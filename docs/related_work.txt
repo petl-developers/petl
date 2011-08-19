@@ -59,3 +59,74 @@ download. There is also a Python library providing data transformation
 functions as found in the GUI. The research paper has a good
 discussion of data transformation and quality issues, esp. w.r.t. tool
 usability.
+
+SnapLogic
+---------
+
+- http://www.snaplogic.com
+- https://www.snaplogic.org/Documentation/3.2/ComponentRef/index.html
+
+A data integration platform, where ETL components are web resources
+with a RESTful interface. Standard components for transforms like
+filter, join and sort.
+
+Talend
+------
+
+TODO
+
+CloverETL
+---------
+
+TODO
+
+Orange
+------
+
+TODO
+
+North Concepts Data Pipeline
+----------------------------
+
+TODO
+
+SAS Clinical Data Integration
+-----------------------------
+
+TODO
+
+R Reshape Package
+-----------------
+
+TODO
+
+TableFu
+-------
+
+TODO
+
+python-tablefu
+--------------
+
+TODO
+
+Data River
+----------
+
+TODO
+
+Ruffus
+------
+
+TODO
+
+PyF
+---
+
+TODO
+
+PyDTA
+-----
+
+TODO
+
