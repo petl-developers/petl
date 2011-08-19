@@ -1,0 +1,50 @@
+Glossary - Terms for Data Transformation
+========================================
+
+
+tcut - selecting and/or re-ordering fields
+-----------------------------------------
+
+The tcut transformation maps each row in the input to a single row in
+the output, such that some fields may be omitted from rows in the
+output, and fields may also be re-ordered in output rows.
+
+E.g., input data:
+
++-----+-----+-------+
+| foo | bar | baz   |
++=====+=====+=======+
+| A   | 1   | True  |
++-----+-----+-------+
+| B   | 2   | False |
++-----+-----+-------+
+
+Transformation: tcut input data, selecting fields (baz, foo).
+
+Expected output:
+
++-------+-----+
+| baz   | foo |
++=======+=====+
+| True  | 1   |
++-------+-----+
+| False | 2   |
++-------+-----+
+
+**Rationale**: "cut" is used in csvkit by analogy with the linux "cut" command. TODO explain rationale for supporting "tcut". 
+
+**Precedents**: csvcut in csvkit, ... TODO terminology used for this transformation in other tools.
+
+
+tslice 
+------
+
+TODO
+
+tmap
+----
+
+TODO
+
+...
+

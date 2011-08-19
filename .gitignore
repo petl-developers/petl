@@ -1,0 +1,4 @@
+*.txt~
+*.pyc
+docs/_build
+
