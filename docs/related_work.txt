@@ -1,0 +1,61 @@
+Related Work
+============
+
+picalo
+------
+
+- http://www.picalo.org/ 
+- http://pypi.python.org/pypi/picalo/ 
+- http://www.picalo.org/download/api/
+
+A GUI application and Python library primarily aimed at data analysis
+for auditors & fraud examiners, but has a number of general purpose
+data mining and transformation capabilities like filter, join,
+transpose, crosstable/pivot.
+
+Does not rely on streaming/iterative processing of data, and has a
+persistence capability based on zodb for handling larger datasets.
+
+csvkit
+------
+
+- http://pypi.python.org/pypi/picalo/
+- http://csvkit.rtfd.org/
+
+A set of command-line utilities for transforming tabular data from CSV
+(delimited) files. Includes csvclean, csvcut, csvjoin, csvsort,
+csvstack, csvstat, csvgrep, csvlook.
+
+Google Refine
+-------------
+
+- http://code.google.com/p/google-refine/
+
+A web application for exploring, filtering, cleaning and transforming
+a table of data. Some excellent functionality for finding and fixing
+problems in data. Does have the capability to join two tables, but
+generally it's one table at a time. Some question marks over ability
+to handle larger datasets. 
+
+Has an extension capability, two third party extensions known at the
+time of writing, including a `stats extension
+<http://blog.apps.chicagotribune.com/2010/11/18/sprint-our-first-google-refine-extension-refine-stats/>`_.
+
+Data Wrangler
+-------------
+
+- http://vis.stanford.edu/wrangler/
+- http://vis.stanford.edu/papers/wrangler
+- http://pypi.python.org/pypi/DataWrangler
+
+A web application for exploring, transforming and cleaning tabular
+data, in a similar vein to Google Refine but with a strong focus on
+usability, and more capabilities for transforming tables, including
+folding/unfolding (similar to R reshape's melt/cast) and
+cross-tabulation.
+
+Currently a client-side only web application, not available for
+download. There is also a Python library providing data transformation
+functions as found in the GUI. The research paper has a good
+discussion of data transformation and quality issues, esp. w.r.t. tool
+usability.
