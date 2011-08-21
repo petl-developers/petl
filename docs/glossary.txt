@@ -58,8 +58,8 @@ Output:
 
 **Implementations** 
 
- - csvcut in csvkit
- - TODO terminology used for this transformation in other tools.
+- csvcut in csvkit
+- ...
 
 Slice - select a subsequence of data rows
 -----------------------------------------
@@ -210,10 +210,66 @@ TODO
 
 TODO
 
-Melt
-----
+Melt - reshape a table ...
+--------------------------
 
 **Definition**
+
+Given an input table, a set of fields in the input table chosen as
+"identifier" fields, and a set of fields chosen as "variable" fields,
+generate an output table such that each row in the input is
+transformed to *v* rows in the output table, where *v* is the number
+of variable fields. 
+
+For each input row, the corresponding *v* output rows will have a copy
+of the identifier fields from the input. Variable field names from the
+input table are given as values of a single "variable" field in the
+output, and values of variable fields from the input table are given
+as values of a single "value" field in the output.
+
+**Example**
+
+Input:
+
++---------+----------+----------+
+| 'name'  | 'weight' | 'height' |
++=========+==========+==========+
+| 'smith' | 12       | 56       |
++---------+----------+----------+
+| 'jones' | 14       | 45       |
++---------+----------+----------+
+
+Transformation: Melt input, with identifier fields ('name') and variable fields ('weight', 'height').
+
+Output:
+
++---------+------------+---------+
+| 'name'  | 'variable' | 'value' |
++=========+============+=========+
+| 'smith' | 'weight'   | 12      |
++---------+------------+---------+
+| 'smith' | 'height'   | 56      |
++---------+------------+---------+
+| 'jones' | 'weight'   | 14      |
++---------+------------+---------+
+| 'jones' | 'height'   | 45      |
++---------+------------+---------+
+
+**Discussion**
+
+Based on the R reshape package. TODO
+
+**Implementations**
+
+- R reshape package (melt)
+- DataWrangler (fold?)
+- Google Refine (not as a single operation, but can be done with transpose ... followed by fill down)
+- ...
+
+Unmelt
+------
+
+**Definition** 
 
 TODO
 
@@ -227,66 +283,215 @@ TODO
 
 **Implementations**
 
-TODO
-
-Unmelt
-------
-
-TODO
+- TODO
 
 Split
 -----
 
+**Definition** 
+
 TODO
+
+**Example**
+
+TODO
+
+**Discussion**
+
+TODO
+
+**Implementations**
+
+- TODO
 
 Merge
 -----
 
+**Definition** 
+
 TODO
+
+**Example**
+
+TODO
+
+**Discussion**
+
+TODO
+
+**Implementations**
+
+- TODO
 
 Sort
 ----
 
+**Definition** 
+
 TODO
+
+**Example**
+
+TODO
+
+**Discussion**
+
+TODO
+
+**Implementations**
+
+- TODO
 
 Convert
 -------
 
+**Definition** 
+
 TODO
+
+**Example**
+
+TODO
+
+**Discussion**
+
+TODO
+
+**Implementations**
+
+- TODO
 
 Join
 ----
 
+**Definition** 
+
 TODO
+
+**Example**
+
+TODO
+
+**Discussion**
+
+TODO
+
+**Implementations**
+
+- TODO
 
 Stat
 ----
 
+**Definition** 
+
 TODO
+
+**Example**
+
+TODO
+
+**Discussion**
+
+TODO
+
+**Implementations**
+
+- TODO
 
 Transpose
 ---------
 
+**Definition** 
+
 TODO
+
+**Example**
+
+TODO
+
+**Discussion**
+
+TODO
+
+**Implementations**
+
+- TODO
 
 Pivot
 -----
 
+**Definition** 
+
 TODO
+
+**Example**
+
+TODO
+
+**Discussion**
+
+TODO
+
+**Implementations**
+
+- TODO
 
 Validate
 --------
 
+**Definition** 
+
 TODO
+
+**Example**
+
+TODO
+
+**Discussion**
+
+TODO
+
+**Implementations**
+
+- TODO
 
 Filter
 ------
 
+**Definition** 
+
 TODO
 
-...
+**Example**
+
+TODO
+
+**Discussion**
+
+TODO
+
+**Implementations**
+
+- TODO
 
 Facet
 -----
 
+**Definition** 
+
 TODO
+
+**Example**
+
+TODO
+
+**Discussion**
+
+TODO
+
+**Implementations**
+
+- TODO
+
+
