@@ -61,8 +61,22 @@ Output:
  - csvcut in csvkit
  - TODO terminology used for this transformation in other tools.
 
-Slice 
-------
+Slice - select a subsequence of data rows
+-----------------------------------------
+
+**Definition**
+
+TODO
+
+**Example**
+
+TODO
+
+**Discussion**
+
+TODO
+
+**Implementations**
 
 TODO
 
@@ -71,10 +85,10 @@ Cat - concatenate two or more tables
 
 **Definition**
 
-Concatenate two or more tables. Input tables may have different
-fields, in which case the fields in the output table are the union of
-the fields in the inputs, and any missing fields in input rows are
-padded with a configurable value.
+Concatenate two or more input tables into a single output table. Input
+tables may have different fields, in which case the fields in the
+output table are the union of the fields in the inputs, and any
+missing fields in input rows are padded with a configurable value.
 
 **Example**
 
@@ -122,13 +136,41 @@ TODO Arguably not primitive...
 
 TODO
 
-Map
-----
+Map - arbitrarily transform rows
+--------------------------------
+
+**Definition**
+
+TODO
+
+**Example**
+
+TODO
+
+**Discussion**
+
+TODO
+
+**Implementations**
 
 TODO
 
 Melt
 ----
+
+**Definition**
+
+TODO
+
+**Example**
+
+TODO
+
+**Discussion**
+
+TODO
+
+**Implementations**
 
 TODO
 
