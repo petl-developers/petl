@@ -16,15 +16,15 @@ Any object is a *tabular data source* if:
 
 So, for example, a list of lists is a tabular data source::
 
-    >>> table = [['foo', 'bar'], ['A', '1'], ['B', '2']]
+    >>> table = [['foo', 'bar'], ['A', 1], ['B', 2]]
     >>> for row in table: print row
     ['foo', 'bar']
-    ['A', '1']
-    ['B', '2']
+    ['A', 1]
+    ['B', 2]
     >>> for row in table: print row
     ['foo', 'bar']
-    ['A', '1']
-    ['B', '2']
+    ['A', 1]
+    ['B', 2]
 
 However, a `csv.reader` object **may not** be a tabular data source,
 e.g., if it backed by a file, because it may only be possible to

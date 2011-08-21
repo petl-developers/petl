@@ -1,50 +1,195 @@
 Glossary - Terms for Data Transformation
 ========================================
 
+This glossary is an attempt to construct a more-or-less consistent
+terminology for transformations on tables of data, and other related
+operations. It's also an attempt to identify a useful and convenient
+set of *primitive* transformation operations, i.e., the fundamental
+operations in terms of which all other transformations can be
+expressed.
 
-tcut - selecting and/or re-ordering fields
------------------------------------------
+Where possible, terminology used in other projects/tools for
+equivalent or similar operations is given in the "Implementations"
+sub-sections.
 
-The tcut transformation maps each row in the input to a single row in
+Because so many of these terms have been used in a variety of
+contexts, sometimes with very different senses, there is no hope of
+creating a terminology that is both intuitive and acceptable to
+everyone. However, I've tried in the "Discussion" sub-sections to give
+my rationale for choosing each particular term. Feel free to argue
+with me and present alternatives.
+
+Cut - select and/or re-order fields
+-----------------------------------
+
+**Definition** 
+
+The Cut transformation maps each row in the input to a single row in
 the output, such that some fields may be omitted from rows in the
-output, and fields may also be re-ordered in output rows.
+output, and fields may also be re-ordered.
 
-E.g., input data:
+**Example**
 
-+-----+-----+-------+
-| foo | bar | baz   |
-+=====+=====+=======+
-| A   | 1   | True  |
-+-----+-----+-------+
-| B   | 2   | False |
-+-----+-----+-------+
+Input:
 
-Transformation: tcut input data, selecting fields (baz, foo).
++-------+-------+-------+
+| 'foo' | 'bar' | 'baz' |
++=======+=======+=======+
+| 'A'   | 1     | True  |
++-------+-------+-------+
+| 'B'   | 2     | False |
++-------+-------+-------+
 
-Expected output:
+Transformation: Cut, selecting fields ('baz', 'foo').
 
-+-------+-----+
-| baz   | foo |
-+=======+=====+
-| True  | 1   |
-+-------+-----+
-| False | 2   |
-+-------+-----+
+Output:
 
-**Rationale**: "cut" is used in csvkit by analogy with the linux "cut" command. TODO explain rationale for supporting "tcut". 
++-------+-------+
+| 'baz' | 'foo' |
++=======+=======+
+| True  | 1     |
++-------+-------+
+| False | 2     |
++-------+-------+
 
-**Precedents**: csvcut in csvkit, ... TODO terminology used for this transformation in other tools.
+**Discussion**
 
+"Cut" is used in csvkit by analogy with the linux "cut" command. TODO explain rationale for supporting "Cut". 
 
-tslice 
+**Implementations** 
+
+ - csvcut in csvkit
+ - TODO terminology used for this transformation in other tools.
+
+Slice 
 ------
 
 TODO
 
-tmap
+Cat - concatenate two or more tables
+------------------------------------
+
+**Definition**
+
+Concatenate two or more tables. Input tables may have different
+fields, in which case the fields in the output table are the union of
+the fields in the inputs, and any missing fields in input rows are
+padded with a configurable value.
+
+**Example**
+
+Input 1:
+
++-------+-------+
+| 'foo' | 'bar' |
++=======+=======+
+| 1     | 'A'   |
++-------+-------+
+| 2     | 'B'   |
++-------+-------+
+
+Input 2:
+
++-------+-------+
+| 'bar' | 'baz' |
++=======+=======+
+| 'C'   | True  |
++-------+-------+
+| 'D'   | False |
++-------+-------+
+
+Transformation: Cat inputs, padding missing fields with value None.
+
+Output:
+
++-------+-------+-------+
+| 'foo' | 'bar' | 'baz' |
++=======+=======+=======+
+| 1     | 'A'   | None  |
++-------+-------+-------+
+| 2     | 'B'   | None  |
++-------+-------+-------+
+| None  | 'C'   | True  |
++-------+-------+-------+
+| None  | 'D'   | False |
++-------+-------+-------+
+
+**Discussion**
+
+TODO Arguably not primitive...
+
+**Implementations**
+
+TODO
+
+Map
 ----
+
+TODO
+
+Melt
+----
+
+TODO
+
+Unmelt
+------
+
+TODO
+
+Split
+-----
+
+TODO
+
+Merge
+-----
+
+TODO
+
+Sort
+----
+
+TODO
+
+Convert
+-------
+
+TODO
+
+Join
+----
+
+TODO
+
+Stat
+----
+
+TODO
+
+Transpose
+---------
+
+TODO
+
+Pivot
+-----
+
+TODO
+
+Validate
+--------
+
+TODO
+
+Filter
+------
 
 TODO
 
 ...
 
+Facet
+-----
+
+TODO
