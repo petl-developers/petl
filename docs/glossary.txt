@@ -66,15 +66,40 @@ Slice - select a subsequence of data rows
 
 **Definition**
 
-TODO
+Select a continuous subsequence of data rows from an input table.
 
 **Example**
 
-TODO
+Input:
+
++-------+-------+-------+
+| 'foo' | 'bar' | 'baz' |
++=======+=======+=======+
+| 'A'   | 1     | True  |
++-------+-------+-------+
+| 'B'   | 2     | False |
++-------+-------+-------+
+| 'C'   | 4     | False |
++-------+-------+-------+
+| 'F'   | 7     | True  |
++-------+-------+-------+
+
+Transformation: Slice input, selecting rows from 1 to 2.
+
+Output:
+
++-------+-------+-------+
+| 'foo' | 'bar' | 'baz' |
++=======+=======+=======+
+| 'B'   | 2     | False |
++-------+-------+-------+
+| 'C'   | 4     | False |
++-------+-------+-------+
 
 **Discussion**
 
-TODO
+N.B., this operation is about slicing data rows, so 0 (zero) indexes
+the first data row, and not the header row.
 
 **Implementations**
 
@@ -141,13 +166,43 @@ Map - arbitrarily transform rows
 
 **Definition**
 
-TODO
+Map each row in an input table to a new row in the output table. The
+mapping is arbitrary, i.e., any function could be defined to perform
+the transformation.
 
 **Example**
 
-TODO
+Input:
+
++-------+-------+
+| 'foo' | 'bar' |
++=======+=======+
+| 1     | 'A'   |
++-------+-------+
+| 2     | 'B'   |
++-------+-------+
+
+Transformation: Map the input table, such that the output field
+'foo_times_2' equals the value of the input field 'foo' multiplied by
+2, and the output field 'foo_bars' equals the value of the input field
+'bar' repeated 'foo' times.
+
+Output:
+
++---------------+------------+
+| 'foo_times_2' | 'foo_bars' |
++===============+============+
+| 2             | 'A'        |
++---------------+------------+
+| 4             | 'BB'       |
++---------------+------------+
 
 **Discussion**
+
+N.B., here 'Map' is restricted to a proper mapping of rows, i.e., one
+row in, one row out. Other types of transformation where one input row
+could result in less than or more than one output row are not included
+in the definition of 'Map'.
 
 TODO
 
