@@ -269,6 +269,7 @@ Based on the R reshape package. TODO
 - R reshape package (melt)
 - DataWrangler (fold?)
 - Google Refine (not as a single operation, but can be done with transpose ... followed by fill down)
+- Pentaho Data Integration (row normaliser?)
 - ...
 
 Unmelt
@@ -288,7 +289,10 @@ TODO
 
 **Implementations**
 
-- TODO
+- R reshape package (cast)
+- DataWrangler (unfold?)
+- Pentaho Data Integration (row denormaliser?)
+- ...
 
 Split
 -----
