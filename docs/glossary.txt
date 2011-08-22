@@ -159,7 +159,12 @@ TODO Arguably not primitive...
 
 **Implementations**
 
-TODO
+- tabular (rowstack - "The rowstack method can handle the case where
+  there are differing column names in the tabarrays being concatenated
+  by removing the non-common attributes, filling in with null values,
+  or throwing an error" -
+  http://packages.python.org/tabular/html/reference/operations.html#row-and-column-operations)
+  - ...
 
 Map - arbitrarily transform rows
 --------------------------------
@@ -418,6 +423,26 @@ TODO
 
 - TODO
 
+Aggregate
+---------
+
+**Definition** 
+
+TODO
+
+**Example**
+
+TODO
+
+**Discussion**
+
+TODO
+
+**Implementations**
+
+- tabular (aggregation -
+  http://packages.python.org/tabular/html/reference/operations.html#aggregation)
+
 Pivot
 -----
 
@@ -435,7 +460,8 @@ TODO
 
 **Implementations**
 
-- TODO
+- tabular (pivot -
+  http://packages.python.org/tabular/html/reference/operations.html#pivot)
 
 Validate
 --------
@@ -493,5 +519,65 @@ TODO
 **Implementations**
 
 - TODO
+
+Stack
+-----
+
+**Definition** 
+
+TODO
+
+**Example**
+
+TODO
+
+**Discussion**
+
+TODO
+
+**Implementations**
+
+- tabular (colstack)
+
+Translate
+---------
+
+**Definition** 
+
+TODO
+
+**Example**
+
+TODO
+
+**Discussion**
+
+TODO
+
+**Implementations**
+
+- ...
+
+Duplicates
+----------
+
+**Definition** 
+
+TODO
+
+**Example**
+
+TODO
+
+**Discussion**
+
+TODO
+
+**Implementations**
+
+- TODO
+
+
+
 
 

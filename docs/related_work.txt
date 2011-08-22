@@ -1,8 +1,23 @@
 Related Work
 ============
 
-picalo
-------
+tabular (Python package)
+------------------------
+
+- http://pypi.python.org/pypi/tabular
+- http://packages.python.org/tabular/html/
+
+A Python package for working with tabular data. The `tabarray` class
+supports both row-oriented and column-oriented access to data,
+including selection and filtering of rows/columns, matrix math
+(tabular extends NumPy), sort, aggregate, join, transpose,
+comparisons. 
+
+Does require a uniform datatype for each column. All data is handled
+in memory.
+
+picalo (Python package)
+-----------------------
 
 - http://www.picalo.org/ 
 - http://pypi.python.org/pypi/picalo/ 
@@ -16,8 +31,8 @@ transpose, crosstable/pivot.
 Does not rely on streaming/iterative processing of data, and has a
 persistence capability based on zodb for handling larger datasets.
 
-csvkit
-------
+csvkit (Python package)
+-----------------------
 
 - http://pypi.python.org/pypi/picalo/
 - http://csvkit.rtfd.org/
@@ -25,6 +40,13 @@ csvkit
 A set of command-line utilities for transforming tabular data from CSV
 (delimited) files. Includes csvclean, csvcut, csvjoin, csvsort,
 csvstack, csvstat, csvgrep, csvlook.
+
+csvutils (Python package)
+-------------------------
+
+TODO
+
+- http://pypi.python.org/pypi/csvutils
 
 Google Refine
 -------------
@@ -134,5 +156,22 @@ Google Fusion Tables
 --------------------
 
 TODO
+
+pivottable (Python package)
+---------------------------
+
+- http://pypi.python.org/pypi/pivottable/0.8
+
+TODO
+
+PrettyTable (Python package)
+----------------------------
+
+- http://pypi.python.org/pypi/PrettyTable
+
+PyTables (Python package)
+-------------------------
+
+- http://www.pytables.org/
 
 
