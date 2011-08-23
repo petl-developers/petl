@@ -106,8 +106,27 @@ Talend
 
 TODO
 
+Jaspersoft ETL
+--------------
+
+TODO
+
 CloverETL
 ---------
+
+TODO
+
+Jitterbit
+---------
+
+TODO
+
+Kapow Katalyst
+--------------
+
+- http://kapowsoftware.com/products/kapow-katalyst-platform/index.php
+- http://kapowsoftware.com/products/kapow-katalyst-platform/extraction-browser.php
+- http://kapowsoftware.com/products/kapow-katalyst-platform/transformation-normalization.php
 
 TODO
 

@@ -61,8 +61,8 @@ Output:
 - csvcut in csvkit
 - ...
 
-Slice - select a subsequence of data rows
------------------------------------------
+Slice
+-----
 
 **Definition**
 
@@ -294,6 +294,271 @@ TODO
 - Pentaho Data Integration (row denormaliser?)
 - ...
 
+Sort
+----
+
+**Definition** 
+
+TODO
+
+**Example**
+
+TODO
+
+**Discussion**
+
+TODO
+
+**Implementations**
+
+- TODO
+
+Convert
+-------
+
+**Definition** 
+
+TODO
+
+**Example**
+
+TODO
+
+**Discussion**
+
+TODO
+
+**Implementations**
+
+- TODO
+
+Join
+----
+
+**Definition** 
+
+TODO
+
+**Example**
+
+TODO
+
+**Discussion**
+
+TODO
+
+**Implementations**
+
+- TODO
+
+Transpose
+---------
+
+**Definition** 
+
+TODO
+
+**Example**
+
+TODO
+
+**Discussion**
+
+TODO
+
+**Implementations**
+
+- TODO
+
+Aggregate
+---------
+
+**Definition** 
+
+TODO
+
+**Example**
+
+TODO
+
+**Discussion**
+
+TODO
+
+**Implementations**
+
+- tabular (aggregation -
+  http://packages.python.org/tabular/html/reference/operations.html#aggregation)
+
+Pivot
+-----
+
+**Definition** 
+
+TODO
+
+**Example**
+
+TODO
+
+**Discussion**
+
+TODO
+
+**Implementations**
+
+- tabular (pivot -
+  http://packages.python.org/tabular/html/reference/operations.html#pivot)
+
+Filter
+------
+
+**Definition** 
+
+TODO
+
+**Example**
+
+TODO
+
+**Discussion**
+
+TODO
+
+**Implementations**
+
+- TODO
+
+Facet
+-----
+
+**Definition** 
+
+TODO
+
+**Example**
+
+TODO
+
+**Discussion**
+
+TODO
+
+**Implementations**
+
+- TODO
+
+FilterValid
+-----------
+
+TODO
+
+Stack
+-----
+
+**Definition** 
+
+TODO
+
+**Example**
+
+TODO
+
+**Discussion**
+
+TODO
+
+**Implementations**
+
+- tabular (colstack)
+
+Translate
+---------
+
+**Definition** 
+
+TODO
+
+**Example**
+
+TODO
+
+**Discussion**
+
+TODO
+
+**Implementations**
+
+- ...
+
+MergeDuplicates
+---------------
+
+**Definition**
+
+Using a given key field or set of fields, find rows with the same key,
+and merge each group of rows into a single row. Conflicting values
+within the same field are resolved with a default strategy where
+non-missing values override missing values, otherwise the first value
+wins. Optionally use a bespoke conflict resolution strategy.
+
+**Example**
+
+Input:
+
++-------+-------+-------+
+| 'foo' | 'bar' | 'baz' |
++=======+=======+=======+
+| 'A'   | 1     | None  |
++-------+-------+-------+
+| 'A'   | None  | True  |
++-------+-------+-------+
+| 'B'   | None  | True  |
++-------+-------+-------+
+| 'B'   | 2     | False |
++-------+-------+-------+
+
+Transformation: MergeDuplicates using key field 'foo', where `None` is
+interpreted as a missing value.
+
+Output:
+
++-------+-------+-------+
+| 'foo' | 'bar' | 'baz' |
++=======+=======+=======+
+| 'A'   | 1     | True  |
++-------+-------+-------+
+| 'B'   | 2     | True  |
++-------+-------+-------+
+
+**Discussion**
+
+TODO
+
+**Implementations**
+
+- TODO
+
+FindDuplicates
+--------------
+
+TODO
+
+FindDuplicatesWithConflicts
+---------------------------
+
+TODO
+
+FillDown
+--------
+
+TODO
+
+FillUp
+------
+
+TODO
+
 StringSplit
 -----------
 
@@ -442,13 +707,18 @@ output values from any capturing groups into given fields.
 
 Input:
 
++----------------------------------------------------------------------------------+
 | 'foo'                                                                            |
++==================================================================================+
 | 'Paris is the capital of France, and has a population of 2,193,031'              |
++----------------------------------------------------------------------------------+
 | 'London is the capital of the United Kingdom, and has a population of 7,825,200' |
++----------------------------------------------------------------------------------+
 
 Transformation: StringCapture field 'foo' using regular expression
-'^(.+)\sis\sthe\scapital\sof\s(.+),.*population\sof\s(\w+)', placing
-capturing groups into fields ('city', 'country', 'population').
+'^(.+)\\sis\\sthe\\scapital\\sof\\s(.+),.*population\\sof\\s(\\w+)',
+placing capturing groups into fields ('city', 'country',
+'population').
 
 Output:
 
@@ -502,60 +772,13 @@ StringCaptureIntoRows
 
 TODO
 
-FillDown
---------
 
-TODO
-
-FillUp
-------
-
-TODO
-
-Merge
------
-
-**Definition** 
-
-TODO
-
-**Example**
-
-TODO
-
-**Discussion**
-
-TODO
-
-**Implementations**
-
-- TODO
-
-Sort
-----
-
-**Definition** 
-
-TODO
-
-**Example**
-
-TODO
-
-**Discussion**
-
-TODO
-
-**Implementations**
-
-- TODO
-
-Convert
+Profile
 -------
 
 **Definition** 
 
-TODO
+Generate a report of summary information on a table of data.
 
 **Example**
 
@@ -568,201 +791,9 @@ TODO
 **Implementations**
 
 - TODO
-
-Join
-----
-
-**Definition** 
-
-TODO
-
-**Example**
-
-TODO
-
-**Discussion**
-
-TODO
-
-**Implementations**
-
-- TODO
-
-Stat
-----
-
-**Definition** 
-
-TODO
-
-**Example**
-
-TODO
-
-**Discussion**
-
-TODO
-
-**Implementations**
-
-- TODO
-
-Transpose
----------
-
-**Definition** 
-
-TODO
-
-**Example**
-
-TODO
-
-**Discussion**
-
-TODO
-
-**Implementations**
-
-- TODO
-
-Aggregate
----------
-
-**Definition** 
-
-TODO
-
-**Example**
-
-TODO
-
-**Discussion**
-
-TODO
-
-**Implementations**
-
-- tabular (aggregation -
-  http://packages.python.org/tabular/html/reference/operations.html#aggregation)
-
-Pivot
------
-
-**Definition** 
-
-TODO
-
-**Example**
-
-TODO
-
-**Discussion**
-
-TODO
-
-**Implementations**
-
-- tabular (pivot -
-  http://packages.python.org/tabular/html/reference/operations.html#pivot)
 
 Validate
 --------
-
-**Definition** 
-
-TODO
-
-**Example**
-
-TODO
-
-**Discussion**
-
-TODO
-
-**Implementations**
-
-- TODO
-
-Filter
-------
-
-**Definition** 
-
-TODO
-
-**Example**
-
-TODO
-
-**Discussion**
-
-TODO
-
-**Implementations**
-
-- TODO
-
-Facet
------
-
-**Definition** 
-
-TODO
-
-**Example**
-
-TODO
-
-**Discussion**
-
-TODO
-
-**Implementations**
-
-- TODO
-
-Stack
------
-
-**Definition** 
-
-TODO
-
-**Example**
-
-TODO
-
-**Discussion**
-
-TODO
-
-**Implementations**
-
-- tabular (colstack)
-
-Translate
----------
-
-**Definition** 
-
-TODO
-
-**Example**
-
-TODO
-
-**Discussion**
-
-TODO
-
-**Implementations**
-
-- ...
-
-Duplicates
-----------
 
 **Definition** 
 
