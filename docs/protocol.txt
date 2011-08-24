@@ -44,8 +44,10 @@ iterate over the data once. E.g.::
     >>> for row in table: print row
 
 The main reason for requiring tabular data sources to support repeated
-iteration is that some transformations need to make more than one pass
-through the data.
+iteration is that this may work better with an exploratory style of
+transformation scripting. It may also make combining transformations
+into pipelines easier, at least for simple cases. However, this is not
+set in stone, and needs exploration.
 
 Data sources backed by files can usually be wrapped to support
 repeated iterations, e.g.::
@@ -67,12 +69,11 @@ data source classes need to take care to support repeated
 iteration. Whether it is strictly necessary or even a good idea
 depends on various factors that I haven't fully explored yet, such as
 whether it makes sense to implement all transformers in a fully
-streaming fashion, even when they need to make more than one pass over
-the data, and whether there are other use cases that justify this
-decision, such as scripting a transformation pipeline where you want
-to iterate over the pipeline output multiple times (or whether it is
-generally more sensible to persist any data you might want to iterate
-over more than once to a file).
+streaming fashion, and whether there are other use cases that justify
+this decision, such as scripting a transformation pipeline where you
+want to iterate over the pipeline output multiple times (or whether it
+is generally more sensible to persist any data you might want to
+iterate over more than once to a file).
 
 Consuming Tabular Data
 ----------------------
@@ -89,8 +90,8 @@ is consuming data from a tabular data source:
 2. All subsequent objects returned by the iterator are "data
    rows". Each data row is a sequence of objects of any type.
 
-On Datatypes
-------------
+On Datatypes, Record Lengths, and Consistency
+---------------------------------------------
 
 This protocol places no constraints on the type of objects that occur
 as data values in rows obtained from tabular data sources. A table may
@@ -98,4 +99,5 @@ contain all strings or all integers, or all values in a particular
 field may be integers or floats, or there may be no consistent pattern
 in the use of datatypes within a table.
 
-TODO
+Note also there is no constraint on row length. Rows from the same table may
+be of differing lengths (i.e., have any number of data values).

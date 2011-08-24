@@ -82,6 +82,15 @@ functions as found in the GUI. The research paper has a good
 discussion of data transformation and quality issues, esp. w.r.t. tool
 usability.
 
+Pentaho Data Integration (a.k.a. Kettle)
+----------------------------------------
+
+- http://kettle.pentaho.com/
+- http://wiki.pentaho.com/display/EAI/Getting+Started
+- http://wiki.pentaho.com/display/EAI/Pentaho+Data+Integration+Steps
+
+TODO
+
 SnapLogic
 ---------
 
@@ -97,8 +106,27 @@ Talend
 
 TODO
 
+Jaspersoft ETL
+--------------
+
+TODO
+
 CloverETL
 ---------
+
+TODO
+
+Jitterbit
+---------
+
+TODO
+
+Kapow Katalyst
+--------------
+
+- http://kapowsoftware.com/products/kapow-katalyst-platform/index.php
+- http://kapowsoftware.com/products/kapow-katalyst-platform/extraction-browser.php
+- http://kapowsoftware.com/products/kapow-katalyst-platform/transformation-normalization.php
 
 TODO
 

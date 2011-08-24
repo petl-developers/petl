@@ -19,8 +19,8 @@ everyone. However, I've tried in the "Discussion" sub-sections to give
 my rationale for choosing each particular term. Feel free to argue
 with me and present alternatives.
 
-Cut - select and/or re-order fields
------------------------------------
+Cut
+---
 
 **Definition** 
 
@@ -61,8 +61,8 @@ Output:
 - csvcut in csvkit
 - ...
 
-Slice - select a subsequence of data rows
------------------------------------------
+Slice
+-----
 
 **Definition**
 
@@ -105,8 +105,8 @@ the first data row, and not the header row.
 
 TODO
 
-Cat - concatenate two or more tables
-------------------------------------
+Cat
+---
 
 **Definition**
 
@@ -166,8 +166,8 @@ TODO Arguably not primitive...
   http://packages.python.org/tabular/html/reference/operations.html#row-and-column-operations)
   - ...
 
-Map - arbitrarily transform rows
---------------------------------
+Map
+---
 
 **Definition**
 
@@ -215,8 +215,8 @@ TODO
 
 TODO
 
-Melt - reshape a table ...
---------------------------
+Melt
+----
 
 **Definition**
 
@@ -269,6 +269,7 @@ Based on the R reshape package. TODO
 - R reshape package (melt)
 - DataWrangler (fold?)
 - Google Refine (not as a single operation, but can be done with transpose ... followed by fill down)
+- Pentaho Data Integration (row normaliser?)
 - ...
 
 Unmelt
@@ -288,45 +289,10 @@ TODO
 
 **Implementations**
 
-- TODO
-
-Split
------
-
-**Definition** 
-
-TODO
-
-**Example**
-
-TODO
-
-**Discussion**
-
-TODO
-
-**Implementations**
-
-- TODO
-
-Merge
------
-
-**Definition** 
-
-TODO
-
-**Example**
-
-TODO
-
-**Discussion**
-
-TODO
-
-**Implementations**
-
-- TODO
+- R reshape package (cast)
+- DataWrangler (unfold?)
+- Pentaho Data Integration (row denormaliser?)
+- ...
 
 Sort
 ----
@@ -367,25 +333,6 @@ TODO
 - TODO
 
 Join
-----
-
-**Definition** 
-
-TODO
-
-**Example**
-
-TODO
-
-**Discussion**
-
-TODO
-
-**Implementations**
-
-- TODO
-
-Stat
 ----
 
 **Definition** 
@@ -463,25 +410,6 @@ TODO
 - tabular (pivot -
   http://packages.python.org/tabular/html/reference/operations.html#pivot)
 
-Validate
---------
-
-**Definition** 
-
-TODO
-
-**Example**
-
-TODO
-
-**Discussion**
-
-TODO
-
-**Implementations**
-
-- TODO
-
 Filter
 ------
 
@@ -519,6 +447,11 @@ TODO
 **Implementations**
 
 - TODO
+
+FilterValid
+-----------
+
+TODO
 
 Stack
 -----
@@ -558,8 +491,309 @@ TODO
 
 - ...
 
-Duplicates
+MergeDuplicates
+---------------
+
+**Definition**
+
+Using a given key field or set of fields, find rows with the same key,
+and merge each group of rows into a single row. Conflicting values
+within the same field are resolved with a default strategy where
+non-missing values override missing values, otherwise the first value
+wins. Optionally use a bespoke conflict resolution strategy.
+
+**Example**
+
+Input:
+
++-------+-------+-------+
+| 'foo' | 'bar' | 'baz' |
++=======+=======+=======+
+| 'A'   | 1     | None  |
++-------+-------+-------+
+| 'A'   | None  | True  |
++-------+-------+-------+
+| 'B'   | None  | True  |
++-------+-------+-------+
+| 'B'   | 2     | False |
++-------+-------+-------+
+
+Transformation: MergeDuplicates using key field 'foo', where `None` is
+interpreted as a missing value.
+
+Output:
+
++-------+-------+-------+
+| 'foo' | 'bar' | 'baz' |
++=======+=======+=======+
+| 'A'   | 1     | True  |
++-------+-------+-------+
+| 'B'   | 2     | True  |
++-------+-------+-------+
+
+**Discussion**
+
+TODO
+
+**Implementations**
+
+- TODO
+
+FindDuplicates
+--------------
+
+TODO
+
+FindDuplicatesWithConflicts
+---------------------------
+
+TODO
+
+FillDown
+--------
+
+TODO
+
+FillUp
+------
+
+TODO
+
+StringSplit
+-----------
+
+**Definition** 
+
+Split string values in a given field, using a given delimiter,
+optionally retaining the original field as well.
+
+**Example**
+
+Input:
+
++-------+
+| 'foo' |
++=======+
+| 'a,b' |
++-------+
+| 'c,d' |
++-------+
+
+Transformation: StringSplit field 'foo' using delimiter ',' placing
+the first two results into fields ('bar', 'baz).
+
+Output:
+
++-------+-------+
+| 'bar' | 'baz' |
++=======+=======+
+| 'a'   | 'b'   |
++-------+-------+
+| 'c'   | 'd'   |
++-------+-------+
+
+**Discussion**
+ 
+'StringSplit' is chosen here because of the correspondance with the
+standard Python `string.split` method.
+
+**Implementations**
+
+- TODO
+
+StringJoin
 ----------
+
+**Definition**
+
+Concatenate string values from multiple fields with an optional
+separator.
+
+**Example**
+
+Input:
+
++-------+-------+
+| 'bar' | 'baz' |
++=======+=======+
+| 'a'   | 'b'   |
++-------+-------+
+| 'c'   | 'd'   |
++-------+-------+
+
+Transformation: StringJoin fields ('bar', 'baz') using separator ','
+and place the result in field 'foo'.
+
+Output:
+
++-------+
+| 'foo' |
++=======+
+| 'a,b' |
++-------+
+| 'c,d' |
++-------+
+
+**Discussion**
+
+'StringJoin' is chosen here because by analogy with the standard
+Python `string.join` method.
+
+**Implementations**
+
+- ...
+
+StringFormat
+------------
+
+**Definition**
+
+Construct a new field by interpolating values from input rows into a
+string template.
+
+**Example**
+
+Input:
+
++-------+-------+
+| 'foo' | 'bar' |
++=======+=======+
+| 'A'   | 1     |
++-------+-------+
+| 'B'   | 2     |
++-------+-------+
+
+Transformation: StringFormat using template '{foo}:{bar}' and placing
+the result in field 'baz'.
+
+Output:
+
++-------+-------+-------+
+| 'foo' | 'bar' | 'baz' |
++=======+=======+=======+
+| 'A'   | 1     | 'A:1' |
++-------+-------+-------+
+| 'B'   | 2     | 'B:2' |
++-------+-------+-------+
+
+**Discussion**
+
+'StringFormat' chosen here by analogy with the standard Python
+`string.format` method.
+
+**Implementations**
+
+- ...
+
+StringReplace
+-------------
+
+TODO
+
+StringTranslate
+---------------
+
+TODO
+
+StringCapture
+-------------
+
+**Definition**
+
+Use a regular expression to search string values in a given field, and
+output values from any capturing groups into given fields.
+
+**Example**
+
+Input:
+
++----------------------------------------------------------------------------------+
+| 'foo'                                                                            |
++==================================================================================+
+| 'Paris is the capital of France, and has a population of 2,193,031'              |
++----------------------------------------------------------------------------------+
+| 'London is the capital of the United Kingdom, and has a population of 7,825,200' |
++----------------------------------------------------------------------------------+
+
+Transformation: StringCapture field 'foo' using regular expression
+'^(.+)\\sis\\sthe\\scapital\\sof\\s(.+),.*population\\sof\\s(\\w+)',
+placing capturing groups into fields ('city', 'country',
+'population').
+
+Output:
+
++----------+------------------+--------------+
+| 'city'   | 'country'        | 'population' |
++==========+==================+==============+
+| 'Paris'  | 'France'         | '2,193,031'  |
++----------+------------------+--------------+
+| 'London' | 'United Kingdom' | '7,825,200'  |
++----------+------------------+--------------+
+
+**Discussion**
+
+TODO
+
+**Implementations**
+
+- ...
+
+SubstringAfter
+--------------
+
+TODO
+
+SubstringBefore
+---------------
+
+TODO
+
+StringSplitIntoRows
+-------------------
+
+**Definition**
+
+TODO
+
+**Example**
+
+TODO
+
+**Discussion**
+
+TODO
+
+**Implementations**
+
+TODO
+
+StringCaptureIntoRows
+---------------------
+
+TODO
+
+
+Profile
+-------
+
+**Definition** 
+
+Generate a report of summary information on a table of data.
+
+**Example**
+
+TODO
+
+**Discussion**
+
+TODO
+
+**Implementations**
+
+- TODO
+
+Validate
+--------
 
 **Definition** 
 
