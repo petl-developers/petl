@@ -5,6 +5,7 @@ TODO doc me
 
 
 from itertools import islice
+from collections import defaultdict
 
 
 class Profiler(object):
@@ -18,48 +19,110 @@ class Profiler(object):
         assert isinstance(max_sample_size, int), 'max_sample_size must be an int'
         self._table = table
         self._max_sample_size = max_sample_size
-        self._profile_functions = list()
+        self._analyses = list()
 
 
-    def add(self, profile_function, field=None):
-        self._profile_functions.append((profile_function, field))
+    def add(self, analysis, field=None):
+        self._analyses.append((analysis, field))
 
 
     def profile(self):
-        profile = dict()
-        profile['general'] = dict()
-        profile['fields'] = dict()
+        
+        report = dict()
+        report['table'] = dict()
+        report['field'] = dict()
+
         it = iter(self._table)
-        field_names = it.next()
-        profile['general']['field_names'] = tuple(field_names)
-        for f in field_names:
-            profile['fields'][f] = dict()
+        fields = it.next()
+        report['table']['default'] = dict()
+        report['table']['default']['fields'] = tuple(fields)
+        for f in fields:
+            report['field'][f] = dict()
+
+        table_analyses = [cls() for cls, field in self._analyses if isinstance(cls, TableAnalysis)]
+        field_analyses = defaultdict(list)
+        for cls, field in self._analyses:
+            if isinstance(cls, FieldAnalysis):
+                if field is not None:
+                    # add analysis on a single field
+                    field_analyses[field].append(cls())
+                else:
+                    # add analysis on all fields (not field specified)
+                    for field in fields:
+                        field_analyses[field].append(cls())
+        
         if self._max_sample_size:
             it = islice(it, 0, self._max_sample_size-1)
+
         sample_size = 0
-        row_length_sum = 0
-        min_row_length = None
-        max_row_length = None
-        for index, row in enumerate(it):
+        for row in it:
             sample_size += 1
-            row_length = len(row)
-            row_length_sum += row_length
-            if min_row_length is None or row_length < min_row_length :
-                min_row_length = row_length
-            if max_row_length is None or row_length > max_row_length :
-                max_row_length = row_length
+            for analysis in table_analyses:
+                analysis.accept(row)
+            for field in fields:
+                field_index = fields.index(field)
+                try:
+                    value = row[field_index]
+                except IndexError:
+                    pass # TODO
+                else:
+                    for analysis in field_analyses[field]:
+                        analysis.accept(value)
         
-        profile['general']['sample_size'] = sample_size
-        profile['general']['min_row_length'] = min_row_length
-        profile['general']['max_row_length'] = max_row_length
-        profile['general']['mean_row_length'] = row_length_sum / sample_size
+        report['table']['default']['sample_size'] = sample_size
+        for analysis in table_analyses:
+            analysis.report(report['table'])
+        for field in fields:
+            for analysis in field_analyses[field]:
+                analysis.report(report['field'][field])
 
-        return profile
+        return report
 
 
-def record_lengths():
+class Analysis(object):
     pass
 
 
-def distinct_values():
+class TableAnalysis(Analysis):
     pass
+
+
+class FieldAnalysis(Analysis):
+    pass
+
+
+class RowLengths(TableAnalysis):
+
+    def accept(self, row):
+        pass
+
+    def report(self, report):
+        pass
+    
+
+class DistinctValues(FieldAnalysis):
+
+    def accept(self, value):
+        pass
+
+    def report(self, report):
+        pass
+
+
+class BasicStatistics(FieldAnalysis):
+
+    def accept(self, value):
+        pass
+
+    def report(self, report):
+        pass
+    
+
+class Types(FieldAnalysis):
+
+    def accept(self, value):
+        pass
+
+    def report(self, report):
+        pass
+    
