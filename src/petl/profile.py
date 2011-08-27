@@ -194,8 +194,16 @@ class Types(FieldAnalysis):
         self._inferred_type = None
 
     def accept(self, value):
+        cls = value.__class__
+        self._actual_types[cls.__name__] += 1
+        for cls in (int, float, str):
+            try:
+                cls(value)
+            except ValueError:
+                pass
+            else:
+                self._applicable_types[cls.__name__] += 1
         # TODO
-        pass
 
     def report(self):
         data = {

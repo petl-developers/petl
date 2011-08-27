@@ -68,10 +68,10 @@ def test_profile():
     d('add types analysis on all fields')
     profiler.add(Types) 
     report = profiler.profile()
-    assert report['field']['foo']['types']['actual_types'] == {'string': 5}
-    assert report['field']['foo']['types']['applicable_types'] == {'string': 5}     
-    assert report['field']['foo']['types']['inferred_type'] == 'string'    
-    assert report['field']['bar']['types']['actual_types'] == {'int': 2, 'string': 2}
-    assert report['field']['bar']['types']['applicable_types'] == {'int': 3, 'float': 3, 'string': 5}     
+    assert report['field']['foo']['types']['actual_types'] == Counter({'str': 5})
+    assert report['field']['foo']['types']['applicable_types'] == Counter({'str': 5})     
+    assert report['field']['foo']['types']['inferred_type'] == 'str'    
+    assert report['field']['bar']['types']['actual_types'] == Counter({'int': 2, 'str': 2})
+    assert report['field']['bar']['types']['applicable_types'] == Counter({'int': 3, 'float': 3, 'str': 5})     
     assert report['field']['bar']['types']['inferred_type'] == 'int'    
 
