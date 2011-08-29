@@ -45,10 +45,10 @@ class Profiler(object):
             report['field'][f] = dict()
 
         d('setup analyses')
-        table_analyses = [cls() for cls, field in self._analyses if issubclass(cls, TableAnalysis)]
+        table_analyses = [cls() for cls, field in self._analyses if hasattr(cls, 'accept_row')]
         field_analyses = defaultdict(list)
         for cls, field in self._analyses:
-            if issubclass(cls, FieldAnalysis):
+            if hasattr(cls, 'accept_value'):
                 if field is not None:
                     # add analysis on a single field
                     field_analyses[field].append(cls())
@@ -66,7 +66,7 @@ class Profiler(object):
         for row in it:
             sample_size += 1
             for analysis in table_analyses:
-                analysis.accept(row)
+                analysis.accept_row(row)
             for field in fields:
                 field_index = fields.index(field)
                 try:
@@ -75,7 +75,7 @@ class Profiler(object):
                     pass # TODO
                 else:
                     for analysis in field_analyses[field]:
-                        analysis.accept(value)
+                        analysis.accept_value(value)
         
         d('build the report')
         report['table']['default']['sample_size'] = sample_size
@@ -92,22 +92,14 @@ class Profiler(object):
                 d(data)
                 report['field'][field][key] = data
 
+        d('clean up')
+        if hasattr(it, 'close'):
+            it.close()
+        
         return report
 
 
-class Analysis(object):
-    pass
-
-
-class TableAnalysis(Analysis):
-    pass
-
-
-class FieldAnalysis(Analysis):
-    pass
-
-
-class RowLengths(TableAnalysis):
+class RowLengths(object):
 
     def __init__(self):
         self._row_lengths_sum = 0
@@ -115,7 +107,7 @@ class RowLengths(TableAnalysis):
         self._min_row_length = None
         self._max_row_length = None
         
-    def accept(self, row):
+    def accept_row(self, row):
         n = len(row)
         self._row_count += 1
         self._row_lengths_sum += n
@@ -136,12 +128,12 @@ class RowLengths(TableAnalysis):
         return ('row_lengths', data)
     
 
-class DistinctValues(FieldAnalysis):
+class DistinctValues(object):
     
     def __init__(self):
         self._counter = Counter()
 
-    def accept(self, value):
+    def accept_value(self, value):
         self._counter[value] += 1
 
     def report(self):
@@ -149,7 +141,7 @@ class DistinctValues(FieldAnalysis):
         return ('distinct_values', self._counter)
 
 
-class BasicStatistics(FieldAnalysis):
+class BasicStatistics(object):
 
     def __init__(self):
         self._count = 0
@@ -158,10 +150,12 @@ class BasicStatistics(FieldAnalysis):
         self._max = None
         self._min = None
 
-    def accept(self, value):
+    def accept_value(self, value):
         try:
             value = float(value)
         except ValueError:
+            self._errors += 1
+        except TypeError:
             self._errors += 1
         else:
             self._count += 1
@@ -186,30 +180,65 @@ class BasicStatistics(FieldAnalysis):
         return ('basic_statistics', data)
     
 
-class Types(FieldAnalysis):
+class Types(object):
     
-    def __init__(self):
+    def __init__(self, threshold=0.5):
+        self._threshold = threshold
+        self._count = 0
         self._actual_types = Counter()
         self._applicable_types = Counter()
         self._inferred_type = None
 
-    def accept(self, value):
+    def accept_value(self, value):
+        self._count += 1
         cls = value.__class__
         self._actual_types[cls.__name__] += 1
-        for cls in (int, float, str):
+        for cls in (int, float, str, unicode):
             try:
                 cls(value)
             except ValueError:
                 pass
+            except TypeError:
+                pass
             else:
                 self._applicable_types[cls.__name__] += 1
-        # TODO
 
     def report(self):
+
+        d('infer type')
+        # int has highest priority
+        ints = float(self._applicable_types['int'])
+        int_ratio = ints / self._count
+        floats = float(self._applicable_types['float'])
+        float_ratio = floats / self._count
+        strings = float(self._actual_types['str'])
+        unicodes = float(self._actual_types['unicode'])
+        basestrings = strings + unicodes
+        basestring_ratio = basestrings / self._count
+        most_common = self._actual_types.most_common(1)
+        most_common_type = most_common[0][0]
+        most_common_count = float(most_common[0][1])
+        most_common_ratio = most_common_count / self._count
+        if int_ratio > self._threshold and self._applicable_types['int'] == self._applicable_types['float'] and self._actual_types['float'] == 0:
+            self._inferred_type = 'int'
+        elif float_ratio > self._threshold:
+            self._inferred_type = 'float'
+        elif basestring_ratio > self._threshold and self._actual_types['unicode'] > 0:
+            self._inferred_type = 'unicode'
+        elif basestring_ratio > self._threshold:
+            self._inferred_type = 'str'
+        elif most_common_ratio > self._threshold:
+            self._inferred_type = most_common_type
+        else:
+            self._inferred_type = None
+        # TODO review inference rules
+        
+        d('build report')
         data = {
                 'actual_types': self._actual_types,
                 'applicable_types': self._applicable_types,
                 'inferred_type': self._inferred_type
                 }
+
         return ('types', data)
     
