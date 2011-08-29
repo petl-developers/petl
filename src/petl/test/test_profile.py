@@ -20,61 +20,121 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 
 
-d('begin tests')
-
-
-def test_profile():
-    """
-    TODO doc me
-
-    """
+def test_profile_default():
+    """TODO doc me"""
 
     table = [['foo', 'bar', 'baz'],
-             ['A', 1, 0.2],
-             ['B', '2', 3.4],
-             [u'B', u'3', 7.8, True],
-             ['D', 'xyz', 9],
+             ['A', 1, 2],
+             ['B', '2', '3.4'],
+             [u'B', u'3', u'7.8', True],
+             ['D', 'xyz', 9.0],
              ['E', None]]
 
     profiler = Profiler(table)
 
     d('profile the table with default analyses')
     report = profiler.profile()
-    assert report['table']['default']['fields'] == ('foo', 'bar', 'baz')
-    assert report['table']['default']['sample_size'] == 5
+    default = report['table']['default'] 
+    assert default['fields'] == ('foo', 'bar', 'baz')
+    assert default['sample_size'] == 5
 
-    d('add row lengths analysis')
+
+def test_profile_row_lengths():
+    """TODO doc me"""
+
+    table = [['foo', 'bar', 'baz'],
+             ['A', 1, 2],
+             ['B', '2', '3.4'],
+             [u'B', u'3', u'7.8', True],
+             ['D', 'xyz', 9.0],
+             ['E', None]]
+
+    profiler = Profiler(table)
+        
+    d('profile with row lengths analysis')
     profiler.add(RowLengths)
     report = profiler.profile()
-    assert report['table']['row_lengths']['max_row_length'] == 4
-    assert report['table']['row_lengths']['min_row_length'] == 2
-    assert report['table']['row_lengths']['mean_row_length'] == 3.
+    row_lengths = report['table']['row_lengths'] 
+    assert row_lengths['max_row_length'] == 4
+    assert row_lengths['min_row_length'] == 2
+    assert row_lengths['mean_row_length'] == 3.
 
-    d('add distinct values analysis on field "foo"')
+
+def test_profile_distinct_values():
+
+    table = [['foo', 'bar', 'baz'],
+             ['A', 1, 2],
+             ['B', '2', '3.4'],
+             [u'B', u'3', u'7.8', True],
+             ['D', 'xyz', 9.0],
+             ['E', None]]
+
+    profiler = Profiler(table)
+
+    d('profile with distinct values analysis on field "foo"')
     profiler.add(DistinctValues, field='foo')
     report = profiler.profile()
-    assert report['field']['foo']['distinct_values'] == {'A': 1, 'B': 2, 'D': 1, 'E': 1}
+    distinct_values = report['field']['foo']['distinct_values'] 
+    assert distinct_values == Counter({'A': 1, 'B': 2, 'D': 1, 'E': 1})
 
+
+def test_profile_basic_statistics():
+
+    table = [['foo', 'bar', 'baz'],
+             ['A', 1, 2],
+             ['B', '2', '3.4'],
+             [u'B', u'3', u'7.8', True],
+             ['D', 'xyz', 9.0],
+             ['E', None]]
+
+    profiler = Profiler(table)
+    
     d('add basic statistics analysis on field "bar"')
     profiler.add(BasicStatistics, field='bar')
     report = profiler.profile()
-    assert report['field']['bar']['basic_statistics']['min'] == 1.0
-    assert report['field']['bar']['basic_statistics']['max'] == 3.0
-    assert report['field']['bar']['basic_statistics']['mean'] == 2.0
-    assert report['field']['bar']['basic_statistics']['sum'] == 6.0
-    assert report['field']['bar']['basic_statistics']['count'] == 3
-    assert report['field']['bar']['basic_statistics']['errors'] == 2
+    basic_statistics = report['field']['bar']['basic_statistics']
+    assert basic_statistics['min'] == 1.0
+    assert basic_statistics['max'] == 3.0
+    assert basic_statistics['mean'] == 2.0
+    assert basic_statistics['sum'] == 6.0
+    assert basic_statistics['count'] == 3
+    assert basic_statistics['errors'] == 2
 
+
+def test_profile_types():
+
+    table = [['foo', 'bar', 'baz'],
+             ['A', 1, 2],
+             ['B', '2', '3.4'],
+             [u'B', u'3', u'7.8', True],
+             ['D', 'xyz', 9.0],
+             ['E', None]]
+
+    profiler = Profiler(table)
+    
     d('add types analysis on all fields')
     profiler.add(Types) 
     report = profiler.profile()
-    assert report['field']['foo']['types']['actual_types'] == Counter({'str': 4, 'unicode': 1})
-    assert report['field']['foo']['types']['applicable_types'] == Counter({'str': 5, 'unicode': 5})     
-    assert report['field']['foo']['types']['inferred_type'] == 'unicode'    
-    assert report['field']['bar']['types']['actual_types'] == Counter({'int': 1, 'str': 2, 'unicode': 1, 'NoneType': 1})
-    assert report['field']['bar']['types']['applicable_types'] == Counter({'int': 3, 'float': 3, 'str': 5, 'unicode': 5})     
-    assert report['field']['bar']['types']['inferred_type'] == 'int'    
-    assert report['field']['baz']['types']['actual_types'] == Counter({'int': 1, 'float': 3})
-    assert report['field']['baz']['types']['applicable_types'] == Counter({'int': 4, 'float': 4, 'str': 4, 'unicode': 4})     
-    assert report['field']['baz']['types']['inferred_type'] == 'float'    
+
+    foo_types = report['field']['foo']['types'] 
+    assert foo_types['actual_types'] == Counter({'str': 4, 'unicode': 1})
+    assert foo_types['parse_types'] == Counter()
+
+    bar_types = report['field']['bar']['types'] 
+    assert bar_types['actual_types'] == Counter({'int': 1, 
+                                                 'str': 2, 
+                                                 'unicode': 1, 
+                                                 'NoneType': 1})
+    assert bar_types['parse_types'] == Counter({'int': 2, 
+                                                'float': 2})
+
+    baz_types = report['field']['baz']['types']
+    assert baz_types['actual_types'] == Counter({'int': 1, 
+                                                 'float': 1,
+                                                 'str': 1,
+                                                 'unicode': 1, 
+                                                 'ellipsis': 1})
+    assert baz_types['parse_types'] == Counter({'float': 2})     
+    
+    # TODO dates, times etc.
 

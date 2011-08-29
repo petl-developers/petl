@@ -72,10 +72,9 @@ class Profiler(object):
                 try:
                     value = row[field_index]
                 except IndexError:
-                    pass # TODO
-                else:
-                    for analysis in field_analyses[field]:
-                        analysis.accept_value(value)
+                    value = Ellipsis
+                for analysis in field_analyses[field]:
+                    analysis.accept_value(value)
         
         d('build the report')
         report['table']['default']['sample_size'] = sample_size
@@ -186,58 +185,30 @@ class Types(object):
         self._threshold = threshold
         self._count = 0
         self._actual_types = Counter()
-        self._applicable_types = Counter()
+        self._parse_types = Counter()
         self._inferred_type = None
 
     def accept_value(self, value):
         self._count += 1
         cls = value.__class__
         self._actual_types[cls.__name__] += 1
-        for cls in (int, float, str, unicode):
-            try:
-                cls(value)
-            except ValueError:
-                pass
-            except TypeError:
-                pass
-            else:
-                self._applicable_types[cls.__name__] += 1
+        if isinstance(value, basestring):
+            for cls in (int, float): # TODO dates
+                try:
+                    cls(value)
+                except ValueError:
+                    pass
+                except TypeError:
+                    pass
+                else:
+                    self._parse_types[cls.__name__] += 1
 
     def report(self):
 
-        d('infer type')
-        # int has highest priority
-        ints = float(self._applicable_types['int'])
-        int_ratio = ints / self._count
-        floats = float(self._applicable_types['float'])
-        float_ratio = floats / self._count
-        strings = float(self._actual_types['str'])
-        unicodes = float(self._actual_types['unicode'])
-        basestrings = strings + unicodes
-        basestring_ratio = basestrings / self._count
-        most_common = self._actual_types.most_common(1)
-        most_common_type = most_common[0][0]
-        most_common_count = float(most_common[0][1])
-        most_common_ratio = most_common_count / self._count
-        if int_ratio > self._threshold and self._applicable_types['int'] == self._applicable_types['float'] and self._actual_types['float'] == 0:
-            self._inferred_type = 'int'
-        elif float_ratio > self._threshold:
-            self._inferred_type = 'float'
-        elif basestring_ratio > self._threshold and self._actual_types['unicode'] > 0:
-            self._inferred_type = 'unicode'
-        elif basestring_ratio > self._threshold:
-            self._inferred_type = 'str'
-        elif most_common_ratio > self._threshold:
-            self._inferred_type = most_common_type
-        else:
-            self._inferred_type = None
-        # TODO review inference rules
-        
         d('build report')
         data = {
                 'actual_types': self._actual_types,
-                'applicable_types': self._applicable_types,
-                'inferred_type': self._inferred_type
+                'parse_types': self._parse_types
                 }
 
         return ('types', data)
