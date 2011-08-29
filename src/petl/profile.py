@@ -186,12 +186,13 @@ class Types(object):
         self._count = 0
         self._actual_types = Counter()
         self._parse_types = Counter()
-        self._inferred_type = None
+        self._consensus_types = Counter()
 
     def accept_value(self, value):
         self._count += 1
         cls = value.__class__
         self._actual_types[cls.__name__] += 1
+        self._consensus_types[cls.__name__] += 1
         if isinstance(value, basestring):
             for cls in (int, float): # TODO dates
                 try:
@@ -202,13 +203,15 @@ class Types(object):
                     pass
                 else:
                     self._parse_types[cls.__name__] += 1
+                    self._consensus_types[cls.__name__] += 1
 
     def report(self):
 
         d('build report')
         data = {
                 'actual_types': self._actual_types,
-                'parse_types': self._parse_types
+                'parse_types': self._parse_types,
+                'consensus_types': self._consensus_types
                 }
 
         return ('types', data)

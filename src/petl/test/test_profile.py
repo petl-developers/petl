@@ -119,6 +119,7 @@ def test_profile_types():
     foo_types = report['field']['foo']['types'] 
     assert foo_types['actual_types'] == Counter({'str': 4, 'unicode': 1})
     assert foo_types['parse_types'] == Counter()
+    assert foo_types['consensus_types'] == Counter({'str': 4, 'unicode': 1})
 
     bar_types = report['field']['bar']['types'] 
     assert bar_types['actual_types'] == Counter({'int': 1, 
@@ -127,6 +128,11 @@ def test_profile_types():
                                                  'NoneType': 1})
     assert bar_types['parse_types'] == Counter({'int': 2, 
                                                 'float': 2})
+    assert bar_types['consensus_types'] == Counter({'int': 3, 
+                                                    'float': 2, 
+                                                    'str': 2, 
+                                                    'unicode': 1,
+                                                    'NoneType': 1})
 
     baz_types = report['field']['baz']['types']
     assert baz_types['actual_types'] == Counter({'int': 1, 
@@ -135,6 +141,10 @@ def test_profile_types():
                                                  'unicode': 1, 
                                                  'ellipsis': 1})
     assert baz_types['parse_types'] == Counter({'float': 2})     
-    
+    assert baz_types['consensus_types'] == Counter({'float': 3, 
+                                                    'int': 1,
+                                                    'str': 1,
+                                                    'unicode': 1,
+                                                    'ellipsis': 1})
     # TODO dates, times etc.
 
