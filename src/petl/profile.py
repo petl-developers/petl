@@ -123,7 +123,7 @@ class RowLengths(object):
                 'row_lengths_sum': self._row_lengths_sum,
                 'min_row_length': self._min_row_length,
                 'max_row_length': self._max_row_length,
-                'mean_row_length': self._row_lengths_sum / self._row_count
+                'mean_row_length': float(self._row_lengths_sum) / self._row_count
                 }
         return ('row_lengths', data)
     
