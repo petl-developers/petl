@@ -96,7 +96,61 @@ class Profiler(object):
         if hasattr(it, 'close'):
             it.close()
         
-        return report
+        return ReportWrapper(report)
+
+
+class ReportWrapper(object):
+    
+    def __init__(self, report):
+        self._report = report
+        
+    def __getitem__(self, item):
+        return self._report[item]
+        
+    def __repr__(self):
+        r = """
+==============
+Profile Report
+==============
+
+"""
+        table = self['table']
+        for analysis in table:
+            for metric in table[analysis]:
+                value = table[analysis][metric]
+                if isinstance(value, (list, tuple)):
+                    value = ", ".join(map(repr, value))
+                r += "{metric}: {value}\n".format(metric=metric.replace('_', ' '), 
+                                                     value=value)
+                
+        for field in table['default']['fields']:
+            header = "Field: {field}".format(field=field)
+            r += '\n{header}\n'.format(header=header)
+            r += '=' * len(header)
+            r += '\n'
+            for analysis in self['field'][field]:
+                subhead = "{analysis}".format(analysis=analysis.replace('_', ' '))
+                r += '\n{subhead}\n'.format(subhead=subhead)
+                r += '-' * len(subhead)
+                r += '\n'
+                data = self['field'][field][analysis]
+                if isinstance(data, Counter):
+                    for item, count in data.most_common():
+                        r += "%(item)r: %(count)s\n" % {'item':item, 'count': count}
+                else:
+                    for metric in sorted(self['field'][field][analysis]):
+                        value = self['field'][field][analysis][metric]
+                        if isinstance(value, (list, tuple)):
+                            value = ", ".join(value)
+                        elif isinstance(value, Counter):
+                            value = value.most_common()
+                            value = map(lambda v: '{v[0]}: {v[1]}'.format(v=v), value)
+                            value = ", ".join(value)
+                        r += "{metric}: {value}\n".format(metric=str(metric).replace('_', ' '), 
+                                                             value=value)
+                    
+
+        return r
 
 
 class RowLengths(object):
