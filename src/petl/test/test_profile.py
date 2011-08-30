@@ -156,7 +156,7 @@ def test_profile_types_datetime():
              [date(1999, 12, 31)],
              ['31/12/99'],
              [' 31/12/1999 '], # throw some ws in as well
-             ['31 Dec 99'],
+             [u'31 Dec 99'],
              ['31 Dec 1999'],
              ['31. Dec. 1999'],
              ['31 December 1999'], 
@@ -183,14 +183,49 @@ def test_profile_types_datetime():
 
     profiler = Profiler(table)
     
-    d('add date_types analysis on "date" field')
+    d('add types analysis on "date" field')
     profiler.add(Types, field='date') 
     report = profiler.profile()
 
     date_types = report['field']['date']['types']
-    assert date_types['actual_types'] == Counter({'date': 1, 'str': 24, 'NoneType': 1})
+    assert date_types['actual_types'] == Counter({'date': 1, 
+                                                  'str': 23, 
+                                                  'unicode': 1, 
+                                                  'NoneType': 1})
     assert date_types['parse_types'] == Counter({'date': 23})
-    assert date_types['consensus_types'] == Counter({'date': 24, 'str': 24, 'NoneType': 1})
+    assert date_types['consensus_types'] == Counter({'date': 24, 
+                                                     'str': 23, 
+                                                     'unicode': 1, 
+                                                     'NoneType': 1})
 
-    # TODO datetimes, times etc.
+    table = [['time'],
+             [time(13, 37, 46)],
+             ['13:37'],
+             [' 13:37:46 '], # throw some ws in as well
+             [u'01:37 PM'],
+             ['01:37:46 PM'],
+             ['37:46.00'],
+             ['13:37:46.00'], 
+             ['I am not a time.'], 
+             [None]
+             ] 
+
+    profiler = Profiler(table)
+    
+    d('add types analysis on "time" field')
+    profiler.add(Types, field='time') 
+    report = profiler.profile()
+    
+    time_types = report['field']['time']['types']
+    assert time_types['actual_types'] == Counter({'time': 1, 
+                                                  'str': 6, 
+                                                  'unicode': 1, 
+                                                  'NoneType': 1})
+    assert time_types['parse_types'] == Counter({'time': 6})
+    assert time_types['consensus_types'] == Counter({'time': 7, 
+                                                     'str': 6,
+                                                     'unicode': 1,
+                                                     'NoneType': 1})
+
+    # TODO datetimes
 
