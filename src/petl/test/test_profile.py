@@ -6,6 +6,7 @@ TODO doc me
 
 import logging
 import sys
+from datetime import date, time, datetime
 
 
 from petl.profile import *
@@ -151,21 +152,45 @@ def test_profile_types():
 
 def test_profile_types_datetime():
 
-    table = [['when',],
-             ['2009-08-12',], # iso 8601
-             ['12/08/2009',], # TODO
-             [u'12/31/2009'], # TODO
+    table = [['date'],
+             [date(1999, 12, 31)],
+             ['31/12/99'],
+             [' 31/12/1999 '], # throw some ws in as well
+             ['31 Dec 99'],
+             ['31 Dec 1999'],
+             ['31. Dec. 1999'],
+             ['31 December 1999'], 
+             ['31. December 1999'], 
+             ['Fri 31 Dec 99'],
+             ['Fri 31/Dec 99'],
+             ['Fri 31 December 1999'],
+             ['Friday 31 December 1999'],
+             ['12-31'],
+             ['99-12-31'],
+             ['1999-12-31'], # iso 8601
+             ['12/99'],
+             ['31/Dec'],
+             ['12/31/99'],
+             ['12/31/1999'],
+             ['Dec 31, 99'],
+             ['Dec 31, 1999'],
+             ['December 31, 1999'],
+             ['Fri, Dec 31, 99'],
+             ['Fri, December 31, 1999'],
+             ['I am not a date.'],
+             [None]
              ] 
 
     profiler = Profiler(table)
     
-    d('add types analysis on "when" field')
-    profiler.add(Types, field='when') 
+    d('add date_types analysis on "date" field')
+    profiler.add(Types, field='date') 
     report = profiler.profile()
 
-    types = report['field']['when']['types']
-    assert types['actual_types'] = Counter({'str': 2, 'unicode': 1})
-    assert types['parse_types'] = Counter({'date_iso8601': 1})
+    date_types = report['field']['date']['types']
+    assert date_types['actual_types'] == Counter({'date': 1, 'str': 24, 'NoneType': 1})
+    assert date_types['parse_types'] == Counter({'date': 23})
+    assert date_types['consensus_types'] == Counter({'date': 24, 'str': 24, 'NoneType': 1})
 
-    # TODO dates, times etc.
+    # TODO datetimes, times etc.
 

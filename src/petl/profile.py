@@ -7,6 +7,7 @@ TODO doc me
 import logging
 from itertools import islice
 from collections import defaultdict, Counter
+from datetime import datetime, date, time
 
 
 logger = logging.getLogger('petl')
@@ -178,6 +179,31 @@ class BasicStatistics(object):
 
         return ('basic_statistics', data)
     
+    
+date_formats = {'%d/%m/%y',
+                '%d/%m/%Y',
+                '%d %b %y',
+                '%d %b %Y',
+                '%d. %b. %Y',
+                '%d %B %Y',
+                '%d. %B %Y',
+                '%a %d %b %y',
+                '%a %d/%b %y',
+                '%a %d %B %Y',
+                '%A %d %B %Y',
+                '%m-%d',
+                '%y-%m-%d',
+                '%Y-%m-%d',
+                '%m/%y',
+                '%d/%b',
+                '%m/%d/%y',
+                '%m/%d/%Y',
+                '%b %d, %y',
+                '%b %d, %Y',
+                '%B %d, %Y',
+                '%a, %b %d, %y',
+                '%a, %B %d, %Y'}
+
 
 class Types(object):
     
@@ -194,7 +220,7 @@ class Types(object):
         self._actual_types[cls.__name__] += 1
         self._consensus_types[cls.__name__] += 1
         if isinstance(value, basestring):
-            for cls in (int, float): # TODO dates
+            for cls in (int, float): # TODO dates, times, datetimes, booleans
                 try:
                     cls(value)
                 except ValueError:
@@ -204,6 +230,16 @@ class Types(object):
                 else:
                     self._parse_types[cls.__name__] += 1
                     self._consensus_types[cls.__name__] += 1
+            for fmt in date_formats:
+                try:
+                    datetime.strptime(value.strip(), fmt)
+                except ValueError:
+                    pass
+                except TypeError:
+                    pass
+                else:
+                    self._parse_types[date.__name__] += 1
+                    self._consensus_types[date.__name__] += 1
 
     def report(self):
 
