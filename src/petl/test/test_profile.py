@@ -146,5 +146,26 @@ def test_profile_types():
                                                     'str': 1,
                                                     'unicode': 1,
                                                     'ellipsis': 1})
+
+
+
+def test_profile_types_datetime():
+
+    table = [['when',],
+             ['2009-08-12',], # iso 8601
+             ['12/08/2009',], # TODO
+             [u'12/31/2009'], # TODO
+             ] 
+
+    profiler = Profiler(table)
+    
+    d('add types analysis on "when" field')
+    profiler.add(Types, field='when') 
+    report = profiler.profile()
+
+    types = report['field']['when']['types']
+    assert types['actual_types'] = Counter({'str': 2, 'unicode': 1})
+    assert types['parse_types'] = Counter({'date_iso8601': 1})
+
     # TODO dates, times etc.
 
