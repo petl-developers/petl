@@ -180,7 +180,14 @@ class BasicStatistics(object):
         return ('basic_statistics', data)
     
     
-date_formats = {'%d/%m/%y',
+# N.B., this list of date, time and datetime formats is far inferior to the set
+# of formats recognised by the Python dateutil package. If you want to do any
+# serious profiling of datetimes, use the Types analysis from petlx (TODO) 
+
+
+date_formats = {
+                '%x',
+                '%d/%m/%y',
                 '%d/%m/%Y',
                 '%d %b %y',
                 '%d %b %Y',
@@ -202,8 +209,65 @@ date_formats = {'%d/%m/%y',
                 '%b %d, %Y',
                 '%B %d, %Y',
                 '%a, %b %d, %y',
-                '%a, %B %d, %Y'}
+                '%a, %B %d, %Y',
+                '%A, %d. %B %Y'
+                }
 
+
+time_formats = {
+                '%X',
+                '%H:%M',
+                '%H:%M:%S',
+                '%I:%M %p',
+                '%I:%M:%S %p',
+                '%M:%S.%f',
+                '%H:%M:%S.%f',
+                '%I:%M:%S.%f %p',
+                '%I:%M%p',
+                '%I:%M:%S%p',
+                '%I:%M:%S.%f%p'
+                }
+
+
+datetime_formats = {
+                    '%Y-%m-%dT%H:%M:%S',
+                    '%Y-%m-%d %H:%M:%S',
+                    '%Y-%m-%dT%H:%M:%S.%f',
+                    '%Y-%m-%d %H:%M:%S.%f'
+                    }
+
+
+def datetime_cls(value):
+    formats = {datetime: datetime_formats,
+               date: date_formats,
+               time: time_formats}
+    value = value.strip()
+    for cls in formats:
+        for fmt in formats[cls]:
+            try:
+                datetime.strptime(value, fmt)
+            except ValueError:
+                pass
+            except TypeError:
+                pass
+            else:
+                return cls
+    return None
+
+
+true_strings = {'true', 't', 'yes', 'y', '1'}
+false_strings = {'false', 'f', 'no', 'n', '0'}
+
+
+def bool_(value):
+    value = value.strip().lower()
+    if value in true_strings:
+        return True
+    elif value in false_strings:
+        return False
+    else:
+        raise ValueError('value is not one of recognised boolean representations: %s' % value)
+    
 
 class Types(object):
     
@@ -220,7 +284,7 @@ class Types(object):
         self._actual_types[cls.__name__] += 1
         self._consensus_types[cls.__name__] += 1
         if isinstance(value, basestring):
-            for cls in (int, float): # TODO dates, times, datetimes, booleans
+            for cls in (int, float): 
                 try:
                     cls(value)
                 except ValueError:
@@ -230,16 +294,19 @@ class Types(object):
                 else:
                     self._parse_types[cls.__name__] += 1
                     self._consensus_types[cls.__name__] += 1
-            for fmt in date_formats:
-                try:
-                    datetime.strptime(value.strip(), fmt)
-                except ValueError:
-                    pass
-                except TypeError:
-                    pass
-                else:
-                    self._parse_types[date.__name__] += 1
-                    self._consensus_types[date.__name__] += 1
+            dt_cls = datetime_cls(value)
+            if dt_cls is not None:
+                self._parse_types[dt_cls.__name__] += 1
+                self._consensus_types[dt_cls.__name__] += 1
+            try:
+                bool_(value)
+            except ValueError:
+                pass
+            except TypeError:
+                pass
+            else:
+                self._parse_types[bool.__name__] += 1
+                self._consensus_types[bool.__name__] += 1
 
     def report(self):
 

@@ -7,9 +7,11 @@ TODO doc me
 import logging
 import sys
 from datetime import date, time, datetime
+from collections import Counter
 
 
-from petl.profile import *
+from petl.profile import Profiler, RowLengths, DistinctValues, BasicStatistics,\
+    Types
 
 
 logger = logging.getLogger('petl')
@@ -177,6 +179,7 @@ def test_profile_types_datetime():
              ['December 31, 1999'],
              ['Fri, Dec 31, 99'],
              ['Fri, December 31, 1999'],
+             ['Friday, 31. December 1999'],
              ['I am not a date.'],
              [None]
              ] 
@@ -189,12 +192,12 @@ def test_profile_types_datetime():
 
     date_types = report['field']['date']['types']
     assert date_types['actual_types'] == Counter({'date': 1, 
-                                                  'str': 23, 
+                                                  'str': 24, 
                                                   'unicode': 1, 
                                                   'NoneType': 1})
-    assert date_types['parse_types'] == Counter({'date': 23})
-    assert date_types['consensus_types'] == Counter({'date': 24, 
-                                                     'str': 23, 
+    assert date_types['parse_types'] == Counter({'date': 24})
+    assert date_types['consensus_types'] == Counter({'date': 25, 
+                                                     'str': 24, 
                                                      'unicode': 1, 
                                                      'NoneType': 1})
 
@@ -206,6 +209,10 @@ def test_profile_types_datetime():
              ['01:37:46 PM'],
              ['37:46.00'],
              ['13:37:46.00'], 
+             ['01:37:46.00 PM'],
+             ['01:37PM'],
+             ['01:37:46PM'],
+             ['01:37:46.00PM'],
              ['I am not a time.'], 
              [None]
              ] 
@@ -218,14 +225,81 @@ def test_profile_types_datetime():
     
     time_types = report['field']['time']['types']
     assert time_types['actual_types'] == Counter({'time': 1, 
-                                                  'str': 6, 
+                                                  'str': 10, 
                                                   'unicode': 1, 
                                                   'NoneType': 1})
-    assert time_types['parse_types'] == Counter({'time': 6})
-    assert time_types['consensus_types'] == Counter({'time': 7, 
-                                                     'str': 6,
+    assert time_types['parse_types'] == Counter({'time': 10})
+    assert time_types['consensus_types'] == Counter({'time': 11, 
+                                                     'str': 10,
                                                      'unicode': 1,
                                                      'NoneType': 1})
 
-    # TODO datetimes
+    table = [['datetime'],
+             [datetime(1999, 12, 31, 13, 37, 46)],
+             ['1999-12-31T13:37:46'],
+             [' 1999-12-31T13:37:46.00 '],
+             [u'1999-12-31 13:37:46'],
+             ['1999-12-31 13:37:46.00'],
+             ['I am not a datetime.'], 
+             [None]
+             ] 
+
+    profiler = Profiler(table)
+    
+    d('add types analysis on "datetime" field')
+    profiler.add(Types, field='datetime') 
+    report = profiler.profile()
+    
+    datetime_types = report['field']['datetime']['types']
+    assert datetime_types['actual_types'] == Counter({'datetime': 1, 
+                                                      'str': 4, 
+                                                      'unicode': 1, 
+                                                      'NoneType': 1})
+    assert datetime_types['parse_types'] == Counter({'datetime': 4})
+    assert datetime_types['consensus_types'] == Counter({'datetime': 5, 
+                                                         'str': 4,
+                                                         'unicode': 1,
+                                                         'NoneType': 1})
+
+
+def test_profile_types_bool():
+
+    table = [['bool'],
+             [True],
+             [False],
+             ['true'],
+             [' True '], # throw some ws in as well
+             [u'false'],
+             ['T'],
+             ['f'],
+             ['yes'], 
+             ['No'], 
+             ['Y'],
+             ['n'],
+             ['1'],
+             ['0'],
+             ['I am not a bool.'],
+             [None]
+             ] 
+
+    profiler = Profiler(table)
+    
+    d('add types analysis on "bool" field')
+    profiler.add(Types, field='bool') 
+    report = profiler.profile()
+
+    bool_types = report['field']['bool']['types']
+    assert bool_types['actual_types'] == Counter({'bool': 2, 
+                                                  'str': 11, 
+                                                  'unicode': 1, 
+                                                  'NoneType': 1})
+    assert bool_types['parse_types'] == Counter({'bool': 11,
+                                                 'int': 2,
+                                                 'float': 2})
+    assert bool_types['consensus_types'] == Counter({'bool': 13, 
+                                                     'str': 11, 
+                                                     'int': 2,
+                                                     'float': 2,
+                                                     'unicode': 1, 
+                                                     'NoneType': 1})
 
