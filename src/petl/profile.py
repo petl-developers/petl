@@ -21,178 +21,199 @@ class Profiler(object):
     """
 
 
-    def __init__(self, table=None, max_sample_size=0):
-        assert isinstance(max_sample_size, int), 'max_sample_size must be an int'
-        self._table = table
-        self._max_sample_size = max_sample_size
-        self._analyses = list()
+    def __init__(self, table=None, start=0, stop=None, step=1):
+        self.table = table
+        self.start = start
+        self.stop = stop
+        self.step = step
+        self.analysis_classes = set()
 
 
-    def add(self, analysis, field=None):
-        self._analyses.append((analysis, field))
+    def add(self, cls, field=None):
+        self.analysis_classes.add((cls, field))
 
 
     def profile(self):
         
-        d('setup the report')
-        report = dict()
-        report['table'] = dict()
-        report['field'] = dict()
-        it = iter(self._table)
-        fields = it.next()
-        report['table']['default'] = dict()
-        report['table']['default']['fields'] = tuple(fields)
-        for f in fields:
-            report['field'][f] = dict()
+        d('create an iterator')
+        it = iter(self.table)
+        
+        try:
+            
+            d('get field names')
+            fields = it.next()
 
-        d('setup analyses')
-        table_analyses = [cls() for cls, field in self._analyses if hasattr(cls, 'accept_row')]
-        field_analyses = defaultdict(list)
-        for cls, field in self._analyses:
-            if hasattr(cls, 'accept_value'):
-                if field is not None:
-                    # add analysis on a single field
-                    field_analyses[field].append(cls())
+            d('adapt iterator to sampling parameters')
+            it = islice(it, self.start, self.stop, self.step)
+            
+            d('normalise analysis classes, now we know the field names')
+            row_analysis_classes = set()
+            value_analysis_classes = dict()
+            for f in fields:
+                value_analysis_classes[f] = set()
+            for cls, field in self.analysis_classes:
+                if hasattr(cls, 'accept_row'):
+                    # ignore the field name, this is a row analysis
+                    row_analysis_classes.add(cls)
+                elif hasattr(cls, 'accept_value'):
+                    if field is None:
+                        # add on all fields
+                        for f in fields:
+                            value_analysis_classes[f].add(cls)
+                    else:
+                        value_analysis_classes[field].add(cls)
                 else:
-                    # add analysis on all fields (not field specified)
-                    for field in fields:
-                        field_analyses[field].append(cls())
-        
-        d('deal with sampling')
-        if self._max_sample_size:
-            it = islice(it, 0, self._max_sample_size-1)
-
-        d('profile the data')
-        sample_size = 0
-        for row in it:
-            sample_size += 1
-            for analysis in table_analyses:
-                analysis.accept_row(row)
-            for field in fields:
-                field_index = fields.index(field)
-                try:
-                    value = row[field_index]
-                except IndexError:
-                    value = Ellipsis
-                for analysis in field_analyses[field]:
-                    analysis.accept_value(value)
-        
-        d('build the report')
-        report['table']['default']['sample_size'] = sample_size
-        for analysis in table_analyses:
-            key, data = analysis.report()
-            d(key)
-            d(data)
-            report['table'][key] = data
-        for field in fields:
-            for analysis in field_analyses[field]:
-                key, data = analysis.report()
-                d(field)
-                d(key)
-                d(data)
-                report['field'][field][key] = data
-
-        d('clean up')
-        if hasattr(it, 'close'):
-            it.close()
-        
-        return ReportWrapper(report)
-
-
-class ReportWrapper(object):
-    
-    def __init__(self, report):
-        self._report = report
-        
-    def __getitem__(self, item):
-        return self._report[item]
-        
-    def __repr__(self):
-        r = """
-==============
-Profile Report
-==============
-
-"""
-        table = self['table']
-        for analysis in table:
-            for metric in table[analysis]:
-                value = table[analysis][metric]
-                if isinstance(value, (list, tuple)):
-                    value = ", ".join(map(repr, value))
-                r += "{metric}: {value}\n".format(metric=metric.replace('_', ' '), 
-                                                     value=value)
-                
-        for field in table['default']['fields']:
-            header = "Field: {field}".format(field=field)
-            r += '\n{header}\n'.format(header=header)
-            r += '=' * len(header)
-            r += '\n'
-            for analysis in self['field'][field]:
-                subhead = "{analysis}".format(analysis=analysis.replace('_', ' '))
-                r += '\n{subhead}\n'.format(subhead=subhead)
-                r += '-' * len(subhead)
-                r += '\n'
-                data = self['field'][field][analysis]
-                if isinstance(data, Counter):
-                    for item, count in data.most_common():
-                        r += "%(item)r: %(count)s\n" % {'item':item, 'count': count}
-                else:
-                    for metric in sorted(self['field'][field][analysis]):
-                        value = self['field'][field][analysis][metric]
-                        if isinstance(value, (list, tuple)):
-                            value = ", ".join(value)
-                        elif isinstance(value, Counter):
-                            value = value.most_common()
-                            value = map(lambda v: '{v[0]}: {v[1]}'.format(v=v), value)
-                            value = ", ".join(value)
-                        r += "{metric}: {value}\n".format(metric=str(metric).replace('_', ' '), 
-                                                             value=value)
+                    it.close()
+                    raise Exception('analysis class has neither accept_row or accept_value method: %(0)s' % cls)
+            
+            d('instantiate analysis_classes')
+            row_analyses = [cls() for cls in row_analysis_classes]
+            value_analyses = defaultdict(list)
+            for f in fields:
+                for cls in value_analysis_classes[f]:
+                    value_analyses[f].append(cls())
                     
+            d('set up containers for example data')
+            example_data = dict()
+            for f in fields:
+                example_data[f] = list()
 
+            d('profile the data')
+            sample_size = 0
+            store_examples = True
+            for row in it:
+                sample_size += 1
+                if store_examples:
+                    if sample_size > 5:
+                        store_examples = False
+                for analysis in row_analyses:
+                    analysis.accept_row(row)
+                for f in fields:
+                    index = fields.index(f)
+                    try:
+                        value = row[index]
+                    except IndexError:
+                        value = Ellipsis
+                    for analysis in value_analyses[f]:
+                        analysis.accept_value(value)
+                    if store_examples:
+                        example_data[f].append(value)
+
+            d('construct the report')
+            report = ProfilingReport(fields=fields, 
+                                     sample_size=sample_size, 
+                                     start=self.start, 
+                                     stop=self.stop, 
+                                     step=self.step,
+                                     row_analyses=row_analyses,
+                                     value_analyses=value_analyses,
+                                     example_data=example_data)
+            return report
+            
+        except:
+            raise
+        finally:
+            # make sure iterator is closed, even if not exhausted
+            if hasattr(it, 'close'):
+                it.close()
+            
+
+class ProfilingReport(object):
+    
+    def __init__(self, fields, sample_size, start, stop, step, row_analyses, 
+                 value_analyses, example_data):
+        self.fields = fields
+        self.sample_size = sample_size
+        self.start = start
+        self.stop = stop
+        self.step = step
+        self.row_analyses = row_analyses
+        self.value_analyses = value_analyses
+        self.example_data = example_data
+        
+    def __str__(self):
+        return repr(self)
+
+    def __repr__(self):
+        
+        r = """
+================
+Profiling Report
+================
+"""
+        if self.stop is None:
+            preamble = """
+Profiling was carried out on %(sample_size)s rows in total. Rows were selected 
+by sampling 1 in every %(step)s rows, starting from row %(start)s.
+""" 
+        else:
+            preamble = """
+Profiling was carried out on %(sample_size)s rows in total. Rows were selected 
+by sampling 1 in every %(step)s rows, starting from row %(start)s and ending at
+row %(stop)s.
+""" 
+        preamble = preamble % {'sample_size': self.sample_size, 
+                               'step': self.step,
+                               'start': self.start,
+                               'stop': self.stop}
+        r += preamble
+        
+        r += "\nFields:\n"
+        for i, f in enumerate(self.fields):
+            r += "%(index)s. %(field)r\n" % {'index': i+1,
+                                             'field': f}
+
+        for analysis in self.row_analyses:
+            r += repr(analysis)
+
+        for i, f in enumerate(self.fields):
+            heading = '\n%(index)s. Field: %(field)r\n' % {'index': i+1,
+                                                           'field': f}
+            r += heading
+            r += '=' * len(heading)
+            r += '\n'
+            r += '\nExample data: %s\n' % ", ".join(map(repr, self.example_data[f])) 
+            
+            for analysis in self.value_analyses[f]:
+                r += repr(analysis)
+                
         return r
 
 
+def repr_counter(counter):
+    r = ", ".join('%r (%s)' % (k, counter[k]) for k in sorted(counter))
+    return r
+    
+    
 class RowLengths(object):
 
     def __init__(self):
-        self._row_lengths_sum = 0
-        self._row_count = 0
-        self._min_row_length = None
-        self._max_row_length = None
+        self.counter = Counter()
         
     def accept_row(self, row):
         n = len(row)
-        self._row_count += 1
-        self._row_lengths_sum += n
-        if self._min_row_length is None or n < self._min_row_length:
-            self._min_row_length = n
-        if self._max_row_length is None or n > self._max_row_length:
-            self._max_row_length = n
+        self.counter[n] += 1
 
-    def report(self):
-        d('build a report of row lengths data')
-        data = {
-                'row_count': self._row_count,
-                'row_lengths_sum': self._row_lengths_sum,
-                'min_row_length': self._min_row_length,
-                'max_row_length': self._max_row_length,
-                'mean_row_length': float(self._row_lengths_sum) / self._row_count
-                }
-        return ('row_lengths', data)
-    
+    def __repr__(self):
+        r = """
+Row lengths: %s
+""" % repr_counter(self.counter)
+        return r
+
 
 class DistinctValues(object):
     
     def __init__(self):
-        self._counter = Counter()
+        self.counter = Counter()
 
     def accept_value(self, value):
-        self._counter[value] += 1
-
-    def report(self):
-        d('build a report of distinct values')
-        return ('distinct_values', self._counter)
+        self.counter[value] += 1
+        
+    def __repr__(self):
+        r = """
+Distinct values (most common): %s
+""" % ", ".join(('%r (%s)' % item for item in self.counter.most_common(20)))
+        return r
 
 
 class BasicStatistics(object):
