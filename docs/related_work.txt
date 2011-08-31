@@ -16,6 +16,51 @@ comparisons.
 Does require a uniform datatype for each column. All data is handled
 in memory.
 
+pandas (Python package)
+-----------------------
+
+- http://pandas.sourceforge.net/
+- http://pypi.python.org/pypi/pandas
+- http://github.com/wesm/pandas
+
+A Python library for analysis of relational/tabular data, built on
+NumPy, and inspired by R's dataframe concept. Functionality includes
+support for missing data, inserting and deleting columns, group
+by/aggregation, merging, joining, reshaping, pivoting.
+
+datarray (Python package)
+-------------------------
+
+- http://pypi.python.org/pypi/datarray
+- http://github.com/fperez/datarray
+- http://fperez.github.com/datarray-doc
+
+Datarray provides a subclass of Numpy ndarrays that support individual
+dimensions (axes) being labeled with meaningful descriptions labeled
+'ticks' along each axis indexing and slicing by named axis indexing on
+any axis with the tick labels instead of only integers reduction
+operations (like .sum, .mean, etc) support named axis arguments
+instead of only integer indices.
+
+pydataframe (Python package)
+----------------------------
+
+- http://code.google.com/p/pydataframe/
+
+An implemention of an almost R like DataFrame object.
+
+larry (Python package)
+----------------------
+
+- http://pypi.python.org/pypi/la
+
+The main class of the la package is a labeled array, larry. A larry
+consists of data and labels. The data is stored as a NumPy array and
+the labels as a list of lists (one list per dimension). larry has
+built-in methods such as ranking, merge, shuffle, move_sum, zscore,
+demean, lag as well as typical Numpy methods like sum, max, std, sign,
+clip. NaNs are treated as missing data.
+
 picalo (Python package)
 -----------------------
 
@@ -44,9 +89,9 @@ csvstack, csvstat, csvgrep, csvlook.
 csvutils (Python package)
 -------------------------
 
-TODO
-
 - http://pypi.python.org/pypi/csvutils
+
+TODO 
 
 Google Refine
 -------------
