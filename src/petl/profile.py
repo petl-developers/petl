@@ -455,3 +455,5 @@ Combined data type counts (actual + parsed): %s
         return r
 
     
+# TODO string lengths, string patterns, ...
+
