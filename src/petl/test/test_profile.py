@@ -6,7 +6,7 @@ TODO doc me
 
 import logging
 import sys
-from datetime import date, time, datetime
+from datetime import date, time
 from collections import Counter
 
 

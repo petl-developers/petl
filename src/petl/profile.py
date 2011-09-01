@@ -191,11 +191,10 @@ row %(stop)s (or the last row, whichever comes sooner).
 
         # construct a subsection for each field
         for i, f in enumerate(self.fields):
-            heading = '\n%(index)s. Field: %(field)r\n' % {'index': i+1,
-                                                           'field': f}
-            r += heading
-            r += '=' * len(heading)
-            r += '\n'
+            heading = '%(index)s. Field: %(field)r' % {'index': i+1,
+                                                       'field': f}
+            underline = '=' * len(heading)
+            r += '\n' + heading + '\n' + underline + '\n'
             r += '\nExample data: %s\n' % ", ".join(map(repr, self.example_data[f])) 
             
             # output results of value analyses for the current field
