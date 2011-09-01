@@ -11,7 +11,7 @@ from collections import Counter
 
 
 from petl.profile import Profiler, RowLengths, DistinctValues, BasicStatistics,\
-    Types
+    DataTypes
 
 
 logger = logging.getLogger('petl')
@@ -33,13 +33,11 @@ def test_profile_default():
              ['D', 'xyz', 9.0],
              ['E', None]]
 
-    profiler = Profiler(table)
-
     d('profile the table with default analyses')
-    report = profiler.profile()
-    default = report['table']['default'] 
-    assert default['fields'] == ('foo', 'bar', 'baz')
-    assert default['sample_size'] == 5
+    profiler = Profiler()
+    report = profiler.profile(table)
+    assert report.fields == ('foo', 'bar', 'baz')
+    assert report.sample_size == 5
 
 
 def test_profile_row_lengths():
@@ -52,15 +50,12 @@ def test_profile_row_lengths():
              ['D', 'xyz', 9.0],
              ['E', None]]
 
-    profiler = Profiler(table)
-        
     d('profile with row lengths analysis')
+    profiler = Profiler()
     profiler.add(RowLengths)
-    report = profiler.profile()
-    row_lengths = report['table']['row_lengths'] 
-    assert row_lengths['max_row_length'] == 4
-    assert row_lengths['min_row_length'] == 2
-    assert row_lengths['mean_row_length'] == 3.
+    report = profiler.profile(table)
+    row_lengths = report.get_analysis(RowLengths) 
+    assert row_lengths.counter == Counter({2: 1, 3: 3, 4: 1})
 
 
 def test_profile_distinct_values():
@@ -72,13 +67,12 @@ def test_profile_distinct_values():
              ['D', 'xyz', 9.0],
              ['E', None]]
 
-    profiler = Profiler(table)
-
     d('profile with distinct values analysis on field "foo"')
+    profiler = Profiler()
     profiler.add(DistinctValues, field='foo')
-    report = profiler.profile()
-    distinct_values = report['field']['foo']['distinct_values'] 
-    assert distinct_values == Counter({'A': 1, 'B': 2, 'D': 1, 'E': 1})
+    report = profiler.profile(table)
+    distinct_values = report.get_analysis(DistinctValues, field='foo') 
+    assert distinct_values.counter == Counter({'A': 1, 'B': 2, 'D': 1, 'E': 1})
 
 
 def test_profile_basic_statistics():
@@ -89,19 +83,18 @@ def test_profile_basic_statistics():
              [u'B', u'3', u'7.8', True],
              ['D', 'xyz', 9.0],
              ['E', None]]
-
-    profiler = Profiler(table)
     
     d('add basic statistics analysis on field "bar"')
+    profiler = Profiler()
     profiler.add(BasicStatistics, field='bar')
-    report = profiler.profile()
-    basic_statistics = report['field']['bar']['basic_statistics']
-    assert basic_statistics['min'] == 1.0
-    assert basic_statistics['max'] == 3.0
-    assert basic_statistics['mean'] == 2.0
-    assert basic_statistics['sum'] == 6.0
-    assert basic_statistics['count'] == 3
-    assert basic_statistics['errors'] == 2
+    report = profiler.profile(table)
+    basic_statistics = report.get_analysis(BasicStatistics, field='bar')
+    assert basic_statistics.min == 1.0
+    assert basic_statistics.max == 3.0
+    assert basic_statistics.sum == 6.0
+    assert basic_statistics.count == 3
+    assert basic_statistics.errors == 2
+    assert basic_statistics.mean() == 2.0
 
 
 def test_profile_types():
@@ -113,42 +106,41 @@ def test_profile_types():
              ['D', 'xyz', 9.0],
              ['E', None]]
 
-    profiler = Profiler(table)
-    
     d('add types analysis on all fields')
-    profiler.add(Types) 
-    report = profiler.profile()
+    profiler = Profiler()
+    profiler.add(DataTypes) 
+    report = profiler.profile(table)
 
-    foo_types = report['field']['foo']['types'] 
-    assert foo_types['actual_types'] == Counter({'str': 4, 'unicode': 1})
-    assert foo_types['parse_types'] == Counter()
-    assert foo_types['consensus_types'] == Counter({'str': 4, 'unicode': 1})
+    foo_types = report.get_analysis(DataTypes, field='foo') 
+    assert foo_types.actual_types == Counter({'str': 4, 'unicode': 1})
+    assert foo_types.parse_types == Counter()
+    assert foo_types.combined_types == Counter({'str': 4, 'unicode': 1})
 
-    bar_types = report['field']['bar']['types'] 
-    assert bar_types['actual_types'] == Counter({'int': 1, 
-                                                 'str': 2, 
-                                                 'unicode': 1, 
-                                                 'NoneType': 1})
-    assert bar_types['parse_types'] == Counter({'int': 2, 
-                                                'float': 2})
-    assert bar_types['consensus_types'] == Counter({'int': 3, 
-                                                    'float': 2, 
-                                                    'str': 2, 
-                                                    'unicode': 1,
-                                                    'NoneType': 1})
+    bar_types = report.get_analysis(DataTypes, field='bar') 
+    assert bar_types.actual_types == Counter({'int': 1, 
+                                              'str': 2, 
+                                              'unicode': 1, 
+                                              'NoneType': 1})
+    assert bar_types.parse_types == Counter({'int': 2, 
+                                             'float': 2})
+    assert bar_types.combined_types == Counter({'int': 3, 
+                                                'float': 2, 
+                                                'str': 2, 
+                                                'unicode': 1,
+                                                'NoneType': 1})
 
-    baz_types = report['field']['baz']['types']
-    assert baz_types['actual_types'] == Counter({'int': 1, 
-                                                 'float': 1,
-                                                 'str': 1,
-                                                 'unicode': 1, 
-                                                 'ellipsis': 1})
-    assert baz_types['parse_types'] == Counter({'float': 2})     
-    assert baz_types['consensus_types'] == Counter({'float': 3, 
-                                                    'int': 1,
-                                                    'str': 1,
-                                                    'unicode': 1,
-                                                    'ellipsis': 1})
+    baz_types = report.get_analysis(DataTypes, field='baz')
+    assert baz_types.actual_types == Counter({'int': 1, 
+                                              'float': 1,
+                                              'str': 1,
+                                              'unicode': 1, 
+                                              'ellipsis': 1})
+    assert baz_types.parse_types == Counter({'float': 2})     
+    assert baz_types.combined_types == Counter({'float': 3, 
+                                                'int': 1,
+                                                'str': 1,
+                                                'unicode': 1,
+                                                'ellipsis': 1})
 
 
 
@@ -184,22 +176,21 @@ def test_profile_types_datetime():
              [None]
              ] 
 
-    profiler = Profiler(table)
-    
     d('add types analysis on "date" field')
-    profiler.add(Types, field='date') 
-    report = profiler.profile()
+    profiler = Profiler()
+    profiler.add(DataTypes, field='date') 
+    report = profiler.profile(table)
 
-    date_types = report['field']['date']['types']
-    assert date_types['actual_types'] == Counter({'date': 1, 
-                                                  'str': 24, 
-                                                  'unicode': 1, 
-                                                  'NoneType': 1})
-    assert date_types['parse_types'] == Counter({'date': 24})
-    assert date_types['consensus_types'] == Counter({'date': 25, 
-                                                     'str': 24, 
-                                                     'unicode': 1, 
-                                                     'NoneType': 1})
+    date_types = report.get_analysis(DataTypes, field='date')
+    assert date_types.actual_types == Counter({'date': 1, 
+                                               'str': 24, 
+                                               'unicode': 1, 
+                                               'NoneType': 1})
+    assert date_types.parse_types == Counter({'date': 24})
+    assert date_types.combined_types == Counter({'date': 25, 
+                                                 'str': 24, 
+                                                 'unicode': 1, 
+                                                 'NoneType': 1})
 
     table = [['time'],
              [time(13, 37, 46)],
@@ -217,49 +208,21 @@ def test_profile_types_datetime():
              [None]
              ] 
 
-    profiler = Profiler(table)
-    
     d('add types analysis on "time" field')
-    profiler.add(Types, field='time') 
-    report = profiler.profile()
+    profiler = Profiler()
+    profiler.add(DataTypes, field='time') 
+    report = profiler.profile(table)
     
-    time_types = report['field']['time']['types']
-    assert time_types['actual_types'] == Counter({'time': 1, 
-                                                  'str': 10, 
-                                                  'unicode': 1, 
-                                                  'NoneType': 1})
-    assert time_types['parse_types'] == Counter({'time': 10})
-    assert time_types['consensus_types'] == Counter({'time': 11, 
-                                                     'str': 10,
-                                                     'unicode': 1,
-                                                     'NoneType': 1})
-
-    table = [['datetime'],
-             [datetime(1999, 12, 31, 13, 37, 46)],
-             ['1999-12-31T13:37:46'],
-             [' 1999-12-31T13:37:46.00 '],
-             [u'1999-12-31 13:37:46'],
-             ['1999-12-31 13:37:46.00'],
-             ['I am not a datetime.'], 
-             [None]
-             ] 
-
-    profiler = Profiler(table)
-    
-    d('add types analysis on "datetime" field')
-    profiler.add(Types, field='datetime') 
-    report = profiler.profile()
-    
-    datetime_types = report['field']['datetime']['types']
-    assert datetime_types['actual_types'] == Counter({'datetime': 1, 
-                                                      'str': 4, 
-                                                      'unicode': 1, 
-                                                      'NoneType': 1})
-    assert datetime_types['parse_types'] == Counter({'datetime': 4})
-    assert datetime_types['consensus_types'] == Counter({'datetime': 5, 
-                                                         'str': 4,
-                                                         'unicode': 1,
-                                                         'NoneType': 1})
+    time_types = report.get_analysis(DataTypes, field='time')
+    assert time_types.actual_types == Counter({'time': 1, 
+                                               'str': 10, 
+                                               'unicode': 1, 
+                                               'NoneType': 1})
+    assert time_types.parse_types == Counter({'time': 10})
+    assert time_types.combined_types == Counter({'time': 11, 
+                                                 'str': 10,
+                                                 'unicode': 1,
+                                                 'NoneType': 1})
 
 
 def test_profile_types_bool():
@@ -282,24 +245,23 @@ def test_profile_types_bool():
              [None]
              ] 
 
-    profiler = Profiler(table)
-    
     d('add types analysis on "bool" field')
-    profiler.add(Types, field='bool') 
-    report = profiler.profile()
+    profiler = Profiler()
+    profiler.add(DataTypes, field='bool') 
+    report = profiler.profile(table)
 
-    bool_types = report['field']['bool']['types']
-    assert bool_types['actual_types'] == Counter({'bool': 2, 
-                                                  'str': 11, 
-                                                  'unicode': 1, 
-                                                  'NoneType': 1})
-    assert bool_types['parse_types'] == Counter({'bool': 11,
+    bool_types = report.get_analysis(DataTypes, field='bool')
+    assert bool_types.actual_types == Counter({'bool': 2, 
+                                               'str': 11, 
+                                               'unicode': 1, 
+                                               'NoneType': 1})
+    assert bool_types.parse_types == Counter({'bool': 11,
+                                              'int': 2,
+                                              'float': 2})
+    assert bool_types.combined_types == Counter({'bool': 13, 
+                                                 'str': 11, 
                                                  'int': 2,
-                                                 'float': 2})
-    assert bool_types['consensus_types'] == Counter({'bool': 13, 
-                                                     'str': 11, 
-                                                     'int': 2,
-                                                     'float': 2,
-                                                     'unicode': 1, 
-                                                     'NoneType': 1})
+                                                 'float': 2,
+                                                 'unicode': 1, 
+                                                 'NoneType': 1})
 

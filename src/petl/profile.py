@@ -21,53 +21,59 @@ class Profiler(object):
     """
 
 
-    def __init__(self, table=None, start=0, stop=None, step=1):
-        self.table = table
-        self.start = start
-        self.stop = stop
-        self.step = step
-        self.analysis_classes = set()
+    def __init__(self):
+        self.row_analysis_classes = set()
+        self.value_analysis_classes = set()
 
 
     def add(self, cls, field=None):
-        self.analysis_classes.add((cls, field))
+        if hasattr(cls, 'accept_row'):
+            # ignore the field, this analysis accepts whole rows
+            self.row_analysis_classes.add(cls)
+        elif hasattr(cls, 'accept_value'):
+            # N.B., field=None implies the analysis should be done on all fields
+            self.value_analysis_classes.add((cls, field))
+        else:
+            raise Exception('analysis class has neither accept_row or accept_value method: %(0)s' % cls)
 
 
-    def profile(self):
+    def profile(self, table, start=1, stop=None, step=1):
+        """
+        TODO doc me
+        
+        """
         
         d('create an iterator')
-        it = iter(self.table)
+        table_iterator = iter(table)
         
         try:
             
             d('get field names')
-            fields = it.next()
+            fields = table_iterator.next()
 
             d('adapt iterator to sampling parameters')
-            it = islice(it, self.start, self.stop, self.step)
+            # N.B., index rows from 1
+            table_iterator = islice(table_iterator, 
+                                    start - 1, 
+                                    stop - 1 if stop is not None else stop, 
+                                    step)
             
-            d('normalise analysis classes, now we know the field names')
-            row_analysis_classes = set()
+            d('normalise value analysis classes, now we know the field names')
             value_analysis_classes = dict()
             for f in fields:
+                # use a set for each field to ensure the same analysis is not 
+                # duplicated
                 value_analysis_classes[f] = set()
-            for cls, field in self.analysis_classes:
-                if hasattr(cls, 'accept_row'):
-                    # ignore the field name, this is a row analysis
-                    row_analysis_classes.add(cls)
-                elif hasattr(cls, 'accept_value'):
-                    if field is None:
-                        # add on all fields
-                        for f in fields:
-                            value_analysis_classes[f].add(cls)
-                    else:
-                        value_analysis_classes[field].add(cls)
+            for cls, field in self.value_analysis_classes:
+                if field is None:
+                    # add on all fields
+                    for f in fields:
+                        value_analysis_classes[f].add(cls)
                 else:
-                    it.close()
-                    raise Exception('analysis class has neither accept_row or accept_value method: %(0)s' % cls)
+                    value_analysis_classes[field].add(cls)
             
             d('instantiate analysis_classes')
-            row_analyses = [cls() for cls in row_analysis_classes]
+            row_analyses = [cls() for cls in self.row_analysis_classes]
             value_analyses = defaultdict(list)
             for f in fields:
                 for cls in value_analysis_classes[f]:
@@ -81,7 +87,7 @@ class Profiler(object):
             d('profile the data')
             sample_size = 0
             store_examples = True
-            for row in it:
+            for row in table_iterator:
                 sample_size += 1
                 if store_examples:
                     if sample_size > 5:
@@ -100,11 +106,11 @@ class Profiler(object):
                         example_data[f].append(value)
 
             d('construct the report')
-            report = ProfilingReport(fields=fields, 
+            report = Report(fields=fields, 
                                      sample_size=sample_size, 
-                                     start=self.start, 
-                                     stop=self.stop, 
-                                     step=self.step,
+                                     start=start, 
+                                     stop=stop, 
+                                     step=step,
                                      row_analyses=row_analyses,
                                      value_analyses=value_analyses,
                                      example_data=example_data)
@@ -114,15 +120,15 @@ class Profiler(object):
             raise
         finally:
             # make sure iterator is closed, even if not exhausted
-            if hasattr(it, 'close'):
-                it.close()
+            if hasattr(table_iterator, 'close'):
+                table_iterator.close()
             
 
-class ProfilingReport(object):
+class Report(object):
     
     def __init__(self, fields, sample_size, start, stop, step, row_analyses, 
                  value_analyses, example_data):
-        self.fields = fields
+        self.fields = tuple(fields)
         self.sample_size = sample_size
         self.start = start
         self.stop = stop
@@ -130,6 +136,20 @@ class ProfilingReport(object):
         self.row_analyses = row_analyses
         self.value_analyses = value_analyses
         self.example_data = example_data
+        
+    def get_analysis(self, cls, field=None):
+        if hasattr(cls, 'accept_row'):
+            # ignore field argument
+            l = [a for a in self.row_analyses if isinstance(a, cls)]
+            if len(l) > 0:
+                return l[0]
+            return None
+        elif hasattr(cls, 'accept_value'):
+            if field in self.value_analyses:
+                l = [a for a in self.value_analyses[field] if isinstance(a, cls)]
+                if len(l) > 0:
+                    return l[0]
+            return None
         
     def __str__(self):
         return repr(self)
@@ -141,6 +161,7 @@ class ProfilingReport(object):
 Profiling Report
 ================
 """
+        # construct the preamble
         if self.stop is None:
             preamble = """
 Profiling was carried out on %(sample_size)s rows in total. Rows were selected 
@@ -150,7 +171,7 @@ by sampling 1 in every %(step)s rows, starting from row %(start)s.
             preamble = """
 Profiling was carried out on %(sample_size)s rows in total. Rows were selected 
 by sampling 1 in every %(step)s rows, starting from row %(start)s and ending at
-row %(stop)s.
+row %(stop)s (or the last row, whichever comes sooner).
 """ 
         preamble = preamble % {'sample_size': self.sample_size, 
                                'step': self.step,
@@ -158,14 +179,17 @@ row %(stop)s.
                                'stop': self.stop}
         r += preamble
         
+        # output a summary list of fields
         r += "\nFields:\n"
         for i, f in enumerate(self.fields):
             r += "%(index)s. %(field)r\n" % {'index': i+1,
                                              'field': f}
 
+        # output results from row analyses
         for analysis in self.row_analyses:
             r += repr(analysis)
 
+        # construct a subsection for each field
         for i, f in enumerate(self.fields):
             heading = '\n%(index)s. Field: %(field)r\n' % {'index': i+1,
                                                            'field': f}
@@ -174,6 +198,7 @@ row %(stop)s.
             r += '\n'
             r += '\nExample data: %s\n' % ", ".join(map(repr, self.example_data[f])) 
             
+            # output results of value analyses for the current field
             for analysis in self.value_analyses[f]:
                 r += repr(analysis)
                 
@@ -184,6 +209,18 @@ def repr_counter(counter):
     r = ", ".join('%r (%s)' % (k, counter[k]) for k in sorted(counter))
     return r
     
+    
+def str_counter(counter):
+    r = ", ".join('%s (%s)' % (k, counter[k]) for k in sorted(counter))
+    return r
+    
+def repr_counter_items(items):
+    return ", ".join(('%r (%s)' % item for item in items))
+
+    
+def str_counter_items(items):
+    return ", ".join(('%s (%s)' % item for item in items))
+
     
 class RowLengths(object):
 
@@ -202,6 +239,11 @@ Row lengths: %s
 
 
 class DistinctValues(object):
+    """
+    TODO doc me
+    
+    """
+    limit = 20
     
     def __init__(self):
         self.counter = Counter()
@@ -210,54 +252,73 @@ class DistinctValues(object):
         self.counter[value] += 1
         
     def __repr__(self):
-        r = """
-Distinct values (most common): %s
-""" % ", ".join(('%r (%s)' % item for item in self.counter.most_common(20)))
+        n = len(self.counter)
+        
+        if n <= self.limit:
+            # order by count
+            items = self.counter.most_common()
+            r = """
+Distinct values: %s
+""" % repr_counter_items(items)
+
+        else:
+            # limit the number we report, so the report doesn't get filled up
+            # with too many values
+            most_common = self.counter.most_common(self.limit)
+            least_common = self.counter.most_common()
+            least_common.reverse()
+            least_common = least_common[:self.limit]
+            r = """
+Distinct values (%s most common): %s
+
+Distinct values (%s least common): %s
+""" % (len(most_common), 
+       repr_counter_items(most_common),
+       len(least_common), 
+       repr_counter_items(least_common))
+        
         return r
 
 
 class BasicStatistics(object):
 
     def __init__(self):
-        self._count = 0
-        self._errors = 0
-        self._sum = 0
-        self._max = None
-        self._min = None
+        self.count = 0
+        self.errors = 0
+        self.sum = 0
+        self.max = None
+        self.min = None
 
     def accept_value(self, value):
         try:
             value = float(value)
         except ValueError:
-            self._errors += 1
+            self.errors += 1
         except TypeError:
-            self._errors += 1
+            self.errors += 1
         else:
-            self._count += 1
-            self._sum += value
-            if self._min is None or value < self._min:
-                self._min = value
-            if self._max is None or value > self._max:
-                self._max = value
-
-    def report(self):
-        d('build a report of basic statistics')
-        data = {
-                'min': self._min,
-                'max': self._max,
-                'sum': self._sum,
-                'count': self._count,
-                'errors': self._errors
-                }
-        if self._count > 0:
-            data['mean'] = self._sum / self._count
-
-        return ('basic_statistics', data)
+            self.count += 1
+            self.sum += value
+            if self.min is None or value < self.min:
+                self.min = value
+            if self.max is None or value > self.max:
+                self.max = value
+                
+    def mean(self):
+        return float(self.sum) / self.count
+                
+    def __repr__(self):
+        r = """
+Basic statistics were evaluated on %s values, with %s values being excluded due 
+to errors converting data values to numbers. The maximum value was %s, the 
+minimum was %s, the sum was %s, and the mean value was %s. 
+""" % (self.count, self.errors, self.max, self.min, self.sum, self.mean())
+        return r
     
     
 # N.B., this list of date, time and datetime formats is far inferior to the set
 # of formats recognised by the Python dateutil package. If you want to do any
-# serious profiling of datetimes, use the Types analysis from petlx (TODO) 
+# serious profiling of datetimes, use the DataTypes analysis from petlx (TODO) 
 
 
 date_formats = {
@@ -304,17 +365,8 @@ time_formats = {
                 }
 
 
-datetime_formats = {
-                    '%Y-%m-%dT%H:%M:%S',
-                    '%Y-%m-%d %H:%M:%S',
-                    '%Y-%m-%dT%H:%M:%S.%f',
-                    '%Y-%m-%d %H:%M:%S.%f'
-                    }
-
-
-def datetime_cls(value):
-    formats = {datetime: datetime_formats,
-               date: date_formats,
+def date_or_time(value):
+    formats = {date: date_formats,
                time: time_formats}
     value = value.strip()
     for cls in formats:
@@ -344,20 +396,20 @@ def bool_(value):
         raise ValueError('value is not one of recognised boolean representations: %s' % value)
     
 
-class Types(object):
+class DataTypes(object):
     
     def __init__(self, threshold=0.5):
         self._threshold = threshold
-        self._count = 0
-        self._actual_types = Counter()
-        self._parse_types = Counter()
-        self._consensus_types = Counter()
+        self.count = 0
+        self.actual_types = Counter()
+        self.parse_types = Counter()
+        self.combined_types = Counter()
 
     def accept_value(self, value):
-        self._count += 1
+        self.count += 1
         cls = value.__class__
-        self._actual_types[cls.__name__] += 1
-        self._consensus_types[cls.__name__] += 1
+        self.actual_types[cls.__name__] += 1
+        self.combined_types[cls.__name__] += 1
         if isinstance(value, basestring):
             for cls in (int, float): 
                 try:
@@ -367,12 +419,12 @@ class Types(object):
                 except TypeError:
                     pass
                 else:
-                    self._parse_types[cls.__name__] += 1
-                    self._consensus_types[cls.__name__] += 1
-            dt_cls = datetime_cls(value)
+                    self.parse_types[cls.__name__] += 1
+                    self.combined_types[cls.__name__] += 1
+            dt_cls = date_or_time(value)
             if dt_cls is not None:
-                self._parse_types[dt_cls.__name__] += 1
-                self._consensus_types[dt_cls.__name__] += 1
+                self.parse_types[dt_cls.__name__] += 1
+                self.combined_types[dt_cls.__name__] += 1
             try:
                 bool_(value)
             except ValueError:
@@ -380,17 +432,27 @@ class Types(object):
             except TypeError:
                 pass
             else:
-                self._parse_types[bool.__name__] += 1
-                self._consensus_types[bool.__name__] += 1
+                self.parse_types[bool.__name__] += 1
+                self.combined_types[bool.__name__] += 1
 
-    def report(self):
+    def __repr__(self):
+        r = """
+Actual data types: %s
+""" % str_counter_items(self.actual_types.most_common())
+        str_count = self.actual_types['str']
+        unicode_count = self.actual_types['unicode']
+        strings_count = str_count + unicode_count
+        if strings_count > 0 and len(self.parse_types) > 0:
+            r += """
+Of %s string values (%s ASCII, %s unicode), the following data types could be 
+obtained by parsing: %s
+""" % (strings_count, 
+       str_count, 
+       unicode_count, 
+       str_counter_items(self.parse_types.most_common()))
+            r += """
+Combined data type counts (actual + parsed): %s
+""" % str_counter_items(self.combined_types.most_common())
+        return r
 
-        d('build report')
-        data = {
-                'actual_types': self._actual_types,
-                'parse_types': self._parse_types,
-                'consensus_types': self._consensus_types
-                }
-
-        return ('types', data)
     
