@@ -307,7 +307,12 @@ class BasicStatistics(object):
         return float(self.sum) / self.count
                 
     def __repr__(self):
-        r = """
+        if self.count == 0:
+            r = """
+Basic statistics could not be evaluated, as there were no valid numeric values.
+"""
+        else:
+            r = """
 Basic statistics were evaluated on %s values, with %s values being excluded due 
 to errors converting data values to numbers. The maximum value was %s, the 
 minimum was %s, the sum was %s, and the mean value was %s. 
