@@ -8,7 +8,7 @@ from petl.prettytable import PrettyTable
 from itertools import islice
 
 
-def look(table, start=1, stop=10, step=1):
+def look(table, start=1, stop=21, step=1):
     
     table_iterator = iter(table)
     try:
