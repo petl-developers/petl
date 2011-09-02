@@ -4,8 +4,7 @@
 TODO doc me
 """
 
-from petl.profile import *
-from petl.extract import *
+from petl import *
 
 table = ExtractCsv('../fixture/example1.csv')
 profiler = Profiler()

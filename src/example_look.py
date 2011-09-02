@@ -4,8 +4,6 @@
 TODO doc me
 """
 
-from petl.extract import ExtractCsv
-from petl.interact import look
-
+from petl import ExtractCsv, look
 table = ExtractCsv('../fixture/example1.csv')
 look(table)

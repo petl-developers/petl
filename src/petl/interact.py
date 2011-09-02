@@ -4,7 +4,7 @@ TODO doc me
 """
 
 
-from prettytable import PrettyTable
+from petl.prettytable import PrettyTable
 from itertools import islice
 
 
