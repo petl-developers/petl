@@ -74,13 +74,10 @@ def _get_row_height(row):
 
     return max_height
 
-def _unicode(value, encoding="UTF-8", use_repr=True):
-    # modify this, we want the representation, not the string value...
-    if use_repr:
-        value = repr(value)
-    elif not isinstance(value, basestring):
+def _unicode(value, encoding="UTF-8"):
+    if not isinstance(value, basestring):
         value = str(value)
-    elif not isinstance(value, unicode):
+    if not isinstance(value, unicode):
         value = unicode(value, encoding, "replace")
     return value
 
