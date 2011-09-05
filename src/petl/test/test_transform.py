@@ -9,7 +9,7 @@ from itertools import izip
 
 
 from petl.transform import Cut, Cat, Convert, Sort, FilterDuplicates,\
-    FilterConflicts, MergeDuplicates, Melt
+    FilterConflicts, MergeDuplicates, Melt, StringCapture, StringSplit, Recast
 
 
 logger = logging.getLogger('petl')
@@ -375,6 +375,167 @@ def test_melt_2():
     
     result = Melt(data, key=('id', 'time'))
     iter_compare(expectation, result)
+
+
+def test_string_capture():
+    
+    data = [
+            ['id', 'variable', 'value'],
+            ['1', 'A1', '12'],
+            ['2', 'A2', '15'],
+            ['3', 'B1', '18'],
+            ['4', 'C12', '19']
+            ]
+    
+    expectation = [
+                   ['id', 'value', 'treat', 'time'],
+                   ['1', '12', 'A', '1'],  
+                   ['2', '15', 'A', '2'],
+                   ['3', '18', 'B', '1'],
+                   ['4', '19', 'C', '1']
+                   ]
+    
+    result = StringCapture(data, 'variable', '(\\w)(\\d)', ('treat', 'time'))
+    iter_compare(expectation, result)
+
+    result = StringCapture(data, 'variable', '(\\w)(\\d)', ('treat', 'time'),
+                           include_original=False)
+    iter_compare(expectation, result)
+
+    expectation = [
+                   ['id', 'variable', 'value', 'treat', 'time'],
+                   ['1', 'A1', '12', 'A', '1'],  
+                   ['2', 'A2', '15', 'A', '2'],
+                   ['3', 'B1', '18', 'B', '1'],
+                   ['4', 'C12', '19', 'C', '1']
+                   ]
+    
+    result = StringCapture(data, 'variable', '(\\w)(\\d)', ('treat', 'time'),
+                           include_original=True)
+    iter_compare(expectation, result)
+    
+    
+def test_string_split():
+    
+    data = [
+            ['id', 'variable', 'value'],
+            ['1', 'parad1', '12'],
+            ['2', 'parad2', '15'],
+            ['3', 'tempd1', '18'],
+            ['4', 'tempd2', '19']
+            ]
+    
+    expectation = [
+                   ['id', 'value', 'variable', 'day'],
+                   ['1', '12', 'para', '1'],  
+                   ['2', '15', 'para', '2'],
+                   ['3', '18', 'temp', '1'],
+                   ['4', '19', 'temp', '2']
+                   ]
+    
+    result = StringSplit(data, 'variable', 'd', ('variable', 'day'))
+    iter_compare(expectation, result)
+
+    result = StringSplit(data, 'variable', 'd', ('variable', 'day'),
+                         include_original=False)
+    iter_compare(expectation, result)
+
+    expectation = [
+                   ['id', 'variable', 'value', 'variable', 'day'],
+                   ['1', 'parad1', '12', 'para', '1'],  
+                   ['2', 'parad2', '15', 'para', '2'],
+                   ['3', 'tempd1', '18', 'temp', '1'],
+                   ['4', 'tempd2', '19', 'temp', '2']
+                   ]
+    
+    result = StringSplit(data, 'variable', 'd', ('variable', 'day'),
+                         include_original=True)
+    iter_compare(expectation, result)
+    
+    
+def test_melt_and_capture():
+    
+    data = [
+            ['id', 'parad0', 'parad1', 'parad2'],
+            ['1', '12', '34', '56'],
+            ['2', '23', '45', '67']
+            ]
+    
+    expectation = [
+                   ['id', 'parasitaemia', 'day'],
+                   ['1', '12', '0'],
+                   ['1', '34', '1'],
+                   ['1', '56', '2'],
+                   ['2', '23', '0'],
+                   ['2', '45', '1'],
+                   ['2', '67', '2']
+                   ]
+    
+    step1 = Melt(data, key='id', value_field='parasitaemia')
+    step2 = StringCapture(step1, 'variable', 'parad(\\d+)', ('day',))
+    iter_compare(expectation, step2)
+
+
+def test_melt_and_split():
+    
+    data = [
+            ['id', 'parad0', 'parad1', 'parad2', 'tempd0', 'tempd1', 'tempd2'],
+            ['1', '12', '34', '56', '37.2', '37.4', '37.9'],
+            ['2', '23', '45', '67', '37.1', '37.8', '36.9']
+            ]
+    
+    expectation = [
+                   ['id', 'value', 'variable', 'day'],
+                   ['1', '12', 'para', '0'],
+                   ['1', '34', 'para', '1'],
+                   ['1', '56', 'para', '2'],
+                   ['1', '37.2', 'temp', '0'],
+                   ['1', '37.4', 'temp', '1'],
+                   ['1', '37.9', 'temp', '2'],
+                   ['2', '23', 'para', '0'],
+                   ['2', '45', 'para', '1'],
+                   ['2', '67', 'para', '2'],
+                   ['2', '37.1', 'temp', '0'],
+                   ['2', '37.8', 'temp', '1'],
+                   ['2', '36.9', 'temp', '2']
+                   ]
+    
+    step1 = Melt(data, key='id')
+    step2 = StringSplit(step1, 'variable', 'd', ('variable', 'day'))
+    iter_compare(expectation, step2)
+
+
+def test_recast_1():
+    
+    data = [
+            ['id', 'variable', 'value'],
+            ['3', 'age', '16'],
+            ['1', 'gender', 'F'],
+            ['2', 'gender', 'M'],
+            ['2', 'age', '17'],
+            ['1', 'age', '12'],
+            ['3', 'gender', 'M']
+            ]
+    
+    expectation = [
+                   ['id', 'age', 'gender'],
+                   ['1', '12', 'F'],
+                   ['2', '17', 'M'],
+                   ['3', '16', 'M']
+                   ]
+    
+    result = Recast(data) # by default lift 'variable' field, hold everything else
+    iter_compare(expectation, result)
+
+    result = Recast(data, variable_field='variable')
+    iter_compare(expectation, result)
+
+    result = Recast(data, key='id', variable_field='variable')
+    iter_compare(expectation, result)
+
+    result = Recast(data, key='id', variable_field='variable', value_field='value')
+    iter_compare(expectation, result)
+
 
 
 

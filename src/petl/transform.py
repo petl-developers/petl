@@ -5,6 +5,9 @@ TODO doc me
 
 
 from operator import itemgetter
+from collections import defaultdict
+from itertools import islice, groupby
+import re
 
 class Cut(object):
     """
@@ -445,16 +448,18 @@ class Melt(object):
         self.value_field = value_field
         
     def __iter__(self):
-        key = self.key
-        variables = self.variables
-        if isinstance(key, basestring):
-            key = (key,) # normalise to a tuple
-        if isinstance(variables, basestring):
-            # shouldn't expect this, but ... ?
-            variables = (variables,) # normalise to a tuple
         sit = iter(self.source)
         try:
+            
+            # normalise some stuff
             flds = sit.next()
+            key = self.key
+            variables = self.variables
+            if isinstance(key, basestring):
+                key = (key,) # normalise to a tuple
+            if isinstance(variables, basestring):
+                # shouldn't expect this, but ... ?
+                variables = (variables,) # normalise to a tuple
             if key is None:
                 # assume key is fields not in variables
                 key = [f for f in flds if f not in variables]
@@ -490,3 +495,195 @@ class Melt(object):
         finally:
             if hasattr(sit, 'close'):
                 sit.close()
+
+
+class Recast(object):
+    
+    def __init__(self, source, key=None, variable_field='variable', 
+                 value_field='value', sample_size=1000, reduce=dict(), 
+                 missing=None):
+        self.source = source
+        self.key = key
+        self.variable_field = variable_field
+        self.value_field = value_field
+        self.sample_size = 1000
+        self.reduce = reduce
+        self.missing = missing
+    
+    def __iter__(self):
+        try:
+            
+            sit = iter(self.source)
+            flds = sit.next()
+            
+            # normalise some stuff
+            valf = self.value_field
+            keyf = self.key
+            varf = self.variable_field
+            if isinstance(keyf, basestring):
+                keyf = (keyf,)
+            if isinstance(varf, basestring):
+                varf = (varf,)
+            if keyf is None:
+                # assume keyf is fields not in variables
+                keyf = [f for f in flds if f not in varf and f != valf]
+            if varf is None:
+                # assume variables are fields not in keyf
+                varf = [f for f in flds if f not in keyf and f != valf]
+            
+            # sanity checks
+            assert valf in flds, 'invalid value field: %s' % valf
+            assert valf not in keyf, 'value field cannot be keyf'
+            assert valf not in varf, 'value field cannot be variable field'
+            for f in keyf:
+                assert f in flds, 'invalid keyf field: %s' % f
+            for f in varf:
+                assert f in flds, 'invalid variable field: %s' % f
+
+            # we'll need these later
+            vali = flds.index(valf)
+            keyi = [flds.index(k) for k in keyf]
+            vari = [flds.index(v) for v in varf]
+            
+            # determine the actual variable names to be cast as fields
+            if isinstance(varf, dict):
+                vard = varf
+            else:
+                vard = defaultdict(set)
+                # sample the data to collect variables to be cast as fields
+                for row in islice(sit, 0, self.sample_size):
+                    for i, f in zip(vari, varf):
+                        vard[f].add(row[i])
+                for f in vard:
+                    vard[f] = sorted(vard[f])
+            
+            if hasattr(sit, 'close'):
+                sit.close() # finished the first pass
+            
+            # determine the output fields
+            out_fields = list(keyf)
+            for f in varf:
+                out_fields.extend(vard[f])
+            yield out_fields
+            
+            # output data
+            
+            source = Sort(self.source, *keyf)
+            sit = iter(source)
+            key = itemgetter(*keyi)
+            
+            # process sorted data in groups
+            groups = groupby(islice(sit, 1), key=key)
+            for kval, group in groups:
+                if len(kval) > 1:
+                    out_row = list(kval)
+                else:
+                    out_row = [kval]
+                group = list(group) # may need to iterate over the group more than once
+                for v, i in zip(varf, vari):
+                    for f in vard[v]:
+                        values = [r[vali] for r in group if r[i] == f]
+                        if f in self.reduce:
+                            redu = self.reduce[f]
+                        else:
+                            redu = itemgetter(0) # pick first item arbitrarily
+                        if values:
+                            value = redu(values)
+                        else:
+                            value = self.missing
+                        out_row.append(value)
+                yield out_row
+                        
+        except:
+            raise
+        finally:
+            if hasattr(sit, 'close'):
+                sit.close()
+
+
+class StringCapture(object):
+    
+    def __init__(self, source, field, pattern, groups, include_original=False):
+        self.source = source
+        self.field = field
+        self.pattern = pattern
+        self.groups = groups
+        self.include_original = include_original
+        
+    def __iter__(self):
+        sit = iter(self.source)
+        try:
+            prog = re.compile(self.pattern)
+            
+            flds = sit.next()
+            assert self.field in flds, 'field not found: %s' % self.field
+            field_index = flds.index(self.field)
+            
+            # determine output fields
+            if self.include_original:
+                out_fields = list(flds)
+            else:
+                out_fields = [f for f in flds if f != self.field]
+            out_fields.extend(self.groups)
+            yield out_fields
+            
+            # construct the output data
+            for row in sit:
+                value = row[field_index]
+                if self.include_original:
+                    out_row = list(row)
+                else:
+                    out_row = [v for i, v in enumerate(row) if i != field_index]
+                out_row.extend(prog.search(value).groups())
+                yield out_row
+                
+        except:
+            raise
+        finally:
+            if hasattr(sit, 'close'):
+                sit.close()
+        
+
+class StringSplit(object):
+    def __init__(self, source, field, pattern, groups, include_original=False):
+        self.source = source
+        self.field = field
+        self.pattern = pattern
+        self.groups = groups
+        self.include_original = include_original
+        
+    def __iter__(self):
+        sit = iter(self.source)
+        try:
+            
+            flds = sit.next()
+            assert self.field in flds, 'field not found: %s' % self.field
+            field_index = flds.index(self.field)
+            
+            # determine output fields
+            if self.include_original:
+                out_fields = list(flds)
+            else:
+                out_fields = [f for f in flds if f != self.field]
+            out_fields.extend(self.groups)
+            yield out_fields
+            
+            # construct the output data
+            for row in sit:
+                value = row[field_index]
+                if self.include_original:
+                    out_row = list(row)
+                else:
+                    out_row = [v for i, v in enumerate(row) if i != field_index]
+                out_row.extend(value.split(self.pattern))
+                yield out_row
+                
+        except:
+            raise
+        finally:
+            if hasattr(sit, 'close'):
+                sit.close()
+        
+
+    
+    
