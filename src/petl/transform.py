@@ -183,4 +183,50 @@ class Convert(object):
                 source_iterator.close()
                 
                 
+class Sort(object):
+    
+    def __init__(self, source, *args, **kwargs):
+        self.source = source
+        self.field_selection = args
+        if 'reverse' in kwargs:
+            self.reverse = kwargs['reverse']
+        else:
+            self.reverse=False
+        self.kwargs = kwargs
+        
+    def __iter__(self):
+        # TODO merge sort on large dataset
+        source_iterator = iter(self.source)
+
+        try:
+            flds = source_iterator.next()
+            yield flds
+            
+            # convert field selection into field indices
+            indices = list()
+            for selection in self.field_selection:
+                # selection could be a field name
+                if selection in flds:
+                    indices.append(flds.index(selection))
+                # or selection could be a field index
+                elif isinstance(selection, int) and selection - 1 < len(flds):
+                    indices.append(selection - 1) # index fields from 1, not 0
+                else:
+                    # TODO raise?
+                    pass
                 
+            # now use field indices to construct a key function
+            # N.B., this will probably raise an exception on short rows
+            key = itemgetter(*indices)
+            rows = list(source_iterator)
+            rows.sort(key=key, reverse=self.reverse)
+            for row in rows:
+                yield row
+            
+        except:
+            raise
+        finally:
+            if hasattr(source_iterator, 'close'):
+                source_iterator.close()
+
+                  

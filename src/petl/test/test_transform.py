@@ -6,7 +6,7 @@ TODO doc me
 from itertools import izip
 
 
-from petl.transform import Cut, Cat, Convert
+from petl.transform import Cut, Cat, Convert, Sort
 
 
 def iter_compare(it1, it2):
@@ -129,4 +129,129 @@ def test_convert():
                    ['D', 'err', 9.0],
                    ['E', 'err']]
     iter_compare(expectation, conv) 
-        
+    
+    
+def test_sort_1():
+    
+    data = [['foo', 'bar'],
+            ['C', '2'],
+            ['A', '9'],
+            ['A', '6'],
+            ['F', '1'],
+            ['D', '10']]
+    
+    result = Sort(data, 'foo')
+    expectation = [['foo', 'bar'],
+                   ['A', '9'],
+                   ['A', '6'],
+                   ['C', '2'],
+                   ['D', '10'],
+                   ['F', '1']]
+    iter_compare(expectation, result)
+    
+    
+def test_sort_2():
+    
+    data = [['foo', 'bar'],
+            ['C', '2'],
+            ['A', '9'],
+            ['A', '6'],
+            ['F', '1'],
+            ['D', '10']]
+    
+    result = Sort(data, 'foo', 'bar')
+    expectation = [['foo', 'bar'],
+                   ['A', '6'],
+                   ['A', '9'],
+                   ['C', '2'],
+                   ['D', '10'],
+                   ['F', '1']]
+    iter_compare(expectation, result)
+    
+    
+def test_sort_3():
+    
+    data = [['foo', 'bar'],
+            ['C', '2'],
+            ['A', '9'],
+            ['A', '6'],
+            ['F', '1'],
+            ['D', '10']]
+    
+    result = Sort(data, 'bar')
+    expectation = [['foo', 'bar'],
+                   ['F', '1'],
+                   ['D', '10'],
+                   ['C', '2'],
+                   ['A', '6'],
+                   ['A', '9']]
+    iter_compare(expectation, result)
+    
+    
+def test_sort_4():
+    
+    data = [['foo', 'bar'],
+            ['C', 2],
+            ['A', 9],
+            ['A', 6],
+            ['F', 1],
+            ['D', 10]]
+    
+    result = Sort(data, 'bar')
+    expectation = [['foo', 'bar'],
+                   ['F', 1],
+                   ['C', 2],
+                   ['A', 6],
+                   ['A', 9],
+                   ['D', 10]]
+    iter_compare(expectation, result)
+    
+    
+def test_sort_5():
+    
+    data = [['foo', 'bar'],
+            [2.3, 2],
+            [1.2, 9],
+            [2.3, 6],
+            [3.2, 1],
+            [1.2, 10]]
+    
+    expectation = [['foo', 'bar'],
+                   [1.2, 9],
+                   [1.2, 10],
+                   [2.3, 2],
+                   [2.3, 6],
+                   [3.2, 1]]
+
+    # can use either field names or indices (from 1) to specify sort key
+    result = Sort(data, 'foo', 'bar')
+    iter_compare(expectation, result)
+    result = Sort(data, 1, 2)
+    iter_compare(expectation, result)
+    result = Sort(data, 'foo', 2)
+    iter_compare(expectation, result)
+    result = Sort(data, 1, 'bar')
+    iter_compare(expectation, result)
+    
+    
+def test_sort_6():
+    
+    data = [['foo', 'bar'],
+            [2.3, 2],
+            [1.2, 9],
+            [2.3, 6],
+            [3.2, 1],
+            [1.2, 10]]
+    
+    expectation = [['foo', 'bar'],
+                   [3.2, 1],
+                   [2.3, 6],
+                   [2.3, 2],
+                   [1.2, 10],
+                   [1.2, 9]]
+
+    # can use either field names or indices (from 1) to specify sort key
+    result = Sort(data, 'foo', 'bar', reverse=True)
+    iter_compare(expectation, result)
+    
+    
