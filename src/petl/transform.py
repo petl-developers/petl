@@ -433,3 +433,60 @@ class MergeDuplicates(object):
                 source_iterator.close()
 
 
+class Melt(object):
+    
+    def __init__(self, source, key=None, variables=None, 
+                 variable_field='variable', value_field='value'):
+        assert key is not None or variables is not None, 'supply either key or variables (or both)'
+        self.source = source
+        self.key = key
+        self.variables = variables
+        self.variable_field = variable_field
+        self.value_field = value_field
+        
+    def __iter__(self):
+        key = self.key
+        variables = self.variables
+        if isinstance(key, basestring):
+            key = (key,) # normalise to a tuple
+        if isinstance(variables, basestring):
+            # shouldn't expect this, but ... ?
+            variables = (variables,) # normalise to a tuple
+        sit = iter(self.source)
+        try:
+            flds = sit.next()
+            if key is None:
+                # assume key is fields not in variables
+                key = [f for f in flds if f not in variables]
+            if variables is None:
+                # assume variables are fields not in key
+                variables = [f for f in flds if f not in key]
+            
+            # determine the output fields
+            out_fields = list(key)
+            out_fields.append(self.variable_field)
+            out_fields.append(self.value_field)
+            yield out_fields
+            
+            key_indices = [flds.index(k) for k in key]
+            if len(key) > 1:
+                get_key = itemgetter(*key_indices)
+            elif len(key) == 1:
+                key_index = key_indices[0]
+                get_key = lambda row: (row[key_index],)
+            variables_indices = [flds.index(v) for v in variables]
+            
+            # construct the output data
+            for row in sit:
+                k = get_key(row)
+                for v, i in zip(variables, variables_indices):
+                    o = list(k) # populate with key values initially
+                    o.append(v)
+                    o.append(row[i])
+                    yield o
+                    
+        except:
+            raise
+        finally:
+            if hasattr(sit, 'close'):
+                sit.close()

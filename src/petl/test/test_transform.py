@@ -9,7 +9,7 @@ from itertools import izip
 
 
 from petl.transform import Cut, Cat, Convert, Sort, FilterDuplicates,\
-    FilterConflicts, MergeDuplicates
+    FilterConflicts, MergeDuplicates, Melt
 
 
 logger = logging.getLogger('petl')
@@ -306,7 +306,7 @@ def test_filter_conflicts():
     iter_compare(expectation, result)
     
     
-def test_merge_conflicts():
+def test_merge_duplicates():
 
     table = [['foo', 'bar', 'baz'],
              ['A', 1, 2],
@@ -328,5 +328,56 @@ def test_merge_conflicts():
     iter_compare(expectation, result)
     
     
+def test_melt_1():
+    
+    data = [
+            ['id', 'gender', 'age'],
+            ['1', 'F', '12'],
+            ['2', 'M', '17'],
+            ['3', 'M', '16']
+            ]
+    
+    expectation = [
+                   ['id', 'variable', 'value'],
+                   ['1', 'gender', 'F'],
+                   ['1', 'age', '12'],
+                   ['2', 'gender', 'M'],
+                   ['2', 'age', '17'],
+                   ['3', 'gender', 'M'],
+                   ['3', 'age', '16']
+                   ]
+    
+    result = Melt(data, key='id')
+    iter_compare(expectation, result)
+
+    result = Melt(data, key='id', variable_field='variable', value_field='value')
+    iter_compare(expectation, result)
+
+
+def test_melt_2():
+    
+    data = [
+            ['id', 'time', 'height', 'weight'],
+            ['1', '11', '66.4', '12.2'],
+            ['2', '16', '53.2', '17.3'],
+            ['3', '12', '34.5', '9.4']
+            ]
+    
+    expectation = [
+                   ['id', 'time', 'variable', 'value'],
+                   ['1', '11', 'height', '66.4'],
+                   ['1', '11', 'weight', '12.2'],
+                   ['2', '16', 'height', '53.2'],
+                   ['2', '16', 'weight', '17.3'],
+                   ['3', '12', 'height', '34.5'],
+                   ['3', '12', 'weight', '9.4']
+                   ]
+    
+    result = Melt(data, key=('id', 'time'))
+    iter_compare(expectation, result)
+
+
+
+
     
     
