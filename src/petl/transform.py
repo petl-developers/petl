@@ -230,3 +230,135 @@ class Sort(object):
                 source_iterator.close()
 
                   
+class FilterDuplicates(object):
+    
+    def __init__(self, source, *args, **kwargs):
+        self.source = source
+        self.field_selection = args
+        self.kwargs = kwargs
+        
+    def __iter__(self):
+        
+        # first need to sort the data
+        source = Sort(self.source, *self.field_selection)
+        source_iterator = iter(source)
+
+        try:
+            flds = source_iterator.next()
+            yield flds
+
+            # convert field selection into field indices
+            indices = list()
+            for selection in self.field_selection:
+                # selection could be a field name
+                if selection in flds:
+                    indices.append(flds.index(selection))
+                # or selection could be a field index
+                elif isinstance(selection, int) and selection - 1 < len(flds):
+                    indices.append(selection - 1) # index fields from 1, not 0
+                else:
+                    # TODO raise?
+                    pass
+                
+            # now use field indices to construct a key function
+            # N.B., this may raise an exception on short rows, depending on
+            # the field selection
+            key = itemgetter(*indices)
+            
+            previous = None
+            previous_yielded = False
+            
+            for row in source_iterator:
+                if previous is None:
+                    previous = row
+                else:
+                    kprev = key(previous)
+                    kcurr = key(row)
+                    if kprev == kcurr:
+                        if not previous_yielded:
+                            yield previous
+                            previous_yielded = True
+                        yield row
+                    else:
+                        # reset
+                        previous_yielded = False
+                    previous = row
+            
+        except:
+            raise
+        finally:
+            if hasattr(source_iterator, 'close'):
+                source_iterator.close()
+
+
+class FilterConflicts(object):
+    
+    def __init__(self, source, *args, **kwargs):
+        self.source = source
+        self.field_selection = args
+        self.kwargs = kwargs
+        if 'missing' in kwargs:
+            self.missing = kwargs['missing']
+        else:
+            self.missing = Ellipsis
+        
+    def __iter__(self):
+        # first need to sort the data
+        source = Sort(self.source, *self.field_selection)
+        source_iterator = iter(source)
+
+        try:
+            flds = source_iterator.next()
+            yield flds
+
+            # convert field selection into field indices
+            indices = list()
+            for selection in self.field_selection:
+                # selection could be a field name
+                if selection in flds:
+                    indices.append(flds.index(selection))
+                # or selection could be a field index
+                elif isinstance(selection, int) and selection - 1 < len(flds):
+                    indices.append(selection - 1) # index fields from 1, not 0
+                else:
+                    # TODO raise?
+                    pass
+                
+            # now use field indices to construct a key function
+            # N.B., this may raise an exception on short rows, depending on
+            # the field selection
+            key = itemgetter(*indices)
+            
+            previous = None
+            previous_yielded = False
+            
+            for row in source_iterator:
+                if previous is None:
+                    previous = row
+                else:
+                    kprev = key(previous)
+                    kcurr = key(row)
+                    if kprev == kcurr:
+                        # is there a conflict?
+                        conflict = False
+                        for x, y in zip(previous, row):
+                            if self.missing not in (x, y) and x != y:
+                                conflict = True
+                                break
+                        if conflict:
+                            if not previous_yielded:
+                                yield previous
+                                previous_yielded = True
+                            yield row
+                    else:
+                        # reset
+                        previous_yielded = False
+                    previous = row
+            
+        except:
+            raise
+        finally:
+            if hasattr(source_iterator, 'close'):
+                source_iterator.close()
+
+
