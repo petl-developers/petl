@@ -131,3 +131,56 @@ class Cat(object):
                 if hasattr(source_iterator, 'close'):
                     source_iterator.close()
         
+
+class Convert(object):
+    
+    def __init__(self, source, conversion=dict(), error_value=None):
+        self.source = source
+        self.conversion = conversion
+        self.error_value = error_value
+        
+    def add(self, field, converter):
+        self.conversion[field] = converter
+        
+    def __iter__(self):
+        source_iterator = iter(self.source)
+        
+        try:
+            
+            # grab the fields in the source table
+            flds = source_iterator.next()
+            yield flds # these are not modified
+            
+            # define a function to transform a value
+            def transform_value(i, v):
+                try:
+                    f = flds[i]
+                except IndexError:
+                    # row is long, just return value as-is
+                    return v
+                else:
+                    try:
+                        c = self.conversion[f]
+                    except KeyError:
+                        # no converter defined on this field, return value as-is
+                        return v
+                    else:
+                        try:
+                            return c(v)
+                        except ValueError:
+                            return self.error_value
+                        except TypeError:
+                            return self.error_value
+
+            # construct the data rows
+            for row in source_iterator:
+                yield [transform_value(i, v) for i, v in enumerate(row)]
+
+        except:
+            raise
+        finally:
+            if hasattr(source_iterator, 'close'):
+                source_iterator.close()
+                
+                
+                

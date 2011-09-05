@@ -6,7 +6,7 @@ TODO doc me
 from itertools import izip
 
 
-from petl.transform import Cut, Cat
+from petl.transform import Cut, Cat, Convert
 
 
 def iter_compare(it1, it2):
@@ -96,3 +96,37 @@ def test_cat():
                    ['E', None, None]]
     iter_compare(expectation, cat3)
     
+    
+def test_convert():
+    
+    table = [['foo', 'bar', 'baz'],
+             ['A', 1, 2],
+             ['B', '2', '3.4'],
+             [u'B', u'3', u'7.8', True],
+             ['D', 'xyz', 9.0],
+             ['E', None]]
+    
+    # test the style where the conversion functions are passed in as a dictionary
+    conversion = {'foo': str, 'bar': int, 'baz': float}
+    conv = Convert(table, conversion=conversion, error_value='error')
+    expectation = [['foo', 'bar', 'baz'],
+                   ['A', 1, 2.0],
+                   ['B', 2, 3.4],
+                   ['B', 3, 7.8, True], # N.B., long rows are preserved
+                   ['D', 'error', 9.0],
+                   ['E', 'error']] # N.B., short rows are preserved
+    iter_compare(expectation, conv) 
+    
+    # test the style where the conversion functions are added one at a time
+    conv = Convert(table, error_value='err')
+    conv.add('foo', str)
+    conv.add('bar', int)
+    conv.add('baz', float)
+    expectation = [['foo', 'bar', 'baz'],
+                   ['A', 1, 2.0],
+                   ['B', 2, 3.4],
+                   ['B', 3, 7.8, True],
+                   ['D', 'err', 9.0],
+                   ['E', 'err']]
+    iter_compare(expectation, conv) 
+        
