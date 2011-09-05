@@ -11,7 +11,7 @@ from petl.transform import Cut, Cat
 
 def iter_compare(it1, it2):
     for a, b in izip(it1, it2):
-        assert a == b, (a, b)
+        assert tuple(a) == tuple(b), (a, b)
         
 
 def test_cut():
@@ -77,4 +77,22 @@ def test_cat():
                    [None, 'C', True],
                    [None, 'D', False]]
     iter_compare(expectation, cat1)
+
+    # how does Cat cope with uneven rows?
+    
+    table3 = [['foo', 'bar', 'baz'],
+              ['A', 1, 2],
+              ['B', '2', '3.4'],
+              [u'B', u'3', u'7.8', True],
+              ['D', 'xyz', 9.0],
+              ['E', None]]
+
+    cat3 = Cat(table3, missing=None)
+    expectation = [['foo', 'bar', 'baz'],
+                   ['A', 1, 2],
+                   ['B', '2', '3.4'],
+                   [u'B', u'3', u'7.8'],
+                   ['D', 'xyz', 9.0],
+                   ['E', None, None]]
+    iter_compare(expectation, cat3)
     

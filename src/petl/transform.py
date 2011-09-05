@@ -4,43 +4,75 @@ TODO doc me
 """
 
 
+from operator import itemgetter
+
 class Cut(object):
     """
     TODO doc me
     
     """
     
-    def __init__(self, table, *args):
-        self.table = table
-        self.args = args
+    def __init__(self, source, *args):
+        self.source = source
+        self.field_selection = args
     
     def __iter__(self):
-        indexes = list()
-        it = iter(self.table)
-        try:
-            fields = it.next()
-            
-            # convert arguments into field indexes
-            for a in self.args:
-                # argument could be a field name
-                if a in fields:
-                    indexes.append(fields.index(a))
-                # or argument could be a field index
-                elif isinstance(a, int) and a - 1 < len(fields):
-                    indexes.append(a - 1) # index fields from 1
 
-            # construct the transformed fields
-            yield [fields[i] for i in indexes]
+        source_iterator = iter(self.source)
+        try:
+            
+            # convert field selection into field indices
+            indices = list()
+            source_fields = source_iterator.next()
+            for selection in self.field_selection:
+                # selection could be a field name
+                if selection in source_fields:
+                    indices.append(source_fields.index(selection))
+                # or selection could be a field index
+                elif isinstance(selection, int) and selection - 1 < len(source_fields):
+                    indices.append(selection - 1) # index fields from 1, not 0
+                else:
+                    # TODO raise?
+                    pass
+
+            # define a function to transform each row in the source data 
+            # according to the field selection
+            #
+            # if more than one field selected, use itemgetter, it should be the
+            # most efficient
+            if len(indices) > 1:
+                transform = itemgetter(*indices)
+            # 
+            # if only one field is selected, we cannot use itemgetter, because
+            # we want a singleton sequence to be returned, but itemgetter with
+            # a single argument returns the get_value itself, so let's define a 
+            # custom transform function
+            elif len(indices) == 1:
+                index = indices[0]
+                transform = lambda row: (row[index],) # note comma - singleton tuple!
+            #
+            # no fields selected, should probably raise an error
+            else:
+                # TODO raise?
+                pass
+            
+            # yield the transformed field names
+            yield transform(source_fields)
+            
             # construct the transformed data
-            for row in it:
-                yield [row[i] if i < len(row) else Ellipsis for i in indexes]
+            for row in source_iterator:
+                try:
+                    yield transform(row) 
+                except IndexError:
+                    # row is short, let's be kind and fill in any missing fields
+                    yield [row[i] if i < len(row) else Ellipsis for i in indices]
 
         except:
             raise
         finally:
             # make sure the iterator is closed
-            if hasattr(it, 'close'):
-                it.close()
+            if hasattr(source_iterator, 'close'):
+                source_iterator.close()
 
 
 class Cat(object):
@@ -49,8 +81,8 @@ class Cat(object):
     
     """
     
-    def __init__(self, *tables, **kwargs):
-        self.tables = tables
+    def __init__(self, *sources, **kwargs):
+        self.sources = sources
         if 'missing' in kwargs:
             self.missing = kwargs['missing']
         else:
@@ -58,32 +90,44 @@ class Cat(object):
     
     def __iter__(self):
         
-        iters = [iter(t) for t in self.tables]
+        source_iterators = [iter(t) for t in self.sources]
         try:
-            # build field names
-            in_fieldses = [it.next() for it in iters]
+            
+            # determine output fields by gathering all fields found in the sources
+            source_fields_lists = [source_iterator.next() for source_iterator in source_iterators]
             out_fields = list()
-            for fields in in_fieldses:
+            for fields in source_fields_lists:
                 for f in fields:
                     if f not in out_fields:
+                        # add any new fields as we find them
                         out_fields.append(f)
             yield out_fields
-            # now build data
-            for i, it in enumerate(iters):
-                fields = in_fieldses[i]
-                def value(row, f):
-                    if f in fields:
+
+            # output data rows
+            for source_index, source_iterator in enumerate(source_iterators):
+                fields = source_fields_lists[source_index]
+                
+                # let's define a function which will, for any row and field name,
+                # return the corresponding get_value, or fill in any missing values
+                def get_value(row, f):
+                    try:
                         value = row[fields.index(f)]
-                    else:
+                    except ValueError: # source does not have f in fields
+                        value = self.missing
+                    except IndexError: # row is short
                         value = self.missing
                     return value
-                for row in it:
-                    out_row = [value(row, f) for f in out_fields]
+                
+                # now construct and yield the data rows
+                for row in source_iterator:
+                    out_row = [get_value(row, f) for f in out_fields]
                     yield out_row
+
         except:
             raise
         finally:
-            # make sure the iterator is closed
-            if hasattr(it, 'close'):
-                it.close()
+            # make sure all iterators are closed
+            for source_iterator in source_iterators:
+                if hasattr(source_iterator, 'close'):
+                    source_iterator.close()
         

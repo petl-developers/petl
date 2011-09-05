@@ -74,12 +74,12 @@ def _get_row_height(row):
 
     return max_height
 
-def _unicode(value, encoding="UTF-8"):
-    if not isinstance(value, basestring):
-        value = str(value)
-    if not isinstance(value, unicode):
-        value = unicode(value, encoding, "replace")
-    return value
+def _unicode(get_value, encoding="UTF-8"):
+    if not isinstance(get_value, basestring):
+        get_value = str(get_value)
+    if not isinstance(get_value, unicode):
+        get_value = unicode(get_value, encoding, "replace")
+    return get_value
 
 class PrettyTable(object):
 
@@ -91,12 +91,12 @@ class PrettyTable(object):
 
         field_names - list or tuple of field names
         fields - list or tuple of field names to include in displays
-        caching - boolean value to turn string caching on/off
+        caching - boolean get_value to turn string caching on/off
         start - index of first data row to include in output
         end - index of last data row to include in output PLUS ONE (list slice style)
         fields - names of fields (columns) to include
         header - print a header showing field names (True or False)
-        border - print a border around the table (True or False)
+        border - print a border around the source (True or False)
         hrules - controls printing of horizontal rules after rows.  Allowed values: FRAME, ALL, NONE
         padding_width - number of spaces on either side of column data (only used if left and right paddings are None)
         left_padding_width - number of spaces on left hand side of column data
@@ -219,19 +219,19 @@ class PrettyTable(object):
         try:
             assert int(val) >= 0
         except AssertionError:
-            raise Exception("Invalid value for %s: %s!" % (name, _unicode(val)))
+            raise Exception("Invalid get_value for %s: %s!" % (name, _unicode(val)))
 
     def _validate_true_or_false(self, name, val):
         try:
             assert val in (True, False)
         except AssertionError:
-            raise Exception("Invalid value for %s!  Must be True or False." % name)
+            raise Exception("Invalid get_value for %s!  Must be True or False." % name)
 
     def _validate_hrules(self, name, val):
         try:
             assert val in (ALL, FRAME, NONE)
         except AssertionError:
-            raise Exception("Invalid value for %s!  Must be ALL, FRAME or NONE." % name)
+            raise Exception("Invalid get_value for %s!  Must be ALL, FRAME or NONE." % name)
 
     def _validate_field_name(self, name, val):
         try:
@@ -250,13 +250,13 @@ class PrettyTable(object):
         try:
             assert len(_unicode(val)) == 1
         except AssertionError:
-            raise Exception("Invalid value for %s!  Must be a string of length 1." % name)
+            raise Exception("Invalid get_value for %s!  Must be a string of length 1." % name)
 
     def _validate_attributes(self, name, val):
         try:
             assert isinstance(val, dict)
         except AssertionError:
-            raise Exception("attributes must be a dictionary of name/value pairs!")
+            raise Exception("attributes must be a dictionary of name/get_value pairs!")
 
     ##############################
     # ATTRIBUTE MANAGEMENT       #
@@ -465,7 +465,7 @@ class PrettyTable(object):
     format = property(_get_format, _set_format)
 
     def _get_attributes(self):
-        """A dictionary of HTML attribute name/value pairs to be included in the <table> tag when printing HTML
+        """A dictionary of HTML attribute name/get_value pairs to be included in the <table> tag when printing HTML
 
         Arguments:
 
@@ -812,8 +812,8 @@ class PrettyTable(object):
             if options["border"]:
                 bits[y].append(self.vertical_char)
 
-        for field, value, width, in zip(self._field_names, row, self._widths):
-            lines = repr(value).split('\n')
+        for field, get_value, width, in zip(self._field_names, row, self._widths):
+            lines = repr(get_value).split('\n')
             if len(lines) < row_height:
                 lines = lines + ([""] * (row_height-len(lines)))
 
@@ -860,7 +860,7 @@ class PrettyTable(object):
         header - should be True or False to print a header showing field names or not
         border - should be True or False to print or not print borders
         hrules - include horizontal rule after each row
-        attributes - dictionary of name/value pairs to include as HTML attributes in the <table> tag"""
+        attributes - dictionary of name/get_value pairs to include as HTML attributes in the <table> tag"""
 
         print self.get_html_string(**kwargs)
 
@@ -879,7 +879,7 @@ class PrettyTable(object):
         header - should be True or False to print a header showing field names or not
         border - should be True or False to print or not print borders
         hrules - include horizontal rule after each row
-        attributes - dictionary of name/value pairs to include as HTML attributes in the <table> tag"""
+        attributes - dictionary of name/get_value pairs to include as HTML attributes in the <table> tag"""
 
         options = self._get_options(kwargs)
 
