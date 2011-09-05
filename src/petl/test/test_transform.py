@@ -3,11 +3,22 @@ TODO doc me
 
 """
 
+import logging
+import sys
 from itertools import izip
 
 
 from petl.transform import Cut, Cat, Convert, Sort, FilterDuplicates,\
-    FilterConflicts
+    FilterConflicts, MergeConflicts
+
+
+logger = logging.getLogger('petl')
+d, i, w, e = logger.debug, logger.info, logger.warn, logger.error # abbreviations
+logger.setLevel(logging.DEBUG)
+handler = logging.StreamHandler(stream=sys.stderr)
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(funcName)s - %(message)s')
+handler.setFormatter(formatter)
+logger.addHandler(handler)
 
 
 def iter_compare(it1, it2):
@@ -293,5 +304,29 @@ def test_filter_conflicts():
                    ['D', 'xyz', 9.4],
                    ['D', 'xyz', 12.3]]
     iter_compare(expectation, result)
+    
+    
+def test_merge_conflicts():
+
+    table = [['foo', 'bar', 'baz'],
+             ['A', 1, 2],
+             ['B', '2', None],
+             ['D', 'xyz', 9.4],
+             ['B', None, u'7.8', True],
+             ['E', None],
+             ['D', 'xyz', 12.3],
+             ['A', 2, None]]
+
+    # value overrides missing; last value wins
+    result = MergeConflicts(table, 'foo', missing=None)
+    expectation = [['foo', 'bar', 'baz'],
+                   ['A', 2, 2],
+                   ['B', '2', u'7.8', True],
+                   ['D', 'xyz', 12.3],
+                   ['E', None]]
+    d(list(result))
+    iter_compare(expectation, result)
+    
+    
     
     

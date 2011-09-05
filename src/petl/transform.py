@@ -362,3 +362,74 @@ class FilterConflicts(object):
                 source_iterator.close()
 
 
+class MergeConflicts(object):
+
+    def __init__(self, source, *args, **kwargs):
+        self.source = source
+        self.field_selection = args
+        self.kwargs = kwargs
+        if 'missing' in kwargs:
+            self.missing = kwargs['missing']
+        else:
+            self.missing = Ellipsis
+        
+    def __iter__(self):
+        # first need to sort the data
+        source = Sort(self.source, *self.field_selection)
+        source_iterator = iter(source)
+
+        try:
+            flds = source_iterator.next()
+            yield flds
+
+            # convert field selection into field indices
+            indices = list()
+            for selection in self.field_selection:
+                # selection could be a field name
+                if selection in flds:
+                    indices.append(flds.index(selection))
+                # or selection could be a field index
+                elif isinstance(selection, int) and selection - 1 < len(flds):
+                    indices.append(selection - 1) # index fields from 1, not 0
+                else:
+                    # TODO raise?
+                    pass
+                
+            # now use field indices to construct a key function
+            # N.B., this may raise an exception on short rows, depending on
+            # the field selection
+            key = itemgetter(*indices)
+            
+            previous = None
+            
+            for row in source_iterator:
+                if previous is None:
+                    previous = row
+                else:
+                    kprev = key(previous)
+                    kcurr = key(row)
+                    if kprev == kcurr:
+                        merge = list()
+                        for i, v in enumerate(row):
+                            try:
+                                if v is not self.missing:
+                                    # last wins
+                                    merge.append(v)
+                                else:
+                                    merge.append(previous[i])
+                            except IndexError: # previous row is short
+                                merge.append(v)
+                        previous = merge
+                    else:
+                        yield previous
+                        previous = row
+            # return the last one
+            yield previous
+            
+        except:
+            raise
+        finally:
+            if hasattr(source_iterator, 'close'):
+                source_iterator.close()
+
+
