@@ -45,7 +45,7 @@ class Cut(object):
             # 
             # if only one field is selected, we cannot use itemgetter, because
             # we want a singleton sequence to be returned, but itemgetter with
-            # a single argument returns the get_value itself, so let's define a 
+            # a single argument returns the value itself, so let's define a 
             # custom transform function
             elif len(indices) == 1:
                 index = indices[0]
@@ -108,7 +108,7 @@ class Cat(object):
                 fields = source_fields_lists[source_index]
                 
                 # let's define a function which will, for any row and field name,
-                # return the corresponding get_value, or fill in any missing values
+                # return the corresponding value, or fill in any missing values
                 def get_value(row, f):
                     try:
                         value = row[fields.index(f)]

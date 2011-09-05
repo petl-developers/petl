@@ -58,7 +58,7 @@ class Profiler(object):
                                     stop - 1 if stop is not None else stop, 
                                     step)
             
-            d('normalise get_value analysis classes, now we know the field names')
+            d('normalise value analysis classes, now we know the field names')
             value_analysis_classes = dict()
             for f in fields:
                 # use a set for each field to ensure the same analysis is not 
@@ -97,13 +97,13 @@ class Profiler(object):
                 for f in fields:
                     index = fields.index(f)
                     try:
-                        get_value = row[index]
+                        value = row[index]
                     except IndexError:
-                        get_value = Ellipsis
+                        value = Ellipsis
                     for analysis in value_analyses[f]:
-                        analysis.accept_value(get_value)
+                        analysis.accept_value(value)
                     if store_examples:
-                        example_data[f].append(get_value)
+                        example_data[f].append(value)
 
             d('construct the report')
             report = Report(fields=fields, 
@@ -197,7 +197,7 @@ row %(stop)s (or the last row, whichever comes sooner).
             r += '\n' + heading + '\n' + underline + '\n'
             r += '\nExample data: %s\n' % ", ".join(map(repr, self.example_data[f])) 
             
-            # output results of get_value analyses for the current field
+            # output results of value analyses for the current field
             for analysis in self.value_analyses[f]:
                 r += repr(analysis)
                 
@@ -221,7 +221,69 @@ def str_counter_items(items):
     return ", ".join(('%s (%s)' % item for item in items))
 
     
-class RowLengths(object):
+class Analysis(object):
+    
+    @classmethod
+    def profile(cls, table, *field_selection):
+        source_iterator = iter(table)
+        try:
+            flds = source_iterator.next()
+            
+            # if this is a row analyser, ignore the field selection
+            if hasattr(cls, 'accept_row'):
+                analysis = cls()
+                for row in source_iterator:
+                    analysis.accept_row(row)
+                return analysis
+            
+            elif hasattr(cls, 'accept_value'):
+            
+                # convert field selection into field indices
+                indices = list()
+                if len(field_selection) > 0:
+                    for selection in field_selection:
+                        # selection could be a field name
+                        if selection in flds:
+                            indices.append(flds.index(selection))
+                        # or selection could be a field index
+                        elif isinstance(selection, int) and selection - 1 < len(flds):
+                            indices.append(selection - 1) # index fields from 1, not 0
+                        else:
+                            # TODO error?
+                            pass
+                else:
+                    indices = range(len(flds)) # analyse all fields
+                    print indices
+
+                # instantiate an analysis for each selected field
+                analyses = [cls() for i in indices]
+            
+                # iterate through the data
+                for row in source_iterator:
+                    for i, a in zip(indices, analyses):
+                        try:
+                            a.accept_value(row[i])
+                        except IndexError:
+                            # TODO what now?
+                            pass
+                        
+                if len(analyses) > 1:
+                    # return a dictionary of analyses
+                    d = dict()
+                    for i, a in zip(indices, analyses):
+                        d[flds[i]] = a
+                    return d
+                else:
+                    return analyses[0] 
+            
+        except:
+            raise
+        finally:
+            if hasattr(source_iterator, 'close'):
+                source_iterator.close()
+
+        
+class RowLengths(Analysis):
 
     def __init__(self):
         self.counter = Counter()
@@ -237,7 +299,7 @@ Row lengths: %s
         return r
 
 
-class DistinctValues(object):
+class DistinctValues(Analysis):
     """
     TODO doc me
     
@@ -247,8 +309,8 @@ class DistinctValues(object):
     def __init__(self):
         self.counter = Counter()
 
-    def accept_value(self, get_value):
-        self.counter[get_value] += 1
+    def accept_value(self, value):
+        self.counter[value] += 1
         
     def __repr__(self):
         n = len(self.counter)
@@ -279,7 +341,7 @@ Distinct values (%s least common): %s
         return r
 
 
-class BasicStatistics(object):
+class BasicStatistics(Analysis):
 
     def __init__(self):
         self.count = 0
@@ -288,20 +350,20 @@ class BasicStatistics(object):
         self.max = None
         self.min = None
 
-    def accept_value(self, get_value):
+    def accept_value(self, value):
         try:
-            get_value = float(get_value)
+            value = float(value)
         except ValueError:
             self.errors += 1
         except TypeError:
             self.errors += 1
         else:
             self.count += 1
-            self.sum += get_value
-            if self.min is None or get_value < self.min:
-                self.min = get_value
-            if self.max is None or get_value > self.max:
-                self.max = get_value
+            self.sum += value
+            if self.min is None or value < self.min:
+                self.min = value
+            if self.max is None or value > self.max:
+                self.max = value
                 
     def mean(self):
         return float(self.sum) / self.count
@@ -314,8 +376,8 @@ Basic statistics could not be evaluated, as there were no valid numeric values.
         else:
             r = """
 Basic statistics were evaluated on %s values, with %s values being excluded due 
-to errors converting data values to numbers. The maximum get_value was %s, the 
-minimum was %s, the sum was %s, and the mean get_value was %s. 
+to errors converting data values to numbers. The maximum was %s, the minimum was 
+%s, the sum was %s and the mean was %s. 
 """ % (self.count, self.errors, self.max, self.min, self.sum, self.mean())
         return r
     
@@ -369,14 +431,14 @@ time_formats = {
                 }
 
 
-def date_or_time(get_value):
+def date_or_time(value):
     formats = {date: date_formats,
                time: time_formats}
-    get_value = get_value.strip()
+    value = value.strip()
     for cls in formats:
         for fmt in formats[cls]:
             try:
-                datetime.strptime(get_value, fmt)
+                datetime.strptime(value, fmt)
             except ValueError:
                 pass
             except TypeError:
@@ -390,17 +452,17 @@ true_strings = {'true', 't', 'yes', 'y', '1'}
 false_strings = {'false', 'f', 'no', 'n', '0'}
 
 
-def bool_(get_value):
-    get_value = get_value.strip().lower()
-    if get_value in true_strings:
+def bool_(value):
+    value = value.strip().lower()
+    if value in true_strings:
         return True
-    elif get_value in false_strings:
+    elif value in false_strings:
         return False
     else:
-        raise ValueError('get_value is not one of recognised boolean representations: %s' % get_value)
+        raise ValueError('value is not one of recognised boolean representations: %s' % value)
     
 
-class DataTypes(object):
+class DataTypes(Analysis):
     
     def __init__(self, threshold=0.5):
         self._threshold = threshold
@@ -409,15 +471,15 @@ class DataTypes(object):
         self.parse_types = Counter()
         self.combined_types = Counter()
 
-    def accept_value(self, get_value):
+    def accept_value(self, value):
         self.count += 1
-        cls = get_value.__class__
+        cls = value.__class__
         self.actual_types[cls.__name__] += 1
         self.combined_types[cls.__name__] += 1
-        if isinstance(get_value, basestring):
+        if isinstance(value, basestring):
             for cls in (int, float): 
                 try:
-                    cls(get_value)
+                    cls(value)
                 except ValueError:
                     pass
                 except TypeError:
@@ -425,12 +487,12 @@ class DataTypes(object):
                 else:
                     self.parse_types[cls.__name__] += 1
                     self.combined_types[cls.__name__] += 1
-            dt_cls = date_or_time(get_value)
+            dt_cls = date_or_time(value)
             if dt_cls is not None:
                 self.parse_types[dt_cls.__name__] += 1
                 self.combined_types[dt_cls.__name__] += 1
             try:
-                bool_(get_value)
+                bool_(value)
             except ValueError:
                 pass
             except TypeError:
