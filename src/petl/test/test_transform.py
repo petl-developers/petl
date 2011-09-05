@@ -9,7 +9,7 @@ from itertools import izip
 
 
 from petl.transform import Cut, Cat, Convert, Sort, FilterDuplicates,\
-    FilterConflicts, MergeConflicts
+    FilterConflicts, MergeDuplicates
 
 
 logger = logging.getLogger('petl')
@@ -318,7 +318,7 @@ def test_merge_conflicts():
              ['A', 2, None]]
 
     # value overrides missing; last value wins
-    result = MergeConflicts(table, 'foo', missing=None)
+    result = MergeDuplicates(table, 'foo', missing=None)
     expectation = [['foo', 'bar', 'baz'],
                    ['A', 2, 2],
                    ['B', '2', u'7.8', True],

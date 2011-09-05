@@ -362,7 +362,7 @@ class FilterConflicts(object):
                 source_iterator.close()
 
 
-class MergeConflicts(object):
+class MergeDuplicates(object):
 
     def __init__(self, source, *args, **kwargs):
         self.source = source
