@@ -8,6 +8,19 @@ from operator import itemgetter
 from collections import defaultdict
 from itertools import islice, groupby
 import re
+import logging
+
+
+logger = logging.getLogger('petl')
+def d(*args):
+    logger.debug(repr(args))
+def i(*args):
+    logger.info(repr(args))
+def w(*args):
+    logger.warn(repr(args))
+def e(*args):
+    logger.error(repr(args))
+
 
 class Cut(object):
     """
@@ -511,80 +524,91 @@ class Recast(object):
         self.missing = missing
     
     def __iter__(self):
+
+        #
+        # TODO implementing this by making two passes through the data is a bit
+        # ugly, and could be costly if there are several upstream transformations
+        # that would need to be re-executed each pass - better to make one pass,
+        # caching the rows sampled to discover variables to be recast as fields?
+        #
+        
         try:
             
-            sit = iter(self.source)
-            flds = sit.next()
+            source_iterator = iter(self.source)
+            flds = source_iterator.next()
             
             # normalise some stuff
-            valf = self.value_field
-            keyf = self.key
-            varf = self.variable_field
-            if isinstance(keyf, basestring):
-                keyf = (keyf,)
-            if isinstance(varf, basestring):
-                varf = (varf,)
-            if keyf is None:
-                # assume keyf is fields not in variables
-                keyf = [f for f in flds if f not in varf and f != valf]
-            if varf is None:
-                # assume variables are fields not in keyf
-                varf = [f for f in flds if f not in keyf and f != valf]
+            value_field = self.value_field
+            key_fields = self.key
+            variable_fields = self.variable_field # N.B., could be more than one
+            if isinstance(key_fields, basestring):
+                key_fields = (key_fields,)
+            if isinstance(variable_fields, basestring):
+                variable_fields = (variable_fields,)
+            if key_fields is None:
+                # assume key_fields is fields not in variables
+                key_fields = [f for f in flds if f not in variable_fields and f != value_field]
+            if variable_fields is None:
+                # assume variables are fields not in key_fields
+                variable_fields = [f for f in flds if f not in key_fields and f != value_field]
             
             # sanity checks
-            assert valf in flds, 'invalid value field: %s' % valf
-            assert valf not in keyf, 'value field cannot be keyf'
-            assert valf not in varf, 'value field cannot be variable field'
-            for f in keyf:
-                assert f in flds, 'invalid keyf field: %s' % f
-            for f in varf:
+            assert value_field in flds, 'invalid value field: %s' % value_field
+            assert value_field not in key_fields, 'value field cannot be key_fields'
+            assert value_field not in variable_fields, 'value field cannot be variable field'
+            for f in key_fields:
+                assert f in flds, 'invalid key_fields field: %s' % f
+            for f in variable_fields:
                 assert f in flds, 'invalid variable field: %s' % f
 
             # we'll need these later
-            vali = flds.index(valf)
-            keyi = [flds.index(k) for k in keyf]
-            vari = [flds.index(v) for v in varf]
+            value_index = flds.index(value_field)
+            key_indices = [flds.index(f) for f in key_fields]
+            variable_indices = [flds.index(f) for f in variable_fields]
             
             # determine the actual variable names to be cast as fields
-            if isinstance(varf, dict):
-                vard = varf
+            if isinstance(variable_fields, dict):
+                # user supplied dictionary
+                variables = variable_fields
             else:
-                vard = defaultdict(set)
-                # sample the data to collect variables to be cast as fields
-                for row in islice(sit, 0, self.sample_size):
-                    for i, f in zip(vari, varf):
-                        vard[f].add(row[i])
-                for f in vard:
-                    vard[f] = sorted(vard[f])
+                variables = defaultdict(set)
+                # sample the data to discover variables to be cast as fields
+                for row in islice(source_iterator, 0, self.sample_size):
+                    for i, f in zip(variable_indices, variable_fields):
+                        variables[f].add(row[i])
+                for f in variables:
+                    variables[f] = sorted(variables[f]) # turn from sets to sorted lists
             
-            if hasattr(sit, 'close'):
-                sit.close() # finished the first pass
+            if hasattr(source_iterator, 'close'):
+                source_iterator.close() # finished the first pass
             
             # determine the output fields
-            out_fields = list(keyf)
-            for f in varf:
-                out_fields.extend(vard[f])
+            out_fields = list(key_fields)
+            for f in variable_fields:
+                out_fields.extend(variables[f])
             yield out_fields
             
             # output data
             
-            source = Sort(self.source, *keyf)
-            sit = iter(source)
-            key = itemgetter(*keyi)
+            source = Sort(self.source, *key_fields)
+            source_iterator = iter(source)
+            source_iterator.next() # skip header row, don't know why islice doesn't work?
+            get_key = itemgetter(*key_indices)
             
             # process sorted data in groups
-            groups = groupby(islice(sit, 1), key=key)
-            for kval, group in groups:
-                if len(kval) > 1:
-                    out_row = list(kval)
-                else:
-                    out_row = [kval]
+            groups = groupby(source_iterator, key=get_key)
+            for key_value, group in groups:
                 group = list(group) # may need to iterate over the group more than once
-                for v, i in zip(varf, vari):
-                    for f in vard[v]:
-                        values = [r[vali] for r in group if r[i] == f]
-                        if f in self.reduce:
-                            redu = self.reduce[f]
+                if len(key_fields) > 1:
+                    out_row = list(key_value)
+                else:
+                    out_row = [key_value]
+                for f, i in zip(variable_fields, variable_indices):
+                    for variable in variables[f]:
+                        # collect all values for the current variable
+                        values = [r[value_index] for r in group if r[i] == variable]
+                        if variable in self.reduce:
+                            redu = self.reduce[variable]
                         else:
                             redu = itemgetter(0) # pick first item arbitrarily
                         if values:
@@ -597,8 +621,8 @@ class Recast(object):
         except:
             raise
         finally:
-            if hasattr(sit, 'close'):
-                sit.close()
+            if hasattr(source_iterator, 'close'):
+                source_iterator.close()
 
 
 class StringCapture(object):

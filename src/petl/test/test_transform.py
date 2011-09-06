@@ -525,6 +525,7 @@ def test_recast_1():
                    ]
     
     result = Recast(data) # by default lift 'variable' field, hold everything else
+    d(list(result))
     iter_compare(expectation, result)
 
     result = Recast(data, variable_field='variable')
@@ -536,6 +537,102 @@ def test_recast_1():
     result = Recast(data, key='id', variable_field='variable', value_field='value')
     iter_compare(expectation, result)
 
+
+def test_recast_2():
+    
+    data = [
+            ['id', 'variable', 'value'],
+            ['3', 'age', '16'],
+            ['1', 'gender', 'F'],
+            ['2', 'gender', 'M'],
+            ['2', 'age', '17'],
+            ['1', 'age', '12'],
+            ['3', 'gender', 'M']
+            ]
+    
+    expectation = [
+                   ['id', 'gender'],
+                   ['1', 'F'],
+                   ['2', 'M'],
+                   ['3', 'M']
+                   ]
+    
+    # can manually pick which variables you want to recast as fields
+    result = Recast(data, key='id', variable_field={'variable':['gender']})
+    iter_compare(expectation, result)
+
+
+def test_recast_3():
+    
+    data = [
+            ['id', 'time', 'variable', 'value'],
+            [1, 11, 'weight', 66.4],
+            [1, 14, 'weight', 55.2],
+            [2, 12, 'weight', 53.2],
+            [2, 16, 'weight', 43.3],
+            [3, 12, 'weight', 34.5],
+            [3, 17, 'weight', 49.4]
+            ]
+    
+    expectation = [
+                   ['id', 'time', 'weight'],
+                   [1, 11, 66.4],
+                   [1, 14, 55.2],
+                   [2, 12, 53.2],
+                   [2, 16, 43.3],
+                   [3, 12, 34.5],
+                   [3, 17, 49.4]
+                   ]
+    
+    result = Recast(data)
+    iter_compare(expectation, result)
+
+    # in the absence of an aggregation function, pick the first item by default
+    expectation = [
+                   ['id', 'weight'],
+                   [1, 66.4],
+                   [2, 53.2],
+                   [3, 34.5]
+                   ]
+    
+    result = Recast(data, key='id')
+    iter_compare(expectation, result)
+
+    # max aggregation
+    expectation = [
+                   ['id', 'weight'],
+                   [1, 66.4],
+                   [2, 53.2],
+                   [3, 49.4]
+                   ]
+    
+    result = Recast(data, key='id', reduce={'weight': max})
+    iter_compare(expectation, result)
+
+    # min aggregation
+    expectation = [
+                   ['id', 'weight'],
+                   [1, 55.2],
+                   [2, 43.3],
+                   [3, 34.5]
+                   ]
+    
+    result = Recast(data, key='id', reduce={'weight': min})
+    iter_compare(expectation, result)
+
+    # mean aggregation
+    expectation = [
+                   ['id', 'weight'],
+                   [1, 60.80],
+                   [2, 48.25],
+                   [3, 41.95]
+                   ]
+
+    mean = lambda values: round(sum(values) / len(values), 2)
+    result = Recast(data, key='id', reduce={'weight': mean})
+    iter_compare(expectation, result)
+
+    
 
 
 
