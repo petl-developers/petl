@@ -9,7 +9,8 @@ from itertools import izip
 
 
 from petl.transform import Cut, Cat, Convert, Sort, FilterDuplicates,\
-    FilterConflicts, MergeDuplicates, Melt, StringCapture, StringSplit, Recast
+    FilterConflicts, MergeDuplicates, Melt, StringCapture, StringSplit, Recast,\
+    meanf
 
 
 logger = logging.getLogger('petl')
@@ -628,8 +629,7 @@ def test_recast_3():
                    [3, 41.95]
                    ]
 
-    mean = lambda values: round(sum(values) / len(values), 2)
-    result = Recast(data, key='id', reduce={'weight': mean})
+    result = Recast(data, key='id', reduce={'weight': meanf(precision=2)})
     iter_compare(expectation, result)
 
     

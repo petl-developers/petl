@@ -709,5 +709,14 @@ class StringSplit(object):
                 sit.close()
         
 
-    
+def mean(values):
+    return float(sum(values)) / len(values)
+
+
+def meanf(precision=2):
+    def f(values):
+        v = mean(values)
+        v = round(v, precision)
+        return v
+    return f
     

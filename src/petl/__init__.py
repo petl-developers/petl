@@ -4,4 +4,4 @@ from petl.profile import Profiler, BasicStatistics, DataTypes, DistinctValues, \
                         RowLengths
 from petl.transform import Cut, Cat, Convert, Sort, FilterDuplicates, \
                         FilterConflicts, MergeDuplicates, Melt, StringCapture, \
-                        StringSplit, Recast
+                        StringSplit, Recast, mean, meanf

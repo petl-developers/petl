@@ -1,9 +1,4 @@
-foo,bar,baz
-A,1,2
-B,2,3.4
-B,3,7.8,True
-D,xyz,9.0
-B,None
-E,31/12/1999,13:37
-E,
-H,yes,11.2
+id,gender,age
+1,F,12
+2,M,17
+3,M,16
