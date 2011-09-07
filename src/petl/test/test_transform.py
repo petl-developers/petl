@@ -8,8 +8,8 @@ import sys
 from itertools import izip
 
 
-from petl.transform import cut, Cat, Convert, Sort, FilterDuplicates,\
-    FilterConflicts, MergeDuplicates, Melt, StringCapture, StringSplit, Recast,\
+from petl.transform import cut, cat, convert, sort, filterduplicates,\
+    filterconflicts, MergeDuplicates, Melt, StringCapture, StringSplit, Recast,\
     meanf
 
 
@@ -83,7 +83,7 @@ def test_cat():
               ['C', True],
               ['D', False]]
     
-    cat1 = Cat(table1, table2, missing=None)
+    cat1 = cat(table1, table2, missing=None)
     expectation = [['foo', 'bar', 'baz'],
                    [1, 'A', None],
                    [2, 'B', None],
@@ -91,7 +91,7 @@ def test_cat():
                    [None, 'D', False]]
     iter_compare(expectation, cat1)
 
-    # how does Cat cope with uneven rows?
+    # how does cat cope with uneven rows?
     
     table3 = [['foo', 'bar', 'baz'],
               ['A', 1, 2],
@@ -100,7 +100,7 @@ def test_cat():
               ['D', 'xyz', 9.0],
               ['E', None]]
 
-    cat3 = Cat(table3, missing=None)
+    cat3 = cat(table3, missing=None)
     expectation = [['foo', 'bar', 'baz'],
                    ['A', 1, 2],
                    ['B', '2', '3.4'],
@@ -121,7 +121,7 @@ def test_convert():
     
     # test the style where the conversion functions are passed in as a dictionary
     conversion = {'foo': str, 'bar': int, 'baz': float}
-    conv = Convert(table, conversion=conversion, error_value='error')
+    conv = convert(table, conversion=conversion, error_value='error')
     expectation = [['foo', 'bar', 'baz'],
                    ['A', 1, 2.0],
                    ['B', 2, 3.4],
@@ -131,10 +131,10 @@ def test_convert():
     iter_compare(expectation, conv) 
     
     # test the style where the conversion functions are added one at a time
-    conv = Convert(table, error_value='err')
-    conv.add('foo', str)
-    conv.add('bar', int)
-    conv.add('baz', float)
+    conv = convert(table, error_value='err')
+    conv.set('foo', str)
+    conv.set('bar', int)
+    conv['baz'] = float # can also use __setitem__
     expectation = [['foo', 'bar', 'baz'],
                    ['A', 1, 2.0],
                    ['B', 2, 3.4],
@@ -153,7 +153,7 @@ def test_sort_1():
             ['F', '1'],
             ['D', '10']]
     
-    result = Sort(data, 'foo')
+    result = sort(data, 'foo')
     expectation = [['foo', 'bar'],
                    ['A', '9'],
                    ['A', '6'],
@@ -172,7 +172,7 @@ def test_sort_2():
             ['F', '1'],
             ['D', '10']]
     
-    result = Sort(data, 'foo', 'bar')
+    result = sort(data, 'foo', 'bar')
     expectation = [['foo', 'bar'],
                    ['A', '6'],
                    ['A', '9'],
@@ -191,7 +191,7 @@ def test_sort_3():
             ['F', '1'],
             ['D', '10']]
     
-    result = Sort(data, 'bar')
+    result = sort(data, 'bar')
     expectation = [['foo', 'bar'],
                    ['F', '1'],
                    ['D', '10'],
@@ -210,7 +210,7 @@ def test_sort_4():
             ['F', 1],
             ['D', 10]]
     
-    result = Sort(data, 'bar')
+    result = sort(data, 'bar')
     expectation = [['foo', 'bar'],
                    ['F', 1],
                    ['C', 2],
@@ -237,13 +237,13 @@ def test_sort_5():
                    [3.2, 1]]
 
     # can use either field names or indices (from 1) to specify sort key
-    result = Sort(data, 'foo', 'bar')
+    result = sort(data, 'foo', 'bar')
     iter_compare(expectation, result)
-    result = Sort(data, 1, 2)
+    result = sort(data, 1, 2)
     iter_compare(expectation, result)
-    result = Sort(data, 'foo', 2)
+    result = sort(data, 'foo', 2)
     iter_compare(expectation, result)
-    result = Sort(data, 1, 'bar')
+    result = sort(data, 1, 'bar')
     iter_compare(expectation, result)
     
     
@@ -264,7 +264,7 @@ def test_sort_6():
                    [1.2, 9]]
 
     # can use either field names or indices (from 1) to specify sort key
-    result = Sort(data, 'foo', 'bar', reverse=True)
+    result = sort(data, 'foo', 'bar', reverse=True)
     iter_compare(expectation, result)
     
     
@@ -278,7 +278,7 @@ def test_filter_duplicates():
              ['E', None],
              ['D', 4, 12.3]]
 
-    result = FilterDuplicates(table, 'foo')
+    result = filterduplicates(table, 'foo')
     expectation = [['foo', 'bar', 'baz'],
                    ['B', '2', '3.4'],
                    ['B', u'3', u'7.8', True],
@@ -298,7 +298,7 @@ def test_filter_conflicts():
              ['D', 'xyz', 12.3],
              ['A', 2, None]]
 
-    result = FilterConflicts(table, 'foo', missing=None)
+    result = filterconflicts(table, 'foo', missing=None)
     expectation = [['foo', 'bar', 'baz'],
                    ['A', 1, 2],
                    ['A', 2, None],

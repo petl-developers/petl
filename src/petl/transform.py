@@ -9,7 +9,7 @@ from collections import defaultdict
 from itertools import islice, groupby
 import re
 import logging
-from petl.util import asindices, rowgetter
+from petl.util import asindices, rowgetter, closeit
 
 
 logger = logging.getLogger('petl')
@@ -31,23 +31,22 @@ class cut(object):
     
     def __init__(self, source, *args):
         self.source = source
-        self.field_selection = args
+        self.selection = args # selection can be either field names or indices
     
     def __iter__(self):
-
         source_iterator = iter(self.source)
         try:
             
             # convert field selection into field indices
-            source_fields = source_iterator.next()
-            indices = asindices(source_fields, self.field_selection)
+            fields = source_iterator.next()
+            indices = asindices(fields, self.selection)
 
             # define a function to transform each row in the source data 
             # according to the field selection
             transform = rowgetter(*indices)
             
             # yield the transformed field names
-            yield transform(source_fields)
+            yield transform(fields)
             
             # construct the transformed data
             for row in source_iterator:
@@ -60,12 +59,10 @@ class cut(object):
         except:
             raise
         finally:
-            # make sure the iterator is closed
-            if hasattr(source_iterator, 'closeit'):
-                source_iterator.closeit()
+            closeit(source_iterator)
 
 
-class Cat(object):
+class cat(object):
     """
     TODO doc me
     
@@ -79,7 +76,6 @@ class Cat(object):
             self.missing = Ellipsis
     
     def __iter__(self):
-        
         source_iterators = [iter(t) for t in self.sources]
         try:
             
@@ -118,33 +114,34 @@ class Cat(object):
         finally:
             # make sure all iterators are closed
             for source_iterator in source_iterators:
-                if hasattr(source_iterator, 'closeit'):
-                    source_iterator.closeit()
+                closeit(source_iterator)
         
 
-class Convert(object):
+class convert(object):
     
     def __init__(self, source, conversion=dict(), error_value=None):
         self.source = source
         self.conversion = conversion
         self.error_value = error_value
         
-    def add(self, field, converter):
+    def set(self, field, converter):
         self.conversion[field] = converter
+        
+    def __setitem__(self, key, value):
+        self.set(key, value)
         
     def __iter__(self):
         source_iterator = iter(self.source)
-        
         try:
             
             # grab the fields in the source table
-            flds = source_iterator.next()
-            yield flds # these are not modified
+            fields = source_iterator.next()
+            yield fields # these are not modified
             
             # define a function to transform a value
             def transform_value(i, v):
                 try:
-                    f = flds[i]
+                    f = fields[i]
                 except IndexError:
                     # row is long, just return value as-is
                     return v
@@ -169,15 +166,14 @@ class Convert(object):
         except:
             raise
         finally:
-            if hasattr(source_iterator, 'closeit'):
-                source_iterator.closeit()
+            closeit(source_iterator)
                 
                 
-class Sort(object):
+class sort(object):
     
     def __init__(self, source, *args, **kwargs):
         self.source = source
-        self.field_selection = args
+        self.selection = args
         if 'reverse' in kwargs:
             self.reverse = kwargs['reverse']
         else:
@@ -185,75 +181,54 @@ class Sort(object):
         self.kwargs = kwargs
         
     def __iter__(self):
-        # TODO merge sort on large dataset
         source_iterator = iter(self.source)
-
         try:
-            flds = source_iterator.next()
-            yield flds
+            fields = source_iterator.next()
+            yield fields
             
             # convert field selection into field indices
-            indices = list()
-            for selection in self.field_selection:
-                # selection could be a field name
-                if selection in flds:
-                    indices.append(flds.index(selection))
-                # or selection could be a field index
-                elif isinstance(selection, int) and selection - 1 < len(flds):
-                    indices.append(selection - 1) # index fields from 1, not 0
-                else:
-                    # TODO raise?
-                    pass
-                
-            # now use field indices to construct a key function
+            indices = asindices(fields, self.selection)
+             
+            # now use field indices to construct a getkey function
             # N.B., this will probably raise an exception on short rows
-            key = itemgetter(*indices)
+            getkey = itemgetter(*indices)
+
+            # TODO merge sort on large dataset!!!
             rows = list(source_iterator)
-            rows.sort(key=key, reverse=self.reverse)
+            rows.sort(key=getkey, reverse=self.reverse)
             for row in rows:
                 yield row
             
         except:
             raise
         finally:
-            if hasattr(source_iterator, 'closeit'):
-                source_iterator.closeit()
+            closeit(source_iterator)
 
                   
-class FilterDuplicates(object):
+class filterduplicates(object):
     
     def __init__(self, source, *args, **kwargs):
         self.source = source
-        self.field_selection = args
+        self.selection = args
         self.kwargs = kwargs
         
     def __iter__(self):
         
         # first need to sort the data
-        source = Sort(self.source, *self.field_selection)
+        source = sort(self.source, *self.selection)
         source_iterator = iter(source)
 
         try:
-            flds = source_iterator.next()
-            yield flds
+            fields = source_iterator.next()
+            yield fields
 
             # convert field selection into field indices
-            indices = list()
-            for selection in self.field_selection:
-                # selection could be a field name
-                if selection in flds:
-                    indices.append(flds.index(selection))
-                # or selection could be a field index
-                elif isinstance(selection, int) and selection - 1 < len(flds):
-                    indices.append(selection - 1) # index fields from 1, not 0
-                else:
-                    # TODO raise?
-                    pass
+            indices = asindices(fields, self.selection)
                 
-            # now use field indices to construct a key function
+            # now use field indices to construct a getkey function
             # N.B., this may raise an exception on short rows, depending on
             # the field selection
-            key = itemgetter(*indices)
+            getkey = itemgetter(*indices)
             
             previous = None
             previous_yielded = False
@@ -262,8 +237,8 @@ class FilterDuplicates(object):
                 if previous is None:
                     previous = row
                 else:
-                    kprev = key(previous)
-                    kcurr = key(row)
+                    kprev = getkey(previous)
+                    kcurr = getkey(row)
                     if kprev == kcurr:
                         if not previous_yielded:
                             yield previous
@@ -277,15 +252,14 @@ class FilterDuplicates(object):
         except:
             raise
         finally:
-            if hasattr(source_iterator, 'closeit'):
-                source_iterator.closeit()
+            closeit(source_iterator)
 
 
-class FilterConflicts(object):
+class filterconflicts(object):
     
     def __init__(self, source, *args, **kwargs):
         self.source = source
-        self.field_selection = args
+        self.selection = args
         self.kwargs = kwargs
         if 'missing' in kwargs:
             self.missing = kwargs['missing']
@@ -294,30 +268,20 @@ class FilterConflicts(object):
         
     def __iter__(self):
         # first need to sort the data
-        source = Sort(self.source, *self.field_selection)
+        source = sort(self.source, *self.selection)
         source_iterator = iter(source)
 
         try:
-            flds = source_iterator.next()
-            yield flds
+            fields = source_iterator.next()
+            yield fields
 
             # convert field selection into field indices
-            indices = list()
-            for selection in self.field_selection:
-                # selection could be a field name
-                if selection in flds:
-                    indices.append(flds.index(selection))
-                # or selection could be a field index
-                elif isinstance(selection, int) and selection - 1 < len(flds):
-                    indices.append(selection - 1) # index fields from 1, not 0
-                else:
-                    # TODO raise?
-                    pass
-                
-            # now use field indices to construct a key function
+            indices = asindices(fields, self.selection)
+                            
+            # now use field indices to construct a getkey function
             # N.B., this may raise an exception on short rows, depending on
             # the field selection
-            key = itemgetter(*indices)
+            getkey = itemgetter(*indices)
             
             previous = None
             previous_yielded = False
@@ -326,8 +290,8 @@ class FilterConflicts(object):
                 if previous is None:
                     previous = row
                 else:
-                    kprev = key(previous)
-                    kcurr = key(row)
+                    kprev = getkey(previous)
+                    kcurr = getkey(row)
                     if kprev == kcurr:
                         # is there a conflict?
                         conflict = False
@@ -348,15 +312,14 @@ class FilterConflicts(object):
         except:
             raise
         finally:
-            if hasattr(source_iterator, 'closeit'):
-                source_iterator.closeit()
+            closeit(source_iterator)
 
 
 class MergeDuplicates(object):
 
     def __init__(self, source, *args, **kwargs):
         self.source = source
-        self.field_selection = args
+        self.selection = args
         self.kwargs = kwargs
         if 'missing' in kwargs:
             self.missing = kwargs['missing']
@@ -365,7 +328,7 @@ class MergeDuplicates(object):
         
     def __iter__(self):
         # first need to sort the data
-        source = Sort(self.source, *self.field_selection)
+        source = sort(self.source, *self.selection)
         source_iterator = iter(source)
 
         try:
@@ -374,7 +337,7 @@ class MergeDuplicates(object):
 
             # convert field selection into field indices
             indices = list()
-            for selection in self.field_selection:
+            for selection in self.selection:
                 # selection could be a field name
                 if selection in flds:
                     indices.append(flds.index(selection))
@@ -564,7 +527,7 @@ class Recast(object):
             
             # output data
             
-            source = Sort(self.source, *key_fields)
+            source = sort(self.source, *key_fields)
             source_iterator = iter(source)
             source_iterator.next() # skip header row, don't know why islice doesn't work?
             get_key = itemgetter(*key_indices)

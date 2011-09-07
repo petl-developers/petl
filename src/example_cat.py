@@ -4,7 +4,7 @@
 TODO doc me
 """
 
-from petl import Cat, look
+from petl import cat, look
 
 table1 = [['foo', 'bar'],
           [1, 'A'],
@@ -12,5 +12,5 @@ table1 = [['foo', 'bar'],
 table2 = [['bar', 'baz'],
           ['C', True],
           ['D', False]]
-table3 = Cat(table1, table2, missing=None)
+table3 = cat(table1, table2, missing=None)
 look(table3)
