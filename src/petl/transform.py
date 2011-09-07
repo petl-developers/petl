@@ -315,7 +315,7 @@ class filterconflicts(object):
             closeit(source_iterator)
 
 
-class MergeDuplicates(object):
+class mergeduplicates(object):
 
     def __init__(self, source, *args, **kwargs):
         self.source = source
@@ -332,26 +332,16 @@ class MergeDuplicates(object):
         source_iterator = iter(source)
 
         try:
-            flds = source_iterator.next()
-            yield flds
+            fields = source_iterator.next()
+            yield fields
 
             # convert field selection into field indices
-            indices = list()
-            for selection in self.selection:
-                # selection could be a field name
-                if selection in flds:
-                    indices.append(flds.index(selection))
-                # or selection could be a field index
-                elif isinstance(selection, int) and selection - 1 < len(flds):
-                    indices.append(selection - 1) # index fields from 1, not 0
-                else:
-                    # TODO raise?
-                    pass
-                
-            # now use field indices to construct a key function
+            indices = asindices(fields, self.selection)
+            
+            # now use field indices to construct a getkey function
             # N.B., this may raise an exception on short rows, depending on
             # the field selection
-            key = itemgetter(*indices)
+            getkey = itemgetter(*indices)
             
             previous = None
             
@@ -359,8 +349,8 @@ class MergeDuplicates(object):
                 if previous is None:
                     previous = row
                 else:
-                    kprev = key(previous)
-                    kcurr = key(row)
+                    kprev = getkey(previous)
+                    kcurr = getkey(row)
                     if kprev == kcurr:
                         merge = list()
                         for i, v in enumerate(row):
@@ -382,8 +372,7 @@ class MergeDuplicates(object):
         except:
             raise
         finally:
-            if hasattr(source_iterator, 'closeit'):
-                source_iterator.closeit()
+            closeit(source_iterator)
 
 
 class Melt(object):

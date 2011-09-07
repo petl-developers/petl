@@ -9,7 +9,7 @@ from itertools import izip
 
 
 from petl.transform import cut, cat, convert, sort, filterduplicates,\
-    filterconflicts, MergeDuplicates, Melt, StringCapture, StringSplit, Recast,\
+    filterconflicts, mergeduplicates, Melt, StringCapture, StringSplit, Recast,\
     meanf
 
 
@@ -319,7 +319,7 @@ def test_merge_duplicates():
              ['A', 2, None]]
 
     # value overrides missing; last value wins
-    result = MergeDuplicates(table, 'foo', missing=None)
+    result = mergeduplicates(table, 'foo', missing=None)
     expectation = [['foo', 'bar', 'baz'],
                    ['A', 2, 2],
                    ['B', '2', u'7.8', True],
