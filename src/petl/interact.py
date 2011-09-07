@@ -6,6 +6,7 @@ TODO doc me
 
 from petl.prettytable import PrettyTable
 from itertools import islice
+from petl.util import closeit
 
 
 def look(table, start=1, stop=21, step=1):
@@ -28,6 +29,5 @@ def look(table, start=1, stop=21, step=1):
     except:
         raise
     finally:
-        if hasattr(table_iterator, 'close'):
-            table_iterator.close()
+        closeit(table_iterator)
     

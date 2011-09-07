@@ -120,8 +120,8 @@ class Profiler(object):
             raise
         finally:
             # make sure iterator is closed, even if not exhausted
-            if hasattr(table_iterator, 'close'):
-                table_iterator.close()
+            if hasattr(table_iterator, 'closeit'):
+                table_iterator.closeit()
             
 
 class Report(object):
@@ -279,8 +279,8 @@ class Analysis(object):
         except:
             raise
         finally:
-            if hasattr(source_iterator, 'close'):
-                source_iterator.close()
+            if hasattr(source_iterator, 'closeit'):
+                source_iterator.closeit()
 
         
 class RowLengths(Analysis):

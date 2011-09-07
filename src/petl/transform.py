@@ -9,6 +9,7 @@ from collections import defaultdict
 from itertools import islice, groupby
 import re
 import logging
+from petl.util import asindices, rowgetter
 
 
 logger = logging.getLogger('petl')
@@ -22,7 +23,7 @@ def e(*args):
     logger.error(repr(args))
 
 
-class Cut(object):
+class cut(object):
     """
     TODO doc me
     
@@ -38,39 +39,12 @@ class Cut(object):
         try:
             
             # convert field selection into field indices
-            indices = list()
             source_fields = source_iterator.next()
-            for selection in self.field_selection:
-                # selection could be a field name
-                if selection in source_fields:
-                    indices.append(source_fields.index(selection))
-                # or selection could be a field index
-                elif isinstance(selection, int) and selection - 1 < len(source_fields):
-                    indices.append(selection - 1) # index fields from 1, not 0
-                else:
-                    # TODO raise?
-                    pass
+            indices = asindices(source_fields, self.field_selection)
 
             # define a function to transform each row in the source data 
             # according to the field selection
-            #
-            # if more than one field selected, use itemgetter, it should be the
-            # most efficient
-            if len(indices) > 1:
-                transform = itemgetter(*indices)
-            # 
-            # if only one field is selected, we cannot use itemgetter, because
-            # we want a singleton sequence to be returned, but itemgetter with
-            # a single argument returns the value itself, so let's define a 
-            # custom transform function
-            elif len(indices) == 1:
-                index = indices[0]
-                transform = lambda row: (row[index],) # note comma - singleton tuple!
-            #
-            # no fields selected, should probably raise an error
-            else:
-                # TODO raise?
-                pass
+            transform = rowgetter(*indices)
             
             # yield the transformed field names
             yield transform(source_fields)
@@ -87,8 +61,8 @@ class Cut(object):
             raise
         finally:
             # make sure the iterator is closed
-            if hasattr(source_iterator, 'close'):
-                source_iterator.close()
+            if hasattr(source_iterator, 'closeit'):
+                source_iterator.closeit()
 
 
 class Cat(object):
@@ -144,8 +118,8 @@ class Cat(object):
         finally:
             # make sure all iterators are closed
             for source_iterator in source_iterators:
-                if hasattr(source_iterator, 'close'):
-                    source_iterator.close()
+                if hasattr(source_iterator, 'closeit'):
+                    source_iterator.closeit()
         
 
 class Convert(object):
@@ -195,8 +169,8 @@ class Convert(object):
         except:
             raise
         finally:
-            if hasattr(source_iterator, 'close'):
-                source_iterator.close()
+            if hasattr(source_iterator, 'closeit'):
+                source_iterator.closeit()
                 
                 
 class Sort(object):
@@ -242,8 +216,8 @@ class Sort(object):
         except:
             raise
         finally:
-            if hasattr(source_iterator, 'close'):
-                source_iterator.close()
+            if hasattr(source_iterator, 'closeit'):
+                source_iterator.closeit()
 
                   
 class FilterDuplicates(object):
@@ -303,8 +277,8 @@ class FilterDuplicates(object):
         except:
             raise
         finally:
-            if hasattr(source_iterator, 'close'):
-                source_iterator.close()
+            if hasattr(source_iterator, 'closeit'):
+                source_iterator.closeit()
 
 
 class FilterConflicts(object):
@@ -374,8 +348,8 @@ class FilterConflicts(object):
         except:
             raise
         finally:
-            if hasattr(source_iterator, 'close'):
-                source_iterator.close()
+            if hasattr(source_iterator, 'closeit'):
+                source_iterator.closeit()
 
 
 class MergeDuplicates(object):
@@ -445,8 +419,8 @@ class MergeDuplicates(object):
         except:
             raise
         finally:
-            if hasattr(source_iterator, 'close'):
-                source_iterator.close()
+            if hasattr(source_iterator, 'closeit'):
+                source_iterator.closeit()
 
 
 class Melt(object):
@@ -506,8 +480,8 @@ class Melt(object):
         except:
             raise
         finally:
-            if hasattr(sit, 'close'):
-                sit.close()
+            if hasattr(sit, 'closeit'):
+                sit.closeit()
 
 
 class Recast(object):
@@ -579,8 +553,8 @@ class Recast(object):
                 for f in variables:
                     variables[f] = sorted(variables[f]) # turn from sets to sorted lists
             
-            if hasattr(source_iterator, 'close'):
-                source_iterator.close() # finished the first pass
+            if hasattr(source_iterator, 'closeit'):
+                source_iterator.closeit() # finished the first pass
             
             # determine the output fields
             out_fields = list(key_fields)
@@ -621,8 +595,8 @@ class Recast(object):
         except:
             raise
         finally:
-            if hasattr(source_iterator, 'close'):
-                source_iterator.close()
+            if hasattr(source_iterator, 'closeit'):
+                source_iterator.closeit()
 
 
 class StringCapture(object):
@@ -664,8 +638,8 @@ class StringCapture(object):
         except:
             raise
         finally:
-            if hasattr(sit, 'close'):
-                sit.close()
+            if hasattr(sit, 'closeit'):
+                sit.closeit()
         
 
 class StringSplit(object):
@@ -705,8 +679,8 @@ class StringSplit(object):
         except:
             raise
         finally:
-            if hasattr(sit, 'close'):
-                sit.close()
+            if hasattr(sit, 'closeit'):
+                sit.closeit()
         
 
 def mean(values):

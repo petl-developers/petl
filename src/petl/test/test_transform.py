@@ -8,7 +8,7 @@ import sys
 from itertools import izip
 
 
-from petl.transform import Cut, Cat, Convert, Sort, FilterDuplicates,\
+from petl.transform import cut, Cat, Convert, Sort, FilterDuplicates,\
     FilterConflicts, MergeDuplicates, Melt, StringCapture, StringSplit, Recast,\
     meanf
 
@@ -36,7 +36,7 @@ def test_cut():
              ['D', 'xyz', 9.0],
              ['E', None]]
 
-    cut1 = Cut(table, 'foo')
+    cut1 = cut(table, 'foo')
     expectation = [['foo'],
                    ['A'],
                    ['B'],
@@ -45,7 +45,7 @@ def test_cut():
                    ['E']]
     iter_compare(expectation, cut1)
     
-    cut2 = Cut(table, 'foo', 'baz')
+    cut2 = cut(table, 'foo', 'baz')
     expectation = [['foo', 'baz'],
                    ['A', 2],
                    ['B', '3.4'],
@@ -54,7 +54,7 @@ def test_cut():
                    ['E', Ellipsis]]
     iter_compare(expectation, cut2)
     
-    cut3 = Cut(table, 1, 3)
+    cut3 = cut(table, 1, 3)
     expectation = [['foo', 'baz'],
                    ['A', 2],
                    ['B', '3.4'],
@@ -63,7 +63,7 @@ def test_cut():
                    ['E', Ellipsis]]
     iter_compare(expectation, cut3)
     
-    cut4 = Cut(table, 'bar', 1)
+    cut4 = cut(table, 'bar', 1)
     expectation = [['bar', 'foo'],
                    [1, 'A'],
                    ['2', 'B'],

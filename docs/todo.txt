@@ -9,62 +9,6 @@ To Do
   this is justified, even though it's not strictly consistent with the
   Python style guide.
 
-- Implement `diff` - Compare two tables, row by row, to find rows in
-  one but not in the other. Probably need to do a lexical sort on the
-  rows, then iterate and compare. What to do about each side of the
-  difference?  Possible to return two tables, only in left and only in
-  right? Maybe a dependency here on a complement function? E.g.::
-
-    >>> table1 = ...
-    >>> table2 = ...
-    >>> added, subtracted = diff(table1, table2)
-    >>> # added is rows found in table2 but not in table1
-    >>> # subtracted is rows found in table1 but not in table2     
-
-- Implement `complement` - Subtract rows in one table from another
-  table, and return a table of the remaining rows. Probably need to do
-  a lexical sort on both tables first, then iterate. E.g.::
-
-    >>> table1 = ...
-    >>> table2 = ...
-    >>> t1_minus_t2 = complement(table1, table2)
-
-- Implement `diffpresorted`: Same as `diff`, but assume tables are
-  already sorted. This is closer to what the original diff on text
-  files does, i.e., compare the files line by line as they are.
-
-- Implement `complementpresorted`: Same as `complement` but assume
-  tables are already sorted.
-
-- Implement default `sort` without key: Change 'Sort' to `sort`. If no
-  key is supplied to `sort`, make the default sort a lexical sort on
-  rows, i.e., sort by field 1, then field 2, etc.
-
-- Implement `rmap`: A transformation mapping each row in the input to
-  one row in the output, based on a single transformation
-  function. E.g.::
-
-    >>> table1 = ... # assume has fields 'foo', 'bar' and 'baz'
-    >>> table2 = rmap(table1, fields=('new1', 'new2'), mapper=lambda r: [r['foo'] * 2, r['bar'] * r['baz']])
-    >>> # N.B., mapper function will be passed a dictionary of values indexed by field, instead of raw rows
-
-- Implement `fmap`: Like `rmap`, but there is one function for each
-  field in the output. E.g.::
-
-    >>> table1 = ... # assume has fields 'foo', 'bar' and 'baz'
-    >>> table2 = fmap(table1)
-    >>> # N.B., mapper functions will be passed a dictionary of values indexed by field, instead of raw rows
-    >>> table2.set('new1', lambda r: r['foo'] * 2)
-    >>> table2.set('new2', lambda r: r['bar'] * r['baz'])
-    >>> table2.set('new3', 'foo') # copy of field 'foo'
-    >>> table2.set('new4', '$bar * $baz') # evaluated expression
-    >>> table2.set('new5', '${bar} * ${baz}') # evaluated expression with syntax to accommodate fields with spaces
-    >>> translation = ((1, 'M'), (2, 'F'))
-    >>> table2.set('new6', translate('foo', translation)) # convenience mapper function for translating values
-    >>> # N.B., translation could also be a dictionary
-    >>> table2['new7'] = '$foo + $bar' # can also use __setitem__
-    >>> # N.B., use ordereddict under the hood, so fields come out in the order they were set
-
 - Change API for `rowlengths`: Accept a table, and optional limit on
   number of rows to examine, and return a table of lengths and counts
   (probably easiest to implement as a list of lists). E.g.::
@@ -150,6 +94,62 @@ To Do
     >>> see(table1)
     'foo': 'A', 'B'
     'bar': 1, 2
+
+- Implement `diff` - Compare two tables, row by row, to find rows in
+  one but not in the other. Probably need to do a lexical sort on the
+  rows, then iterate and compare. What to do about each side of the
+  difference?  Possible to return two tables, only in left and only in
+  right? Maybe a dependency here on a complement function? E.g.::
+
+    >>> table1 = ...
+    >>> table2 = ...
+    >>> added, subtracted = diff(table1, table2)
+    >>> # added is rows found in table2 but not in table1
+    >>> # subtracted is rows found in table1 but not in table2     
+
+- Implement `complement` - Subtract rows in one table from another
+  table, and return a table of the remaining rows. Probably need to do
+  a lexical sort on both tables first, then iterate. E.g.::
+
+    >>> table1 = ...
+    >>> table2 = ...
+    >>> t1_minus_t2 = complement(table1, table2)
+
+- Implement `diffpresorted`: Same as `diff`, but assume tables are
+  already sorted. This is closer to what the original diff on text
+  files does, i.e., compare the files line by line as they are.
+
+- Implement `complementpresorted`: Same as `complement` but assume
+  tables are already sorted.
+
+- Implement default `sort` without key: Change 'Sort' to `sort`. If no
+  key is supplied to `sort`, make the default sort a lexical sort on
+  rows, i.e., sort by field 1, then field 2, etc.
+
+- Implement `rmap`: A transformation mapping each row in the input to
+  one row in the output, based on a single transformation
+  function. E.g.::
+
+    >>> table1 = ... # assume has fields 'foo', 'bar' and 'baz'
+    >>> table2 = rmap(table1, fields=('new1', 'new2'), mapper=lambda r: [r['foo'] * 2, r['bar'] * r['baz']])
+    >>> # N.B., mapper function will be passed a dictionary of values indexed by field, instead of raw rows
+
+- Implement `fmap`: Like `rmap`, but there is one function for each
+  field in the output. E.g.::
+
+    >>> table1 = ... # assume has fields 'foo', 'bar' and 'baz'
+    >>> table2 = fmap(table1)
+    >>> # N.B., mapper functions will be passed a dictionary of values indexed by field, instead of raw rows
+    >>> table2.set('new1', lambda r: r['foo'] * 2)
+    >>> table2.set('new2', lambda r: r['bar'] * r['baz'])
+    >>> table2.set('new3', 'foo') # copy of field 'foo'
+    >>> table2.set('new4', '$bar * $baz') # evaluated expression
+    >>> table2.set('new5', '${bar} * ${baz}') # evaluated expression with syntax to accommodate fields with spaces
+    >>> translation = ((1, 'M'), (2, 'F'))
+    >>> table2.set('new6', translate('foo', translation)) # convenience mapper function for translating values
+    >>> # N.B., translation could also be a dictionary
+    >>> table2['new7'] = '$foo + $bar' # can also use __setitem__
+    >>> # N.B., use ordereddict under the hood, so fields come out in the order they were set
 
 - Review API for `convert`: Maybe change 'add' to 'set', and also
   implement __setitem__. Rationale is, 'add' is confusing, if called
