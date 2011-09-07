@@ -375,7 +375,7 @@ class mergeduplicates(object):
             closeit(source_iterator)
 
 
-class Melt(object):
+class melt(object):
     
     def __init__(self, source, key=None, variables=None, 
                  variable_field='variable', value_field='value'):
@@ -387,11 +387,11 @@ class Melt(object):
         self.value_field = value_field
         
     def __iter__(self):
-        sit = iter(self.source)
+        source_iterator = iter(self.source)
         try:
             
             # normalise some stuff
-            flds = sit.next()
+            fields = source_iterator.next()
             key = self.key
             variables = self.variables
             if isinstance(key, basestring):
@@ -401,10 +401,10 @@ class Melt(object):
                 variables = (variables,) # normalise to a tuple
             if key is None:
                 # assume key is fields not in variables
-                key = [f for f in flds if f not in variables]
+                key = [f for f in fields if f not in variables]
             if variables is None:
                 # assume variables are fields not in key
-                variables = [f for f in flds if f not in key]
+                variables = [f for f in fields if f not in key]
             
             # determine the output fields
             out_fields = list(key)
@@ -412,31 +412,26 @@ class Melt(object):
             out_fields.append(self.value_field)
             yield out_fields
             
-            key_indices = [flds.index(k) for k in key]
-            if len(key) > 1:
-                get_key = itemgetter(*key_indices)
-            elif len(key) == 1:
-                key_index = key_indices[0]
-                get_key = lambda row: (row[key_index],)
-            variables_indices = [flds.index(v) for v in variables]
+            key_indices = [fields.index(k) for k in key]
+            getkey = rowgetter(*key_indices)
+            variables_indices = [fields.index(v) for v in variables]
             
             # construct the output data
-            for row in sit:
-                k = get_key(row)
+            for row in source_iterator:
+                k = getkey(row)
                 for v, i in zip(variables, variables_indices):
                     o = list(k) # populate with key values initially
-                    o.append(v)
-                    o.append(row[i])
+                    o.append(v) # add variable
+                    o.append(row[i]) # add value
                     yield o
                     
         except:
             raise
         finally:
-            if hasattr(sit, 'closeit'):
-                sit.closeit()
+            closeit(source_iterator)
 
 
-class Recast(object):
+class recast(object):
     
     def __init__(self, source, key=None, variable_field='variable', 
                  value_field='value', sample_size=1000, reduce=dict(), 
@@ -461,7 +456,7 @@ class Recast(object):
         try:
             
             source_iterator = iter(self.source)
-            flds = source_iterator.next()
+            fields = source_iterator.next()
             
             # normalise some stuff
             value_field = self.value_field
@@ -473,24 +468,24 @@ class Recast(object):
                 variable_fields = (variable_fields,)
             if key_fields is None:
                 # assume key_fields is fields not in variables
-                key_fields = [f for f in flds if f not in variable_fields and f != value_field]
+                key_fields = [f for f in fields if f not in variable_fields and f != value_field]
             if variable_fields is None:
                 # assume variables are fields not in key_fields
-                variable_fields = [f for f in flds if f not in key_fields and f != value_field]
+                variable_fields = [f for f in fields if f not in key_fields and f != value_field]
             
             # sanity checks
-            assert value_field in flds, 'invalid value field: %s' % value_field
+            assert value_field in fields, 'invalid value field: %s' % value_field
             assert value_field not in key_fields, 'value field cannot be key_fields'
             assert value_field not in variable_fields, 'value field cannot be variable field'
             for f in key_fields:
-                assert f in flds, 'invalid key_fields field: %s' % f
+                assert f in fields, 'invalid key_fields field: %s' % f
             for f in variable_fields:
-                assert f in flds, 'invalid variable field: %s' % f
+                assert f in fields, 'invalid variable field: %s' % f
 
             # we'll need these later
-            value_index = flds.index(value_field)
-            key_indices = [flds.index(f) for f in key_fields]
-            variable_indices = [flds.index(f) for f in variable_fields]
+            value_index = fields.index(value_field)
+            key_indices = [fields.index(f) for f in key_fields]
+            variable_indices = [fields.index(f) for f in variable_fields]
             
             # determine the actual variable names to be cast as fields
             if isinstance(variable_fields, dict):
@@ -505,8 +500,7 @@ class Recast(object):
                 for f in variables:
                     variables[f] = sorted(variables[f]) # turn from sets to sorted lists
             
-            if hasattr(source_iterator, 'closeit'):
-                source_iterator.closeit() # finished the first pass
+            closeit(source_iterator) # finished the first pass
             
             # determine the output fields
             out_fields = list(key_fields)
@@ -519,10 +513,10 @@ class Recast(object):
             source = sort(self.source, *key_fields)
             source_iterator = iter(source)
             source_iterator.next() # skip header row, don't know why islice doesn't work?
-            get_key = itemgetter(*key_indices)
+            getkey = itemgetter(*key_indices)
             
             # process sorted data in groups
-            groups = groupby(source_iterator, key=get_key)
+            groups = groupby(source_iterator, key=getkey)
             for key_value, group in groups:
                 group = list(group) # may need to iterate over the group more than once
                 if len(key_fields) > 1:
@@ -547,11 +541,10 @@ class Recast(object):
         except:
             raise
         finally:
-            if hasattr(source_iterator, 'closeit'):
-                source_iterator.closeit()
+            closeit(source_iterator)
 
 
-class StringCapture(object):
+class stringcapture(object):
     
     def __init__(self, source, field, pattern, groups, include_original=False):
         self.source = source
@@ -561,24 +554,23 @@ class StringCapture(object):
         self.include_original = include_original
         
     def __iter__(self):
-        sit = iter(self.source)
+        source_iterator = iter(self.source)
         try:
             prog = re.compile(self.pattern)
             
-            flds = sit.next()
-            assert self.field in flds, 'field not found: %s' % self.field
-            field_index = flds.index(self.field)
+            fields = source_iterator.next()
+            assert self.field in fields, 'field not found: %s' % self.field
+            field_index = fields.index(self.field)
             
             # determine output fields
-            if self.include_original:
-                out_fields = list(flds)
-            else:
-                out_fields = [f for f in flds if f != self.field]
+            out_fields = list(fields)
+            if not self.include_original:
+                out_fields.remove(self.field)
             out_fields.extend(self.groups)
             yield out_fields
             
             # construct the output data
-            for row in sit:
+            for row in source_iterator:
                 value = row[field_index]
                 if self.include_original:
                     out_row = list(row)
@@ -590,11 +582,10 @@ class StringCapture(object):
         except:
             raise
         finally:
-            if hasattr(sit, 'closeit'):
-                sit.closeit()
+            closeit(source_iterator)
         
 
-class StringSplit(object):
+class stringsplit(object):
     def __init__(self, source, field, pattern, groups, include_original=False):
         self.source = source
         self.field = field
@@ -603,23 +594,22 @@ class StringSplit(object):
         self.include_original = include_original
         
     def __iter__(self):
-        sit = iter(self.source)
+        source_iterator = iter(self.source)
         try:
             
-            flds = sit.next()
-            assert self.field in flds, 'field not found: %s' % self.field
-            field_index = flds.index(self.field)
+            fields = source_iterator.next()
+            assert self.field in fields, 'field not found: %s' % self.field
+            field_index = fields.index(self.field)
             
             # determine output fields
-            if self.include_original:
-                out_fields = list(flds)
-            else:
-                out_fields = [f for f in flds if f != self.field]
+            out_fields = list(fields)
+            if not self.include_original:
+                out_fields.remove(self.field)
             out_fields.extend(self.groups)
             yield out_fields
             
             # construct the output data
-            for row in sit:
+            for row in source_iterator:
                 value = row[field_index]
                 if self.include_original:
                     out_row = list(row)
@@ -631,8 +621,7 @@ class StringSplit(object):
         except:
             raise
         finally:
-            if hasattr(sit, 'closeit'):
-                sit.closeit()
+            closeit(source_iterator)
         
 
 def mean(values):

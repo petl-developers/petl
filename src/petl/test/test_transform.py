@@ -9,7 +9,7 @@ from itertools import izip
 
 
 from petl.transform import cut, cat, convert, sort, filterduplicates,\
-    filterconflicts, mergeduplicates, Melt, StringCapture, StringSplit, Recast,\
+    filterconflicts, mergeduplicates, melt, stringcapture, stringsplit, recast,\
     meanf
 
 
@@ -348,10 +348,10 @@ def test_melt_1():
                    ['3', 'age', '16']
                    ]
     
-    result = Melt(data, key='id')
+    result = melt(data, key='id')
     iter_compare(expectation, result)
 
-    result = Melt(data, key='id', variable_field='variable', value_field='value')
+    result = melt(data, key='id', variable_field='variable', value_field='value')
     iter_compare(expectation, result)
 
 
@@ -374,7 +374,7 @@ def test_melt_2():
                    ['3', '12', 'weight', '9.4']
                    ]
     
-    result = Melt(data, key=('id', 'time'))
+    result = melt(data, key=('id', 'time'))
     iter_compare(expectation, result)
 
 
@@ -396,10 +396,10 @@ def test_string_capture():
                    ['4', '19', 'C', '1']
                    ]
     
-    result = StringCapture(data, 'variable', '(\\w)(\\d)', ('treat', 'time'))
+    result = stringcapture(data, 'variable', '(\\w)(\\d)', ('treat', 'time'))
     iter_compare(expectation, result)
 
-    result = StringCapture(data, 'variable', '(\\w)(\\d)', ('treat', 'time'),
+    result = stringcapture(data, 'variable', '(\\w)(\\d)', ('treat', 'time'),
                            include_original=False)
     iter_compare(expectation, result)
 
@@ -411,7 +411,7 @@ def test_string_capture():
                    ['4', 'C12', '19', 'C', '1']
                    ]
     
-    result = StringCapture(data, 'variable', '(\\w)(\\d)', ('treat', 'time'),
+    result = stringcapture(data, 'variable', '(\\w)(\\d)', ('treat', 'time'),
                            include_original=True)
     iter_compare(expectation, result)
     
@@ -434,10 +434,10 @@ def test_string_split():
                    ['4', '19', 'temp', '2']
                    ]
     
-    result = StringSplit(data, 'variable', 'd', ('variable', 'day'))
+    result = stringsplit(data, 'variable', 'd', ('variable', 'day'))
     iter_compare(expectation, result)
 
-    result = StringSplit(data, 'variable', 'd', ('variable', 'day'),
+    result = stringsplit(data, 'variable', 'd', ('variable', 'day'),
                          include_original=False)
     iter_compare(expectation, result)
 
@@ -449,7 +449,7 @@ def test_string_split():
                    ['4', 'tempd2', '19', 'temp', '2']
                    ]
     
-    result = StringSplit(data, 'variable', 'd', ('variable', 'day'),
+    result = stringsplit(data, 'variable', 'd', ('variable', 'day'),
                          include_original=True)
     iter_compare(expectation, result)
     
@@ -472,8 +472,8 @@ def test_melt_and_capture():
                    ['2', '67', '2']
                    ]
     
-    step1 = Melt(data, key='id', value_field='parasitaemia')
-    step2 = StringCapture(step1, 'variable', 'parad(\\d+)', ('day',))
+    step1 = melt(data, key='id', value_field='parasitaemia')
+    step2 = stringcapture(step1, 'variable', 'parad(\\d+)', ('day',))
     iter_compare(expectation, step2)
 
 
@@ -501,8 +501,8 @@ def test_melt_and_split():
                    ['2', '36.9', 'temp', '2']
                    ]
     
-    step1 = Melt(data, key='id')
-    step2 = StringSplit(step1, 'variable', 'd', ('variable', 'day'))
+    step1 = melt(data, key='id')
+    step2 = stringsplit(step1, 'variable', 'd', ('variable', 'day'))
     iter_compare(expectation, step2)
 
 
@@ -525,17 +525,17 @@ def test_recast_1():
                    ['3', '16', 'M']
                    ]
     
-    result = Recast(data) # by default lift 'variable' field, hold everything else
+    result = recast(data) # by default lift 'variable' field, hold everything else
     d(list(result))
     iter_compare(expectation, result)
 
-    result = Recast(data, variable_field='variable')
+    result = recast(data, variable_field='variable')
     iter_compare(expectation, result)
 
-    result = Recast(data, key='id', variable_field='variable')
+    result = recast(data, key='id', variable_field='variable')
     iter_compare(expectation, result)
 
-    result = Recast(data, key='id', variable_field='variable', value_field='value')
+    result = recast(data, key='id', variable_field='variable', value_field='value')
     iter_compare(expectation, result)
 
 
@@ -559,7 +559,7 @@ def test_recast_2():
                    ]
     
     # can manually pick which variables you want to recast as fields
-    result = Recast(data, key='id', variable_field={'variable':['gender']})
+    result = recast(data, key='id', variable_field={'variable':['gender']})
     iter_compare(expectation, result)
 
 
@@ -585,7 +585,7 @@ def test_recast_3():
                    [3, 17, 49.4]
                    ]
     
-    result = Recast(data)
+    result = recast(data)
     iter_compare(expectation, result)
 
     # in the absence of an aggregation function, pick the first item by default
@@ -596,7 +596,7 @@ def test_recast_3():
                    [3, 34.5]
                    ]
     
-    result = Recast(data, key='id')
+    result = recast(data, key='id')
     iter_compare(expectation, result)
 
     # max aggregation
@@ -607,7 +607,7 @@ def test_recast_3():
                    [3, 49.4]
                    ]
     
-    result = Recast(data, key='id', reduce={'weight': max})
+    result = recast(data, key='id', reduce={'weight': max})
     iter_compare(expectation, result)
 
     # min aggregation
@@ -618,7 +618,7 @@ def test_recast_3():
                    [3, 34.5]
                    ]
     
-    result = Recast(data, key='id', reduce={'weight': min})
+    result = recast(data, key='id', reduce={'weight': min})
     iter_compare(expectation, result)
 
     # mean aggregation
@@ -629,7 +629,7 @@ def test_recast_3():
                    [3, 41.95]
                    ]
 
-    result = Recast(data, key='id', reduce={'weight': meanf(precision=2)})
+    result = recast(data, key='id', reduce={'weight': meanf(precision=2)})
     iter_compare(expectation, result)
 
     
