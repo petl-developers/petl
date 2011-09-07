@@ -4,5 +4,5 @@ from petl.transform import dateparser, timeparser, boolparser, datetimeparser, p
                         parsedate, parsetime, cut, cat, convert, sort, filterduplicates, \
                         filterconflicts, mergeduplicates, melt, stringcapture, \
                         stringsplit, recast, mean, meanf, rslice, head, tail, count, \
-                        fields
+                        fields, complement, complementpresorted, diff, diffpresorted
 from petl.io import readcsv, writecsv, readpickle, writepickle

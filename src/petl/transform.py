@@ -173,7 +173,7 @@ class convert(object):
                 
 class sort(object):
     
-    def __init__(self, source, key, reverse=False):
+    def __init__(self, source, key=None, reverse=False):
         self.source = source
         self.selection = key
         self.reverse = reverse
@@ -184,16 +184,24 @@ class sort(object):
             fields = source_iterator.next()
             yield fields
             
-            # convert field selection into field indices
-            indices = asindices(fields, self.selection)
-             
-            # now use field indices to construct a getkey function
-            # N.B., this will probably raise an exception on short rows
-            getkey = itemgetter(*indices)
-
             # TODO merge sort on large dataset!!!
             rows = list(source_iterator)
-            rows.sort(key=getkey, reverse=self.reverse)
+
+            if self.selection is not None:
+
+                # convert field selection into field indices
+                indices = asindices(fields, self.selection)
+                 
+                # now use field indices to construct a getkey function
+                # N.B., this will probably raise an exception on short rows
+                getkey = itemgetter(*indices)
+    
+                rows.sort(key=getkey, reverse=self.reverse)
+
+            else:
+
+                rows.sort(reverse=self.reverse)
+
             for row in rows:
                 yield row
             
@@ -804,5 +812,104 @@ def fields(source):
     finally:
         closeit(it)
     return count
+
+
+class complement(object):
+    
+    def __init__(self, a, b):
+        # lexical sort both sources
+        self.sourcea = sort(a)
+        self.sourceb = sort(b)
+        
+    def __iter__(self):
+        ita = iter(self.sourcea) 
+        itb = iter(self.sourceb)
+        try:
+            aflds = ita.next()
+            itb.next() # ignore b fields
+            yield aflds
+            
+            a = ita.next()
+            b = itb.next()
+            # we want the elements in a that are not in b
+            while True:
+                if b is None or a < b:
+                    yield a
+                    try:
+                        a = ita.next()
+                    except StopIteration:
+                        break
+                elif a == b:
+                    try:
+                        a = ita.next()
+                    except StopIteration:
+                        break
+                else:
+                    try:
+                        b = itb.next()
+                    except StopIteration:
+                        b = None
+        except:
+            raise
+        finally:
+            closeit(ita)
+            closeit(itb)
+    
+    
+class complementpresorted(object):
+    
+    def __init__(self, a, b):
+        self.sourcea = a
+        self.sourceb = b
+        
+    def __iter__(self):
+        ita = iter(self.sourcea) 
+        itb = iter(self.sourceb)
+        try:
+            aflds = ita.next()
+            itb.next() # ignore b fields
+            yield aflds
+            
+            a = ita.next()
+            b = itb.next()
+            # we want the elements in a that are not in b
+            while True:
+                if b is None or a < b:
+                    yield a
+                    try:
+                        a = ita.next()
+                    except StopIteration:
+                        break
+                elif a == b:
+                    try:
+                        a = ita.next()
+                    except StopIteration:
+                        break
+                else:
+                    try:
+                        b = itb.next()
+                    except StopIteration:
+                        b = None
+        except:
+            raise
+        finally:
+            closeit(ita)
+            closeit(itb)
+    
+    
+def diff(a, b):
+    a = sort(a)
+    b = sort(b)
+    added = complementpresorted(b, a)
+    subtracted = complementpresorted(a, b)
+    return added, subtracted
+    
+    
+def diffpresorted(a, b):
+    added = complementpresorted(b, a)
+    subtracted = complementpresorted(a, b)
+    return added, subtracted
+    
+    
 
 

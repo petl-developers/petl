@@ -11,7 +11,8 @@ from datetime import date, time
 
 from petl import cut, cat, convert, sort, filterduplicates,\
     filterconflicts, mergeduplicates, melt, stringcapture, stringsplit, recast,\
-    meanf, rslice, head, tail, parsedate, parsetime, count, fields
+    meanf, rslice, head, tail, parsedate, parsetime, count, fields, complement,\
+    diff
 
 
 logger = logging.getLogger('petl')
@@ -174,6 +175,15 @@ def test_sort_2():
             ['D', '10']]
     
     result = sort(data, key=('foo', 'bar'))
+    expectation = [['foo', 'bar'],
+                   ['A', '6'],
+                   ['A', '9'],
+                   ['C', '2'],
+                   ['D', '10'],
+                   ['F', '1']]
+    iter_compare(expectation, result)
+    
+    result = sort(data) # default is lexical sort
     expectation = [['foo', 'bar'],
                    ['A', '6'],
                    ['A', '9'],
@@ -783,4 +793,83 @@ def test_fields():
     result = fields(table)
     assert result == ['foo', 'bar', 'baz']
 
+    
+def test_complement_1():
+
+    table1 = [['foo', 'bar'],
+              ['A', 1],
+              ['B', 2],
+              ['C', 7]]
+    
+    table2 = [['foo', 'bar'],
+              ['A', 9],
+              ['B', 2],
+              ['B', 3]]
+    
+    expectation = [['foo', 'bar'],
+                   ['A', 1],
+                   ['C', 7]]
+    
+    result = complement(table1, table2)
+    iter_compare(expectation, result)
+    
+    
+def test_complement_2():
+
+    tablea = [['foo', 'bar', 'baz'],
+              ['A', 1, True],
+              ['C', 7, False],
+              ['B', 2, False],
+              ['C', 9, True]]
+    
+    tableb = [['x', 'y', 'z'],
+              ['B', 2, False],
+              ['A', 9, False],
+              ['B', 3, True],
+              ['C', 9, True]]
+    
+    aminusb = [['foo', 'bar', 'baz'],
+               ['A', 1, True],
+               ['C', 7, False]]
+    
+    result = complement(tablea, tableb)
+    iter_compare(aminusb, result)
+    
+    bminusa = [['x', 'y', 'z'],
+               ['A', 9, False],
+               ['B', 3, True]]
+    
+    result = complement(tableb, tablea)
+    iter_compare(bminusa, result)
+    
+
+def test_diff():
+
+    tablea = [['foo', 'bar', 'baz'],
+              ['A', 1, True],
+              ['C', 7, False],
+              ['B', 2, False],
+              ['C', 9, True]]
+    
+    tableb = [['x', 'y', 'z'],
+              ['B', 2, False],
+              ['A', 9, False],
+              ['B', 3, True],
+              ['C', 9, True]]
+    
+    aminusb = [['foo', 'bar', 'baz'],
+               ['A', 1, True],
+               ['C', 7, False]]
+    
+    bminusa = [['x', 'y', 'z'],
+               ['A', 9, False],
+               ['B', 3, True]]
+
+    added, subtracted = diff(tablea, tableb)    
+    iter_compare(added, bminusa)
+    iter_compare(subtracted, aminusb)
+    
+
+
+    
     
