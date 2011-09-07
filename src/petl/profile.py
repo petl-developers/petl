@@ -282,6 +282,11 @@ class Analysis(object):
             if hasattr(source_iterator, 'closeit'):
                 source_iterator.closeit()
 
+
+def rowlengths(table, limit=None):
+    it = iter(table)
+    it = islice(it, 1, None) # skip header row
+    
         
 class RowLengths(Analysis):
 

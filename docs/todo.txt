@@ -1,7 +1,7 @@
 To Do
 =====
 
-- Change naming convention to use all lower case without any
+- [DONE] Change naming convention to use all lower case without any
   underscores: It's just a pain and slows you down, especially in an
   interactive session, if you have to think about capitalisation or
   underscores. Note that hardly any unix commands ever use

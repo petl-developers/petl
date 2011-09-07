@@ -512,7 +512,7 @@ class recast(object):
             
             source = sort(self.source, *key_fields)
             source_iterator = iter(source)
-            source_iterator.next() # skip header row, don't know why islice doesn't work?
+            source_iterator = islice(source_iterator, 1, None) # skip header row
             getkey = itemgetter(*key_indices)
             
             # process sorted data in groups
