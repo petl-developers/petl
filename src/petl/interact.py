@@ -4,8 +4,10 @@ TODO doc me
 """
 
 
-from petl.prettytable import PrettyTable
 from itertools import islice
+from collections import defaultdict
+
+from petl.prettytable import PrettyTable
 from petl.util import closeit
 
 
@@ -30,4 +32,28 @@ def look(table, start=1, stop=21, step=1):
         raise
     finally:
         closeit(table_iterator)
+        
+
+def see(source, limit=20):
+    it = iter(source)
+    try:
+        fields = it.next()
+        data = defaultdict(list)
+        indices = [fields.index(f) for f in fields]
+        for row in islice(it, limit):
+            for f, i in zip(fields, indices):
+                try:
+                    data[f].append(repr(row[i]))
+                except IndexError:
+                    data[f].append(repr(Ellipsis))
+        closeit(it)
+        for f in fields:
+            print '%r: %s' % (f, ', '.join(data[f]))
+    except:
+        raise
+    finally:
+        closeit(it)
+    
+
+
     

@@ -6,11 +6,12 @@ TODO doc me
 import logging
 import sys
 from itertools import izip
+from datetime import date, time
 
 
-from petl.transform import cut, cat, convert, sort, filterduplicates,\
+from petl import cut, cat, convert, sort, filterduplicates,\
     filterconflicts, mergeduplicates, melt, stringcapture, stringsplit, recast,\
-    meanf
+    meanf, rslice, head, tail, parsedate, parsetime, count, fields
 
 
 logger = logging.getLogger('petl')
@@ -633,9 +634,153 @@ def test_recast_3():
     iter_compare(expectation, result)
 
     
-
-
-
-
+def test_rslice():
     
+    table = [['foo', 'bar', 'baz'],
+             ['A', 1, 2],
+             ['B', '2', '3.4'],
+             [u'B', u'3', u'7.8', True],
+             ['D', 'xyz', 9.0],
+             ['E', None]]
+
+    result = rslice(table, 2)
+    expectation = [['foo', 'bar', 'baz'],
+                   ['A', 1, 2],
+                   ['B', '2', '3.4']]
+    iter_compare(expectation, result)
+
+    result = rslice(table, 1, 2)
+    expectation = [['foo', 'bar', 'baz'],
+                   ['B', '2', '3.4']]
+    iter_compare(expectation, result)
+
+    result = rslice(table, 1, 5, 2)
+    expectation = [['foo', 'bar', 'baz'],
+                   ['B', '2', '3.4'],
+                   ['D', 'xyz', 9.0]]
+    iter_compare(expectation, result)
+
+
+def test_head():
+    
+    table = [['foo', 'bar', 'baz'],
+             ['A', 1, 2],
+             ['B', '2', '3.4'],
+             [u'B', u'3', u'7.8', True],
+             ['D', 'xyz', 9.0],
+             ['E', None]]
+
+    result = head(table, 2)
+    expectation = [['foo', 'bar', 'baz'],
+                   ['A', 1, 2],
+                   ['B', '2', '3.4']]
+    iter_compare(expectation, result)
+
+
+def test_tail():
+    
+    table = [['foo', 'bar', 'baz'],
+             ['A', 1, 2],
+             ['B', '2', '3.4'],
+             [u'B', u'3', u'7.8', True],
+             ['D', 'xyz', 9.0],
+             ['E', None]]
+
+    result = tail(table, 2)
+    expectation = [['foo', 'bar', 'baz'],
+                   ['D', 'xyz', 9.0],
+                   ['E', None]]
+    iter_compare(expectation, result)
+
+
+
+def test_parsedate():
+
+    dates = ['31/12/99',
+             ' 31/12/1999 ', # throw some ws in as well
+             u'31 Dec 99',
+             '31 Dec 1999',
+             '31. Dec. 1999',
+             '31 December 1999', 
+             '31. December 1999', 
+             'Fri 31 Dec 99',
+             'Fri 31/Dec 99',
+             'Fri 31 December 1999',
+             'Friday 31 December 1999',
+             '12-31',
+             '99-12-31',
+             '1999-12-31', # iso 8601
+             '12/99',
+             '31/Dec',
+             '12/31/99',
+             '12/31/1999',
+             'Dec 31, 99',
+             'Dec 31, 1999',
+             'December 31, 1999',
+             'Fri, Dec 31, 99',
+             'Fri, December 31, 1999',
+             'Friday, 31. December 1999'] 
+
+    for d in dates:
+        p = parsedate(d)
+        assert isinstance(p, date)
+    
+    try:
+        parsedate('not a date')
+    except:
+        pass
+    else:
+        assert False
+
+
+def test_parsetime():        
+
+    times = ['13:37',
+             ' 13:37:46 ', # throw some ws in as well
+             u'01:37 PM',
+             '01:37:46 PM',
+             '37:46.00',
+             '13:37:46.00', 
+             '01:37:46.00 PM',
+             '01:37PM',
+             '01:37:46PM',
+             '01:37:46.00PM'] 
+
+    for t in times:
+        p = parsetime(t)
+        assert isinstance(p, time)
+    
+    try:
+        parsetime('not a time')
+    except:
+        pass
+    else:
+        assert False
+
+ 
+def test_count():
+        
+    table = [['foo', 'bar', 'baz'],
+             ['A', 1, 2],
+             ['B', '2', '3.4'],
+             [u'B', u'3', u'7.8', True],
+             ['D', 'xyz', 9.0],
+             ['E', None]]
+
+    result = count(table)
+    assert result == 5
+    
+    
+def test_fields():
+
+    table = [['foo', 'bar', 'baz'],
+             ['A', 1, 2],
+             ['B', '2', '3.4'],
+             [u'B', u'3', u'7.8', True],
+             ['D', 'xyz', 9.0],
+             ['E', None]]
+
+    result = fields(table)
+    assert result == ['foo', 'bar', 'baz']
+
     

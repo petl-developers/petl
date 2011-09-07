@@ -9,57 +9,60 @@ To Do
   this is justified, even though it's not strictly consistent with the
   Python style guide.
 
-- Change API for `rowlengths`: Accept a table, and optional limit on
-  number of rows to examine, and return a table of lengths and counts
-  (probably easiest to implement as a list of lists). E.g.::
+- [DONE] Change API for `rowlengths`: Accept a table, and optional
+  limit on number of rows to examine, and return a table of lengths
+  and counts (probably easiest to implement as a list of
+  lists). E.g.::
 
     >>> table1 = ...
     >>> rowlengths(table1)
     (('length', 'count'), (3, 9), (2, 1))
 
-- Change API for `distinctvalues`: Change name to `values`, make this
-  a callable, accept a table and a field name, and optional limit on
-  number of rows to examine, and return a two column table where the
-  first field is the values, and the second field is counts, sorted by
-  most common (i.e., count descending). Returning a list of lists is
-  probably the simplest, and could be implemented by a call to
-  Counter.most_common() prepended with a pair of field names. E.g.::
+- [DONE] Change API for `distinctvalues`: Change name to `values`,
+  make this a callable, accept a table and a field name, and optional
+  limit on number of rows to examine, and return a two column table
+  where the first field is the values, and the second field is counts,
+  sorted by most common (i.e., count descending). Returning a list of
+  lists is probably the simplest, and could be implemented by a call
+  to Counter.most_common() prepended with a pair of field
+  names. E.g.::
 
     >>> table1 = ...
     >>> values(table1, 'foo')
     (('value', 'count'), ('A', 3), ('C', 1))
 
-- Change API for `datatypes`: Change name to `types` and make it
-  callable, accepting a table and field name, and returning a two
+- [DONE] Change API for `datatypes`: Change name to `types` and make
+  it callable, accepting a table and field name, and returning a two
   column table of types and counts, similar to `values`. E.g.::
 
     >>> table1 = ...
     >>> types(table1, 'foo')
     (('type', 'count'), (int, 3), (str, 2), (float, 1))
 
-- Implement `parsetypes` function as replacement to `DataTypes`: A
-  function accepting a table and field name, an optional limit on
-  number of rows to examine, and an optional list of parser functions,
-  returning a table of types and counts. The default list of parser
-  functions should be (int, float), define some additional functions
-  for parsing dates and times based on a specific pattern, or falling
-  back to a list of known patterns, but don't include by default as
-  they are super slow (e.g., dateparser, timeparser). E.g.::
+- [DONE] Implement `parsetypes` function as replacement to
+  `DataTypes`: A function accepting a table and field name, an
+  optional limit on number of rows to examine, and an optional list of
+  parser functions, returning a table of types and counts. The default
+  list of parser functions should be (int, float), define some
+  additional functions for parsing dates and times based on a specific
+  pattern, or falling back to a list of known patterns, but don't
+  include by default as they are super slow (e.g., dateparser,
+  timeparser). E.g.::
 
     >>> table1 = ...
     >>> parsetypes(table1, 'foo')
     (('type', 'count'), (int, 2), (float, 1)) 
 
-- Implement `stats` as replacement to `BasicStatistics`: Implement a
-  `stats` function which accepts a table and a field name, and
-  optionally a limit on the number of values to examine, and returns
-  basic descriptive statistics as a dictionary. E.g.::
+- [DONE] Implement `stats` as replacement to `BasicStatistics`:
+  Implement a `stats` function which accepts a table and a field name,
+  and optionally a limit on the number of values to examine, and
+  returns basic descriptive statistics as a dictionary. E.g.::
 
     >>> table1 = ...
     >>> stats(table1, 'foo')
     {'min': 1, 'max': 7, 'mean': 3.4, 'sum': 34, 'count': 10, 'errors': 2}
 
-- Clean up the profile module and tests.
+- [DONE] Clean up the profile module and tests.
 
 - Implement `head`: Return a table with the first n rows. E.g.::
 

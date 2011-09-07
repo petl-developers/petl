@@ -7,10 +7,8 @@ TODO doc me
 import logging
 import sys
 from datetime import date, time
-from collections import Counter
 from itertools import izip
-from petl.profile import rowlengths, values, stats, types, parsedate, parsetime,\
-    parsetypes
+from petl import rowlengths, values, stats, types, parsetypes
 
 
 logger = logging.getLogger('petl')
@@ -103,68 +101,4 @@ def test_parsetypes():
     result = parsetypes(table, 'bar') 
     expectation = (('type', 'count'), ('float', 3), ('int', 2))
     iter_compare(expectation, result)
-
-
-def test_parsedate():
-
-    dates = ['31/12/99',
-             ' 31/12/1999 ', # throw some ws in as well
-             u'31 Dec 99',
-             '31 Dec 1999',
-             '31. Dec. 1999',
-             '31 December 1999', 
-             '31. December 1999', 
-             'Fri 31 Dec 99',
-             'Fri 31/Dec 99',
-             'Fri 31 December 1999',
-             'Friday 31 December 1999',
-             '12-31',
-             '99-12-31',
-             '1999-12-31', # iso 8601
-             '12/99',
-             '31/Dec',
-             '12/31/99',
-             '12/31/1999',
-             'Dec 31, 99',
-             'Dec 31, 1999',
-             'December 31, 1999',
-             'Fri, Dec 31, 99',
-             'Fri, December 31, 1999',
-             'Friday, 31. December 1999'] 
-
-    for d in dates:
-        p = parsedate(d)
-        assert isinstance(p, date)
-    
-    try:
-        parsedate('not a date')
-    except:
-        pass
-    else:
-        assert False
-
-
-def test_parsetime():        
-
-    times = ['13:37',
-             ' 13:37:46 ', # throw some ws in as well
-             u'01:37 PM',
-             '01:37:46 PM',
-             '37:46.00',
-             '13:37:46.00', 
-             '01:37:46.00 PM',
-             '01:37PM',
-             '01:37:46PM',
-             '01:37:46.00PM'] 
-
-    for t in times:
-        p = parsetime(t)
-        assert isinstance(p, time)
-    
-    try:
-        parsetime('not a time')
-    except:
-        pass
-    else:
-        assert False
 

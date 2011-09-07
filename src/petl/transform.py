@@ -9,7 +9,9 @@ from collections import defaultdict
 from itertools import islice, groupby
 import re
 import logging
+from collections import deque
 from petl.util import asindices, rowgetter, closeit
+from datetime import datetime
 
 
 logger = logging.getLogger('petl')
@@ -634,4 +636,186 @@ def meanf(precision=2):
         v = round(v, precision)
         return v
     return f
+
+
+class rslice(object):
     
+    def __init__(self, source, *args):
+        self.source = source
+        self.args = args
+        
+    def __iter__(self):
+        source_iterator = iter(self.source)
+        try:
+            yield source_iterator.next() # fields
+            for row in islice(source_iterator, *self.args):
+                yield row
+        except:
+            raise
+        finally:
+            closeit(source_iterator)
+        
+
+def head(source, limit=10):
+    return rslice(source, limit)
+
+
+class tail(object):
+    
+    def __init__(self, source, limit=10):
+        self.source = source
+        self.limit = limit
+        
+    def __iter__(self):
+        source_iterator = iter(self.source)
+        try:
+            yield source_iterator.next() # fields
+            cache = deque()
+            for row in source_iterator:
+                cache.append(row)
+                if len(cache) > self.limit:
+                    cache.popleft()
+            for row in cache:
+                yield row
+        except:
+            raise
+        finally:
+            closeit(source_iterator)
+        
+
+
+# N.B., this list of date, time and datetime formats is far inferior to the set
+# of formats recognised by the Python dateutil package. If you want to do any
+# serious profiling of datetimes, use the DataTypes analysis from petlx (TODO) 
+
+
+date_formats = {
+                '%x',
+                '%d/%m/%y',
+                '%d/%m/%Y',
+                '%d %b %y',
+                '%d %b %Y',
+                '%d. %b. %Y',
+                '%d %B %Y',
+                '%d. %B %Y',
+                '%a %d %b %y',
+                '%a %d/%b %y',
+                '%a %d %B %Y',
+                '%A %d %B %Y',
+                '%m-%d',
+                '%y-%m-%d',
+                '%Y-%m-%d',
+                '%m/%y',
+                '%d/%b',
+                '%m/%d/%y',
+                '%m/%d/%Y',
+                '%b %d, %y',
+                '%b %d, %Y',
+                '%B %d, %Y',
+                '%a, %b %d, %y',
+                '%a, %B %d, %Y',
+                '%A, %d. %B %Y'
+                }
+
+
+time_formats = {
+                '%X',
+                '%H:%M',
+                '%H:%M:%S',
+                '%I:%M %p',
+                '%I:%M:%S %p',
+                '%M:%S.%f',
+                '%H:%M:%S.%f',
+                '%I:%M:%S.%f %p',
+                '%I:%M%p',
+                '%I:%M:%S%p',
+                '%I:%M:%S.%f%p'
+                }
+
+
+def parsedate(value):
+    for fmt in date_formats:
+        try:
+            return datetime.strptime(value.strip(), fmt).date()
+        except:
+            pass
+    raise ValueError('could not parse value as date: %s' % value)
+
+
+def parsetime(value):
+    value = value.strip()
+    for fmt in time_formats:
+        try:
+            return datetime.strptime(value.strip(), fmt).time()
+        except:
+            pass
+    raise ValueError('could not parse value as time: %s' % value)
+
+
+def datetimeparser(format):
+    def parser(value):
+        return datetime.strptime(value.strip(), format)
+    
+
+def dateparser(format):
+    def parser(value):
+        return datetime.strptime(value.strip(), format).date()
+    
+
+def timeparser(format):
+    def parser(value):
+        return datetime.strptime(value.strip(), format).time()
+    
+
+true_strings = {'true', 't', 'yes', 'y', '1'}
+false_strings = {'false', 'f', 'no', 'n', '0'}
+
+
+def parsebool(value):
+    value = value.strip().lower()
+    if value in true_strings:
+        return True
+    elif value in false_strings:
+        return False
+    else:
+        raise ValueError('value is not one of recognised boolean strings: %s' % value)
+    
+
+def boolparser(true_strings=true_strings, false_strings=false_strings):
+    def parser(value):
+        value = value.strip().lower()
+        if value in true_strings:
+            return True
+        elif value in false_strings:
+            return False
+        else:
+            raise ValueError('value is not one of recognised boolean strings: %s' % value)
+    return parser
+    
+
+def count(source):
+    it = iter(source)
+    count = 0
+    try:
+        for row in islice(it, 1, None):
+            count += 1
+    except:
+        raise
+    finally:
+        closeit(it)
+    return count
+
+
+def fields(source):
+    it = iter(source)
+    try:
+        fields = it.next()
+        closeit(it)
+        return fields
+    except:
+        raise
+    finally:
+        closeit(it)
+    return count
+
+
