@@ -126,6 +126,7 @@ Contents
    glossary
    protocol
    related_work
+   todo
 
 Indices and tables
 ==================

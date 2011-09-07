@@ -1,0 +1,193 @@
+To Do
+=====
+
+- Change naming convention to use all lower case without any
+  underscores: It's just a pain and slows you down, especially in an
+  interactive session, if you have to think about capitalisation or
+  underscores. Note that hardly any unix commands ever use
+  capitalisation. Given the emphasis on ease of use for petl, I think
+  this is justified, even though it's not strictly consistent with the
+  Python style guide.
+
+- Implement `diff` - Compare two tables, row by row, to find rows in
+  one but not in the other. Probably need to do a lexical sort on the
+  rows, then iterate and compare. What to do about each side of the
+  difference?  Possible to return two tables, only in left and only in
+  right? Maybe a dependency here on a complement function? E.g.::
+
+    >>> table1 = ...
+    >>> table2 = ...
+    >>> added, subtracted = diff(table1, table2)
+    >>> # added is rows found in table2 but not in table1
+    >>> # subtracted is rows found in table1 but not in table2     
+
+- Implement `complement` - Subtract rows in one table from another
+  table, and return a table of the remaining rows. Probably need to do
+  a lexical sort on both tables first, then iterate. E.g.::
+
+    >>> table1 = ...
+    >>> table2 = ...
+    >>> t1_minus_t2 = complement(table1, table2)
+
+- Implement `diffpresorted`: Same as `diff`, but assume tables are
+  already sorted. This is closer to what the original diff on text
+  files does, i.e., compare the files line by line as they are.
+
+- Implement `complementpresorted`: Same as `complement` but assume
+  tables are already sorted.
+
+- Implement default `sort` without key: Change 'Sort' to `sort`. If no
+  key is supplied to `sort`, make the default sort a lexical sort on
+  rows, i.e., sort by field 1, then field 2, etc.
+
+- Implement `rmap`: A transformation mapping each row in the input to
+  one row in the output, based on a single transformation
+  function. E.g.::
+
+    >>> table1 = ... # assume has fields 'foo', 'bar' and 'baz'
+    >>> table2 = rmap(table1, fields=('new1', 'new2'), mapper=lambda r: [r['foo'] * 2, r['bar'] * r['baz']])
+    >>> # N.B., mapper function will be passed a dictionary of values indexed by field, instead of raw rows
+
+- Implement `fmap`: Like `rmap`, but there is one function for each
+  field in the output. E.g.::
+
+    >>> table1 = ... # assume has fields 'foo', 'bar' and 'baz'
+    >>> table2 = fmap(table1)
+    >>> # N.B., mapper functions will be passed a dictionary of values indexed by field, instead of raw rows
+    >>> table2.set('new1', lambda r: r['foo'] * 2)
+    >>> table2.set('new2', lambda r: r['bar'] * r['baz'])
+    >>> table2.set('new3', 'foo') # copy of field 'foo'
+    >>> table2.set('new4', '$bar * $baz') # evaluated expression
+    >>> table2.set('new5', '${bar} * ${baz}') # evaluated expression with syntax to accommodate fields with spaces
+    >>> translation = ((1, 'M'), (2, 'F'))
+    >>> table2.set('new6', translate('foo', translation)) # convenience mapper function for translating values
+    >>> # N.B., translation could also be a dictionary
+    >>> table2['new7'] = '$foo + $bar' # can also use __setitem__
+    >>> # N.B., use ordereddict under the hood, so fields come out in the order they were set
+
+- Change API for `rowlengths`: Accept a table, and optional limit on
+  number of rows to examine, and return a table of lengths and counts
+  (probably easiest to implement as a list of lists). E.g.::
+
+    >>> table1 = ...
+    >>> rowlengths(table1)
+    (('length', 'count'), (3, 9), (2, 1))
+
+- Change API for `distinctvalues`: Change name to `values`, make this
+  a callable, accept a table and a field name, and optional limit on
+  number of rows to examine, and return a two column table where the
+  first field is the values, and the second field is counts, sorted by
+  most common (i.e., count descending). Returning a list of lists is
+  probably the simplest, and could be implemented by a call to
+  Counter.most_common() prepended with a pair of field names. E.g.::
+
+    >>> table1 = ...
+    >>> values(table1, 'foo')
+    (('value', 'count'), ('A', 3), ('C', 1))
+
+- Change API for `datatypes`: Change name to `types` and make it
+  callable, accepting a table and field name, and returning a two
+  column table of types and counts, similar to `values`. E.g.::
+
+    >>> table1 = ...
+    >>> types(table1, 'foo')
+    (('type', 'count'), (int, 3), (str, 2), (float, 1))
+
+- Implement `parsetypes` function as replacement to `DataTypes`: A
+  function accepting a table and field name, an optional limit on
+  number of rows to examine, and an optional list of parser functions,
+  returning a table of types and counts. The default list of parser
+  functions should be (int, float), define some additional functions
+  for parsing dates and times based on a specific pattern, or falling
+  back to a list of known patterns, but don't include by default as
+  they are super slow (e.g., dateparser, timeparser). E.g.::
+
+    >>> table1 = ...
+    >>> parsetypes(table1, 'foo')
+    (('type', 'count'), (int, 2), (float, 1)) 
+
+- Implement `stats` as replacement to `BasicStatistics`: Implement a
+  `stats` function which accepts a table and a field name, and
+  optionally a limit on the number of values to examine, and returns
+  basic descriptive statistics as a dictionary. E.g.::
+
+    >>> table1 = ...
+    >>> stats(table1, 'foo')
+    {'min': 1, 'max': 7, 'mean': 3.4, 'sum': 34, 'count': 10, 'errors': 2}
+
+- Clean up the profile module and tests.
+
+- Implement `head`: Return a table with the first n rows. E.g.::
+
+    >>> table1 = ...
+    >>> t1head = head(table1) # default to 10?
+    >>> t1head = head(table1, 20) # return first 20
+
+- Implement `tail`: Return a table with the last n rows. E.g.::
+
+    >>> table1 = ...
+    >>> t1tail = tail(table1) # default to 10?
+    >>> t1tail = tail(table1, 20) # return last 20
+
+- Implement `count`: Simple function counting number of rows in a
+  table. E.g.::
+
+    >>> table1 = ...
+    >>> count(table1) # N.B., count does not include header row (field names)
+    10
+
+- Implement `fields`: Simple function returning list of fields in a
+  table. E.g.::
+
+    >>> table1 = ...
+    >>> fields(table1)
+    ['foo', 'bar', 'baz]
+
+- Implement `see`: Similar to `look` but view transposed, i.e., fields
+  arranged vertically. E.g.::
+
+    >>> table1 = [['foo', 'bar'], ['A', 1], ['B', 2]]
+    >>> see(table1)
+    'foo': 'A', 'B'
+    'bar': 1, 2
+
+- Review API for `convert`: Maybe change 'add' to 'set', and also
+  implement __setitem__. Rationale is, 'add' is confusing, if called
+  twice on the same field the second call will override the first.
+
+- Change API for `sort`, `filterduplicates`, `filterconflicts`,
+  `mergeduplicates`: Make sure all these take a 'key' keyword
+  argument, instead of specifying the key as a list of arguments, so
+  there is consistency across these and `melt`, `recast` etc.
+
+- Implement `slice`
+
+- Implement `filter`.
+
+- Implement various types of join.
+
+- Implement `transpose`.
+
+- Implement `aggregate`?
+
+- Implement `pivot`? (How is this different from `recast`?)
+
+- Implement `filtervalid` and `filterinvalid`. (Or maybe `validator.filter`?)
+
+- Implement `validator` (or maybe `validate`?).
+
+- Implement `facet`.
+
+- Implement `translate` (or can this be done with `convert`?).
+
+- Implement `fillup` and `filldown`.
+
+- Implement `stringformat`, `stringreplace`, `stringtranslate`,
+  `substringafter`, `substringbefore`, `stringsplitintorows`,
+  `stringcaptureintorows`.
+
+- Implement `recastpresorted`, ... and presorted equivalents for other
+  functions that require sorted data.
+
+- Implement merge sort with configurable buffer/chunk size, and with
+  optional caching, on `sort`.
