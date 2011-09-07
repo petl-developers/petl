@@ -11,14 +11,14 @@ from petl.prettytable import PrettyTable
 from petl.util import closeit
 
 
-def look(table, start=1, stop=21, step=1):
+def look(table, limit=20):
     
     table_iterator = iter(table)
     try:
         fields = table_iterator.next()
         pretty = PrettyTable()
         pretty.field_names = fields
-        for row in islice(table_iterator, start - 1, stop - 1, step):
+        for row in islice(table_iterator, limit):
             # need to normalize row length, otherwise prettytable chokes
             difference = len(fields) - len(row)
             if difference < 0:

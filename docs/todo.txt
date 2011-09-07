@@ -64,39 +64,64 @@ To Do
 
 - [DONE] Clean up the profile module and tests.
 
-- Implement `head`: Return a table with the first n rows. E.g.::
+- [DONE] Implement `rslice`: Like islice but slice data rows and
+  always include the header row. (Can't use 'slice' because already
+  used in Python.)
+
+- [DONE] Implement `head`: Return a table with the first n
+  rows. E.g.::
 
     >>> table1 = ...
     >>> t1head = head(table1) # default to 10?
     >>> t1head = head(table1, 20) # return first 20
 
-- Implement `tail`: Return a table with the last n rows. E.g.::
+- [DONE] Implement `tail`: Return a table with the last n rows. E.g.::
 
     >>> table1 = ...
     >>> t1tail = tail(table1) # default to 10?
     >>> t1tail = tail(table1, 20) # return last 20
 
-- Implement `count`: Simple function counting number of rows in a
-  table. E.g.::
+- [DONE] Implement `count`: Simple function counting number of rows in
+  a table. E.g.::
 
     >>> table1 = ...
     >>> count(table1) # N.B., count does not include header row (field names)
     10
 
-- Implement `fields`: Simple function returning list of fields in a
-  table. E.g.::
+- [DONE] Implement `fields`: Simple function returning list of fields
+  in a table. E.g.::
 
     >>> table1 = ...
     >>> fields(table1)
     ['foo', 'bar', 'baz]
 
-- Implement `see`: Similar to `look` but view transposed, i.e., fields
-  arranged vertically. E.g.::
+- [DONE] Implement `see`: Similar to `look` but view transposed, i.e.,
+  fields arranged vertically. E.g.::
 
     >>> table1 = [['foo', 'bar'], ['A', 1], ['B', 2]]
     >>> see(table1)
     'foo': 'A', 'B'
     'bar': 1, 2
+
+- Review API for `convert`: Maybe change 'add' to 'set', and also
+  implement __setitem__. Rationale is, 'add' is confusing, if called
+  twice on the same field the second call will override the first.
+
+- Change API for `sort`, `filterduplicates`, `filterconflicts`,
+  `mergeduplicates`: Make sure all these take a 'key' keyword
+  argument, instead of specifying the key as a list of arguments, so
+  there is consistency across these and `melt`, `recast` etc.
+
+- Implement `complement` - Subtract rows in one table from another
+  table, and return a table of the remaining rows. Probably need to do
+  a lexical sort on both tables first, then iterate. E.g.::
+
+    >>> table1 = ...
+    >>> table2 = ...
+    >>> t1_minus_t2 = complement(table1, table2)
+
+- Implement `complementpresorted`: Same as `complement` but assume
+  tables are already sorted.
 
 - Implement `diff` - Compare two tables, row by row, to find rows in
   one but not in the other. Probably need to do a lexical sort on the
@@ -110,20 +135,9 @@ To Do
     >>> # added is rows found in table2 but not in table1
     >>> # subtracted is rows found in table1 but not in table2     
 
-- Implement `complement` - Subtract rows in one table from another
-  table, and return a table of the remaining rows. Probably need to do
-  a lexical sort on both tables first, then iterate. E.g.::
-
-    >>> table1 = ...
-    >>> table2 = ...
-    >>> t1_minus_t2 = complement(table1, table2)
-
 - Implement `diffpresorted`: Same as `diff`, but assume tables are
   already sorted. This is closer to what the original diff on text
   files does, i.e., compare the files line by line as they are.
-
-- Implement `complementpresorted`: Same as `complement` but assume
-  tables are already sorted.
 
 - Implement default `sort` without key: Change 'Sort' to `sort`. If no
   key is supplied to `sort`, make the default sort a lexical sort on
@@ -153,17 +167,6 @@ To Do
     >>> # N.B., translation could also be a dictionary
     >>> table2['new7'] = '$foo + $bar' # can also use __setitem__
     >>> # N.B., use ordereddict under the hood, so fields come out in the order they were set
-
-- Review API for `convert`: Maybe change 'add' to 'set', and also
-  implement __setitem__. Rationale is, 'add' is confusing, if called
-  twice on the same field the second call will override the first.
-
-- Change API for `sort`, `filterduplicates`, `filterconflicts`,
-  `mergeduplicates`: Make sure all these take a 'key' keyword
-  argument, instead of specifying the key as a list of arguments, so
-  there is consistency across these and `melt`, `recast` etc.
-
-- Implement `slice`
 
 - Implement `filter`.
 
