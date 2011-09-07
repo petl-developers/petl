@@ -173,14 +173,10 @@ class convert(object):
                 
 class sort(object):
     
-    def __init__(self, source, *args, **kwargs):
+    def __init__(self, source, key, reverse=False):
         self.source = source
-        self.selection = args
-        if 'reverse' in kwargs:
-            self.reverse = kwargs['reverse']
-        else:
-            self.reverse=False
-        self.kwargs = kwargs
+        self.selection = key
+        self.reverse = reverse
         
     def __iter__(self):
         source_iterator = iter(self.source)
@@ -209,15 +205,14 @@ class sort(object):
                   
 class filterduplicates(object):
     
-    def __init__(self, source, *args, **kwargs):
+    def __init__(self, source, key):
         self.source = source
-        self.selection = args
-        self.kwargs = kwargs
+        self.selection = key
         
     def __iter__(self):
         
         # first need to sort the data
-        source = sort(self.source, *self.selection)
+        source = sort(self.source, key=self.selection)
         source_iterator = iter(source)
 
         try:
@@ -259,18 +254,14 @@ class filterduplicates(object):
 
 class filterconflicts(object):
     
-    def __init__(self, source, *args, **kwargs):
+    def __init__(self, source, key, missing=Ellipsis):
         self.source = source
-        self.selection = args
-        self.kwargs = kwargs
-        if 'missing' in kwargs:
-            self.missing = kwargs['missing']
-        else:
-            self.missing = Ellipsis
+        self.selection = key
+        self.missing = missing
         
     def __iter__(self):
         # first need to sort the data
-        source = sort(self.source, *self.selection)
+        source = sort(self.source, key=self.selection)
         source_iterator = iter(source)
 
         try:
@@ -319,18 +310,14 @@ class filterconflicts(object):
 
 class mergeduplicates(object):
 
-    def __init__(self, source, *args, **kwargs):
+    def __init__(self, source, key, missing=Ellipsis):
         self.source = source
-        self.selection = args
-        self.kwargs = kwargs
-        if 'missing' in kwargs:
-            self.missing = kwargs['missing']
-        else:
-            self.missing = Ellipsis
+        self.selection = key
+        self.missing = missing
         
     def __iter__(self):
         # first need to sort the data
-        source = sort(self.source, *self.selection)
+        source = sort(self.source, key=self.selection)
         source_iterator = iter(source)
 
         try:
@@ -379,9 +366,9 @@ class mergeduplicates(object):
 
 class melt(object):
     
-    def __init__(self, source, key=None, variables=None, 
+    def __init__(self, source, key=[], variables=[], 
                  variable_field='variable', value_field='value'):
-        assert key is not None or variables is not None, 'supply either key or variables (or both)'
+        assert key or variables, 'supply either key or variables (or both)'
         self.source = source
         self.key = key
         self.variables = variables
@@ -401,10 +388,10 @@ class melt(object):
             if isinstance(variables, basestring):
                 # shouldn't expect this, but ... ?
                 variables = (variables,) # normalise to a tuple
-            if key is None:
+            if not key:
                 # assume key is fields not in variables
                 key = [f for f in fields if f not in variables]
-            if variables is None:
+            if not variables:
                 # assume variables are fields not in key
                 variables = [f for f in fields if f not in key]
             
@@ -435,7 +422,7 @@ class melt(object):
 
 class recast(object):
     
-    def __init__(self, source, key=None, variable_field='variable', 
+    def __init__(self, source, key=[], variable_field='variable', 
                  value_field='value', sample_size=1000, reduce=dict(), 
                  missing=None):
         self.source = source
@@ -468,10 +455,10 @@ class recast(object):
                 key_fields = (key_fields,)
             if isinstance(variable_fields, basestring):
                 variable_fields = (variable_fields,)
-            if key_fields is None:
+            if not key_fields:
                 # assume key_fields is fields not in variables
                 key_fields = [f for f in fields if f not in variable_fields and f != value_field]
-            if variable_fields is None:
+            if not variable_fields:
                 # assume variables are fields not in key_fields
                 variable_fields = [f for f in fields if f not in key_fields and f != value_field]
             
@@ -512,7 +499,7 @@ class recast(object):
             
             # output data
             
-            source = sort(self.source, *key_fields)
+            source = sort(self.source, key=key_fields)
             source_iterator = iter(source)
             source_iterator = islice(source_iterator, 1, None) # skip header row
             getkey = itemgetter(*key_indices)

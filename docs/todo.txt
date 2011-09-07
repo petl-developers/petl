@@ -103,14 +103,19 @@ To Do
     'foo': 'A', 'B'
     'bar': 1, 2
 
-- Review API for `convert`: Maybe change 'add' to 'set', and also
-  implement __setitem__. Rationale is, 'add' is confusing, if called
-  twice on the same field the second call will override the first.
+- [DONE] Review API for `convert`: Maybe change 'add' to 'set', and
+  also implement __setitem__. Rationale is, 'add' is confusing, if
+  called twice on the same field the second call will override the
+  first.
 
-- Change API for `sort`, `filterduplicates`, `filterconflicts`,
+- [DONE] Change API for `sort`, `filterduplicates`, `filterconflicts`,
   `mergeduplicates`: Make sure all these take a 'key' keyword
   argument, instead of specifying the key as a list of arguments, so
   there is consistency across these and `melt`, `recast` etc.
+
+- Implement default `sort` without key: Change 'Sort' to `sort`. If no
+  key is supplied to `sort`, make the default sort a lexical sort on
+  rows, i.e., sort by field 1, then field 2, etc.
 
 - Implement `complement` - Subtract rows in one table from another
   table, and return a table of the remaining rows. Probably need to do
@@ -138,10 +143,6 @@ To Do
 - Implement `diffpresorted`: Same as `diff`, but assume tables are
   already sorted. This is closer to what the original diff on text
   files does, i.e., compare the files line by line as they are.
-
-- Implement default `sort` without key: Change 'Sort' to `sort`. If no
-  key is supplied to `sort`, make the default sort a lexical sort on
-  rows, i.e., sort by field 1, then field 2, etc.
 
 - Implement `rmap`: A transformation mapping each row in the input to
   one row in the output, based on a single transformation
@@ -173,6 +174,8 @@ To Do
 - Implement various types of join.
 
 - Implement `transpose`.
+
+- Implement `reduce`?
 
 - Implement `aggregate`?
 

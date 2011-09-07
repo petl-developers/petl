@@ -173,7 +173,7 @@ def test_sort_2():
             ['F', '1'],
             ['D', '10']]
     
-    result = sort(data, 'foo', 'bar')
+    result = sort(data, key=('foo', 'bar'))
     expectation = [['foo', 'bar'],
                    ['A', '6'],
                    ['A', '9'],
@@ -238,13 +238,13 @@ def test_sort_5():
                    [3.2, 1]]
 
     # can use either field names or indices (from 1) to specify sort key
-    result = sort(data, 'foo', 'bar')
+    result = sort(data, key=('foo', 'bar'))
     iter_compare(expectation, result)
-    result = sort(data, 1, 2)
+    result = sort(data, key=(1, 2))
     iter_compare(expectation, result)
-    result = sort(data, 'foo', 2)
+    result = sort(data, key=('foo', 2))
     iter_compare(expectation, result)
-    result = sort(data, 1, 'bar')
+    result = sort(data, key=(1, 'bar'))
     iter_compare(expectation, result)
     
     
@@ -265,7 +265,7 @@ def test_sort_6():
                    [1.2, 9]]
 
     # can use either field names or indices (from 1) to specify sort key
-    result = sort(data, 'foo', 'bar', reverse=True)
+    result = sort(data, key=('foo', 'bar'), reverse=True)
     iter_compare(expectation, result)
     
     

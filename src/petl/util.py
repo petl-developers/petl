@@ -22,6 +22,8 @@ def asindices(fields, selection):
     
     """
     indices = list()
+    if isinstance(selection, basestring):
+        selection = (selection,)
     for s in selection:
         # selection could be a field name
         if s in fields:
