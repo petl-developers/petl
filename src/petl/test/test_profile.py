@@ -9,7 +9,8 @@ import sys
 from datetime import date, time
 from collections import Counter
 from itertools import izip
-from petl.profile import rowlengths, values, stats, types, parsedate, parsetime
+from petl.profile import rowlengths, values, stats, types, parsedate, parsetime,\
+    parsetypes
 
 
 logger = logging.getLogger('petl')
@@ -87,6 +88,20 @@ def test_types():
 
     result = types(table, 'bar') 
     expectation = (('type', 'count'), ('unicode', 3), ('int', 2))
+    iter_compare(expectation, result)
+
+
+def test_parsetypes():
+
+    table = [['foo', 'bar', 'baz'],
+             ['A', 1, 2],
+             ['B', u'2', '3.4'],
+             [u'B', u'3', u'7.8', True],
+             ['D', '3.7', 9.0],
+             ['E', 42]]
+
+    result = parsetypes(table, 'bar') 
+    expectation = (('type', 'count'), ('float', 3), ('int', 2))
     iter_compare(expectation, result)
 
 
