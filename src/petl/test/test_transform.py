@@ -12,7 +12,7 @@ from datetime import date, time
 from petl import cut, cat, convert, sort, filterduplicates,\
     filterconflicts, mergeduplicates, melt, stringcapture, stringsplit, recast,\
     meanf, rslice, head, tail, parsedate, parsetime, count, fields, complement,\
-    diff
+    diff, data, translate, rename, addfield
 
 
 logger = logging.getLogger('petl')
@@ -146,6 +146,61 @@ def test_convert():
     iter_compare(expectation, conv) 
     
     
+def test_translate():
+    
+    table = [['foo', 'bar'],
+             ['M', 12],
+             ['F', 34],
+             ['-', 56]]
+    
+    trans = {'M': 'male', 'F': 'female'}
+    result = translate(table, 'foo', trans, default=None)
+    
+    expectation = [['foo', 'bar'],
+                   ['male', 12],
+                   ['female', 34],
+                   [None, 56]]
+    iter_compare(expectation, result)
+    
+    
+def test_rename():
+
+    table = [['foo', 'bar'],
+             ['M', 12],
+             ['F', 34],
+             ['-', 56]]
+    
+    result = rename(table, 'foo', 'foofoo')
+    assert list(fields(result)) == ['foofoo', 'bar']
+    
+    result = rename(table, {'foo': 'foofoo', 'bar': 'barbar'})
+    assert list(fields(result)) == ['foofoo', 'barbar']
+
+
+def test_addfield():
+
+    table = [['foo', 'bar'],
+             ['M', 12],
+             ['F', 34],
+             ['-', 56]]
+    
+    result = addfield(table, 'baz', 42)
+    d(list(result))
+    expectation = [['foo', 'bar', 'baz'],
+                   ['M', 12, 42],
+                   ['F', 34, 42],
+                   ['-', 56, 42]]
+    iter_compare(expectation, result)
+
+    result = addfield(table, 'baz', lambda d: d['bar'] * 2)
+    d(list(result))
+    expectation = [['foo', 'bar', 'baz'],
+                   ['M', 12, 24],
+                   ['F', 34, 68],
+                   ['-', 56, 112]]
+    iter_compare(expectation, result)
+
+
 def test_sort_1():
     
     data = [['foo', 'bar'],
@@ -793,7 +848,24 @@ def test_fields():
     result = fields(table)
     assert result == ['foo', 'bar', 'baz']
 
-    
+
+def test_data():
+    table = [['foo', 'bar', 'baz'],
+             ['A', 1, 2],
+             ['B', '2', '3.4'],
+             [u'B', u'3', u'7.8', True],
+             ['D', 'xyz', 9.0],
+             ['E', None]]
+
+    result = data(table)
+    expectation = [['A', 1, 2],
+                   ['B', '2', '3.4'],
+                   [u'B', u'3', u'7.8', True],
+                   ['D', 'xyz', 9.0],
+                   ['E', None]]
+    iter_compare(expectation, result)
+
+
 def test_complement_1():
 
     table1 = [['foo', 'bar'],

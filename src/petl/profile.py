@@ -60,7 +60,57 @@ def values(table, field, limit=None):
         raise
     finally:
         closeit(it)
-
+        
+        
+def valueset(table, field, limit=None):
+    """
+    TODO doc me
+    
+    """
+    it = iter(table)
+    try:
+        fields = it.next()
+        assert field in fields, 'field not found: %s' % field
+        field_index = fields.index(field)
+        if limit is not None:
+            it = islice(it, 0, limit - 1) # index rows from 1
+        vals = set()
+        for row in it:
+            vals.add(row[field_index])
+        closeit(it)
+        return vals
+    except:
+        raise
+    finally:
+        closeit(it)
+        
+        
+def unique(table, field):
+    """
+    TODO doc me
+    
+    """
+    it = iter(table)
+    try:
+        fields = it.next()
+        assert field in fields, 'field not found: %s' % field
+        field_index = fields.index(field)
+        vals = set()
+        unique = True
+        for row in it:
+            val = row[field_index]
+            if val in vals:
+                unique = False
+                break
+            else:
+                vals.add(val)
+        closeit(it)
+        return unique
+    except:
+        raise
+    finally:
+        closeit(it)
+        
 
 def types(table, field, limit=None):    
     """

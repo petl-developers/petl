@@ -6,9 +6,8 @@ TODO doc me
 
 import logging
 import sys
-from datetime import date, time
 from itertools import izip
-from petl import rowlengths, values, stats, types, parsetypes
+from petl import rowlengths, values, stats, types, parsetypes, valueset, unique
 
 
 logger = logging.getLogger('petl')
@@ -51,6 +50,31 @@ def test_values():
     result = values(table, 'foo')
     expectation = (('value', 'count'), ('B', 3), ('A', 2))
     iter_compare(expectation, result) 
+
+
+def test_valueset():
+
+    table = [['foo', 'bar', 'baz'],
+             ['A', 1, 2],
+             ['B', '2', '3.4'],
+             [u'B', u'3', u'7.8', True],
+             ['B', 'xyz', 9.0],
+             ['A', None]]
+    result = valueset(table, 'foo')
+    expectation = {'B', 'A'}
+    assert expectation == result, result
+
+
+def test_unique():
+
+    table = [['foo', 'bar', 'baz'],
+             ['A', 1, 2],
+             ['B', '2', '3.4'],
+             [u'B', u'3', u'7.8', True],
+             ['B', 'xyz', 9.0],
+             ['A', None]]
+    assert unique(table, 'bar')
+    assert not unique(table, 'foo')
 
 
 def test_stats():

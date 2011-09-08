@@ -1,0 +1,10 @@
+Chr	Pos	Ref	Nref	Der	Mut	isTypable	GeneId	GeneAlias	GeneDescr
+MAL1	91099	G	A	-	S	N	PFA0095c	MAL1P1.10	rifin
+MAL1	91104	A	T	-	N	N	PFA0095c	MAL1P1.10	rifin
+MAL1	93363	T	A	-	N	Y	PFA0100c	MAL1P1.11	hypothetical protein, conserved in P. falciparum
+MAL1	93382	T	G	-	N	Y	PFA0100c	MAL1P1.11	hypothetical protein, conserved in P. falciparum
+MAL1	93384	G	A	-	N	Y	PFA0100c	MAL1P1.11	hypothetical protein, conserved in P. falciparum
+MAL1	93390	T	A	-	N	Y	PFA0100c	MAL1P1.11	hypothetical protein, conserved in P. falciparum
+MAL1	93439	T	C	-	S	Y	PFA0100c	MAL1P1.11	hypothetical protein, conserved in P. falciparum
+MAL1	93457	C	T	-	S	Y	PFA0100c	MAL1P1.11	hypothetical protein, conserved in P. falciparum
+MAL1	94008	T	C	-	N	Y	PFA0100c	MAL1P1.11	hypothetical protein, conserved in P. falciparum

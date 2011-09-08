@@ -145,6 +145,31 @@ To Do
   are already sorted. This is closer to what the original diff on text
   files does, i.e., compare the files line by line as they are.
 
+- [DONE] Implement `data`: Simple convenience function to return the
+  data rows of a table.
+
+- [DONE] Implement `valueset`: Convenience function to return values
+  found in a column as a set (for easy access and comparison).
+
+- [DONE] Implement `translate` (or can this be done with `convert`?):
+  Convenience function to translate values in a single field.
+
+- [DONE] Implement `rename`: Convenience function to rename one (or
+  more?)  fields.
+
+- [DONE] Implement `unique`: Simple test of uniqueness of a given
+  field or selection of fields, returns true or false.
+
+- [DONE] Implement `addfield`: Add a new field to a table, passing in
+  a function to generate the values (possibly from existing values in
+  the table, i.e., a calculated field).
+
+- Join of diff?: Would be really useful to join the added and
+  subtracted components of a diff on some (hopefully unique) key,
+  which would give you a side-by-side comparison of the
+  differences. Maybe doable with an appropriate join function, i.e.,
+  requires do dedicated function?
+
 - Implement `rmap`: A transformation mapping each row in the input to
   one row in the output, based on a single transformation
   function. E.g.::
@@ -187,8 +212,6 @@ To Do
 - Implement `validator` (or maybe `validate`?).
 
 - Implement `facet`.
-
-- Implement `translate` (or can this be done with `convert`?).
 
 - Implement `fillup` and `filldown`.
 

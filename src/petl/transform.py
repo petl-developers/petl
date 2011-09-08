@@ -10,7 +10,7 @@ from itertools import islice, groupby
 import re
 import logging
 from collections import deque
-from petl.util import asindices, rowgetter, closeit
+from petl.util import asindices, rowgetter, closeit, FieldSelectionError
 from datetime import datetime
 
 
@@ -171,6 +171,103 @@ class convert(object):
             closeit(source_iterator)
                 
                 
+class translate(object):
+    
+    def __init__(self, source, field, dictionary, default=Ellipsis):
+        self.source = source
+        self.field = field
+        self.dictionary = dictionary
+        self.default = default
+        
+    def __iter__(self):
+        it = iter(self.source)
+        try:
+            fields = it.next()
+            yield fields 
+            
+            if self.field in fields:
+                index = fields.index(self.field)
+            elif isinstance(self.field, int) and self.field < len(fields):
+                index = self.field
+            else:
+                raise FieldSelectionError(self.field)
+            
+            for row in it:
+                row = list(row) # copy, so we don't modify the source
+                value = row[index]
+                if value in self.dictionary:
+                    row[index] = self.dictionary[value]
+                else:
+                    row[index] = self.default
+                yield row
+                
+        except:
+            raise
+        finally:
+            closeit(it)
+    
+    
+class rename(object):
+    
+    def __init__(self, source, *args):
+        self.source = source
+        if len(args) == 1 and isinstance(args[0], dict):
+            self.fieldmap = args[0]
+        elif len(args) == 2:
+            self.fieldmap = {args[0]: args[1]}
+        else:
+            raise Exception('bad arguments: either provide a dictionary or a pair of fields')
+        self.args = args
+        
+    def __iter__(self):
+        it = iter(self.source)
+        try:
+            fields = it.next()
+
+            out_fields = [self.fieldmap[f] if f in self.fieldmap else f for f in fields]
+            yield out_fields 
+            
+            for row in it:
+                yield row
+                
+        except:
+            raise
+        finally:
+            closeit(it)
+            
+            
+class addfield(object):
+    
+    def __init__(self, source, field, value):
+        self.source = source
+        self.field = field
+        self.value = value
+        
+    def __iter__(self):
+        it = iter(self.source)
+        try:
+            fields = it.next()
+            out_fields = list(fields)
+            out_fields.append(self.field)
+            yield out_fields
+
+            for row in it:
+                out_row = list(row) # copy so we don't modify source
+                if callable(self.value):
+                    d = dict()
+                    for f in fields:
+                        d[f] = row[fields.index(f)]
+                    out_row.append(self.value(d))
+                else:
+                    out_row.append(self.value)
+                yield out_row
+                
+        except:
+            raise
+        finally:
+            closeit(it)
+            
+            
 class sort(object):
     
     def __init__(self, source, key=None, reverse=False):
@@ -811,7 +908,23 @@ def fields(source):
         raise
     finally:
         closeit(it)
-    return count
+
+
+class data(object):
+    
+    def __init__(self, source):
+        self.source = source
+        
+    def __iter__(self):
+        it = iter(self.source)
+        try:
+            rows = islice(it, 1, None)
+            for row in rows:
+                yield row
+        except:
+            raise
+        finally:
+            closeit(it)
 
 
 class complement(object):
