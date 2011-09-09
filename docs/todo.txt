@@ -164,11 +164,8 @@ To Do
   a function to generate the values (possibly from existing values in
   the table, i.e., a calculated field).
 
-- Join of diff?: Would be really useful to join the added and
-  subtracted components of a diff on some (hopefully unique) key,
-  which would give you a side-by-side comparison of the
-  differences. Maybe doable with an appropriate join function, i.e.,
-  requires do dedicated function?
+- Rename `addfield` to `extend` for consistency with relational
+  algebra.
 
 - Implement `rmap`: A transformation mapping each row in the input to
   one row in the output, based on a single transformation
@@ -197,21 +194,55 @@ To Do
 
 - Implement `filter`.
 
-- Implement various types of join.
+- Implement `filtererrors`, e.g.::
 
-- Implement `transpose`.
+    >>> errs = filtererrors(tbl)
+    >>> errs.add('foo', nullable(int, None))
+    >>> look(errs)
 
-- Implement `reduce`?
+- Implement `facet`.
 
-- Implement `aggregate`?
+- Implement `join` as equijoin if 'key' argument is supplied, or
+  natural join if no 'key' argument given. Use sort-merge as default
+  join algorithm. Also implement `joinpresorted`.
+
+- Implement `outerjoin` as full outer join, and
+  `outerjoinpresorted`. Also `leftjoin` and `rightjoin` with presorted
+  versions.
+
+- Implement `crossjoin` as simple cartesian product? Or is that just
+  what happens with a natural join if there are no fields in common?
+
+- Implement `thetajoin`? Or is this just a crossjoin followed by a
+  filter?
+
+- Join of diff?: Would be really useful to join the added and
+  subtracted components of a diff on some (hopefully unique) key,
+  which would give you a side-by-side comparison of the
+  differences. Maybe doable with an appropriate join function, i.e.,
+  requires do dedicated function?
+
+- Implement additional signature to `values` function to only look at
+  specific values (e.g., if you want to look at the level of
+  missingness), and also output percentages, e.g.::
+
+    >>> values(tbl, 'foo', {None})
+    [['value', 'count', 'percent'], [None, 12, 32.7]]
+
+- Implement `reduce`? Providing a single reduce function to reduce a
+  list of rows into a single row.
+
+- Implement `aggregate`? Providing an aggregation function for each
+  non-key field.
 
 - Implement `pivot`? (How is this different from `recast`?)
 
-- Implement `filtervalid` and `filterinvalid`. (Or maybe `validator.filter`?)
+- Implement `transpose`.
 
 - Implement `validator` (or maybe `validate`?).
 
-- Implement `facet`.
+- Implement `filtervalid` and `filterinvalid`. Or maybe
+  `validator.filter`? Or maybe...
 
 - Implement `fillup` and `filldown`.
 
@@ -224,3 +255,48 @@ To Do
 
 - Implement merge sort with configurable buffer/chunk size, and with
   optional caching, on `sort`.
+
+- Add skip argument to `readcsv` to cater for cases where there is
+  bumf before the header row.
+
+- Implement `readtxt` or `readlines`: Function to make a text file
+  available as a simple single column table, where each row is a
+  line. This or some other way to support working with files where you
+  need to filter out lines you want to ignore, e.g., gff, or other
+  cases where you need to preprocess before you can do normal csv
+  parsing. Also possibly filter out based on row length (e.g., to deal
+  with gff files with fasta at the end).
+
+- Implement `hashtable`, i.e., index rows from a table by some key
+  value, either using in memory dictionaries or the shelve
+  module. N.B., this is similar to faceting.
+
+- Implement joins using either sort-merge or hashtable, and give
+  option to switch default implementation.
+
+- Implement intersect? I.e., find rows in each table where a key value
+  also exists in the other? Or is this just what you'd get with an
+  equijoin? Or maybe intersect should be true intersection, i.e.,
+  exact rows in common?
+
+- Rename `cut` to `project` and `filter` to `select` for consistency
+  with relational algebra? Or make them aliases? Or don't bother (cut
+  and filter may be more intuitive).
+
+- Implement `antijoin`? N.B., this is different from `complement`,
+  because that looks at the whole row, whereas `antijoin` looks for
+  absence of a key value.
+
+- Change default reduce function in `recast` to return a list of all
+  values, rather than just the first value arbitrarily.
+
+- Change default `mergeduplicates` behaviour under conflicts,
+  collecting conflicting values and output as a list? Or as an option?
+
+(N.B., mergeduplicates is a special case of reduce/aggregate, ...)
+
+- Some sort of mapreduce map function, i.e., yield a sequence of key,
+  value pairs based on some table input?
+
+- Add `stringjoin` as an aggregation function.
+
