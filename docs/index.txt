@@ -1,3 +1,4 @@
+.. py:module:: petl
 
 petl - Extract, Transform and Load (Tables of Data)
 ===================================================
@@ -5,137 +6,174 @@ petl - Extract, Transform and Load (Tables of Data)
 `petl` is a tentative Python package for extracting, transforming and
 loading tables of data.
 
-- Docs: http://readthedocs.org/docs/petl
-- Source: https://github.com/alimanfoo/petl
+- Documentation: http://petl.rtfd.org/
+- Source Code: https://github.com/alimanfoo/petl
 - Download: http://pypi.python.org/pypi/petl
+- Mailing List: http://groups.google.com/group/python-etl 
 
-Introduction
-------------
+Table containers and iterators
+------------------------------
 
-There are already many Python packages that are useful for ETL
-tasks. However, none (that I've found) cover the full range of
-transformations I've needed. Also, many use different data structures
-or interfaces to represent tables of data, meaning that functions from
-different packages cannot easily be mixed.
+This package defines the following convention for objects acting as
+containers of tabular data and supporting row-oriented iteration over
+the data.
 
-It would be magnificent if there was a single Python package that
-brought all of this together. However, that's a big ask. In the
-interim, it would be wonderful if there was some consistency across
-relevant packages so that, over time, an ecosystem of compatible
-Python ETL components could emerge.
+A *table container* (or simply a *table*) is any object which
+satisfies the following:
 
-Status
-------
+1. implements the `__iter__` method
 
-Currently, this package is somewhere between pipe dream, fantasy,
-wishlist, experiment, placeholder (until someone with far more talent,
-time and energy than me comes along) and call to arms.
+2. `__iter__` returns a *table iterator* (see below)
 
-However, I would like to do at least the following:
+3. all iterators returned by `__iter__` are independent, i.e., consuming items from one iterator will not affect any other iterators
 
-- Try to compile a consistent glossary/terminology for describing
-  transformations on tables of data (e.g., what do "map", "cut",
-  "slice", , "join", "merge", "fold", "transpose", "split", "melt",
-  "cast", ..., mean?) with cross-references to what terminology is
-  used in other tools/modules.
+(Point 3 ensures that a table can be iterated over any number of times
+within the same script or interactive session.)
 
-- Work towards an interface/protocol for objects that can consume
-  and/or generate tabular data, that is (a) as simple as possible, so
-  that writing transformation scripts, and developing new
-  transformation functions, is possible for people like me (who aren't
-  Python gods), (b) compatible with a wide range of transformations,
-  (c) compatible with chaining/pipelining multiple transformations,
-  and (d) workable for transformations on big(-ish) datasets.
+A *table iterator* is an iterator which satisfies the following:
 
-- Explore and develop a deeper understanding of implementation
-  strategies for a range of tabular data transformations.
+4. each item returned by the iterator is either a list or a tuple
 
-If any of this is in any way interesting to you, then I've set up a
-mailing list at http://groups.google.com/group/python-etl - not just
-for this package, but for general discussion about Pythonic ways of
-working with table-shaped data. Feel free to jump in, or to redirect
-me to other projects or forums that have already got this all covered.
+5. the first item returned by the iterator is a header row comprising a list or tuple of *fields*
 
-Design Goals
-------------
+6. each subsequent item returned by the iterator is a *data row* comprising a list or tuple of *data values*
 
-Usability
-~~~~~~~~~
+7. a *field* is typically a string (`str` or `unicode`) but may be an object of any type as long as it implements `__str__` and is pickleable
 
-Many of the big ETL platforms like Talend, Clover and Kettle sell
-themselves on having GUIs for designing data transformation
-pipelines. You don't need to write code, you just need to point and
-click. However, I've found that these GUIs can have a steep learning
-curve. They can also obfuscate many of the details of what's going on
-under the hood - details that you inevitably need to learn about
-anyway, when you get into any fairly complicated transformation task.
+8. a *data value* is any pickleable object
 
-This may seem like a contradiction in terms, but I think that, for
-many data transformation tasks, a simple Python script or interactive
-session, using a simple library of ETL functions, would be more usable
-than many ETL GUIs. It could present a lower barrier to entry,
-especially for those with a little scripting already under their
-belt. It could also be easier to interpret/understand, and scale
-better to complicated multi-step transformations (where tens to
-hundreds of nodes and arcs on a screen gets cumbersome).
+So, for example, the list of lists shown below is a table::
 
-This focus on usability is something that I applaud in tools like
-Google Refine and Data Wrangler. One day soon someone will get the GUI
-right. Until then, a simple and comprehensive Python DSL or family of
-compatible libraries for scripting data transformation tasks would be
-very helpful.
+>>> table = [['foo', 'bar'], ['a', 1], ['b', 2]]
 
-Good with Bad Data
-~~~~~~~~~~~~~~~~~~
+Note that, under this convention, an object returned by the
+`csv.reader` function from the standard Python `csv` module is *not* a
+table, because it can only be iterated over once, e.g.::
 
-Many tools I've seen for transforming tabular data require the inputs
-and outputs to each transformation component to be well defined in
-advance, in terms of having a fixed schema (field names and datatypes)
-at both ends. While this makes sense and is necessary for some types
-of transformation, it is often a burden, and a barrier to working with
-less-than-perfect data. So I'd like a tool that is as forgiving as
-possible, and demands consistency only when it is absolutely
-necessary.
+ >>> from StringIO import StringIO
+ >>> import csv
+ >>> csvdata = """foo,bar
+ ... a,1
+ ... b,2
+ ... """
+ >>> notatable = csv.reader(StringIO(csvdata))
+ >>> for row in notatable:
+ ...     print row
+ ... 
+ ['foo', 'bar']
+ ['a', '1']
+ ['b', '2']
+ >>> for row in notatable:
+ ...     print row
+ ... 
+ >>> # can only iterate over notatable once
 
-Support an Exploratory Style
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+However, it is straightforward to define functions that support the
+above convention and provide access to data from CSV or other types of
+file or data source, see e.g. the `fromcsv` function in this package.
 
-I work in a world of perpetual heterogeneity. Every day we encounter a
-wierd and wonderful new dataset. So the bias is much more towards
-one-off transformations. I.e., we are **not** designing transformation
-jobs that, once written, will be run nightly for 2 years to integrate
-sales and inventory data. We write many transformations, most of which
-will be run a handful of times at most.
+The main reason for requiring that tables support independent
+iterators is that data from a table may need to be iterated over
+several times. E.g., when using `petl` in interative mode to build up
+a sequence of data transformation steps, the user might want to
+examine outputs from intermediate steps.
 
-In this environment, every dataset is an exploration. And
-transformations on those data are approached in an exploratory
-way. The tools we use need to be written with this in mind.
+Note that this convention does not place any restrictions on the
+lengths of header and data rows. A table may return a header row
+and/or data rows of varying lengths. 
 
-Focus on Transformation
-~~~~~~~~~~~~~~~~~~~~~~~
+Caching / memoization
+---------------------
 
-I'm most interested in the T of ETL. I.e., data
-transformations. Writing code to extract/load data from files or
-databases is fairly straightforward. However, while some
-transformations are fairly easy to code from scratch, others are a bit
-mind-bending. This is where a comprehensive library of transformation
-functions would be a huge boon.
+This package tries to make efficient use of memory by using iterators
+and lazy evaluation where possible. However, some transformations
+cannot be done without building data structures, either in memory or
+on disk.
 
-Contents
---------
+An example is the `sort` function, which will either sort a table
+entirely in memory, or will sort the table in memory in chunks,
+writing chunks to disk and performing a final merge sort on the
+chunks. Which strategy is used will depend on the arguments passed
+into the `sort` function when it is called. 
+
+In either case, the sorting can take some time, and if the sorted data
+will be used more than once, it is obviously undesirable to throw away
+the sorted data and start again from scratch each time. It is better
+to cache (a.k.a., memoize) the sorted data, if possible, so it can be
+re-used. However, if a table upstream of the sort is mutable, there
+needs to be some way of discovering whether data have been changed
+since the last sort was performed, and hence whether the cached data
+are still fresh or not.
+
+There are also cases where, even though data are generated in a purely
+iterative fashion, some programs may still want to cache some or all
+of the data. E.g., where data are calculated dynamically and are
+relatively expensive to compute, or require scanning many rows, or
+where data are being retrieved via a network and there is
+latency. Again, there needs to be some way of finding out whether
+cached data are fresh or not.
+
+To support caching, it is recommended (but not required) that table
+container objects also implement the `cachetag` method. This method
+should return an integer which changes whenever the table's fields or
+data changes (i.e., a table iterator would yield a different sequence
+of items). All `petl` table objects implement this method, where
+applicable.
+
+Note that care must be taken to ensure correct implementation of the
+`cachetag` method where a table is generating data dynamically from
+another source. In these cases, the state of the upstream tables must
+be considered when generating a `cachetag` value. One strategy is to
+construct `cachetag` values by hashing the internal configuration
+attributes of a table, along with the `cachetag` values from any
+tables immediately upstream.
+
+In some cases, it may be difficult to determine whether data have
+changed, e.g., where data are being retrieved from a database. In
+these cases it is suggested that table objects use a user-configurable
+time to live (TTL) to generate `cachetag` values. E.g., where a
+database table is updated once a day at most, a TTL of a few hours
+would enable data to be cached during an interactive session, which
+might greatly improve usability for someone developing a
+transformation script.
+
+Utility functions
+-----------------
+
+.. autofunction:: fields
+
+.. autofunction:: data
+
+.. autofunction:: records
+
+.. autofunction:: count
+
+.. autofunction:: look
+
+.. autofunction:: see
+
+.. autofunction:: values
+
+.. autofunction:: types
+
+.. autofunction:: parsetypes
+
+.. autofunction:: stats
+
+.. autofunction:: rowlengths
+
+Further Reading
+---------------
 
 .. toctree::
    :maxdepth: 2
 
-   glossary
-   protocol
    related_work
    todo
 
 Indices and tables
-==================
+------------------
 
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-
