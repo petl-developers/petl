@@ -74,7 +74,7 @@ file or data source, see e.g. the `fromcsv` function in this package.
 
 The main reason for requiring that tables support independent
 iterators is that data from a table may need to be iterated over
-several times. E.g., when using `petl` in interative mode to build up
+several times. E.g., when using `petl` in interactive mode to build up
 a sequence of data transformation steps, the user might want to
 examine outputs from intermediate steps.
 
@@ -153,6 +153,8 @@ Utility functions
 .. autofunction:: see
 
 .. autofunction:: values
+
+.. autofunction:: valueset
 
 .. autofunction:: types
 
