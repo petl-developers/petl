@@ -354,6 +354,9 @@ def valueset(table, field, start=0, stop=None, step=1):
         raise
     finally:
         close(it)
+        
+        
+# TODO unique
     
         
 def types(table):
