@@ -9,7 +9,7 @@ from collections import defaultdict, Counter
 
 
 __all__ = ['fields', 'data', 'records', 'count', 'look', 'see', 'values', 
-           'valueset', 'types', 'parsetypes', 'stats', 'rowlengths']
+           'valueset', 'unique', 'types', 'parsetypes', 'stats', 'rowlengths']
 
 
 def fields(table):
@@ -356,8 +356,41 @@ def valueset(table, field, start=0, stop=None, step=1):
         close(it)
         
         
-# TODO unique
+def unique(table, field):
+    """
+    Return True if there are no duplicate values for the given field, otherwise
+    False. E.g.::
+
+        >>> table = [['foo', 'bar'], ['a', 1], ['b'], ['b', 2], ['c', 3, True]]
+        >>> unique(table, 'foo')
+        False
+        >>> unique(table, 'bar')
+        True
     
+    """    
+
+    it = iter(table)
+    try:
+        flds = it.next()
+        assert field in flds, 'field not found: %s' % field
+        field_index = flds.index(field)
+        vals = set()
+        for row in it:
+            try:
+                val = row[field_index]
+            except IndexError:
+                pass # ignore short rows
+            else:
+                if val in vals:
+                    return False
+                else:
+                    vals.add(val)
+        return True
+    except:
+        raise
+    finally:
+        close(it)
+       
         
 def types(table):
     """TODO doc me"""

@@ -3,7 +3,8 @@ TODO doc me
 
 """
 
-from petl import fields, data, records, count, look, see, values, valueset
+from petl import fields, data, records, count, look, see, values, valueset,\
+                unique
 
 
 def assertequal(expect, actual):
@@ -133,3 +134,11 @@ def test_valueset():
     assertequal(expect, actual)
 
 
+def test_unique():
+    """Test the unique function."""
+    
+    table = [['foo', 'bar'], ['a', 1], ['b'], ['b', 2], ['c', 3, True]]
+    assert not unique(table, 'foo')
+    assert unique(table, 'bar')
+    
+    
