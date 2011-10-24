@@ -6,10 +6,12 @@ TODO doc me
 
 from itertools import islice
 from collections import defaultdict, Counter
+from operator import itemgetter
 
 
-__all__ = ['fields', 'data', 'records', 'count', 'look', 'see', 'values', 
-           'valueset', 'unique', 'types', 'parsetypes', 'stats', 'rowlengths']
+__all__ = ['fields', 'data', 'records', 'count', 'look', 'see', 'values', \
+           'valueset', 'unique', 'index', 'indexone', 'recindex', 'recindexone', \
+           'types', 'parsetypes', 'stats', 'rowlengths', 'DuplicateKeyError']
 
 
 def fields(table):
@@ -67,19 +69,23 @@ def records(table, missing=None):
     it = iter(table)
     flds = it.next()
     for row in it:
-        try:
-            # list comprehension should be faster
-            items = [(flds[i], row[i]) for i in range(len(flds))]
-        except IndexError:
-            # short row, fall back to slower for loop
-            items = list()
-            for i, f in enumerate(flds):
-                try:
-                    v = row[i]
-                except IndexError:
-                    v = missing
-                items.append((f, v))
-        yield dict(items)
+        yield asdict(flds, row, missing)
+    
+    
+def asdict(flds, row, missing=None):
+    try:
+        # list comprehension should be faster
+        items = [(flds[i], row[i]) for i in range(len(flds))]
+    except IndexError:
+        # short row, fall back to slower for loop
+        items = list()
+        for i, f in enumerate(flds):
+            try:
+                v = row[i]
+            except IndexError:
+                v = missing
+            items.append((f, v))
+    return dict(items)
     
     
 def count(table):
@@ -392,6 +398,108 @@ def unique(table, field):
         close(it)
        
         
+def index(table, key, value=None):
+    """TODO doc me"""
+    
+    it = iter(table)
+    try:
+        flds = it.next()
+        if value is None:
+            value = flds
+        keyindices = asindices(flds, key)
+        assert len(keyindices) > 0, 'no key selected'
+        valueindices = asindices(flds, value)
+        assert len(valueindices) > 0, 'no value selected'
+        idx = defaultdict(list)
+        getkey = itemgetter(*keyindices)
+        getvalue = itemgetter(*valueindices)
+        # TODO handle short rows?
+        for row in it:
+            k = getkey(row)
+            v = getvalue(row)
+            idx[k].append(v)
+        return idx
+    except:
+        raise
+    finally:
+        close(it)
+    
+    
+def indexone(table, key, value=None, strict=True):
+    """TODO doc me"""
+
+    it = iter(table)
+    try:
+        flds = it.next()
+        if value is None:
+            value = flds
+        keyindices = asindices(flds, key)
+        assert len(keyindices) > 0, 'no key selected'
+        valueindices = asindices(flds, value)
+        assert len(valueindices) > 0, 'no value selected'
+        idx = defaultdict(list)
+        getkey = itemgetter(*keyindices)
+        getvalue = itemgetter(*valueindices)
+        # TODO handle short rows?
+        for row in it:
+            k = getkey(row)
+            if strict and k in idx:
+                raise DuplicateKeyError
+            v = getvalue(row)
+            idx[k] = v
+        return idx
+    except:
+        raise
+    finally:
+        close(it)
+    
+    
+def recindex(table, key):
+    """TODO doc me"""
+    
+    it = iter(table)
+    try:
+        flds = it.next()
+        keyindices = asindices(flds, key)
+        assert len(keyindices) > 0, 'no key selected'
+        idx = defaultdict(list)
+        getkey = itemgetter(*keyindices)
+        # TODO handle short rows?
+        for row in it:
+            k = getkey(row)
+            d = asdict(flds, row)
+            idx[k].append(d)
+        return idx
+    except:
+        raise
+    finally:
+        close(it)
+    
+        
+def recindexone(table, key, strict=True):
+    """TODO doc me"""
+    
+    it = iter(table)
+    try:
+        flds = it.next()
+        keyindices = asindices(flds, key)
+        assert len(keyindices) > 0, 'no key selected'
+        idx = defaultdict(list)
+        getkey = itemgetter(*keyindices)
+        # TODO handle short rows?
+        for row in it:
+            k = getkey(row)
+            if strict and k in idx:
+                raise DuplicateKeyError
+            d = asdict(flds, row)
+            idx[k] = d
+        return idx
+    except:
+        raise
+    finally:
+        close(it)
+    
+            
 def types(table):
     """TODO doc me"""
     
@@ -418,4 +526,61 @@ def close(o):
         o.close()
         
         
+class DuplicateKeyError(Exception):
+    pass
 
+
+def asindices(flds, selection):
+    """
+    TODO doc me
+    
+    """
+    indices = list()
+    if isinstance(selection, basestring):
+        selection = (selection,)
+    if isinstance(selection, int):
+        selection = (selection,)
+    for s in selection:
+        # selection could be a field name
+        if s in flds:
+            indices.append(flds.index(s))
+        # or selection could be a field index
+        elif isinstance(s, int) and s - 1 < len(flds):
+            indices.append(s - 1) # index fields from 1, not 0
+        else:
+            raise FieldSelectionError(s)
+    return indices
+        
+        
+class FieldSelectionError(Exception):
+    """
+    TODO doc me
+    
+    """
+    
+    def __init__(self, value):
+        self.value = value
+        
+    def __str__(self):
+        return 'selection is not a field or valid field index: %s' % self.value
+    
+    
+def rowgetter(*indices):
+    """
+    TODO doc me
+    
+    """
+    
+    # guard condition
+    assert len(indices) > 0, 'indices is empty'
+
+    # if only one index, we cannot use itemgetter, because we want a singleton 
+    # sequence to be returned, but itemgetter with a single argument returns the 
+    # value itself, so let's define a function
+    if len(indices) == 1:
+        index = indices[0]
+        return lambda row: (row[index],) # note comma - singleton tuple!
+    # if more than one index, use itemgetter, it should be the most efficient
+    else:
+        return itemgetter(*indices)
+    
