@@ -171,6 +171,15 @@ Utility functions
 
 .. autofunction:: rowlengths
 
+.. autofunction:: lookup
+
+.. autofunction:: lookupone
+
+.. autofunction:: recordlookup
+
+.. autofunction:: recordlookupone
+
+
 Further Reading
 ---------------
 

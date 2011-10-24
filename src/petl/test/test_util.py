@@ -4,7 +4,7 @@ TODO doc me
 """
 
 from petl import fields, data, records, count, look, see, values, valueset,\
-                unique, index, indexone, recindex, recindexone, DuplicateKeyError
+                unique, lookup, lookupone, recordlookup, recordlookupone, DuplicateKeyError
 
 
 def assertequal(expect, actual):
@@ -144,18 +144,18 @@ def test_unique():
     assert unique(table, 'bar')
     
 
-def test_index():
-    """Test the index function."""
+def test_lookup():
+    """Test the lookup function."""
 
     t1 = [['foo', 'bar'], ['a', 1], ['b', 2], ['b', 3]]
     
-    # index one column on another
-    actual = index(t1, 'foo', 'bar')
+    # lookup one column on another
+    actual = lookup(t1, 'foo', 'bar')
     expect = {'a': [1], 'b': [2, 3]}
     assertequal(expect, actual)
 
     # test default value - tuple of whole row
-    actual = index(t1, 'foo') # no value selector
+    actual = lookup(t1, 'foo') # no value selector
     expect = {'a': [('a', 1)], 'b': [('b', 2), ('b', 3)]}
     assertequal(expect, actual)
     
@@ -166,36 +166,36 @@ def test_index():
           ['b', 3, False]]
     
     # test value selection
-    actual = index(t2, 'foo', ('bar', 'baz'))
+    actual = lookup(t2, 'foo', ('bar', 'baz'))
     expect = {'a': [(1, True)], 'b': [(2, False), (3, True), (3, False)]}
     assertequal(expect, actual)
     
     # test compound key
-    actual = index(t2, ('foo', 'bar'), 'baz')
+    actual = lookup(t2, ('foo', 'bar'), 'baz')
     expect = {('a', 1): [True], ('b', 2): [False], ('b', 3): [True, False]}
     assertequal(expect, actual)
     
     
-def test_indexone():
-    """Test the indexone function."""
+def test_lookupone():
+    """Test the lookupone function."""
     
     t1 = [['foo', 'bar'], ['a', 1], ['b', 2], ['b', 3]]
     
-    # index one column on another under strict mode
+    # lookup one column on another under strict mode
     try:
-        indexone(t1, 'foo', 'bar')
+        lookupone(t1, 'foo', 'bar')
     except DuplicateKeyError:
         pass # expected
     else:
         assert False, 'expected error'
         
-    # index one column on another under, not strict 
-    actual = indexone(t1, 'foo', 'bar', strict=False)
+    # lookup one column on another under, not strict 
+    actual = lookupone(t1, 'foo', 'bar', strict=False)
     expect = {'a': 1, 'b': 3} # last value wins
     assertequal(expect, actual)
 
     # test default value - tuple of whole row
-    actual = indexone(t1, 'foo', strict=False) # no value selector
+    actual = lookupone(t1, 'foo', strict=False) # no value selector
     expect = {'a': ('a', 1), 'b': ('b', 3)} # last wins
     assertequal(expect, actual)
     
@@ -206,22 +206,22 @@ def test_indexone():
           ['b', 3, False]]
     
     # test value selection
-    actual = indexone(t2, 'foo', ('bar', 'baz'), strict=False)
+    actual = lookupone(t2, 'foo', ('bar', 'baz'), strict=False)
     expect = {'a': (1, True), 'b': (3, False)}
     assertequal(expect, actual)
     
     # test compound key
-    actual = indexone(t2, ('foo', 'bar'), 'baz', strict=False)
+    actual = lookupone(t2, ('foo', 'bar'), 'baz', strict=False)
     expect = {('a', 1): True, ('b', 2): False, ('b', 3): False} # last wins
     assertequal(expect, actual)
     
 
-def test_recindex():
-    """Test the recindex function."""
+def test_recordlookup():
+    """Test the recordlookup function."""
     
     t1 = [['foo', 'bar'], ['a', 1], ['b', 2], ['b', 3]]
     
-    actual = recindex(t1, 'foo') 
+    actual = recordlookup(t1, 'foo') 
     expect = {'a': [{'foo': 'a', 'bar': 1}], 'b': [{'foo': 'b', 'bar': 2}, {'foo': 'b', 'bar': 3}]}
     assertequal(expect, actual)
     
@@ -232,7 +232,7 @@ def test_recindex():
           ['b', 3, False]]
     
     # test compound key
-    actual = recindex(t2, ('foo', 'bar'))
+    actual = recordlookup(t2, ('foo', 'bar'))
     expect = {('a', 1): [{'foo': 'a', 'bar': 1, 'baz': True}], 
               ('b', 2): [{'foo': 'b', 'bar': 2, 'baz': False}], 
               ('b', 3): [{'foo': 'b', 'bar': 3, 'baz': True}, 
@@ -240,20 +240,20 @@ def test_recindex():
     assertequal(expect, actual)
     
     
-def test_recindexone():
-    """Test the recindexone function."""
+def test_recordlookupone():
+    """Test the recordlookupone function."""
     
     t1 = [['foo', 'bar'], ['a', 1], ['b', 2], ['b', 3]]
     
     try:
-        recindexone(t1, 'foo')
+        recordlookupone(t1, 'foo')
     except DuplicateKeyError:
         pass # expected
     else:
         assert False, 'expected error'
         
     # relax 
-    actual = recindexone(t1, 'foo', strict=False)
+    actual = recordlookupone(t1, 'foo', strict=False)
     expect = {'a': {'foo': 'a', 'bar': 1}, 'b': {'foo': 'b', 'bar': 3}} # last wins
     assertequal(expect, actual)
 
@@ -264,7 +264,7 @@ def test_recindexone():
           ['b', 3, False]]
     
     # test compound key
-    actual = recindexone(t2, ('foo', 'bar'), strict=False)
+    actual = recordlookupone(t2, ('foo', 'bar'), strict=False)
     expect = {('a', 1): {'foo': 'a', 'bar': 1, 'baz': True}, 
               ('b', 2): {'foo': 'b', 'bar': 2, 'baz': False}, 
               ('b', 3): {'foo': 'b', 'bar': 3, 'baz': False}} # last wins

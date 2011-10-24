@@ -10,7 +10,7 @@ from operator import itemgetter
 
 
 __all__ = ['fields', 'data', 'records', 'count', 'look', 'see', 'values', \
-           'valueset', 'unique', 'index', 'indexone', 'recindex', 'recindexone', \
+           'valueset', 'unique', 'lookup', 'lookupone', 'recordlookup', 'recordlookupone', \
            'types', 'parsetypes', 'stats', 'rowlengths', 'DuplicateKeyError']
 
 
@@ -398,8 +398,46 @@ def unique(table, field):
         close(it)
        
         
-def index(table, key, value=None):
-    """TODO doc me"""
+# TODO handle short rows in lookup, lookupone, recordlookup, recordlookupone?
+
+
+def lookup(table, key, value=None):
+    """
+    Construct a dictionary (in memory) from the given table. E.g.::
+    
+        >>> table = [['foo', 'bar'], ['a', 1], ['b', 2], ['b', 3]]
+        >>> lkp = lookup(table, 'foo', 'bar')
+        >>> lkp['a']
+        [1]
+        >>> lkp['b']
+        [2, 3]
+
+    If no field or fields are given to select the value, defaults to the whole
+    row (as a tuple), e.g.::
+
+        >>> table = [['foo', 'bar'], ['a', 1], ['b', 2], ['b', 3]]
+        >>> lkp = lookup(table, 'foo')
+        >>> lkp['a']
+        [('a', 1)]
+        >>> lkp['b']
+        [('b', 2), ('b', 3)]
+
+    Compound keys are supported, e.g.::
+    
+        >>> t2 = [['foo', 'bar', 'baz'],
+        ...       ['a', 1, True],
+        ...       ['b', 2, False],
+        ...       ['b', 3, True],
+        ...       ['b', 3, False]]
+        >>> lkp = lookup(t2, ('foo', 'bar'), 'baz')
+        >>> lkp[('a', 1)]
+        [True]
+        >>> lkp[('b', 2)]
+        [False]
+        >>> lkp[('b', 3)]
+        [True, False]
+    
+    """
     
     it = iter(table)
     try:
@@ -410,23 +448,68 @@ def index(table, key, value=None):
         assert len(keyindices) > 0, 'no key selected'
         valueindices = asindices(flds, value)
         assert len(valueindices) > 0, 'no value selected'
-        idx = defaultdict(list)
+        lkp = defaultdict(list)
         getkey = itemgetter(*keyindices)
         getvalue = itemgetter(*valueindices)
-        # TODO handle short rows?
         for row in it:
             k = getkey(row)
             v = getvalue(row)
-            idx[k].append(v)
-        return idx
+            lkp[k].append(v)
+        return lkp
     except:
         raise
     finally:
         close(it)
     
     
-def indexone(table, key, value=None, strict=True):
-    """TODO doc me"""
+def lookupone(table, key, value=None, strict=True):
+    """
+    Construct a dictionary (in memory) from the given table, assuming there is
+    at most one value for each key. E.g.::
+    
+        >>> table = [['foo', 'bar'], ['a', 1], ['b', 2], ['c', 2]]
+        >>> lkp = lookupone(table, 'foo', 'bar')
+        >>> lkp['a']
+        1
+        >>> lkp['b']
+        2
+        >>> lkp['c']
+        2
+        
+    If the selected key is not unique, will raise DuplicateKeyError, e.g.::
+
+        >>> table = [['foo', 'bar'], ['a', 1], ['b', 2], ['b', 3]]
+        >>> lkp = lookupone(table, 'foo')
+        Traceback (most recent call last):
+          File "<stdin>", line 1, in <module>
+          File "petl/util.py", line 451, in lookupone
+        petl.util.DuplicateKeyError
+        
+    Unique checks can be overridden by providing `strict=False`, in which case
+    the last value wins, e.g.::
+
+        >>> table = [['foo', 'bar'], ['a', 1], ['b', 2], ['b', 3]]
+        >>> lkp = lookupone(table, 'foo', 'bar', strict=False)
+        >>> lkp['a']
+        1
+        >>> lkp['b']
+        3
+        
+    Compound keys are supported, e.g.::
+    
+        >>> t2 = [['foo', 'bar', 'baz'],
+        ...       ['a', 1, True],
+        ...       ['b', 2, False],
+        ...       ['b', 3, True]]
+        >>> lkp = lookupone(t2, ('foo', 'bar'), 'baz')
+        >>> lkp[('a', 1)]
+        True
+        >>> lkp[('b', 2)]
+        False
+        >>> lkp[('b', 3)]
+        True
+    
+    """
 
     it = iter(table)
     try:
@@ -437,63 +520,132 @@ def indexone(table, key, value=None, strict=True):
         assert len(keyindices) > 0, 'no key selected'
         valueindices = asindices(flds, value)
         assert len(valueindices) > 0, 'no value selected'
-        idx = defaultdict(list)
+        lkp = defaultdict(list)
         getkey = itemgetter(*keyindices)
         getvalue = itemgetter(*valueindices)
-        # TODO handle short rows?
         for row in it:
             k = getkey(row)
-            if strict and k in idx:
+            if strict and k in lkp:
                 raise DuplicateKeyError
             v = getvalue(row)
-            idx[k] = v
-        return idx
+            lkp[k] = v
+        return lkp
     except:
         raise
     finally:
         close(it)
     
     
-def recindex(table, key):
-    """TODO doc me"""
+def recordlookup(table, key):
+    """
+    Construct a dictionary (in memory) from the given table, mapping to records. 
+    E.g.::
+    
+        >>> table = [['foo', 'bar'], ['a', 1], ['b', 2], ['b', 3]]
+        >>> lkp = recordlookup(table, 'foo')
+        >>> lkp['a']
+        [{'foo': 'a', 'bar': 1}]
+        >>> lkp['b']
+        [{'foo': 'b', 'bar': 2}, {'foo': 'b', 'bar': 3}]
+
+    Compound keys are supported, e.g.::
+    
+        >>> t2 = [['foo', 'bar', 'baz'],
+        ...       ['a', 1, True],
+        ...       ['b', 2, False],
+        ...       ['b', 3, True],
+        ...       ['b', 3, False]]
+        >>> lkp = recordlookup(t2, ('foo', 'bar'))
+        >>> lkp[('a', 1)]
+        [{'baz': True, 'foo': 'a', 'bar': 1}]
+        >>> lkp[('b', 2)]
+        [{'baz': False, 'foo': 'b', 'bar': 2}]
+        >>> lkp[('b', 3)]
+        [{'baz': True, 'foo': 'b', 'bar': 3}, {'baz': False, 'foo': 'b', 'bar': 3}]
+    
+    """
     
     it = iter(table)
     try:
         flds = it.next()
         keyindices = asindices(flds, key)
         assert len(keyindices) > 0, 'no key selected'
-        idx = defaultdict(list)
+        lkp = defaultdict(list)
         getkey = itemgetter(*keyindices)
-        # TODO handle short rows?
         for row in it:
             k = getkey(row)
             d = asdict(flds, row)
-            idx[k].append(d)
-        return idx
+            lkp[k].append(d)
+        return lkp
     except:
         raise
     finally:
         close(it)
     
         
-def recindexone(table, key, strict=True):
-    """TODO doc me"""
+def recordlookupone(table, key, strict=True):
+    """
+    Construct a dictionary (in memory) from the given table, mapping to records,
+    assuming there is at most one record for each key. E.g.::
     
+        >>> table = [['foo', 'bar'], ['a', 1], ['b', 2], ['c', 2]]
+        >>> lkp = recordlookupone(table, 'foo')
+        >>> lkp['a']
+        {'foo': 'a', 'bar': 1}
+        >>> lkp['b']
+        {'foo': 'b', 'bar': 2}
+        >>> lkp['c']
+        {'foo': 'c', 'bar': 2}
+        
+    If the selected key is not unique, will raise DuplicateKeyError, e.g.::
+
+        >>> table = [['foo', 'bar'], ['a', 1], ['b', 2], ['b', 3]]
+        >>> lkp = recordlookupone(table, 'foo')
+        Traceback (most recent call last):
+          File "<stdin>", line 1, in <module>
+          File "petl/util.py", line 451, in lookupone
+        petl.util.DuplicateKeyError
+        
+    Unique checks can be overridden by providing `strict=False`, in which case
+    the last record wins, e.g.::
+
+        >>> table = [['foo', 'bar'], ['a', 1], ['b', 2], ['b', 3]]
+        >>> lkp = recordlookupone(table, 'foo', strict=False)
+        >>> lkp['a']
+        {'foo': 'a', 'bar': 1}
+        >>> lkp['b']
+        {'foo': 'b', 'bar': 3}
+        
+    Compound keys are supported, e.g.::
+    
+        >>> t2 = [['foo', 'bar', 'baz'],
+        ...       ['a', 1, True],
+        ...       ['b', 2, False],
+        ...       ['b', 3, True]]
+        >>> lkp = recordlookupone(t2, ('foo', 'bar'), strict=False)
+        >>> lkp[('a', 1)]
+        {'baz': True, 'foo': 'a', 'bar': 1}
+        >>> lkp[('b', 2)]
+        {'baz': False, 'foo': 'b', 'bar': 2}
+        >>> lkp[('b', 3)]
+        {'baz': True, 'foo': 'b', 'bar': 3}
+    
+    """    
+
     it = iter(table)
     try:
         flds = it.next()
         keyindices = asindices(flds, key)
         assert len(keyindices) > 0, 'no key selected'
-        idx = defaultdict(list)
+        lkp = defaultdict(list)
         getkey = itemgetter(*keyindices)
-        # TODO handle short rows?
         for row in it:
             k = getkey(row)
-            if strict and k in idx:
+            if strict and k in lkp:
                 raise DuplicateKeyError
             d = asdict(flds, row)
-            idx[k] = d
-        return idx
+            lkp[k] = d
+        return lkp
     except:
         raise
     finally:
