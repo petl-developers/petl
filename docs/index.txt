@@ -161,6 +161,10 @@ Utility functions
 
 .. autofunction:: valueset
 
+.. autofunction:: valuecounter
+
+.. autofunction:: valuecounts
+
 .. autofunction:: unique
 
 .. autofunction:: types

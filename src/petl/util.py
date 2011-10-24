@@ -9,7 +9,7 @@ from collections import defaultdict, Counter
 from operator import itemgetter
 
 
-__all__ = ['fields', 'data', 'records', 'count', 'look', 'see', 'values', \
+__all__ = ['fields', 'data', 'records', 'count', 'look', 'see', 'values', 'valuecounter', 'valuecounts', \
            'valueset', 'unique', 'lookup', 'lookupone', 'recordlookup', 'recordlookupone', \
            'types', 'parsetypes', 'stats', 'rowlengths', 'DuplicateKeyError']
 
@@ -276,40 +276,96 @@ class See(object):
             close(it)
     
     
-def values(table, field, start=0, stop=None, step=1):    
+def values(table, field, start=0, stop=None, step=1):
+    """
+    Return an iterator over values in a given field. E.g.::
+    
+        >>> table = [['foo', 'bar'], ['a', True], ['b'], ['b', True], ['c', False]]
+        >>> foo = values(table, 'foo')
+        >>> foo.next()
+        'a'
+        >>> foo.next()
+        'b'
+        >>> foo.next()
+        'b'
+        >>> foo.next()
+        'c'
+        >>> foo.next()
+        Traceback (most recent call last):
+          File "<stdin>", line 1, in <module>
+        StopIteration
+
+    If rows are uneven, any missing values are skipped, e.g.::
+    
+        >>> table = [['foo', 'bar'], ['a', True], ['b'], ['b', True], ['c', False]]
+        >>> bar = values(table, 'bar')
+        >>> bar.next()
+        True
+        >>> bar.next()
+        True
+        >>> bar.next()
+        False
+        >>> bar.next()
+        Traceback (most recent call last):
+          File "<stdin>", line 1, in <module>
+        StopIteration
+    
+    """
+    
+    it = iter(table)
+    try:
+        flds = it.next()
+        indices = asindices(flds, field)
+        assert len(indices) > 0, 'no field selected'
+        getvalue = itemgetter(*indices)
+        it = islice(it, start, stop, step)
+        for row in it:
+            try:
+                value = getvalue(row)
+                yield value
+            except IndexError:
+                pass # ignore short rows
+    except:
+        raise
+    finally:
+        close(it)
+    
+    
+def valueset(table, field, start=0, stop=None, step=1):
+    """
+    Find distinct values for the given field. Returns a set. E.g.::
+
+        >>> table = [['foo', 'bar'], ['a', True], ['b'], ['b', True], ['c', False]]
+        >>> valueset(table, 'foo')
+        set(['a', 'c', 'b'])
+        >>> valueset(table, 'bar')
+        set([False, True])
+        
+    Convenient shorthand for `set(values(table, field, start, stop, step))`.
+        
+    """
+
+    return set(values(table, field, start, stop, step))
+
+
+def valuecounter(table, field, start=0, stop=None, step=1):
     """
     Find distinct values for the given field and count the number of 
-    occurrences. Returns a table mapping values to counts. E.g.::
+    occurrences. Returns a dictionary mapping values to counts. E.g.::
 
         >>> table = [['foo', 'bar'], ['a', True], ['b'], ['b', True], ['c', False]]
-        >>> values(table, 'foo')
-        [('value', 'count'), ('b', 2), ('a', 1), ('c', 1)]
-
-    Can be combined with `look`, e.g.::
+        >>> c = valuecounter(table, 'foo')
+        >>> c['a']
+        1
+        >>> c['b']
+        2
+        >>> c['c']
+        1
+        >>> c
+        Counter({'b': 2, 'a': 1, 'c': 1})
     
-        >>> table = [['foo', 'bar'], ['a', True], ['b'], ['b', True], ['c', False]]
-        >>> look(values(table, 'foo'))
-        +---------+---------+
-        | 'value' | 'count' |
-        +=========+=========+
-        | 'b'     | 2       |
-        +---------+---------+
-        | 'a'     | 1       |
-        +---------+---------+
-        | 'c'     | 1       |
-        +---------+---------+
-        
-        >>> look(values(table, 'bar'))
-        +---------+---------+
-        | 'value' | 'count' |
-        +=========+=========+
-        | True    | 2       |
-        +---------+---------+
-        | False   | 1       |
-        +---------+---------+
-            
     """
-    
+
     it = iter(table)
     try:
         flds = it.next()
@@ -322,44 +378,52 @@ def values(table, field, start=0, stop=None, step=1):
                 counter[row[field_index]] += 1
             except IndexError:
                 pass # short row
-        output = [('value', 'count')]
-        output.extend(counter.most_common())
-        return output
+        return counter
     except:
         raise
     finally:
         close(it)
         
-        
-def valueset(table, field, start=0, stop=None, step=1):
+
+def valuecounts(table, field, start=0, stop=None, step=1):    
     """
-    Find distinct values for the given field. Returns a set. E.g.::
+    Find distinct values for the given field and count the number of 
+    occurrences. Returns a table mapping values to counts, with most common 
+    values first. E.g.::
 
         >>> table = [['foo', 'bar'], ['a', True], ['b'], ['b', True], ['c', False]]
-        >>> valueset(table, 'foo')
-        set(['a', 'c', 'b'])
-        >>> valueset(table, 'bar')
-        set([False, True])
-        
-    """
+        >>> valuecounts(table, 'foo')
+        [('value', 'count'), ('b', 2), ('a', 1), ('c', 1)]
 
-    it = iter(table)
-    try:
-        flds = it.next()
-        assert field in flds, 'field not found: %s' % field
-        field_index = flds.index(field)
-        it = islice(it, start, stop, step)
-        vals = set()
-        for row in it:
-            try:
-                vals.add(row[field_index])
-            except IndexError:
-                pass # short row
-        return vals
-    except:
-        raise
-    finally:
-        close(it)
+    Can be combined with `look`, e.g.::
+    
+        >>> table = [['foo', 'bar'], ['a', True], ['b'], ['b', True], ['c', False]]
+        >>> look(valuecounts(table, 'foo'))
+        +---------+---------+
+        | 'value' | 'count' |
+        +=========+=========+
+        | 'b'     | 2       |
+        +---------+---------+
+        | 'a'     | 1       |
+        +---------+---------+
+        | 'c'     | 1       |
+        +---------+---------+
+        
+        >>> look(valuecounts(table, 'bar'))
+        +---------+---------+
+        | 'value' | 'count' |
+        +=========+=========+
+        | True    | 2       |
+        +---------+---------+
+        | False   | 1       |
+        +---------+---------+
+            
+    """
+    
+    counter = valuecounter(table, field, start, stop, step)
+    output = [('value', 'count')]
+    output.extend(counter.most_common())
+    return output
         
         
 def unique(table, field):

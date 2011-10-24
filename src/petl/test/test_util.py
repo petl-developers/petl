@@ -3,8 +3,9 @@ TODO doc me
 
 """
 
-from petl import fields, data, records, count, look, see, values, valueset,\
-                unique, lookup, lookupone, recordlookup, recordlookupone, DuplicateKeyError
+from petl import fields, data, records, count, look, see, values, valuecounter, valuecounts, valueset,\
+                unique, lookup, lookupone, recordlookup, recordlookupone, \
+                DuplicateKeyError
 
 
 def assertequal(expect, actual):
@@ -103,21 +104,44 @@ def test_see():
 """
     assertequal(expect, actual)
 
-        
+
 def test_values():
     """Test the values function."""
     
     table = [['foo', 'bar'], ['a', 1], ['b', 2], ['b', 7]]
+
     actual = values(table, 'foo')
+    expect = ['a', 'b', 'b']
+    iassertequal(expect, actual) 
+
+    actual = values(table, 'bar')
+    expect = [1, 2, 7]
+    iassertequal(expect, actual) 
+
+
+def test_valuecounter():
+    """Test the valuecounter function."""
+    
+    table = [['foo', 'bar'], ['a', 1], ['b', 2], ['b', 7]]
+    actual = valuecounter(table, 'foo')
+    expect = {'b': 2, 'a': 1}
+    assertequal(expect, actual) 
+    
+        
+def test_valuecounts():
+    """Test the valuecounts function."""
+    
+    table = [['foo', 'bar'], ['a', 1], ['b', 2], ['b', 7]]
+    actual = valuecounts(table, 'foo')
     expect = (('value', 'count'), ('b', 2), ('a', 1))
     iassertequal(expect, actual) 
 
 
-def test_values_shortrows():
+def test_valuecounts_shortrows():
     """Test the values function with short rows."""
     
     table = [['foo', 'bar'], ['a', True], ['b'], ['b', True], ['c', False]]
-    actual = values(table, 'bar')
+    actual = valuecounts(table, 'bar')
     expect = (('value', 'count'), (True, 2), (False, 1))
     iassertequal(expect, actual) 
 
