@@ -11,7 +11,7 @@ from operator import itemgetter
 
 __all__ = ['fields', 'data', 'records', 'count', 'look', 'see', 'values', 'valuecounter', 'valuecounts', \
            'valueset', 'unique', 'lookup', 'lookupone', 'recordlookup', 'recordlookupone', \
-           'types', 'parsetypes', 'stats', 'rowlengths', 'DuplicateKeyError']
+           'types', 'typeset', 'parsetypes', 'stats', 'rowlengths', 'DuplicateKeyError']
 
 
 def fields(table):
@@ -716,18 +716,6 @@ def recordlookupone(table, key, strict=True):
         close(it)
     
             
-def types(table):
-    """TODO doc me"""
-    
-    
-def parsetypes(table):
-    """TODO doc me"""
-    
-    
-def stats(table):
-    """TODO doc me"""
-    
-    
 def close(o):
     """
     If the object has a 'close' method, call it. 
@@ -835,3 +823,209 @@ def rowlengths(table, start=0, stop=None, step=1):
         close(it)
 
 
+def types(table, field, start=0, stop=None, step=1):    
+    """
+    Count the number of values found for each Python type. E.g.::
+
+        >>> table = [['foo', 'bar', 'baz'],
+        ...          ['A', 1, 2],
+        ...          ['B', u'2', '3.4'],
+        ...          [u'B', u'3', u'7.8', True],
+        ...          ['D', u'xyz', 9.0],
+        ...          ['E', 42]]
+        >>> look(types(table, 'foo'))
+        +-----------+---------+
+        | 'type'    | 'count' |
+        +===========+=========+
+        | 'str'     | 4       |
+        +-----------+---------+
+        | 'unicode' | 1       |
+        +-----------+---------+
+        
+        >>> look(types(table, 'bar'))
+        +-----------+---------+
+        | 'type'    | 'count' |
+        +===========+=========+
+        | 'unicode' | 3       |
+        +-----------+---------+
+        | 'int'     | 2       |
+        +-----------+---------+
+        
+        >>> look(types(table, 'baz'))
+        +-----------+---------+
+        | 'type'    | 'count' |
+        +===========+=========+
+        | 'int'     | 1       |
+        +-----------+---------+
+        | 'float'   | 1       |
+        +-----------+---------+
+        | 'unicode' | 1       |
+        +-----------+---------+
+        | 'str'     | 1       |
+        +-----------+---------+
+
+    
+    """
+    
+    it = iter(table)
+    try:
+        fields = it.next()
+        assert field in fields, 'field not found: %s' % field
+        field_index = fields.index(field)
+        it = islice(it, start, stop, step)
+        counter = Counter()
+        for row in it:
+            try:
+                counter[row[field_index].__class__.__name__] += 1
+            except IndexError:
+                pass # ignore short rows
+        output = [('type', 'count')]
+        output.extend(counter.most_common())
+        return output
+    except:
+        raise
+    finally:
+        close(it)
+
+
+def typeset(table, field, start=0, stop=None, step=1):
+    """
+    Return a set containing all Python types found for values in the given field.
+    E.g.::
+    
+        >>> table = [['foo', 'bar', 'baz'],
+        ...          ['A', 1, '2'],
+        ...          ['B', u'2', '3.4'],
+        ...          [u'B', u'3', '7.8', True],
+        ...          ['D', u'xyz', 9.0],
+        ...          ['E', 42]]
+        >>> typeset(table, 'foo') 
+        set([<type 'str'>, <type 'unicode'>])
+        >>> typeset(table, 'bar') 
+        set([<type 'int'>, <type 'unicode'>])
+        >>> typeset(table, 'baz') 
+        set([<type 'float'>, <type 'str'>])
+    
+    """
+
+    it = iter(table)
+    try:
+        fields = it.next()
+        assert field in fields, 'field not found: %s' % field
+        field_index = fields.index(field)
+        it = islice(it, start, stop, step)
+        s = set()
+        for row in it:
+            try:
+                s.add(row[field_index].__class__)
+            except IndexError:
+                pass # ignore short rows
+        return s
+    except:
+        raise
+    finally:
+        close(it)
+    
+
+def parsetypes(table, field, parsers={'int': int, 'float': float}, start=0, stop=None, step=1):    
+    """
+    Count the number of `str` or `unicode` values that can be parsed as ints, 
+    floats or via custom parser functions. E.g.::
+    
+        >>> table = [['foo', 'bar', 'baz'],
+        ...          ['A', 1, 2],
+        ...          ['B', u'2', '3.4'],
+        ...          [u'B', u'3', u'7.8', True],
+        ...          ['D', '3.7', 9.0],
+        ...          ['E', 42]]
+        >>> look(parsetypes(table, 'bar'))
+        +---------+---------+
+        | 'type'  | 'count' |
+        +=========+=========+
+        | 'float' | 3       |
+        +---------+---------+
+        | 'int'   | 2       |
+        +---------+---------+
+
+    """
+    
+    it = iter(table)
+    try:
+        fields = it.next()
+        assert field in fields, 'field not found: %s' % field
+        field_index = fields.index(field)
+        it = islice(it, start, stop, step)
+        counter = Counter()
+        for row in it:
+            value = row[field_index]
+            if isinstance(value, basestring):
+                for name, parser in parsers.items():
+                    try:
+                        parser(value)
+                    except ValueError:
+                        pass
+                    except TypeError:
+                        pass
+                    else:
+                        counter[name] += 1
+        output = [('type', 'count')]
+        output.extend(counter.most_common())
+        return output
+    except:
+        raise
+    finally:
+        close(it)
+
+
+def stats(table, field, start=0, stop=None, step=1):
+    """
+    Calculate basic descriptive statistics on a given field. E.g.::
+    
+        >>> table = [['foo', 'bar', 'baz'],
+        ...          ['A', 1, 2],
+        ...          ['B', '2', '3.4'],
+        ...          [u'B', u'3', u'7.8', True],
+        ...          ['D', 'xyz', 9.0],
+        ...          ['E', None]]
+        >>> stats(table, 'bar')    
+        {'count': 3, 'errors': 2, 'min': 1.0, 'max': 3.0, 'sum': 6.0, 'mean': 2.0}
+        
+    """
+    
+    output = {'min': None, 
+              'max': None,
+              'sum': None, 
+              'mean': None, 
+              'count': 0, 
+              'errors': 0}
+    it = iter(table)
+    try:
+        fields = it.next()
+        assert field in fields, 'field not found: %s' % field
+        field_index = fields.index(field)
+        it = islice(it, start, stop, step)
+        for row in it:
+            value = row[field_index]
+            try:
+                value = float(value)
+            except:
+                output['errors'] += 1
+            else:
+                if output['min'] is None or value < output['min']:
+                    output['min'] = value
+                if output['max'] is None or value > output['max']:
+                    output['max'] = value
+                if output['sum'] is None:
+                    output['sum'] = value
+                else:
+                    output['sum'] += value
+                output['count'] += 1
+        if output['count'] > 0:
+            output['mean'] = output['sum'] / output['count']
+        return output
+    except:
+        raise
+    finally:
+        close(it)
+        
+# TODO string lengths, string patterns, ...

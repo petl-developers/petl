@@ -169,6 +169,8 @@ Utility functions
 
 .. autofunction:: types
 
+.. autofunction:: typeset
+
 .. autofunction:: parsetypes
 
 .. autofunction:: stats

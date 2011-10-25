@@ -5,7 +5,7 @@ TODO doc me
 
 from petl import fields, data, records, count, look, see, values, valuecounter, valuecounts, valueset,\
                 unique, lookup, lookupone, recordlookup, recordlookupone, \
-                DuplicateKeyError, rowlengths
+                DuplicateKeyError, rowlengths, stats, types, parsetypes, typeset
 
 
 def assertequal(expect, actual):
@@ -310,3 +310,69 @@ def test_rowlengths():
     iassertequal(expect, actual) 
 
 
+def test_stats():
+
+    table = [['foo', 'bar', 'baz'],
+             ['A', 1, 2],
+             ['B', '2', '3.4'],
+             [u'B', u'3', u'7.8', True],
+             ['D', 'xyz', 9.0],
+             ['E', None]]
+
+    result = stats(table, 'bar')    
+    assert result['min'] == 1.0
+    assert result['max'] == 3.0
+    assert result['sum'] == 6.0
+    assert result['count'] == 3
+    assert result['errors'] == 2
+    assert result['mean'] == 2.0
+
+
+def test_types():
+
+    table = [['foo', 'bar', 'baz'],
+             ['A', 1, '2'],
+             ['B', u'2', '3.4'],
+             [u'B', u'3', '7.8', True],
+             ['D', u'xyz', 9.0],
+             ['E', 42]]
+
+    actual = types(table, 'foo') 
+    expect = (('type', 'count'), ('str', 4), ('unicode', 1))
+    iassertequal(expect, actual)
+
+    actual = types(table, 'bar') 
+    expect = (('type', 'count'), ('unicode', 3), ('int', 2))
+    iassertequal(expect, actual)
+
+    actual = types(table, 'baz') 
+    expect = (('type', 'count'), ('str', 3), ('float', 1))
+    iassertequal(expect, actual)
+
+
+def test_typeset():
+
+    table = [['foo', 'bar', 'baz'],
+             ['A', 1, '2'],
+             ['B', u'2', '3.4'],
+             [u'B', u'3', '7.8', True],
+             ['D', u'xyz', 9.0],
+             ['E', 42]]
+
+    actual = typeset(table, 'foo') 
+    expect = {str, unicode}
+    assertequal(expect, actual)
+
+
+def test_parsetypes():
+
+    table = [['foo', 'bar', 'baz'],
+             ['A', 1, 2],
+             ['B', u'2', '3.4'],
+             [u'B', u'3', u'7.8', True],
+             ['D', '3.7', 9.0],
+             ['E', 42]]
+
+    actual = parsetypes(table, 'bar') 
+    expect = (('type', 'count'), ('float', 3), ('int', 2))
+    iassertequal(expect, actual)
