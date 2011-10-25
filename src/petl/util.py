@@ -35,7 +35,7 @@ def fields(table):
     return flds
 
     
-def data(table):
+def data(table, start=0, stop=None, step=1):
     """
     Return an iterator over the data rows for the given table. E.g.::
     
@@ -48,10 +48,10 @@ def data(table):
     
     """
     
-    return islice(table, 1, None)
+    return islice(table, start + 1, stop, step)
 
     
-def records(table, missing=None):
+def records(table, start=0, stop=None, step=1, missing=None):
     """
     Return an iterator over the data in the table, yielding each row as a 
     dictionary of values indexed by field. E.g.::
@@ -68,7 +68,7 @@ def records(table, missing=None):
     
     it = iter(table)
     flds = it.next()
-    for row in it:
+    for row in islice(it, start, stop, step):
         yield asdict(flds, row, missing)
     
     
@@ -228,7 +228,7 @@ class Look(object):
         return repr(self)
         
         
-def see(table, start=0, stop=5, step=1):
+def see(table, start=0, stop=10, step=1):
     """
     Format a portion of a table as text in a column-oriented layout for 
     inspection in an interactive session. E.g.::
@@ -728,10 +728,6 @@ def stats(table):
     """TODO doc me"""
     
     
-def rowlengths(table):
-    """TODO doc me"""
-    
-    
 def close(o):
     """
     If the object has a 'close' method, call it. 
@@ -800,3 +796,42 @@ def rowgetter(*indices):
     else:
         return itemgetter(*indices)
     
+    
+def rowlengths(table, start=0, stop=None, step=1):
+    """
+    Report on row lengths found in the table. E.g.::
+    
+        >>> table = [['foo', 'bar', 'baz'],
+        ...          ['A', 1, 2],
+        ...          ['B', '2', '3.4'],
+        ...          [u'B', u'3', u'7.8', True],
+        ...          ['D', 'xyz', 9.0],
+        ...          ['E', None],
+        ...          ['F', 9]]
+        >>> look(rowlengths(table))
+        +----------+---------+
+        | 'length' | 'count' |
+        +==========+=========+
+        | 3        | 3       |
+        +----------+---------+
+        | 2        | 2       |
+        +----------+---------+
+        | 4        | 1       |
+        +----------+---------+
+
+    """
+
+    it = data(table, start, stop, step)
+    try:
+        counter = Counter()
+        for row in it:
+            counter[len(row)] += 1
+        output = [('length', 'count')]
+        output.extend(counter.most_common())
+        return output
+    except:
+        raise
+    finally:
+        close(it)
+
+

@@ -5,7 +5,7 @@ TODO doc me
 
 from petl import fields, data, records, count, look, see, values, valuecounter, valuecounts, valueset,\
                 unique, lookup, lookupone, recordlookup, recordlookupone, \
-                DuplicateKeyError
+                DuplicateKeyError, rowlengths
 
 
 def assertequal(expect, actual):
@@ -294,4 +294,19 @@ def test_recordlookupone():
               ('b', 3): {'foo': 'b', 'bar': 3, 'baz': False}} # last wins
     assertequal(expect, actual)
     
+
+def test_rowlengths():
+    """Test the rowlengths function."""
+
+    table = [['foo', 'bar', 'baz'],
+             ['A', 1, 2],
+             ['B', '2', '3.4'],
+             [u'B', u'3', u'7.8', True],
+             ['D', 'xyz', 9.0],
+             ['E', None],
+             ['F', 9]]
+    actual = rowlengths(table)
+    expect = (('length', 'count'), (3, 3), (2, 2), (4, 1))
+    iassertequal(expect, actual) 
+
 
