@@ -145,46 +145,54 @@ TODO
 Utility functions
 -----------------
 
-.. autofunction:: fields
+.. autofunction:: petl.fields
 
-.. autofunction:: data
+.. autofunction:: petl.data
 
-.. autofunction:: records
+.. autofunction:: petl.records
 
-.. autofunction:: count
+.. autofunction:: petl.count
 
-.. autofunction:: look
+.. autofunction:: petl.look
 
-.. autofunction:: see
+.. autofunction:: petl.see
 
-.. autofunction:: values
+.. autofunction:: petl.values
 
-.. autofunction:: valueset
+.. autofunction:: petl.valueset
 
-.. autofunction:: valuecounter
+.. autofunction:: petl.valuecounter
 
-.. autofunction:: valuecounts
+.. autofunction:: petl.valuecounts
 
-.. autofunction:: unique
+.. autofunction:: petl.unique
 
-.. autofunction:: types
+.. autofunction:: petl.types
 
-.. autofunction:: typeset
+.. autofunction:: petl.typeset
 
-.. autofunction:: parsetypes
+.. autofunction:: petl.parsetypes
 
-.. autofunction:: stats
+.. autofunction:: petl.stats
 
-.. autofunction:: rowlengths
+.. autofunction:: petl.rowlengths
 
-.. autofunction:: lookup
+.. autofunction:: petl.lookup
 
-.. autofunction:: lookupone
+.. autofunction:: petl.lookupone
 
-.. autofunction:: recordlookup
+.. autofunction:: petl.recordlookup
 
-.. autofunction:: recordlookupone
+.. autofunction:: petl.recordlookupone
 
+Extracting (reading) tables from files & other sources
+------------------------------------------------------
+
+.. autofunction:: petl.fromcsv
+
+.. autofunction:: petl.frompickle
+
+.. autofunction:: petl.fromsqlite3
 
 Further Reading
 ---------------

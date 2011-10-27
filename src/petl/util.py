@@ -18,6 +18,7 @@ def fields(table):
     """
     Return the header row for the given table. E.g.::
     
+        >>> from petl import fields
         >>> table = [['foo', 'bar'], ['a', 1], ['b', 2]]
         >>> fields(table)
         ['foo', 'bar']
@@ -39,6 +40,7 @@ def data(table, start=0, stop=None, step=1):
     """
     Return an iterator over the data rows for the given table. E.g.::
     
+        >>> from petl import data
         >>> table = [['foo', 'bar'], ['a', 1], ['b', 2]]
         >>> it = data(table)
         >>> it.next()
@@ -92,6 +94,7 @@ def count(table):
     """
     Count the number of rows in a table. E.g.::
     
+        >>> from petl import count
         >>> table = [['foo', 'bar'], ['a', 1], ['b', 2]]
         >>> count(table)
         2
@@ -108,6 +111,7 @@ def look(table, start=0, stop=10, step=1):
     Format a portion of the table as text for inspection in an interactive
     session. E.g.::
     
+        >>> from petl import look
         >>> table = [['foo', 'bar'], ['a', 1], ['b', 2]]
         >>> look(table)
         +-------+-------+
@@ -233,6 +237,7 @@ def see(table, start=0, stop=10, step=1):
     Format a portion of a table as text in a column-oriented layout for 
     inspection in an interactive session. E.g.::
     
+        >>> from petl import see
         >>> table = [['foo', 'bar'], ['a', 1], ['b', 2]]
         >>> see(table)
         'foo': 'a', 'b'
@@ -280,6 +285,7 @@ def values(table, field, start=0, stop=None, step=1):
     """
     Return an iterator over values in a given field. E.g.::
     
+        >>> from petl import values
         >>> table = [['foo', 'bar'], ['a', True], ['b'], ['b', True], ['c', False]]
         >>> foo = values(table, 'foo')
         >>> foo.next()
@@ -335,6 +341,7 @@ def valueset(table, field, start=0, stop=None, step=1):
     """
     Find distinct values for the given field. Returns a set. E.g.::
 
+        >>> from petl import valueset
         >>> table = [['foo', 'bar'], ['a', True], ['b'], ['b', True], ['c', False]]
         >>> valueset(table, 'foo')
         set(['a', 'c', 'b'])
@@ -353,6 +360,7 @@ def valuecounter(table, field, start=0, stop=None, step=1):
     Find distinct values for the given field and count the number of 
     occurrences. Returns a dictionary mapping values to counts. E.g.::
 
+        >>> from petl import valuecounter
         >>> table = [['foo', 'bar'], ['a', True], ['b'], ['b', True], ['c', False]]
         >>> c = valuecounter(table, 'foo')
         >>> c['a']
@@ -391,6 +399,7 @@ def valuecounts(table, field, start=0, stop=None, step=1):
     occurrences. Returns a table mapping values to counts, with most common 
     values first. E.g.::
 
+        >>> from petl import valuecounts
         >>> table = [['foo', 'bar'], ['a', True], ['b'], ['b', True], ['c', False]]
         >>> valuecounts(table, 'foo')
         [('value', 'count'), ('b', 2), ('a', 1), ('c', 1)]
@@ -431,6 +440,7 @@ def unique(table, field):
     Return True if there are no duplicate values for the given field, otherwise
     False. E.g.::
 
+        >>> from petl import unique
         >>> table = [['foo', 'bar'], ['a', 1], ['b'], ['b', 2], ['c', 3, True]]
         >>> unique(table, 'foo')
         False
@@ -469,6 +479,7 @@ def lookup(table, key, value=None):
     """
     Construct a dictionary (in memory) from the given table. E.g.::
     
+        >>> from petl import lookup
         >>> table = [['foo', 'bar'], ['a', 1], ['b', 2], ['b', 3]]
         >>> lkp = lookup(table, 'foo', 'bar')
         >>> lkp['a']
@@ -531,6 +542,7 @@ def lookupone(table, key, value=None, strict=True):
     Construct a dictionary (in memory) from the given table, assuming there is
     at most one value for each key. E.g.::
     
+        >>> from petl import lookupone
         >>> table = [['foo', 'bar'], ['a', 1], ['b', 2], ['c', 2]]
         >>> lkp = lookupone(table, 'foo', 'bar')
         >>> lkp['a']
@@ -605,6 +617,7 @@ def recordlookup(table, key):
     Construct a dictionary (in memory) from the given table, mapping to records. 
     E.g.::
     
+        >>> from petl import recordlookup
         >>> table = [['foo', 'bar'], ['a', 1], ['b', 2], ['b', 3]]
         >>> lkp = recordlookup(table, 'foo')
         >>> lkp['a']
@@ -652,6 +665,7 @@ def recordlookupone(table, key, strict=True):
     Construct a dictionary (in memory) from the given table, mapping to records,
     assuming there is at most one record for each key. E.g.::
     
+        >>> from petl import recordlookupone
         >>> table = [['foo', 'bar'], ['a', 1], ['b', 2], ['c', 2]]
         >>> lkp = recordlookupone(table, 'foo')
         >>> lkp['a']
@@ -789,6 +803,7 @@ def rowlengths(table, start=0, stop=None, step=1):
     """
     Report on row lengths found in the table. E.g.::
     
+        >>> from petl import look, rowlengths
         >>> table = [['foo', 'bar', 'baz'],
         ...          ['A', 1, 2],
         ...          ['B', '2', '3.4'],
@@ -827,6 +842,7 @@ def types(table, field, start=0, stop=None, step=1):
     """
     Count the number of values found for each Python type. E.g.::
 
+        >>> from petl import look, types
         >>> table = [['foo', 'bar', 'baz'],
         ...          ['A', 1, 2],
         ...          ['B', u'2', '3.4'],
@@ -893,6 +909,7 @@ def typeset(table, field, start=0, stop=None, step=1):
     Return a set containing all Python types found for values in the given field.
     E.g.::
     
+        >>> from petl import typeset
         >>> table = [['foo', 'bar', 'baz'],
         ...          ['A', 1, '2'],
         ...          ['B', u'2', '3.4'],
@@ -932,6 +949,7 @@ def parsetypes(table, field, parsers={'int': int, 'float': float}, start=0, stop
     Count the number of `str` or `unicode` values that can be parsed as ints, 
     floats or via custom parser functions. E.g.::
     
+        >>> from petl import look, parsetypes
         >>> table = [['foo', 'bar', 'baz'],
         ...          ['A', 1, 2],
         ...          ['B', u'2', '3.4'],
@@ -981,6 +999,7 @@ def stats(table, field, start=0, stop=None, step=1):
     """
     Calculate basic descriptive statistics on a given field. E.g.::
     
+        >>> from petl import stats
         >>> table = [['foo', 'bar', 'baz'],
         ...          ['A', 1, 2],
         ...          ['B', '2', '3.4'],
