@@ -5,10 +5,9 @@ TODO doc me
 
 from tempfile import NamedTemporaryFile
 import csv
+import cPickle as pickle
 
-
-from petl import fromcsv
-import os.path
+from petl import fromcsv, frompickle, fromsqlite3
 
 
 def assertequal(expect, actual):
@@ -75,3 +74,52 @@ def test_fromcsv_cachetag():
     assert tag2 != tag1, (tag2, tag1)
     
 
+def test_frompickle():
+    """Test the frompickle function."""
+    
+    f = NamedTemporaryFile(delete=False)
+    table = [['foo', 'bar'],
+             ['a', 1],
+             ['b', 2],
+             ['c', 2]]
+    for row in table:
+        pickle.dump(row, f)
+    f.close()
+    
+    actual = frompickle(f.name)
+    iassertequal(table, actual)
+    iassertequal(table, actual) # verify can iterate twice
+    
+    
+def test_frompickle_cachetag():
+    """Test the cachetag method on tables returned by frompickle."""
+    
+    # initial data
+    f = NamedTemporaryFile(delete=False)
+    table = [['foo', 'bar'],
+             ['a', 1],
+             ['b', 2],
+             ['c', 2]]
+    for row in table:
+        pickle.dump(row, f)
+    f.close()
+
+    # cachetag with initial data
+    tbl = frompickle(f.name)
+    tag1 = tbl.cachetag()
+    
+    # make a change
+    with open(f.name, 'wb') as f:
+        rows = [['foo', 'bar'],
+                ['d', 3],
+                ['e', 5],
+                ['f', 4]]
+        for row in rows:
+            pickle.dump(row, f)
+
+    # check cachetag has changed
+    tag2 = tbl.cachetag()
+    assert tag2 != tag1, (tag2, tag1)
+    
+
+    

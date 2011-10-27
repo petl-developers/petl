@@ -7,6 +7,7 @@ TODO doc me
 import csv
 import os
 import zlib
+import cPickle as pickle
 
 
 __all__ = ['fromcsv', 'frompickle', 'fromsqlite3', 'tocsv', 'topickle', 'tosqlite3']
@@ -90,6 +91,9 @@ def fromcsv(path, *args, **kwargs):
     Note that all data values are strings, and any intended numeric values will
     need to be converted, see also `petl.convert`.
     
+    The returned table object implements the `cachetag` method using the 
+    `zlib.adler32` function to detect changes to the underlying file's contents. 
+    
     """
 
     return CSVView(path, *args, **kwargs)
@@ -119,9 +123,59 @@ class CSVView(object):
     
 def frompickle(path):
     """
-    TODO doc me
+    Returns a table providing access to the data pickled in the given file. The 
+    rows in the table should have been pickled to the file one at a time. E.g.::
+
+        >>> import pickle
+        >>> import tempfile
+        >>> # set up a temporary file to demonstrate with
+        ... f = tempfile.NamedTemporaryFile(delete=False)
+        >>> pickle.dump(['foo', 'bar'], f)
+        >>> pickle.dump(['a', 1], f)
+        >>> pickle.dump(['b', 2], f)
+        >>> pickle.dump(['c', 2.5], f)
+        >>> f.close()
+        >>> # now demonstrate the use of petl.frompickle
+        ... from petl import frompickle, look
+        >>> table = frompickle(f.name)
+        >>> look(table)
+        +-------+-------+
+        | 'foo' | 'bar' |
+        +=======+=======+
+        | 'a'   | 1     |
+        +-------+-------+
+        | 'b'   | 2     |
+        +-------+-------+
+        | 'c'   | 2.5   |
+        +-------+-------+
+
+    The returned table object implements the `cachetag` method using the 
+    `zlib.adler32` function to detect changes to the underlying file's contents. 
     
     """
+    
+    return PickleView(path)
+    
+    
+class PickleView(object):
+
+    def __init__(self, path):
+        self.path = path
+        
+    def __iter__(self):
+        with open(self.path, 'rb') as file:
+            try:
+                while True:
+                    yield pickle.load(file)
+            except EOFError:
+                pass
+                
+    def cachetag(self):
+        p = self.path
+        if os.path.isfile(p):
+            return adler32(p)
+        else:
+            raise Uncacheable
     
 
 def fromsqlite3():
