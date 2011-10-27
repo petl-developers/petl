@@ -8,6 +8,7 @@ import csv
 import cPickle as pickle
 
 from petl import fromcsv, frompickle, fromsqlite3
+import sqlite3
 
 
 def assertequal(expect, actual):
@@ -16,7 +17,7 @@ def assertequal(expect, actual):
 
 def iassertequal(expect, actual):
     for e, a in zip(expect, actual):
-        assert e == a, (e, a)
+        assert tuple(e) == tuple(a), (e, a)
 
 
 def test_fromcsv():
@@ -122,4 +123,28 @@ def test_frompickle_cachetag():
     assert tag2 != tag1, (tag2, tag1)
     
 
+def test_fromsqlite3():
+    """Test the fromsqlite3 function."""
     
+    # initial data
+    data = [['a', 1],
+            ['b', 2],
+            ['c', 2.0]]
+    connection = sqlite3.connect(':memory:')
+    c = connection.cursor()
+    c.execute('create table foobar (foo, bar)')
+    for row in data:
+        c.execute('insert into foobar values (?, ?)', row)
+    connection.commit()
+    c.close()
+    
+    # test the function
+    actual = fromsqlite3(connection, 'select * from foobar')
+    expect = [['foo', 'bar'],
+              ['a', 1],
+              ['b', 2],
+              ['c', 2.0]]
+    iassertequal(expect, actual)
+    iassertequal(expect, actual) # verify can iterate twice
+
+

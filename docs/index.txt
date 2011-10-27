@@ -194,6 +194,18 @@ Extracting (reading) tables from files & other sources
 
 .. autofunction:: petl.fromsqlite3
 
+Transforming tables
+-------------------
+
+TODO
+
+.. autofunction:: petl.rename
+
+Loading (writing) tables to files & other sources
+-------------------------------------------------
+
+TODO
+
 Further Reading
 ---------------
 

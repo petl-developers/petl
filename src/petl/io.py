@@ -178,12 +178,61 @@ class PickleView(object):
             raise Uncacheable
     
 
-def fromsqlite3():
+def fromsqlite3(connection, query):
     """
-    TODO doc me
+    Provides access to data from an sqlite3 connection via a given query. E.g.::
     
+        >>> # set up a demonstration sqlite3 database
+        ... import sqlite3
+        >>> data = [['a', 1],
+        ...         ['b', 2],
+        ...         ['c', 2.0]]
+        >>> connection = sqlite3.connect(':memory:')
+        >>> c = connection.cursor()
+        >>> c.execute('create table foobar (foo, bar)')
+        <sqlite3.Cursor object at 0xb77f56e0>
+        >>> for row in data:
+        ...     c.execute('insert into foobar values (?, ?)', row)
+        ... 
+        <sqlite3.Cursor object at 0xb77f56e0>
+        <sqlite3.Cursor object at 0xb77f56e0>
+        <sqlite3.Cursor object at 0xb77f56e0>
+        >>> connection.commit()
+        >>> c.close()
+        >>> # now demonstrate the use of petl.fromsqlite3
+        ... from petl import look, fromsqlite3
+        >>> table = fromsqlite3(connection, 'select * from foobar')
+        >>> look(table)    
+        +-------+-------+
+        | 'foo' | 'bar' |
+        +=======+=======+
+        | u'a'  | 1     |
+        +-------+-------+
+        | u'b'  | 2     |
+        +-------+-------+
+        | u'c'  | 2.0   |
+        +-------+-------+
+
+    Returned table objects do not implement the cachetag method.
     """
     
+    return Sqlite3View(connection, query)
+
+
+class Sqlite3View(object):
+
+    def __init__(self, connection, query):
+        self.connection = connection
+        self.query = query
+        
+    def __iter__(self):
+        c = self.connection.cursor()
+        c.execute(self.query)
+        fields = [d[0] for d in c.description]
+        yield fields
+        for result in c:
+            yield result
+                
 
 def tocsv(table, path, *args, **kwargs):
     """
