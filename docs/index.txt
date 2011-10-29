@@ -167,11 +167,15 @@ Utility functions
 
 .. autofunction:: petl.unique
 
-.. autofunction:: petl.types
+.. autofunction:: petl.typecounter
+
+.. autofunction:: petl.typecounts
 
 .. autofunction:: petl.typeset
 
-.. autofunction:: petl.parsetypes
+.. autofunction:: petl.parsecounter
+
+.. autofunction:: petl.parsecounts
 
 .. autofunction:: petl.stats
 

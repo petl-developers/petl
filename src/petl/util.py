@@ -11,7 +11,8 @@ from operator import itemgetter
 
 __all__ = ['fields', 'data', 'records', 'count', 'look', 'see', 'values', 'valuecounter', 'valuecounts', \
            'valueset', 'unique', 'lookup', 'lookupone', 'recordlookup', 'recordlookupone', \
-           'types', 'typeset', 'parsetypes', 'stats', 'rowlengths', 'DuplicateKeyError']
+           'typecounter', 'typecounts', 'typeset', 'parsecounter', 'parsecounts', \
+           'stats', 'rowlengths', 'DuplicateKeyError']
 
 
 def fields(table):
@@ -814,18 +815,48 @@ def rowlengths(table, start=0, stop=None, step=1):
         close(it)
 
 
-def types(table, field, start=0, stop=None, step=1):    
+def typecounter(table, field, start=0, stop=None, step=1):    
     """
     Count the number of values found for each Python type. E.g.::
 
-        >>> from petl import look, types
+        >>> from petl import typecounter
         >>> table = [['foo', 'bar', 'baz'],
         ...          ['A', 1, 2],
         ...          ['B', u'2', '3.4'],
         ...          [u'B', u'3', u'7.8', True],
         ...          ['D', u'xyz', 9.0],
         ...          ['E', 42]]
-        >>> look(types(table, 'foo'))
+        >>> typecounter(table, 'foo')
+        Counter({'str': 4, 'unicode': 1})
+        >>> typecounter(table, 'bar')
+        Counter({'unicode': 3, 'int': 2})
+        >>> typecounter(table, 'baz')
+        Counter({'int': 1, 'float': 1, 'unicode': 1, 'str': 1})
+    
+    """
+    
+    counter = Counter()
+    for v in values(table, field, start, stop, step):
+        try:
+            counter[v.__class__.__name__] += 1
+        except IndexError:
+            pass # ignore short rows
+    return counter
+
+
+def typecounts(table, field, start=0, stop=None, step=1):    
+    """
+    Count the number of values found for each Python type and return a table
+    mapping class names to counts. E.g.::
+
+        >>> from petl import look, typecounts
+        >>> table = [['foo', 'bar', 'baz'],
+        ...          ['A', 1, 2],
+        ...          ['B', u'2', '3.4'],
+        ...          [u'B', u'3', u'7.8', True],
+        ...          ['D', u'xyz', 9.0],
+        ...          ['E', 42]]
+        >>> look(typecounts(table, 'foo'))
         +-----------+---------+
         | 'type'    | 'count' |
         +===========+=========+
@@ -834,7 +865,7 @@ def types(table, field, start=0, stop=None, step=1):
         | 'unicode' | 1       |
         +-----------+---------+
         
-        >>> look(types(table, 'bar'))
+        >>> look(typecounts(table, 'bar'))
         +-----------+---------+
         | 'type'    | 'count' |
         +===========+=========+
@@ -843,7 +874,7 @@ def types(table, field, start=0, stop=None, step=1):
         | 'int'     | 2       |
         +-----------+---------+
         
-        >>> look(types(table, 'baz'))
+        >>> look(typecounts(table, 'baz'))
         +-----------+---------+
         | 'type'    | 'count' |
         +===========+=========+
@@ -859,12 +890,7 @@ def types(table, field, start=0, stop=None, step=1):
     
     """
     
-    counter = Counter()
-    for v in values(table, field, start, stop, step):
-        try:
-            counter[v.__class__.__name__] += 1
-        except IndexError:
-            pass # ignore short rows
+    counter = typecounter(table, field, start, stop, step)
     output = [('type', 'count')]
     output.extend(counter.most_common())
     return output
@@ -900,27 +926,21 @@ def typeset(table, field, start=0, stop=None, step=1):
     return s
     
 
-def parsetypes(table, field, parsers={'int': int, 'float': float}, start=0, stop=None, step=1):    
+def parsecounter(table, field, parsers={'int': int, 'float': float}, start=0, stop=None, step=1):    
     """
     Count the number of `str` or `unicode` values that can be parsed as ints, 
     floats or via custom parser functions. E.g.::
     
-        >>> from petl import look, parsetypes
+        >>> from petl import parsecounter
         >>> table = [['foo', 'bar', 'baz'],
         ...          ['A', 1, 2],
         ...          ['B', u'2', '3.4'],
         ...          [u'B', u'3', u'7.8', True],
         ...          ['D', '3.7', 9.0],
         ...          ['E', 42]]
-        >>> look(parsetypes(table, 'bar'))
-        +---------+---------+
-        | 'type'  | 'count' |
-        +=========+=========+
-        | 'float' | 3       |
-        +---------+---------+
-        | 'int'   | 2       |
-        +---------+---------+
-
+        >>> parsecounter(table, 'bar')
+        Counter({'float': 3, 'int': 2})
+        
     """
     
     counter = Counter()
@@ -935,6 +955,34 @@ def parsetypes(table, field, parsers={'int': int, 'float': float}, start=0, stop
                     pass
                 else:
                     counter[name] += 1
+    return counter
+
+
+def parsecounts(table, field, parsers={'int': int, 'float': float}, start=0, stop=None, step=1):    
+    """
+    Count the number of `str` or `unicode` values that can be parsed as ints, 
+    floats or via custom parser functions. Return a table mapping parser names
+    to the number of values successfully parsed. E.g.::
+    
+        >>> from petl import look, parsecounts
+        >>> table = [['foo', 'bar', 'baz'],
+        ...          ['A', 1, 2],
+        ...          ['B', u'2', '3.4'],
+        ...          [u'B', u'3', u'7.8', True],
+        ...          ['D', '3.7', 9.0],
+        ...          ['E', 42]]
+        >>> look(parsecounts(table, 'bar'))
+        +---------+---------+
+        | 'type'  | 'count' |
+        +=========+=========+
+        | 'float' | 3       |
+        +---------+---------+
+        | 'int'   | 2       |
+        +---------+---------+
+
+    """
+    
+    counter = parsecounter(table, field, parsers, start, stop, step)
     output = [('type', 'count')]
     output.extend(counter.most_common())
     return output

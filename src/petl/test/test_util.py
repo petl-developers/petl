@@ -5,7 +5,7 @@ TODO doc me
 
 from petl import fields, data, records, count, look, see, values, valuecounter, valuecounts, valueset,\
                 unique, lookup, lookupone, recordlookup, recordlookupone, \
-                DuplicateKeyError, rowlengths, stats, types, parsetypes, typeset
+                DuplicateKeyError, rowlengths, stats, typecounts, parsecounts, typeset
 
 
 def assertequal(expect, actual):
@@ -328,7 +328,7 @@ def test_stats():
     assert result['mean'] == 2.0
 
 
-def test_types():
+def test_typecounts():
 
     table = [['foo', 'bar', 'baz'],
              ['A', 1, '2'],
@@ -337,15 +337,15 @@ def test_types():
              ['D', u'xyz', 9.0],
              ['E', 42]]
 
-    actual = types(table, 'foo') 
+    actual = typecounts(table, 'foo') 
     expect = (('type', 'count'), ('str', 4), ('unicode', 1))
     iassertequal(expect, actual)
 
-    actual = types(table, 'bar') 
+    actual = typecounts(table, 'bar') 
     expect = (('type', 'count'), ('unicode', 3), ('int', 2))
     iassertequal(expect, actual)
 
-    actual = types(table, 'baz') 
+    actual = typecounts(table, 'baz') 
     expect = (('type', 'count'), ('str', 3), ('float', 1))
     iassertequal(expect, actual)
 
@@ -364,7 +364,7 @@ def test_typeset():
     assertequal(expect, actual)
 
 
-def test_parsetypes():
+def test_parsecounts():
 
     table = [['foo', 'bar', 'baz'],
              ['A', 1, 2],
@@ -373,6 +373,6 @@ def test_parsetypes():
              ['D', '3.7', 9.0],
              ['E', 42]]
 
-    actual = parsetypes(table, 'bar') 
+    actual = parsecounts(table, 'bar') 
     expect = (('type', 'count'), ('float', 3), ('int', 2))
     iassertequal(expect, actual)
