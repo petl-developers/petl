@@ -374,24 +374,14 @@ def valuecounter(table, field, start=0, stop=None, step=1):
     
     """
 
-    it = iter(table)
-    try:
-        flds = it.next()
-        assert field in flds, 'field not found: %s' % field
-        field_index = flds.index(field)
-        it = islice(it, start, stop, step)
-        counter = Counter()
-        for row in it:
-            try:
-                counter[row[field_index]] += 1
-            except IndexError:
-                pass # short row
-        return counter
-    except:
-        raise
-    finally:
-        close(it)
-        
+    counter = Counter()
+    for v in values(table, field, start, stop, step):
+        try:
+            counter[v] += 1
+        except IndexError:
+            pass # short row
+    return counter
+            
 
 def valuecounts(table, field, start=0, stop=None, step=1):    
     """
@@ -449,27 +439,13 @@ def unique(table, field):
     
     """    
 
-    it = iter(table)
-    try:
-        flds = it.next()
-        assert field in flds, 'field not found: %s' % field
-        field_index = flds.index(field)
-        vals = set()
-        for row in it:
-            try:
-                val = row[field_index]
-            except IndexError:
-                pass # ignore short rows
-            else:
-                if val in vals:
-                    return False
-                else:
-                    vals.add(val)
-        return True
-    except:
-        raise
-    finally:
-        close(it)
+    vals = set()
+    for v in values(table, field):
+        if v in vals:
+            return False
+        else:
+            vals.add(v)
+    return True
        
         
 # TODO handle short rows in lookup, lookupone, recordlookup, recordlookupone?
@@ -518,7 +494,7 @@ def lookup(table, key, value=None):
     try:
         flds = it.next()
         if value is None:
-            value = flds
+            value = flds # default value is complete row
         keyindices = asindices(flds, key)
         assert len(keyindices) > 0, 'no key selected'
         valueindices = asindices(flds, value)
@@ -883,25 +859,15 @@ def types(table, field, start=0, stop=None, step=1):
     
     """
     
-    it = iter(table)
-    try:
-        fields = it.next()
-        assert field in fields, 'field not found: %s' % field
-        field_index = fields.index(field)
-        it = islice(it, start, stop, step)
-        counter = Counter()
-        for row in it:
-            try:
-                counter[row[field_index].__class__.__name__] += 1
-            except IndexError:
-                pass # ignore short rows
-        output = [('type', 'count')]
-        output.extend(counter.most_common())
-        return output
-    except:
-        raise
-    finally:
-        close(it)
+    counter = Counter()
+    for v in values(table, field, start, stop, step):
+        try:
+            counter[v.__class__.__name__] += 1
+        except IndexError:
+            pass # ignore short rows
+    output = [('type', 'count')]
+    output.extend(counter.most_common())
+    return output
 
 
 def typeset(table, field, start=0, stop=None, step=1):
@@ -925,23 +891,13 @@ def typeset(table, field, start=0, stop=None, step=1):
     
     """
 
-    it = iter(table)
-    try:
-        fields = it.next()
-        assert field in fields, 'field not found: %s' % field
-        field_index = fields.index(field)
-        it = islice(it, start, stop, step)
-        s = set()
-        for row in it:
-            try:
-                s.add(row[field_index].__class__)
-            except IndexError:
-                pass # ignore short rows
-        return s
-    except:
-        raise
-    finally:
-        close(it)
+    s = set()
+    for v in values(table, field, start, stop, step):
+        try:
+            s.add(v.__class__)
+        except IndexError:
+            pass # ignore short rows
+    return s
     
 
 def parsetypes(table, field, parsers={'int': int, 'float': float}, start=0, stop=None, step=1):    
@@ -967,32 +923,21 @@ def parsetypes(table, field, parsers={'int': int, 'float': float}, start=0, stop
 
     """
     
-    it = iter(table)
-    try:
-        fields = it.next()
-        assert field in fields, 'field not found: %s' % field
-        field_index = fields.index(field)
-        it = islice(it, start, stop, step)
-        counter = Counter()
-        for row in it:
-            value = row[field_index]
-            if isinstance(value, basestring):
-                for name, parser in parsers.items():
-                    try:
-                        parser(value)
-                    except ValueError:
-                        pass
-                    except TypeError:
-                        pass
-                    else:
-                        counter[name] += 1
-        output = [('type', 'count')]
-        output.extend(counter.most_common())
-        return output
-    except:
-        raise
-    finally:
-        close(it)
+    counter = Counter()
+    for v in values(table, field, start, stop, step):
+        if isinstance(v, basestring):
+            for name, parser in parsers.items():
+                try:
+                    parser(v)
+                except ValueError:
+                    pass
+                except TypeError:
+                    pass
+                else:
+                    counter[name] += 1
+    output = [('type', 'count')]
+    output.extend(counter.most_common())
+    return output
 
 
 def stats(table, field, start=0, stop=None, step=1):
@@ -1017,34 +962,23 @@ def stats(table, field, start=0, stop=None, step=1):
               'mean': None, 
               'count': 0, 
               'errors': 0}
-    it = iter(table)
-    try:
-        fields = it.next()
-        assert field in fields, 'field not found: %s' % field
-        field_index = fields.index(field)
-        it = islice(it, start, stop, step)
-        for row in it:
-            value = row[field_index]
-            try:
-                value = float(value)
-            except:
-                output['errors'] += 1
+    for v in values(table, field, start, stop, step):
+        try:
+            v = float(v)
+        except:
+            output['errors'] += 1
+        else:
+            if output['min'] is None or v < output['min']:
+                output['min'] = v
+            if output['max'] is None or v > output['max']:
+                output['max'] = v
+            if output['sum'] is None:
+                output['sum'] = v
             else:
-                if output['min'] is None or value < output['min']:
-                    output['min'] = value
-                if output['max'] is None or value > output['max']:
-                    output['max'] = value
-                if output['sum'] is None:
-                    output['sum'] = value
-                else:
-                    output['sum'] += value
-                output['count'] += 1
-        if output['count'] > 0:
-            output['mean'] = output['sum'] / output['count']
-        return output
-    except:
-        raise
-    finally:
-        close(it)
+                output['sum'] += v
+            output['count'] += 1
+    if output['count'] > 0:
+        output['mean'] = output['sum'] / output['count']
+    return output
         
 # TODO string lengths, string patterns, ...
