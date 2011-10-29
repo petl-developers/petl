@@ -177,6 +177,14 @@ Utility functions
 
 .. autofunction:: petl.parsecounts
 
+.. autofunction:: petl.dateparser
+
+.. autofunction:: petl.timeparser
+
+.. autofunction:: petl.datetimeparser
+
+.. autofunction:: petl.boolparser
+
 .. autofunction:: petl.stats
 
 .. autofunction:: petl.rowlengths

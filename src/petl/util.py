@@ -7,12 +7,13 @@ TODO doc me
 from itertools import islice
 from collections import defaultdict, Counter
 from operator import itemgetter
+from datetime import datetime
 
 
 __all__ = ['fields', 'data', 'records', 'count', 'look', 'see', 'values', 'valuecounter', 'valuecounts', \
            'valueset', 'unique', 'lookup', 'lookupone', 'recordlookup', 'recordlookupone', \
            'typecounter', 'typecounts', 'typeset', 'parsecounter', 'parsecounts', \
-           'stats', 'rowlengths', 'DuplicateKeyError']
+           'stats', 'rowlengths', 'DuplicateKeyError', 'datetimeparser', 'dateparser', 'timeparser', 'boolparser']
 
 
 def fields(table):
@@ -987,6 +988,74 @@ def parsecounts(table, field, parsers={'int': int, 'float': float}, start=0, sto
     output.extend(counter.most_common())
     return output
 
+
+
+def datetimeparser(format):
+    """
+    Return a function to parse strings as `datetime` objects using a given format.
+    E.g.::
+    
+        TODO
+    
+    """
+    
+    def parser(value):
+        return datetime.strptime(value.strip(), format)
+    return parser
+    
+
+def dateparser(format):
+    """
+    Return a function to parse strings as `date` objects using a given format.
+    E.g.::
+    
+        TODO
+    
+    """
+    
+    def parser(value):
+        return datetime.strptime(value.strip(), format).date()
+    return parser
+    
+
+def timeparser(format):
+    """
+    Return a function to parse strings as `time` objects using a given format.
+    E.g.::
+    
+        TODO
+    
+    """
+    
+    def parser(value):
+        return datetime.strptime(value.strip(), format).time()
+    return parser
+    
+
+def boolparser(true_strings=['true', 't', 'yes', 'y', '1'], 
+               false_strings=['false', 'f', 'no', 'n', '0'],
+               case_insensitive=True):
+    """
+    Return a function to parse strings as `bool` objects using a given set of
+    string representations for `True` and `False`.
+    E.g.::
+    
+        TODO
+    
+    """
+    
+    def parser(value):
+        value = value.strip()
+        if case_insensitive:
+            value = value.lower()
+        if value in true_strings:
+            return True
+        elif value in false_strings:
+            return False
+        else:
+            raise ValueError('value is not one of recognised boolean strings: %s' % value)
+    return parser
+    
 
 def stats(table, field, start=0, stop=None, step=1):
     """
