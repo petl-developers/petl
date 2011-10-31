@@ -82,18 +82,17 @@ def fromcsv(filename, checksumfun=statsum, **kwargs):
     `csv.reader`. E.g.::
 
         >>> import csv
-        >>> import tempfile
-        >>> # set up a temporary CSV file to demonstrate with
-        ... f = tempfile.NamedTemporaryFile(delete=False)
-        >>> writer = csv.writer(f, delimiter='\\t')
-        >>> writer.writerow(['foo', 'bar'])
-        >>> writer.writerow(['a', 1])
-        >>> writer.writerow(['b', 2])
-        >>> writer.writerow(['c', 2])
-        >>> f.close()
+        >>> # set up a CSV file to demonstrate with
+        ... with open('test.csv', 'wb') as f:
+        ...     writer = csv.writer(f, delimiter='\\t')
+        ...     writer.writerow(['foo', 'bar'])
+        ...     writer.writerow(['a', 1])
+        ...     writer.writerow(['b', 2])
+        ...     writer.writerow(['c', 2])
+        ...
         >>> # now demonstrate the use of petl.fromcsv
         ... from petl import fromcsv, look
-        >>> table = fromcsv(f.name, delimiter='\\t')
+        >>> table = fromcsv('test.csv', delimiter='\\t')
         >>> look(table)
         +-------+-------+
         | 'foo' | 'bar' |
@@ -148,17 +147,16 @@ def frompickle(filename, checksumfun=statsum):
     rows in the table should have been pickled to the file one at a time. E.g.::
 
         >>> import pickle
-        >>> import tempfile
-        >>> # set up a temporary file to demonstrate with
-        ... f = tempfile.NamedTemporaryFile(delete=False)
-        >>> pickle.dump(['foo', 'bar'], f)
-        >>> pickle.dump(['a', 1], f)
-        >>> pickle.dump(['b', 2], f)
-        >>> pickle.dump(['c', 2.5], f)
-        >>> f.close()
+        >>> # set up a file to demonstrate with
+        ... with open('test.dat', 'wb') as f:
+        ...     pickle.dump(['foo', 'bar'], f)
+        ...     pickle.dump(['a', 1], f)
+        ...     pickle.dump(['b', 2], f)
+        ...     pickle.dump(['c', 2.5], f)
+        ...
         >>> # now demonstrate the use of petl.frompickle
         ... from petl import frompickle, look
-        >>> table = frompickle(f.name)
+        >>> table = frompickle('test.dat')
         >>> look(table)
         +-------+-------+
         | 'foo' | 'bar' |
@@ -214,7 +212,7 @@ def fromsqlite3(filename, query, checksumfun=statsum):
         >>> data = [['a', 1],
         ...         ['b', 2],
         ...         ['c', 2.0]]
-        >>> connection = sqlite3.connect('tmp.db')
+        >>> connection = sqlite3.connect('test.db')
         >>> c = connection.cursor()
         >>> c.execute('create table foobar (foo, bar)')
         <sqlite3.Cursor object at 0x2240b90>
@@ -227,7 +225,7 @@ def fromsqlite3(filename, query, checksumfun=statsum):
         >>> connection.commit()
         >>> c.close()
         >>> # demonstrate the petl.fromsqlite3 function
-        ... table = fromsqlite3('tmp.db', 'select * from foobar')
+        ... table = fromsqlite3('test.db', 'select * from foobar')
         >>> look(table)    
         +-------+-------+
         | 'foo' | 'bar' |
