@@ -994,8 +994,36 @@ def datetimeparser(format):
     """
     Return a function to parse strings as `datetime` objects using a given format.
     E.g.::
+
+        >>> from petl import datetimeparser
+        >>> isodatetime = datetimeparser('%Y-%m-%dT%H:%M:%S')
+        >>> isodatetime('2002-12-25T00:00:00')
+        datetime.datetime(2002, 12, 25, 0, 0)
+        >>> isodatetime('2002-12-25T00:00:99')
+        Traceback (most recent call last):
+          File "<stdin>", line 1, in <module>
+          File "petl/util.py", line 1018, in parser
+            return datetime.strptime(value.strip(), format)
+          File "/usr/lib/python2.7/_strptime.py", line 328, in _strptime
+            data_string[found.end():])
+        ValueError: unconverted data remains: 9
+
+    Can be used with `parsecounts`, e.g.::
     
-        TODO
+        >>> from petl import look, parsecounts, datetimeparser
+        >>> table = [['when', 'who'],
+        ...          ['2002-12-25T00:00:00', 'Alex'],
+        ...          ['2004-09-12T01:10:11', 'Gloria'],
+        ...          ['2002-13-25T00:00:00', 'Marty'],
+        ...          ['2002-02-30T07:09:00', 'Melman']]
+        >>> parsers={'datetime': datetimeparser('%Y-%m-%dT%H:%M:%S')}
+        >>> pc = parsecounts(table, 'when', parsers)
+        >>> look(pc)
+        +------------+---------+
+        | 'type'     | 'count' |
+        +============+=========+
+        | 'datetime' | 2       |
+        +------------+---------+
     
     """
     
@@ -1009,8 +1037,37 @@ def dateparser(format):
     Return a function to parse strings as `date` objects using a given format.
     E.g.::
     
-        TODO
+        >>> from petl import dateparser
+        >>> isodate = dateparser('%Y-%m-%d')
+        >>> isodate('2002-12-25')
+        datetime.date(2002, 12, 25)
+        >>> isodate('2002-02-30')
+        Traceback (most recent call last):
+          File "<stdin>", line 1, in <module>
+          File "petl/util.py", line 1032, in parser
+            return parser
+          File "/usr/lib/python2.7/_strptime.py", line 440, in _strptime
+            datetime_date(year, 1, 1).toordinal() + 1
+        ValueError: day is out of range for month
+
+
+    Can be used with `parsecounts`, e.g.::
     
+        >>> from petl import look, parsecounts, dateparser
+        >>> table = [['when', 'who'],
+        ...          ['2002-12-25', 'Alex'],
+        ...          ['2004-09-12', 'Gloria'],
+        ...          ['2002-13-25', 'Marty'],
+        ...          ['2002-02-30', 'Melman']]
+        >>> parsers={'date': dateparser('%Y-%m-%d')}
+        >>> pc = parsecounts(table, 'when', parsers)
+        >>> look(pc)
+        +--------+---------+
+        | 'type' | 'count' |
+        +========+=========+
+        | 'date' | 2       |
+        +--------+---------+
+        
     """
     
     def parser(value):
@@ -1023,7 +1080,45 @@ def timeparser(format):
     Return a function to parse strings as `time` objects using a given format.
     E.g.::
     
-        TODO
+        >>> from petl import timeparser
+        >>> isotime = timeparser('%H:%M:%S')
+        >>> isotime('00:00:00')
+        datetime.time(0, 0)
+        >>> isotime('13:00:00')
+        datetime.time(13, 0)
+        >>> isotime('12:00:99')
+        Traceback (most recent call last):
+          File "<stdin>", line 1, in <module>
+          File "petl/util.py", line 1046, in parser
+            
+          File "/usr/lib/python2.7/_strptime.py", line 328, in _strptime
+            data_string[found.end():])
+        ValueError: unconverted data remains: 9
+        >>> isotime('25:00:00')
+        Traceback (most recent call last):
+          File "<stdin>", line 1, in <module>
+          File "petl/util.py", line 1046, in parser
+            
+          File "/usr/lib/python2.7/_strptime.py", line 325, in _strptime
+            (data_string, format))
+        ValueError: time data '25:00:00' does not match format '%H:%M:%S'
+
+    Can be used with `parsecounts`, e.g.::
+    
+        >>> from petl import look, parsecounts, timeparser
+        >>> table = [['when', 'who'],
+        ...          ['00:00:00', 'Alex'],
+        ...          ['12:02:45', 'Gloria'],
+        ...          ['25:01:01', 'Marty'],
+        ...          ['09:70:00', 'Melman']]
+        >>> parsers={'time': timeparser('%H:%M:%S')}
+        >>> pc = parsecounts(table, 'when', parsers)
+        >>> look(pc)
+        +--------+---------+
+        | 'type' | 'count' |
+        +========+=========+
+        | 'time' | 2       |
+        +--------+---------+
     
     """
     
@@ -1034,26 +1129,70 @@ def timeparser(format):
 
 def boolparser(true_strings=['true', 't', 'yes', 'y', '1'], 
                false_strings=['false', 'f', 'no', 'n', '0'],
-               case_insensitive=True):
+               case_sensitive=False):
     """
     Return a function to parse strings as `bool` objects using a given set of
     string representations for `True` and `False`.
     E.g.::
+
+        >>> from petl import boolparser    
+        >>> mybool = boolparser(true_strings=['yes', 'y'], false_strings=['no', 'n'])
+        >>> mybool('y')
+        True
+        >>> mybool('Y')
+        True
+        >>> mybool('yes')
+        True
+        >>> mybool('No')
+        False
+        >>> mybool('nO')
+        False
+        >>> mybool('true')
+        Traceback (most recent call last):
+          File "<stdin>", line 1, in <module>
+          File "petl/util.py", line 1175, in parser
+            raise ValueError('value is not one of recognised boolean strings: %r' % value)
+        ValueError: value is not one of recognised boolean strings: 'true'
+        >>> mybool('foo')
+        Traceback (most recent call last):
+          File "<stdin>", line 1, in <module>
+          File "petl/util.py", line 1175, in parser
+            raise ValueError('value is not one of recognised boolean strings: %r' % value)
+        ValueError: value is not one of recognised boolean strings: 'foo'
     
-        TODO
+    Can be used with `parsecounts`, e.g.::
     
+        >>> from petl import look, parsecounts, boolparser
+        >>> table = [['who', 'vote'],
+        ...          ['Alex', 'yes'],
+        ...          ['Gloria', 'N'],
+        ...          ['Marty', 'hmmm'],
+        ...          ['Melman', 'nope']]
+        >>> mybool = boolparser(true_strings=['yes', 'y'], false_strings=['no', 'n'])
+        >>> parsers = {'bool': mybool}
+        >>> pc = parsecounts(table, 'vote', parsers) 
+        >>> look(pc)
+        +--------+---------+
+        | 'type' | 'count' |
+        +========+=========+
+        | 'bool' | 2       |
+        +--------+---------+
+
     """
     
+    if not case_sensitive:
+        true_strings = [s.lower() for s in true_strings]
+        false_strings = [s.lower() for s in false_strings]
     def parser(value):
         value = value.strip()
-        if case_insensitive:
+        if not case_sensitive:
             value = value.lower()
         if value in true_strings:
             return True
         elif value in false_strings:
             return False
         else:
-            raise ValueError('value is not one of recognised boolean strings: %s' % value)
+            raise ValueError('value is not one of recognised boolean strings: %r' % value)
     return parser
     
 
