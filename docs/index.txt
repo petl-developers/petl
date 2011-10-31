@@ -242,7 +242,22 @@ TODO
 Loading (writing) tables to files and databases
 -----------------------------------------------
 
-TODO
+.. autofunction:: petl.tocsv
+
+.. autofunction:: petl.appendcsv
+
+.. autofunction:: petl.topickle
+
+.. autofunction:: petl.appendpickle
+
+.. autofunction:: petl.tosqlite3
+
+.. autofunction:: petl.appendsqlite3
+
+.. autofunction:: petl.todb
+
+.. autofunction:: petl.appenddb
+
 
 Further Reading
 ---------------

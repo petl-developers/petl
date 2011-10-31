@@ -6,18 +6,13 @@ TODO doc me
 from tempfile import NamedTemporaryFile
 import csv
 import cPickle as pickle
-
-from petl import fromcsv, frompickle, fromsqlite3, adler32sum, crc32sum, fromdb
 import sqlite3
 
+from petl import fromcsv, frompickle, fromsqlite3, adler32sum, crc32sum, fromdb, \
+                tocsv, topickle, appendcsv, appendpickle
 
-def assertequal(expect, actual):
-    assert expect == actual, (expect, actual)
 
-
-def iassertequal(expect, actual):
-    for e, a in zip(expect, actual):
-        assert tuple(e) == tuple(a), (e, a)
+from petl.testfun import iassertequal
 
 
 def test_fromcsv():
@@ -301,5 +296,94 @@ def test_fromdb():
     iassertequal(expect, actual) # verify can iterate twice
 
 
+def test_tocsv():
+    """Test the tocsv function."""
+    
+    # exercise function
+    table = [['foo', 'bar'],
+             ['a', 1],
+             ['b', 2],
+             ['c', 2]]
+    f = NamedTemporaryFile(delete=False)
+    tocsv(table, f.name, delimiter='\t')
+    
+    # check what it did
+    with open(f.name, 'rb') as file:
+        actual = csv.reader(file, delimiter='\t')
+        expect = [['foo', 'bar'],
+                  ['a', '1'],
+                  ['b', '2'],
+                  ['c', '2']]
+        iassertequal(expect, actual)
+    
+    # check appending
+    table2 = [['foo', 'bar'],
+              ['d', 7],
+              ['e', 9],
+              ['f', 1]]
+    appendcsv(table2, f.name, delimiter='\t') 
+
+    # check what it did
+    with open(f.name, 'rb') as file:
+        actual = csv.reader(file, delimiter='\t')
+        expect = [['foo', 'bar'],
+                  ['a', '1'],
+                  ['b', '2'],
+                  ['c', '2'],
+                  ['d', '7'],
+                  ['e', '9'],
+                  ['f', '1']]
+        iassertequal(expect, actual)
+    
+        
+    
+def test_topickle():
+    """Test the topickle function."""
+    
+    # exercise function
+    table = [['foo', 'bar'],
+             ['a', 1],
+             ['b', 2],
+             ['c', 2]]
+    f = NamedTemporaryFile(delete=False)
+    topickle(table, f.name)
+    
+    def picklereader(file):
+        try:
+            while True:
+                yield pickle.load(file)
+        except EOFError:
+            pass
+
+    # check what it did
+    with open(f.name, 'rb') as file:
+        actual = picklereader(file)
+        expect = [['foo', 'bar'],
+                  ['a', 1],
+                  ['b', 2],
+                  ['c', 2]]
+        iassertequal(expect, actual)
+    
+    # check appending
+    table2 = [['foo', 'bar'],
+              ['d', 7],
+              ['e', 9],
+              ['f', 1]]
+    appendpickle(table2, f.name) 
+
+    # check what it did
+    with open(f.name, 'rb') as file:
+        actual = picklereader(file)
+        expect = [['foo', 'bar'],
+                  ['a', 1],
+                  ['b', 2],
+                  ['c', 2],
+                  ['d', 7],
+                  ['e', 9],
+                  ['f', 1]]
+        iassertequal(expect, actual)
+    
+        
+    
 
     

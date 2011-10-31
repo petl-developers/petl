@@ -11,8 +11,12 @@ import cPickle as pickle
 import sqlite3
 
 
+from petl.util import data
+
+
 __all__ = ['fromcsv', 'frompickle', 'fromsqlite3', 'tocsv', 'topickle', \
-           'tosqlite3', 'crc32sum', 'adler32sum', 'statsum', 'fromdb']
+           'tosqlite3', 'crc32sum', 'adler32sum', 'statsum', 'fromdb', \
+           'appendcsv', 'appendpickle']
 
 
 class Uncacheable(Exception):
@@ -323,18 +327,50 @@ class DbView(object):
             yield result
 
     
-def tocsv(table, filename, *args, **kwargs):
+def tocsv(table, filename, **kwargs):
     """
     TODO doc me
     
     """
+    
+    with open(filename, 'wb') as f:
+        writer = csv.writer(f, **kwargs)
+        for row in table:
+            writer.writerow(row)
+
+
+def appendcsv(table, filename, **kwargs):
+    """
+    TODO doc me
+    
+    """
+    
+    with open(filename, 'ab') as f:
+        writer = csv.writer(f, **kwargs)
+        for row in data(table):
+            writer.writerow(row)
+
+
+def topickle(table, filename, protocol=-1):
+    """
+    TODO doc me
+    
+    """
+    
+    with open(filename, 'wb') as file:
+        for row in table:
+            pickle.dump(row, file, protocol)
     
 
-def topickle(table, filename):
+def appendpickle(table, filename, protocol=-1):
     """
     TODO doc me
     
     """
+    
+    with open(filename, 'ab') as file:
+        for row in data(table):
+            pickle.dump(row, file, protocol)
     
 
 def tosqlite3(table):

@@ -7,14 +7,7 @@ from petl import fields, data, records, count, look, see, values, valuecounter, 
                 unique, lookup, lookupone, recordlookup, recordlookupone, \
                 DuplicateKeyError, rowlengths, stats, typecounts, parsecounts, typeset
 
-
-def assertequal(expect, actual):
-    assert expect == actual, (expect, actual)
-
-
-def iassertequal(expect, actual):
-    for e, a in zip(expect, actual):
-        assert e == a, (e, a)
+from petl.testfun import *
 
 
 def test_fields():
