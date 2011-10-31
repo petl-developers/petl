@@ -9,7 +9,8 @@ import cPickle as pickle
 import sqlite3
 
 from petl import fromcsv, frompickle, fromsqlite3, adler32sum, crc32sum, fromdb, \
-                tocsv, topickle, appendcsv, appendpickle
+                tocsv, topickle, appendcsv, appendpickle, tosqlite3, appendsqlite3 \
+                
 
 
 from petl.testfun import iassertequal
@@ -358,11 +359,7 @@ def test_topickle():
     # check what it did
     with open(f.name, 'rb') as file:
         actual = picklereader(file)
-        expect = [['foo', 'bar'],
-                  ['a', 1],
-                  ['b', 2],
-                  ['c', 2]]
-        iassertequal(expect, actual)
+        iassertequal(table, actual)
     
     # check appending
     table2 = [['foo', 'bar'],
@@ -382,6 +379,44 @@ def test_topickle():
                   ['e', 9],
                   ['f', 1]]
         iassertequal(expect, actual)
+    
+        
+def test_tosqlite3():
+    """Test the tosqlite3 function."""
+    
+    # exercise function
+    table = [['foo', 'bar'],
+             ['a', 1],
+             ['b', 2],
+             ['c', 2]]
+    f = NamedTemporaryFile(delete=False)
+    tosqlite3(table, f.name, 'foobar', create=True)
+    
+    # check what it did
+    conn = sqlite3.connect(f.name)
+    actual = conn.execute('select * from foobar')
+    expect = [['a', 1],
+              ['b', 2],
+              ['c', 2]]
+    iassertequal(expect, actual)
+    
+    # check appending
+    table2 = [['foo', 'bar'],
+              ['d', 7],
+              ['e', 9],
+              ['f', 1]]
+    appendsqlite3(table2, f.name, 'foobar') 
+
+    # check what it did
+    conn = sqlite3.connect(f.name)
+    actual = conn.execute('select * from foobar')
+    expect = [['a', 1],
+              ['b', 2],
+              ['c', 2],
+              ['d', 7],
+              ['e', 9],
+              ['f', 1]]
+    iassertequal(expect, actual)
     
         
     

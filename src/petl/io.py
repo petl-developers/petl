@@ -11,12 +11,12 @@ import cPickle as pickle
 import sqlite3
 
 
-from petl.util import data
+from petl.util import data, fields
 
 
 __all__ = ['fromcsv', 'frompickle', 'fromsqlite3', 'tocsv', 'topickle', \
            'tosqlite3', 'crc32sum', 'adler32sum', 'statsum', 'fromdb', \
-           'appendcsv', 'appendpickle']
+           'appendcsv', 'appendpickle', 'appendsqlite3']
 
 
 class Uncacheable(Exception):
@@ -373,10 +373,38 @@ def appendpickle(table, filename, protocol=-1):
             pickle.dump(row, file, protocol)
     
 
-def tosqlite3(table):
+def tosqlite3(table, filename, tablename, create=False):
     """
     TODO doc me
     
     """
+    
+    conn = sqlite3.connect(filename)
+    flds = fields(table)
+    # N.B., breaking the rules about avoiding SQL injection!
+    if create:
+        conn.execute('create table %s (%s)' % (tablename, ', '.join(flds)))
+    conn.execute('delete from %s' % tablename)
+    insertquery = 'insert into %s values (%s)' % (tablename, ', '.join(['?'] * len(flds)))
+    for row in data(table):
+        conn.execute(insertquery, row)
+    conn.commit()
+    
+    
+def appendsqlite3(table, filename, tablename):
+    """
+    TODO doc me
+    
+    """
+
+    conn = sqlite3.connect(filename)
+    flds = fields(table)
+    # N.B., breaking the rules about avoiding SQL injection!
+    insertquery = 'insert into %s values (%s)' % (tablename, ', '.join(['?'] * len(flds)))
+    for row in data(table):
+        conn.execute(insertquery, row)
+    conn.commit()
+    
+    
     
     
