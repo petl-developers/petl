@@ -8,10 +8,11 @@ import csv
 import os
 import zlib
 import cPickle as pickle
+import sqlite3
 
 
 __all__ = ['fromcsv', 'frompickle', 'fromsqlite3', 'tocsv', 'topickle', \
-           'tosqlite3', 'crc32sum', 'adler32sum', 'statsum']
+           'tosqlite3', 'crc32sum', 'adler32sum', 'statsum', 'fromdb']
 
 
 class Uncacheable(Exception):
@@ -73,10 +74,10 @@ def statsum(filename):
                  os.path.getmtime(filename)))
         
 
-def fromcsv(path, checksumfun=statsum, **kwargs):
+def fromcsv(filename, checksumfun=statsum, **kwargs):
     """
     Wrapper for the standard `csv.reader` function. Returns a table providing
-    access to the data in the given delimited file. The `path` argument is the
+    access to the data in the given delimited file. The `filename` argument is the
     path of the delimited file, all other keyword arguments are passed to 
     `csv.reader`. E.g.::
 
@@ -84,7 +85,7 @@ def fromcsv(path, checksumfun=statsum, **kwargs):
         >>> import tempfile
         >>> # set up a temporary CSV file to demonstrate with
         ... f = tempfile.NamedTemporaryFile(delete=False)
-        >>> writer = csv.writer(f, delimiter='\t')
+        >>> writer = csv.writer(f, delimiter='\\t')
         >>> writer.writerow(['foo', 'bar'])
         >>> writer.writerow(['a', 1])
         >>> writer.writerow(['b', 2])
@@ -92,7 +93,7 @@ def fromcsv(path, checksumfun=statsum, **kwargs):
         >>> f.close()
         >>> # now demonstrate the use of petl.fromcsv
         ... from petl import fromcsv, look
-        >>> table = fromcsv(f.name, delimiter='\t')
+        >>> table = fromcsv(f.name, delimiter='\\t')
         >>> look(table)
         +-------+-------+
         | 'foo' | 'bar' |
@@ -116,24 +117,24 @@ def fromcsv(path, checksumfun=statsum, **kwargs):
     
     """
 
-    return CSVView(path, checksumfun=checksumfun, **kwargs)
+    return CSVView(filename, checksumfun=checksumfun, **kwargs)
 
 
 class CSVView(object):
     
-    def __init__(self, path, checksumfun=statsum, **kwargs):
-        self.path = path
+    def __init__(self, filename, checksumfun=statsum, **kwargs):
+        self.filename = filename
         self.checksumfun = checksumfun
         self.kwargs = kwargs
         
     def __iter__(self):
-        with open(self.path, 'rb') as file:
+        with open(self.filename, 'rb') as file:
             reader = csv.reader(file, **self.kwargs)
             for row in reader:
                 yield row
                 
     def cachetag(self):
-        p = self.path
+        p = self.filename
         if os.path.isfile(p):
             checksum = self.checksumfun(p)
             return hash((checksum, tuple(self.kwargs.items()))) 
@@ -141,7 +142,7 @@ class CSVView(object):
             raise Uncacheable
                 
     
-def frompickle(path, checksumfun=statsum):
+def frompickle(filename, checksumfun=statsum):
     """
     Returns a table providing access to the data pickled in the given file. The 
     rows in the table should have been pickled to the file one at a time. E.g.::
@@ -178,17 +179,17 @@ def frompickle(path, checksumfun=statsum):
     
     """
     
-    return PickleView(path, checksumfun=checksumfun)
+    return PickleView(filename, checksumfun=checksumfun)
     
     
 class PickleView(object):
 
-    def __init__(self, path, checksumfun=statsum):
-        self.path = path
+    def __init__(self, filename, checksumfun=statsum):
+        self.filename = filename
         self.checksumfun = checksumfun
         
     def __iter__(self):
-        with open(self.path, 'rb') as file:
+        with open(self.filename, 'rb') as file:
             try:
                 while True:
                     yield pickle.load(file)
@@ -196,37 +197,37 @@ class PickleView(object):
                 pass
                 
     def cachetag(self):
-        p = self.path
+        p = self.filename
         if os.path.isfile(p):
             return self.checksumfun(p)
         else:
             raise Uncacheable
     
 
-def fromsqlite3(connection, query):
+def fromsqlite3(filename, query, checksumfun=statsum):
     """
     Provides access to data from an sqlite3 connection via a given query. E.g.::
-    
-        >>> # set up a demonstration sqlite3 database
-        ... import sqlite3
+
+        >>> import sqlite3
+        >>> from petl import look, fromsqlite3    
+        >>> # initial data
         >>> data = [['a', 1],
         ...         ['b', 2],
         ...         ['c', 2.0]]
-        >>> connection = sqlite3.connect(':memory:')
+        >>> connection = sqlite3.connect('tmp.db')
         >>> c = connection.cursor()
         >>> c.execute('create table foobar (foo, bar)')
-        <sqlite3.Cursor object at 0xb77f56e0>
+        <sqlite3.Cursor object at 0x2240b90>
         >>> for row in data:
         ...     c.execute('insert into foobar values (?, ?)', row)
         ... 
-        <sqlite3.Cursor object at 0xb77f56e0>
-        <sqlite3.Cursor object at 0xb77f56e0>
-        <sqlite3.Cursor object at 0xb77f56e0>
+        <sqlite3.Cursor object at 0x2240b90>
+        <sqlite3.Cursor object at 0x2240b90>
+        <sqlite3.Cursor object at 0x2240b90>
         >>> connection.commit()
         >>> c.close()
-        >>> # now demonstrate the use of petl.fromsqlite3
-        ... from petl import look, fromsqlite3
-        >>> table = fromsqlite3(connection, 'select * from foobar')
+        >>> # demonstrate the petl.fromsqlite3 function
+        ... table = fromsqlite3('tmp.db', 'select * from foobar')
         >>> look(table)    
         +-------+-------+
         | 'foo' | 'bar' |
@@ -238,35 +239,99 @@ def fromsqlite3(connection, query):
         | u'c'  | 2.0   |
         +-------+-------+
 
-    Returned table objects do not implement the cachetag method.
+    The returned table object implements the `cachetag` method, which by default
+    uses the `statsum` function to generate a checksum of the underlying file.
+    Note that `statsum` is cheap to compute but crude as it relies on file size 
+    and time of modification, and on some systems this will not reveal changes 
+    within the same second that preserve file size. If you need a finer level
+    of granularity, use either `adler32sum` or `crc32sum` instead.
+    
     """
     
-    return Sqlite3View(connection, query)
+    return Sqlite3View(filename, query, checksumfun)
 
 
 class Sqlite3View(object):
+
+    def __init__(self, filename, query, checksumfun=statsum):
+        self.filename = filename
+        self.query = query
+        self.checksumfun = checksumfun
+        
+    def __iter__(self):
+        connection = sqlite3.connect(self.filename)
+        cursor = connection.execute(self.query)
+        fields = [d[0] for d in cursor.description]
+        yield fields
+        for result in cursor:
+            yield result
+        connection.close()
+
+    def cachetag(self):
+        p = self.filename
+        if os.path.isfile(p):
+            checksum = self.checksumfun(p)
+            return hash((checksum, self.query))
+        else:
+            raise Uncacheable
+                
+    
+def fromdb(connection, query):
+    """
+    Provides access to data from any DB-API 2.0 connection via a given query. 
+    E.g., using `sqlite3`::
+
+        >>> import sqlite3
+        >>> from petl import look, fromdb
+        >>> connection = sqlite3.connect('test.db')
+        >>> table = fromdb(connection, 'select * from foobar')
+        >>> look(table)
+        
+    E.g., using `psycopg2` (assuming you've installed it first)::
+    
+        >>> import psycopg2
+        >>> from petl import look, fromdb
+        >>> connection = psycopg2.connect("dbname=test user=postgres")
+        >>> table = fromdb(connection, 'select * from test')
+        >>> look(table)
+        
+    E.g., using `MySQLdb` (assuming you've installed it first)::
+    
+        >>> import MySQLdb
+        >>> from petl import look, fromdb
+        >>> connection = MySQLdb.connect(passwd="moonpie", db="thangs")
+        >>> table = fromdb(connection, 'select * from test')
+        >>> look(table)
+        
+    The returned table object does not implement the `cachetag` method.
+        
+    """
+    
+    return DbView(connection, query)
+
+
+class DbView(object):
 
     def __init__(self, connection, query):
         self.connection = connection
         self.query = query
         
     def __iter__(self):
-        c = self.connection.cursor()
-        c.execute(self.query)
-        fields = [d[0] for d in c.description]
+        cursor = self.connection.execute(self.query)
+        fields = [d[0] for d in cursor.description]
         yield fields
-        for result in c:
+        for result in cursor:
             yield result
-                
 
-def tocsv(table, path, *args, **kwargs):
+    
+def tocsv(table, filename, *args, **kwargs):
     """
     TODO doc me
     
     """
     
 
-def topickle(table, path):
+def topickle(table, filename):
     """
     TODO doc me
     

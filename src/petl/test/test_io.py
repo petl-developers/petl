@@ -7,7 +7,7 @@ from tempfile import NamedTemporaryFile
 import csv
 import cPickle as pickle
 
-from petl import fromcsv, frompickle, fromsqlite3, adler32sum, crc32sum
+from petl import fromcsv, frompickle, fromsqlite3, adler32sum, crc32sum, fromdb
 import sqlite3
 
 
@@ -191,6 +191,95 @@ def test_fromsqlite3():
     """Test the fromsqlite3 function."""
     
     # initial data
+    f = NamedTemporaryFile(delete=False)
+    data = [['a', 1],
+            ['b', 2],
+            ['c', 2.0]]
+    connection = sqlite3.connect(f.name)
+    c = connection.cursor()
+    c.execute('create table foobar (foo, bar)')
+    for row in data:
+        c.execute('insert into foobar values (?, ?)', row)
+    connection.commit()
+    c.close()
+    
+    # test the function
+    actual = fromsqlite3(f.name, 'select * from foobar')
+    expect = [['foo', 'bar'],
+              ['a', 1],
+              ['b', 2],
+              ['c', 2.0]]
+    iassertequal(expect, actual)
+    iassertequal(expect, actual) # verify can iterate twice
+
+
+def test_fromsqlite3_cachetag():
+    """Test the fromsqlite3 cachetag function."""
+    
+    # initial data
+    f = NamedTemporaryFile(delete=False)
+    data = [['a', 1],
+            ['b', 2],
+            ['c', 2.0]]
+    connection = sqlite3.connect(f.name)
+    c = connection.cursor()
+    c.execute('create table foobar (foo, bar)')
+    for row in data:
+        c.execute('insert into foobar values (?, ?)', row)
+    connection.commit()
+    c.close()
+    
+    # test the function
+    tbl = fromsqlite3(f.name, 'select * from foobar')
+    tag1 = tbl.cachetag()
+    
+    # update the data
+    modata = [['d', 1],
+              ['e', 2],
+              ['f', 2.0]]
+    c = connection.cursor()
+    for i in range(100):
+        for row in modata:
+            c.execute('insert into foobar values (?, ?)', row)
+    connection.commit()
+    c.close()
+    
+    tag2 = tbl.cachetag()
+    assert tag2 != tag1, (tag2, tag1)
+
+    
+def test_fromsqlite3_cachetag_strict():
+    """Test the fromsqlite3 cachetag function under strict conditions."""
+    
+    # initial data
+    f = NamedTemporaryFile(delete=False)
+    data = [['a', 1],
+            ['b', 2],
+            ['c', 2.0]]
+    connection = sqlite3.connect(f.name)
+    c = connection.cursor()
+    c.execute('create table foobar (foo, bar)')
+    for row in data:
+        c.execute('insert into foobar values (?, ?)', row)
+    connection.commit()
+    c.close()
+    
+    # test the function
+    tbl = fromsqlite3(f.name, 'select * from foobar', checksumfun=adler32sum)
+    tag1 = tbl.cachetag()
+    
+    # update the data
+    connection.execute('update foobar set bar = ? where foo = ?', (42, 'a'))
+    connection.commit()
+    
+    tag2 = tbl.cachetag()
+    assert tag2 != tag1, (tag2, tag1)
+    
+    
+def test_fromdb():
+    """Test the fromdb function."""
+    
+    # initial data
     data = [['a', 1],
             ['b', 2],
             ['c', 2.0]]
@@ -203,7 +292,7 @@ def test_fromsqlite3():
     c.close()
     
     # test the function
-    actual = fromsqlite3(connection, 'select * from foobar')
+    actual = fromdb(connection, 'select * from foobar')
     expect = [['foo', 'bar'],
               ['a', 1],
               ['b', 2],
@@ -212,3 +301,5 @@ def test_fromsqlite3():
     iassertequal(expect, actual) # verify can iterate twice
 
 
+
+    
