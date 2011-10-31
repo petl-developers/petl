@@ -119,7 +119,7 @@ def fromcsv(filename, checksumfun=None, **kwargs):
     Note that all data values are strings, and any intended numeric values will
     need to be converted, see also :func:`convert`.
     
-    The returned table object implements the `cachetag` method.
+    The returned table object implements the `cachetag()` method.
     
     """
 
@@ -176,7 +176,7 @@ def frompickle(filename, checksumfun=None):
         | 'c'   | 2.5   |
         +-------+-------+
 
-    The returned table object implements the `cachetag` method.
+    The returned table object implements the `cachetag()` method.
     
     """
     
@@ -242,7 +242,7 @@ def fromsqlite3(filename, query, checksumfun=None):
         | u'c'  | 2.0   |
         +-------+-------+
 
-    The returned table object implements the `cachetag` method.
+    The returned table object implements the `cachetag()` method.
 
     """
     
@@ -302,7 +302,7 @@ def fromdb(connection, query):
         >>> table = fromdb(connection, 'select * from test')
         >>> look(table)
         
-    The returned table object does not implement the `cachetag` method.
+    The returned table object does not implement the `cachetag()` method.
         
     """
     
