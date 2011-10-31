@@ -72,14 +72,26 @@ def statsum(filename):
     return hash((os.path.abspath(filename), 
                  os.path.getsize(filename), 
                  os.path.getmtime(filename)))
+
+
+defaultsumfun = statsum
+"""
+Default checksum function used when generating cachetags for file-backed tables.
+
+To change the default globally, e.g.::
+
+    >>> import petl.io
+    >>> petl.io.defaultsumfun = petl.io.adler32sum
+    
+"""
         
 
-def fromcsv(filename, checksumfun=statsum, **kwargs):
+def fromcsv(filename, checksumfun=None, **kwargs):
     """
-    Wrapper for the standard `csv.reader` function. Returns a table providing
+    Wrapper for the standard :func:`csv.reader` function. Returns a table providing
     access to the data in the given delimited file. The `filename` argument is the
     path of the delimited file, all other keyword arguments are passed to 
-    `csv.reader`. E.g.::
+    :func:`csv.reader`. E.g.::
 
         >>> import csv
         >>> # set up a CSV file to demonstrate with
@@ -105,14 +117,9 @@ def fromcsv(filename, checksumfun=statsum, **kwargs):
         +-------+-------+
 
     Note that all data values are strings, and any intended numeric values will
-    need to be converted, see also `petl.convert`.
+    need to be converted, see also :func:`convert`.
     
-    The returned table object implements the `cachetag` method, which by default
-    uses the `statsum` function to generate a checksum of the underlying file.
-    Note that `statsum` is cheap to compute but crude as it relies on file size 
-    and time of modification, and on some systems this will not reveal changes 
-    within the same second that preserve file size. If you need a finer level
-    of granularity, use either `adler32sum` or `crc32sum` instead.
+    The returned table object implements the `cachetag` method.
     
     """
 
@@ -121,7 +128,7 @@ def fromcsv(filename, checksumfun=statsum, **kwargs):
 
 class CSVView(object):
     
-    def __init__(self, filename, checksumfun=statsum, **kwargs):
+    def __init__(self, filename, checksumfun=None, **kwargs):
         self.filename = filename
         self.checksumfun = checksumfun
         self.kwargs = kwargs
@@ -135,13 +142,14 @@ class CSVView(object):
     def cachetag(self):
         p = self.filename
         if os.path.isfile(p):
-            checksum = self.checksumfun(p)
+            sumfun = self.checksumfun if self.checksumfun is not None else defaultsumfun
+            checksum = sumfun(p)
             return hash((checksum, tuple(self.kwargs.items()))) 
         else:
             raise Uncacheable
                 
     
-def frompickle(filename, checksumfun=statsum):
+def frompickle(filename, checksumfun=None):
     """
     Returns a table providing access to the data pickled in the given file. The 
     rows in the table should have been pickled to the file one at a time. E.g.::
@@ -168,12 +176,7 @@ def frompickle(filename, checksumfun=statsum):
         | 'c'   | 2.5   |
         +-------+-------+
 
-    The returned table object implements the `cachetag` method, which by default
-    uses the `statsum` function to generate a checksum of the underlying file.
-    Note that `statsum` is cheap to compute but crude as it relies on file size 
-    and time of modification, and on some systems this will not reveal changes 
-    within the same second that preserve file size. If you need a finer level
-    of granularity, use either `adler32sum` or `crc32sum` instead.
+    The returned table object implements the `cachetag` method.
     
     """
     
@@ -182,7 +185,7 @@ def frompickle(filename, checksumfun=statsum):
     
 class PickleView(object):
 
-    def __init__(self, filename, checksumfun=statsum):
+    def __init__(self, filename, checksumfun=None):
         self.filename = filename
         self.checksumfun = checksumfun
         
@@ -197,14 +200,16 @@ class PickleView(object):
     def cachetag(self):
         p = self.filename
         if os.path.isfile(p):
-            return self.checksumfun(p)
+            sumfun = self.checksumfun if self.checksumfun is not None else defaultsumfun
+            checksum = sumfun(p)
+            return checksum
         else:
             raise Uncacheable
     
 
-def fromsqlite3(filename, query, checksumfun=statsum):
+def fromsqlite3(filename, query, checksumfun=None):
     """
-    Provides access to data from an sqlite3 connection via a given query. E.g.::
+    Provides access to data from an :mod:`sqlite3` connection via a given query. E.g.::
 
         >>> import sqlite3
         >>> from petl import look, fromsqlite3    
@@ -237,13 +242,8 @@ def fromsqlite3(filename, query, checksumfun=statsum):
         | u'c'  | 2.0   |
         +-------+-------+
 
-    The returned table object implements the `cachetag` method, which by default
-    uses the `statsum` function to generate a checksum of the underlying file.
-    Note that `statsum` is cheap to compute but crude as it relies on file size 
-    and time of modification, and on some systems this will not reveal changes 
-    within the same second that preserve file size. If you need a finer level
-    of granularity, use either `adler32sum` or `crc32sum` instead.
-    
+    The returned table object implements the `cachetag` method.
+
     """
     
     return Sqlite3View(filename, query, checksumfun)
@@ -251,7 +251,7 @@ def fromsqlite3(filename, query, checksumfun=statsum):
 
 class Sqlite3View(object):
 
-    def __init__(self, filename, query, checksumfun=statsum):
+    def __init__(self, filename, query, checksumfun=None):
         self.filename = filename
         self.query = query
         self.checksumfun = checksumfun
@@ -268,7 +268,8 @@ class Sqlite3View(object):
     def cachetag(self):
         p = self.filename
         if os.path.isfile(p):
-            checksum = self.checksumfun(p)
+            sumfun = self.checksumfun if self.checksumfun is not None else defaultsumfun
+            checksum = sumfun(p)
             return hash((checksum, self.query))
         else:
             raise Uncacheable

@@ -3,8 +3,8 @@
 petl - Extract, Transform and Load (Tables of Data)
 ===================================================
 
-`petl` is a tentative Python package for extracting, transforming and
-loading tables of data.
+:mod:`petl` is a tentative Python package for extracting, transforming
+and loading tables of data.
 
 - Documentation: http://petl.rtfd.org/
 - Source Code: https://github.com/alimanfoo/petl
@@ -47,8 +47,8 @@ So, for example, the list of lists shown below is a table::
 >>> table = [['foo', 'bar'], ['a', 1], ['b', 2]]
 
 Note that, under this convention, an object returned by the
-`csv.reader` function from the standard Python `csv` module is *not* a
-table, because it can only be iterated over once, e.g.::
+:func:`csv.reader` function from the standard Python :mod:`csv` module
+is *not* a table, because it can only be iterated over once, e.g.::
 
  >>> from StringIO import StringIO
  >>> import csv
@@ -70,7 +70,8 @@ table, because it can only be iterated over once, e.g.::
 
 However, it is straightforward to define functions that support the
 above convention and provide access to data from CSV or other types of
-file or data source, see e.g. the `fromcsv` function in this package.
+file or data source, see e.g. the :func:`fromcsv` function in this
+package.
 
 The main reason for requiring that tables support independent row
 iterators is that data from a table may need to be iterated over
@@ -90,11 +91,11 @@ and lazy evaluation where possible. However, some transformations
 cannot be done without building data structures, either in memory or
 on disk.
 
-An example is the `sort` function, which will either sort a table
-entirely in memory, or will sort the table in memory in chunks,
+An example is the :func:`sort` function, which will either sort a
+table entirely in memory, or will sort the table in memory in chunks,
 writing chunks to disk and performing a final merge sort on the
 chunks. Which strategy is used will depend on the arguments passed
-into the `sort` function when it is called. 
+into the :func:`sort` function when it is called.
 
 In either case, the sorting can take some time, and if the sorted data
 will be used more than once, it is obviously undesirable to throw away
@@ -117,13 +118,30 @@ To support caching, it is recommended (but not required) that table
 container objects also implement the `cachetag` method. This method
 should return an integer which changes whenever the table's fields or
 data changes (i.e., a row iterator would yield a different sequence of
-items). All `petl` table objects implement this method, where
+items). All :mod:`petl` table objects implement this method, where
 applicable.
 
-Note that care must be taken to ensure correct implementation of the
-`cachetag` method where a table is generating data dynamically from
-another source. In these cases, the state of the upstream tables must
-be considered when generating a `cachetag` value. One strategy is to
+Note in particular that the functions :func:`fromcsv`,
+:func:`frompickle` and :func:`fromsqlite3` return tables that
+implement the `cachetag` method, and that the implementation of
+`cachetag` in these cases depends on a checksum function operating on
+the underlying data file. By default, :func:`statsum` is used as the
+checksum function, which is cheap to compute but crude because it
+relies only on file name, size and time of modification, and on some
+systems this will **not** reveal changes within the same second that
+preserve file size. If you need a finer level of granularity, use
+either :func:`adler32sum` or :func:`crc32sum` instead. These can be
+passed in as arguments to :func:`fromcsv`, :func:`frompickle` and
+:func:`fromsqlite3`, or can be set globally, e.g.::
+
+    >>> import petl.io
+    >>> petl.io.defaultsumfun = petl.io.adler32sum
+
+
+Care must be taken to ensure correct implementation of the `cachetag`
+method where a table is generating data dynamically from another table
+or tables. In these cases, the state of the upstream tables must be
+considered when generating a `cachetag` value. One strategy is to
 construct `cachetag` values by hashing the internal configuration
 attributes of a table, along with the `cachetag` values from any
 tables immediately upstream.

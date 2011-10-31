@@ -7,7 +7,7 @@ TODO doc me
 from itertools import islice
 from collections import defaultdict, Counter
 from operator import itemgetter
-from datetime import datetime
+import datetime
 
 
 __all__ = ['fields', 'data', 'records', 'count', 'look', 'see', 'values', 'valuecounter', 'valuecounts', \
@@ -360,7 +360,7 @@ def valueset(table, field, start=0, stop=None, step=1):
 def valuecounter(table, field, start=0, stop=None, step=1):
     """
     Find distinct values for the given field and count the number of 
-    occurrences. Returns a dictionary mapping values to counts. E.g.::
+    occurrences. Returns a :class:`dict` mapping values to counts. E.g.::
 
         >>> from petl import valuecounter
         >>> table = [['foo', 'bar'], ['a', True], ['b'], ['b', True], ['c', False]]
@@ -455,7 +455,7 @@ def unique(table, field):
 
 def lookup(table, key, value=None):
     """
-    Construct a dictionary (in memory) from the given table. E.g.::
+    Construct a :class:`dict` (in memory) from the given table. E.g.::
     
         >>> from petl import lookup
         >>> table = [['foo', 'bar'], ['a', 1], ['b', 2], ['b', 3]]
@@ -517,7 +517,7 @@ def lookup(table, key, value=None):
     
 def lookupone(table, key, value=None, strict=True):
     """
-    Construct a dictionary (in memory) from the given table, assuming there is
+    Construct a :class:`dict` (in memory) from the given table, assuming there is
     at most one value for each key. E.g.::
     
         >>> from petl import lookupone
@@ -592,7 +592,7 @@ def lookupone(table, key, value=None, strict=True):
     
 def recordlookup(table, key):
     """
-    Construct a dictionary (in memory) from the given table, mapping to records. 
+    Construct a :class:`dict` (in memory) from the given table, mapping to records. 
     E.g.::
     
         >>> from petl import recordlookup
@@ -640,7 +640,7 @@ def recordlookup(table, key):
         
 def recordlookupone(table, key, strict=True):
     """
-    Construct a dictionary (in memory) from the given table, mapping to records,
+    Construct a :class:`dict` (in memory) from the given table, mapping to records,
     assuming there is at most one record for each key. E.g.::
     
         >>> from petl import recordlookupone
@@ -996,7 +996,7 @@ def parsecounts(table, field, parsers={'int': int, 'float': float}, start=0, sto
 
 def datetimeparser(format):
     """
-    Return a function to parse strings as `datetime` objects using a given format.
+    Return a function to parse strings as :class:`datetime.datetime` objects using a given format.
     E.g.::
 
         >>> from petl import datetimeparser
@@ -1012,7 +1012,7 @@ def datetimeparser(format):
             data_string[found.end():])
         ValueError: unconverted data remains: 9
 
-    Can be used with `parsecounts`, e.g.::
+    Can be used with :func:`parsecounts`, e.g.::
     
         >>> from petl import look, parsecounts, datetimeparser
         >>> table = [['when', 'who'],
@@ -1031,13 +1031,13 @@ def datetimeparser(format):
     """
     
     def parser(value):
-        return datetime.strptime(value.strip(), format)
+        return datetime.datetime.strptime(value.strip(), format)
     return parser
     
 
 def dateparser(format):
     """
-    Return a function to parse strings as `date` objects using a given format.
+    Return a function to parse strings as :class:`datetime.date` objects using a given format.
     E.g.::
     
         >>> from petl import dateparser
@@ -1054,7 +1054,7 @@ def dateparser(format):
         ValueError: day is out of range for month
 
 
-    Can be used with `parsecounts`, e.g.::
+    Can be used with :func:`parsecounts`, e.g.::
     
         >>> from petl import look, parsecounts, dateparser
         >>> table = [['when', 'who'],
@@ -1073,13 +1073,13 @@ def dateparser(format):
     """
     
     def parser(value):
-        return datetime.strptime(value.strip(), format).date()
+        return datetime.datetime.strptime(value.strip(), format).date()
     return parser
     
 
 def timeparser(format):
     """
-    Return a function to parse strings as `time` objects using a given format.
+    Return a function to parse strings as :class:`datetime.time` objects using a given format.
     E.g.::
     
         >>> from petl import timeparser
@@ -1105,7 +1105,7 @@ def timeparser(format):
             (data_string, format))
         ValueError: time data '25:00:00' does not match format '%H:%M:%S'
 
-    Can be used with `parsecounts`, e.g.::
+    Can be used with :func:`parsecounts`, e.g.::
     
         >>> from petl import look, parsecounts, timeparser
         >>> table = [['when', 'who'],
@@ -1124,7 +1124,7 @@ def timeparser(format):
     """
     
     def parser(value):
-        return datetime.strptime(value.strip(), format).time()
+        return datetime.datetime.strptime(value.strip(), format).time()
     return parser
     
 
@@ -1132,7 +1132,7 @@ def boolparser(true_strings=['true', 't', 'yes', 'y', '1'],
                false_strings=['false', 'f', 'no', 'n', '0'],
                case_sensitive=False):
     """
-    Return a function to parse strings as `bool` objects using a given set of
+    Return a function to parse strings as :class:`bool` objects using a given set of
     string representations for `True` and `False`.
     E.g.::
 
@@ -1161,7 +1161,7 @@ def boolparser(true_strings=['true', 't', 'yes', 'y', '1'],
             raise ValueError('value is not one of recognised boolean strings: %r' % value)
         ValueError: value is not one of recognised boolean strings: 'foo'
     
-    Can be used with `parsecounts`, e.g.::
+    Can be used with :func:`parsecounts`, e.g.::
     
         >>> from petl import look, parsecounts, boolparser
         >>> table = [['who', 'vote'],
