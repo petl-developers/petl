@@ -7,7 +7,7 @@ from tempfile import NamedTemporaryFile
 import csv
 import cPickle as pickle
 
-from petl import fromcsv, frompickle, fromsqlite3
+from petl import fromcsv, frompickle, fromsqlite3, adler32sum, crc32sum
 import sqlite3
 
 
@@ -24,7 +24,7 @@ def test_fromcsv():
     """Test the fromcsv function."""
     
     f = NamedTemporaryFile(delete=False)
-    writer = csv.writer(f)
+    writer = csv.writer(f, delimiter='\t')
     table = [['foo', 'bar'],
              ['a', 1],
              ['b', 2],
@@ -33,7 +33,7 @@ def test_fromcsv():
         writer.writerow(row)
     f.close()
     
-    actual = fromcsv(f.name)
+    actual = fromcsv(f.name, delimiter='\t')
     expect = [['foo', 'bar'],
               ['a', '1'],
               ['b', '2'],
@@ -61,6 +61,39 @@ def test_fromcsv_cachetag():
     tag1 = tbl.cachetag()
     
     # make a change
+    with open(f.name, 'wb') as f:
+        writer = csv.writer(f)
+        rows = [['foo', 'bar'],
+                ['d', 3],
+#                ['e', 5],
+                ['f', 4]]
+        for row in rows:
+            writer.writerow(row)
+
+    # check cachetag has changed
+    tag2 = tbl.cachetag()
+    assert tag2 != tag1, (tag2, tag1)
+    
+
+def test_fromcsv_cachetag_strict():
+    """Test the cachetag method on tables returned by fromcsv."""
+    
+    # initial data
+    f = NamedTemporaryFile(delete=False)
+    writer = csv.writer(f)
+    table = [['foo', 'bar'],
+             ['a', 1],
+             ['b', 2],
+             ['c', 2]]
+    for row in table:
+        writer.writerow(row)
+    f.close()
+
+    # cachetag with initial data
+    tbl = fromcsv(f.name, checksumfun=adler32sum)
+    tag1 = tbl.cachetag()
+    
+    # make a change, preserving file size
     with open(f.name, 'wb') as f:
         writer = csv.writer(f)
         rows = [['foo', 'bar'],
@@ -110,6 +143,37 @@ def test_frompickle_cachetag():
     tag1 = tbl.cachetag()
     
     # make a change
+    with open(f.name, 'wb') as f:
+        rows = [['foo', 'bar'],
+                ['d', 3],
+#                ['e', 5],
+                ['f', 4]]
+        for row in rows:
+            pickle.dump(row, f)
+
+    # check cachetag has changed
+    tag2 = tbl.cachetag()
+    assert tag2 != tag1, (tag2, tag1)
+    
+
+def test_frompickle_cachetag_strict():
+    """Test the cachetag method on tables returned by frompickle."""
+    
+    # initial data
+    f = NamedTemporaryFile(delete=False)
+    table = [['foo', 'bar'],
+             ['a', 1],
+             ['b', 2],
+             ['c', 2]]
+    for row in table:
+        pickle.dump(row, f)
+    f.close()
+
+    # cachetag with initial data
+    tbl = frompickle(f.name, checksumfun=crc32sum)
+    tag1 = tbl.cachetag()
+    
+    # make a change, preserving file size
     with open(f.name, 'wb') as f:
         rows = [['foo', 'bar'],
                 ['d', 3],

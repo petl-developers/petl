@@ -197,14 +197,22 @@ Utility functions
 
 .. autofunction:: petl.recordlookupone
 
-Extracting (reading) tables from files & other sources
-------------------------------------------------------
+.. autofunction:: petl.statsum
+
+.. autofunction:: petl.adler32sum
+
+.. autofunction:: petl.crc32sum
+
+Extracting (reading) tables from files and databases
+----------------------------------------------------
 
 .. autofunction:: petl.fromcsv
 
 .. autofunction:: petl.frompickle
 
 .. autofunction:: petl.fromsqlite3
+
+.. autofunction:: petl.fromdb
 
 Transforming tables
 -------------------
@@ -213,8 +221,8 @@ TODO
 
 .. autofunction:: petl.rename
 
-Loading (writing) tables to files & other sources
--------------------------------------------------
+Loading (writing) tables to files and databases
+-----------------------------------------------
 
 TODO
 

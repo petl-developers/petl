@@ -10,14 +10,15 @@ import zlib
 import cPickle as pickle
 
 
-__all__ = ['fromcsv', 'frompickle', 'fromsqlite3', 'tocsv', 'topickle', 'tosqlite3']
+__all__ = ['fromcsv', 'frompickle', 'fromsqlite3', 'tocsv', 'topickle', \
+           'tosqlite3', 'crc32sum', 'adler32sum', 'statsum']
 
 
 class Uncacheable(Exception):
     pass # TODO
 
 
-def crc32(file_path):
+def crc32sum(filename):
     """
     Compute the CRC32 checksum of the file at the given location. Returns
     the checksum as an integer, use hex(result) to view as hexadecimal.
@@ -25,10 +26,10 @@ def crc32(file_path):
     """
     
     checksum = None
-    with open(file_path, 'rb') as f:
+    with open(filename, 'rb') as f:
         while True:
             data = f.read(8192)
-            if data is None:
+            if not data:
                 break
             if checksum is None:
                 checksum = zlib.crc32(data) & 0xffffffffL # deal with signed integer
@@ -37,15 +38,15 @@ def crc32(file_path):
     return checksum
 
 
-def adler32(file_path):
+def adler32sum(filename):
     """
-    Compute the adler 32 checksum of the file at the given location. Returns
+    Compute the Adler 32 checksum of the file at the given location. Returns
     the checksum as an integer, use hex(result) to view as hexadecimal.
     
     """
     
     checksum = None
-    with open(file_path, 'rb') as f:
+    with open(filename, 'rb') as f:
         while True:
             data = f.read(8192)
             if not data:
@@ -57,18 +58,33 @@ def adler32(file_path):
     return checksum
 
 
-def fromcsv(path, *args, **kwargs):
+def statsum(filename):
+    """
+    Compute a crude checksum of the file by hashing the file's absolute path
+    name, the file size, and the file's time of last modification. N.B., on
+    some systems this will give a 1s resolution, i.e., any changes to a file
+    within the same second that preserve the file size will *not* change the
+    result.
+    
+    """
+    
+    return hash((os.path.abspath(filename), 
+                 os.path.getsize(filename), 
+                 os.path.getmtime(filename)))
+        
+
+def fromcsv(path, checksumfun=statsum, **kwargs):
     """
     Wrapper for the standard `csv.reader` function. Returns a table providing
     access to the data in the given delimited file. The `path` argument is the
-    path of the delimited file, all other positional and/or keyword arguments
-    are passed to `csv.reader`. E.g.::
+    path of the delimited file, all other keyword arguments are passed to 
+    `csv.reader`. E.g.::
 
         >>> import csv
         >>> import tempfile
         >>> # set up a temporary CSV file to demonstrate with
         ... f = tempfile.NamedTemporaryFile(delete=False)
-        >>> writer = csv.writer(f)
+        >>> writer = csv.writer(f, delimiter='\t')
         >>> writer.writerow(['foo', 'bar'])
         >>> writer.writerow(['a', 1])
         >>> writer.writerow(['b', 2])
@@ -76,7 +92,7 @@ def fromcsv(path, *args, **kwargs):
         >>> f.close()
         >>> # now demonstrate the use of petl.fromcsv
         ... from petl import fromcsv, look
-        >>> table = fromcsv(f.name)
+        >>> table = fromcsv(f.name, delimiter='\t')
         >>> look(table)
         +-------+-------+
         | 'foo' | 'bar' |
@@ -91,37 +107,41 @@ def fromcsv(path, *args, **kwargs):
     Note that all data values are strings, and any intended numeric values will
     need to be converted, see also `petl.convert`.
     
-    The returned table object implements the `cachetag` method using the 
-    `zlib.adler32` function to detect changes to the underlying file's contents. 
+    The returned table object implements the `cachetag` method, which by default
+    uses the `statsum` function to generate a checksum of the underlying file.
+    Note that `statsum` is cheap to compute but crude as it relies on file size 
+    and time of modification, and on some systems this will not reveal changes 
+    within the same second that preserve file size. If you need a finer level
+    of granularity, use either `adler32sum` or `crc32sum` instead.
     
     """
 
-    return CSVView(path, *args, **kwargs)
+    return CSVView(path, checksumfun=checksumfun, **kwargs)
 
 
 class CSVView(object):
     
-    def __init__(self, path, *args, **kwargs):
+    def __init__(self, path, checksumfun=statsum, **kwargs):
         self.path = path
-        self.args = args
+        self.checksumfun = checksumfun
         self.kwargs = kwargs
         
     def __iter__(self):
         with open(self.path, 'rb') as file:
-            reader = csv.reader(file, *self.args, **self.kwargs)
+            reader = csv.reader(file, **self.kwargs)
             for row in reader:
                 yield row
                 
     def cachetag(self):
         p = self.path
         if os.path.isfile(p):
-            checksum = adler32(p)
-            return hash((checksum, self.args, tuple(self.kwargs.items()))) 
+            checksum = self.checksumfun(p)
+            return hash((checksum, tuple(self.kwargs.items()))) 
         else:
             raise Uncacheable
                 
     
-def frompickle(path):
+def frompickle(path, checksumfun=statsum):
     """
     Returns a table providing access to the data pickled in the given file. The 
     rows in the table should have been pickled to the file one at a time. E.g.::
@@ -149,18 +169,23 @@ def frompickle(path):
         | 'c'   | 2.5   |
         +-------+-------+
 
-    The returned table object implements the `cachetag` method using the 
-    `zlib.adler32` function to detect changes to the underlying file's contents. 
+    The returned table object implements the `cachetag` method, which by default
+    uses the `statsum` function to generate a checksum of the underlying file.
+    Note that `statsum` is cheap to compute but crude as it relies on file size 
+    and time of modification, and on some systems this will not reveal changes 
+    within the same second that preserve file size. If you need a finer level
+    of granularity, use either `adler32sum` or `crc32sum` instead.
     
     """
     
-    return PickleView(path)
+    return PickleView(path, checksumfun=checksumfun)
     
     
 class PickleView(object):
 
-    def __init__(self, path):
+    def __init__(self, path, checksumfun=statsum):
         self.path = path
+        self.checksumfun = checksumfun
         
     def __iter__(self):
         with open(self.path, 'rb') as file:
@@ -173,7 +198,7 @@ class PickleView(object):
     def cachetag(self):
         p = self.path
         if os.path.isfile(p):
-            return adler32(p)
+            return self.checksumfun(p)
         else:
             raise Uncacheable
     
