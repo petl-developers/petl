@@ -367,12 +367,12 @@ def test_typeset():
 def test_parsecounts():
 
     table = [['foo', 'bar', 'baz'],
-             ['A', 1, 2],
+             ['A', 'aaa', 2],
              ['B', u'2', '3.4'],
              [u'B', u'3', u'7.8', True],
              ['D', '3.7', 9.0],
              ['E', 42]]
 
     actual = parsecounts(table, 'bar') 
-    expect = (('type', 'count'), ('float', 3), ('int', 2))
+    expect = (('type', 'count', 'errors'), ('float', 3, 1), ('int', 2, 2))
     iassertequal(expect, actual)

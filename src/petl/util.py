@@ -929,65 +929,69 @@ def typeset(table, field, start=0, stop=None, step=1):
 
 def parsecounter(table, field, parsers={'int': int, 'float': float}, start=0, stop=None, step=1):    
     """
-    Count the number of `str` or `unicode` values that can be parsed as ints, 
-    floats or via custom parser functions. E.g.::
+    Count the number of `str` or `unicode` values in the given fields that can 
+    be parsed as ints, floats or via custom parser functions. Return a pair of 
+    `Counter` objects, the first mapping parser names to the number of strings 
+    successfully parsed, the second mapping parser names to the number of errors. 
+    E.g.::
     
         >>> from petl import parsecounter
         >>> table = [['foo', 'bar', 'baz'],
-        ...          ['A', 1, 2],
+        ...          ['A', 'aaa', 2],
         ...          ['B', u'2', '3.4'],
         ...          [u'B', u'3', u'7.8', True],
         ...          ['D', '3.7', 9.0],
         ...          ['E', 42]]
-        >>> parsecounter(table, 'bar')
+        >>> counter, errors = parsecounter(table, 'bar')
+        >>> counter
         Counter({'float': 3, 'int': 2})
+        >>> errors
+        Counter({'int': 2, 'float': 1})
         
     """
     
-    counter = Counter()
+    counter, errors = Counter(), Counter()
     for v in values(table, field, start, stop, step):
         if isinstance(v, basestring):
             for name, parser in parsers.items():
                 try:
                     parser(v)
-                except ValueError:
-                    pass
-                except TypeError:
-                    pass
+                except:
+                    errors[name] += 1
                 else:
                     counter[name] += 1
-    return counter
+    return counter, errors
 
 
 def parsecounts(table, field, parsers={'int': int, 'float': float}, start=0, stop=None, step=1):    
     """
     Count the number of `str` or `unicode` values that can be parsed as ints, 
     floats or via custom parser functions. Return a table mapping parser names
-    to the number of values successfully parsed. E.g.::
+    to the number of values successfully parsed and the number of errors. E.g.::
     
         >>> from petl import look, parsecounts
         >>> table = [['foo', 'bar', 'baz'],
-        ...          ['A', 1, 2],
+        ...          ['A', 'aaa', 2],
         ...          ['B', u'2', '3.4'],
         ...          [u'B', u'3', u'7.8', True],
         ...          ['D', '3.7', 9.0],
         ...          ['E', 42]]
         >>> look(parsecounts(table, 'bar'))
-        +---------+---------+
-        | 'type'  | 'count' |
-        +=========+=========+
-        | 'float' | 3       |
-        +---------+---------+
-        | 'int'   | 2       |
-        +---------+---------+
+        +---------+---------+----------+
+        | 'type'  | 'count' | 'errors' |
+        +=========+=========+==========+
+        | 'float' | 3       | 1        |
+        +---------+---------+----------+
+        | 'int'   | 2       | 2        |
+        +---------+---------+----------+
 
     """
     
-    counter = parsecounter(table, field, parsers, start, stop, step)
-    output = [('type', 'count')]
-    output.extend(counter.most_common())
+    counter, errors = parsecounter(table, field, parsers, start, stop, step)
+    output_fields = [('type', 'count', 'errors')]
+    output_data = [(item, count, errors[item]) for (item, count) in counter.most_common()]
+    output = output_fields + output_data
     return output
-
 
 
 def datetimeparser(format):
@@ -1017,13 +1021,12 @@ def datetimeparser(format):
         ...          ['2002-13-25T00:00:00', 'Marty'],
         ...          ['2002-02-30T07:09:00', 'Melman']]
         >>> parsers={'datetime': datetimeparser('%Y-%m-%dT%H:%M:%S')}
-        >>> pc = parsecounts(table, 'when', parsers)
-        >>> look(pc)
-        +------------+---------+
-        | 'type'     | 'count' |
-        +============+=========+
-        | 'datetime' | 2       |
-        +------------+---------+
+        >>> look(parsecounts(table, 'when', parsers))
+        +------------+---------+----------+
+        | 'type'     | 'count' | 'errors' |
+        +============+=========+==========+
+        | 'datetime' | 2       | 2        |
+        +------------+---------+----------+
     
     """
     
@@ -1060,13 +1063,12 @@ def dateparser(format):
         ...          ['2002-13-25', 'Marty'],
         ...          ['2002-02-30', 'Melman']]
         >>> parsers={'date': dateparser('%Y-%m-%d')}
-        >>> pc = parsecounts(table, 'when', parsers)
-        >>> look(pc)
-        +--------+---------+
-        | 'type' | 'count' |
-        +========+=========+
-        | 'date' | 2       |
-        +--------+---------+
+        >>> look(parsecounts(table, 'when', parsers))
+        +--------+---------+----------+
+        | 'type' | 'count' | 'errors' |
+        +========+=========+==========+
+        | 'date' | 2       | 2        |
+        +--------+---------+----------+
         
     """
     
@@ -1112,13 +1114,12 @@ def timeparser(format):
         ...          ['25:01:01', 'Marty'],
         ...          ['09:70:00', 'Melman']]
         >>> parsers={'time': timeparser('%H:%M:%S')}
-        >>> pc = parsecounts(table, 'when', parsers)
-        >>> look(pc)
-        +--------+---------+
-        | 'type' | 'count' |
-        +========+=========+
-        | 'time' | 2       |
-        +--------+---------+
+        >>> look(parsecounts(table, 'when', parsers))
+        +--------+---------+----------+
+        | 'type' | 'count' | 'errors' |
+        +========+=========+==========+
+        | 'time' | 2       | 2        |
+        +--------+---------+----------+
     
     """
     
@@ -1170,13 +1171,12 @@ def boolparser(true_strings=['true', 't', 'yes', 'y', '1'],
         ...          ['Melman', 'nope']]
         >>> mybool = boolparser(true_strings=['yes', 'y'], false_strings=['no', 'n'])
         >>> parsers = {'bool': mybool}
-        >>> pc = parsecounts(table, 'vote', parsers) 
-        >>> look(pc)
-        +--------+---------+
-        | 'type' | 'count' |
-        +========+=========+
-        | 'bool' | 2       |
-        +--------+---------+
+        >>> look(parsecounts(table, 'vote', parsers))
+        +--------+---------+----------+
+        | 'type' | 'count' | 'errors' |
+        +========+=========+==========+
+        | 'bool' | 2       | 2        |
+        +--------+---------+----------+
 
     """
     
