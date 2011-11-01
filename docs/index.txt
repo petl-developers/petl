@@ -27,9 +27,6 @@ satisfies the following:
 
 3. all row iterators returned by `__iter__` are independent, i.e., consuming items from one iterator will not affect any other iterators
 
-(Point 3 ensures that a table can be iterated over any number of times
-within the same script or interactive session.)
-
 A *row iterator* is an iterator which satisfies the following:
 
 4. each item returned by the iterator is either a list or a tuple
@@ -74,10 +71,10 @@ file or data source, see e.g. the :func:`fromcsv` function in this
 package.
 
 The main reason for requiring that tables support independent row
-iterators is that data from a table may need to be iterated over
-several times. E.g., when using `petl` in interactive mode to build up
-a sequence of data transformation steps, the user might want to
-examine outputs from intermediate steps.
+iterators (point 3) is that data from a table may need to be iterated
+over several times. E.g., when using `petl` in interactive mode to
+build up a sequence of data transformation steps, the user might want
+to examine outputs from intermediate steps.
 
 Note that this convention does not place any restrictions on the
 lengths of header and data rows. A table may return a header row
@@ -166,6 +163,8 @@ Utility functions
 .. autofunction:: petl.fields
 
 .. autofunction:: petl.data
+
+.. autofunction:: petl.fieldnames
 
 .. autofunction:: petl.records
 

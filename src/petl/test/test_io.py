@@ -419,6 +419,25 @@ def test_tosqlite3():
     iassertequal(expect, actual)
     
         
+def test_tosqlite3_identifiers():
+    """Test the tosqlite3 function with funky table and field names."""
+    
+    # exercise function
+    table = [['foo foo', 'bar.baz.spong"'],
+             ['a', 1],
+             ['b', 2],
+             ['c', 2]]
+    f = NamedTemporaryFile(delete=False)
+    tosqlite3(table, f.name, 'foo bar"', create=True)
+    
+    # check what it did
+    conn = sqlite3.connect(f.name)
+    actual = conn.execute('select * from "foo bar"')
+    expect = [['a', 1],
+              ['b', 2],
+              ['c', 2]]
+    iassertequal(expect, actual)
+    
     
 
     

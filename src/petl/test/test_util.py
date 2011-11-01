@@ -3,7 +3,7 @@ TODO doc me
 
 """
 
-from petl import fields, data, records, count, look, see, values, valuecounter, valuecounts, valueset,\
+from petl import fields, fieldnames, data, records, count, look, see, values, valuecounter, valuecounts, valueset,\
                 unique, lookup, lookupone, recordlookup, recordlookupone, \
                 DuplicateKeyError, rowlengths, stats, typecounts, parsecounts, typeset
 
@@ -18,7 +18,32 @@ def test_fields():
     expect = ['foo', 'bar']
     assertequal(expect, actual)
     
-
+    
+def test_fieldnames():
+    """Test the fieldnames function."""
+    
+    table = [['foo', 'bar'], ['a', 1], ['b', 2]]
+    actual = fieldnames(table)
+    expect = ['foo', 'bar']
+    assertequal(expect, actual)
+    
+    class CustomField(object):
+        def __init__(self, id, description):
+            self.id = id
+            self.description = description
+        def __str__(self):
+            return self.id
+        def __repr__(self):
+            return 'CustomField(%r, %r)' % (self.id, self.description)
+        
+    table = [[CustomField('foo', 'Get some foo.'), CustomField('bar', 'A lot of bar.')], 
+             ['a', 1], 
+             ['b', 2]]
+    actual = fieldnames(table)
+    expect = ['foo', 'bar']
+    assertequal(expect, actual)
+    
+    
 def test_data():
     """Test the data function."""
 

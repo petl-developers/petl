@@ -11,12 +11,12 @@ import cPickle as pickle
 import sqlite3
 
 
-from petl.util import data, fields
+from petl.util import data, fields, fieldnames
 
 
 __all__ = ['fromcsv', 'frompickle', 'fromsqlite3', 'tocsv', 'topickle', \
            'tosqlite3', 'crc32sum', 'adler32sum', 'statsum', 'fromdb', \
-           'appendcsv', 'appendpickle', 'appendsqlite3']
+           'appendcsv', 'appendpickle', 'appendsqlite3', 'todb', 'appenddb']
 
 
 class Uncacheable(Exception):
@@ -123,7 +123,10 @@ def fromcsv(filename, checksumfun=None, **kwargs):
     Note that all data values are strings, and any intended numeric values will
     need to be converted, see also :func:`convert`.
     
-    The returned table object implements the `cachetag()` method.
+    The returned table object implements the `cachetag()` method. If the 
+    `checksumfun` argument is not given, the default checksum function (whatever
+    `petl.io.defaultsumfun` is currently set to) will be used to calculate 
+    cachetag values.
     
     """
 
@@ -180,7 +183,10 @@ def frompickle(filename, checksumfun=None):
         | 'c'   | 2.5   |
         +-------+-------+
 
-    The returned table object implements the `cachetag()` method.
+    The returned table object implements the `cachetag()` method. If the 
+    `checksumfun` argument is not given, the default checksum function (whatever
+    `petl.io.defaultsumfun` is currently set to) will be used to calculate 
+    cachetag values.
     
     """
     
@@ -246,8 +252,11 @@ def fromsqlite3(filename, query, checksumfun=None):
         | u'c'  | 2.0   |
         +-------+-------+
 
-    The returned table object implements the `cachetag()` method.
-
+    The returned table object implements the `cachetag()` method. If the 
+    `checksumfun` argument is not given, the default checksum function (whatever
+    `petl.io.defaultsumfun` is currently set to) will be used to calculate 
+    cachetag values.
+    
     """
     
     return Sqlite3View(filename, query, checksumfun)
@@ -329,7 +338,28 @@ class DbView(object):
     
 def tocsv(table, filename, **kwargs):
     """
-    TODO doc me
+    Write the table to a CSV file. E.g.::
+
+        >>> from petl import tocsv
+        >>> table = [['foo', 'bar'],
+        ...          ['a', 1],
+        ...          ['b', 2],
+        ...          ['c', 2]]
+        >>> tocsv(table, 'test.csv', delimiter='\\t')
+        >>> # look what it did
+        ... from petl import look, fromcsv
+        >>> look(fromcsv('test.csv', delimiter='\\t'))
+        +-------+-------+
+        | 'foo' | 'bar' |
+        +=======+=======+
+        | 'a'   | '1'   |
+        +-------+-------+
+        | 'b'   | '2'   |
+        +-------+-------+
+        | 'c'   | '2'   |
+        +-------+-------+
+
+    Note that if a file already exists at the given location, it will be overwritten.
     
     """
     
@@ -341,7 +371,49 @@ def tocsv(table, filename, **kwargs):
 
 def appendcsv(table, filename, **kwargs):
     """
-    TODO doc me
+    Append data rows to an existing CSV file. E.g.::
+
+        >>> # look at an existing CSV file
+        ... from petl import look, fromcsv
+        >>> look(fromcsv('test.csv', delimiter='\\t'))
+        +-------+-------+
+        | 'foo' | 'bar' |
+        +=======+=======+
+        | 'a'   | '1'   |
+        +-------+-------+
+        | 'b'   | '2'   |
+        +-------+-------+
+        | 'c'   | '2'   |
+        +-------+-------+
+        
+        >>> # append some data
+        ... from petl import appendcsv 
+        >>> table = [['foo', 'bar'],
+        ...          ['d', 7],
+        ...          ['e', 42],
+        ...          ['f', 12]]
+        >>> appendcsv(table, 'test.csv', delimiter='\\t')
+        >>> # look what it did
+        ... look(fromcsv('test.csv', delimiter='\\t'))
+        +-------+-------+
+        | 'foo' | 'bar' |
+        +=======+=======+
+        | 'a'   | '1'   |
+        +-------+-------+
+        | 'b'   | '2'   |
+        +-------+-------+
+        | 'c'   | '2'   |
+        +-------+-------+
+        | 'd'   | '7'   |
+        +-------+-------+
+        | 'e'   | '42'  |
+        +-------+-------+
+        | 'f'   | '12'  |
+        +-------+-------+
+
+    Note that no attempt is made to check that the fields or row lengths are 
+    consistent with the existing data, the data rows from the table are simply
+    appended to the file. See also the :func:`cat` function.
     
     """
     
@@ -353,7 +425,31 @@ def appendcsv(table, filename, **kwargs):
 
 def topickle(table, filename, protocol=-1):
     """
-    TODO doc me
+    Write the table to a pickle file. E.g.::
+
+        >>> from petl import topickle
+        >>> table = [['foo', 'bar'],
+        ...          ['a', 1],
+        ...          ['b', 2],
+        ...          ['c', 2]]
+        >>> topickle(table, 'test.dat')
+        >>> # look what it did
+        ... from petl import look, frompickle
+        >>> look(frompickle('test.dat'))
+        +-------+-------+
+        | 'foo' | 'bar' |
+        +=======+=======+
+        | 'a'   | 1     |
+        +-------+-------+
+        | 'b'   | 2     |
+        +-------+-------+
+        | 'c'   | 2     |
+        +-------+-------+
+
+    Note that if a file already exists at the given location, it will be overwritten.
+
+    The pickle file format preserves type information, i.e., reading and writing 
+    is round-trippable.
     
     """
     
@@ -364,7 +460,49 @@ def topickle(table, filename, protocol=-1):
 
 def appendpickle(table, filename, protocol=-1):
     """
-    TODO doc me
+    Append data to an existing pickle file. E.g.::
+
+        >>> # inspect an existing pickle file
+        ... from petl import look, frompickle
+        >>> look(frompickle('test.dat'))
+        +-------+-------+
+        | 'foo' | 'bar' |
+        +=======+=======+
+        | 'a'   | 1     |
+        +-------+-------+
+        | 'b'   | 2     |
+        +-------+-------+
+        | 'c'   | 2     |
+        +-------+-------+
+        
+        >>> # append some data
+        ... from petl import appendpickle
+        >>> table = [['foo', 'bar'],
+        ...          ['d', 7],
+        ...          ['e', 42],
+        ...          ['f', 12]]
+        >>> appendpickle(table, 'test.dat')
+        >>> # look what it did
+        ... look(frompickle('test.dat'))
+        +-------+-------+
+        | 'foo' | 'bar' |
+        +=======+=======+
+        | 'a'   | 1     |
+        +-------+-------+
+        | 'b'   | 2     |
+        +-------+-------+
+        | 'c'   | 2     |
+        +-------+-------+
+        | 'd'   | 7     |
+        +-------+-------+
+        | 'e'   | 42    |
+        +-------+-------+
+        | 'f'   | 12    |
+        +-------+-------+
+
+    Note that no attempt is made to check that the fields or row lengths are 
+    consistent with the existing data, the data rows from the table are simply
+    appended to the file. See also the :func:`cat` function.
     
     """
     
@@ -373,19 +511,22 @@ def appendpickle(table, filename, protocol=-1):
             pickle.dump(row, file, protocol)
     
 
-def tosqlite3(table, filename, tablename, create=False):
+def tosqlite3(table, filename, tablename, create=True):
     """
     TODO doc me
     
     """
     
+    # sanitise table and field names
+    tablename = '"%s"' % tablename.replace('"', '')
+    names = ['"%s"' % n.replace('"', '') for n in fieldnames(table)]
+
     conn = sqlite3.connect(filename)
-    flds = fields(table)
-    # N.B., breaking the rules about avoiding SQL injection!
     if create:
-        conn.execute('create table %s (%s)' % (tablename, ', '.join(flds)))
+        conn.execute('create table if not exists %s (%s)' % (tablename, ', '.join(names)))
     conn.execute('delete from %s' % tablename)
-    insertquery = 'insert into %s values (%s)' % (tablename, ', '.join(['?'] * len(flds)))
+    placeholders = ', '.join(['?'] * len(names))
+    insertquery = 'insert into %s values (%s)' % (tablename, placeholders)
     for row in data(table):
         conn.execute(insertquery, row)
     conn.commit()
@@ -397,14 +538,32 @@ def appendsqlite3(table, filename, tablename):
     
     """
 
+    # sanitise table name
+    tablename = '"%s"' % tablename.replace('"', '')
+
     conn = sqlite3.connect(filename)
-    flds = fields(table)
-    # N.B., breaking the rules about avoiding SQL injection!
-    insertquery = 'insert into %s values (%s)' % (tablename, ', '.join(['?'] * len(flds)))
+    flds = fields(table) # just need to know how many fields there are
+    placeholders = ', '.join(['?'] * len(flds))
+    insertquery = 'insert into %s values (%s)' % (tablename, placeholders)
     for row in data(table):
         conn.execute(insertquery, row)
     conn.commit()
     
+    
+    
+def todb(connection, tablename):
+    """
+    TODO doc me
+    
+    """
+    
+    
+def appenddb(connection, tablename):
+    """
+    TODO doc me
+    
+    """
+
     
     
     
