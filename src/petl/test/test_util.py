@@ -3,7 +3,7 @@ TODO doc me
 
 """
 
-from petl import fields, fieldnames, data, records, count, look, see, values, valuecounter, valuecounts, valueset,\
+from petl import fields, fieldnames, data, records, rowcount, look, see, values, valuecounter, valuecounts, valueset,\
                 unique, lookup, lookupone, recordlookup, recordlookupone, \
                 DuplicateKeyError, rowlengths, stats, typecounts, parsecounts, typeset
 
@@ -71,11 +71,11 @@ def test_records_shortrows():
     iassertequal(expect, actual)
     
     
-def test_count():
-    """Test the count function."""
+def test_rowcount():
+    """Test the rowcount function."""
     
     table = [['foo', 'bar'], ['a', 1], ['b']]
-    actual = count(table)
+    actual = rowcount(table)
     expect = 2
     assertequal(expect, actual)
     

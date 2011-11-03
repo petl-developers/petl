@@ -6,7 +6,7 @@ petl - Extract, Transform and Load (Tables of Data)
 :mod:`petl` is a tentative Python package for extracting, transforming
 and loading tables of data.
 
-- Documentation: http://petl.rtfd.org/
+- Documentation: http://packages.python.org/petl
 - Source Code: https://github.com/alimanfoo/petl
 - Download: http://pypi.python.org/pypi/petl
 - Mailing List: http://groups.google.com/group/python-etl 
@@ -168,7 +168,7 @@ Utility functions
 
 .. autofunction:: petl.records
 
-.. autofunction:: petl.count
+.. autofunction:: petl.rowcount
 
 .. autofunction:: petl.look
 

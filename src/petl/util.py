@@ -10,7 +10,7 @@ from operator import itemgetter
 import datetime
 
 
-__all__ = ['fields', 'fieldnames', 'data', 'records', 'count', 'look', 'see', 'values', 'valuecounter', 'valuecounts', \
+__all__ = ['fields', 'fieldnames', 'data', 'records', 'rowcount', 'look', 'see', 'values', 'valuecounter', 'valuecounts', \
            'valueset', 'unique', 'lookup', 'lookupone', 'recordlookup', 'recordlookupone', \
            'typecounter', 'typecounts', 'typeset', 'parsecounter', 'parsecounts', \
            'stats', 'rowlengths', 'DuplicateKeyError', 'datetimeparser', 'dateparser', 'timeparser', 'boolparser']
@@ -131,13 +131,13 @@ def asdict(flds, row, missing=None):
     return dict(items)
     
     
-def count(table):
+def rowcount(table):
     """
-    Count the number of rows in a table. E.g.::
+    Count the number of data rows in a table. E.g.::
     
-        >>> from petl import count
+        >>> from petl import rowcount
         >>> table = [['foo', 'bar'], ['a', 1], ['b', 2]]
-        >>> count(table)
+        >>> rowcount(table)
         2
     """
     
