@@ -9,7 +9,8 @@ import cPickle as pickle
 import sqlite3
 
 from petl import fromcsv, frompickle, fromsqlite3, adler32sum, crc32sum, fromdb, \
-                tocsv, topickle, appendcsv, appendpickle, tosqlite3, appendsqlite3 \
+                tocsv, topickle, appendcsv, appendpickle, tosqlite3, appendsqlite3, \
+                todb, appenddb 
                 
 
 
@@ -297,8 +298,8 @@ def test_fromdb():
     iassertequal(expect, actual) # verify can iterate twice
 
 
-def test_tocsv():
-    """Test the tocsv function."""
+def test_tocsv_appendcsv():
+    """Test the tocsv and appendcsv function."""
     
     # exercise function
     table = [['foo', 'bar'],
@@ -338,8 +339,8 @@ def test_tocsv():
     
         
     
-def test_topickle():
-    """Test the topickle function."""
+def test_topickle_appendpickle():
+    """Test the topickle and appendpickle functions."""
     
     # exercise function
     table = [['foo', 'bar'],
@@ -381,8 +382,8 @@ def test_topickle():
         iassertequal(expect, actual)
     
         
-def test_tosqlite3():
-    """Test the tosqlite3 function."""
+def test_tosqlite3_appendsqlite3():
+    """Test the tosqlite3 and appendsqlite3 functions."""
     
     # exercise function
     table = [['foo', 'bar'],
@@ -437,7 +438,52 @@ def test_tosqlite3_identifiers():
               ['b', 2],
               ['c', 2]]
     iassertequal(expect, actual)
+
+
+# TODO test uneven rows
     
+    
+def test_todb_appenddb():
+    """Test the todb and appenddb functions."""
+    
+    f = NamedTemporaryFile(delete=False)
+    conn = sqlite3.connect(f.name)
+    conn.execute('create table foobar (foo, bar)')
+    conn.commit()
+
+    # exercise function
+    table = [['foo', 'bar'],
+             ['a', 1],
+             ['b', 2],
+             ['c', 2]]
+    todb(table, conn, 'foobar')
+    
+    # check what it did
+    actual = conn.execute('select * from foobar')
+    expect = [['a', 1],
+              ['b', 2],
+              ['c', 2]]
+    iassertequal(expect, actual)
+    
+    # try appending
+    table2 = [['foo', 'bar'],
+              ['d', 7],
+              ['e', 9],
+              ['f', 1]]
+    appenddb(table2, conn, 'foobar') 
+
+    # check what it did
+    actual = conn.execute('select * from foobar')
+    expect = [['a', 1],
+              ['b', 2],
+              ['c', 2],
+              ['d', 7],
+              ['e', 9],
+              ['f', 1]]
+    iassertequal(expect, actual)
+    
+        
+
     
 
     

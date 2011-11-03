@@ -517,18 +517,15 @@ def tosqlite3(table, filename, tablename, create=True):
     
     """
     
-    # sanitise table and field names
-    tablename = '"%s"' % tablename.replace('"', '')
-    names = ['"%s"' % n.replace('"', '') for n in fieldnames(table)]
+    tablename = _quote(tablename)
+    names = [_quote(n) for n in fieldnames(table)]
 
     conn = sqlite3.connect(filename)
     if create:
         conn.execute('create table if not exists %s (%s)' % (tablename, ', '.join(names)))
     conn.execute('delete from %s' % tablename)
     placeholders = ', '.join(['?'] * len(names))
-    insertquery = 'insert into %s values (%s)' % (tablename, placeholders)
-    for row in data(table):
-        conn.execute(insertquery, row)
+    _insert(conn, tablename, placeholders, table)
     conn.commit()
     
     
@@ -539,31 +536,85 @@ def appendsqlite3(table, filename, tablename):
     """
 
     # sanitise table name
-    tablename = '"%s"' % tablename.replace('"', '')
+    tablename = _quote(tablename)
 
     conn = sqlite3.connect(filename)
     flds = fields(table) # just need to know how many fields there are
     placeholders = ', '.join(['?'] * len(flds))
-    insertquery = 'insert into %s values (%s)' % (tablename, placeholders)
-    for row in data(table):
-        conn.execute(insertquery, row)
+    _insert(conn, tablename, placeholders, table)
     conn.commit()
     
     
     
-def todb(connection, tablename):
-    """
-    TODO doc me
-    
-    """
-    
-    
-def appenddb(connection, tablename):
+def todb(table, connection, tablename, commit=True):
     """
     TODO doc me
     
     """
 
+    # sanitise table and field names
+    tablename = _quote(tablename)
+    names = [_quote(n) for n in fieldnames(table)]
+    placeholders = _placeholders(connection, names)
+
+    # truncate the table
+    c = connection.cursor()
+    c.execute('delete from %s' % tablename)
     
+    # insert some data
+    _insert(c, tablename, placeholders, table)
+
+    # finish up
+    if commit:
+        connection.commit()
+    c.close()
+    
+    
+def appenddb(table, connection, tablename, commit=True):
+    """
+    TODO doc me
+    
+    """
+
+    # sanitise table and field names
+    tablename = _quote(tablename)
+    names = [_quote(n) for n in fieldnames(table)]
+    placeholders = _placeholders(connection, names)
+    
+    # insert some data
+    c = connection.cursor()
+    _insert(c, tablename, placeholders, table)
+
+    # finish up
+    if commit:
+        connection.commit()
+    c.close()
+
+
+def _quote(s):
+    # crude way to sanitise table and field names
+    return '"%s"' % s.replace('"', '')
+
+
+def _insert(cursor, tablename, placeholders, table):    
+    insertquery = 'insert into %s values (%s)' % (tablename, placeholders)
+    for row in data(table):
+        cursor.execute(insertquery, row)
+
+    
+def _placeholders(connection, names):    
+    # discover the paramstyle
+    mod = __import__(connection.__class__.__module__)
+    if mod.paramstyle == 'qmark':
+        placeholders = ', '.join(['?'] * len(names))
+    elif mod.paramstyle in ('format', 'pyformat'):
+        # TODO test this!
+        placeholders = ', '.join(['%s'] * len(names))
+    elif mod.paramstyle == 'numeric':
+        # TODO test this!
+        placeholders = ', '.join([':' + str(i + 1) for i in range(len(names))])
+    else:
+        raise Exception('TODO')
+    return placeholders
     
     
