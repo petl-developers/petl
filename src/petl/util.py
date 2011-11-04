@@ -788,8 +788,8 @@ def asindices(flds, spec):
         if s in names:
             indices.append(names.index(s))
         # or spec could be a field index
-        elif isinstance(s, int) and s - 1 < len(names):
-            indices.append(s - 1) # index fields from 1, not 0
+        elif isinstance(s, int) and s < len(names):
+            indices.append(s) # index fields from 0
         else:
             raise FieldSelectionError(s)
     return indices

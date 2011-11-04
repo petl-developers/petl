@@ -234,9 +234,9 @@ Extracting (reading) tables from files and databases
 Transforming tables
 -------------------
 
-TODO
-
 .. autofunction:: petl.rename
+
+.. autofunction:: petl.cut
 
 Loading (writing) tables to files and databases
 -----------------------------------------------
