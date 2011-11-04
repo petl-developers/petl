@@ -201,4 +201,20 @@ def test_extend():
     iassertequal(expectation, result)
 
 
+# TODO rowslice
+# TODO head
+# TODO tail
+# TODO sort
+# TODO melt
+# TODO recast
+# TODO selectduplicates
+# TODO selectconflicts
+# TODO mergeduplicates
+# TODO stringcapture
+# TODO stringsplit
+# TODO complement
+# TODO diff
+# TODO select
+# TODO joins...
+
 
