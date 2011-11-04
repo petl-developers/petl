@@ -4,9 +4,9 @@ TODO doc me
 """
 
 
-from petl.util import close, asindices, rowgetter, FieldSelectionError
+from petl.util import close, asindices, rowgetter, FieldSelectionError, asdict
 
-__all__ = ['rename', 'cut', 'cat', 'convert', 'translate']
+__all__ = ['rename', 'cut', 'cat', 'convert', 'translate', 'extend']
 
 
 def rename(table, spec=dict()):
@@ -515,4 +515,85 @@ def itertranslate(source, field, dictionary):
             
     finally:
         close(it)
+        
+        
+def extend(table, field, value):
+    """
+    Extend a table with a fixed value or calculated field. E.g., using a fixed
+    value::
+    
+        >>> from petl import extend, look
+        >>> table1 = [['foo', 'bar'],
+        ...           ['M', 12],
+        ...           ['F', 34],
+        ...           ['-', 56]]
+        >>> table2 = extend(table1, 'baz', 42)
+        >>> look(table2)
+        +-------+-------+-------+
+        | 'foo' | 'bar' | 'baz' |
+        +=======+=======+=======+
+        | 'M'   | 12    | 42    |
+        +-------+-------+-------+
+        | 'F'   | 34    | 42    |
+        +-------+-------+-------+
+        | '-'   | 56    | 42    |
+        +-------+-------+-------+
+
+    E.g., calculating the value::
+    
+        >>> table1 = [['foo', 'bar'],
+        ...           ['M', 12],
+        ...           ['F', 34],
+        ...           ['-', 56]]
+        >>> table2 = extend(table1, 'baz', lambda rec: rec['bar'] * 2)
+        >>> look(table2)
+        +-------+-------+-------+
+        | 'foo' | 'bar' | 'baz' |
+        +=======+=======+=======+
+        | 'M'   | 12    | 24    |
+        +-------+-------+-------+
+        | 'F'   | 34    | 68    |
+        +-------+-------+-------+
+        | '-'   | 56    | 112   |
+        +-------+-------+-------+
+
+    When using a calculated value, the function should accept a record, i.e., a
+    dictionary representation of the row, with values indexed by field name.
+    
+    """
+    
+    return ExtendView(table, field, value)
+
+
+class ExtendView(object):
+    
+    def __init__(self, source, field, value):
+        self.source = source
+        self.field = field
+        self.value = value
+        
+    def __iter__(self):
+        return iterextend(self.source, self.field, self.value)
+
+
+def iterextend(source, field, value):
+    it = iter(source)
+    try:
+        flds = it.next()
+        out_flds = list(flds)
+        out_flds.append(field)
+        yield out_flds
+
+        for row in it:
+            out_row = list(row) # copy so we don't modify source
+            if callable(value):
+                rec = asdict(flds, row)
+                out_row.append(value(rec))
+            else:
+                out_row.append(value)
+            yield out_row
+    finally:
+        close(it)
+        
+    
         
