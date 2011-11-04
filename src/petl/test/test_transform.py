@@ -5,7 +5,7 @@ Tests for the petl.transform module.
 
 
 from petl.testfun import iassertequal
-from petl import rename, fieldnames, cut, cat, convert
+from petl import rename, fieldnames, cut, cat, convert, translate
 
 
 def test_rename():
@@ -161,3 +161,19 @@ def test_convert():
     iassertequal(expectation, conv) 
     
     
+def test_translate():
+    """Test the translate function."""
+    
+    table = [['foo', 'bar'],
+             ['M', 12],
+             ['F', 34],
+             ['-', 56]]
+    
+    trans = {'M': 'male', 'F': 'female'}
+    result = translate(table, 'foo', trans)
+    expectation = [['foo', 'bar'],
+                   ['male', 12],
+                   ['female', 34],
+                   ['-', 56]]
+    iassertequal(expectation, result)
+

@@ -4,9 +4,9 @@ TODO doc me
 """
 
 
-from petl.util import close, asindices, rowgetter
+from petl.util import close, asindices, rowgetter, FieldSelectionError
 
-__all__ = ['rename', 'cut', 'cat', 'convert']
+__all__ = ['rename', 'cut', 'cat', 'convert', 'translate']
 
 
 def rename(table, spec=dict()):
@@ -73,9 +73,7 @@ class RenameView(object):
         self.spec = spec
         
     def __iter__(self):
-        source = self.source
-        spec = self.spec
-        return iterrename(source, spec)
+        return iterrename(self.source, self.spec)
     
     def __setitem__(self, key, value):
         self.spec[key] = value
@@ -193,10 +191,7 @@ class CutView(object):
         self.missing = missing
         
     def __iter__(self):
-        source = self.source
-        spec = self.spec
-        missing = self.missing
-        return itercut(source, spec, missing)
+        return itercut(self.source, self.spec, self.missing)
         
         
 def itercut(source, spec, missing=None):
@@ -288,9 +283,7 @@ class CatView(object):
         self.missing = missing
 
     def __iter__(self):
-        sources = self.sources
-        missing = self.missing
-        return itercat(sources, missing)
+        return itercat(self.sources, self.missing)
     
 
 def itercat(sources, missing=None):
@@ -416,10 +409,7 @@ class ConvertView(object):
         self.errorvalue = errorvalue
         
     def __iter__(self):
-        source = self.source
-        converters = self.converters
-        errorvalue = self.errorvalue
-        return iterconvert(source, converters, errorvalue)
+        return iterconvert(self.source, self.converters, self.errorvalue)
     
     def __setitem__(self, key, value):
         self.converters[key] = value
@@ -465,5 +455,64 @@ def iterconvert(source, converters, errorvalue):
         close(it)
             
 
+def translate(table, field, dictionary=dict()):
+    """
+    Translate values in a given field using a dictionary. E.g.::
     
+        >>> from petl import translate, look
+        >>> table1 = [['gender', 'age'],
+        ...           ['M', 12],
+        ...           ['F', 34],
+        ...           ['-', 56]]
+        >>> table2 = translate(table1, 'gender', {'M': 'male', 'F': 'female'})
+        >>> look(table2)
+        +----------+-------+
+        | 'gender' | 'age' |
+        +==========+=======+
+        | 'male'   | 12    |
+        +----------+-------+
+        | 'female' | 34    |
+        +----------+-------+
+        | '-'      | 56    |
+        +----------+-------+
+
+    """
     
+    return TranslateView(table, field, dictionary)
+
+
+class TranslateView(object):
+    
+    def __init__(self, source, field, dictionary=dict()):
+        self.source = source
+        self.field = field
+        self.dictionary = dictionary
+        
+    def __iter__(self):
+        return itertranslate(self.source, self.field, self.dictionary)
+
+
+def itertranslate(source, field, dictionary):
+    it = iter(source)
+    try:
+        
+        flds = it.next()
+        yield flds 
+        
+        if field in flds:
+            index = flds.index(field)
+        elif isinstance(field, int) and field < len(flds):
+            index = field
+        else:
+            raise FieldSelectionError(field)
+        
+        for row in it:
+            row = list(row) # copy, so we don't modify the source
+            value = row[index]
+            if value in dictionary:
+                row[index] = dictionary[value]
+            yield row
+            
+    finally:
+        close(it)
+        
