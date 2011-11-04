@@ -5,12 +5,15 @@ TODO doc me
 
 from itertools import islice
 from collections import deque
+from operator import itemgetter
 
 
 from petl.util import close, asindices, rowgetter, FieldSelectionError, asdict
 
 __all__ = ['rename', 'cut', 'cat', 'convert', 'translate', 'extend', 'rowslice', \
-           'head', 'tail']
+           'head', 'tail', 'sort', 'melt', 'recast', 'duplicates', 'conflicts', \
+           'mergeduplicates', 'select', 'complement', 'diff', 'stringcapture', \
+           'stringsplit']
 
 
 def rename(table, spec=dict()):
@@ -782,4 +785,190 @@ def itertail(source, n):
     finally:
         close(it)
 
+
+def sort(table, key=None, reverse=False):
+    """
+    Sort the table. E.g.::
+    
+        >>> from petl import sort, look
+        >>> table1 = [['foo', 'bar'],
+        ...           ['C', 2],
+        ...           ['A', 9],
+        ...           ['A', 6],
+        ...           ['F', 1],
+        ...           ['D', 10]]
+        >>> table2 = sort(table1, 'foo')
+        >>> look(table2)
+        +-------+-------+
+        | 'foo' | 'bar' |
+        +=======+=======+
+        | 'A'   | 9     |
+        +-------+-------+
+        | 'A'   | 6     |
+        +-------+-------+
+        | 'C'   | 2     |
+        +-------+-------+
+        | 'D'   | 10    |
+        +-------+-------+
+        | 'F'   | 1     |
+        +-------+-------+
+
+    Sorting by compound key is supported, e.g.::
+    
+        >>> table3 = sort(table1, key=('foo', 'bar'))
+        >>> look(table3)
+        +-------+-------+
+        | 'foo' | 'bar' |
+        +=======+=======+
+        | 'A'   | 6     |
+        +-------+-------+
+        | 'A'   | 9     |
+        +-------+-------+
+        | 'C'   | 2     |
+        +-------+-------+
+        | 'D'   | 10    |
+        +-------+-------+
+        | 'F'   | 1     |
+        +-------+-------+
+
+    Field names or indices (from zero) can be used to specify the key.
+    
+    If no key is specified, the default is a lexical sort, e.g.::
+
+        >>> table4 = sort(table1)
+        >>> look(table4)
+        +-------+-------+
+        | 'foo' | 'bar' |
+        +=======+=======+
+        | 'A'   | 6     |
+        +-------+-------+
+        | 'A'   | 9     |
+        +-------+-------+
+        | 'C'   | 2     |
+        +-------+-------+
+        | 'D'   | 10    |
+        +-------+-------+
+        | 'F'   | 1     |
+        +-------+-------+
+        
+    TODO currently this sorts data in memory, need to add option to limit
+    memory usage and merge sort from chunks on disk
+
+    """
+    
+    return SortView(table, key, reverse)
+    
+    
+class SortView(object):
+    
+    def __init__(self, source, key=None, reverse=False):
+        self.source = source
+        self.key = key
+        self.reverse = reverse
+        
+    def __iter__(self):
+        return itersort(self.source, self.key, self.reverse)
+    
+
+def itersort(source, key, reverse):
+    it = iter(source)
+    try:
+        flds = it.next()
+        yield flds
+        
+        # TODO merge sort on large dataset!!!
+        rows = list(it)
+
+        if key is not None:
+
+            # convert field selection into field indices
+            indices = asindices(flds, key)
+             
+            # now use field indices to construct a getkey function
+            # N.B., this will probably raise an exception on short rows
+            getkey = itemgetter(*indices)
+
+            rows.sort(key=getkey, reverse=reverse)
+
+        else:
+            rows.sort(reverse=reverse)
+
+        for row in rows:
+            yield row
+        
+    finally:
+        close(it)
+    
+    
+def melt(table):
+    """
+    TODO doc me
+    
+    """
+    
+    
+def recast(table):
+    """
+    TODO doc me
+    
+    """
+    
+    
+def duplicates(table):
+    """
+    TODO doc me
+    
+    """
+    
+    
+def conflicts(table):
+    """
+    TODO doc me
+    
+    """
+    
+    
+def mergeduplicates(table):
+    """
+    TODO doc me
+    
+    """
+    
+    
+def select(table):
+    """
+    TODO doc me
+    
+    """
+    
+    
+def complement(table):
+    """
+    TODO doc me
+    
+    """
+    
+    
+def diff(table):
+    """
+    TODO doc me
+    
+    """
+    
+    
+def stringcapture(table):
+    """
+    TODO doc me
+    
+    """
+    
+    
+def stringsplit(table):
+    """
+    TODO doc me
+    
+    """
+    
+    
+    
         

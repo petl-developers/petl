@@ -211,6 +211,18 @@ Transforming tables
 .. autofunction:: petl.rowslice
 .. autofunction:: petl.head
 .. autofunction:: petl.tail
+.. autofunction:: petl.sort
+.. autofunction:: petl.melt
+.. autofunction:: petl.recast
+.. autofunction:: petl.duplicates
+.. autofunction:: petl.conflicts
+.. autofunction:: petl.mergeduplicates
+.. autofunction:: petl.select
+.. autofunction:: petl.complement
+.. autofunction:: petl.diff
+.. autofunction:: petl.stringcapture
+.. autofunction:: petl.stringsplit
+
 
 Loading (writing) tables to files and databases
 -----------------------------------------------

@@ -6,7 +6,9 @@ Tests for the petl.transform module.
 
 from petl.testfun import iassertequal
 from petl import rename, fieldnames, cut, cat, convert, translate, extend, \
-                rowslice, head, tail
+                rowslice, head, tail, sort, melt, recast, duplicates, conflicts, \
+                mergeduplicates, select, complement, diff, stringcapture, \
+                stringsplit
 
 
 def test_rename():
@@ -279,19 +281,137 @@ def test_tail():
     iassertequal(expect, table2)
     
     
-# TODO head
-# TODO tail
-# TODO sort
-# TODO melt
-# TODO recast
-# TODO selectduplicates
-# TODO selectconflicts
-# TODO mergeduplicates
-# TODO stringcapture
-# TODO stringsplit
-# TODO complement
-# TODO diff
-# TODO select
-# TODO joins...
+def test_sort_1():
+    
+    table = [['foo', 'bar'],
+            ['C', '2'],
+            ['A', '9'],
+            ['A', '6'],
+            ['F', '1'],
+            ['D', '10']]
+    
+    result = sort(table, 'foo')
+    expectation = [['foo', 'bar'],
+                   ['A', '9'],
+                   ['A', '6'],
+                   ['C', '2'],
+                   ['D', '10'],
+                   ['F', '1']]
+    iassertequal(expectation, result)
+    
+    
+def test_sort_2():
+    
+    table = [['foo', 'bar'],
+            ['C', '2'],
+            ['A', '9'],
+            ['A', '6'],
+            ['F', '1'],
+            ['D', '10']]
+    
+    result = sort(table, key=('foo', 'bar'))
+    expectation = [['foo', 'bar'],
+                   ['A', '6'],
+                   ['A', '9'],
+                   ['C', '2'],
+                   ['D', '10'],
+                   ['F', '1']]
+    iassertequal(expectation, result)
+    
+    result = sort(table) # default is lexical sort
+    expectation = [['foo', 'bar'],
+                   ['A', '6'],
+                   ['A', '9'],
+                   ['C', '2'],
+                   ['D', '10'],
+                   ['F', '1']]
+    iassertequal(expectation, result)
+    
+    
+def test_sort_3():
+    
+    table = [['foo', 'bar'],
+            ['C', '2'],
+            ['A', '9'],
+            ['A', '6'],
+            ['F', '1'],
+            ['D', '10']]
+    
+    result = sort(table, 'bar')
+    expectation = [['foo', 'bar'],
+                   ['F', '1'],
+                   ['D', '10'],
+                   ['C', '2'],
+                   ['A', '6'],
+                   ['A', '9']]
+    iassertequal(expectation, result)
+    
+    
+def test_sort_4():
+    
+    table = [['foo', 'bar'],
+            ['C', 2],
+            ['A', 9],
+            ['A', 6],
+            ['F', 1],
+            ['D', 10]]
+    
+    result = sort(table, 'bar')
+    expectation = [['foo', 'bar'],
+                   ['F', 1],
+                   ['C', 2],
+                   ['A', 6],
+                   ['A', 9],
+                   ['D', 10]]
+    iassertequal(expectation, result)
+    
+    
+def test_sort_5():
+    
+    table = [['foo', 'bar'],
+            [2.3, 2],
+            [1.2, 9],
+            [2.3, 6],
+            [3.2, 1],
+            [1.2, 10]]
+    
+    expectation = [['foo', 'bar'],
+                   [1.2, 9],
+                   [1.2, 10],
+                   [2.3, 2],
+                   [2.3, 6],
+                   [3.2, 1]]
+
+    # can use either field names or indices (from 1) to specify sort key
+    result = sort(table, key=('foo', 'bar'))
+    iassertequal(expectation, result)
+    result = sort(table, key=(0, 1))
+    iassertequal(expectation, result)
+    result = sort(table, key=('foo', 1))
+    iassertequal(expectation, result)
+    result = sort(table, key=(0, 'bar'))
+    iassertequal(expectation, result)
+    
+    
+def test_sort_6():
+    
+    table = [['foo', 'bar'],
+            [2.3, 2],
+            [1.2, 9],
+            [2.3, 6],
+            [3.2, 1],
+            [1.2, 10]]
+    
+    expectation = [['foo', 'bar'],
+                   [3.2, 1],
+                   [2.3, 6],
+                   [2.3, 2],
+                   [1.2, 10],
+                   [1.2, 9]]
+
+    result = sort(table, key=('foo', 'bar'), reverse=True)
+    iassertequal(expectation, result)
+    
+    
 
 
