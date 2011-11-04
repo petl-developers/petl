@@ -3,8 +3,8 @@ TODO doc me
 
 """
 
-from itertools import islice
-from collections import deque
+from itertools import islice, groupby
+from collections import deque, defaultdict
 from operator import itemgetter
 
 
@@ -815,7 +815,7 @@ def sort(table, key=None, reverse=False):
 
     Sorting by compound key is supported, e.g.::
     
-        >>> table3 = sort(table1, key=('foo', 'bar'))
+        >>> table3 = sort(table1, key=['foo', 'bar'])
         >>> look(table3)
         +-------+-------+
         | 'foo' | 'bar' |
@@ -900,20 +900,363 @@ def itersort(source, key, reverse):
         close(it)
     
     
-def melt(table):
+def melt(table, key=[], variables=[], variable_field='variable', value_field='value'):
     """
-    TODO doc me
+    Reshape a table, melting fields into data. E.g.::
+
+        >>> from petl import melt, look
+        >>> table1 = [['id', 'gender', 'age'],
+        ...           [1, 'F', 12],
+        ...           [2, 'M', 17],
+        ...           [3, 'M', 16]]
+        >>> table2 = melt(table1, 'id')
+        >>> look(table2)
+        +------+------------+---------+
+        | 'id' | 'variable' | 'value' |
+        +======+============+=========+
+        | 1    | 'gender'   | 'F'     |
+        +------+------------+---------+
+        | 1    | 'age'      | 12      |
+        +------+------------+---------+
+        | 2    | 'gender'   | 'M'     |
+        +------+------------+---------+
+        | 2    | 'age'      | 17      |
+        +------+------------+---------+
+        | 3    | 'gender'   | 'M'     |
+        +------+------------+---------+
+        | 3    | 'age'      | 16      |
+        +------+------------+---------+
+
+    Compound keys are supported, e.g.::
     
+        >>> table3 = [['id', 'time', 'height', 'weight'],
+        ...           [1, 11, 66.4, 12.2],
+        ...           [2, 16, 53.2, 17.3],
+        ...           [3, 12, 34.5, 9.4]]
+        >>> table4 = melt(table3, key=['id', 'time'])
+        >>> look(table4)
+        +------+--------+------------+---------+
+        | 'id' | 'time' | 'variable' | 'value' |
+        +======+========+============+=========+
+        | 1    | 11     | 'height'   | 66.4    |
+        +------+--------+------------+---------+
+        | 1    | 11     | 'weight'   | 12.2    |
+        +------+--------+------------+---------+
+        | 2    | 16     | 'height'   | 53.2    |
+        +------+--------+------------+---------+
+        | 2    | 16     | 'weight'   | 17.3    |
+        +------+--------+------------+---------+
+        | 3    | 12     | 'height'   | 34.5    |
+        +------+--------+------------+---------+
+        | 3    | 12     | 'weight'   | 9.4     |
+        +------+--------+------------+---------+
+
+    A subset of variable fields can be selected, e.g.::
+    
+        >>> table5 = melt(table3, key=['id', 'time'], variables=['height'])    
+        >>> look(table5)
+        +------+--------+------------+---------+
+        | 'id' | 'time' | 'variable' | 'value' |
+        +======+========+============+=========+
+        | 1    | 11     | 'height'   | 66.4    |
+        +------+--------+------------+---------+
+        | 2    | 16     | 'height'   | 53.2    |
+        +------+--------+------------+---------+
+        | 3    | 12     | 'height'   | 34.5    |
+        +------+--------+------------+---------+
+
     """
     
+    return MeltView(table, key, variables, variable_field, value_field)
     
-def recast(table):
+    
+class MeltView(object):
+    
+    def __init__(self, source, key=[], variables=[], 
+                 variable_field='variable', value_field='value'):
+        self.source = source
+        self.key = key
+        self.variables = variables
+        self.variable_field = variable_field
+        self.value_field = value_field
+        
+    def __iter__(self):
+        return itermelt(self.source, self.key, self.variables, 
+                        self.variable_field, self.value_field)
+    
+    
+def itermelt(source, key, variables, variable_field, value_field):
+    it = iter(source)
+    try:
+        
+        # normalise some stuff
+        flds = it.next()
+        if isinstance(key, basestring):
+            key = (key,) # normalise to a tuple
+        if isinstance(variables, basestring):
+            # shouldn't expect this, but ... ?
+            variables = (variables,) # normalise to a tuple
+        if not key:
+            # assume key is flds not in variables
+            key = [f for f in flds if f not in variables]
+        if not variables:
+            # assume variables are flds not in key
+            variables = [f for f in flds if f not in key]
+        
+        # determine the output flds
+        out_flds = list(key)
+        out_flds.append(variable_field)
+        out_flds.append(value_field)
+        yield out_flds
+        
+        key_indices = [flds.index(k) for k in key]
+        getkey = rowgetter(*key_indices)
+        variables_indices = [flds.index(v) for v in variables]
+        
+        # construct the output data
+        for row in it:
+            k = getkey(row)
+            for v, i in zip(variables, variables_indices):
+                o = list(k) # populate with key values initially
+                o.append(v) # add variable
+                o.append(row[i]) # add value
+                yield o
+                
+    finally:
+        close(it)
+
+
+
+def recast(table, key=[], variable_field='variable', value_field='value', 
+           sample_size=1000, reduce=dict(), missing=None):
     """
-    TODO doc me
+    Reshape molten data. E.g.::
     
+        >>> from petl import recast, look
+        >>> table1 = [['id', 'variable', 'value'],
+        ...           [3, 'age', 16],
+        ...           [1, 'gender', 'F'],
+        ...           [2, 'gender', 'M'],
+        ...           [2, 'age', 17],
+        ...           [1, 'age', 12],
+        ...           [3, 'gender', 'M']]
+        >>> table2 = recast(table1)
+        >>> look(table2)
+        +------+-------+----------+
+        | 'id' | 'age' | 'gender' |
+        +======+=======+==========+
+        | 1    | 12    | 'F'      |
+        +------+-------+----------+
+        | 2    | 17    | 'M'      |
+        +------+-------+----------+
+        | 3    | 16    | 'M'      |
+        +------+-------+----------+
+
+    If variable and value fields are different from the defaults, e.g.::
+    
+        >>> table3 = [['id', 'vars', 'vals'],
+        ...           [3, 'age', 16],
+        ...           [1, 'gender', 'F'],
+        ...           [2, 'gender', 'M'],
+        ...           [2, 'age', 17],
+        ...           [1, 'age', 12],
+        ...           [3, 'gender', 'M']]
+        >>> table4 = recast(table3, variable_field='vars', value_field='vals')
+        >>> look(table4)
+        +------+-------+----------+
+        | 'id' | 'age' | 'gender' |
+        +======+=======+==========+
+        | 1    | 12    | 'F'      |
+        +------+-------+----------+
+        | 2    | 17    | 'M'      |
+        +------+-------+----------+
+        | 3    | 16    | 'M'      |
+        +------+-------+----------+
+
+    If there are multiple values for each key/variable pair, and no reduce
+    function is provided, then all values will be listed. E.g.::
+    
+        >>> table6 = [['id', 'time', 'variable', 'value'],
+        ...           [1, 11, 'weight', 66.4],
+        ...           [1, 14, 'weight', 55.2],
+        ...           [2, 12, 'weight', 53.2],
+        ...           [2, 16, 'weight', 43.3],
+        ...           [3, 12, 'weight', 34.5],
+        ...           [3, 17, 'weight', 49.4]]
+        >>> table7 = recast(table6, key='id')
+        >>> look(table7)
+        +------+--------------+
+        | 'id' | 'weight'     |
+        +======+==============+
+        | 1    | [66.4, 55.2] |
+        +------+--------------+
+        | 2    | [53.2, 43.3] |
+        +------+--------------+
+        | 3    | [34.5, 49.4] |
+        +------+--------------+
+
+    Multiple values can be reduced via an aggregation function, e.g.::
+
+        >>> def mean(values):
+        ...     return float(sum(values)) / len(values)
+        ... 
+        >>> table8 = recast(table6, key='id', reduce={'weight': mean})
+        >>> look(table8)    
+        +------+--------------------+
+        | 'id' | 'weight'           |
+        +======+====================+
+        | 1    | 60.800000000000004 |
+        +------+--------------------+
+        | 2    | 48.25              |
+        +------+--------------------+
+        | 3    | 41.95              |
+        +------+--------------------+
+
+    Missing values are padded with whatever is provided via the `missing` 
+    keyword argument (`None` by default), e.g.::
+
+        >>> table9 = [['id', 'variable', 'value'],
+        ...           [1, 'gender', 'F'],
+        ...           [2, 'age', 17],
+        ...           [1, 'age', 12],
+        ...           [3, 'gender', 'M']]
+        >>> table10 = recast(table9, key='id')
+        >>> look(table10)
+        +------+-------+----------+
+        | 'id' | 'age' | 'gender' |
+        +======+=======+==========+
+        | 1    | 12    | 'F'      |
+        +------+-------+----------+
+        | 2    | 17    | None     |
+        +------+-------+----------+
+        | 3    | None  | 'M'      |
+        +------+-------+----------+
+
     """
     
+    return RecastView(table, key, variable_field, value_field, sample_size, reduce, missing)
     
+
+class RecastView(object):
+    
+    def __init__(self, source, key=[], variable_field='variable', 
+                 value_field='value', sample_size=1000, reduce=dict(), 
+                 missing=None):
+        self.source = source
+        self.key = key
+        self.variable_field = variable_field
+        self.value_field = value_field
+        self.sample_size = sample_size
+        self.reduce = reduce
+        self.missing = missing
+        
+    def __iter__(self):
+        return iterrecast(self.source, self.key, self.variable_field, 
+                          self.value_field, self.sample_size, self.reduce,
+                          self.missing)
+
+
+def iterrecast(source, key=[], variable_field='variable', value_field='value', 
+               sample_size=1000, reduce=dict(), missing=None):        
+    #
+    # TODO implementing this by making two passes through the data is a bit
+    # ugly, and could be costly if there are several upstream transformations
+    # that would need to be re-executed each pass - better to make one pass,
+    # caching the rows sampled to discover variables to be recast as fields?
+    #
+    
+    try:
+        
+        it = iter(source)
+        fields = it.next()
+        
+        # normalise some stuff
+        key_fields = key
+        variable_fields = variable_field # N.B., could be more than one
+        if isinstance(key_fields, basestring):
+            key_fields = (key_fields,)
+        if isinstance(variable_fields, basestring):
+            variable_fields = (variable_fields,)
+        if not key_fields:
+            # assume key_fields is fields not in variables
+            key_fields = [f for f in fields if f not in variable_fields and f != value_field]
+        if not variable_fields:
+            # assume variables are fields not in key_fields
+            variable_fields = [f for f in fields if f not in key_fields and f != value_field]
+        
+        # sanity checks
+        assert value_field in fields, 'invalid value field: %s' % value_field
+        assert value_field not in key_fields, 'value field cannot be key_fields'
+        assert value_field not in variable_fields, 'value field cannot be variable field'
+        for f in key_fields:
+            assert f in fields, 'invalid key_fields field: %s' % f
+        for f in variable_fields:
+            assert f in fields, 'invalid variable field: %s' % f
+
+        # we'll need these later
+        value_index = fields.index(value_field)
+        key_indices = [fields.index(f) for f in key_fields]
+        variable_indices = [fields.index(f) for f in variable_fields]
+        
+        # determine the actual variable names to be cast as fields
+        if isinstance(variable_fields, dict):
+            # user supplied dictionary
+            variables = variable_fields
+        else:
+            variables = defaultdict(set)
+            # sample the data to discover variables to be cast as fields
+            for row in islice(it, 0, sample_size):
+                for i, f in zip(variable_indices, variable_fields):
+                    variables[f].add(row[i])
+            for f in variables:
+                variables[f] = sorted(variables[f]) # turn from sets to sorted lists
+        
+        close(it) # finished the first pass
+        
+        # determine the output fields
+        out_fields = list(key_fields)
+        for f in variable_fields:
+            out_fields.extend(variables[f])
+        yield out_fields
+        
+        # output data
+        
+        source = sort(source, key=key_fields)
+        it = iter(source)
+        it = islice(it, 1, None) # skip header row
+        getkey = itemgetter(*key_indices)
+        
+        # process sorted data in groups
+        groups = groupby(it, key=getkey)
+        for key_value, group in groups:
+            group = list(group) # may need to iterate over the group more than once
+            if len(key_fields) > 1:
+                out_row = list(key_value)
+            else:
+                out_row = [key_value]
+            for f, i in zip(variable_fields, variable_indices):
+                for variable in variables[f]:
+                    # collect all values for the current variable
+                    values = [r[value_index] for r in group if r[i] == variable]
+                    if len(values) == 0:
+                        value = missing
+                    elif len(values) == 1:
+                        value = values[0]
+                    else:
+                        if variable in reduce:
+                            redu = reduce[variable]
+                        else:
+                            redu = list # list all values
+                        value = redu(values)
+                    out_row.append(value)
+            yield out_row
+                    
+    finally:
+        close(it)
+
+    
+        
+            
 def duplicates(table):
     """
     TODO doc me

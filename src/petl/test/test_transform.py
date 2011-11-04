@@ -413,5 +413,177 @@ def test_sort_6():
     iassertequal(expectation, result)
     
     
+def test_melt_1():
+    
+    table = [['id', 'gender', 'age'],
+             [1, 'F', 12],
+             [2, 'M', 17],
+             [3, 'M', 16]]
+    
+    expectation = [['id', 'variable', 'value'],
+                   [1, 'gender', 'F'],
+                   [1, 'age', 12],
+                   [2, 'gender', 'M'],
+                   [2, 'age', 17],
+                   [3, 'gender', 'M'],
+                   [3, 'age', 16]]
+    
+    result = melt(table, key='id')
+    iassertequal(expectation, result)
+
+    result = melt(table, key='id', variable_field='variable', value_field='value')
+    iassertequal(expectation, result)
+
+
+def test_melt_2():
+    
+    table = [['id', 'time', 'height', 'weight'],
+             [1, 11, 66.4, 12.2],
+             [2, 16, 53.2, 17.3],
+             [3, 12, 34.5, 9.4]]
+    
+    expectation = [['id', 'time', 'variable', 'value'],
+                   [1, 11, 'height', 66.4],
+                   [1, 11, 'weight', 12.2],
+                   [2, 16, 'height', 53.2],
+                   [2, 16, 'weight', 17.3],
+                   [3, 12, 'height', 34.5],
+                   [3, 12, 'weight', 9.4]]
+    result = melt(table, key=('id', 'time'))
+    iassertequal(expectation, result)
+
+    expectation = [['id', 'time', 'variable', 'value'],
+                   [1, 11, 'height', 66.4],
+                   [2, 16, 'height', 53.2],
+                   [3, 12, 'height', 34.5]]
+    result = melt(table, key=('id', 'time'), variables='height')
+    iassertequal(expectation, result)
+    
+
+def test_recast_1():
+    
+    table = [['id', 'variable', 'value'],
+             [3, 'age', 16],
+             [1, 'gender', 'F'],
+             [2, 'gender', 'M'],
+             [2, 'age', 17],
+             [1, 'age', 12],
+             [3, 'gender', 'M']]
+    
+    expectation = [['id', 'age', 'gender'],
+                   [1, 12, 'F'],
+                   [2, 17, 'M'],
+                   [3, 16, 'M']]
+    
+    result = recast(table) # by default lift 'variable' field, hold everything else
+    iassertequal(expectation, result)
+
+    result = recast(table, variable_field='variable')
+    iassertequal(expectation, result)
+
+    result = recast(table, key='id', variable_field='variable')
+    iassertequal(expectation, result)
+
+    result = recast(table, key='id', variable_field='variable', value_field='value')
+    iassertequal(expectation, result)
+
+
+def test_recast_2():
+    
+    table = [['id', 'variable', 'value'],
+             [3, 'age', 16],
+             [1, 'gender', 'F'],
+             [2, 'gender', 'M'],
+             [2, 'age', 17],
+             [1, 'age', 12],
+             [3, 'gender', 'M']]
+    
+    expectation = [['id', 'gender'],
+                   [1, 'F'],
+                   [2, 'M'],
+                   [3, 'M']]
+    
+    # can manually pick which variables you want to recast as fields
+    # TODO this is awkward
+    result = recast(table, key='id', variable_field={'variable':['gender']})
+    iassertequal(expectation, result)
+
+
+def test_recast_3():
+    
+    table = [['id', 'time', 'variable', 'value'],
+             [1, 11, 'weight', 66.4],
+             [1, 14, 'weight', 55.2],
+             [2, 12, 'weight', 53.2],
+             [2, 16, 'weight', 43.3],
+             [3, 12, 'weight', 34.5],
+             [3, 17, 'weight', 49.4]]
+    
+    expectation = [['id', 'time', 'weight'],
+                   [1, 11, 66.4],
+                   [1, 14, 55.2],
+                   [2, 12, 53.2],
+                   [2, 16, 43.3],
+                   [3, 12, 34.5],
+                   [3, 17, 49.4]]
+    result = recast(table)
+    iassertequal(expectation, result)
+
+    # in the absence of an aggregation function, list all values
+    expectation = [['id', 'weight'],
+                   [1, [66.4, 55.2]],
+                   [2, [53.2, 43.3]],
+                   [3, [34.5, 49.4]]]
+    result = recast(table, key='id')
+    iassertequal(expectation, result)
+
+    # max aggregation
+    expectation = [['id', 'weight'],
+                   [1, 66.4],
+                   [2, 53.2],
+                   [3, 49.4]]
+    result = recast(table, key='id', reduce={'weight': max})
+    iassertequal(expectation, result)
+
+    # min aggregation
+    expectation = [['id', 'weight'],
+                   [1, 55.2],
+                   [2, 43.3],
+                   [3, 34.5]]
+    result = recast(table, key='id', reduce={'weight': min})
+    iassertequal(expectation, result)
+
+    # mean aggregation
+    expectation = [['id', 'weight'],
+                   [1, 60.80],
+                   [2, 48.25],
+                   [3, 41.95]]
+    def mean(values):
+        return float(sum(values)) / len(values)
+    def meanf(precision):
+        def f(values):
+            v = mean(values)
+            v = round(v, precision)
+            return v
+        return f
+    result = recast(table, key='id', reduce={'weight': meanf(precision=2)})
+    iassertequal(expectation, result)
+
+    
+def test_recast4():
+    
+    # deal with missing data
+    table = [['id', 'variable', 'value'],
+             [1, 'gender', 'F'],
+             [2, 'age', 17],
+             [1, 'age', 12],
+             [3, 'gender', 'M']]
+    result = recast(table, key='id')
+    expect = [['id', 'age', 'gender'],
+              [1, 12, 'F'],
+              [2, 17, None],
+              [3, None, 'M']]
+    iassertequal(expect, result)
+
 
 
