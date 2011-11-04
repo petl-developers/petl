@@ -108,8 +108,8 @@ def fromcsv(filename, checksumfun=None, **kwargs):
         ...
         >>> # now demonstrate the use of petl.fromcsv
         ... from petl import fromcsv, look
-        >>> table = fromcsv('test.csv', delimiter='\\t')
-        >>> look(table)
+        >>> testcsv = fromcsv('test.csv', delimiter='\\t')
+        >>> look(testcsv)
         +-------+-------+
         | 'foo' | 'bar' |
         +=======+=======+
@@ -171,8 +171,8 @@ def frompickle(filename, checksumfun=None):
         ...
         >>> # now demonstrate the use of petl.frompickle
         ... from petl import frompickle, look
-        >>> table = frompickle('test.dat')
-        >>> look(table)
+        >>> testdat = frompickle('test.dat')
+        >>> look(testdat)
         +-------+-------+
         | 'foo' | 'bar' |
         +=======+=======+
@@ -240,8 +240,8 @@ def fromsqlite3(filename, query, checksumfun=None):
         >>> connection.commit()
         >>> c.close()
         >>> # demonstrate the petl.fromsqlite3 function
-        ... table = fromsqlite3('test.db', 'select * from foobar')
-        >>> look(table)    
+        ... foobar = fromsqlite3('test.db', 'select * from foobar')
+        >>> look(foobar)    
         +-------+-------+
         | 'foo' | 'bar' |
         +=======+=======+
@@ -375,7 +375,8 @@ def appendcsv(table, filename, **kwargs):
 
         >>> # look at an existing CSV file
         ... from petl import look, fromcsv
-        >>> look(fromcsv('test.csv', delimiter='\\t'))
+        >>> testcsv = fromcsv('test.csv', delimiter='\\t')
+        >>> look(testcsv)
         +-------+-------+
         | 'foo' | 'bar' |
         +=======+=======+
@@ -394,7 +395,7 @@ def appendcsv(table, filename, **kwargs):
         ...          ['f', 12]]
         >>> appendcsv(table, 'test.csv', delimiter='\\t')
         >>> # look what it did
-        ... look(fromcsv('test.csv', delimiter='\\t'))
+        ... look(testcsv)
         +-------+-------+
         | 'foo' | 'bar' |
         +=======+=======+
@@ -464,7 +465,8 @@ def appendpickle(table, filename, protocol=-1):
 
         >>> # inspect an existing pickle file
         ... from petl import look, frompickle
-        >>> look(frompickle('test.dat'))
+        >>> testdat = frompickle('test.dat')
+        >>> look(testdat)
         +-------+-------+
         | 'foo' | 'bar' |
         +=======+=======+
@@ -483,7 +485,7 @@ def appendpickle(table, filename, protocol=-1):
         ...          ['f', 12]]
         >>> appendpickle(table, 'test.dat')
         >>> # look what it did
-        ... look(frompickle('test.dat'))
+        ... look(testdat)
         +-------+-------+
         | 'foo' | 'bar' |
         +=======+=======+
@@ -513,8 +515,31 @@ def appendpickle(table, filename, protocol=-1):
 
 def tosqlite3(table, filename, tablename, create=True):
     """
-    TODO doc me
-    
+    Load data into a table in an :mod:`sqlite3` database. Note that if
+    the database table exists, it will be truncated, i.e., all
+    existing rows will be deleted prior to inserting the new
+    data. E.g.::
+
+        >>> table = [['foo', 'bar'],
+        ...          ['a', 1],
+        ...          ['b', 2],
+        ...          ['c', 2]]
+        >>> from petl import tosqlite3
+        >>> # by default, if the table does not already exist, it will be created
+        ... tosqlite3(table, 'test.db', 'foobar')
+        >>> # look what it did
+        ... from petl import look, fromsqlite3
+        >>> look(fromsqlite3('test.db', 'select * from foobar'))
+        +-------+-------+
+        | 'foo' | 'bar' |
+        +=======+=======+
+        | u'a'  | 1     |
+        +-------+-------+
+        | u'b'  | 2     |
+        +-------+-------+
+        | u'c'  | 2     |
+        +-------+-------+
+
     """
     
     tablename = _quote(tablename)
@@ -531,8 +556,36 @@ def tosqlite3(table, filename, tablename, create=True):
     
 def appendsqlite3(table, filename, tablename):
     """
-    TODO doc me
+    Load data into an existing table in an :mod:`sqlite3`
+    database. Note that the database table will be appended, i.e., the
+    new data will be inserted into the table, and any existing rows
+    will remain. E.g.::
     
+        >>> moredata = [['foo', 'bar'],
+        ...             ['d', 7],
+        ...             ['e', 9],
+        ...             ['f', 1]]
+        >>> from petl import appendsqlite3
+        >>> appendsqlite3(moredata, 'test.db', 'foobar') 
+        >>> # look what it did
+        ... from petl import look, fromsqlite3
+        >>> look(fromsqlite3('test.db', 'select * from foobar'))
+        +-------+-------+
+        | 'foo' | 'bar' |
+        +=======+=======+
+        | u'a'  | 1     |
+        +-------+-------+
+        | u'b'  | 2     |
+        +-------+-------+
+        | u'c'  | 2     |
+        +-------+-------+
+        | u'd'  | 7     |
+        +-------+-------+
+        | u'e'  | 9     |
+        +-------+-------+
+        | u'f'  | 1     |
+        +-------+-------+
+
     """
 
     # sanitise table name
@@ -548,8 +601,46 @@ def appendsqlite3(table, filename, tablename):
     
 def todb(table, connection, tablename, commit=True):
     """
-    TODO doc me
+    Load data into an existing database table via a DB-API 2.0
+    connection. Note that the database table will be truncated, i.e.,
+    all existing rows will be deleted prior to inserting the new data.
     
+    E.g., using :mod:`sqlite3`::
+    
+        >>> import sqlite3
+        >>> connection = sqlite3.connect('test.db')
+        >>> table = [['foo', 'bar'],
+        ...          ['a', 1],
+        ...          ['b', 2],
+        ...          ['c', 2]]
+        >>> from petl import todb
+        >>> # assuming table "foobar" already exists in the database
+        ... todb(table, connection, 'foobar')    
+        
+    E.g., using :mod:`psycopg2`::
+
+        >>> import psycopg2 
+        >>> connection = psycopg2.connect("dbname=test user=postgres")
+        >>> table = [['foo', 'bar'],
+        ...          ['a', 1],
+        ...          ['b', 2],
+        ...          ['c', 2]]
+        >>> from petl import todb
+        >>> # assuming table "foobar" already exists in the database
+        ... todb(table, connection, 'foobar')    
+        
+    E.g., using :mod:`MySQLdb`::
+
+        >>> import MySQLdb
+        >>> connection = MySQLdb.connect(passwd="moonpie", db="thangs")
+        >>> table = [['foo', 'bar'],
+        ...          ['a', 1],
+        ...          ['b', 2],
+        ...          ['c', 2]]
+        >>> from petl import todb
+        >>> # assuming table "foobar" already exists in the database
+        ... todb(table, connection, 'foobar')    
+        
     """
 
     # sanitise table and field names
@@ -572,8 +663,47 @@ def todb(table, connection, tablename, commit=True):
     
 def appenddb(table, connection, tablename, commit=True):
     """
-    TODO doc me
+    Load data into an existing database table via a DB-API 2.0
+    connection. Note that the database table will be appended, i.e.,
+    the new data will be inserted into the table, and any existing
+    rows will remain.
     
+    E.g., using :mod:`sqlite3`::
+    
+        >>> import sqlite3
+        >>> connection = sqlite3.connect('test.db')
+        >>> table = [['foo', 'bar'],
+        ...          ['a', 1],
+        ...          ['b', 2],
+        ...          ['c', 2]]
+        >>> from petl import appenddb
+        >>> # assuming table "foobar" already exists in the database
+        ... appenddb(table, connection, 'foobar')    
+        
+    E.g., using :mod:`psycopg2`::
+
+        >>> import psycopg2 
+        >>> connection = psycopg2.connect("dbname=test user=postgres")
+        >>> table = [['foo', 'bar'],
+        ...          ['a', 1],
+        ...          ['b', 2],
+        ...          ['c', 2]]
+        >>> from petl import appenddb
+        >>> # assuming table "foobar" already exists in the database
+        ... appenddb(table, connection, 'foobar')    
+        
+    E.g., using :mod:`MySQLdb`::
+
+        >>> import MySQLdb
+        >>> connection = MySQLdb.connect(passwd="moonpie", db="thangs")
+        >>> table = [['foo', 'bar'],
+        ...          ['a', 1],
+        ...          ['b', 2],
+        ...          ['c', 2]]
+        >>> from petl import appenddb
+        >>> # assuming table "foobar" already exists in the database
+        ... appenddb(table, connection, 'foobar')    
+        
     """
 
     # sanitise table and field names
