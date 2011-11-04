@@ -5,9 +5,9 @@ Tests for the petl.transform module.
 
 
 from petl.testfun import iassertequal
-from petl import rename, fieldnames, cut
-
-
+from petl import rename, fieldnames, cut, cat
+ 
+ 
 def test_rename():
     """Test the rename function."""
 
@@ -72,3 +72,56 @@ def test_cut():
                    [None, 'E']]
     iassertequal(expectation, cut4)
     
+
+def test_cat():
+    """Test the cat function."""
+    
+    table1 = [['foo', 'bar'],
+              [1, 'A'],
+              [2, 'B']]
+
+    table2 = [['bar', 'baz'],
+              ['C', True],
+              ['D', False]]
+    
+    cat1 = cat(table1, table2, missing=None)
+    expectation = [['foo', 'bar', 'baz'],
+                   [1, 'A', None],
+                   [2, 'B', None],
+                   [None, 'C', True],
+                   [None, 'D', False]]
+    iassertequal(expectation, cat1)
+
+    # how does cat cope with uneven rows?
+    
+    table3 = [['foo', 'bar', 'baz'],
+              ['A', 1, 2],
+              ['B', '2', '3.4'],
+              [u'B', u'3', u'7.8', True],
+              ['D', 'xyz', 9.0],
+              ['E', None]]
+
+    cat3 = cat(table3, missing=None)
+    expectation = [['foo', 'bar', 'baz'],
+                   ['A', 1, 2],
+                   ['B', '2', '3.4'],
+                   [u'B', u'3', u'7.8'],
+                   ['D', 'xyz', 9.0],
+                   ['E', None, None]]
+    iassertequal(expectation, cat3)
+    
+    # cat more than two tables?
+    cat4 = cat(table1, table2, table3)
+    expectation = [['foo', 'bar', 'baz'],
+                   [1, 'A', None],
+                   [2, 'B', None],
+                   [None, 'C', True],
+                   [None, 'D', False],
+                   ['A', 1, 2],
+                   ['B', '2', '3.4'],
+                   [u'B', u'3', u'7.8'],
+                   ['D', 'xyz', 9.0],
+                   ['E', None, None]]
+    iassertequal(expectation, cat4)
+    
+    # TODO test cachetag

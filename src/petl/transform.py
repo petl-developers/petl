@@ -6,7 +6,7 @@ TODO doc me
 
 from petl.util import close, asindices, rowgetter
 
-__all__ = ['rename', 'cut']
+__all__ = ['rename', 'cut', 'cat']
 
 
 def rename(table, spec=dict()):
@@ -96,7 +96,7 @@ def iterrename(source, spec):
         close(it)
         
         
-def cut(table, *args):
+def cut(table, *args, **kwargs):
     """
     Choose and/or re-order columns. E.g.::
 
@@ -123,7 +123,8 @@ def cut(table, *args):
         | 'E'   | None  |
         +-------+-------+
 
-    Note that any short rows will be padded with `None` values.
+    Note that any short rows will be padded with `None` values (or whatever is
+    provided via the `missing` keyword argument).
     
     Fields can also be specified by index, starting from zero. E.g.::
 
@@ -181,7 +182,7 @@ def cut(table, *args):
 
     """
     
-    return CutView(table, args)
+    return CutView(table, args, **kwargs)
 
 
 class CutView(object):
@@ -224,4 +225,110 @@ def itercut(source, spec, missing=None):
     finally:
         close(it)
     
+    
+def cat(*tables, **kwargs):
+    """
+    Concatenate data from two or more tables. Note that the tables do not need
+    to share exactly the same fields, any missing fields will be padded with
+    `None` (or whatever is provided via the `missing` keyword argument). E.g.::
+
+        >>> from petl import look, cat    
+        >>> table1 = [['foo', 'bar'],
+        ...           [1, 'A'],
+        ...           [2, 'B']]
+        >>> table2 = [['bar', 'baz'],
+        ...           ['C', True],
+        ...           ['D', False]]
+        >>> table3 = cat(table1, table2)
+        >>> look(table3)
+        +-------+-------+-------+
+        | 'foo' | 'bar' | 'baz' |
+        +=======+=======+=======+
+        | 1     | 'A'   | None  |
+        +-------+-------+-------+
+        | 2     | 'B'   | None  |
+        +-------+-------+-------+
+        | None  | 'C'   | True  |
+        +-------+-------+-------+
+        | None  | 'D'   | False |
+        +-------+-------+-------+
+
+    This function can also be used to square up a table with uneven rows, e.g.::
+
+        >>> table = [['foo', 'bar', 'baz'],
+        ...          ['A', 1, 2],
+        ...          ['B', '2', '3.4'],
+        ...          [u'B', u'3', u'7.8', True],
+        ...          ['D', 'xyz', 9.0],
+        ...          ['E', None]]
+        >>> look(cat(table))
+        +-------+-------+--------+
+        | 'foo' | 'bar' | 'baz'  |
+        +=======+=======+========+
+        | 'A'   | 1     | 2      |
+        +-------+-------+--------+
+        | 'B'   | '2'   | '3.4'  |
+        +-------+-------+--------+
+        | u'B'  | u'3'  | u'7.8' |
+        +-------+-------+--------+
+        | 'D'   | 'xyz' | 9.0    |
+        +-------+-------+--------+
+        | 'E'   | None  | None   |
+        +-------+-------+--------+
+
+    """
+    
+    return CatView(tables, **kwargs)
+    
+    
+class CatView(object):
+    
+    def __init__(self, sources, missing=None):
+        self.sources = sources
+        self.missing = missing
+
+    def __iter__(self):
+        sources = self.sources
+        missing = self.missing
+        return itercat(sources, missing)
+    
+
+def itercat(sources, missing=None):
+    its = [iter(t) for t in sources]
+    try:
+        
+        # determine output flds by gathering all flds found in the sources
+        source_flds_lists = [it.next() for it in its]
+        out_flds = list()
+        for flds in source_flds_lists:
+            for f in flds:
+                if f not in out_flds:
+                    # add any new flds as we find them
+                    out_flds.append(f)
+        yield out_flds
+
+        # output data rows
+        for source_index, it in enumerate(its):
+            flds = source_flds_lists[source_index]
+            
+            # let's define a function which will, for any row and field name,
+            # return the corresponding value, or fill in any missing values
+            def get_value(row, f):
+                try:
+                    value = row[flds.index(f)]
+                except ValueError: # source does not have f in flds
+                    value = missing
+                except IndexError: # row is short
+                    value = missing
+                return value
+            
+            # now construct and yield the data rows
+            for row in it:
+                out_row = [get_value(row, f) for f in out_flds]
+                yield out_row
+
+    finally:
+        # make sure all iterators are closed
+        for it in its:
+            close(it)
     

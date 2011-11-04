@@ -238,6 +238,8 @@ Transforming tables
 
 .. autofunction:: petl.cut
 
+.. autofunction:: petl.cat
+
 Loading (writing) tables to files and databases
 -----------------------------------------------
 
