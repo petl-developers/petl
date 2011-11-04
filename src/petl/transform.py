@@ -6,7 +6,7 @@ TODO doc me
 
 from petl.util import close, asindices, rowgetter
 
-__all__ = ['rename', 'cut', 'cat']
+__all__ = ['rename', 'cut', 'cat', 'convert']
 
 
 def rename(table, spec=dict()):
@@ -331,4 +331,139 @@ def itercat(sources, missing=None):
         # make sure all iterators are closed
         for it in its:
             close(it)
+    
+    
+def convert(table, converters=dict(), errorvalue=None):
+    """
+    Transform values in invidual fields. E.g.::
+
+        >>> from petl import convert, look    
+        >>> table1 = [['foo', 'bar'],
+        ...           ['1', '2.4'],
+        ...           ['3', '7.9'],
+        ...           ['7', '2'],
+        ...           ['8.3', '42.0'],
+        ...           ['2', 'abc']]
+        >>> table2 = convert(table1, {'foo': int, 'bar': float})
+        >>> look(table2)
+        +-------+-------+
+        | 'foo' | 'bar' |
+        +=======+=======+
+        | 1     | 2.4   |
+        +-------+-------+
+        | 3     | 7.9   |
+        +-------+-------+
+        | 7     | 2.0   |
+        +-------+-------+
+        | None  | 42.0  |
+        +-------+-------+
+        | 2     | None  |
+        +-------+-------+
+
+    Converter functions can also be specified by using the suffix notation on the
+    returned table object. E.g.::
+
+        >>> table1 = [['foo', 'bar', 'baz'],
+        ...           ['1', '2.4', 14],
+        ...           ['3', '7.9', 47],
+        ...           ['7', '2', 11],
+        ...           ['8.3', '42.0', 33],
+        ...           ['2', 'abc', 'xyz']]
+        >>> table2 = convert(table1)
+        >>> look(table2)
+        +-------+--------+-------+
+        | 'foo' | 'bar'  | 'baz' |
+        +=======+========+=======+
+        | '1'   | '2.4'  | 14    |
+        +-------+--------+-------+
+        | '3'   | '7.9'  | 47    |
+        +-------+--------+-------+
+        | '7'   | '2'    | 11    |
+        +-------+--------+-------+
+        | '8.3' | '42.0' | 33    |
+        +-------+--------+-------+
+        | '2'   | 'abc'  | 'xyz' |
+        +-------+--------+-------+
+        
+        >>> table2['foo'] = int
+        >>> table2['bar'] = float
+        >>> table2['baz'] = lambda v: v**2
+        >>> look(table2)
+        +-------+-------+-------+
+        | 'foo' | 'bar' | 'baz' |
+        +=======+=======+=======+
+        | 1     | 2.4   | 196   |
+        +-------+-------+-------+
+        | 3     | 7.9   | 2209  |
+        +-------+-------+-------+
+        | 7     | 2.0   | 121   |
+        +-------+-------+-------+
+        | None  | 42.0  | 1089  |
+        +-------+-------+-------+
+        | 2     | None  | None  |
+        +-------+-------+-------+
+
+    """
+    
+    return ConvertView(table, converters, errorvalue)
+
+
+class ConvertView(object):
+    
+    def __init__(self, source, converters=dict(), errorvalue=None):
+        self.source = source
+        self.converters = converters
+        self.errorvalue = errorvalue
+        
+    def __iter__(self):
+        source = self.source
+        converters = self.converters
+        errorvalue = self.errorvalue
+        return iterconvert(source, converters, errorvalue)
+    
+    def __setitem__(self, key, value):
+        self.converters[key] = value
+        
+    def __getitem__(self, key):
+        return self.converters[key]
+    
+    
+def iterconvert(source, converters, errorvalue):
+    it = iter(source)
+    try:
+        
+        # grab the fields in the source table
+        flds = it.next()
+        yield flds # these are not modified
+        
+        # define a function to transform a value
+        def transform_value(i, v):
+            try:
+                f = flds[i]
+            except IndexError:
+                # row is long, just return value as-is
+                return v
+            else:
+                try:
+                    c = converters[f]
+                except KeyError:
+                    # no converter defined on this field, return value as-is
+                    return v
+                else:
+                    try:
+                        return c(v)
+                    except ValueError:
+                        return errorvalue
+                    except TypeError:
+                        return errorvalue
+
+        # construct the data rows
+        for row in it:
+            yield [transform_value(i, v) for i, v in enumerate(row)]
+
+    finally:
+        close(it)
+            
+
+    
     

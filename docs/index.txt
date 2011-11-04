@@ -161,102 +161,62 @@ Utility functions
 -----------------
 
 .. autofunction:: petl.fields
-
 .. autofunction:: petl.data
-
 .. autofunction:: petl.fieldnames
-
 .. autofunction:: petl.records
-
 .. autofunction:: petl.rowcount
-
 .. autofunction:: petl.look
-
 .. autofunction:: petl.see
-
 .. autofunction:: petl.values
-
 .. autofunction:: petl.valueset
-
 .. autofunction:: petl.valuecounter
-
 .. autofunction:: petl.valuecounts
-
 .. autofunction:: petl.unique
-
 .. autofunction:: petl.typecounter
-
 .. autofunction:: petl.typecounts
-
 .. autofunction:: petl.typeset
-
 .. autofunction:: petl.parsecounter
-
 .. autofunction:: petl.parsecounts
-
 .. autofunction:: petl.dateparser
-
 .. autofunction:: petl.timeparser
-
 .. autofunction:: petl.datetimeparser
-
 .. autofunction:: petl.boolparser
-
 .. autofunction:: petl.stats
-
 .. autofunction:: petl.rowlengths
-
 .. autofunction:: petl.lookup
-
 .. autofunction:: petl.lookupone
-
 .. autofunction:: petl.recordlookup
-
 .. autofunction:: petl.recordlookupone
-
 .. autofunction:: petl.statsum
-
 .. autofunction:: petl.adler32sum
-
 .. autofunction:: petl.crc32sum
 
 Extracting (reading) tables from files and databases
 ----------------------------------------------------
 
 .. autofunction:: petl.fromcsv
-
 .. autofunction:: petl.frompickle
-
 .. autofunction:: petl.fromsqlite3
-
 .. autofunction:: petl.fromdb
 
 Transforming tables
 -------------------
 
 .. autofunction:: petl.rename
-
 .. autofunction:: petl.cut
-
 .. autofunction:: petl.cat
+.. autofunction:: petl.convert
 
 Loading (writing) tables to files and databases
 -----------------------------------------------
 
 .. autofunction:: petl.tocsv
-
 .. autofunction:: petl.appendcsv
-
 .. autofunction:: petl.topickle
-
 .. autofunction:: petl.appendpickle
-
 .. autofunction:: petl.tosqlite3
-
 .. autofunction:: petl.appendsqlite3
-
 .. autofunction:: petl.todb
-
 .. autofunction:: petl.appenddb
 
 
@@ -267,7 +227,7 @@ Further Reading
    :maxdepth: 2
 
    related_work
-   todo
+
 
 Indices and tables
 ------------------

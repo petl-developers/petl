@@ -5,9 +5,9 @@ Tests for the petl.transform module.
 
 
 from petl.testfun import iassertequal
-from petl import rename, fieldnames, cut, cat
- 
- 
+from petl import rename, fieldnames, cut, cat, convert
+
+
 def test_rename():
     """Test the rename function."""
 
@@ -125,3 +125,39 @@ def test_cat():
     iassertequal(expectation, cat4)
     
     # TODO test cachetag
+
+
+def test_convert():
+    
+    table = [['foo', 'bar', 'baz'],
+             ['A', 1, 2],
+             ['B', '2', '3.4'],
+             [u'B', u'3', u'7.8', True],
+             ['D', 'xyz', 9.0],
+             ['E', None]]
+    
+    # test the style where the converters functions are passed in as a dictionary
+    converters = {'foo': str, 'bar': int, 'baz': float}
+    conv = convert(table, converters, errorvalue='error')
+    expectation = [['foo', 'bar', 'baz'],
+                   ['A', 1, 2.0],
+                   ['B', 2, 3.4],
+                   ['B', 3, 7.8, True], # N.B., long rows are preserved
+                   ['D', 'error', 9.0],
+                   ['E', 'error']] # N.B., short rows are preserved
+    iassertequal(expectation, conv) 
+    
+    # test the style where the converters functions are added one at a time
+    conv = convert(table, errorvalue='err')
+    conv['foo'] = str
+    conv['bar'] = int
+    conv['baz'] = float 
+    expectation = [['foo', 'bar', 'baz'],
+                   ['A', 1, 2.0],
+                   ['B', 2, 3.4],
+                   ['B', 3, 7.8, True],
+                   ['D', 'err', 9.0],
+                   ['E', 'err']]
+    iassertequal(expectation, conv) 
+    
+    
