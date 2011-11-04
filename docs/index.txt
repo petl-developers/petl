@@ -208,6 +208,9 @@ Transforming tables
 .. autofunction:: petl.convert
 .. autofunction:: petl.translate
 .. autofunction:: petl.extend
+.. autofunction:: petl.rowslice
+.. autofunction:: petl.head
+.. autofunction:: petl.tail
 
 Loading (writing) tables to files and databases
 -----------------------------------------------

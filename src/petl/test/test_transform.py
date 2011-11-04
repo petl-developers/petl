@@ -5,7 +5,8 @@ Tests for the petl.transform module.
 
 
 from petl.testfun import iassertequal
-from petl import rename, fieldnames, cut, cat, convert, translate, extend
+from petl import rename, fieldnames, cut, cat, convert, translate, extend, \
+                rowslice, head, tail
 
 
 def test_rename():
@@ -201,7 +202,83 @@ def test_extend():
     iassertequal(expectation, result)
 
 
-# TODO rowslice
+def test_rowslice():
+    """Test the rowslice function."""
+    
+    table = [['foo', 'bar', 'baz'],
+             ['A', 1, 2],
+             ['B', '2', '3.4'],
+             [u'B', u'3', u'7.8', True],
+             ['D', 'xyz', 9.0],
+             ['E', None]]
+
+    result = rowslice(table, 0, 2)
+    expectation = [['foo', 'bar', 'baz'],
+                   ['A', 1, 2],
+                   ['B', '2', '3.4']]
+    iassertequal(expectation, result)
+
+    result = rowslice(table, 1, 2)
+    expectation = [['foo', 'bar', 'baz'],
+                   ['B', '2', '3.4']]
+    iassertequal(expectation, result)
+
+    result = rowslice(table, 1, 5, 2)
+    expectation = [['foo', 'bar', 'baz'],
+                   ['B', '2', '3.4'],
+                   ['D', 'xyz', 9.0]]
+    iassertequal(expectation, result)
+
+
+
+def test_head():
+    """Test the head function."""
+    
+    table1 = [['foo', 'bar'],
+              ['a', 1],
+              ['b', 2],
+              ['c', 5],
+              ['d', 7],
+              ['f', 42],
+              ['f', 3],
+              ['h', 90],
+              ['k', 12],
+              ['l', 77],
+              ['q', 2]]
+    
+    table2 = head(table1, 4)
+    expect = [['foo', 'bar'],
+              ['a', 1],
+              ['b', 2],
+              ['c', 5],
+              ['d', 7]]
+    iassertequal(expect, table2)
+
+
+def test_tail():
+    """Test the tail function."""
+    
+    table1 = [['foo', 'bar'],
+              ['a', 1],
+              ['b', 2],
+              ['c', 5],
+              ['d', 7],
+              ['f', 42],
+              ['f', 3],
+              ['h', 90],
+              ['k', 12],
+              ['l', 77],
+              ['q', 2]]
+    
+    table2 = tail(table1, 4)
+    expect = [['foo', 'bar'],
+              ['h', 90],
+              ['k', 12],
+              ['l', 77],
+              ['q', 2]]
+    iassertequal(expect, table2)
+    
+    
 # TODO head
 # TODO tail
 # TODO sort

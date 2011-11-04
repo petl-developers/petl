@@ -3,10 +3,14 @@ TODO doc me
 
 """
 
+from itertools import islice
+from collections import deque
+
 
 from petl.util import close, asindices, rowgetter, FieldSelectionError, asdict
 
-__all__ = ['rename', 'cut', 'cat', 'convert', 'translate', 'extend']
+__all__ = ['rename', 'cut', 'cat', 'convert', 'translate', 'extend', 'rowslice', \
+           'head', 'tail']
 
 
 def rename(table, spec=dict()):
@@ -84,6 +88,7 @@ class RenameView(object):
     
 def iterrename(source, spec):
     it = iter(source)
+    spec = spec.copy() # make sure nobody can change this midstream
     try:
         sourceflds = it.next()
         newflds = [spec[f] if f in spec else f for f in sourceflds]
@@ -196,6 +201,7 @@ class CutView(object):
         
 def itercut(source, spec, missing=None):
     it = iter(source)
+    spec = tuple(spec) # make sure no-one can change midstream
     try:
         
         # convert field selection into field indices
@@ -420,6 +426,7 @@ class ConvertView(object):
     
 def iterconvert(source, converters, errorvalue):
     it = iter(source)
+    converters = converters.copy()
     try:
         
         # grab the fields in the source table
@@ -494,6 +501,7 @@ class TranslateView(object):
 
 def itertranslate(source, field, dictionary):
     it = iter(source)
+    dictionary = dictionary.copy()
     try:
         
         flds = it.next()
@@ -596,4 +604,182 @@ def iterextend(source, field, value):
         close(it)
         
     
+def rowslice(table, start=0, stop=None, step=1):
+    """
+    Choose a subset of data rows. E.g.::
+    
+        >>> from petl import rowslice, look
+        >>> table1 = [['foo', 'bar'],
+        ...           ['a', 1],
+        ...           ['b', 2],
+        ...           ['c', 5],
+        ...           ['d', 7],
+        ...           ['f', 42]]
+        >>> table2 = rowslice(table1, 0, 2)
+        >>> look(table2)
+        +-------+-------+
+        | 'foo' | 'bar' |
+        +=======+=======+
+        | 'a'   | 1     |
+        +-------+-------+
+        | 'b'   | 2     |
+        +-------+-------+
+        
+        >>> table3 = rowslice(table1, 1, 4)
+        >>> look(table3)
+        +-------+-------+
+        | 'foo' | 'bar' |
+        +=======+=======+
+        | 'b'   | 2     |
+        +-------+-------+
+        | 'c'   | 5     |
+        +-------+-------+
+        | 'd'   | 7     |
+        +-------+-------+
+        
+        >>> table4 = rowslice(table1, 0, 5, 2)
+        >>> look(table4)
+        +-------+-------+
+        | 'foo' | 'bar' |
+        +=======+=======+
+        | 'a'   | 1     |
+        +-------+-------+
+        | 'c'   | 5     |
+        +-------+-------+
+        | 'f'   | 42    |
+        +-------+-------+
+        
+        >>> table5 = rowslice(table1, step=2)
+        >>> look(table5)
+        +-------+-------+
+        | 'foo' | 'bar' |
+        +=======+=======+
+        | 'a'   | 1     |
+        +-------+-------+
+        | 'c'   | 5     |
+        +-------+-------+
+        | 'f'   | 42    |
+        +-------+-------+
+
+    """
+    
+    return RowSliceView(table, start, stop, step)
+
+
+class RowSliceView(object):
+    
+    def __init__(self, source, start=0, stop=None, step=1):
+        self.source = source
+        self.start = start
+        self.stop = stop
+        self.step = step
+        
+    def __iter__(self):
+        return iterrowslice(self.source, self.start, self.stop, self.step)
+
+
+def iterrowslice(source, start, stop, step):    
+    it = iter(source)
+    try:
+        yield it.next() # fields
+        for row in islice(it, start, stop, step):
+            yield row
+    finally:
+        close(it)
+
+
+def head(table, n):
+    """
+    Choose the first n rows. E.g.::
+
+        >>> from petl import head, look    
+        >>> table1 = [['foo', 'bar'],
+        ...           ['a', 1],
+        ...           ['b', 2],
+        ...           ['c', 5],
+        ...           ['d', 7],
+        ...           ['f', 42],
+        ...           ['f', 3],
+        ...           ['h', 90],
+        ...           ['k', 12],
+        ...           ['l', 77],
+        ...           ['q', 2]]
+        >>> table2 = head(table1, 4)
+        >>> look(table2)    
+        +-------+-------+
+        | 'foo' | 'bar' |
+        +=======+=======+
+        | 'a'   | 1     |
+        +-------+-------+
+        | 'b'   | 2     |
+        +-------+-------+
+        | 'c'   | 5     |
+        +-------+-------+
+        | 'd'   | 7     |
+        +-------+-------+
+    
+    """
+    
+    return rowslice(table, stop=n)
+
+        
+def tail(table, n):
+    """
+    Choose the last n rows. E.g.::
+
+        >>> from petl import tail, look    
+        >>> table1 = [['foo', 'bar'],
+        ...           ['a', 1],
+        ...           ['b', 2],
+        ...           ['c', 5],
+        ...           ['d', 7],
+        ...           ['f', 42],
+        ...           ['f', 3],
+        ...           ['h', 90],
+        ...           ['k', 12],
+        ...           ['l', 77],
+        ...           ['q', 2]]
+        >>> table2 = tail(table1, 4)
+        >>> look(table2)    
+        +-------+-------+
+        | 'foo' | 'bar' |
+        +=======+=======+
+        | 'h'   | 90    |
+        +-------+-------+
+        | 'k'   | 12    |
+        +-------+-------+
+        | 'l'   | 77    |
+        +-------+-------+
+        | 'q'   | 2     |
+        +-------+-------+
+
+    """
+
+    return TailView(table, n)
+
+
+class TailView(object):
+    
+    def __init__(self, source, n):
+        self.source = source
+        self.n = n
+        
+    def __iter__(self):
+        return itertail(self.source, self.n)
+
+
+def itertail(source, n):
+    it = iter(source)
+    try:
+        yield it.next() # fields
+        cache = deque()
+        for row in it:
+            cache.append(row)
+            if len(cache) > n:
+                cache.popleft()
+        for row in cache:
+            yield row
+    finally:
+        close(it)
+
         
