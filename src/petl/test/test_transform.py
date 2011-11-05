@@ -613,3 +613,121 @@ def test_duplicates():
                    ['B', '2', 42]]
     iassertequal(expectation, result)
     
+
+def test_conflicts():
+    
+    table = [['foo', 'bar', 'baz'],
+             ['A', 1, 2],
+             ['B', '2', None],
+             ['D', 'xyz', 9.4],
+             ['B', None, u'7.8', True],
+             ['E', None],
+             ['D', 'xyz', 12.3],
+             ['A', 2, None]]
+
+    result = conflicts(table, 'foo', missing=None)
+    expectation = [['foo', 'bar', 'baz'],
+                   ['A', 1, 2],
+                   ['A', 2, None],
+                   ['D', 'xyz', 9.4],
+                   ['D', 'xyz', 12.3]]
+    iassertequal(expectation, result)
+    
+    
+def test_mergeduplicates():
+
+    table = [['foo', 'bar', 'baz'],
+             ['A', 1, 2],
+             ['B', '2', None],
+             ['D', 'xyz', 9.4],
+             ['B', None, u'7.8', True],
+             ['E', None],
+             ['D', 'xyz', 12.3],
+             ['A', 2, None]]
+
+    # value overrides missing; last value wins
+    result = mergeduplicates(table, 'foo', missing=None)
+    expectation = [['foo', 'bar', 'baz'],
+                   ['A', 2, 2],
+                   ['B', '2', u'7.8', True],
+                   ['D', 'xyz', 12.3],
+                   ['E', None]]
+    iassertequal(expectation, result)
+    
+    
+def test_complement_1():
+
+    table1 = [['foo', 'bar'],
+              ['A', 1],
+              ['B', 2],
+              ['C', 7]]
+    
+    table2 = [['foo', 'bar'],
+              ['A', 9],
+              ['B', 2],
+              ['B', 3]]
+    
+    expectation = [['foo', 'bar'],
+                   ['A', 1],
+                   ['C', 7]]
+    
+    result = complement(table1, table2)
+    iassertequal(expectation, result)
+    
+    
+def test_complement_2():
+
+    tablea = [['foo', 'bar', 'baz'],
+              ['A', 1, True],
+              ['C', 7, False],
+              ['B', 2, False],
+              ['C', 9, True]]
+    
+    tableb = [['x', 'y', 'z'],
+              ['B', 2, False],
+              ['A', 9, False],
+              ['B', 3, True],
+              ['C', 9, True]]
+    
+    aminusb = [['foo', 'bar', 'baz'],
+               ['A', 1, True],
+               ['C', 7, False]]
+    
+    result = complement(tablea, tableb)
+    iassertequal(aminusb, result)
+    
+    bminusa = [['x', 'y', 'z'],
+               ['A', 9, False],
+               ['B', 3, True]]
+    
+    result = complement(tableb, tablea)
+    iassertequal(bminusa, result)
+    
+
+def test_diff():
+
+    tablea = [['foo', 'bar', 'baz'],
+              ['A', 1, True],
+              ['C', 7, False],
+              ['B', 2, False],
+              ['C', 9, True]]
+    
+    tableb = [['x', 'y', 'z'],
+              ['B', 2, False],
+              ['A', 9, False],
+              ['B', 3, True],
+              ['C', 9, True]]
+    
+    aminusb = [['foo', 'bar', 'baz'],
+               ['A', 1, True],
+               ['C', 7, False]]
+    
+    bminusa = [['x', 'y', 'z'],
+               ['A', 9, False],
+               ['B', 3, True]]
+    
+    added, subtracted = diff(tablea, tableb)
+    iassertequal(bminusa, added)
+    iassertequal(aminusb, subtracted)
+    
+

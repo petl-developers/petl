@@ -217,11 +217,11 @@ Transforming tables
 .. autofunction:: petl.duplicates
 .. autofunction:: petl.conflicts
 .. autofunction:: petl.mergeduplicates
-.. autofunction:: petl.select
 .. autofunction:: petl.complement
 .. autofunction:: petl.diff
 .. autofunction:: petl.stringcapture
 .. autofunction:: petl.stringsplit
+.. autofunction:: petl.select
 
 
 Loading (writing) tables to files and databases

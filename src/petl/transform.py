@@ -1358,39 +1358,328 @@ def iterduplicates(source, key):
     
     
     
-def conflicts(table):
+def conflicts(table, key, missing=None, presorted=False):
     """
-    TODO doc me
+    Select rows with the same key value but differing in some other field. E.g.::
+
+        >>> from petl import conflicts, look    
+        >>> table1 = [['foo', 'bar', 'baz'],
+        ...           ['A', 1, 2.7],
+        ...           ['B', 2, None],
+        ...           ['D', 3, 9.4],
+        ...           ['B', None, 7.8],
+        ...           ['E', None],
+        ...           ['D', 3, 12.3],
+        ...           ['A', 2, None]]
+        >>> table2 = conflicts(table1, 'foo')
+        >>> look(table2)
+        +-------+-------+-------+
+        | 'foo' | 'bar' | 'baz' |
+        +=======+=======+=======+
+        | 'A'   | 1     | 2.7   |
+        +-------+-------+-------+
+        | 'A'   | 2     | None  |
+        +-------+-------+-------+
+        | 'D'   | 3     | 9.4   |
+        +-------+-------+-------+
+        | 'D'   | 3     | 12.3  |
+        +-------+-------+-------+
+
+    Missing values are not considered conflicts. By default, `None` is treated
+    as the missing value, this can be changed via the `missing` keyword 
+    argument.
     
     """
     
+    return ConflictsView(table, key, missing, presorted)
+
+
+class ConflictsView(object):
     
-def mergeduplicates(table):
+    def __init__(self, source, key, missing=None, presorted=False):
+        if presorted:
+            self.source = source
+        else:
+            self.source = sort(source, key)
+        self.key = key
+        self.missing = missing
+        
+        
+    def __iter__(self):
+        return iterconflicts(self.source, self.key, self.missing)
+    
+    
+def iterconflicts(source, key, missing):
+    it = iter(source)
+    try:
+        flds = it.next()
+        yield flds
+
+        # convert field selection into field indices
+        indices = asindices(flds, key)
+                        
+        # now use field indices to construct a getkey function
+        # N.B., this may raise an exception on short rows, depending on
+        # the field selection
+        getkey = itemgetter(*indices)
+        
+        previous = None
+        previous_yielded = False
+        
+        for row in it:
+            if previous is None:
+                previous = row
+            else:
+                kprev = getkey(previous)
+                kcurr = getkey(row)
+                if kprev == kcurr:
+                    # is there a conflict?
+                    conflict = False
+                    for x, y in zip(previous, row):
+                        if missing not in (x, y) and x != y:
+                            conflict = True
+                            break
+                    if conflict:
+                        if not previous_yielded:
+                            yield previous
+                            previous_yielded = True
+                        yield row
+                else:
+                    # reset
+                    previous_yielded = False
+                previous = row
+        
+    finally:
+        close(it)
+
+
+def mergeduplicates(table, key, missing=None, presorted=False):
     """
-    TODO doc me
+    Merge rows with duplicate values under a given key. E.g.::
+    
+        >>> from petl import mergeduplicates, look    
+        >>> table1 = [['foo', 'bar', 'baz'],
+        ...           ['A', 1, 2.7],
+        ...           ['B', 2, None],
+        ...           ['D', 3, 9.4],
+        ...           ['B', None, 7.8],
+        ...           ['E', None],
+        ...           ['D', 3, 12.3],
+        ...           ['A', 2, None]]
+        >>> table2 = mergeduplicates(table1, 'foo')
+        >>> look(table2)
+        +-------+-------+-------+
+        | 'foo' | 'bar' | 'baz' |
+        +=======+=======+=======+
+        | 'A'   | 2     | 2.7   |
+        +-------+-------+-------+
+        | 'B'   | 2     | 7.8   |
+        +-------+-------+-------+
+        | 'D'   | 3     | 12.3  |
+        +-------+-------+-------+
+        | 'E'   | None  |       |
+        +-------+-------+-------+
+
+    Any conflicts are resolved by selecting the later value. Missing values are 
+    not considered conflicts, and are overridden by non-missing values. 
     
     """
     
+    return MergeDuplicatesView(table, key, missing, presorted)
+
+
+class MergeDuplicatesView(object):
     
-def select(table):
+    def __init__(self, source, key, missing=None, presorted=False):
+        if presorted:
+            self.source = source
+        else:
+            self.source = sort(source, key)
+        self.key = key
+        self.missing = missing
+
+    def __iter__(self):
+        return itermergeduplicates(self.source, self.key, self.missing)
+    
+    
+def itermergeduplicates(source, key, missing):
+    it = iter(source)
+
+    try:
+        flds = it.next()
+        yield flds
+
+        # convert field selection into field indices
+        indices = asindices(flds, key)
+        
+        # now use field indices to construct a getkey function
+        # N.B., this may raise an exception on short rows, depending on
+        # the field selection
+        getkey = itemgetter(*indices)
+        
+        previous = None
+        
+        for row in it:
+            if previous is None:
+                previous = row
+            else:
+                kprev = getkey(previous)
+                kcurr = getkey(row)
+                if kprev == kcurr:
+                    merge = list()
+                    for i, v in enumerate(row):
+                        try:
+                            if v is not missing:
+                                # last wins
+                                merge.append(v)
+                            else:
+                                merge.append(previous[i])
+                        except IndexError: # previous row is short
+                            merge.append(v)
+                    previous = merge
+                else:
+                    yield previous
+                    previous = row
+        # return the last one
+        yield previous
+        
+    finally:
+        close(it)
+
+
+def complement(a, b, presorted=False):
     """
-    TODO doc me
+    Return rows in `a` that are not in `b`. E.g.::
     
+        >>> from petl import complement, look
+        >>> a = [['foo', 'bar', 'baz'],
+        ...      ['A', 1, True],
+        ...      ['C', 7, False],
+        ...      ['B', 2, False],
+        ...      ['C', 9, True]]
+        >>> b = [['x', 'y', 'z'],
+        ...      ['B', 2, False],
+        ...      ['A', 9, False],
+        ...      ['B', 3, True],
+        ...      ['C', 9, True]]
+        >>> aminusb = complement(a, b)
+        >>> look(aminusb)
+        +-------+-------+-------+
+        | 'foo' | 'bar' | 'baz' |
+        +=======+=======+=======+
+        | 'A'   | 1     | True  |
+        +-------+-------+-------+
+        | 'C'   | 7     | False |
+        +-------+-------+-------+
+        
+        >>> bminusa = complement(b, a)
+        >>> look(bminusa)
+        +-----+-----+-------+
+        | 'x' | 'y' | 'z'   |
+        +=====+=====+=======+
+        | 'A' | 9   | False |
+        +-----+-----+-------+
+        | 'B' | 3   | True  |
+        +-----+-----+-------+
+
     """
     
+    return ComplementView(a, b, presorted)
+
+
+class ComplementView(object):
     
-def complement(table):
+    def __init__(self, a, b, presorted=False):
+        if presorted:
+            self.a = a
+            self.b = b
+        else:
+            self.a = sort(a)
+            self.b = sort(b)
+            
+    def __iter__(self):
+        return itercomplement(self.a, self.b)
+
+
+def itercomplement(a, b):
+    ita = iter(a) 
+    itb = iter(b)
+    try:
+        aflds = ita.next()
+        itb.next() # ignore b fields
+        yield aflds
+        
+        a = ita.next()
+        b = itb.next()
+        # we want the elements in a that are not in b
+        while True:
+            if b is None or a < b:
+                yield a
+                try:
+                    a = ita.next()
+                except StopIteration:
+                    break
+            elif a == b:
+                try:
+                    a = ita.next()
+                except StopIteration:
+                    break
+            else:
+                try:
+                    b = itb.next()
+                except StopIteration:
+                    b = None
+    finally:
+        close(ita)
+        close(itb)
+        
+    
+def diff(a, b, presorted=False):
     """
-    TODO doc me
+    Find the difference between two tables. Returns a pair of tables, e.g.::
     
+        >>> from petl import diff, look
+        >>> a = [['foo', 'bar', 'baz'],
+        ...      ['A', 1, True],
+        ...      ['C', 7, False],
+        ...      ['B', 2, False],
+        ...      ['C', 9, True]]
+        >>> b = [['x', 'y', 'z'],
+        ...      ['B', 2, False],
+        ...      ['A', 9, False],
+        ...      ['B', 3, True],
+        ...      ['C', 9, True]]
+        >>> added, subtracted = diff(a, b)
+        >>> # rows in b not in a
+        ... look(added)
+        +-----+-----+-------+
+        | 'x' | 'y' | 'z'   |
+        +=====+=====+=======+
+        | 'A' | 9   | False |
+        +-----+-----+-------+
+        | 'B' | 3   | True  |
+        +-----+-----+-------+
+        
+        >>> # rows in a not in b
+        ... look(subtracted)
+        +-------+-------+-------+
+        | 'foo' | 'bar' | 'baz' |
+        +=======+=======+=======+
+        | 'A'   | 1     | True  |
+        +-------+-------+-------+
+        | 'C'   | 7     | False |
+        +-------+-------+-------+
+        
+    Convenient shorthand for ``(complement(b, a), complement(a, b))``.
+
     """
-    
-    
-def diff(table):
-    """
-    TODO doc me
-    
-    """
+
+    if not presorted:    
+        a = sort(a)
+        b = sort(b)
+    added = complement(b, a, presorted=True)
+    subtracted = complement(a, b, presorted=True)
+    return added, subtracted
     
     
 def stringcapture(table):
@@ -1405,6 +1694,13 @@ def stringsplit(table):
     TODO doc me
     
     """
+    
+def select(table):
+    """
+    TODO doc me
+    
+    """
+    
     
     
     
