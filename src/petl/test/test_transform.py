@@ -8,7 +8,7 @@ from petl.testfun import iassertequal
 from petl import rename, fieldnames, cut, cat, convert, translate, extend, \
                 rowslice, head, tail, sort, melt, recast, duplicates, conflicts, \
                 mergeduplicates, select, complement, diff, capture, \
-                stringsplit
+                split
 
 
 def test_rename():
@@ -731,7 +731,7 @@ def test_diff():
     iassertequal(aminusb, subtracted)
     
 
-def test_stringcapture():
+def test_capture():
     
     table = [['id', 'variable', 'value'],
             ['1', 'A1', '12'],
@@ -762,4 +762,36 @@ def test_stringcapture():
                            include_original=True)
     iassertequal(expectation, result)
     
+    
+def test_split():
+    
+    table = [['id', 'variable', 'value'],
+             ['1', 'parad1', '12'],
+             ['2', 'parad2', '15'],
+             ['3', 'tempd1', '18'],
+             ['4', 'tempd2', '19']]
+    
+    expectation = [['id', 'value', 'variable', 'day'],
+                   ['1', '12', 'para', '1'],  
+                   ['2', '15', 'para', '2'],
+                   ['3', '18', 'temp', '1'],
+                   ['4', '19', 'temp', '2']]
+    
+    result = split(table, 'variable', 'd', ('variable', 'day'))
+    iassertequal(expectation, result)
+
+    result = split(table, 'variable', 'd', ('variable', 'day'))
+    iassertequal(expectation, result)
+
+    expectation = [['id', 'variable', 'value', 'variable', 'day'],
+                   ['1', 'parad1', '12', 'para', '1'],  
+                   ['2', 'parad2', '15', 'para', '2'],
+                   ['3', 'tempd1', '18', 'temp', '1'],
+                   ['4', 'tempd2', '19', 'temp', '2']]
+    
+    result = split(table, 'variable', 'd', ('variable', 'day'), include_original=True)
+    iassertequal(expectation, result)
+    
+
+
     
