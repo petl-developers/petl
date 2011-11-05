@@ -7,7 +7,7 @@ Tests for the petl.transform module.
 from petl.testfun import iassertequal
 from petl import rename, fieldnames, cut, cat, convert, translate, extend, \
                 rowslice, head, tail, sort, melt, recast, duplicates, conflicts, \
-                mergeduplicates, select, complement, diff, stringcapture, \
+                mergeduplicates, select, complement, diff, capture, \
                 stringsplit
 
 
@@ -731,3 +731,35 @@ def test_diff():
     iassertequal(aminusb, subtracted)
     
 
+def test_stringcapture():
+    
+    table = [['id', 'variable', 'value'],
+            ['1', 'A1', '12'],
+            ['2', 'A2', '15'],
+            ['3', 'B1', '18'],
+            ['4', 'C12', '19']]
+    
+    expectation = [['id', 'value', 'treat', 'time'],
+                   ['1', '12', 'A', '1'],  
+                   ['2', '15', 'A', '2'],
+                   ['3', '18', 'B', '1'],
+                   ['4', '19', 'C', '1']]
+    
+    result = capture(table, 'variable', '(\\w)(\\d)', ('treat', 'time'))
+    iassertequal(expectation, result)
+
+    result = capture(table, 'variable', '(\\w)(\\d)', ('treat', 'time'),
+                           include_original=False)
+    iassertequal(expectation, result)
+
+    expectation = [['id', 'variable', 'value', 'treat', 'time'],
+                   ['1', 'A1', '12', 'A', '1'],  
+                   ['2', 'A2', '15', 'A', '2'],
+                   ['3', 'B1', '18', 'B', '1'],
+                   ['4', 'C12', '19', 'C', '1']]
+    
+    result = capture(table, 'variable', '(\\w)(\\d)', ('treat', 'time'),
+                           include_original=True)
+    iassertequal(expectation, result)
+    
+    

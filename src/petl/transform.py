@@ -9,10 +9,11 @@ from operator import itemgetter
 
 
 from petl.util import close, asindices, rowgetter, FieldSelectionError, asdict
+import re
 
 __all__ = ['rename', 'cut', 'cat', 'convert', 'translate', 'extend', 'rowslice', \
            'head', 'tail', 'sort', 'melt', 'recast', 'duplicates', 'conflicts', \
-           'mergeduplicates', 'select', 'complement', 'diff', 'stringcapture', \
+           'mergeduplicates', 'select', 'complement', 'diff', 'capture', \
            'stringsplit']
 
 
@@ -1682,13 +1683,96 @@ def diff(a, b, presorted=False):
     return added, subtracted
     
     
-def stringcapture(table):
+def capture(table, field, pattern, groups, include_original=False):
     """
-    TODO doc me
+    Extend the table with one or more new fields with values captured from an
+    existing field via a regular expression. E.g.::
+
+        >>> from petl import capture, look
+        >>> table1 = [['id', 'variable', 'value'],
+        ...           ['1', 'A1', '12'],
+        ...           ['2', 'A2', '15'],
+        ...           ['3', 'B1', '18'],
+        ...           ['4', 'C12', '19']]
+        >>> table2 = capture(table1, 'variable', '(\\w)(\\d)', ['treat', 'time'])
+        >>> look(table2)
+        +------+---------+---------+--------+
+        | 'id' | 'value' | 'treat' | 'time' |
+        +======+=========+=========+========+
+        | '1'  | '12'    | 'A'     | '1'    |
+        +------+---------+---------+--------+
+        | '2'  | '15'    | 'A'     | '2'    |
+        +------+---------+---------+--------+
+        | '3'  | '18'    | 'B'     | '1'    |
+        +------+---------+---------+--------+
+        | '4'  | '19'    | 'C'     | '1'    |
+        +------+---------+---------+--------+
+
+    By default the field on which the capture is performed is omitted. It can
+    be included using the `include_original` argument, e.g.::
     
+        >>> table3 = capture(table1, 'variable', '(\\w)(\\d)', ['treat', 'time'], include_original=True)
+        >>> look(table3)
+        +------+------------+---------+---------+--------+
+        | 'id' | 'variable' | 'value' | 'treat' | 'time' |
+        +======+============+=========+=========+========+
+        | '1'  | 'A1'       | '12'    | 'A'     | '1'    |
+        +------+------------+---------+---------+--------+
+        | '2'  | 'A2'       | '15'    | 'A'     | '2'    |
+        +------+------------+---------+---------+--------+
+        | '3'  | 'B1'       | '18'    | 'B'     | '1'    |
+        +------+------------+---------+---------+--------+
+        | '4'  | 'C12'      | '19'    | 'C'     | '1'    |
+        +------+------------+---------+---------+--------+
+
     """
     
+    return CaptureView(table, field, pattern, groups, include_original)
+
+
+class CaptureView(object):
     
+    def __init__(self, source, field, pattern, groups, include_original):
+        self.source = source
+        self.field = field
+        self.pattern = pattern
+        self.groups = groups
+        self.include_original = include_original
+        
+    def __iter__(self):
+        return itercapture(self.source, self.field, self.pattern, self.groups, self.include_original)
+
+
+def itercapture(source, field, pattern, groups, include_original):
+    it = iter(source)
+    try:
+        prog = re.compile(pattern)
+        
+        flds = it.next()
+        assert field in flds, 'field not found: %s' % field
+        field_index = flds.index(field)
+        
+        # determine output flds
+        out_flds = list(flds)
+        if not include_original:
+            out_flds.remove(field)
+        out_flds.extend(groups)
+        yield out_flds
+        
+        # construct the output data
+        for row in it:
+            value = row[field_index]
+            if include_original:
+                out_row = list(row)
+            else:
+                out_row = [v for i, v in enumerate(row) if i != field_index]
+            out_row.extend(prog.search(value).groups())
+            yield out_row
+            
+    finally:
+        close(it)
+    
+        
 def stringsplit(table):
     """
     TODO doc me
