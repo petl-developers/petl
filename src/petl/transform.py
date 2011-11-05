@@ -1030,7 +1030,7 @@ def itermelt(source, key, variables, variable_field, value_field):
 def recast(table, key=[], variable_field='variable', value_field='value', 
            sample_size=1000, reduce=dict(), missing=None):
     """
-    Reshape molten data. E.g.::
+    Recast molten data. E.g.::
     
         >>> from petl import recast, look
         >>> table1 = [['id', 'variable', 'value'],
@@ -1257,11 +1257,105 @@ def iterrecast(source, key=[], variable_field='variable', value_field='value',
     
         
             
-def duplicates(table):
+def duplicates(table, key, presorted=False):
     """
-    TODO doc me
+    Select rows with duplicate values under a given key. E.g.::
+
+        >>> from petl import duplicates, look    
+        >>> table1 = [['foo', 'bar', 'baz'],
+        ...           ['A', 1, 2.0],
+        ...           ['B', 2, 3.4],
+        ...           ['D', 6, 9.3],
+        ...           ['B', 3, 7.8],
+        ...           ['B', 2, 12.3],
+        ...           ['E', None, 1.3],
+        ...           ['D', 4, 14.5]]
+        >>> table2 = duplicates(table1, 'foo')
+        >>> look(table2)
+        +-------+-------+-------+
+        | 'foo' | 'bar' | 'baz' |
+        +=======+=======+=======+
+        | 'B'   | 2     | 3.4   |
+        +-------+-------+-------+
+        | 'B'   | 3     | 7.8   |
+        +-------+-------+-------+
+        | 'B'   | 2     | 12.3  |
+        +-------+-------+-------+
+        | 'D'   | 6     | 9.3   |
+        +-------+-------+-------+
+        | 'D'   | 4     | 14.5  |
+        +-------+-------+-------+
+
+    Compound keys are supported, e.g.::
     
+        >>> table3 = duplicates(table1, key=['foo', 'bar'])
+        >>> look(table3)
+        +-------+-------+-------+
+        | 'foo' | 'bar' | 'baz' |
+        +=======+=======+=======+
+        | 'B'   | 2     | 3.4   |
+        +-------+-------+-------+
+        | 'B'   | 2     | 12.3  |
+        +-------+-------+-------+
+
     """
+    
+    return DuplicatesView(table, key, presorted)
+
+
+class DuplicatesView(object):
+    
+    def __init__(self, source, key, presorted=False):
+        if presorted:
+            self.source = source
+        else:
+            self.source = sort(source, key)
+        self.key = key
+        
+    def __iter__(self):
+        return iterduplicates(self.source, self.key)
+
+
+def iterduplicates(source, key):
+    # assume source is sorted
+    # first need to sort the data
+    it = iter(source)
+
+    try:
+        flds = it.next()
+        yield flds
+
+        # convert field selection into field indices
+        indices = asindices(flds, key)
+            
+        # now use field indices to construct a getkey function
+        # N.B., this may raise an exception on short rows, depending on
+        # the field selection
+        getkey = itemgetter(*indices)
+        
+        previous = None
+        previous_yielded = False
+        
+        for row in it:
+            if previous is None:
+                previous = row
+            else:
+                kprev = getkey(previous)
+                kcurr = getkey(row)
+                if kprev == kcurr:
+                    if not previous_yielded:
+                        yield previous
+                        previous_yielded = True
+                    yield row
+                else:
+                    # reset
+                    previous_yielded = False
+                previous = row
+        
+    finally:
+        close(it)
+
+    
     
     
 def conflicts(table):

@@ -586,4 +586,30 @@ def test_recast4():
     iassertequal(expect, result)
 
 
+def test_duplicates():
+    
+    table = [['foo', 'bar', 'baz'],
+             ['A', 1, 2],
+             ['B', '2', '3.4'],
+             ['D', 'xyz', 9.0],
+             ['B', u'3', u'7.8', True],
+             ['B', '2', 42],
+             ['E', None],
+             ['D', 4, 12.3]]
 
+    result = duplicates(table, 'foo')
+    expectation = [['foo', 'bar', 'baz'],
+                   ['B', '2', '3.4'],
+                   ['B', u'3', u'7.8', True],
+                   ['B', '2', 42],
+                   ['D', 'xyz', 9.0],
+                   ['D', 4, 12.3]]
+    iassertequal(expectation, result)
+    
+    # test with compound key
+    result = duplicates(table, key=('foo', 'bar'))
+    expectation = [['foo', 'bar', 'baz'],
+                   ['B', '2', '3.4'],
+                   ['B', '2', 42]]
+    iassertequal(expectation, result)
+    
