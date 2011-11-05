@@ -14,7 +14,7 @@ import re
 __all__ = ['rename', 'cut', 'cat', 'convert', 'translate', 'extend', 'rowslice', \
            'head', 'tail', 'sort', 'melt', 'recast', 'duplicates', 'conflicts', \
            'mergeduplicates', 'select', 'complement', 'diff', 'capture', \
-           'split']
+           'split', 'fieldmap']
 
 
 def rename(table, spec=dict()):

@@ -222,6 +222,7 @@ Transforming tables
 .. autofunction:: petl.capture
 .. autofunction:: petl.split
 .. autofunction:: petl.select
+.. autofunction:: petl.fieldmap
 
 
 Loading (writing) tables to files and databases
