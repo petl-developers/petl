@@ -5,9 +5,9 @@ Tests for the petl.transform module.
 
 
 from petl.testfun import iassertequal
-from petl import rename, fieldnames, cut, cat, convert, translate, extend, \
+from petl import rename, fieldnames, project, cat, convert, translate, extend, \
                 rowslice, head, tail, sort, melt, recast, duplicates, conflicts, \
-                mergeduplicates, select, complement, diff, capture, \
+                merge, select, complement, diff, capture, \
                 split
 
 
@@ -30,7 +30,7 @@ def test_rename():
 
 
 def test_cut():
-    """Test the cut function."""
+    """Test the project function."""
     
     table = [['foo', 'bar', 'baz'],
              ['A', 1, 2],
@@ -39,7 +39,7 @@ def test_cut():
              ['D', 'xyz', 9.0],
              ['E', None]]
 
-    cut1 = cut(table, 'foo')
+    cut1 = project(table, 'foo')
     expectation = [['foo'],
                    ['A'],
                    ['B'],
@@ -48,7 +48,7 @@ def test_cut():
                    ['E']]
     iassertequal(expectation, cut1)
     
-    cut2 = cut(table, 'foo', 'baz')
+    cut2 = project(table, 'foo', 'baz')
     expectation = [['foo', 'baz'],
                    ['A', 2],
                    ['B', '3.4'],
@@ -57,7 +57,7 @@ def test_cut():
                    ['E', None]]
     iassertequal(expectation, cut2)
     
-    cut3 = cut(table, 0, 2)
+    cut3 = project(table, 0, 2)
     expectation = [['foo', 'baz'],
                    ['A', 2],
                    ['B', '3.4'],
@@ -66,7 +66,7 @@ def test_cut():
                    ['E', None]]
     iassertequal(expectation, cut3)
     
-    cut4 = cut(table, 'bar', 0)
+    cut4 = project(table, 'bar', 0)
     expectation = [['bar', 'foo'],
                    [1, 'A'],
                    ['2', 'B'],
@@ -646,7 +646,7 @@ def test_mergeduplicates():
              ['A', 2, None]]
 
     # value overrides missing; last value wins
-    result = mergeduplicates(table, 'foo', missing=None)
+    result = merge(table, 'foo', missing=None)
     expectation = [['foo', 'bar', 'baz'],
                    ['A', 2, 2],
                    ['B', '2', u'7.8', True],

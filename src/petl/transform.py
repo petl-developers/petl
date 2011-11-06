@@ -11,9 +11,9 @@ from operator import itemgetter
 from petl.util import close, asindices, rowgetter, FieldSelectionError, asdict
 import re
 
-__all__ = ['rename', 'cut', 'cat', 'convert', 'translate', 'extend', 'rowslice', \
+__all__ = ['rename', 'project', 'cat', 'convert', 'translate', 'extend', 'rowslice', \
            'head', 'tail', 'sort', 'melt', 'recast', 'duplicates', 'conflicts', \
-           'mergeduplicates', 'select', 'complement', 'diff', 'capture', \
+           'merge', 'select', 'complement', 'diff', 'capture', \
            'split', 'fieldmap']
 
 
@@ -103,19 +103,19 @@ def iterrename(source, spec):
         close(it)
         
         
-def cut(table, *args, **kwargs):
+def project(table, *args, **kwargs):
     """
     Choose and/or re-order columns. E.g.::
 
-        >>> from petl import look, cut    
-        >>> table = [['foo', 'bar', 'baz'],
-        ...          ['A', 1, 2.7],
-        ...          ['B', 2, 3.4],
-        ...          ['B', 3, 7.8],
-        ...          ['D', 42, 9.0],
-        ...          ['E', 12]]
-        >>> cut1 = cut(table, 'foo', 'baz')
-        >>> look(cut1)
+        >>> from petl import look, project    
+        >>> table1 = [['foo', 'bar', 'baz'],
+        ...           ['A', 1, 2.7],
+        ...           ['B', 2, 3.4],
+        ...           ['B', 3, 7.8],
+        ...           ['D', 42, 9.0],
+        ...           ['E', 12]]
+        >>> table2 = project(table1, 'foo', 'baz')
+        >>> look(table2)
         +-------+-------+
         | 'foo' | 'baz' |
         +=======+=======+
@@ -135,8 +135,8 @@ def cut(table, *args, **kwargs):
     
     Fields can also be specified by index, starting from zero. E.g.::
 
-        >>> cut2 = cut(table, 0, 2)
-        >>> look(cut2)
+        >>> table3 = project(table1, 0, 2)
+        >>> look(table3)
         +-------+-------+
         | 'foo' | 'baz' |
         +=======+=======+
@@ -153,8 +153,8 @@ def cut(table, *args, **kwargs):
 
     Field names and indices can be mixed, e.g.::
 
-        >>> cut3 = cut(table, 'bar', 0)
-        >>> look(cut3)
+        >>> table4 = project(table1, 'bar', 0)
+        >>> look(table4)
         +-------+-------+
         | 'bar' | 'foo' |
         +=======+=======+
@@ -171,8 +171,8 @@ def cut(table, *args, **kwargs):
 
     Use the standard :func:`range` runction to select a range of fields, e.g.::
     
-        >>> cut4 = cut(table, *range(0, 2))
-        >>> look(cut4)    
+        >>> table5 = project(table1, *range(0, 2))
+        >>> look(table5)    
         +-------+-------+
         | 'foo' | 'bar' |
         +=======+=======+
@@ -189,10 +189,10 @@ def cut(table, *args, **kwargs):
 
     """
     
-    return CutView(table, args, **kwargs)
+    return ProjectView(table, args, **kwargs)
 
 
-class CutView(object):
+class ProjectView(object):
     
     def __init__(self, source, spec, missing=None):
         self.source = source
@@ -200,10 +200,10 @@ class CutView(object):
         self.padding = missing
         
     def __iter__(self):
-        return itercut(self.source, self.spec, self.padding)
+        return iterproject(self.source, self.spec, self.padding)
         
         
-def itercut(source, spec, missing=None):
+def iterproject(source, spec, missing=None):
     it = iter(source)
     spec = tuple(spec) # make sure no-one can change midstream
     try:
@@ -1454,11 +1454,11 @@ def iterconflicts(source, key, missing):
         close(it)
 
 
-def mergeduplicates(table, key, missing=None, presorted=False):
+def merge(table, key, missing=None, presorted=False):
     """
     Merge rows with duplicate values under a given key. E.g.::
     
-        >>> from petl import mergeduplicates, look    
+        >>> from petl import merge, look    
         >>> table1 = [['foo', 'bar', 'baz'],
         ...           ['A', 1, 2.7],
         ...           ['B', 2, None],
@@ -1467,7 +1467,7 @@ def mergeduplicates(table, key, missing=None, presorted=False):
         ...           ['E', None],
         ...           ['D', 3, 12.3],
         ...           ['A', 2, None]]
-        >>> table2 = mergeduplicates(table1, 'foo')
+        >>> table2 = merge(table1, 'foo')
         >>> look(table2)
         +-------+-------+-------+
         | 'foo' | 'bar' | 'baz' |
@@ -1486,10 +1486,10 @@ def mergeduplicates(table, key, missing=None, presorted=False):
     
     """
     
-    return MergeDuplicatesView(table, key, missing, presorted)
+    return MergeView(table, key, missing, presorted)
 
 
-class MergeDuplicatesView(object):
+class MergeView(object):
     
     def __init__(self, source, key, missing=None, presorted=False):
         if presorted:
@@ -1500,10 +1500,10 @@ class MergeDuplicatesView(object):
         self.padding = missing
 
     def __iter__(self):
-        return itermergeduplicates(self.source, self.key, self.padding)
+        return itermerge(self.source, self.key, self.padding)
     
     
-def itermergeduplicates(source, key, missing):
+def itermerge(source, key, missing):
     it = iter(source)
 
     try:
