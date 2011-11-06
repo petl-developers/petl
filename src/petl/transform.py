@@ -131,7 +131,7 @@ def cut(table, *args, **kwargs):
         +-------+-------+
 
     Note that any short rows will be padded with `None` values (or whatever is
-    provided via the `missing` keyword argument).
+    provided via the `padding` keyword argument).
     
     Fields can also be specified by index, starting from zero. E.g.::
 
@@ -197,10 +197,10 @@ class CutView(object):
     def __init__(self, source, spec, missing=None):
         self.source = source
         self.spec = spec
-        self.missing = missing
+        self.padding = missing
         
     def __iter__(self):
-        return itercut(self.source, self.spec, self.missing)
+        return itercut(self.source, self.spec, self.padding)
         
         
 def itercut(source, spec, missing=None):
@@ -224,7 +224,7 @@ def itercut(source, spec, missing=None):
             try:
                 yield transform(row) 
             except IndexError:
-                # row is short, let's be kind and fill in any missing fields
+                # row is short, let's be kind and fill in any padding fields
                 yield [row[i] if i < len(row) else missing for i in indices]
 
     finally:
@@ -234,8 +234,8 @@ def itercut(source, spec, missing=None):
 def cat(*tables, **kwargs):
     """
     Concatenate data from two or more tables. Note that the tables do not need
-    to share exactly the same fields, any missing fields will be padded with
-    `None` (or whatever is provided via the `missing` keyword argument). E.g.::
+    to share exactly the same fields, any padding fields will be padded with
+    `None` (or whatever is provided via the `padding` keyword argument). E.g.::
 
         >>> from petl import look, cat    
         >>> table1 = [['foo', 'bar'],
@@ -290,10 +290,10 @@ class CatView(object):
     
     def __init__(self, sources, missing=None):
         self.sources = sources
-        self.missing = missing
+        self.padding = missing
 
     def __iter__(self):
-        return itercat(self.sources, self.missing)
+        return itercat(self.sources, self.padding)
     
 
 def itercat(sources, missing=None):
@@ -315,7 +315,7 @@ def itercat(sources, missing=None):
             flds = source_flds_lists[source_index]
             
             # let's define a function which will, for any row and field name,
-            # return the corresponding value, or fill in any missing values
+            # return the corresponding value, or fill in any padding values
             def get_value(row, f):
                 try:
                     value = row[flds.index(f)]
@@ -1113,7 +1113,7 @@ def recast(table, key=[], variable_field='variable', value_field='value',
         | 3    | 41.95              |
         +------+--------------------+
 
-    Missing values are padded with whatever is provided via the `missing` 
+    Missing values are padded with whatever is provided via the `padding` 
     keyword argument (`None` by default), e.g.::
 
         >>> table9 = [['id', 'variable', 'value'],
@@ -1149,12 +1149,12 @@ class RecastView(object):
         self.value_field = value_field
         self.sample_size = sample_size
         self.reduce = reduce
-        self.missing = missing
+        self.padding = missing
         
     def __iter__(self):
         return iterrecast(self.source, self.key, self.variable_field, 
                           self.value_field, self.sample_size, self.reduce,
-                          self.missing)
+                          self.padding)
 
 
 def iterrecast(source, key=[], variable_field='variable', value_field='value', 
@@ -1387,7 +1387,7 @@ def conflicts(table, key, missing=None, presorted=False):
         +-------+-------+-------+
 
     Missing values are not considered conflicts. By default, `None` is treated
-    as the missing value, this can be changed via the `missing` keyword 
+    as the padding value, this can be changed via the `padding` keyword 
     argument.
     
     """
@@ -1403,11 +1403,11 @@ class ConflictsView(object):
         else:
             self.source = sort(source, key)
         self.key = key
-        self.missing = missing
+        self.padding = missing
         
         
     def __iter__(self):
-        return iterconflicts(self.source, self.key, self.missing)
+        return iterconflicts(self.source, self.key, self.padding)
     
     
 def iterconflicts(source, key, missing):
@@ -1482,7 +1482,7 @@ def mergeduplicates(table, key, missing=None, presorted=False):
         +-------+-------+-------+
 
     Any conflicts are resolved by selecting the later value. Missing values are 
-    not considered conflicts, and are overridden by non-missing values. 
+    not considered conflicts, and are overridden by non-padding values. 
     
     """
     
@@ -1497,10 +1497,10 @@ class MergeDuplicatesView(object):
         else:
             self.source = sort(source, key)
         self.key = key
-        self.missing = missing
+        self.padding = missing
 
     def __iter__(self):
-        return itermergeduplicates(self.source, self.key, self.missing)
+        return itermergeduplicates(self.source, self.key, self.padding)
     
     
 def itermergeduplicates(source, key, missing):
@@ -1847,11 +1847,79 @@ def itersplit(source, field, pattern, newfields, include_original):
         close(it)
         
     
-def select(table):
+def select(table, where, padding=None):
     """
-    TODO doc me
+    Select rows meeting a condition. The `where` condition can be a function
+    accepting a record (i.e., a dictionary representation of a row) e.g.::
     
+        >>> from petl import select, look     
+        >>> table1 = [['foo', 'bar', 'baz'],
+        ...           ['a', 4, 9.3],
+        ...           ['a', 2, 88.2],
+        ...           ['b', 1, 23.3],
+        ...           ['c', 8, 42.0],
+        ...           ['d', 7, 100.9],
+        ...           ['c', 2]]
+        >>> table2 = select(table1, lambda rec: rec['foo'] == 'a' and rec['baz'] > 88.1)
+        >>> look(table2)
+        +-------+-------+-------+
+        | 'foo' | 'bar' | 'baz' |
+        +=======+=======+=======+
+        | 'a'   | 2     | 88.2  |
+        +-------+-------+-------+
+
+    The where condition can also be an expression string, e.g.::
+    
+        >>> table3 = select(table1, "{foo} == 'a' and {baz} > 88.1")
+        >>> look(table3)
+        +-------+-------+-------+
+        | 'foo' | 'bar' | 'baz' |
+        +=======+=======+=======+
+        | 'a'   | 2     | 88.2  |
+        +-------+-------+-------+
+
+    The expression string is converted into a lambda function by prepending
+    the string with ``'lambda rec: '``, then replacing anything enclosed in 
+    curly braces (e.g., ``"{foo}"``) with a lookup on the record (e.g., 
+    ``"rec['foo']"``), then finally calling :func:`eval`.
+   
     """
+    
+    return SelectView(table, where, padding)
+
+
+class SelectView(object):
+    
+    def __init__(self, source, where, padding=None):
+        self.source = source
+        self.where = where
+        self.padding = padding
+        
+        
+    def __iter__(self):
+        return iterselect(self.source, self.where, self.padding)
+    
+    
+def iterselect(source, where, padding):
+    it = iter(source)
+    try:
+        if isinstance(where, basestring):
+            where = asrecfun(where)
+        flds = it.next()
+        yield flds
+        for row in it:
+            rec = asdict(flds, row, padding)
+            if where(rec):
+                yield row
+    finally:
+        close(it)
+        
+        
+def asrecfun(s):
+    prog = re.compile('\{([^}]+)\}')
+    def repl(matchobj):
+        return "rec['%s']" % matchobj.group(1)
+    return eval("lambda rec: " + prog.sub(repl, s))
     
     
 def fieldmap(table):

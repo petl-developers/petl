@@ -35,7 +35,7 @@ A *row iterator* is an iterator which satisfies the following:
 
 6. each subsequent item returned by the iterator is a *data row* comprising a list or tuple of *data values*
 
-7. a *field* is typically a string (`str` or `unicode`) but may be an object of any type as long as it implements `__str__` and is pickleable
+7. a *field* is typically a string (`str` or `unicode`) but may be an object of any type as long as it implements `__str__`, is immutable (can be used as a dictionary key) and is pickleable
 
 8. a *data value* is any pickleable object
 

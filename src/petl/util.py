@@ -93,7 +93,7 @@ def data(table, start=0, stop=None, step=1):
     return islice(table, start + 1, stop, step)
 
     
-def records(table, start=0, stop=None, step=1, missing=None):
+def records(table, start=0, stop=None, step=1, padding=None):
     """
     Return an iterator over the data in the table, yielding each row as a 
     dictionary of values indexed by field name. E.g.::
@@ -105,16 +105,33 @@ def records(table, start=0, stop=None, step=1, missing=None):
         {'foo': 'a', 'bar': 1}
         >>> it.next()
         {'foo': 'b', 'bar': 2}
+        >>> it.next()
+        Traceback (most recent call last):
+          File "<stdin>", line 1, in <module>
+        StopIteration
+        
+    Short rows are padded, e.g.::
+    
+        >>> table = [['foo', 'bar'], ['a', 1], ['b']]
+        >>> it = records(table)
+        >>> it.next()
+        {'foo': 'a', 'bar': 1}
+        >>> it.next()
+        {'foo': 'b', 'bar': None}
+        >>> it.next()
+        Traceback (most recent call last):
+          File "<stdin>", line 1, in <module>
+        StopIteration
 
     """
     
     it = iter(table)
     flds = it.next()
     for row in islice(it, start, stop, step):
-        yield asdict(flds, row, missing)
+        yield asdict(flds, row, padding)
     
     
-def asdict(flds, row, missing=None):
+def asdict(flds, row, padding=None):
     names = [str(f) for f in flds]
     try:
         # list comprehension should be faster
@@ -126,7 +143,7 @@ def asdict(flds, row, missing=None):
             try:
                 v = row[i]
             except IndexError:
-                v = missing
+                v = padding
             items.append((f, v))
     return dict(items)
     
