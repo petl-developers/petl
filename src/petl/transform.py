@@ -1493,7 +1493,7 @@ def merge(table, key, missing=None, presorted=False):
         +-------+-------+-------+
 
     Any conflicts are resolved by selecting the later value. Missing values are 
-    not considered conflicts, and are overridden by non-padding values. 
+    not considered conflicts, and are overridden by non-missing values. 
     
     """
     
