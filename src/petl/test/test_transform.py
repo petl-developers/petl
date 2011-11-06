@@ -8,7 +8,7 @@ from petl.testfun import iassertequal
 from petl import rename, fieldnames, project, cat, convert, translate, extend, \
                 rowslice, head, tail, sort, melt, recast, duplicates, conflicts, \
                 merge, select, complement, diff, capture, \
-                split
+                split, expr
 
 
 def test_rename():
@@ -197,6 +197,13 @@ def test_extend():
     iassertequal(expectation, result)
 
     result = extend(table, 'baz', lambda rec: rec['bar'] * 2)
+    expectation = [['foo', 'bar', 'baz'],
+                   ['M', 12, 24],
+                   ['F', 34, 68],
+                   ['-', 56, 112]]
+    iassertequal(expectation, result)
+
+    result = extend(table, 'baz', expr('{bar} * 2'))
     expectation = [['foo', 'bar', 'baz'],
                    ['M', 12, 24],
                    ['F', 34, 68],
@@ -859,13 +866,13 @@ def test_select():
               ['a', 4, 9.3]]
     iassertequal(expect, actual)
 
-    actual = select(table, "{foo} == 'a'")
+    actual = select(table, expr("{foo} == 'a'"))
     expect = [['foo', 'bar', 'baz'],
               ['a', 4, 9.3],
               ['a', 2, 88.2]]
     iassertequal(expect, actual)
 
-    actual = select(table, "{foo} == 'a' and {bar} > 3")
+    actual = select(table, expr( "{foo} == 'a' and {bar} > 3"))
     expect = [['foo', 'bar', 'baz'],
               ['a', 4, 9.3]]
     iassertequal(expect, actual)

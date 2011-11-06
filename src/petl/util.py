@@ -8,12 +8,14 @@ from itertools import islice
 from collections import defaultdict, Counter
 from operator import itemgetter
 import datetime
+import re
 
 
 __all__ = ['fields', 'fieldnames', 'data', 'records', 'rowcount', 'look', 'see', 'values', 'valuecounter', 'valuecounts', \
            'valueset', 'unique', 'lookup', 'lookupone', 'recordlookup', 'recordlookupone', \
            'typecounter', 'typecounts', 'typeset', 'parsecounter', 'parsecounts', \
-           'stats', 'rowlengths', 'DuplicateKeyError', 'datetimeparser', 'dateparser', 'timeparser', 'boolparser']
+           'stats', 'rowlengths', 'DuplicateKeyError', 'datetimeparser', 'dateparser', 'timeparser', 'boolparser', \
+           'expr']
 
 
 def fields(table):
@@ -1317,3 +1319,27 @@ def stats(table, fieldspec, start=0, stop=None, step=1):
     return output
         
 # TODO string lengths, string patterns, ...
+
+
+def expr(s):
+    """
+    Construct a function operating on a record (i.e., a dictinoary representation
+    of a data row, indexed by field name).
+    
+    The expression string is converted into a lambda function by prepending
+    the string with ``'lambda rec: '``, then replacing anything enclosed in 
+    curly braces (e.g., ``"{foo}"``) with a lookup on the record (e.g., 
+    ``"rec['foo']"``), then finally calling :func:`eval`.
+    
+    So, e.g., the expression string ``"{foo} * {bar}"`` is converted to the 
+    function ``lambda rec: rec['foo'] * rec['bar']``
+    
+    """
+    
+    prog = re.compile('\{([^}]+)\}')
+    def repl(matchobj):
+        return "rec['%s']" % matchobj.group(1)
+    return eval("lambda rec: " + prog.sub(repl, s))
+    
+    
+

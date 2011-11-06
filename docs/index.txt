@@ -190,6 +190,7 @@ Utility functions
 .. autofunction:: petl.statsum
 .. autofunction:: petl.adler32sum
 .. autofunction:: petl.crc32sum
+.. autofunction:: petl.expr
 
 Extracting (reading) tables from files and databases
 ----------------------------------------------------

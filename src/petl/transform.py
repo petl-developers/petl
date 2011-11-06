@@ -8,7 +8,8 @@ from collections import deque, defaultdict
 from operator import itemgetter
 
 
-from petl.util import close, asindices, rowgetter, FieldSelectionError, asdict
+from petl.util import close, asindices, rowgetter, FieldSelectionError, asdict,\
+    expr
 import re
 
 __all__ = ['rename', 'project', 'cat', 'convert', 'translate', 'extend', 'rowslice', \
@@ -553,10 +554,6 @@ def extend(table, field, value):
 
     E.g., calculating the value::
     
-        >>> table1 = [['foo', 'bar'],
-        ...           ['M', 12],
-        ...           ['F', 34],
-        ...           ['-', 56]]
         >>> table2 = extend(table1, 'baz', lambda rec: rec['bar'] * 2)
         >>> look(table2)
         +-------+-------+-------+
@@ -572,6 +569,20 @@ def extend(table, field, value):
     When using a calculated value, the function should accept a record, i.e., a
     dictionary representation of the row, with values indexed by field name.
     
+    An expression string can also be used via :func:`expr`, e.g.::
+
+        >>> table3 = extend(table1, 'baz', expr('{bar} * 2'))
+        >>> look(table3)
+        +-------+-------+-------+
+        | 'foo' | 'bar' | 'baz' |
+        +=======+=======+=======+
+        | 'M'   | 12    | 24    |
+        +-------+-------+-------+
+        | 'F'   | 34    | 68    |
+        +-------+-------+-------+
+        | '-'   | 56    | 112   |
+        +-------+-------+-------+
+
     """
     
     return ExtendView(table, field, value)
@@ -1868,9 +1879,10 @@ def select(table, where, padding=None):
         | 'a'   | 2     | 88.2  |
         +-------+-------+-------+
 
-    The where condition can also be an expression string, e.g.::
+    The where condition can also be constructed from an expression string using
+    :func:`expr`, e.g.::
     
-        >>> table3 = select(table1, "{foo} == 'a' and {baz} > 88.1")
+        >>> table3 = select(table1, expr("{foo} == 'a' and {baz} > 88.1"))
         >>> look(table3)
         +-------+-------+-------+
         | 'foo' | 'bar' | 'baz' |
@@ -1878,13 +1890,11 @@ def select(table, where, padding=None):
         | 'a'   | 2     | 88.2  |
         +-------+-------+-------+
 
-    The expression string is converted into a lambda function by prepending
-    the string with ``'lambda rec: '``, then replacing anything enclosed in 
-    curly braces (e.g., ``"{foo}"``) with a lookup on the record (e.g., 
-    ``"rec['foo']"``), then finally calling :func:`eval`.
-   
     """
     
+    if isinstance(where, basestring):
+        # be kind to the user
+        where = expr(where)
     return SelectView(table, where, padding)
 
 
@@ -1903,8 +1913,6 @@ class SelectView(object):
 def iterselect(source, where, padding):
     it = iter(source)
     try:
-        if isinstance(where, basestring):
-            where = asrecfun(where)
         flds = it.next()
         yield flds
         for row in it:
@@ -1915,13 +1923,6 @@ def iterselect(source, where, padding):
         close(it)
         
         
-def asrecfun(s):
-    prog = re.compile('\{([^}]+)\}')
-    def repl(matchobj):
-        return "rec['%s']" % matchobj.group(1)
-    return eval("lambda rec: " + prog.sub(repl, s))
-    
-    
 def fieldmap(table):
     """
     TODO doc me
