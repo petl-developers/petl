@@ -551,7 +551,7 @@ def test_recast_3():
                    [1, 66.4],
                    [2, 53.2],
                    [3, 49.4]]
-    result = recast(table, key='id', reduce={'weight': max})
+    result = recast(table, key='id', reducers={'weight': max})
     iassertequal(expectation, result)
 
     # min aggregation
@@ -559,7 +559,7 @@ def test_recast_3():
                    [1, 55.2],
                    [2, 43.3],
                    [3, 34.5]]
-    result = recast(table, key='id', reduce={'weight': min})
+    result = recast(table, key='id', reducers={'weight': min})
     iassertequal(expectation, result)
 
     # mean aggregation
@@ -575,7 +575,7 @@ def test_recast_3():
             v = round(v, precision)
             return v
         return f
-    result = recast(table, key='id', reduce={'weight': meanf(precision=2)})
+    result = recast(table, key='id', reducers={'weight': meanf(precision=2)})
     iassertequal(expectation, result)
 
     
@@ -889,25 +889,25 @@ def test_select():
     
 def test_fieldmap():
     
-    table = [['id', 'sex', 'age', 'weight'],
-             [1, 'male', 16, 62.0],
-             [2, 'female', 19, 55.4],
-             [3, 'female', 17, 74.4],
-             [4, 'male', 21, 45.2],
-             [5, '-', 25, 51.9]]
+    table = [['id', 'sex', 'age', 'height', 'weight'],
+             [1, 'male', 16, 1.45, 62.0],
+             [2, 'female', 19, 1.34, 55.4],
+             [3, 'female', 17, 1.78, 74.4],
+             [4, 'male', 21, 1.33, 45.2],
+             [5, '-', 25, 1.65, 51.9]]
     
     mappings = OrderedDict()
     mappings['subject_id'] = 'id'
     mappings['gender'] = 'sex', {'male': 'M', 'female': 'F'}
-    mappings['age_months'] = 'age', lambda v: v * 24
-    mappings['bmi'] = lambda rec: rec['weight'] / rec['age'] # TODO make this real :)
+    mappings['age_months'] = 'age', lambda v: v * 12
+    mappings['bmi'] = lambda rec: rec['weight'] / rec['height']**2 
     actual = fieldmap(table, mappings)  
     expect = [['subject_id', 'gender', 'age_months', 'bmi'],
-              [1, 'M', 16*24, 62.0/16],
-              [2, 'F', 19*24, 55.4/19],
-              [3, 'F', 17*24, 74.4/17],
-              [4, 'M', 21*24, 45.2/21],
-              [5, '-', 25*24, 51.9/25]]
+              [1, 'M', 16*12, 62.0/1.45**2],
+              [2, 'F', 19*12, 55.4/1.34**2],
+              [3, 'F', 17*12, 74.4/1.78**2],
+              [4, 'M', 21*12, 45.2/1.33**2],
+              [5, '-', 25*12, 51.9/1.65**2]]
     iassertequal(expect, actual)
     iassertequal(expect, actual) # can iteratate twice?
     
@@ -915,8 +915,8 @@ def test_fieldmap():
     actual = fieldmap(table)
     actual['subject_id'] = 'id'
     actual['gender'] = 'sex', {'male': 'M', 'female': 'F'}
-    actual['age_months'] = 'age', lambda v: v * 24
-    actual['bmi'] = '{weight} / {age}' # TODO make this real :)
+    actual['age_months'] = 'age', lambda v: v * 12
+    actual['bmi'] = '{weight} / {height}**2'
     iassertequal(expect, actual)
     
     # TODO test short rows

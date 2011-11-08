@@ -1323,7 +1323,7 @@ def stats(table, fieldspec, start=0, stop=None, step=1):
 
 def expr(s):
     """
-    Construct a function operating on a record (i.e., a dictinoary representation
+    Construct a function operating on a record (i.e., a dictionary representation
     of a data row, indexed by field name).
     
     The expression string is converted into a lambda function by prepending

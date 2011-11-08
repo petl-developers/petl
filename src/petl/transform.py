@@ -132,7 +132,7 @@ def project(table, *args, **kwargs):
         +-------+-------+
 
     Note that any short rows will be padded with `None` values (or whatever is
-    provided via the `padding` keyword argument).
+    provided via the `missing` keyword argument).
     
     Fields can also be specified by index, starting from zero. E.g.::
 
@@ -198,10 +198,10 @@ class ProjectView(object):
     def __init__(self, source, spec, missing=None):
         self.source = source
         self.spec = spec
-        self.padding = missing
+        self.missing = missing
         
     def __iter__(self):
-        return iterproject(self.source, self.spec, self.padding)
+        return iterproject(self.source, self.spec, self.missing)
         
         
 def iterproject(source, spec, missing=None):
@@ -225,7 +225,7 @@ def iterproject(source, spec, missing=None):
             try:
                 yield transform(row) 
             except IndexError:
-                # row is short, let's be kind and fill in any padding fields
+                # row is short, let's be kind and fill in any missing fields
                 yield [row[i] if i < len(row) else missing for i in indices]
 
     finally:
@@ -235,8 +235,8 @@ def iterproject(source, spec, missing=None):
 def cat(*tables, **kwargs):
     """
     Concatenate data from two or more tables. Note that the tables do not need
-    to share exactly the same fields, any padding fields will be padded with
-    `None` (or whatever is provided via the `padding` keyword argument). E.g.::
+    to share exactly the same fields, any missing fields will be padded with
+    `None` (or whatever is provided via the `missing` keyword argument). E.g.::
 
         >>> from petl import look, cat    
         >>> table1 = [['foo', 'bar'],
@@ -291,10 +291,10 @@ class CatView(object):
     
     def __init__(self, sources, missing=None):
         self.sources = sources
-        self.padding = missing
+        self.missing = missing
 
     def __iter__(self):
-        return itercat(self.sources, self.padding)
+        return itercat(self.sources, self.missing)
     
 
 def itercat(sources, missing=None):
@@ -316,7 +316,7 @@ def itercat(sources, missing=None):
             flds = source_flds_lists[source_index]
             
             # let's define a function which will, for any row and field name,
-            # return the corresponding value, or fill in any padding values
+            # return the corresponding value, or fill in any missing values
             def get_value(row, f):
                 try:
                     value = row[flds.index(f)]
@@ -1040,7 +1040,7 @@ def itermelt(source, key, variables, variable_field, value_field):
 
 
 def recast(table, key=[], variable_field='variable', value_field='value', 
-           sample_size=1000, reduce=dict(), missing=None):
+           sample_size=1000, reducers=dict(), missing=None):
     """
     Recast molten data. E.g.::
     
@@ -1085,7 +1085,7 @@ def recast(table, key=[], variable_field='variable', value_field='value',
         | 3    | 16    | 'M'      |
         +------+-------+----------+
 
-    If there are multiple values for each key/variable pair, and no reduce
+    If there are multiple values for each key/variable pair, and no reducers
     function is provided, then all values will be listed. E.g.::
     
         >>> table6 = [['id', 'time', 'variable', 'value'],
@@ -1112,7 +1112,7 @@ def recast(table, key=[], variable_field='variable', value_field='value',
         >>> def mean(values):
         ...     return float(sum(values)) / len(values)
         ... 
-        >>> table8 = recast(table6, key='id', reduce={'weight': mean})
+        >>> table8 = recast(table6, key='id', reducers={'weight': mean})
         >>> look(table8)    
         +------+--------------------+
         | 'id' | 'weight'           |
@@ -1124,7 +1124,7 @@ def recast(table, key=[], variable_field='variable', value_field='value',
         | 3    | 41.95              |
         +------+--------------------+
 
-    Missing values are padded with whatever is provided via the `padding` 
+    Missing values are padded with whatever is provided via the `missing` 
     keyword argument (`None` by default), e.g.::
 
         >>> table9 = [['id', 'variable', 'value'],
@@ -1146,30 +1146,30 @@ def recast(table, key=[], variable_field='variable', value_field='value',
 
     """
     
-    return RecastView(table, key, variable_field, value_field, sample_size, reduce, missing)
+    return RecastView(table, key, variable_field, value_field, sample_size, reducers, missing)
     
 
 class RecastView(object):
     
     def __init__(self, source, key=[], variable_field='variable', 
-                 value_field='value', sample_size=1000, reduce=dict(), 
+                 value_field='value', sample_size=1000, reducers=dict(), 
                  missing=None):
         self.source = source
         self.key = key
         self.variable_field = variable_field
         self.value_field = value_field
         self.sample_size = sample_size
-        self.reduce = reduce
-        self.padding = missing
+        self.reducers = reducers
+        self.missing = missing
         
     def __iter__(self):
         return iterrecast(self.source, self.key, self.variable_field, 
-                          self.value_field, self.sample_size, self.reduce,
-                          self.padding)
+                          self.value_field, self.sample_size, self.reducers,
+                          self.missing)
 
 
 def iterrecast(source, key=[], variable_field='variable', value_field='value', 
-               sample_size=1000, reduce=dict(), missing=None):        
+               sample_size=1000, reducers=dict(), missing=None):        
     #
     # TODO implementing this by making two passes through the data is a bit
     # ugly, and could be costly if there are several upstream transformations
@@ -1255,8 +1255,8 @@ def iterrecast(source, key=[], variable_field='variable', value_field='value',
                     elif len(values) == 1:
                         value = values[0]
                     else:
-                        if variable in reduce:
-                            redu = reduce[variable]
+                        if variable in reducers:
+                            redu = reducers[variable]
                         else:
                             redu = list # list all values
                         value = redu(values)
@@ -1398,7 +1398,7 @@ def conflicts(table, key, missing=None, presorted=False):
         +-------+-------+-------+
 
     Missing values are not considered conflicts. By default, `None` is treated
-    as the padding value, this can be changed via the `padding` keyword 
+    as the missing value, this can be changed via the `missing` keyword 
     argument.
     
     """
@@ -1414,11 +1414,11 @@ class ConflictsView(object):
         else:
             self.source = sort(source, key)
         self.key = key
-        self.padding = missing
+        self.missing = missing
         
         
     def __iter__(self):
-        return iterconflicts(self.source, self.key, self.padding)
+        return iterconflicts(self.source, self.key, self.missing)
     
     
 def iterconflicts(source, key, missing):
@@ -1508,10 +1508,10 @@ class MergeView(object):
         else:
             self.source = sort(source, key)
         self.key = key
-        self.padding = missing
+        self.missing = missing
 
     def __iter__(self):
-        return itermerge(self.source, self.key, self.padding)
+        return itermerge(self.source, self.key, self.missing)
     
     
 def itermerge(source, key, missing):
@@ -1903,11 +1903,11 @@ class SelectView(object):
     def __init__(self, source, where, padding=None):
         self.source = source
         self.where = where
-        self.padding = padding
+        self.missing = padding
         
         
     def __iter__(self):
-        return iterselect(self.source, self.where, self.padding)
+        return iterselect(self.source, self.where, self.missing)
     
     
 def iterselect(source, where, padding):
@@ -1925,8 +1925,69 @@ def iterselect(source, where, padding):
         
 def fieldmap(table, mappings=OrderedDict()):
     """
-    TODO doc me
+    Transform a table, mapping fields arbitrarily between input and output. E.g.::
     
+        >>> from petl import fieldmap, look
+        >>> from collections import OrderedDict
+        >>> table1 = [['id', 'sex', 'age', 'height', 'weight'],
+        ...           [1, 'male', 16, 1.45, 62.0],
+        ...           [2, 'female', 19, 1.34, 55.4],
+        ...           [3, 'female', 17, 1.78, 74.4],
+        ...           [4, 'male', 21, 1.33, 45.2],
+        ...           [5, '-', 25, 1.65, 51.9]]
+        >>> mappings = OrderedDict()
+        >>> # rename a field
+        ... mappings['subject_id'] = 'id'
+        >>> # translate a field
+        ... mappings['gender'] = 'sex', {'male': 'M', 'female': 'F'}
+        >>> # apply a calculation to a field
+        ... mappings['age_months'] = 'age', lambda v: v * 12
+        >>> # apply a calculation to a combination of fields
+        ... mappings['bmi'] = lambda rec: rec['weight'] / rec['height']**2 
+        >>> # transform and inspect the output
+        ... table2 = fieldmap(table1, mappings)
+        >>> look(table2)
+        +--------------+----------+--------------+--------------------+
+        | 'subject_id' | 'gender' | 'age_months' | 'bmi'              |
+        +==============+==========+==============+====================+
+        | 1            | 'M'      | 192          | 29.48870392390012  |
+        +--------------+----------+--------------+--------------------+
+        | 2            | 'F'      | 228          | 30.8531967030519   |
+        +--------------+----------+--------------+--------------------+
+        | 3            | 'F'      | 204          | 23.481883600555488 |
+        +--------------+----------+--------------+--------------------+
+        | 4            | 'M'      | 252          | 25.55260331279326  |
+        +--------------+----------+--------------+--------------------+
+        | 5            | '-'      | 300          | 19.0633608815427   |
+        +--------------+----------+--------------+--------------------+
+
+    Field mappings can also be added and/or updated after the table is created via
+    the suffix notation. E.g.::
+    
+        >>> table3 = fieldmap(table1)
+        >>> table3['subject_id'] = 'id'
+        >>> table3['gender'] = 'sex', {'male': 'M', 'female': 'F'}
+        >>> table3['age_months'] = 'age', lambda v: v * 12
+        >>> # use an expression string this time
+        ... table3['bmi'] = '{weight} / {height}**2'
+        >>> look(table3)
+        +--------------+----------+--------------+--------------------+
+        | 'subject_id' | 'gender' | 'age_months' | 'bmi'              |
+        +==============+==========+==============+====================+
+        | 1            | 'M'      | 192          | 29.48870392390012  |
+        +--------------+----------+--------------+--------------------+
+        | 2            | 'F'      | 228          | 30.8531967030519   |
+        +--------------+----------+--------------+--------------------+
+        | 3            | 'F'      | 204          | 23.481883600555488 |
+        +--------------+----------+--------------+--------------------+
+        | 4            | 'M'      | 252          | 25.55260331279326  |
+        +--------------+----------+--------------+--------------------+
+        | 5            | '-'      | 300          | 19.0633608815427   |
+        +--------------+----------+--------------+--------------------+
+
+    Note also that the mapping value can be an expression string, which will be 
+    converted to a lambda function via :func:`expr`. 
+
     """    
     
     return FieldMapView(table, mappings)
