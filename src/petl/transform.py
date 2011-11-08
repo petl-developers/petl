@@ -1475,20 +1475,20 @@ def merge(table, key, missing=None, presorted=False):
         ...           ['A', 2, None]]
         >>> table2 = merge(table1, 'foo')
         >>> look(table2)
-        +-------+-------+-------+
-        | 'foo' | 'bar' | 'baz' |
-        +=======+=======+=======+
-        | 'A'   | 2     | 2.7   |
-        +-------+-------+-------+
-        | 'B'   | 2     | 7.8   |
-        +-------+-------+-------+
-        | 'D'   | 3     | 12.3  |
-        +-------+-------+-------+
-        | 'E'   | None  |       |
-        +-------+-------+-------+
+        +-------+-------------+------------------+
+        | 'foo' | 'bar'       | 'baz'            |
+        +=======+=============+==================+
+        | 'A'   | set([1, 2]) | 2.7              |
+        +-------+-------------+------------------+
+        | 'B'   | 2           | 7.8              |
+        +-------+-------------+------------------+
+        | 'D'   | 3           | set([9.4, 12.3]) |
+        +-------+-------------+------------------+
+        | 'E'   | set([])     |                  |
+        +-------+-------------+------------------+
 
-    Any conflicts are resolved by selecting the later value. Missing values are 
-    not considered conflicts, and are overridden by non-missing values. 
+    Missing values are overridden by non-missing values. Conflicting values are
+    reported as a set.
     
     """
     
@@ -1524,31 +1524,18 @@ def itermerge(source, key, missing):
         # the field selection
         getkey = itemgetter(*indices)
         
-        previous = None
-        
-        for row in it:
-            if previous is None:
-                previous = row
-            else:
-                kprev = getkey(previous)
-                kcurr = getkey(row)
-                if kprev == kcurr:
-                    merge = list()
-                    for i, v in enumerate(row):
-                        try:
-                            if v is not missing:
-                                # last wins
-                                merge.append(v)
-                            else:
-                                merge.append(previous[i])
-                        except IndexError: # previous row is short
-                            merge.append(v)
-                    previous = merge
-                else:
-                    yield previous
-                    previous = row
-        # return the last one
-        yield previous
+        for key, group in groupby(it, key=getkey):
+            merge = list()
+            for row in group:
+                for i, v in enumerate(row):
+                    if i == len(merge):
+                        merge.append(set())
+                    merge[i].add(v)
+            # remove missing values
+            merge = [vals - {missing} for vals in merge]
+            # replace singletons
+            merge = [vals.pop() if len(vals) == 1 else vals for vals in merge]
+            yield merge
         
     finally:
         close(it)

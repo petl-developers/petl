@@ -643,7 +643,7 @@ def test_conflicts():
     iassertequal(expectation, result)
     
     
-def test_mergeduplicates():
+def test_merge():
 
     table = [['foo', 'bar', 'baz'],
              ['A', 1, 2],
@@ -657,10 +657,10 @@ def test_mergeduplicates():
     # value overrides missing; last value wins
     result = merge(table, 'foo', missing=None)
     expectation = [['foo', 'bar', 'baz'],
-                   ['A', 2, 2],
+                   ['A', {1, 2}, 2],
                    ['B', '2', u'7.8', True],
-                   ['D', 'xyz', 12.3],
-                   ['E', None]]
+                   ['D', 'xyz', {9.4, 12.3}],
+                   ['E', set()]]
     iassertequal(expectation, result)
     
     
