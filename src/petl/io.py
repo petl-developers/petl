@@ -14,11 +14,6 @@ import sqlite3
 from petl.util import data, fields, fieldnames
 
 
-__all__ = ['fromcsv', 'frompickle', 'fromsqlite3', 'tocsv', 'topickle', \
-           'tosqlite3', 'crc32sum', 'adler32sum', 'statsum', 'fromdb', \
-           'appendcsv', 'appendpickle', 'appendsqlite3', 'todb', 'appenddb']
-
-
 class Uncacheable(Exception):
     pass # TODO
 

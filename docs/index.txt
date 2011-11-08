@@ -206,6 +206,7 @@ Transforming tables
 .. autofunction:: petl.rename
 .. autofunction:: petl.project
 .. autofunction:: petl.select
+.. autofunction:: petl.selecteq
 .. autofunction:: petl.cat
 .. autofunction:: petl.convert
 .. autofunction:: petl.translate
@@ -224,6 +225,7 @@ Transforming tables
 .. autofunction:: petl.capture
 .. autofunction:: petl.split
 .. autofunction:: petl.fieldmap
+.. autofunction:: petl.facet
 
 
 Loading (writing) tables to files and databases

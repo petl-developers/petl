@@ -10,7 +10,7 @@ from petl.testfun import iassertequal
 from petl import rename, fieldnames, project, cat, convert, translate, extend, \
                 rowslice, head, tail, sort, melt, recast, duplicates, conflicts, \
                 merge, select, complement, diff, capture, \
-                split, expr, fieldmap
+                split, expr, fieldmap, facet
 
 
 def test_rename():
@@ -935,4 +935,27 @@ def test_fieldmap():
     actual = fieldmap(table2, mappings)
     iassertequal(expect, actual)
 
+
+def test_facet():
+
+    table = [['foo', 'bar', 'baz'],
+             ['a', 4, 9.3],
+             ['a', 2, 88.2],
+             ['b', 1, 23.3],
+             ['c', 8, 42.0],
+             ['d', 7, 100.9],
+             ['c', 2]]
+    fct = facet(table, 'foo')
+    assert set(fct.keys()) == {'a', 'b', 'c', 'd'}
+    expect_fcta = [['foo', 'bar', 'baz'],
+                   ['a', 4, 9.3],
+                   ['a', 2, 88.2]]
+    iassertequal(fct['a'], expect_fcta)
+    iassertequal(fct['a'], expect_fcta) # check can iterate twice
+    expect_fctc = [['foo', 'bar', 'baz'],
+                   ['c', 8, 42.0],
+                   ['c', 2]]
+    iassertequal(fct['c'], expect_fctc)
+    iassertequal(fct['c'], expect_fctc) # check can iterate twice
+    
 

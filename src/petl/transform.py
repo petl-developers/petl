@@ -9,13 +9,8 @@ from operator import itemgetter
 
 
 from petl.util import close, asindices, rowgetter, FieldSelectionError, asdict,\
-    expr
+    expr, valueset
 import re
-
-__all__ = ['rename', 'project', 'cat', 'convert', 'translate', 'extend', 'rowslice', \
-           'head', 'tail', 'sort', 'melt', 'recast', 'duplicates', 'conflicts', \
-           'merge', 'select', 'complement', 'diff', 'capture', \
-           'split', 'fieldmap']
 
 
 def rename(table, spec=dict()):
@@ -2073,3 +2068,69 @@ def composedict(d, srcfld):
         else:
             return k
     return g
+
+
+def facet(table, field):
+    """
+    Return a dictionary mapping field values to tables. E.g.::
+    
+        >>> from petl import facet, look
+        >>> table1 = [['foo', 'bar', 'baz'],
+        ...           ['a', 4, 9.3],
+        ...           ['a', 2, 88.2],
+        ...           ['b', 1, 23.3],
+        ...           ['c', 8, 42.0],
+        ...           ['d', 7, 100.9],
+        ...           ['c', 2]]
+        >>> foo = facet(table1, 'foo')
+        >>> look(foo['a'])
+        +-------+-------+-------+
+        | 'foo' | 'bar' | 'baz' |
+        +=======+=======+=======+
+        | 'a'   | 4     | 9.3   |
+        +-------+-------+-------+
+        | 'a'   | 2     | 88.2  |
+        +-------+-------+-------+
+        
+        >>> look(foo['c'])
+        +-------+-------+-------+
+        | 'foo' | 'bar' | 'baz' |
+        +=======+=======+=======+
+        | 'c'   | 8     | 42.0  |
+        +-------+-------+-------+
+        | 'c'   | 2     |       |
+        +-------+-------+-------+
+
+    """
+    
+    fct = dict()
+    for v in valueset(table, field):
+        fct[v] = selecteq(table, field, v)
+    return fct
+
+
+def selecteq(table, field, value):
+    """
+    Select rows where values in the given field equal the given value. E.g.::
+    
+        >>> from petl import selecteq, look     
+        >>> table1 = [['foo', 'bar', 'baz'],
+        ...           ['a', 4, 9.3],
+        ...           ['a', 2, 88.2],
+        ...           ['b', 1, 23.3],
+        ...           ['c', 8, 42.0],
+        ...           ['d', 7, 100.9],
+        ...           ['c', 2]]
+        >>> table2 = selecteq(table1, 'foo', 'a')
+        >>> look(table2)
+        +-------+-------+-------+
+        | 'foo' | 'bar' | 'baz' |
+        +=======+=======+=======+
+        | 'a'   | 4     | 9.3   |
+        +-------+-------+-------+
+        | 'a'   | 2     | 88.2  |
+        +-------+-------+-------+
+
+    """
+    
+    return select(table, lambda rec: rec[field] == value)
