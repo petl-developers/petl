@@ -1923,7 +1923,7 @@ def iterselect(source, where, padding):
         close(it)
         
         
-def fieldmap(table, mappings=OrderedDict()):
+def fieldmap(table, mappings=OrderedDict(), errorvalue=None):
     """
     Transform a table, mapping fields arbitrarily between input and output. E.g.::
     
@@ -1990,14 +1990,15 @@ def fieldmap(table, mappings=OrderedDict()):
 
     """    
     
-    return FieldMapView(table, mappings)
+    return FieldMapView(table, mappings, errorvalue)
     
     
 class FieldMapView(object):
     
-    def __init__(self, source, mappings=OrderedDict()):
+    def __init__(self, source, mappings=OrderedDict(), errorvalue=None):
         self.source = source
         self.mappings = mappings
+        self.errorvalue = errorvalue
         
     def __getitem__(self, key):
         return self.mappings[key]
@@ -2006,10 +2007,10 @@ class FieldMapView(object):
         self.mappings[key] = value
         
     def __iter__(self):
-        return iterfieldmap(self.source, self.mappings)
+        return iterfieldmap(self.source, self.mappings, self.errorvalue)
     
     
-def iterfieldmap(source, mappings):
+def iterfieldmap(source, mappings, errorvalue):
     it = iter(source)
     try:
         flds = it.next()
@@ -2040,7 +2041,19 @@ def iterfieldmap(source, mappings):
                 
         for row in it:
             rec = asdict(flds, row)
-            yield [mapfuns[outfld](rec) for outfld in outflds] 
+            try:
+                # use list comprehension if possible
+                outrow = [mapfuns[outfld](rec) for outfld in outflds]
+            except:
+                # fall back to doing it one field at a time
+                outrow = list()
+                for outfld in outflds:
+                    try:
+                        val = mapfuns[outfld](rec)
+                    except:
+                        val = errorvalue
+                    outrow.append(val)
+            yield outrow
                     
     finally:
         close(it)

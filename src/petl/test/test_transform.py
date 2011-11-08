@@ -919,6 +919,20 @@ def test_fieldmap():
     actual['bmi'] = '{weight} / {height}**2'
     iassertequal(expect, actual)
     
-    # TODO test short rows
+    # test short rows
+    table2 = [['id', 'sex', 'age', 'height', 'weight'],
+              [1, 'male', 16, 1.45, 62.0],
+              [2, 'female', 19, 1.34, 55.4],
+              [3, 'female', 17, 1.78, 74.4],
+              [4, 'male', 21, 1.33, 45.2],
+              [5, '-', 25, 1.65]]
+    expect = [['subject_id', 'gender', 'age_months', 'bmi'],
+              [1, 'M', 16*12, 62.0/1.45**2],
+              [2, 'F', 19*12, 55.4/1.34**2],
+              [3, 'F', 17*12, 74.4/1.78**2],
+              [4, 'M', 21*12, 45.2/1.33**2],
+              [5, '-', 25*12, None]]
+    actual = fieldmap(table2, mappings)
+    iassertequal(expect, actual)
 
 
