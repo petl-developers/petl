@@ -514,9 +514,9 @@ def unique(table, fieldspec):
 # TODO handle short rows in lookup, lookupone, recordlookup, recordlookupone?
 
 
-def lookup(table, keyspec, valuespec=None):
+def lookup(table, keyspec, valuespec=None, dictionary=None):
     """
-    Construct a :class:`dict` (in memory) from the given table. E.g.::
+    Load a dictionary with data from the given table. E.g.::
     
         >>> from petl import lookup
         >>> table = [['foo', 'bar'], ['a', 1], ['b', 2], ['b', 3]]
@@ -550,9 +550,32 @@ def lookup(table, keyspec, valuespec=None):
         [False]
         >>> lkp[('b', 3)]
         [True, False]
+
+    Data can be loaded into an existing dictionary-like object, including
+    persistent dictionaries created via the :mod:`shelve` module, e.g.::
     
+        >>> import shelve
+        >>> table = [['foo', 'bar'], ['a', 1], ['b', 2], ['b', 3]]
+        >>> lkp = shelve.open('mylookup.dat')
+        >>> lkp = lookup(table, 'foo', 'bar', lkp)
+        >>> lkp.close()
+        >>> exit()
+        $ python
+        Python 2.7.1+ (r271:86832, Apr 11 2011, 18:05:24) 
+        [GCC 4.5.2] on linux2
+        Type "help", "copyright", "credits" or "license" for more information.
+        >>> import shelve
+        >>> lkp = shelve.open('mylookup.dat')
+        >>> lkp['a']
+        [1]
+        >>> lkp['b']
+        [2, 3]
+
     """
     
+    if dictionary is None:
+        dictionary = dict()
+        
     it = iter(table)
     try:
         flds = it.next()
@@ -562,23 +585,28 @@ def lookup(table, keyspec, valuespec=None):
         assert len(keyindices) > 0, 'no keyspec selected'
         valueindices = asindices(flds, valuespec)
         assert len(valueindices) > 0, 'no valuespec selected'
-        lkp = defaultdict(list)
         getkey = itemgetter(*keyindices)
         getvalue = itemgetter(*valueindices)
         for row in it:
             k = getkey(row)
             v = getvalue(row)
-            lkp[k].append(v)
-        return lkp
+            if k in dictionary:
+                # work properly with shelve
+                l = dictionary[k]
+                l.append(v)
+                dictionary[k] = l
+            else:
+                dictionary[k] = [v]
+        return dictionary
     except:
         raise
     finally:
         close(it)
     
     
-def lookupone(table, keyspec, valuespec=None, strict=True):
+def lookupone(table, keyspec, valuespec=None, dictionary=None, strict=True):
     """
-    Construct a :class:`dict` (in memory) from the given table, assuming there is
+    Load a dictionary with data from the given table, assuming there is
     at most one value for each key. E.g.::
     
         >>> from petl import lookupone
@@ -624,7 +652,33 @@ def lookupone(table, keyspec, valuespec=None, strict=True):
         >>> lkp[('b', 3)]
         True
     
+    Data can be loaded into an existing dictionary-like object, including
+    persistent dictionaries created via the :mod:`shelve` module, e.g.::
+    
+        >>> from petl import lookupone
+        >>> import shelve
+        >>> table = [['foo', 'bar'], ['a', 1], ['b', 2], ['c', 2]]
+        >>> lkp = shelve.open('mylookupone.dat')
+        >>> lkp = lookupone(table, 'foo', 'bar', dictionary=lkp)
+        >>> lkp.close()
+        >>> exit()
+        $ python
+        Python 2.7.1+ (r271:86832, Apr 11 2011, 18:05:24) 
+        [GCC 4.5.2] on linux2
+        Type "help", "copyright", "credits" or "license" for more information.
+        >>> import shelve
+        >>> lkp = shelve.open('mylookupone.dat')
+        >>> lkp['a']
+        1
+        >>> lkp['b']
+        2
+        >>> lkp['c']
+        2
+
     """
+
+    if dictionary is None:
+        dictionary = dict()
 
     it = iter(table)
     try:
@@ -635,26 +689,24 @@ def lookupone(table, keyspec, valuespec=None, strict=True):
         assert len(keyindices) > 0, 'no keyspec selected'
         valueindices = asindices(flds, valuespec)
         assert len(valueindices) > 0, 'no valuespec selected'
-        lkp = defaultdict(list)
         getkey = itemgetter(*keyindices)
         getvalue = itemgetter(*valueindices)
         for row in it:
             k = getkey(row)
-            if strict and k in lkp:
+            if strict and k in dictionary:
                 raise DuplicateKeyError
             v = getvalue(row)
-            lkp[k] = v
-        return lkp
+            dictionary[k] = v
+        return dictionary
     except:
         raise
     finally:
         close(it)
     
     
-def recordlookup(table, keyspec):
+def recordlookup(table, keyspec, dictionary=None):
     """
-    Construct a :class:`dict` (in memory) from the given table, mapping to records. 
-    E.g.::
+    Load a dictionary with data from the given table, mapping to records. E.g.::
     
         >>> from petl import recordlookup
         >>> table = [['foo', 'bar'], ['a', 1], ['b', 2], ['b', 3]]
@@ -679,29 +731,57 @@ def recordlookup(table, keyspec):
         >>> lkp[('b', 3)]
         [{'baz': True, 'foo': 'b', 'bar': 3}, {'baz': False, 'foo': 'b', 'bar': 3}]
     
+    Data can be loaded into an existing dictionary-like object, including
+    persistent dictionaries created via the :mod:`shelve` module, e.g.::
+
+        >>> import shelve
+        >>> table = [['foo', 'bar'], ['a', 1], ['b', 2], ['b', 3]]
+        >>> lkp = shelve.open('myrecordlookup.dat')
+        >>> lkp = recordlookup(table, 'foo', dictionary=lkp)
+        >>> lkp.close()
+        >>> exit()
+        $ python
+        Python 2.7.1+ (r271:86832, Apr 11 2011, 18:05:24) 
+        [GCC 4.5.2] on linux2
+        Type "help", "copyright", "credits" or "license" for more information.
+        >>> import shelve
+        >>> lkp = shelve.open('myrecordlookup.dat')
+        >>> lkp['a']
+        [{'foo': 'a', 'bar': 1}]
+        >>> lkp['b']
+        [{'foo': 'b', 'bar': 2}, {'foo': 'b', 'bar': 3}]
+
     """
     
+    if dictionary is None:
+        dictionary = dict()
+
     it = iter(table)
     try:
         flds = it.next()
         keyindices = asindices(flds, keyspec)
         assert len(keyindices) > 0, 'no keyspec selected'
-        lkp = defaultdict(list)
         getkey = itemgetter(*keyindices)
         for row in it:
             k = getkey(row)
-            d = asdict(flds, row)
-            lkp[k].append(d)
-        return lkp
+            rec = asdict(flds, row)
+            if k in dictionary:
+                # work properly with shelve
+                l = dictionary[k]
+                l.append(rec)
+                dictionary[k] = l
+            else:
+                dictionary[k] = [rec]
+        return dictionary
     except:
         raise
     finally:
         close(it)
     
         
-def recordlookupone(table, keyspec, strict=True):
+def recordlookupone(table, keyspec, dictionary=None, strict=True):
     """
-    Construct a :class:`dict` (in memory) from the given table, mapping to records,
+    Load a dictionary with data from the given table, mapping to records,
     assuming there is at most one record for each key. E.g.::
     
         >>> from petl import recordlookupone
@@ -747,22 +827,46 @@ def recordlookupone(table, keyspec, strict=True):
         >>> lkp[('b', 3)]
         {'baz': True, 'foo': 'b', 'bar': 3}
     
+    Data can be loaded into an existing dictionary-like object, including
+    persistent dictionaries created via the :mod:`shelve` module, e.g.::
+
+        >>> import shelve
+        >>> lkp = shelve.open('myrecordlookupone.dat')
+        >>> table = [['foo', 'bar'], ['a', 1], ['b', 2], ['c', 2]]
+        >>> lkp = recordlookupone(table, 'foo', dictionary=lkp)
+        >>> lkp.close()
+        >>> exit()
+        $ python
+        Python 2.7.1+ (r271:86832, Apr 11 2011, 18:05:24) 
+        [GCC 4.5.2] on linux2
+        Type "help", "copyright", "credits" or "license" for more information.
+        >>> import shelve
+        >>> lkp = shelve.open('myrecordlookupone.dat')
+        >>> lkp['a']
+        {'foo': 'a', 'bar': 1}
+        >>> lkp['b']
+        {'foo': 'b', 'bar': 2}
+        >>> lkp['c']
+        {'foo': 'c', 'bar': 2}
+
     """    
+
+    if dictionary is None:
+        dictionary = dict()
 
     it = iter(table)
     try:
         flds = it.next()
         keyindices = asindices(flds, keyspec)
         assert len(keyindices) > 0, 'no keyspec selected'
-        lkp = defaultdict(list)
         getkey = itemgetter(*keyindices)
         for row in it:
             k = getkey(row)
-            if strict and k in lkp:
+            if strict and k in dictionary:
                 raise DuplicateKeyError
             d = asdict(flds, row)
-            lkp[k] = d
-        return lkp
+            dictionary[k] = d
+        return dictionary
     except:
         raise
     finally:
