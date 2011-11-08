@@ -4,7 +4,7 @@ TODO doc me
 """
 
 from itertools import islice, groupby
-from collections import deque, defaultdict
+from collections import deque, defaultdict, OrderedDict
 from operator import itemgetter
 
 
@@ -1923,10 +1923,79 @@ def iterselect(source, where, padding):
         close(it)
         
         
-def fieldmap(table):
+def fieldmap(table, mappings=OrderedDict()):
     """
     TODO doc me
     
     """    
     
+    return FieldMapView(table, mappings)
+    
+    
+class FieldMapView(object):
+    
+    def __init__(self, source, mappings=OrderedDict()):
+        self.source = source
+        self.mappings = mappings
         
+    def __getitem__(self, key):
+        return self.mappings[key]
+    
+    def __setitem__(self, key, value):
+        self.mappings[key] = value
+        
+    def __iter__(self):
+        return iterfieldmap(self.source, self.mappings)
+    
+    
+def iterfieldmap(source, mappings):
+    it = iter(source)
+    try:
+        flds = it.next()
+        outflds = mappings.keys()
+        yield outflds
+        
+        mapfuns = dict()
+        for outfld, m in mappings.items():
+            if m in flds:
+                mapfuns[outfld] = itemgetter(m)
+            elif isinstance(m, int) and m < len(flds):
+                mapfuns[outfld] = itemgetter(m)
+            elif isinstance(m, basestring):
+                mapfuns[outfld] = expr(m)
+            elif callable(m):
+                mapfuns[outfld] = m
+            elif isinstance(m, (tuple, list)) and len(m) == 2:
+                srcfld = m[0]
+                fm = m[1]
+                if callable(fm):
+                    mapfuns[outfld] = composefun(fm, srcfld)
+                elif isinstance(fm, dict):
+                    mapfuns[outfld] = composedict(fm, srcfld)
+                else:
+                    raise Exception('expected callable or dict') # TODO better error
+            else:
+                raise Exception('invalid mapping', outfld, m) # TODO better error
+                
+        for row in it:
+            rec = asdict(flds, row)
+            yield [mapfuns[outfld](rec) for outfld in outflds] 
+                    
+    finally:
+        close(it)
+        
+        
+def composefun(f, srcfld):
+    def g(rec):
+        return f(rec[srcfld])
+    return g
+
+
+def composedict(d, srcfld):
+    def g(rec):
+        k = rec[srcfld]
+        if k in d:
+            return d[k]
+        else:
+            return k
+    return g

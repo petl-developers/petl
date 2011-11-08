@@ -4,11 +4,13 @@ Tests for the petl.transform module.
 """
 
 
+from collections import OrderedDict
+
 from petl.testfun import iassertequal
 from petl import rename, fieldnames, project, cat, convert, translate, extend, \
                 rowslice, head, tail, sort, melt, recast, duplicates, conflicts, \
                 merge, select, complement, diff, capture, \
-                split, expr
+                split, expr, fieldmap
 
 
 def test_rename():
@@ -885,3 +887,37 @@ def test_select():
     iassertequal(expect, actual)
     
     
+def test_fieldmap():
+    
+    table = [['id', 'sex', 'age', 'weight'],
+             [1, 'male', 16, 62.0],
+             [2, 'female', 19, 55.4],
+             [3, 'female', 17, 74.4],
+             [4, 'male', 21, 45.2],
+             [5, '-', 25, 51.9]]
+    
+    mappings = OrderedDict()
+    mappings['subject_id'] = 'id'
+    mappings['gender'] = 'sex', {'male': 'M', 'female': 'F'}
+    mappings['age_months'] = 'age', lambda v: v * 24
+    mappings['bmi'] = lambda rec: rec['weight'] / rec['age'] # TODO make this real :)
+    actual = fieldmap(table, mappings)  
+    expect = [['subject_id', 'gender', 'age_months', 'bmi'],
+              [1, 'M', 16*24, 62.0/16],
+              [2, 'F', 19*24, 55.4/19],
+              [3, 'F', 17*24, 74.4/17],
+              [4, 'M', 21*24, 45.2/21],
+              [5, '-', 25*24, 51.9/25]]
+    iassertequal(expect, actual)
+    
+    # do it with suffix
+    actual = fieldmap(table)
+    actual['subject_id'] = 'id'
+    actual['gender'] = 'sex', {'male': 'M', 'female': 'F'}
+    actual['age_months'] = 'age', lambda v: v * 24
+    actual['bmi'] = '{weight} / {age}' # TODO make this real :)
+    iassertequal(expect, actual)
+    
+    # TODO test short rows
+
+
