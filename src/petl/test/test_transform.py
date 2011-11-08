@@ -909,6 +909,7 @@ def test_fieldmap():
               [4, 'M', 21*24, 45.2/21],
               [5, '-', 25*24, 51.9/25]]
     iassertequal(expect, actual)
+    iassertequal(expect, actual) # can iteratate twice?
     
     # do it with suffix
     actual = fieldmap(table)
