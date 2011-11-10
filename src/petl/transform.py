@@ -1460,87 +1460,6 @@ def iterconflicts(source, key, missing):
         close(it)
 
 
-def merge(table, key, missing=None, presorted=False):
-    """
-    Merge rows with duplicate values under a given key. E.g.::
-    
-        >>> from petl import merge, look    
-        >>> table1 = [['foo', 'bar', 'baz'],
-        ...           ['A', 1, 2.7],
-        ...           ['B', 2, None],
-        ...           ['D', 3, 9.4],
-        ...           ['B', None, 7.8],
-        ...           ['E', None],
-        ...           ['D', 3, 12.3],
-        ...           ['A', 2, None]]
-        >>> table2 = merge(table1, 'foo')
-        >>> look(table2)
-        +-------+-------------+------------------+
-        | 'foo' | 'bar'       | 'baz'            |
-        +=======+=============+==================+
-        | 'A'   | set([1, 2]) | 2.7              |
-        +-------+-------------+------------------+
-        | 'B'   | 2           | 7.8              |
-        +-------+-------------+------------------+
-        | 'D'   | 3           | set([9.4, 12.3]) |
-        +-------+-------------+------------------+
-        | 'E'   | set([])     |                  |
-        +-------+-------------+------------------+
-
-    Missing values are overridden by non-missing values. Conflicting values are
-    reported as a set.
-    
-    """
-    
-    return MergeView(table, key, missing, presorted)
-
-
-class MergeView(object):
-    
-    def __init__(self, source, key, missing=None, presorted=False):
-        if presorted:
-            self.source = source
-        else:
-            self.source = sort(source, key)
-        self.key = key
-        self.missing = missing
-
-    def __iter__(self):
-        return itermerge(self.source, self.key, self.missing)
-    
-    
-def itermerge(source, key, missing):
-    it = iter(source)
-
-    try:
-        flds = it.next()
-        yield flds
-
-        # convert field selection into field indices
-        indices = asindices(flds, key)
-        
-        # now use field indices to construct a getkey function
-        # N.B., this may raise an exception on short rows, depending on
-        # the field selection
-        getkey = itemgetter(*indices)
-        
-        for key, group in groupby(it, key=getkey):
-            merge = list()
-            for row in group:
-                for i, v in enumerate(row):
-                    if i == len(merge):
-                        merge.append(set())
-                    merge[i].add(v)
-            # remove missing values
-            merge = [vals - {missing} for vals in merge]
-            # replace singletons
-            merge = [vals.pop() if len(vals) == 1 else vals for vals in merge]
-            yield merge
-        
-    finally:
-        close(it)
-
-
 def complement(a, b, presorted=False):
     """
     Return rows in `a` that are not in `b`. E.g.::
@@ -2124,3 +2043,102 @@ def selecteq(table, field, value):
     """
     
     return select(table, lambda rec: rec[field] == value)
+
+
+def rowreduce(table, key, reducer, header=None, presorted=False):
+    """
+    TODO doc me
+    
+    """
+
+    return RowReduceView(table, key, reducer, header, presorted)
+
+
+class RowReduceView(object):
+    
+    def __init__(self, source, key, reducer, header=None, presorted=False):
+        if presorted:
+            self.source = source
+        else:
+            self.source = sort(source, key)
+        self.key = key
+        self.header = header
+        self.reducer = reducer
+
+    def __iter__(self):
+        return iterrowreduce(self.source, self.key, self.reducer, self.header)
+    
+    
+def iterrowreduce(source, key, reducer, header):
+    it = iter(source)
+
+    try:
+        srcflds = it.next()
+        if header is None:
+            yield srcflds
+        else:
+            yield header
+
+        # convert field selection into field indices
+        indices = asindices(srcflds, key)
+        
+        # now use field indices to construct a getkey function
+        # N.B., this may raise an exception on short rows, depending on
+        # the field selection
+        getkey = itemgetter(*indices)
+        
+        for key, rows in groupby(it, key=getkey):
+            yield reducer(key, rows)
+        
+    finally:
+        close(it)
+
+
+def merge(table, key, missing=None, presorted=False):
+    """
+    Merge rows with duplicate values under a given key. E.g.::
+    
+        >>> from petl import merge, look    
+        >>> table1 = [['foo', 'bar', 'baz'],
+        ...           ['A', 1, 2.7],
+        ...           ['B', 2, None],
+        ...           ['D', 3, 9.4],
+        ...           ['B', None, 7.8],
+        ...           ['E', None],
+        ...           ['D', 3, 12.3],
+        ...           ['A', 2, None]]
+        >>> table2 = merge(table1, 'foo')
+        >>> look(table2)
+        +-------+-------------+------------------+
+        | 'foo' | 'bar'       | 'baz'            |
+        +=======+=============+==================+
+        | 'A'   | set([1, 2]) | 2.7              |
+        +-------+-------------+------------------+
+        | 'B'   | 2           | 7.8              |
+        +-------+-------------+------------------+
+        | 'D'   | 3           | set([9.4, 12.3]) |
+        +-------+-------------+------------------+
+        | 'E'   | set([])     |                  |
+        +-------+-------------+------------------+
+
+    Missing values are overridden by non-missing values. Conflicting values are
+    reported as a set.
+    
+    """
+
+    def _reducer(key, rows):
+        merged = list()
+        for row in rows:
+            for i, v in enumerate(row):
+                if i == len(merged):
+                    merged.append(set())
+                merged[i].add(v)
+        # remove missing values
+        merged = [vals - {missing} for vals in merged]
+        # replace singletons
+        merged = [vals.pop() if len(vals) == 1 else vals for vals in merged]
+        return merged
+    
+    return rowreduce(table, key, reducer=_reducer, presorted=presorted)
+
+

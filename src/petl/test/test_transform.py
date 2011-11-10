@@ -10,7 +10,7 @@ from petl.testfun import iassertequal
 from petl import rename, fieldnames, project, cat, convert, translate, extend, \
                 rowslice, head, tail, sort, melt, recast, duplicates, conflicts, \
                 merge, select, complement, diff, capture, \
-                split, expr, fieldmap, facet
+                split, expr, fieldmap, facet, rowreduce
 
 
 def test_rename():
@@ -959,3 +959,23 @@ def test_facet():
     iassertequal(fct['c'], expect_fctc) # check can iterate twice
     
 
+def test_rowreduce():
+    
+    table1 = [['foo', 'bar'],
+              ['a', 3],
+              ['a', 7],
+              ['b', 2],
+              ['b', 1],
+              ['b', 9],
+              ['c', 4]]
+    
+    def reducer(key, rows):
+        return [key, sum([row[1] for row in rows])]
+        
+    table2 = rowreduce(table1, key='foo', reducer=reducer, header=['foo', 'barsum'])
+    expect2 = [['foo', 'barsum'],
+               ['a', 10],
+               ['b', 12],
+               ['c', 4]]
+    iassertequal(expect2, table2)
+    

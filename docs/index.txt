@@ -227,6 +227,7 @@ Transforming tables
 .. autofunction:: petl.split
 .. autofunction:: petl.fieldmap
 .. autofunction:: petl.facet
+.. autofunction:: petl.rowreduce
 
 
 Loading (writing) tables to files and databases
