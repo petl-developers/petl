@@ -45,7 +45,8 @@ So, for example, the list of lists shown below is a table::
 
 Note that, under this convention, an object returned by the
 :func:`csv.reader` function from the standard Python :mod:`csv` module
-is *not* a table, because it can only be iterated over once, e.g.::
+is a row iterator and *not* a table, because it can only be iterated
+over once, e.g.::
 
  >>> from StringIO import StringIO
  >>> import csv
@@ -53,28 +54,28 @@ is *not* a table, because it can only be iterated over once, e.g.::
  ... a,1
  ... b,2
  ... """
- >>> notatable = csv.reader(StringIO(csvdata))
- >>> for row in notatable:
+ >>> rowiterator = csv.reader(StringIO(csvdata))
+ >>> for row in rowiterator:
  ...     print row
  ... 
  ['foo', 'bar']
  ['a', '1']
  ['b', '2']
- >>> for row in notatable:
+ >>> for row in rowiterator:
  ...     print row
  ... 
- >>> # can only iterate over notatable once
+ >>> # can only iterate once
 
 However, it is straightforward to define functions that support the
-above convention and provide access to data from CSV or other types of
-file or data source, see e.g. the :func:`fromcsv` function in this
-package.
+above convention for table objects and provide access to data from CSV
+or other types of file or data source, see e.g. the :func:`fromcsv`
+function in this package.
 
-The main reason for requiring that tables support independent row
-iterators (point 3) is that data from a table may need to be iterated
-over several times. E.g., when using `petl` in interactive mode to
-build up a sequence of data transformation steps, the user might want
-to examine outputs from intermediate steps.
+The main reason for requiring that table objects support independent
+row iterators (point 3) is that data from a table may need to be
+iterated over several times. E.g., when using `petl` in interactive
+mode to build up a sequence of data transformation steps, the user
+might want to examine outputs from intermediate steps.
 
 Note that this convention does not place any restrictions on the
 lengths of header and data rows. A table may return a header row

@@ -1905,7 +1905,7 @@ def iterselect(source, where, padding):
         close(it)
         
         
-def fieldmap(table, mappings=OrderedDict(), errorvalue=None):
+def fieldmap(table, mappings=None, errorvalue=None):
     """
     Transform a table, mapping fields arbitrarily between input and output. E.g.::
     
@@ -1977,9 +1977,12 @@ def fieldmap(table, mappings=OrderedDict(), errorvalue=None):
     
 class FieldMapView(object):
     
-    def __init__(self, source, mappings=OrderedDict(), errorvalue=None):
+    def __init__(self, source, mappings=None, errorvalue=None):
         self.source = source
-        self.mappings = mappings
+        if mappings is None:
+            self.mappings = OrderedDict()
+        else:
+            self.mappings = mappings
         self.errorvalue = errorvalue
         
     def __getitem__(self, key):

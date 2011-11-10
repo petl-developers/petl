@@ -214,7 +214,7 @@ class PickleView(object):
 
 def fromsqlite3(filename, query, checksumfun=None):
     """
-    Provides access to data from an :mod:`sqlite3` connection via a given query. E.g.::
+    Provides access to data from an :mod:`sqlite3` database file via a given query. E.g.::
 
         >>> import sqlite3
         >>> from petl import look, fromsqlite3    
