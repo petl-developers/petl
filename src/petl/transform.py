@@ -2205,3 +2205,140 @@ def merge(*tables, **kwargs):
     return t2
 
 
+def aggregate(table, key, aggregators=None, presorted=False, errorvalue=None):
+    """
+    Group rows under the given key then apply aggregation functions. E.g.::
+
+        >>> from petl import aggregate, look
+        >>> from collections import OrderedDict
+        >>> table1 = [['foo', 'bar'],
+        ...           ['a', 3],
+        ...           ['a', 7],
+        ...           ['b', 2],
+        ...           ['b', 1],
+        ...           ['b', 9],
+        ...           ['c', 4],
+        ...           ['d', 3],
+        ...           ['d'],
+        ...           ['e']]
+        >>> aggregators = OrderedDict()
+        >>> aggregators['minbar'] = 'bar', min
+        >>> aggregators['maxbar'] = 'bar', max
+        >>> aggregators['sumbar'] = 'bar', sum
+        >>> table2 = aggregate(table1, 'foo', aggregators)
+        >>> look(table2)
+        +-------+----------+----------+----------+
+        | 'foo' | 'minbar' | 'maxbar' | 'sumbar' |
+        +=======+==========+==========+==========+
+        | 'a'   | 3        | 7        | 10       |
+        +-------+----------+----------+----------+
+        | 'b'   | 1        | 9        | 12       |
+        +-------+----------+----------+----------+
+        | 'c'   | 4        | 4        | 4        |
+        +-------+----------+----------+----------+
+        | 'd'   | 3        | 3        | 3        |
+        +-------+----------+----------+----------+
+        | 'e'   | None     | None     | 0        |
+        +-------+----------+----------+----------+
+
+    Aggregation functions can also be added and/or updated using the suffix
+    notation on the returned table object, e.g.::
+    
+        >>> table3 = aggregate(table1, 'foo')
+        >>> table3['minbar'] = 'bar', min
+        >>> table3['maxbar'] = 'bar', max
+        >>> table3['sumbar'] = 'bar', sum
+        >>> look(table3)
+        +-------+----------+----------+----------+
+        | 'foo' | 'minbar' | 'maxbar' | 'sumbar' |
+        +=======+==========+==========+==========+
+        | 'a'   | 3        | 7        | 10       |
+        +-------+----------+----------+----------+
+        | 'b'   | 1        | 9        | 12       |
+        +-------+----------+----------+----------+
+        | 'c'   | 4        | 4        | 4        |
+        +-------+----------+----------+----------+
+        | 'd'   | 3        | 3        | 3        |
+        +-------+----------+----------+----------+
+        | 'e'   | None     | None     | 0        |
+        +-------+----------+----------+----------+
+    
+    """
+
+    return AggregateView(table, key, aggregators, presorted, errorvalue)
+
+
+class AggregateView(object):
+    
+    def __init__(self, source, key, aggregators=None, presorted=False, errorvalue=None):
+        if presorted:
+            self.source = source
+        else:
+            self.source = sort(source, key)
+        self.key = key
+        if aggregators is None:
+            self.aggregators = OrderedDict()
+        else:
+            self.aggregators = aggregators
+        self.errorvalue = errorvalue
+
+    def __iter__(self):
+        return iteraggregate(self.source, self.key, self.aggregators, self.errorvalue)
+    
+    def __getitem__(self, key):
+        return self.aggregators[key]
+    
+    def __setitem__(self, key, value):
+        self.aggregators[key] = value
+
+    
+def iteraggregate(source, key, aggregators, errorvalue):
+    it = iter(source)
+
+    try:
+        srcflds = it.next()
+
+        # convert field selection into field indices
+        indices = asindices(srcflds, key)
+        
+        # now use field indices to construct a getkey function
+        # N.B., this may raise an exception on short rows, depending on
+        # the field selection
+        getkey = itemgetter(*indices)
+        
+        if len(indices) == 1:
+            outflds = [getkey(srcflds)]
+        else:
+            outflds = list(getkey(srcflds))
+        outflds.extend(aggregators.keys())
+        yield outflds
+        
+        for key, rows in groupby(it, key=getkey):
+            rows = list(rows) # may need to iterate over these more than once
+            outrow = list(key)
+            for outfld in aggregators:
+                srcfld, aggfun = aggregators[outfld]
+                idx = srcflds.index(srcfld)
+                try:
+                    # try using list comprehension
+                    vals = [row[idx] for row in rows]
+                except IndexError:
+                    # fall back to slower for loop
+                    vals = list()
+                    for row in rows:
+                        try:
+                            vals.append(row[idx])
+                        except IndexError:
+                            pass
+                try:
+                    aggval = aggfun(vals)
+                except:
+                    aggval = errorvalue
+                outrow.append(aggval)
+            yield outrow
+            
+    finally:
+        close(it)
+
+
+    

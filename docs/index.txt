@@ -229,6 +229,7 @@ Transforming tables
 .. autofunction:: petl.rowreduce
 .. autofunction:: petl.mergereduce
 .. autofunction:: petl.merge
+.. autofunction:: petl.aggregate
 
 
 Loading (writing) tables to files and databases

@@ -10,7 +10,7 @@ from petl.testfun import iassertequal
 from petl import rename, fieldnames, project, cat, convert, translate, extend, \
                 rowslice, head, tail, sort, melt, recast, duplicates, conflicts, \
                 mergereduce, select, complement, diff, capture, \
-                split, expr, fieldmap, facet, rowreduce
+                split, expr, fieldmap, facet, rowreduce, aggregate
 
 
 def test_rename():
@@ -969,13 +969,48 @@ def test_rowreduce():
               ['b', 9],
               ['c', 4]]
     
-    def reducer(key, rows):
+    def sumbar(key, rows):
         return [key, sum([row[1] for row in rows])]
         
-    table2 = rowreduce(table1, key='foo', reducer=reducer, header=['foo', 'barsum'])
+    table2 = rowreduce(table1, key='foo', reducer=sumbar, header=['foo', 'barsum'])
     expect2 = [['foo', 'barsum'],
                ['a', 10],
                ['b', 12],
                ['c', 4]]
     iassertequal(expect2, table2)
+    
+    
+def test_aggregate():
+    
+    table1 = [['foo', 'bar'],
+              ['a', 3],
+              ['a', 7],
+              ['b', 2],
+              ['b', 1],
+              ['b', 9],
+              ['c', 4],
+              ['d', 3],
+              ['d'],
+              ['e']]
+    
+    aggregators = OrderedDict()
+    aggregators['minbar'] = 'bar', min
+    aggregators['maxbar'] = 'bar', max
+    aggregators['sumbar'] = 'bar', sum
+
+    table2 = aggregate(table1, 'foo', aggregators)
+    expect2 = [['foo', 'minbar', 'maxbar', 'sumbar'],
+               ['a', 3, 7, 10],
+               ['b', 1, 9, 12],
+               ['c', 4, 4, 4],
+               ['d', 3, 3, 3],
+               ['e', None, None, 0]]
+    iassertequal(expect2, table2)
+    iassertequal(expect2, table2) # check can iterate twice
+    
+    table3 = aggregate(table1, 'foo')
+    table3['minbar'] = 'bar', min
+    table3['maxbar'] = 'bar', max
+    table3['sumbar'] = 'bar', sum
+    iassertequal(expect2, table3)
     
