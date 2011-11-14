@@ -75,7 +75,7 @@ The main reason for requiring that table objects support independent
 row iterators (point 3) is that data from a table may need to be
 iterated over several times. E.g., when using `petl` in interactive
 mode to build up a sequence of data transformation steps, the user
-might want to examine outputs from intermediate steps.
+might want to examine outputs from several intermediate steps.
 
 Note that this convention does not place any restrictions on the
 lengths of header and data rows. A table may return a header row

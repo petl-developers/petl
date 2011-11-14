@@ -1,0 +1,81 @@
+- document rowreduce
+
+- change merge to mergereduce, implement merge as cat then mergereduce
+
+- implement aggregate
+
+- implement rowmap, recordmap, rowmapmany, recordmapmany
+
+- implement skip - discard first n rows, including header
+
+- implement pushfields
+
+- implement filldown
+
+- implement fillup
+
+- implement fillright? 
+
+- implement fillleft?
+
+- modify fromcsv, frompickle, add header argument
+
+- implement fromtext(filename, header=['lines'])
+
+- implement totext(table, filename, template, prologue=None, epilogue=None)
+
+- implement appendtext(table, filename, template, prologue=None, epilogue=None)
+
+- implement join (inner equijoin) with key argument
+
+- implement join (inner equijoin) without key argument (natural join) 
+
+- implement left outer join
+
+- implement right outer join
+
+- implement full outer join
+
+- implement crossjoin
+
+- implement antijoin
+
+- implement rangefacet/bin/segregate/partition/... - facet by numerical field into any number of bins or by a given interval size?
+
+- implement rangeaggregate/binaggregate/segagg/partitionaggregate ... aggregate by numerical field that has been partitioned
+
+- partitioning of alpha fields?
+
+- values on a combination of fields
+
+- modify sort to use merge sort above a given buffer size
+
+- implement cachetag for all view classes
+
+- modify sort to keep cached data and check cachetag values
+
+- implement setfields
+
+- implement selectlen - select by row length
+
+- implement stringjoin as aggregation function
+
+- implement missingness
+
+- implement transpose
+
+- check how cat and cut handle long/short rows; are they using itemgetter where possible?
+
+- implement rowgroupby? generate sequence of key/row iterator pairs?
+
+- implement pivot?
+
+- implement crosstab?
+
+- implement hash (lookup) alternatives to all join and other sort-dependent functions
+
+- implement provenance trace
+
+- implement petl.interactive with cache wrappers
+
+- implement petl.fluent
