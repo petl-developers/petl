@@ -1,8 +1,10 @@
-- document rowreduce
+- [done] document rowreduce
 
-- change merge to mergereduce, implement merge as cat then mergereduce
+- [done] change merge to mergereduce, implement merge as cat then mergereduce
 
 - implement aggregate
+
+- implement recordreduce?
 
 - implement rowmap, recordmap, rowmapmany, recordmapmany
 

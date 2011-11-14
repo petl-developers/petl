@@ -2047,7 +2047,33 @@ def selecteq(table, field, value):
 
 def rowreduce(table, key, reducer, header=None, presorted=False):
     """
-    TODO doc me
+    Reduce rows grouped under the given key via an arbitrary function. E.g.::
+
+        >>> from petl import rowreduce, look    
+        >>> table1 = [['foo', 'bar'],
+        ...           ['a', 3],
+        ...           ['a', 7],
+        ...           ['b', 2],
+        ...           ['b', 1],
+        ...           ['b', 9],
+        ...           ['c', 4]]
+        >>> def sumbar(key, rows):
+        ...     return [key, sum([row[1] for row in rows])]
+        ... 
+        >>> table2 = rowreduce(table1, key='foo', reducer=sumbar, header=['foo', 'barsum'])
+        >>> look(table2)
+        +-------+----------+
+        | 'foo' | 'barsum' |
+        +=======+==========+
+        | 'a'   | 10       |
+        +-------+----------+
+        | 'b'   | 12       |
+        +-------+----------+
+        | 'c'   | 4        |
+        +-------+----------+
+
+    The `reducer` function should accept two arguments, a key and a sequence
+    of rows.
     
     """
 
@@ -2094,11 +2120,11 @@ def iterrowreduce(source, key, reducer, header):
         close(it)
 
 
-def merge(table, key, missing=None, presorted=False):
+def mergereduce(table, key, missing=None, presorted=False):
     """
-    Merge rows with duplicate values under a given key. E.g.::
+    Merge rows under the given key. E.g.::
     
-        >>> from petl import merge, look    
+        >>> from petl import mergereduce, look    
         >>> table1 = [['foo', 'bar', 'baz'],
         ...           ['A', 1, 2.7],
         ...           ['B', 2, None],
@@ -2107,7 +2133,7 @@ def merge(table, key, missing=None, presorted=False):
         ...           ['E', None],
         ...           ['D', 3, 12.3],
         ...           ['A', 2, None]]
-        >>> table2 = merge(table1, 'foo')
+        >>> table2 = mergereduce(table1, 'foo')
         >>> look(table2)
         +-------+-------------+------------------+
         | 'foo' | 'bar'       | 'baz'            |
@@ -2126,7 +2152,7 @@ def merge(table, key, missing=None, presorted=False):
     
     """
 
-    def _reducer(key, rows):
+    def _mergereducer(key, rows):
         merged = list()
         for row in rows:
             for i, v in enumerate(row):
@@ -2139,6 +2165,43 @@ def merge(table, key, missing=None, presorted=False):
         merged = [vals.pop() if len(vals) == 1 else vals for vals in merged]
         return merged
     
-    return rowreduce(table, key, reducer=_reducer, presorted=presorted)
+    return rowreduce(table, key, reducer=_mergereducer, presorted=presorted)
+
+
+def merge(*tables, **kwargs):
+    """
+    Convenience function to concatenate multiple tables (via :func:`cat`) then 
+    reduce rows by merging under the given key (via :func:`mergereduce`). E.g.::
+    
+        >>> from petl import look, merge
+        >>> table1 = [['foo', 'bar', 'baz'],
+        ...           [1, 'A', True],
+        ...           [2, 'B', None],
+        ...           [4, 'C', True]]
+        >>> table2 = [['bar', 'baz', 'quux'],
+        ...           ['A', True, 42.0],
+        ...           ['B', False, 79.3],
+        ...           ['C', False, 12.4]]
+        >>> table3 = merge(table1, table2, key='bar')
+        >>> look(table3)
+        +-------+-------+--------------------+--------+
+        | 'foo' | 'bar' | 'baz'              | 'quux' |
+        +=======+=======+====================+========+
+        | 1     | 'A'   | True               | 42.0   |
+        +-------+-------+--------------------+--------+
+        | 2     | 'B'   | False              | 79.3   |
+        +-------+-------+--------------------+--------+
+        | 4     | 'C'   | set([False, True]) | 12.4   |
+        +-------+-------+--------------------+--------+
+
+    """
+    
+    assert 'key' in kwargs, 'keyword argument "key" is required'
+    key = kwargs['key']
+    missing = kwargs['missing'] if 'missing' in kwargs else None
+    presorted = kwargs['presorted'] if 'presorted' in kwargs else False
+    t1 = cat(*tables, missing=missing)
+    t2 = mergereduce(t1, key=key, presorted=presorted)
+    return t2
 
 

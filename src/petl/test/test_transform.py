@@ -9,7 +9,7 @@ from collections import OrderedDict
 from petl.testfun import iassertequal
 from petl import rename, fieldnames, project, cat, convert, translate, extend, \
                 rowslice, head, tail, sort, melt, recast, duplicates, conflicts, \
-                merge, select, complement, diff, capture, \
+                mergereduce, select, complement, diff, capture, \
                 split, expr, fieldmap, facet, rowreduce
 
 
@@ -655,7 +655,7 @@ def test_merge():
              ['A', 2, None]]
 
     # value overrides missing; last value wins
-    result = merge(table, 'foo', missing=None)
+    result = mergereduce(table, 'foo', missing=None)
     expectation = [['foo', 'bar', 'baz'],
                    ['A', {1, 2}, 2],
                    ['B', '2', u'7.8', True],
