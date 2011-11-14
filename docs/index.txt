@@ -227,6 +227,7 @@ Transforming tables
 .. autofunction:: petl.duplicates
 .. autofunction:: petl.conflicts
 .. autofunction:: petl.rowreduce
+.. autofunction:: petl.recordreduce
 .. autofunction:: petl.mergereduce
 .. autofunction:: petl.merge
 .. autofunction:: petl.aggregate

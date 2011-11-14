@@ -5,9 +5,15 @@
 
 - [done] implement aggregate
 
-- implement recordreduce?
+- [done] implement recordreduce
 
-- implement rowmap, recordmap, rowmapmany, recordmapmany
+- implement rowmap
+
+- implement recordmap
+
+- implement rowmapmany
+
+- implement recordmapmany
 
 - implement skip - discard first n rows, including header
 

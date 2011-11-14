@@ -9,7 +9,7 @@ from operator import itemgetter
 
 
 from petl.util import close, asindices, rowgetter, FieldSelectionError, asdict,\
-    expr, valueset
+    expr, valueset, records
 import re
 
 
@@ -2073,7 +2073,7 @@ def rowreduce(table, key, reducer, header=None, presorted=False):
         +-------+----------+
 
     The `reducer` function should accept two arguments, a key and a sequence
-    of rows.
+    of rows, and return a single row.
     
     """
 
@@ -2115,6 +2115,83 @@ def iterrowreduce(source, key, reducer, header):
         
         for key, rows in groupby(it, key=getkey):
             yield reducer(key, rows)
+        
+    finally:
+        close(it)
+
+
+def recordreduce(table, key, reducer, header=None, presorted=False):
+    """
+    Reduce records grouped under the given key via an arbitrary function. E.g.::
+
+        >>> from petl import recordreduce, look    
+        >>> table1 = [['foo', 'bar'],
+        ...           ['a', 3],
+        ...           ['a', 7],
+        ...           ['b', 2],
+        ...           ['b', 1],
+        ...           ['b', 9],
+        ...           ['c', 4]]
+        >>> def sumbar(key, records):
+        ...     return [key, sum([rec['bar'] for rec in records])]
+        ... 
+        >>> table2 = recordreduce(table1, key='foo', reducer=sumbar, header=['foo', 'barsum'])
+        >>> look(table2)
+        +-------+----------+
+        | 'foo' | 'barsum' |
+        +=======+==========+
+        | 'a'   | 10       |
+        +-------+----------+
+        | 'b'   | 12       |
+        +-------+----------+
+        | 'c'   | 4        |
+        +-------+----------+
+
+    The `reducer` function should accept two arguments, a key and a sequence
+    of records (i.e., dictionaries of values indexed by field) and return a single
+    row.
+    
+    """
+
+    return RecordReduceView(table, key, reducer, header, presorted)
+
+
+class RecordReduceView(object):
+    
+    def __init__(self, source, key, reducer, header=None, presorted=False):
+        if presorted:
+            self.source = source
+        else:
+            self.source = sort(source, key)
+        self.key = key
+        self.header = header
+        self.reducer = reducer
+
+    def __iter__(self):
+        return iterrecordreduce(self.source, self.key, self.reducer, self.header)
+    
+    
+def iterrecordreduce(source, key, reducer, header):
+    it = iter(source)
+
+    try:
+        srcflds = it.next()
+        if header is None:
+            yield srcflds
+        else:
+            yield header
+
+        # convert field selection into field indices
+        indices = asindices(srcflds, key)
+        
+        # now use field indices to construct a getkey function
+        # N.B., this may raise an exception on short rows, depending on
+        # the field selection
+        getkey = itemgetter(*indices)
+        
+        for key, rows in groupby(it, key=getkey):
+            records = [asdict(srcflds, row) for row in rows]
+            yield reducer(key, records)
         
     finally:
         close(it)

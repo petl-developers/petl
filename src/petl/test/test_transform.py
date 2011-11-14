@@ -10,7 +10,7 @@ from petl.testfun import iassertequal
 from petl import rename, fieldnames, project, cat, convert, translate, extend, \
                 rowslice, head, tail, sort, melt, recast, duplicates, conflicts, \
                 mergereduce, select, complement, diff, capture, \
-                split, expr, fieldmap, facet, rowreduce, aggregate
+                split, expr, fieldmap, facet, rowreduce, aggregate, recordreduce
 
 
 def test_rename():
@@ -979,7 +979,28 @@ def test_rowreduce():
                ['c', 4]]
     iassertequal(expect2, table2)
     
+
+def test_recordreduce():
     
+    table1 = [['foo', 'bar'],
+              ['a', 3],
+              ['a', 7],
+              ['b', 2],
+              ['b', 1],
+              ['b', 9],
+              ['c', 4]]
+    
+    def sumbar(key, records):
+        return [key, sum([rec['bar'] for rec in records])]
+        
+    table2 = recordreduce(table1, key='foo', reducer=sumbar, header=['foo', 'barsum'])
+    expect2 = [['foo', 'barsum'],
+               ['a', 10],
+               ['b', 12],
+               ['c', 4]]
+    iassertequal(expect2, table2)
+    
+
 def test_aggregate():
     
     table1 = [['foo', 'bar'],
@@ -1013,4 +1034,5 @@ def test_aggregate():
     table3['maxbar'] = 'bar', max
     table3['sumbar'] = 'bar', sum
     iassertequal(expect2, table3)
-    
+
+
