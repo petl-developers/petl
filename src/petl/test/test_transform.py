@@ -11,7 +11,8 @@ from petl import rename, fieldnames, project, cat, convert, translate, extend, \
                 rowslice, head, tail, sort, melt, recast, duplicates, conflicts, \
                 mergereduce, select, complement, diff, capture, \
                 split, expr, fieldmap, facet, rowreduce, aggregate, recordreduce, \
-                rowmap, recordmap, rowmapmany, recordmapmany
+                rowmap, recordmap, rowmapmany, recordmapmany, setfields, pushfields, \
+                skip
 
 
 def test_rename():
@@ -1180,3 +1181,45 @@ def test_recordmapmany():
     iassertequal(expect, actual)
     iassertequal(expect, actual) # can iteratate twice?
         
+
+def test_setfields():
+    
+    table1 = [['foo', 'bar'],
+              ['a', 1],
+              ['b', 2]]
+    table2 = setfields(table1, ['foofoo', 'barbar'])
+    expect2 = [['foofoo', 'barbar'],
+               ['a', 1],
+               ['b', 2]]
+    iassertequal(expect2, table2)
+    iassertequal(expect2, table2) # can iterate twice?
+    
+    
+def test_pushfields():
+    
+    table1 = [['a', 1],
+              ['b', 2]]
+    table2 = pushfields(table1, ['foo', 'bar'])
+    expect2 = [['foo', 'bar'],
+               ['a', 1],
+               ['b', 2]]
+    iassertequal(expect2, table2)
+    iassertequal(expect2, table2) # can iterate twice?
+    
+
+def test_skip():
+    
+    table1 = [['#aaa', 'bbb', 'ccc'],
+              ['#mmm'],
+              ['foo', 'bar'],
+              ['a', 1],
+              ['b', 2]]
+    table2 = skip(table1, 2)
+    expect2 = [['foo', 'bar'],
+               ['a', 1],
+               ['b', 2]]
+    iassertequal(expect2, table2)
+    iassertequal(expect2, table2) # can iterate twice?
+    
+    
+    

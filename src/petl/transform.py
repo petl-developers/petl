@@ -2721,4 +2721,137 @@ def iterrecordmapmany(source, rowgenerator, header, failonerror):
     finally:
         close(it)
         
-            
+        
+def setfields(table, flds):
+    """
+    Override fields in the given table. E.g.::
+    
+        >>> from petl import setfields, look
+        >>> table1 = [['foo', 'bar'],
+        ...           ['a', 1],
+        ...           ['b', 2]]
+        >>> table2 = setfields(table1, ['foofoo', 'barbar'])
+        >>> look(table2)
+        +----------+----------+
+        | 'foofoo' | 'barbar' |
+        +==========+==========+
+        | 'a'      | 1        |
+        +----------+----------+
+        | 'b'      | 2        |
+        +----------+----------+
+
+    """
+    
+    return SetFieldsView(table, flds) 
+
+
+class SetFieldsView(object):
+    
+    def __init__(self, source, flds):
+        self.source = source
+        self.flds = flds
+        
+    def __iter__(self):
+        return itersetfields(self.source, self.flds)   
+
+
+def itersetfields(source, flds):
+    it = iter(source)
+    try:
+        it.next() # discard source fields
+        yield flds
+        for row in it:
+            yield row
+    finally:
+        close(it)
+        
+        
+def pushfields(table, flds):
+    """
+    Push rows down and prepend a header row. E.g.::
+
+        >>> from petl import pushfields, look    
+        >>> table1 = [['a', 1],
+        ...           ['b', 2]]
+        >>> table2 = pushfields(table1, ['foo', 'bar'])
+        >>> look(table2)
+        +-------+-------+
+        | 'foo' | 'bar' |
+        +=======+=======+
+        | 'a'   | 1     |
+        +-------+-------+
+        | 'b'   | 2     |
+        +-------+-------+
+
+    Useful, e.g., where data are from a CSV file that has not included a header
+    row.
+    
+    """ 
+
+    return PushFieldsView(table, flds)
+
+
+class PushFieldsView(object):
+    
+    def __init__(self, source, flds):
+        self.source = source
+        self.flds = flds
+        
+    def __iter__(self):
+        return iterpushfields(self.source, self.flds)   
+
+
+def iterpushfields(source, flds):
+    it = iter(source)
+    try:
+        yield flds
+        for row in it:
+            yield row
+    finally:
+        close(it)
+        
+    
+def skip(table, n):
+    """
+    Skip `n` rows (including the header row). E.g.::
+    
+        >>> from petl import skip, look
+        >>> table1 = [['#aaa', 'bbb', 'ccc'],
+        ...           ['#mmm'],
+        ...           ['foo', 'bar'],
+        ...           ['a', 1],
+        ...           ['b', 2]]
+        >>> table2 = skip(table1, 2)
+        >>> look(table2)
+        +-------+-------+
+        | 'foo' | 'bar' |
+        +=======+=======+
+        | 'a'   | 1     |
+        +-------+-------+
+        | 'b'   | 2     |
+        +-------+-------+
+    
+    """ 
+
+    return SkipView(table, n)
+
+
+class SkipView(object):
+    
+    def __init__(self, source, n):
+        self.source = source
+        self.n = n
+        
+    def __iter__(self):
+        return iterskip(self.source, self.n)   
+
+
+def iterskip(source, n):
+    it = iter(source)
+    try:
+        for row in islice(it, n, None):
+            yield row
+    finally:
+        close(it)
+        
+    

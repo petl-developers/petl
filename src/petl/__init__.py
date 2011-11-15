@@ -17,7 +17,8 @@ from petl.transform import rename, project, cat, convert, translate, extend, row
            head, tail, sort, melt, recast, duplicates, conflicts, \
            mergereduce, select, complement, diff, capture, \
            split, fieldmap, facet, selecteq, rowreduce, merge, aggregate, recordreduce, \
-           rowmap, recordmap, rowmapmany, recordmapmany
+           rowmap, recordmap, rowmapmany, recordmapmany, setfields, pushfields, skip
+           
 
 
 

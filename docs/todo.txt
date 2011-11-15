@@ -15,11 +15,11 @@
 
 - [done] implement recordmapmany
 
-- implement setfields
+- [done] implement setfields
 
-- implement pushfields
+- [done] implement pushfields
 
-- implement skip - discard first n rows, including header
+- [done] implement skip - discard first n rows, including header
 
 - modify fromcsv, frompickle, add header argument
 
