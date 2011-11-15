@@ -10,7 +10,7 @@ import sqlite3
 
 from petl import fromcsv, frompickle, fromsqlite3, adler32sum, crc32sum, fromdb, \
                 tocsv, topickle, appendcsv, appendpickle, tosqlite3, appendsqlite3, \
-                todb, appenddb 
+                todb, appenddb, fromtext, totext, appendtext
                 
 
 
@@ -294,6 +294,25 @@ def test_fromdb():
               ['a', 1],
               ['b', 2],
               ['c', 2.0]]
+    iassertequal(expect, actual)
+    iassertequal(expect, actual) # verify can iterate twice
+
+
+def test_fromtext():
+    
+    # initial data
+    f = NamedTemporaryFile(delete=False)
+    f.write('foo\tbar\n')
+    f.write('a\t1\n')
+    f.write('b\t2\n')
+    f.write('c\t3\n')
+    f.close()
+    
+    actual = fromtext(f.name)
+    expect = [['foo\tbar\n'],
+              ['a\t1\n'],
+              ['b\t2\n'],
+              ['c\t3\n']]
     iassertequal(expect, actual)
     iassertequal(expect, actual) # verify can iterate twice
 

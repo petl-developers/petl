@@ -329,6 +329,36 @@ class DbView(object):
         yield fields
         for result in cursor:
             yield result
+            
+            
+def fromtext(filename, checksumfun=None):
+    """
+    TODO doc me
+    
+    """
+
+    return TextView(filename, checksumfun=checksumfun)
+
+
+class TextView(object):
+    
+    def __init__(self, filename, checksumfun=None):
+        self.filename = filename
+        self.checksumfun = checksumfun
+        
+    def __iter__(self):
+        with open(self.filename, 'rU') as file:
+            for line in file:
+                yield [line]
+                
+    def cachetag(self):
+        p = self.filename
+        if os.path.isfile(p):
+            sumfun = self.checksumfun if self.checksumfun is not None else defaultsumfun
+            checksum = sumfun(p)
+            return checksum
+        else:
+            raise Uncacheable
 
     
 def tocsv(table, filename, **kwargs):
@@ -741,5 +771,22 @@ def _placeholders(connection, names):
     else:
         raise Exception('TODO')
     return placeholders
+
+
+def totext(table, filename, template, prologue, epilogue):
+    """
+    TODO doc me
+    
+    """
+
+    
+def appendtext(table, filename, template, prologue, epilogue):
+    """
+    TODO doc me
+    
+    """
+
+    
+
     
     

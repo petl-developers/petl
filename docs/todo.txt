@@ -21,13 +21,29 @@
 
 - [done] implement skip - discard first n rows, including header
 
-- modify fromcsv, frompickle, add header argument
+- [won't do] modify fromcsv, frompickle, add header argument
 
-- implement fromtext(filename, header=['lines'])
+- [won't do] modify tocsv, topickle, add writeheader argument
+
+- [done] implement fromtext(filename, header=['lines'])
+
+- document fromtext
+
+- implement stringreplace as a conversion function
+
+- implement stringsubstring as a conversion function
+
+- implement trim as a conversion function
+
+- implement stripstring as a conversion function
 
 - implement totext(table, filename, template, prologue=None, epilogue=None)
 
 - implement appendtext(table, filename, template, prologue=None, epilogue=None)
+
+- review split behaviour when there are more splits than fields
+
+- review capture behaviour when there are more splits than fields
 
 - implement join (inner equijoin) with key argument
 
