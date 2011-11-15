@@ -7,25 +7,19 @@
 
 - [done] implement recordreduce
 
-- implement rowmap
+- [done] implement rowmap
 
-- implement recordmap
+- [done] implement recordmap
 
-- implement rowmapmany
+- [done] implement rowmapmany
 
-- implement recordmapmany
+- [done] implement recordmapmany
 
-- implement skip - discard first n rows, including header
+- implement setfields
 
 - implement pushfields
 
-- implement filldown
-
-- implement fillup
-
-- implement fillright? 
-
-- implement fillleft?
+- implement skip - discard first n rows, including header
 
 - modify fromcsv, frompickle, add header argument
 
@@ -49,6 +43,14 @@
 
 - implement antijoin
 
+- implement filldown
+
+- implement fillup
+
+- implement fillright? 
+
+- implement fillleft?
+
 - implement rangefacet/bin/segregate/partition/... - facet by numerical field into any number of bins or by a given interval size?
 
 - implement rangeaggregate/binaggregate/segagg/partitionaggregate ... aggregate by numerical field that has been partitioned
@@ -67,7 +69,7 @@
 
 - implement selectlen - select by row length
 
-- implement stringjoin as aggregation function
+- implement stringjoin as aggregation function (or can you just pass ', '.join?)
 
 - implement missingness
 

@@ -2418,4 +2418,307 @@ def iteraggregate(source, key, aggregators, errorvalue):
         close(it)
 
 
+def rowmap(table, rowmapper, header, failonerror=False):
+    """
+    Transform rows via an arbitrary function. E.g.::
+
+        >>> from petl import rowmap, look
+        >>> table1 = [['id', 'sex', 'age', 'height', 'weight'],
+        ...           [1, 'male', 16, 1.45, 62.0],
+        ...           [2, 'female', 19, 1.34, 55.4],
+        ...           [3, 'female', 17, 1.78, 74.4],
+        ...           [4, 'male', 21, 1.33, 45.2],
+        ...           [5, '-', 25, 1.65, 51.9]]
+        >>> def rowmapper(row):
+        ...     transmf = {'male': 'M', 'female': 'F'}
+        ...     return [row[0],
+        ...             transmf[row[1]] if row[1] in transmf else row[1],
+        ...             row[2] * 12,
+        ...             row[4] / row[3] ** 2]
+        ... 
+        >>> table2 = rowmap(table1, rowmapper, header=['subject_id', 'gender', 'age_months', 'bmi'])  
+        >>> look(table2)    
+        +--------------+----------+--------------+--------------------+
+        | 'subject_id' | 'gender' | 'age_months' | 'bmi'              |
+        +==============+==========+==============+====================+
+        | 1            | 'M'      | 192          | 29.48870392390012  |
+        +--------------+----------+--------------+--------------------+
+        | 2            | 'F'      | 228          | 30.8531967030519   |
+        +--------------+----------+--------------+--------------------+
+        | 3            | 'F'      | 204          | 23.481883600555488 |
+        +--------------+----------+--------------+--------------------+
+        | 4            | 'M'      | 252          | 25.55260331279326  |
+        +--------------+----------+--------------+--------------------+
+        | 5            | '-'      | 300          | 19.0633608815427   |
+        +--------------+----------+--------------+--------------------+
+
+    The `rowmapper` function should accept a row (list or tuple) and return a
+    single row (list or tuple).
     
+    """
+    
+    return RowMapView(table, rowmapper, header, failonerror)
+    
+    
+class RowMapView(object):
+    
+    def __init__(self, source, rowmapper, header, failonerror=False):
+        self.source = source
+        self.rowmapper = rowmapper
+        self.header = header
+        self.failonerror = failonerror
+        
+    def __iter__(self):
+        return iterrowmap(self.source, self.rowmapper, self.header, self.failonerror)
+    
+    
+def iterrowmap(source, rowmapper, header, failonerror):
+    it = iter(source)
+    try:
+        it.next() # discard source header
+        yield header
+        for row in it:
+            try:
+                outrow = rowmapper(row)
+                yield outrow
+            except:
+                if failonerror:
+                    raise
+    finally:
+        close(it)
+        
+        
+def recordmap(table, recmapper, header, failonerror=False):
+    """
+    Transform records via an arbitrary function. E.g.::
+
+        >>> from petl import recordmap, look
+        >>> table1 = [['id', 'sex', 'age', 'height', 'weight'],
+        ...           [1, 'male', 16, 1.45, 62.0],
+        ...           [2, 'female', 19, 1.34, 55.4],
+        ...           [3, 'female', 17, 1.78, 74.4],
+        ...           [4, 'male', 21, 1.33, 45.2],
+        ...           [5, '-', 25, 1.65, 51.9]]
+        >>> def recmapper(rec):
+        ...     transmf = {'male': 'M', 'female': 'F'}
+        ...     return [rec['id'],
+        ...             transmf[rec['sex']] if rec['sex'] in transmf else rec['sex'],
+        ...             rec['age'] * 12,
+        ...             rec['weight'] / rec['height'] ** 2]
+        ... 
+        >>> table2 = recordmap(table1, recmapper, header=['subject_id', 'gender', 'age_months', 'bmi'])  
+        >>> look(table2)
+        +--------------+----------+--------------+--------------------+
+        | 'subject_id' | 'gender' | 'age_months' | 'bmi'              |
+        +==============+==========+==============+====================+
+        | 1            | 'M'      | 192          | 29.48870392390012  |
+        +--------------+----------+--------------+--------------------+
+        | 2            | 'F'      | 228          | 30.8531967030519   |
+        +--------------+----------+--------------+--------------------+
+        | 3            | 'F'      | 204          | 23.481883600555488 |
+        +--------------+----------+--------------+--------------------+
+        | 4            | 'M'      | 252          | 25.55260331279326  |
+        +--------------+----------+--------------+--------------------+
+        | 5            | '-'      | 300          | 19.0633608815427   |
+        +--------------+----------+--------------+--------------------+
+
+    The `recmapper` function should accept a record (dictionary of data values
+    indexed by field) and return a single row (list or tuple).
+    
+    """
+    
+    return RecordMapView(table, recmapper, header, failonerror)
+    
+    
+class RecordMapView(object):
+    
+    def __init__(self, source, recmapper, header, failonerror=False):
+        self.source = source
+        self.recmapper = recmapper
+        self.header = header
+        self.failonerror = failonerror
+        
+    def __iter__(self):
+        return iterrecordmap(self.source, self.recmapper, self.header, self.failonerror)
+    
+    
+def iterrecordmap(source, recmapper, header, failonerror):
+    it = iter(source)
+    try:
+        flds = it.next() # discard source header
+        yield header
+        for row in it:
+            rec = asdict(flds, row)
+            try:
+                outrow = recmapper(rec)
+                yield outrow
+            except:
+                if failonerror:
+                    raise
+    finally:
+        close(it)
+        
+        
+def rowmapmany(table, rowgenerator, header, failonerror=False):
+    """
+    Map each input row to any number of output rows via an arbitrary function.
+    E.g.::
+
+        >>> from petl import rowmapmany, look    
+        >>> table1 = [['id', 'sex', 'age', 'height', 'weight'],
+        ...           [1, 'male', 16, 1.45, 62.0],
+        ...           [2, 'female', 19, 1.34, 55.4],
+        ...           [3, '-', 17, 1.78, 74.4],
+        ...           [4, 'male', 21, 1.33]]
+        >>> def rowgenerator(row):
+        ...     transmf = {'male': 'M', 'female': 'F'}
+        ...     yield [row[0], 'gender', transmf[row[1]] if row[1] in transmf else row[1]]
+        ...     yield [row[0], 'age_months', row[2] * 12]
+        ...     yield [row[0], 'bmi', row[4] / row[3] ** 2]
+        ... 
+        >>> table2 = rowmapmany(table1, rowgenerator, header=['subject_id', 'variable', 'value'])  
+        >>> look(table2)
+        +--------------+--------------+--------------------+
+        | 'subject_id' | 'variable'   | 'value'            |
+        +==============+==============+====================+
+        | 1            | 'gender'     | 'M'                |
+        +--------------+--------------+--------------------+
+        | 1            | 'age_months' | 192                |
+        +--------------+--------------+--------------------+
+        | 1            | 'bmi'        | 29.48870392390012  |
+        +--------------+--------------+--------------------+
+        | 2            | 'gender'     | 'F'                |
+        +--------------+--------------+--------------------+
+        | 2            | 'age_months' | 228                |
+        +--------------+--------------+--------------------+
+        | 2            | 'bmi'        | 30.8531967030519   |
+        +--------------+--------------+--------------------+
+        | 3            | 'gender'     | '-'                |
+        +--------------+--------------+--------------------+
+        | 3            | 'age_months' | 204                |
+        +--------------+--------------+--------------------+
+        | 3            | 'bmi'        | 23.481883600555488 |
+        +--------------+--------------+--------------------+
+        | 4            | 'gender'     | 'M'                |
+        +--------------+--------------+--------------------+
+
+    The `rowgenerator` function should accept a row (list or tuple) and yield
+    zero or more rows (lists or tuples).
+    
+    See also the :func:`melt` function.
+    
+    """
+    
+    return RowMapManyView(table, rowgenerator, header, failonerror)
+    
+    
+class RowMapManyView(object):
+    
+    def __init__(self, source, rowgenerator, header, failonerror=False):
+        self.source = source
+        self.rowgenerator = rowgenerator
+        self.header = header
+        self.failonerror = failonerror
+        
+    def __iter__(self):
+        return iterrowmapmany(self.source, self.rowgenerator, self.header, self.failonerror)
+    
+    
+def iterrowmapmany(source, rowgenerator, header, failonerror):
+    it = iter(source)
+    try:
+        it.next() # discard source header
+        yield header
+        for row in it:
+            try:
+                for outrow in rowgenerator(row):
+                    yield outrow
+            except:
+                if failonerror:
+                    raise
+    finally:
+        close(it)
+        
+        
+def recordmapmany(table, rowgenerator, header, failonerror=False):
+    """
+    Map each input row (as a record) to any number of output rows via an 
+    arbitrary function. E.g.::
+
+        >>> from petl import recordmapmany, look    
+        >>> table1 = [['id', 'sex', 'age', 'height', 'weight'],
+        ...           [1, 'male', 16, 1.45, 62.0],
+        ...           [2, 'female', 19, 1.34, 55.4],
+        ...           [3, '-', 17, 1.78, 74.4],
+        ...           [4, 'male', 21, 1.33]]
+        >>> def rowgenerator(rec):
+        ...     transmf = {'male': 'M', 'female': 'F'}
+        ...     yield [rec['id'], 'gender', transmf[rec['sex']] if rec['sex'] in transmf else rec['sex']]
+        ...     yield [rec['id'], 'age_months', rec['age'] * 12]
+        ...     yield [rec['id'], 'bmi', rec['weight'] / rec['height'] ** 2]
+        ... 
+        >>> table2 = recordmapmany(table1, rowgenerator, header=['subject_id', 'variable', 'value'])  
+        >>> look(table2)
+        +--------------+--------------+--------------------+
+        | 'subject_id' | 'variable'   | 'value'            |
+        +==============+==============+====================+
+        | 1            | 'gender'     | 'M'                |
+        +--------------+--------------+--------------------+
+        | 1            | 'age_months' | 192                |
+        +--------------+--------------+--------------------+
+        | 1            | 'bmi'        | 29.48870392390012  |
+        +--------------+--------------+--------------------+
+        | 2            | 'gender'     | 'F'                |
+        +--------------+--------------+--------------------+
+        | 2            | 'age_months' | 228                |
+        +--------------+--------------+--------------------+
+        | 2            | 'bmi'        | 30.8531967030519   |
+        +--------------+--------------+--------------------+
+        | 3            | 'gender'     | '-'                |
+        +--------------+--------------+--------------------+
+        | 3            | 'age_months' | 204                |
+        +--------------+--------------+--------------------+
+        | 3            | 'bmi'        | 23.481883600555488 |
+        +--------------+--------------+--------------------+
+        | 4            | 'gender'     | 'M'                |
+        +--------------+--------------+--------------------+
+
+    The `rowgenerator` function should accept a record (dictionary of data values
+    indexed by field) and yield zero or more rows (lists or tuples).
+    
+    See also the :func:`melt` function.
+    
+    """
+    
+    return RecordMapManyView(table, rowgenerator, header, failonerror)
+    
+    
+class RecordMapManyView(object):
+    
+    def __init__(self, source, rowgenerator, header, failonerror=False):
+        self.source = source
+        self.rowgenerator = rowgenerator
+        self.header = header
+        self.failonerror = failonerror
+        
+    def __iter__(self):
+        return iterrecordmapmany(self.source, self.rowgenerator, self.header, self.failonerror)
+    
+    
+def iterrecordmapmany(source, rowgenerator, header, failonerror):
+    it = iter(source)
+    try:
+        flds = it.next() # discard source header
+        yield header
+        for row in it:
+            rec = asdict(flds, row)
+            try:
+                for outrow in rowgenerator(rec):
+                    yield outrow
+            except:
+                if failonerror:
+                    raise
+    finally:
+        close(it)
+        
+            

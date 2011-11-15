@@ -200,37 +200,55 @@ Extracting (reading) tables from files and databases
 .. autofunction:: petl.frompickle
 .. autofunction:: petl.fromsqlite3
 .. autofunction:: petl.fromdb
+.. autofunction:: petl.fromtext
 
 Transforming tables
 -------------------
 
 .. autofunction:: petl.rename
+.. autofunction:: petl.setfields
+.. autofunction:: petl.pushfields
+.. autofunction:: petl.skip
 .. autofunction:: petl.project
 .. autofunction:: petl.select
 .. autofunction:: petl.selecteq
-.. autofunction:: petl.cat
+.. autofunction:: petl.facet
 .. autofunction:: petl.convert
 .. autofunction:: petl.translate
 .. autofunction:: petl.extend
+.. autofunction:: petl.capture
+.. autofunction:: petl.split
+.. autofunction:: petl.cat
+.. autofunction:: petl.duplicates
+.. autofunction:: petl.conflicts
 .. autofunction:: petl.rowslice
 .. autofunction:: petl.head
 .. autofunction:: petl.tail
 .. autofunction:: petl.sort
-.. autofunction:: petl.melt
-.. autofunction:: petl.recast
 .. autofunction:: petl.complement
 .. autofunction:: petl.diff
-.. autofunction:: petl.capture
-.. autofunction:: petl.split
+.. autofunction:: petl.join
+.. autofunction:: petl.leftjoin
+.. autofunction:: petl.rightjoin
+.. autofunction:: petl.outerjoin
+.. autofunction:: petl.crossjoin
+.. autofunction:: petl.antijoin
 .. autofunction:: petl.fieldmap
-.. autofunction:: petl.facet
-.. autofunction:: petl.duplicates
-.. autofunction:: petl.conflicts
+.. autofunction:: petl.rowmap
+.. autofunction:: petl.recordmap
+.. autofunction:: petl.rowmapmany
+.. autofunction:: petl.recordmapmany
+.. autofunction:: petl.aggregate
 .. autofunction:: petl.rowreduce
 .. autofunction:: petl.recordreduce
 .. autofunction:: petl.mergereduce
 .. autofunction:: petl.merge
-.. autofunction:: petl.aggregate
+.. autofunction:: petl.melt
+.. autofunction:: petl.recast
+.. autofunction:: petl.filldown
+.. autofunction:: petl.fillup
+.. autofunction:: petl.fillleft
+.. autofunction:: petl.fillright
 
 
 Loading (writing) tables to files and databases
@@ -244,6 +262,8 @@ Loading (writing) tables to files and databases
 .. autofunction:: petl.appendsqlite3
 .. autofunction:: petl.todb
 .. autofunction:: petl.appenddb
+.. autofunction:: petl.totext
+.. autofunction:: petl.appendtext
 
 
 Further Reading
