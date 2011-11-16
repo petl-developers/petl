@@ -331,23 +331,61 @@ class DbView(object):
             yield result
             
             
-def fromtext(filename, checksumfun=None):
+def fromtext(filename, header=['lines'], checksumfun=None):
     """
-    TODO doc me
+    Construct a table from lines in the given text file. E.g.::
+
+        >>> # example data
+        ... with open('test.txt', 'w') as f:
+        ...     f.write('a\\t1\\n')
+        ...     f.write('b\\t2\\n')
+        ...     f.write('c\\t3\\n')
+        ... 
+        >>> from petl import fromtext, look
+        >>> table1 = fromtext('test.txt')
+        >>> look(table1)
+        +--------------+
+        | 'lines'      |
+        +==============+
+        | 'a\\t1\\n'     |
+        +--------------+
+        | 'b\\t2\\n'     |
+        +--------------+
+        | 'c\\t3\\n'     |
+        +--------------+
+
+    Provides a starting point for custom handling of text files. E.g., using
+    :func:`capture`::
     
+        >>> from petl import capture
+        >>> table2 = capture(table1, 'lines', '(.*)\\\\t(.*)$', ['foo', 'bar'])
+        >>> look(table2)
+        +-------+-------+
+        | 'foo' | 'bar' |
+        +=======+=======+
+        | 'a'   | '1'   |
+        +-------+-------+
+        | 'b'   | '2'   |
+        +-------+-------+
+        | 'c'   | '3'   |
+        +-------+-------+
+
     """
 
-    return TextView(filename, checksumfun=checksumfun)
+    return TextView(filename, header, checksumfun=checksumfun)
 
 
 class TextView(object):
     
-    def __init__(self, filename, checksumfun=None):
+    def __init__(self, filename, header=['lines'], checksumfun=None):
         self.filename = filename
+        self.header = header
         self.checksumfun = checksumfun
         
     def __iter__(self):
         with open(self.filename, 'rU') as file:
+            if self.header is not None:
+                yield self.header
             for line in file:
                 yield [line]
                 

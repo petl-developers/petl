@@ -29,9 +29,11 @@
 
 - document fromtext
 
-- implement stringreplace as a conversion function
+- [won't do] implement stringreplace as a conversion function
 
-- implement stringsubstring as a conversion function
+- [won't do] implement stringsubstring as a conversion function
+
+- change signature of convert, support signature for single field conversion, also applying methods
 
 - implement trim as a conversion function
 
@@ -44,6 +46,8 @@
 - review split behaviour when there are more splits than fields
 
 - review capture behaviour when there are more splits than fields
+
+- implement unpack, or some other way to go from a single field containing list or tuple values to multiple fields
 
 - implement join (inner equijoin) with key argument
 
@@ -98,6 +102,10 @@
 - implement pivot?
 
 - implement crosstab?
+
+- implement string lengths as utility function
+
+- implement string patterns as utility function
 
 - implement hash (lookup) alternatives to all join and other sort-dependent functions
 

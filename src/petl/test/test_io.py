@@ -309,7 +309,8 @@ def test_fromtext():
     f.close()
     
     actual = fromtext(f.name)
-    expect = [['foo\tbar\n'],
+    expect = [['lines'],
+              ['foo\tbar\n'],
               ['a\t1\n'],
               ['b\t2\n'],
               ['c\t3\n']]
