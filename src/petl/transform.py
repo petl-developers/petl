@@ -406,7 +406,8 @@ def convert(table, field, *args, **kwargs):
         +-------+-------+
 
     Useful for, among other things, string manipulation, see also the methods
-    on the standard :class:`str` class.
+    on the `str <http://docs.python.org/library/stdtypes.html#string-methods>`_ 
+    type.
     
     """
     
@@ -446,17 +447,17 @@ def fieldconvert(table, converters=None, failonerror=False, errorvalue=None):
         | 2     | None  |
         +-------+-------+
 
-    Converter functions can also be specified by using the suffix notation on the
+    Converters can also be added or updated using the suffix notation on the
     returned table object. E.g.::
 
-        >>> table1 = [['foo', 'bar', 'baz'],
+        >>> table3 = [['foo', 'bar', 'baz'],
         ...           ['1', '2.4', 14],
         ...           ['3', '7.9', 47],
         ...           ['7', '2', 11],
         ...           ['8.3', '42.0', 33],
         ...           ['2', 'abc', 'xyz']]
-        >>> table2 = fieldconvert(table1)
-        >>> look(table2)
+        >>> table4 = fieldconvert(table3)
+        >>> look(table4)
         +-------+--------+-------+
         | 'foo' | 'bar'  | 'baz' |
         +=======+========+=======+
@@ -471,10 +472,10 @@ def fieldconvert(table, converters=None, failonerror=False, errorvalue=None):
         | '2'   | 'abc'  | 'xyz' |
         +-------+--------+-------+
         
-        >>> table2['foo'] = int
-        >>> table2['bar'] = float
-        >>> table2['baz'] = lambda v: v**2
-        >>> look(table2)
+        >>> table4['foo'] = int
+        >>> table4['bar'] = float
+        >>> table4['baz'] = lambda v: v**2
+        >>> look(table4)
         +-------+-------+-------+
         | 'foo' | 'bar' | 'baz' |
         +=======+=======+=======+
@@ -487,6 +488,30 @@ def fieldconvert(table, converters=None, failonerror=False, errorvalue=None):
         | None  | 42.0  | 1089  |
         +-------+-------+-------+
         | 2     | None  | None  |
+        +-------+-------+-------+
+
+    Converters can be functions, method names, or method names with arguments. E.g.::
+    
+        >>> table5 = [['foo', 'bar', 'baz'],
+        ...           ['2', 'A', 'x'],
+        ...           ['5', 'B', 'y'],
+        ...           ['1', 'C', 'y'],
+        ...           ['8.3', 'D', 'z']]
+        >>> table6 = fieldconvert(table5)
+        >>> table6['foo'] = int
+        >>> table6['bar'] = 'lower'
+        >>> table6['baz'] = 'replace', 'y', 'yy'
+        >>> look(table6)
+        +-------+-------+-------+
+        | 'foo' | 'bar' | 'baz' |
+        +=======+=======+=======+
+        | 2     | 'a'   | 'x'   |
+        +-------+-------+-------+
+        | 5     | 'b'   | 'yy'  |
+        +-------+-------+-------+
+        | 1     | 'c'   | 'yy'  |
+        +-------+-------+-------+
+        | None  | 'd'   | 'z'   |
         +-------+-------+-------+
 
     """

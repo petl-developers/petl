@@ -14,7 +14,7 @@ from petl import fromcsv, frompickle, fromsqlite3, adler32sum, crc32sum, fromdb,
                 
 
 
-from petl.testfun import iassertequal
+from petl.testfun import iassertequal, assertequal
 
 
 def test_fromcsv():
@@ -503,7 +503,42 @@ def test_todb_appenddb():
     iassertequal(expect, actual)
     
         
-
+def test_totext():
     
-
+    # exercise function
+    table = [['foo', 'bar'],
+             ['a', 1],
+             ['b', 2],
+             ['c', 2]]
+    f = NamedTemporaryFile(delete=False)
+    prologue = """{| class="wikitable"
+|-
+! foo
+! bar
+"""
+    template = """|-
+| {foo}
+| {bar}
+"""
+    epilogue = "|}"
+    totext(table, f.name, template, prologue, epilogue)
+    
+    # check what it did
+    with open(f.name, 'rb') as file:
+        actual = file.read()
+        expect = """{| class="wikitable"
+|-
+! foo
+! bar
+|-
+| a
+| 1
+|-
+| b
+| 2
+|-
+| c
+| 2
+|}"""
+        assertequal(expect, actual)
     

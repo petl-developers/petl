@@ -11,7 +11,7 @@ import cPickle as pickle
 import sqlite3
 
 
-from petl.util import data, fields, fieldnames
+from petl.util import data, fields, fieldnames, asdict
 
 
 class Uncacheable(Exception):
@@ -811,20 +811,78 @@ def _placeholders(connection, names):
     return placeholders
 
 
-def totext(table, filename, template, prologue, epilogue):
+def totext(table, filename, template, prologue=None, epilogue=None):
     """
-    TODO doc me
+    Write the table to a text file. E.g.::
+
+        >>> from petl import totext    
+        >>> table = [['foo', 'bar'],
+        ...          ['a', 1],
+        ...          ['b', 2],
+        ...          ['c', 2]]
+        >>> prologue = \"\"\"{| class="wikitable"
+        ... |-
+        ... ! foo
+        ... ! bar
+        ... \"\"\"
+        >>> template = \"\"\"|-
+        ... | {foo}
+        ... | {bar}
+        ... \"\"\"
+        >>> epilogue = "|}"
+        >>> totext(table, 'test.txt', template, prologue, epilogue)
+        >>> 
+        >>> # see what we did
+        ... with open('test.txt') as f:
+        ...     print f.read()
+        ...     
+        {| class="wikitable"
+        |-
+        ! foo
+        ! bar
+        |-
+        | a
+        | 1
+        |-
+        | b
+        | 2
+        |-
+        | c
+        | 2
+        |}
+        
+    The `template` will be used to format each row via `str.format <http://docs.python.org/library/stdtypes.html#str.format>`_.
+    """
+    
+    with open(filename, 'w') as f:
+        if prologue is not None:
+            f.write(prologue)
+        it = iter(table)
+        flds = it.next()
+        for row in it:
+            rec = asdict(flds, row)
+            s = template.format(**rec)
+            f.write(s)
+        if epilogue is not None:
+            f.write(epilogue)
+            
+    
+def appendtext(table, filename, template, prologue=None, epilogue=None):
+    """
+    As :func:`totext` but the file is opened in append mode.
     
     """
 
-    
-def appendtext(table, filename, template, prologue, epilogue):
-    """
-    TODO doc me
-    
-    """
+    with open(filename, 'a') as f:
+        if prologue is not None:
+            f.write(prologue)
+        it = iter(table)
+        flds = it.next()
+        for row in it:
+            rec = asdict(flds, row)
+            s = template.format(**rec)
+            f.write(s)
+        if epilogue is not None:
+            f.write(epilogue)
+            
 
-    
-
-    
-    

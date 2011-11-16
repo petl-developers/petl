@@ -33,15 +33,15 @@
 
 - [won't do] implement stringsubstring as a conversion function
 
-- change signature of convert, support signature for single field conversion, also applying methods
+- [done] change signature of convert, support signature for single field conversion, also applying methods
 
 - [won't do] implement trim as a conversion function
 
 - [won't do] implement stripstring as a conversion function
 
-- implement totext(table, filename, template, prologue=None, epilogue=None)
+- [done] implement totext(table, filename, template, prologue=None, epilogue=None)
 
-- implement appendtext(table, filename, template, prologue=None, epilogue=None)
+- [done] implement appendtext(table, filename, template, prologue=None, epilogue=None)
 
 - review split behaviour when there are more splits than fields
 
