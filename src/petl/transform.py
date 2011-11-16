@@ -330,20 +330,107 @@ def itercat(sources, missing=None):
         # make sure all iterators are closed
         for it in its:
             close(it)
-    
-    
-def convert(table, converters=dict(), errorvalue=None):
-    """
-    Transform values in invidual fields. E.g.::
 
-        >>> from petl import convert, look    
+
+def convert(table, field, *args, **kwargs):
+    """
+    Transform values under the given field via an arbitrary function or method
+    invocation. E.g., using the built-in :func:`float` function:
+    
+        >>> from petl import convert, look
+        >>> table1 = [['foo', 'bar'],
+        ...           ['A', '2.4'],
+        ...           ['B', '5.7'],
+        ...           ['C', '1.2'],
+        ...           ['D', '8.3']]
+        >>> table2 = convert(table1, 'bar', float)
+        >>> look(table2)
+        +-------+-------+
+        | 'foo' | 'bar' |
+        +=======+=======+
+        | 'A'   | 2.4   |
+        +-------+-------+
+        | 'B'   | 5.7   |
+        +-------+-------+
+        | 'C'   | 1.2   |
+        +-------+-------+
+        | 'D'   | 8.3   |
+        +-------+-------+
+    
+    E.g., using a lambda function::
+        
+        >>> table3 = convert(table2, 'bar', lambda v: v**2)
+        >>> look(table3)    
+        +-------+-------------------+
+        | 'foo' | 'bar'             |
+        +=======+===================+
+        | 'A'   | 5.76              |
+        +-------+-------------------+
+        | 'B'   | 32.49             |
+        +-------+-------------------+
+        | 'C'   | 1.44              |
+        +-------+-------------------+
+        | 'D'   | 68.89000000000001 |
+        +-------+-------------------+
+
+    A method of the data value can also be invoked by passing the method name. E.g.::
+    
+        >>> table4 = convert(table1, 'foo', 'lower')
+        >>> look(table4)
+        +-------+-------+
+        | 'foo' | 'bar' |
+        +=======+=======+
+        | 'a'   | '2.4' |
+        +-------+-------+
+        | 'b'   | '5.7' |
+        +-------+-------+
+        | 'c'   | '1.2' |
+        +-------+-------+
+        | 'd'   | '8.3' |
+        +-------+-------+
+        
+    Arguments to the method invocation can also be given, e.g.::
+        
+        >>> table5 = convert(table4, 'foo', 'replace', 'a', 'aa')
+        >>> look(table5)
+        +-------+-------+
+        | 'foo' | 'bar' |
+        +=======+=======+
+        | 'aa'  | '2.4' |
+        +-------+-------+
+        | 'b'   | '5.7' |
+        +-------+-------+
+        | 'c'   | '1.2' |
+        +-------+-------+
+        | 'd'   | '8.3' |
+        +-------+-------+
+
+    Useful for, among other things, string manipulation, see also the methods
+    on the standard :class:`str` class.
+    
+    """
+    
+    converters = dict()
+    if len(args) == 1:
+        converters[field] = args[0]
+    elif len(args) > 1:
+        converters[field] = args
+    return fieldconvert(table, converters, **kwargs)
+
+    
+def fieldconvert(table, converters=None, failonerror=False, errorvalue=None):
+    """
+    Transform values in one or more fields via functions or method invocations. 
+    E.g.::
+
+        >>> from petl import fieldconvert, look    
         >>> table1 = [['foo', 'bar'],
         ...           ['1', '2.4'],
         ...           ['3', '7.9'],
         ...           ['7', '2'],
         ...           ['8.3', '42.0'],
         ...           ['2', 'abc']]
-        >>> table2 = convert(table1, {'foo': int, 'bar': float})
+        >>> table2 = fieldconvert(table1, {'foo': int, 'bar': float})
         >>> look(table2)
         +-------+-------+
         | 'foo' | 'bar' |
@@ -368,7 +455,7 @@ def convert(table, converters=dict(), errorvalue=None):
         ...           ['7', '2', 11],
         ...           ['8.3', '42.0', 33],
         ...           ['2', 'abc', 'xyz']]
-        >>> table2 = convert(table1)
+        >>> table2 = fieldconvert(table1)
         >>> look(table2)
         +-------+--------+-------+
         | 'foo' | 'bar'  | 'baz' |
@@ -403,19 +490,20 @@ def convert(table, converters=dict(), errorvalue=None):
         +-------+-------+-------+
 
     """
-    
-    return ConvertView(table, converters, errorvalue)
+
+    return FieldConvertView(table, converters, failonerror, errorvalue)
 
 
-class ConvertView(object):
+class FieldConvertView(object):
     
-    def __init__(self, source, converters=dict(), errorvalue=None):
+    def __init__(self, source, converters=None, failonerror=False, errorvalue=None):
         self.source = source
-        self.converters = converters
+        self.converters = converters if converters is not None else dict()
+        self.failonerror = failonerror
         self.errorvalue = errorvalue
         
     def __iter__(self):
-        return iterconvert(self.source, self.converters, self.errorvalue)
+        return iterfieldconvert(self.source, self.converters, self.failonerror, self.errorvalue)
     
     def __setitem__(self, key, value):
         self.converters[key] = value
@@ -424,9 +512,23 @@ class ConvertView(object):
         return self.converters[key]
     
     
-def iterconvert(source, converters, errorvalue):
+def iterfieldconvert(source, converters, failonerror, errorvalue):
     it = iter(source)
     converters = converters.copy()
+    # normalise converters
+    for f, c in converters.items():
+        if callable(c):
+            pass 
+        elif isinstance(c, basestring):
+            # assume method name
+            converters[f] = methodcaller(c)
+        elif isinstance(c, (tuple, list)):
+            # assume method name and args
+            methnm = c[0]
+            methargs = c[1:]
+            converters[f] = methodcaller(methnm, *methargs)
+        else:
+            raise Exception('unexpected converter specification on field %r: %r' % (f, c))
     try:
         
         # grab the fields in the source table
@@ -441,18 +543,18 @@ def iterconvert(source, converters, errorvalue):
                 # row is long, just return value as-is
                 return v
             else:
-                try:
-                    c = converters[f]
-                except KeyError:
+                if f not in converters:
                     # no converter defined on this field, return value as-is
                     return v
                 else:
+                    c = converters[f]
                     try:
                         return c(v)
-                    except ValueError:
-                        return errorvalue
-                    except TypeError:
-                        return errorvalue
+                    except:
+                        if failonerror:
+                            raise
+                        else:
+                            return errorvalue
 
         # construct the data rows
         for row in it:
@@ -461,6 +563,10 @@ def iterconvert(source, converters, errorvalue):
     finally:
         close(it)
             
+            
+def methodcaller(nm, *args):
+    return lambda v: getattr(v, nm)(*args)
+
 
 def translate(table, field, dictionary=dict()):
     """

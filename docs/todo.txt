@@ -27,7 +27,7 @@
 
 - [done] implement fromtext(filename, header=['lines'])
 
-- document fromtext
+- [done] document fromtext
 
 - [won't do] implement stringreplace as a conversion function
 
@@ -35,9 +35,9 @@
 
 - change signature of convert, support signature for single field conversion, also applying methods
 
-- implement trim as a conversion function
+- [won't do] implement trim as a conversion function
 
-- implement stripstring as a conversion function
+- [won't do] implement stripstring as a conversion function
 
 - implement totext(table, filename, template, prologue=None, epilogue=None)
 

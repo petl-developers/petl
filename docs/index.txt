@@ -214,6 +214,7 @@ Transforming tables
 .. autofunction:: petl.selecteq
 .. autofunction:: petl.facet
 .. autofunction:: petl.convert
+.. autofunction:: petl.fieldconvert
 .. autofunction:: petl.translate
 .. autofunction:: petl.extend
 .. autofunction:: petl.capture

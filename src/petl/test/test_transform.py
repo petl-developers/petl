@@ -7,7 +7,7 @@ Tests for the petl.transform module.
 from collections import OrderedDict
 
 from petl.testfun import iassertequal
-from petl import rename, fieldnames, project, cat, convert, translate, extend, \
+from petl import rename, fieldnames, project, cat, convert, fieldconvert, translate, extend, \
                 rowslice, head, tail, sort, melt, recast, duplicates, conflicts, \
                 mergereduce, select, complement, diff, capture, \
                 split, expr, fieldmap, facet, rowreduce, aggregate, recordreduce, \
@@ -136,36 +136,83 @@ def test_cat():
 
 def test_convert():
     
-    table = [['foo', 'bar', 'baz'],
-             ['A', 1, 2],
-             ['B', '2', '3.4'],
-             [u'B', u'3', u'7.8', True],
-             ['D', 'xyz', 9.0],
-             ['E', None]]
+    table1 = [['foo', 'bar', 'baz'],
+              ['A', 1, 2],
+              ['B', '2', '3.4'],
+              [u'B', u'3', u'7.8', True],
+              ['D', 'xyz', 9.0],
+              ['E', None]]
+    
+    # test the simplest style - single field, lambda function
+    table2 = convert(table1, 'foo', lambda s: s.lower())
+    expect2 = [['foo', 'bar', 'baz'],
+               ['a', 1, 2],
+               ['b', '2', '3.4'],
+               [u'b', u'3', u'7.8', True],
+               ['d', 'xyz', 9.0],
+               ['e', None]]
+    iassertequal(expect2, table2)
+    iassertequal(expect2, table2)
+    
+    # test single field with method call
+    table3 = convert(table1, 'foo', 'lower')
+    expect3 = expect2
+    iassertequal(expect3, table3)
+
+    # test single field with method call with arguments
+    table4 = convert(table1, 'foo', 'replace', 'B', 'BB')
+    expect4 = [['foo', 'bar', 'baz'],
+               ['A', 1, 2],
+               ['BB', '2', '3.4'],
+               [u'BB', u'3', u'7.8', True],
+               ['D', 'xyz', 9.0],
+               ['E', None]]
+    iassertequal(expect4, table4)
+
+
+def test_fieldconvert():
+
+    table1 = [['foo', 'bar', 'baz'],
+              ['A', 1, 2],
+              ['B', '2', '3.4'],
+              [u'B', u'3', u'7.8', True],
+              ['D', 'xyz', 9.0],
+              ['E', None]]
     
     # test the style where the converters functions are passed in as a dictionary
     converters = {'foo': str, 'bar': int, 'baz': float}
-    conv = convert(table, converters, errorvalue='error')
-    expectation = [['foo', 'bar', 'baz'],
-                   ['A', 1, 2.0],
-                   ['B', 2, 3.4],
-                   ['B', 3, 7.8, True], # N.B., long rows are preserved
-                   ['D', 'error', 9.0],
-                   ['E', 'error']] # N.B., short rows are preserved
-    iassertequal(expectation, conv) 
+    table5 = fieldconvert(table1, converters, errorvalue='error')
+    expect5 = [['foo', 'bar', 'baz'],
+               ['A', 1, 2.0],
+               ['B', 2, 3.4],
+               ['B', 3, 7.8, True], # N.B., long rows are preserved
+               ['D', 'error', 9.0],
+               ['E', 'error']] # N.B., short rows are preserved
+    iassertequal(expect5, table5) 
     
     # test the style where the converters functions are added one at a time
-    conv = convert(table, errorvalue='err')
-    conv['foo'] = str
-    conv['bar'] = int
-    conv['baz'] = float 
-    expectation = [['foo', 'bar', 'baz'],
-                   ['A', 1, 2.0],
-                   ['B', 2, 3.4],
-                   ['B', 3, 7.8, True],
-                   ['D', 'err', 9.0],
-                   ['E', 'err']]
-    iassertequal(expectation, conv) 
+    table6 = fieldconvert(table1, errorvalue='err')
+    table6['foo'] = str
+    table6['bar'] = int
+    table6['baz'] = float 
+    expect6 = [['foo', 'bar', 'baz'],
+               ['A', 1, 2.0],
+               ['B', 2, 3.4],
+               ['B', 3, 7.8, True],
+               ['D', 'err', 9.0],
+               ['E', 'err']]
+    iassertequal(expect6, table6) 
+    
+    # test some different converters
+    table7 = fieldconvert(table1)
+    table7['foo'] = 'replace', 'B', 'BB'
+    expect7 = [['foo', 'bar', 'baz'],
+               ['A', 1, 2],
+               ['BB', '2', '3.4'],
+               [u'BB', u'3', u'7.8', True],
+               ['D', 'xyz', 9.0],
+               ['E', None]]
+    iassertequal(expect7, table7) 
     
     
 def test_translate():
