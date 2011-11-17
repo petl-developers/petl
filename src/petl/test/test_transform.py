@@ -12,7 +12,7 @@ from petl import rename, fieldnames, project, cat, convert, fieldconvert, transl
                 mergereduce, select, complement, diff, capture, \
                 split, expr, fieldmap, facet, rowreduce, aggregate, recordreduce, \
                 rowmap, recordmap, rowmapmany, recordmapmany, setfields, pushfields, \
-                skip, extendfields, unpack, join
+                skip, extendfields, unpack, join, leftjoin, rightjoin, outerjoin
 
 
 def test_rename():
@@ -1409,5 +1409,101 @@ def test_join_compound_keys():
     expect11 = expect10
     iassertequal(expect11, table11)
     
+    
+def test_leftjoin():
+    
+    table1 = [['id', 'colour'],
+              [1, 'blue'],
+              [2, 'red'],
+              [3, 'purple']]
+    table2 = [['id', 'shape'],
+              [1, 'circle'],
+              [3, 'square'],
+              [4, 'ellipse']]
+    table3 = leftjoin(table1, table2, key='id')
+    expect3 = [['id', 'colour', 'shape'],
+               [1, 'blue', 'circle'],
+               [2, 'red', None],
+               [3, 'purple', 'square']]
+    iassertequal(expect3, table3)
+    iassertequal(expect3, table3) # check twice
+    
+    
+def test_leftjoin_compound_keys():
+    
+    # compound keys
+    table4 = [['id', 'time', 'height'],
+              [1, 1, 12.3],
+              [1, 2, 34.5],
+              [2, 1, 56.7]]
+    table5 = [['id', 'time', 'weight', 'bp'],
+              [1, 2, 4.5, 120],
+              [2, 1, 6.7, 110],
+              [2, 2, 8.9, 100]]
+    table6 = leftjoin(table4, table5, key=['id', 'time'])
+    expect6 = [['id', 'time', 'height', 'weight', 'bp'],
+                [1, 1, 12.3, None, None],
+                [1, 2, 34.5, 4.5, 120],
+                [2, 1, 56.7, 6.7, 110]]
+    iassertequal(expect6, table6)
+
+
+def test_rightjoin():
+    
+    table1 = [['id', 'colour'],
+              [1, 'blue'],
+              [2, 'red'],
+              [3, 'purple']]
+    table2 = [['id', 'shape'],
+              [1, 'circle'],
+              [3, 'square'],
+              [4, 'ellipse']]
+    table3 = rightjoin(table1, table2, key='id')
+    expect3 = [['id', 'colour', 'shape'],
+               [1, 'blue', 'circle'],
+               [3, 'purple', 'square'],
+               [4, None, 'ellipse']]
+    iassertequal(expect3, table3)
+    iassertequal(expect3, table3) # check twice
+    
+    
+def test_outerjoin():
+    
+    table1 = [['id', 'colour'],
+              [1, 'blue'],
+              [2, 'red'],
+              [3, 'purple']]
+    table2 = [['id', 'shape'],
+              [1, 'circle'],
+              [3, 'square'],
+              [4, 'ellipse']]
+    table3 = outerjoin(table1, table2, key='id')
+    expect3 = [['id', 'colour', 'shape'],
+               [1, 'blue', 'circle'],
+               [2, 'red', None],
+               [3, 'purple', 'square'],
+               [4, None, 'ellipse']]
+    iassertequal(expect3, table3)
+    iassertequal(expect3, table3) # check twice
+    
+    
+def test_outerjoin_fieldorder():
+
+    table1 = [['colour', 'id'],
+              ['blue', 1],
+              ['red', 2],
+              ['purple', 3]]
+    table2 = [['id', 'shape'],
+              [1, 'circle'],
+              [3, 'square'],
+              [4, 'ellipse']]
+    table3 = outerjoin(table1, table2, key='id')
+    expect3 = [['colour', 'id', 'shape'],
+               ['blue', 1, 'circle'],
+               ['red', 2, None],
+               ['purple', 3, 'square'],
+               [None, 4, 'ellipse']]
+    iassertequal(expect3, table3)
+    iassertequal(expect3, table3) # check twice
     
     

@@ -59,11 +59,13 @@
 
 - [done] implement join (inner equijoin) without key argument (natural join) 
 
-- implement left outer join
+- [done] implement left outer join
 
-- implement right outer join
+- [done] implement right outer join
 
-- implement full outer join
+- [done] implement full outer join
+
+- document leftjoin, rightjoin, outerjoin
 
 - implement crossjoin
 

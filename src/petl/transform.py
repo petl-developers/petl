@@ -3323,3 +3323,249 @@ def iterequijoin(left, right, key):
         close(lit)
         close(rit)
         
+        
+def leftjoin(left, right, key, missing=None, presorted=False):
+    """
+    TODO doc me
+    
+    """
+    
+    return LeftJoinView(left, right, key, missing, presorted)
+    
+    
+class LeftJoinView(object):
+    
+    def __init__(self, left, right, key, missing=None, presorted=False):
+        if presorted:
+            self.left = left
+            self.right = right
+        else:
+            self.left = sort(left, key)
+            self.right = sort(right, key)
+            # TODO what if someone sets self.key to something else after __init__?
+            # (sort will be incorrect - maybe need to protect key with property setter?)
+        self.key = key
+        self.missing = missing
+
+    def __iter__(self):
+        return iterleftjoin(self.left, self.right, self.key, self.missing)
+    
+    
+def iterleftjoin(left, right, key, missing):
+    lit = iter(left)
+    rit = iter(right)
+    try:
+        lflds = lit.next()
+        rflds = rit.next()
+        lkind = asindices(lflds, key)
+        rkind = asindices(rflds, key)
+        lgetk = itemgetter(*lkind)
+        rgetk = itemgetter(*rkind)
+        rvind = [i for i in range(len(rflds)) if i not in rkind]
+        rgetv = rowgetter(*rvind)
+        outflds = list(lflds)
+        outflds.extend(rgetv(rflds))
+        yield outflds
+
+        lgit = groupby(lit, key=lgetk)
+        rgit = groupby(rit, key=rgetk)
+        lkval, lrows = lgit.next() 
+        rkval, rrows = rgit.next()
+        try:
+            while True:
+                if lkval < rkval:
+                    for row in lrows:
+                        outrow = list(row)
+                        outrow.extend([missing] * len(rvind))
+                        yield outrow
+                    # advance left
+                    lkval, lrows = lgit.next()
+                elif lkval > rkval: 
+                    # advance right
+                    rkval, rrows = rgit.next()
+                else:
+                    # need to cache, may iterate more than once
+                    lrows = list(lrows)
+                    rrows = list(rrows)
+                    for lrow in lrows:
+                        for rrow in rrows:
+                            outrow = list(lrow)
+                            outrow.extend(rgetv(rrow))
+                            yield outrow
+                    # advance both
+                    lkval, lrows = lgit.next()
+                    rkval, rrows = rgit.next()
+        except StopIteration:
+            pass # no more rows 
+        
+    finally:
+        close(lit)
+        close(rit)
+        
+        
+def rightjoin(left, right, key, missing=None, presorted=False):
+    """
+    TODO doc me
+    
+    """
+    
+    return RightJoinView(left, right, key, missing, presorted)
+    
+    
+class RightJoinView(object):
+    
+    def __init__(self, left, right, key, missing=None, presorted=False):
+        if presorted:
+            self.left = left
+            self.right = right
+        else:
+            self.left = sort(left, key)
+            self.right = sort(right, key)
+            # TODO what if someone sets self.key to something else after __init__?
+            # (sort will be incorrect - maybe need to protect key with property setter?)
+        self.key = key
+        self.missing = missing
+
+    def __iter__(self):
+        return iterrightjoin(self.left, self.right, self.key, self.missing)
+    
+    
+def iterrightjoin(left, right, key, missing):
+    lit = iter(left)
+    rit = iter(right)
+    try:
+        lflds = lit.next()
+        rflds = rit.next()
+        lkind = asindices(lflds, key)
+        rkind = asindices(rflds, key)
+        lgetk = itemgetter(*lkind)
+        rgetk = itemgetter(*rkind)
+        rvind = [i for i in range(len(rflds)) if i not in rkind]
+        rgetv = rowgetter(*rvind)
+        outflds = list(lflds)
+        outflds.extend(rgetv(rflds))
+        yield outflds
+
+        lgit = groupby(lit, key=lgetk)
+        rgit = groupby(rit, key=rgetk)
+        lkval, lrows = lgit.next() 
+        rkval, rrows = rgit.next()
+        try:
+            while True:
+                if lkval < rkval:
+                    # advance left
+                    lkval, lrows = lgit.next()
+                elif lkval > rkval:
+                    for rrow in rrows:
+                        outrow = [missing] * len(lflds)
+                        for li, ri in zip(lkind, rkind):
+                            outrow[li] = rrow[ri] 
+                        outrow.extend(rgetv(rrow))
+                        yield outrow
+                    # advance right
+                    rkval, rrows = rgit.next()
+                else:
+                    # need to cache, may iterate more than once
+                    lrows = list(lrows)
+                    rrows = list(rrows)
+                    for lrow in lrows:
+                        for rrow in rrows:
+                            outrow = list(lrow)
+                            outrow.extend(rgetv(rrow))
+                            yield outrow
+                    # advance both
+                    lkval, lrows = lgit.next()
+                    rkval, rrows = rgit.next()
+        except StopIteration:
+            pass # no more rows 
+        
+    finally:
+        close(lit)
+        close(rit)
+        
+        
+def outerjoin(left, right, key, missing=None, presorted=False):
+    """
+    TODO doc me
+    
+    """
+
+    return OuterJoinView(left, right, key, missing, presorted)
+    
+    
+class OuterJoinView(object):
+    
+    def __init__(self, left, right, key, missing=None, presorted=False):
+        if presorted:
+            self.left = left
+            self.right = right
+        else:
+            self.left = sort(left, key)
+            self.right = sort(right, key)
+            # TODO what if someone sets self.key to something else after __init__?
+            # (sort will be incorrect - maybe need to protect key with property setter?)
+        self.key = key
+        self.missing = missing
+
+    def __iter__(self):
+        return iterouterjoin(self.left, self.right, self.key, self.missing)
+    
+    
+def iterouterjoin(left, right, key, missing):
+    lit = iter(left)
+    rit = iter(right)
+    try:
+        lflds = lit.next()
+        rflds = rit.next()
+        lkind = asindices(lflds, key)
+        rkind = asindices(rflds, key)
+        lgetk = itemgetter(*lkind)
+        rgetk = itemgetter(*rkind)
+        rvind = [i for i in range(len(rflds)) if i not in rkind]
+        rgetv = rowgetter(*rvind)
+        outflds = list(lflds)
+        outflds.extend(rgetv(rflds))
+        yield outflds
+
+        lgit = groupby(lit, key=lgetk)
+        rgit = groupby(rit, key=rgetk)
+        lkval, lrows = lgit.next() 
+        rkval, rrows = rgit.next()
+        try:
+            while True:
+                if lkval < rkval:
+                    for lrow in lrows:
+                        outrow = list(lrow)
+                        outrow.extend([missing] * len(rvind))
+                        yield outrow
+                    # advance left
+                    lkval, lrows = lgit.next()
+                elif lkval > rkval:
+                    for rrow in rrows:
+                        outrow = [missing] * len(lflds)
+                        for li, ri in zip(lkind, rkind):
+                            outrow[li] = rrow[ri] 
+                        outrow.extend(rgetv(rrow))
+                        yield outrow
+                    # advance right
+                    rkval, rrows = rgit.next()
+                else:
+                    # need to cache, may iterate more than once
+                    lrows = list(lrows)
+                    rrows = list(rrows)
+                    for lrow in lrows:
+                        for rrow in rrows:
+                            outrow = list(lrow)
+                            outrow.extend(rgetv(rrow))
+                            yield outrow
+                    # advance both
+                    lkval, lrows = lgit.next()
+                    rkval, rrows = rgit.next()
+        except StopIteration:
+            pass # no more rows 
+        
+    finally:
+        close(lit)
+        close(rit)
+        
+        
