@@ -227,14 +227,14 @@ Transforming tables
 .. autofunction:: petl.head
 .. autofunction:: petl.tail
 .. autofunction:: petl.sort
-.. autofunction:: petl.complement
-.. autofunction:: petl.diff
 .. autofunction:: petl.join
 .. autofunction:: petl.leftjoin
 .. autofunction:: petl.rightjoin
 .. autofunction:: petl.outerjoin
 .. autofunction:: petl.crossjoin
 .. autofunction:: petl.antijoin
+.. autofunction:: petl.complement
+.. autofunction:: petl.diff
 .. autofunction:: petl.fieldmap
 .. autofunction:: petl.rowmap
 .. autofunction:: petl.recordmap

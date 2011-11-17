@@ -12,7 +12,7 @@ from petl import rename, fieldnames, project, cat, convert, fieldconvert, transl
                 mergereduce, select, complement, diff, capture, \
                 split, expr, fieldmap, facet, rowreduce, aggregate, recordreduce, \
                 rowmap, recordmap, rowmapmany, recordmapmany, setfields, pushfields, \
-                skip, extendfields, unpack
+                skip, extendfields, unpack, join
 
 
 def test_rename():
@@ -1341,6 +1341,73 @@ def test_unpack():
               [2, ['c', 'd'], 'c'],
               [3, ['e', 'f'], 'e']]
     iassertequal(expect5, table5)
+    
+    
+def test_join():
+    
+    table1 = [['id', 'colour'],
+              [1, 'blue'],
+              [2, 'red'],
+              [3, 'purple']]
+    table2 = [['id', 'shape'],
+              [1, 'circle'],
+              [3, 'square'],
+              [4, 'ellipse']]
+    
+    # normal inner join
+    table3 = join(table1, table2, key='id')
+    expect3 = [['id', 'colour', 'shape'],
+               [1, 'blue', 'circle'],
+               [3, 'purple', 'square']]
+    iassertequal(expect3, table3)
+    iassertequal(expect3, table3) # check twice
+    
+    # natural join
+    table4 = join(table1, table2)
+    expect4 = expect3
+    iassertequal(expect4, table4)
+    iassertequal(expect4, table4) # check twice
+    
+    # multiple rows for each key
+    table5 = [['id', 'colour'],
+              [1, 'blue'],
+              [1, 'red'],
+              [2, 'purple']]
+    table6 = [['id', 'shape'],
+              [1, 'circle'],
+              [1, 'square'],
+              [2, 'ellipse']]
+    table7 = join(table5, table6, key='id')
+    expect7 = [['id', 'colour', 'shape'],
+               [1, 'blue', 'circle'],
+               [1, 'blue', 'square'],
+               [1, 'red', 'circle'],
+               [1, 'red', 'square'],
+               [2, 'purple', 'ellipse']]
+    iassertequal(expect7, table7)
+    
+    
+def test_join_compound_keys():
+    
+    # compound keys
+    table8 = [['id', 'time', 'height'],
+              [1, 1, 12.3],
+              [1, 2, 34.5],
+              [2, 1, 56.7]]
+    table9 = [['id', 'time', 'weight'],
+              [1, 2, 4.5],
+              [2, 1, 6.7],
+              [2, 2, 8.9]]
+    table10 = join(table8, table9, key=['id', 'time'])
+    expect10 = [['id', 'time', 'height', 'weight'],
+                [1, 2, 34.5, 4.5],
+                [2, 1, 56.7, 6.7]]
+    iassertequal(expect10, table10)
+
+    # natural join on compound key
+    table11 = join(table8, table9)
+    expect11 = expect10
+    iassertequal(expect11, table11)
     
     
     

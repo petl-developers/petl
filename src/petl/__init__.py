@@ -19,7 +19,7 @@ from petl.transform import rename, project, cat, convert, fieldconvert, translat
            mergereduce, select, complement, diff, capture, \
            split, fieldmap, facet, selecteq, rowreduce, merge, aggregate, recordreduce, \
            rowmap, recordmap, rowmapmany, recordmapmany, setfields, pushfields, skip, \
-           extendfields, unpack
+           extendfields, unpack, join
            
 
 

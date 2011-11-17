@@ -55,9 +55,9 @@
 
 - [done] review mergereduce behaviour - set or list?
 
-- implement join (inner equijoin) with key argument
+- [done] implement join (inner equijoin) with key argument
 
-- implement join (inner equijoin) without key argument (natural join) 
+- [done] implement join (inner equijoin) without key argument (natural join) 
 
 - implement left outer join
 

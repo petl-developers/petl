@@ -9,7 +9,7 @@ from operator import itemgetter
 
 
 from petl.util import close, asindices, rowgetter, FieldSelectionError, asdict,\
-    expr, valueset, records
+    expr, valueset, records, fields
 import re
 
 
@@ -3138,4 +3138,188 @@ def iterunpack(source, field, newfields, max, include_original):
     finally:
         close(it)
         
+        
+def join(left, right, key=None, presorted=False):
+    """
+    Perform an equi-join on the two tables. E.g.::
+        
+        >>> from petl import join, look    
+        >>> table1 = [['id', 'colour'],
+        ...           [1, 'blue'],
+        ...           [2, 'red'],
+        ...           [3, 'purple']]
+        >>> table2 = [['id', 'shape'],
+        ...           [1, 'circle'],
+        ...           [3, 'square'],
+        ...           [4, 'ellipse']]
+        >>> table3 = join(table1, table2, key='id')
+        >>> look(table3)
+        +------+----------+----------+
+        | 'id' | 'colour' | 'shape'  |
+        +======+==========+==========+
+        | 1    | 'blue'   | 'circle' |
+        +------+----------+----------+
+        | 3    | 'purple' | 'square' |
+        +------+----------+----------+
+
+    If no `key` is given, a natural join is tried, e.g.::
+    
+        >>> table4 = join(table1, table2)
+        >>> look(table4)
+        +------+----------+----------+
+        | 'id' | 'colour' | 'shape'  |
+        +======+==========+==========+
+        | 1    | 'blue'   | 'circle' |
+        +------+----------+----------+
+        | 3    | 'purple' | 'square' |
+        +------+----------+----------+
+
+    Note behaviour if the key is not unique in either or both tables::
+
+        >>> table5 = [['id', 'colour'],
+        ...           [1, 'blue'],
+        ...           [1, 'red'],
+        ...           [2, 'purple']]
+        >>> table6 = [['id', 'shape'],
+        ...           [1, 'circle'],
+        ...           [1, 'square'],
+        ...           [2, 'ellipse']]
+        >>> table7 = join(table5, table6, key='id')
+        >>> look(table7)
+        +------+----------+-----------+
+        | 'id' | 'colour' | 'shape'   |
+        +======+==========+===========+
+        | 1    | 'blue'   | 'circle'  |
+        +------+----------+-----------+
+        | 1    | 'blue'   | 'square'  |
+        +------+----------+-----------+
+        | 1    | 'red'    | 'circle'  |
+        +------+----------+-----------+
+        | 1    | 'red'    | 'square'  |
+        +------+----------+-----------+
+        | 2    | 'purple' | 'ellipse' |
+        +------+----------+-----------+
+
+    Compound keys are supported, e.g.::
+    
+        >>> table8 = [['id', 'time', 'height'],
+        ...           [1, 1, 12.3],
+        ...           [1, 2, 34.5],
+        ...           [2, 1, 56.7]]
+        >>> table9 = [['id', 'time', 'weight'],
+        ...           [1, 2, 4.5],
+        ...           [2, 1, 6.7],
+        ...           [2, 2, 8.9]]
+        >>> table10 = join(table8, table9, key=['id', 'time'])
+        >>> look(table10)
+        +------+--------+----------+----------+
+        | 'id' | 'time' | 'height' | 'weight' |
+        +======+========+==========+==========+
+        | 1    | 2      | 34.5     | 4.5      |
+        +------+--------+----------+----------+
+        | 2    | 1      | 56.7     | 6.7      |
+        +------+--------+----------+----------+
+
+    """
+    
+    if key is None:
+        return NaturalJoinView(left, right, presorted)
+    else:
+        return EquiJoinView(left, right, key, presorted)
+
+
+class NaturalJoinView(object):
+    
+    def __init__(self, left, right, presorted=False):
+        self.left = left
+        self.right = right
+        self.presorted = presorted
+        
+    def __iter__(self):
+        return iternaturaljoin(self.left, self.right, self.presorted)
+    
+
+def iternaturaljoin(left, right, presorted):
+    # determine key field or fields
+    lflds = fields(left)
+    rflds = fields(right)
+    key = []
+    for f in lflds:
+        if f in rflds:
+            key.append(f)
+    assert len(key) > 0, 'no fields in common'
+    if len(key) == 1:
+        key = key[0] # deal with singletons
+    if not presorted:
+        # this is not optimal, have to sort each time, because key is determined
+        # dynamically from the data
+        left = sort(left, key)
+        right = sort(right, key)
+    # delegate the rest
+    return iterequijoin(left, right, key)
+
+
+class EquiJoinView(object):
+    
+    def __init__(self, left, right, key, presorted=False):
+        if presorted:
+            self.left = left
+            self.right = right
+        else:
+            self.left = sort(left, key)
+            self.right = sort(right, key)
+            # TODO what if someone sets self.key to something else after __init__?
+            # (sort will be incorrect - maybe need to protect key with property setter?)
+        self.key = key
+        
+    def __iter__(self):
+        return iterequijoin(self.left, self.right, self.key)
+    
+    
+def iterequijoin(left, right, key):
+    lit = iter(left)
+    rit = iter(right)
+    try:
+        lflds = lit.next()
+        rflds = rit.next()
+        lkind = asindices(lflds, key)
+        rkind = asindices(rflds, key)
+        lgetk = itemgetter(*lkind)
+        rgetk = itemgetter(*rkind)
+        rvind = [i for i in range(len(rflds)) if i not in rkind]
+        rgetv = rowgetter(*rvind)
+        outflds = list(lflds)
+        outflds.extend(rgetv(rflds))
+        yield outflds
+
+        lgit = groupby(lit, key=lgetk)
+        rgit = groupby(rit, key=rgetk)
+        lkval, lrows = lgit.next() 
+        rkval, rrows = rgit.next()
+        try:
+            while True:
+                if lkval < rkval:
+                    # advance left
+                    lkval, lrows = lgit.next()
+                elif lkval > rkval: 
+                    # advance right
+                    rkval, rrows = rgit.next()
+                else:
+                    # need to cache, may iterate more than once
+                    lrows = list(lrows)
+                    rrows = list(rrows)
+                    for lrow in lrows:
+                        for rrow in rrows:
+                            outrow = list(lrow)
+                            outrow.extend(rgetv(rrow))
+                            yield outrow
+                    # advance both
+                    lkval, lrows = lgit.next()
+                    rkval, rrows = rgit.next()
+        except StopIteration:
+            pass # no more rows 
+        
+    finally:
+        close(lit)
+        close(rit)
         
