@@ -1087,14 +1087,15 @@ def test_aggregate():
     aggregators['minbar'] = 'bar', min
     aggregators['maxbar'] = 'bar', max
     aggregators['sumbar'] = 'bar', sum
+    aggregators['listbar'] = 'bar', list
 
     table2 = aggregate(table1, 'foo', aggregators)
-    expect2 = [['foo', 'minbar', 'maxbar', 'sumbar'],
-               ['a', 3, 7, 10],
-               ['b', 1, 9, 12],
-               ['c', 4, 4, 4],
-               ['d', 3, 3, 3],
-               ['e', None, None, 0]]
+    expect2 = [['foo', 'minbar', 'maxbar', 'sumbar', 'listbar'],
+               ['a', 3, 7, 10, [3, 7]],
+               ['b', 1, 9, 12, [2, 1, 9]],
+               ['c', 4, 4, 4, [4]],
+               ['d', 3, 3, 3, [3]],
+               ['e', None, None, 0, []]]
     iassertequal(expect2, table2)
     iassertequal(expect2, table2) # check can iterate twice
     
@@ -1102,6 +1103,7 @@ def test_aggregate():
     table3['minbar'] = 'bar', min
     table3['maxbar'] = 'bar', max
     table3['sumbar'] = 'bar', sum
+    table3['listbar'] = 'bar' # default is list
     iassertequal(expect2, table3)
 
 
