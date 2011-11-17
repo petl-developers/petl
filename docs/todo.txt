@@ -91,7 +91,7 @@
 
 - modify sort to keep cached data and check cachetag values
 
-- implement setfields
+- [done] implement setfields
 
 - implement selectlen - select by row length
 
@@ -105,18 +105,20 @@
 
 - implement rowgroupby? generate sequence of key/row iterator pairs?
 
+- implement recordgroupby?
+
 - implement pivot?
 
 - implement crosstab?
 
 - implement string lengths as utility function
 
-- implement string patterns as utility function
+- (0.3) implement string patterns as utility function
 
-- implement hash (lookup) alternatives to all join and other sort-dependent functions
+- (0.3) implement hash (lookup) alternatives to all join and other sort-dependent functions
 
-- implement provenance trace
+- (0.3) implement provenance trace
 
-- implement petl.interactive with cache wrappers
+- (0.3) implement petl.interactive with cache wrappers
 
-- implement petl.fluent
+- (0.3) implement petl.fluent
