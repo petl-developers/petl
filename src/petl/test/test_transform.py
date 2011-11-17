@@ -805,20 +805,29 @@ def test_capture():
     
     result = capture(table, 'variable', '(\\w)(\\d)', ('treat', 'time'))
     iassertequal(expectation, result)
-
     result = capture(table, 'variable', '(\\w)(\\d)', ('treat', 'time'),
                            include_original=False)
     iassertequal(expectation, result)
 
+    # what about including the original field?
     expectation = [['id', 'variable', 'value', 'treat', 'time'],
                    ['1', 'A1', '12', 'A', '1'],  
                    ['2', 'A2', '15', 'A', '2'],
                    ['3', 'B1', '18', 'B', '1'],
                    ['4', 'C12', '19', 'C', '1']]
-    
     result = capture(table, 'variable', '(\\w)(\\d)', ('treat', 'time'),
                            include_original=True)
     iassertequal(expectation, result)
+    
+    # what about if number of captured groups is different from new fields?
+    expectation = [['id', 'value'],
+                   ['1', '12', 'A', '1'],  
+                   ['2', '15', 'A', '2'],
+                   ['3', '18', 'B', '1'],
+                   ['4', '19', 'C', '1']]
+    result = capture(table, 'variable', '(\\w)(\\d)')
+    iassertequal(expectation, result)
+    
     
     
 def test_split():
@@ -837,8 +846,9 @@ def test_split():
     
     result = split(table, 'variable', 'd', ('variable', 'day'))
     iassertequal(expectation, result)
-
-    result = split(table, 'variable', 'd', ('variable', 'day'))
+    iassertequal(expectation, result)
+    # proper regex
+    result = split(table, 'variable', '[Dd]', ('variable', 'day'))
     iassertequal(expectation, result)
 
     expectation = [['id', 'variable', 'value', 'variable', 'day'],
@@ -849,6 +859,16 @@ def test_split():
     
     result = split(table, 'variable', 'd', ('variable', 'day'), include_original=True)
     iassertequal(expectation, result)
+    
+    # what about if no new fields?
+    expectation = [['id', 'value'],
+                   ['1', '12', 'para', '1'],  
+                   ['2', '15', 'para', '2'],
+                   ['3', '18', 'temp', '1'],
+                   ['4', '19', 'temp', '2']]
+    result = split(table, 'variable', 'd')
+    iassertequal(expectation, result)
+
     
 
 def test_melt_and_capture():

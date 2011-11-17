@@ -43,9 +43,11 @@
 
 - [done] implement appendtext(table, filename, template, prologue=None, epilogue=None)
 
-- review split behaviour when there are more splits than fields
+- [done] review split behaviour when there are more splits than fields
 
-- review capture behaviour when there are more splits than fields
+- [done] review capture behaviour when there are more splits than fields
+
+- implement extendfields
 
 - implement unpack, or some other way to go from a single field containing list or tuple values to multiple fields
 
