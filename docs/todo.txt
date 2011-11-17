@@ -67,6 +67,8 @@
 
 - document leftjoin, rightjoin, outerjoin
 
+- refactor join functions
+
 - implement crossjoin
 
 - implement antijoin
