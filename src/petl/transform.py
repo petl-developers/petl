@@ -2368,20 +2368,20 @@ def mergereduce(table, key, missing=None, presorted=False):
         ...           ['A', 2, None]]
         >>> table2 = mergereduce(table1, 'foo')
         >>> look(table2)
-        +-------+-------------+------------------+
-        | 'foo' | 'bar'       | 'baz'            |
-        +=======+=============+==================+
-        | 'A'   | set([1, 2]) | 2.7              |
-        +-------+-------------+------------------+
-        | 'B'   | 2           | 7.8              |
-        +-------+-------------+------------------+
-        | 'D'   | 3           | set([9.4, 12.3]) |
-        +-------+-------------+------------------+
-        | 'E'   | set([])     |                  |
-        +-------+-------------+------------------+
+        +-------+--------+-------------+
+        | 'foo' | 'bar'  | 'baz'       |
+        +=======+========+=============+
+        | 'A'   | [1, 2] | 2.7         |
+        +-------+--------+-------------+
+        | 'B'   | 2      | 7.8         |
+        +-------+--------+-------------+
+        | 'D'   | 3      | [9.4, 12.3] |
+        +-------+--------+-------------+
+        | 'E'   | []     |             |
+        +-------+--------+-------------+
 
     Missing values are overridden by non-missing values. Conflicting values are
-    reported as a set.
+    reported as a list.
     
     """
 
@@ -2390,12 +2390,11 @@ def mergereduce(table, key, missing=None, presorted=False):
         for row in rows:
             for i, v in enumerate(row):
                 if i == len(merged):
-                    merged.append(set())
-                merged[i].add(v)
-        # remove missing values
-        merged = [vals - {missing} for vals in merged]
+                    merged.append(list())
+                if v != missing and v not in merged[i]:
+                    merged[i].append(v)    
         # replace singletons
-        merged = [vals.pop() if len(vals) == 1 else vals for vals in merged]
+        merged = [vals[0] if len(vals) == 1 else vals for vals in merged]
         return merged
     
     return rowreduce(table, key, reducer=_mergereducer, presorted=presorted)
@@ -2417,15 +2416,15 @@ def merge(*tables, **kwargs):
         ...           ['C', False, 12.4]]
         >>> table3 = merge(table1, table2, key='bar')
         >>> look(table3)
-        +-------+-------+--------------------+--------+
-        | 'foo' | 'bar' | 'baz'              | 'quux' |
-        +=======+=======+====================+========+
-        | 1     | 'A'   | True               | 42.0   |
-        +-------+-------+--------------------+--------+
-        | 2     | 'B'   | False              | 79.3   |
-        +-------+-------+--------------------+--------+
-        | 4     | 'C'   | set([False, True]) | 12.4   |
-        +-------+-------+--------------------+--------+
+        +-------+-------+---------------+--------+
+        | 'foo' | 'bar' | 'baz'         | 'quux' |
+        +=======+=======+===============+========+
+        | 1     | 'A'   | True          | 42.0   |
+        +-------+-------+---------------+--------+
+        | 2     | 'B'   | False         | 79.3   |
+        +-------+-------+---------------+--------+
+        | 4     | 'C'   | [False, True] | 12.4   |
+        +-------+-------+---------------+--------+
 
     """
     

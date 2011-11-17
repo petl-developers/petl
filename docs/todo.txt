@@ -53,7 +53,7 @@
 
 - [done] review aggregate behaviour with no reducer function - produce list? (like recast)
 
-- review mergereduce behaviour - set or list?
+- [done] review mergereduce behaviour - set or list?
 
 - implement join (inner equijoin) with key argument
 
