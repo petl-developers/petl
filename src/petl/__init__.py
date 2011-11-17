@@ -18,7 +18,8 @@ from petl.transform import rename, project, cat, convert, fieldconvert, translat
            head, tail, sort, melt, recast, duplicates, conflicts, \
            mergereduce, select, complement, diff, capture, \
            split, fieldmap, facet, selecteq, rowreduce, merge, aggregate, recordreduce, \
-           rowmap, recordmap, rowmapmany, recordmapmany, setfields, pushfields, skip
+           rowmap, recordmap, rowmapmany, recordmapmany, setfields, pushfields, skip, \
+           extendfields, unpack
            
 
 

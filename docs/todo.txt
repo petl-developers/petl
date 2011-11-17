@@ -47,9 +47,13 @@
 
 - [done] review capture behaviour when there are more splits than fields
 
-- implement extendfields
+- [done] implement extendfields
 
-- implement unpack, or some other way to go from a single field containing list or tuple values to multiple fields
+- [done] implement unpack, or some other way to go from a single field containing list or tuple values to multiple fields
+
+- review aggregate behaviour with no reducer function - produce list? (like recast)
+
+- review mergereduce behaviour - set or list?
 
 - implement join (inner equijoin) with key argument
 

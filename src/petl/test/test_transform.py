@@ -12,7 +12,7 @@ from petl import rename, fieldnames, project, cat, convert, fieldconvert, transl
                 mergereduce, select, complement, diff, capture, \
                 split, expr, fieldmap, facet, rowreduce, aggregate, recordreduce, \
                 rowmap, recordmap, rowmapmany, recordmapmany, setfields, pushfields, \
-                skip
+                skip, extendfields, unpack
 
 
 def test_rename():
@@ -1262,6 +1262,19 @@ def test_setfields():
     iassertequal(expect2, table2) # can iterate twice?
     
     
+def test_extendfields():
+    
+    table1 = [['foo'],
+              ['a', 1, True],
+              ['b', 2, False]]
+    table2 = extendfields(table1, ['bar', 'baz'])
+    expect2 = [['foo', 'bar', 'baz'],
+               ['a', 1, True],
+               ['b', 2, False]]
+    iassertequal(expect2, table2)
+    iassertequal(expect2, table2) # can iterate twice?
+    
+    
 def test_pushfields():
     
     table1 = [['a', 1],
@@ -1287,6 +1300,45 @@ def test_skip():
                ['b', 2]]
     iassertequal(expect2, table2)
     iassertequal(expect2, table2) # can iterate twice?
+    
+    
+def test_unpack():
+    
+    table1 = [['foo', 'bar'],
+              [1, ['a', 'b']],
+              [2, ['c', 'd']],
+              [3, ['e', 'f']]]
+    table2 = unpack(table1, 'bar', ['baz', 'quux'])
+    expect2 = [['foo', 'baz', 'quux'],
+               [1, 'a', 'b'],
+               [2, 'c', 'd'],
+               [3, 'e', 'f']]
+    iassertequal(expect2, table2)
+    iassertequal(expect2, table2) # check twice
+    
+    # check no new fields
+    table3 = unpack(table1, 'bar')
+    expect3 = [['foo'],
+               [1, 'a', 'b'],
+               [2, 'c', 'd'],
+               [3, 'e', 'f']]
+    iassertequal(expect3, table3)
+    
+    # check max
+    table4 = unpack(table1, 'bar', ['baz'], max=1)
+    expect4 = [['foo', 'baz'],
+               [1, 'a'],
+               [2, 'c'],
+               [3, 'e']]
+    iassertequal(expect4, table4)
+    
+    # check include original
+    table5 = unpack(table1, 'bar', ['baz'], max=1, include_original=True)
+    expect5 = [['foo', 'bar', 'baz'],
+              [1, ['a', 'b'], 'a'],
+              [2, ['c', 'd'], 'c'],
+              [3, ['e', 'f'], 'e']]
+    iassertequal(expect5, table5)
     
     
     

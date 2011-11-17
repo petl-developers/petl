@@ -207,6 +207,7 @@ Transforming tables
 
 .. autofunction:: petl.rename
 .. autofunction:: petl.setfields
+.. autofunction:: petl.extendfields
 .. autofunction:: petl.pushfields
 .. autofunction:: petl.skip
 .. autofunction:: petl.project
@@ -246,6 +247,7 @@ Transforming tables
 .. autofunction:: petl.merge
 .. autofunction:: petl.melt
 .. autofunction:: petl.recast
+.. autofunction:: petl.unpack
 .. autofunction:: petl.filldown
 .. autofunction:: petl.fillup
 .. autofunction:: petl.fillleft

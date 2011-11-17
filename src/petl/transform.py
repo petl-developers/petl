@@ -1798,8 +1798,12 @@ def itercapture(source, field, pattern, newfields, include_original, flags):
         prog = re.compile(pattern, flags)
         
         flds = it.next()
-        assert field in flds, 'field not found: %s' % field
-        field_index = flds.index(field)
+        if field in flds:
+            field_index = flds.index(field)
+        elif isinstance(field, int) and field < len(flds):
+            field_index = field
+        else:
+            raise Exception('field invalid: must be either field name or index')
         
         # determine output flds
         out_flds = list(flds)
@@ -1882,8 +1886,12 @@ def itersplit(source, field, pattern, newfields, include_original, maxsplit,
         prog = re.compile(pattern, flags)
 
         flds = it.next()
-        assert field in flds, 'field not found: %s' % field
-        field_index = flds.index(field)
+        if field in flds:
+            field_index = flds.index(field)
+        elif isinstance(field, int) and field < len(flds):
+            field_index = field
+        else:
+            raise Exception('field invalid: must be either field name or index')
         
         # determine output flds
         out_flds = list(flds)
@@ -2914,6 +2922,52 @@ def itersetfields(source, flds):
         close(it)
         
         
+def extendfields(table, flds):
+    """
+    Extend fields in the given table. E.g.::
+    
+        >>> from petl import extendfields, look
+        >>> table1 = [['foo'],
+        ...           ['a', 1, True],
+        ...           ['b', 2, False]]
+        >>> table2 = extendfields(table1, ['bar', 'baz'])
+        >>> look(table2)
+        +-------+-------+-------+
+        | 'foo' | 'bar' | 'baz' |
+        +=======+=======+=======+
+        | 'a'   | 1     | True  |
+        +-------+-------+-------+
+        | 'b'   | 2     | False |
+        +-------+-------+-------+
+
+    """
+    
+    return ExtendFieldsView(table, flds) 
+
+
+class ExtendFieldsView(object):
+    
+    def __init__(self, source, flds):
+        self.source = source
+        self.flds = flds
+        
+    def __iter__(self):
+        return iterextendfields(self.source, self.flds)   
+
+
+def iterextendfields(source, flds):
+    it = iter(source)
+    try:
+        srcflds = it.next() 
+        outflds = list(srcflds)
+        outflds.extend(flds)
+        yield outflds
+        for row in it:
+            yield row
+    finally:
+        close(it)
+        
+        
 def pushfields(table, flds):
     """
     Push rows down and prepend a header row. E.g.::
@@ -3003,3 +3057,78 @@ def iterskip(source, n):
         close(it)
         
     
+def unpack(table, field, newfields=None, max=None, include_original=False):
+    """
+    Unpack data values that are lists or tuples. E.g.::
+    
+        >>> from petl import unpack, look    
+        >>> table1 = [['foo', 'bar'],
+        ...           [1, ['a', 'b']],
+        ...           [2, ['c', 'd']],
+        ...           [3, ['e', 'f']]]
+        >>> table2 = unpack(table1, 'bar', ['baz', 'quux'])
+        >>> look(table2)
+        +-------+-------+--------+
+        | 'foo' | 'baz' | 'quux' |
+        +=======+=======+========+
+        | 1     | 'a'   | 'b'    |
+        +-------+-------+--------+
+        | 2     | 'c'   | 'd'    |
+        +-------+-------+--------+
+        | 3     | 'e'   | 'f'    |
+        +-------+-------+--------+
+    
+    """
+    
+    return UnpackView(table, field, newfields, max, include_original)
+
+
+class UnpackView(object):
+    
+    def __init__(self, source, field, newfields=None, max=None, 
+                 include_original=False):
+        self.source = source
+        self.field = field
+        self.newfields = newfields
+        self.max = max
+        self.include_original = include_original
+        
+    def __iter__(self):
+        return iterunpack(self.source, self.field, self.newfields, self.max, 
+                          self.include_original)
+
+
+def iterunpack(source, field, newfields, max, include_original):
+    it = iter(source)
+    try:
+
+        flds = it.next()
+        if field in flds:
+            field_index = flds.index(field)
+        elif isinstance(field, int) and field < len(flds):
+            field_index = field
+        else:
+            raise Exception('field invalid: must be either field name or index')
+        
+        # determine output flds
+        out_flds = list(flds)
+        if not include_original:
+            out_flds.remove(field)
+        if newfields:   
+            out_flds.extend(newfields)
+        yield out_flds
+        
+        # construct the output data
+        for row in it:
+            value = row[field_index]
+            if include_original:
+                out_row = list(row)
+            else:
+                out_row = [v for i, v in enumerate(row) if i != field_index]
+            out_row.extend(value[:max])
+            yield out_row
+            
+    finally:
+        close(it)
+        
+        
