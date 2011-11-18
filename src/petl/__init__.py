@@ -21,7 +21,22 @@ from petl.transform import rename, project, cat, convert, fieldconvert, translat
            rowmap, recordmap, rowmapmany, recordmapmany, setfields, pushfields, skip, \
            extendfields, unpack, join, leftjoin, rightjoin, outerjoin
            
+def lenstats(table, field):
+    """
+    Convenience function to report statistics on value lengths under the given
+    field. E.g.::
 
+        >>> from petl import lenstats    
+        >>> table1 = [['foo', 'bar'],
+        ...           [1, 'a'],
+        ...           [2, 'aaa'],
+        ...           [3, 'aa'],
+        ...           [4, 'aaa'],
+        ...           [5, 'aaaaaaaaaaa']]
+        >>> lenstats(table1, 'bar')
+        {'count': 5, 'errors': 0, 'min': 1.0, 'max': 11.0, 'sum': 20.0, 'mean': 4.0}
+
+    """
 
 
 

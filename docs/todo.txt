@@ -115,7 +115,7 @@
 
 - implement crosstab?
 
-- implement string lengths as utility function
+- [done] implement string lengths as utility function
 
 - (0.3) implement string patterns as utility function
 
