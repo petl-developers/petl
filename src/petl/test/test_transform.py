@@ -471,6 +471,44 @@ def test_sort_6():
     result = sort(table, key=('foo', 'bar'), reverse=True)
     iassertequal(expectation, result)
     
+
+def test_sort_merge():
+    
+    table = [['foo', 'bar'],
+            ['C', 2],
+            ['A', 9],
+            ['A', 6],
+            ['F', 1],
+            ['D', 10]]
+
+    # test sort forwards
+    expectation = [['foo', 'bar'],
+                   ['F', 1],
+                   ['C', 2],
+                   ['A', 6],
+                   ['A', 9],
+                   ['D', 10]]
+    result = sort(table, 'bar')
+    iassertequal(expectation, result)
+    result = sort(table, 'bar', buffersize=2)
+    print list(result)
+    iassertequal(expectation, result)
+        
+    # sort in reverse
+    expectation = [['foo', 'bar'],
+                   ['D', 10],
+                   ['A', 9],
+                   ['A', 6],
+                   ['C', 2],
+                   ['F', 1]]
+    
+    result = sort(table, 'bar', reverse=True)
+    iassertequal(expectation, result)
+    # currently not supported - cannot reverse heapq.merge
+#    result = sort(table, 'bar', reverse=True, buffersize=2)
+#    print list(result)
+#    iassertequal(expectation, result)
+    
     
 def test_melt_1():
     

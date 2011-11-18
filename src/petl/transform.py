@@ -4,14 +4,17 @@ TODO doc me
 """
 
 from itertools import islice, groupby, product
-from collections import deque, defaultdict, OrderedDict
+from collections import deque, defaultdict, OrderedDict, namedtuple
 from operator import itemgetter
+import cPickle as pickle
 
 
 from petl.util import close, asindices, rowgetter, FieldSelectionError, asdict,\
     expr, valueset, records, fields, data
 import re
-from petl.io import Uncacheable
+from petl.io import Uncacheable, frompickle
+from tempfile import NamedTemporaryFile, TemporaryFile
+import heapq
 
 
 def rename(table, spec=dict()):
@@ -925,7 +928,7 @@ def itertail(source, n):
         close(it)
 
 
-def sort(table, key=None, reverse=False):
+def sort(table, key=None, reverse=False, buffersize=100000):
     """
     Sort the table. E.g.::
     
@@ -990,28 +993,64 @@ def sort(table, key=None, reverse=False):
         | 'F'   | 1     |
         +-------+-------+
         
-    TODO currently this sorts data in memory, need to add option to limit
-    memory usage and merge sort from chunks on disk
+    If the number of rows in the table is less than `buffersize`, the table
+    will be sorted in memory. Otherwise, the table is sorted in chunks of
+    no more than `buffersize` rows, each chunk is written to a temporary file, 
+    and then a merge sort is performed on the temporary files.
 
     """
     
-    return SortView(table, key, reverse)
+    return SortView(table, key, reverse, buffersize)
     
+
+def iterchunk(filename):
+    with open(filename, 'rb') as f:
+        try:
+            while True:
+                yield pickle.load(f)
+        except EOFError:
+            pass
+
+
+Keyed = namedtuple('Keyed', ['key', 'obj'])
+    
+    
+def mergesort(key=None, *iterables):
+    if key is None:
+        keyed_iterables = iterables
+        for element in heapq.merge(*keyed_iterables):
+            yield element
+    else:
+        keyed_iterables = [(Keyed(key(obj), obj) for obj in iterable) for iterable in iterables]
+        for element in heapq.merge(*keyed_iterables):
+            yield element.obj
+        
     
 class SortView(object):
     
-    def __init__(self, source, key=None, reverse=False):
+    def __init__(self, source, key=None, reverse=False, buffersize=100000):
         self.source = source
         self.key = key
         self.reverse = reverse
+        self.buffersize = buffersize
         self.fldcache = None
         self.memcache = None
-        self.memcachetag = None
+        self.filecache = None
+        self.internalcachetag = None
+        self.getkey = None
         
     def _iterfromcache(self):
-        yield self.fldcache
-        for row in self.memcache:
-            yield row
+        if self.memcache is not None:
+            yield self.fldcache
+            for row in self.memcache:
+                yield row
+        elif self.filecache:
+            yield self.fldcache
+            chunkiters = [iterchunk(f.name) for f in self.filecache]
+            for row in mergesort(self.getkey, *chunkiters):
+                yield row
+        else:
+            raise Exception('unexpected') # TODO could this happen
         
     def _iternocache(self, source, key, reverse):
         it = iter(source)
@@ -1019,37 +1058,75 @@ class SortView(object):
             flds = it.next()
             yield flds
             
-            # TODO merge sort on large dataset!!!
-            rows = list(it)
-    
+            getkey = None
             if key is not None:
-    
                 # convert field selection into field indices
                 indices = asindices(flds, key)
-                 
                 # now use field indices to construct a getkey function
                 # N.B., this will probably raise an exception on short rows
                 getkey = itemgetter(*indices)
-    
+            
+            # initialise the first chunk
+            rows = list(islice(it, 0, self.buffersize))
+            
+            # have we exhausted the source iterator?
+            if len(rows) < self.buffersize:
+
                 rows.sort(key=getkey, reverse=reverse)
     
+                try:
+                    # TODO possible race condition here, attributes determining
+                    # cachetag have changed since we entered this function?
+                    self.internalcachetag = self.cachetag()
+                    self.fldcache = flds
+                    self.memcache = rows
+                    self.filecache = None
+                    self.getkey = getkey
+                except Uncacheable:
+                    self.internalcachetag = None
+                    self.fldcache = None
+                    self.memcache = None
+                    self.filecache = None
+                    self.getkey = None
+        
+                for row in rows:
+                    yield row
+                    
             else:
-                rows.sort(reverse=reverse)
-            
-            try:
-                # TODO possible race condition here, attributes determining
-                # cachetag have changed since we entered this function?
-                self.memcachetag = self.cachetag()
-                self.fldcache = flds
-                self.memcache = rows
-            except Uncacheable:
-                self.memcachetag = None
-                self.fldcache = None
-                self.memcache = None
-    
-            for row in rows:
-                yield row
-            
+
+                chunkfiles = []  
+                
+                while rows:
+                
+                    # dump the chunk
+                    f = NamedTemporaryFile(delete=False)
+                    for row in rows:
+                        pickle.dump(row, f, protocol=-1)
+                    f.close()
+                    chunkfiles.append(f)
+                    # grab the next chunk
+                    rows = list(islice(it, 0, self.buffersize))
+                    rows.sort(key=getkey, reverse=reverse)
+
+                try:
+                    # TODO possible race condition here, attributes determining
+                    # cachetag have changed since we entered this function?
+                    self.internalcachetag = self.cachetag()
+                    self.fldcache = flds
+                    self.memcache = None
+                    self.filecache = chunkfiles
+                    self.getkey = getkey
+                except Uncacheable:
+                    self.internalcachetag = None
+                    self.fldcache = None
+                    self.memcache = None
+                    self.filecache = None
+                    self.getkey = None
+
+                chunkiters = [iterchunk(f.name) for f in chunkfiles]
+                for row in mergesort(getkey, *chunkiters):
+                    yield row
+                
         finally:
             close(it)
             
@@ -1060,7 +1137,7 @@ class SortView(object):
         reverse = self.reverse
         try:
             currcachetag = self.cachetag()
-            if self.memcachetag == currcachetag:
+            if self.internalcachetag == currcachetag:
                 return self._iterfromcache()
             else:
                 return self._iternocache(source, key, reverse)
