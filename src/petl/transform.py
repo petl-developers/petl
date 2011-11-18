@@ -3,7 +3,7 @@ TODO doc me
 
 """
 
-from itertools import islice, groupby
+from itertools import islice, groupby, product
 from collections import deque, defaultdict, OrderedDict
 from operator import itemgetter
 
@@ -3503,9 +3503,9 @@ def iternaturaljoin(left, right, presorted=False, leftouter=False,
                     missing=missing)
 
 
-def crossjoin(left, right):
+def crossjoin(*tables):
     """
-    Construct the cartesian product of the two tables. E.g.::
+    Form the cartesian product of the given tables. E.g.::
 
         >>> from petl import crossjoin, look
         >>> table1 = [['id', 'colour'],
@@ -3530,30 +3530,29 @@ def crossjoin(left, right):
 
     """
     
-    return CrossJoinView(left, right)
+    return CrossJoinView(*tables)
 
 
 class CrossJoinView(object):
     
-    def __init__(self, left, right):
-        self.left = left
-        self.right = right
+    def __init__(self, *sources):
+        self.sources = sources
         
     def __iter__(self):
-        return itercrossjoin(self.left, self.right)
+        return itercrossjoin(self.sources)
     
-    
-def itercrossjoin(left, right):
-    lflds = fields(left)
-    rflds = fields(right)
+def itercrossjoin(sources):
 
-    outflds = list(lflds)
-    outflds.extend(rflds)
+    # construct fields
+    outflds = list()
+    for s in sources:
+        outflds.extend(fields(s))
     yield outflds
-    
-    for lrow in data(left):
-        for rrow in data(right):
-            outrow = list(lrow)
-            outrow.extend(rrow)
-            yield outrow
+
+    datasrcs = [data(src) for src in sources]
+    for prod in product(*datasrcs):
+        outrow = list()
+        for row in prod:
+            outrow.extend(row)
+        yield outrow
         
