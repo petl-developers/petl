@@ -73,21 +73,21 @@
 
 - [done] implement antijoin
 
-- implement filldown
+- (0.3) implement filldown
 
-- implement fillup
+- (0.3) implement fillup
 
-- implement fillright? 
+- (0.3) implement fillright? 
 
-- implement fillleft?
+- (0.3) implement fillleft?
 
-- implement rangefacet/bin/segregate/partition/... - facet by numerical field into any number of bins or by a given interval size?
+- (0.3) implement rangefacet/bin/segregate/partition/... - facet by numerical field into any number of bins or by a given interval size?
 
-- implement rangeaggregate/binaggregate/segagg/partitionaggregate ... aggregate by numerical field that has been partitioned
+- (0.3) implement rangeaggregate/binaggregate/segagg/partitionaggregate ... aggregate by numerical field that has been partitioned
 
 - (0.3) partitioning of alpha fields?
 
-- values on a combination of fields
+- [done] values on a combination of fields
 
 - modify sort to use merge sort above a given buffer size
 
