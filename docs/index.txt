@@ -153,11 +153,6 @@ would enable data to be cached during an interactive session, which
 might greatly improve usability for someone developing a
 transformation script.
 
-Using `petl` in interactive mode
---------------------------------
-
-TODO
-
 Utility functions
 -----------------
 

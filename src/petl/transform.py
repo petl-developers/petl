@@ -2379,7 +2379,7 @@ def mergereduce(table, key, missing=None, presorted=False):
         +-------+--------+-------------+
         | 'D'   | 3      | [9.4, 12.3] |
         +-------+--------+-------------+
-        | 'E'   | []     |             |
+        | 'E'   | None   |             |
         +-------+--------+-------------+
 
     Missing values are overridden by non-missing values. Conflicting values are
@@ -2395,8 +2395,8 @@ def mergereduce(table, key, missing=None, presorted=False):
                     merged.append(list())
                 if v != missing and v not in merged[i]:
                     merged[i].append(v)    
-        # replace singletons
-        merged = [vals[0] if len(vals) == 1 else vals for vals in merged]
+        # replace singletons and empty lists
+        merged = [vals[0] if len(vals) == 1 else missing if len(vals) == 0 else vals for vals in merged]
         return merged
     
     return rowreduce(table, key, reducer=_mergereducer, presorted=presorted)
@@ -3225,12 +3225,12 @@ def join(left, right, key=None, presorted=False):
     """
     
     if key is None:
-        return NaturalJoinView(left, right, presorted)
+        return ImplicitJoinView(left, right, presorted)
     else:
         return JoinView(left, right, key, presorted)
 
 
-class NaturalJoinView(object):
+class ImplicitJoinView(object):
     
     def __init__(self, left, right, presorted=False, leftouter=False, 
                  rightouter=False, missing=None):
@@ -3242,7 +3242,7 @@ class NaturalJoinView(object):
         self.missing = missing
         
     def __iter__(self):
-        return iternaturaljoin(self.left, self.right, self.presorted, 
+        return iterimplicitjoin(self.left, self.right, self.presorted, 
                                leftouter=self.leftouter, 
                                rightouter=self.rightouter, 
                                missing=self.missing)
@@ -3298,7 +3298,7 @@ def leftjoin(left, right, key=None, missing=None, presorted=False):
     """
     
     if key is None:
-        return NaturalJoinView(left, right, presorted=presorted, leftouter=True, 
+        return ImplicitJoinView(left, right, presorted=presorted, leftouter=True, 
                                rightouter=False, missing=missing)
     else:
         return JoinView(left, right, key, presorted=presorted, leftouter=True, 
@@ -3333,7 +3333,7 @@ def rightjoin(left, right, key=None, missing=None, presorted=False):
     """
     
     if key is None:
-        return NaturalJoinView(left, right, presorted=presorted, leftouter=False, 
+        return ImplicitJoinView(left, right, presorted=presorted, leftouter=False, 
                                rightouter=True, missing=missing)
     else:
         return JoinView(left, right, key, presorted=presorted, leftouter=False, 
@@ -3370,7 +3370,7 @@ def outerjoin(left, right, key=None, missing=None, presorted=False):
     """
 
     if key is None:
-        return NaturalJoinView(left, right, presorted=presorted, leftouter=True, 
+        return ImplicitJoinView(left, right, presorted=presorted, leftouter=True, 
                                rightouter=True, missing=missing)
     else:
         return JoinView(left, right, key, presorted=presorted, leftouter=True, 
@@ -3435,12 +3435,13 @@ def iterjoin(left, right, key, leftouter=False, rightouter=False, missing=None):
         lgit = groupby(lit, key=lgetk)
         rgit = groupby(rit, key=rgetk)
         
-        # pick off initial row groups
-        lkval, lrowgrp = lgit.next() 
-        rkval, rrowgrp = rgit.next()
-        
         # loop until *either* of the iterators is exhausted
         try:
+
+            # pick off initial row groups
+            lkval, lrowgrp = lgit.next() 
+            rkval, rrowgrp = rgit.next()
+        
             while True:
                 if lkval < rkval:
                     if leftouter:
@@ -3464,14 +3465,24 @@ def iterjoin(left, right, key, leftouter=False, rightouter=False, missing=None):
         except StopIteration:
             pass
         
+        # make sure any left rows remaining are yielded
         if leftouter:
-            # any left over?
+            if lkval > rkval:
+                # yield anything that got left hanging
+                for row in joinrows(lrowgrp, None):
+                    yield row
+            # yield the rest
             for lkval, lrowgrp in lgit:
                 for row in joinrows(lrowgrp, None):
                     yield row
 
+        # make sure any right rows remaining are yielded
         if rightouter:
-            # any left over?
+            if lkval < rkval:
+                # yield anything that got left hanging
+                for row in joinrows(None, rrowgrp):
+                    yield row
+            # yield the rest
             for rkval, rrowgrp in rgit:
                 for row in joinrows(None, rrowgrp):
                     yield row
@@ -3481,7 +3492,7 @@ def iterjoin(left, right, key, leftouter=False, rightouter=False, missing=None):
         close(rit)
         
         
-def iternaturaljoin(left, right, presorted=False, leftouter=False, 
+def iterimplicitjoin(left, right, presorted=False, leftouter=False, 
                     rightouter=False, missing=None):
     # determine key field or fields
     lflds = fields(left)
@@ -3541,6 +3552,7 @@ class CrossJoinView(object):
     def __iter__(self):
         return itercrossjoin(self.sources)
     
+    
 def itercrossjoin(sources):
 
     # construct fields
@@ -3556,3 +3568,149 @@ def itercrossjoin(sources):
             outrow.extend(row)
         yield outrow
         
+        
+def antijoin(left, right, key=None, presorted=False):
+    """
+    Return rows from the `left` table where the key value does not occur in the
+    `right` table. E.g.::
+
+        >>> from petl import antijoin, look
+        >>> table1 = [['id', 'colour'],
+        ...           [0, 'black'],
+        ...           [1, 'blue'],
+        ...           [2, 'red'],
+        ...           [4, 'yellow'],
+        ...           [5, 'white']]
+        >>> table2 = [['id', 'shape'],
+        ...           [1, 'circle'],
+        ...           [3, 'square']]
+        >>> table3 = antijoin(table1, table2, key='id')
+        >>> look(table3)
+        +------+----------+
+        | 'id' | 'colour' |
+        +======+==========+
+        | 0    | 'black'  |
+        +------+----------+
+        | 2    | 'red'    |
+        +------+----------+
+        | 4    | 'yellow' |
+        +------+----------+
+        | 5    | 'white'  |
+        +------+----------+
+    
+    """
+    
+    if key is None:
+        return ImplicitAntiJoinView(left, right, presorted)
+    else:
+        return AntiJoinView(left, right, key, presorted)
+
+
+class AntiJoinView(object):
+    
+    def __init__(self, left, right, key, presorted=False):
+        if presorted:
+            self.left = left
+            self.right = right
+        else:
+            self.left = sort(left, key)
+            self.right = sort(right, key)
+            # TODO what if someone sets self.key to something else after __init__?
+            # (sort will be incorrect - maybe need to protect key with property setter?)
+        self.key = key
+        
+    def __iter__(self):
+        return iterantijoin(self.left, self.right, self.key)
+    
+    
+def iterantijoin(left, right, key):
+    lit = iter(left)
+    rit = iter(right)
+    try:
+        lflds = lit.next()
+        rflds = rit.next()
+        yield lflds
+
+        # determine indices of the key fields in left and right tables
+        lkind = asindices(lflds, key)
+        rkind = asindices(rflds, key)
+        
+        # construct functions to extract key values from both tables
+        lgetk = itemgetter(*lkind)
+        rgetk = itemgetter(*rkind)
+        
+        # construct group iterators for both tables
+        lgit = groupby(lit, key=lgetk)
+        rgit = groupby(rit, key=rgetk)
+        
+        # loop until *either* of the iterators is exhausted
+        try:
+
+            # pick off initial row groups
+            lkval, lrowgrp = lgit.next() 
+            rkval, rrowgrp = rgit.next()
+
+            while True:
+                if lkval < rkval:
+                    for row in lrowgrp:
+                        yield row
+                    # advance left
+                    lkval, lrowgrp = lgit.next()
+                elif lkval > rkval:
+                    # advance right
+                    rkval, rrowgrp = rgit.next()
+                else:
+                    # advance both
+                    lkval, lrowgrp = lgit.next()
+                    rkval, rrowgrp = rgit.next()
+            
+        except StopIteration:
+            pass
+        
+        # any left over?
+        if lkval > rkval:
+            # yield anything that got left hanging
+            for row in lrowgrp:
+                yield row
+        # and the rest...
+        for lkval, lrowgrp in lgit:
+            for row in lrowgrp:
+                yield row
+
+    finally:
+        close(lit)
+        close(rit)
+    
+    
+        
+class ImplicitAntiJoinView(object):
+    
+    def __init__(self, left, right, presorted=False):
+        self.left = left
+        self.right = right
+        self.presorted = presorted
+        
+    def __iter__(self):
+        return iterimplicitantijoin(self.left, self.right, self.presorted)
+    
+    
+def iterimplicitantijoin(left, right, presorted=False):
+    # determine key field or fields
+    lflds = fields(left)
+    rflds = fields(right)
+    key = []
+    for f in lflds:
+        if f in rflds:
+            key.append(f)
+    assert len(key) > 0, 'no fields in common'
+    if len(key) == 1:
+        key = key[0] # deal with singletons
+    if not presorted:
+        # this is not optimal, have to sort each time, because key is determined
+        # dynamically from the data
+        left = sort(left, key)
+        right = sort(right, key)
+    # from here on it's the same as a normal antijoin
+    return iterantijoin(left, right, key)
+
+

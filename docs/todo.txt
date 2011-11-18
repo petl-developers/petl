@@ -71,7 +71,7 @@
 
 - [done] implement crossjoin
 
-- implement antijoin
+- [done] implement antijoin
 
 - implement filldown
 

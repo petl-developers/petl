@@ -19,7 +19,9 @@ from petl.transform import rename, project, cat, convert, fieldconvert, translat
            mergereduce, select, complement, diff, capture, \
            split, fieldmap, facet, selecteq, rowreduce, merge, aggregate, recordreduce, \
            rowmap, recordmap, rowmapmany, recordmapmany, setfields, pushfields, skip, \
-           extendfields, unpack, join, leftjoin, rightjoin, outerjoin, crossjoin
+           extendfields, unpack, join, leftjoin, rightjoin, outerjoin, crossjoin, \
+           antijoin
+           
            
 def lenstats(table, field):
     """
