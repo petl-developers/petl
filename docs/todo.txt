@@ -85,7 +85,7 @@
 
 - implement rangeaggregate/binaggregate/segagg/partitionaggregate ... aggregate by numerical field that has been partitioned
 
-- partitioning of alpha fields?
+- (0.3) partitioning of alpha fields?
 
 - values on a combination of fields
 
@@ -107,9 +107,9 @@
 
 - check how cat and cut handle long/short rows; are they using itemgetter where possible?
 
-- implement rowgroupby? generate sequence of key/row iterator pairs?
+- (0.3) implement rowgroupby? generate sequence of key/row iterator pairs?
 
-- implement recordgroupby?
+- (0.3) implement recordgroupby?
 
 - implement pivot?
 
