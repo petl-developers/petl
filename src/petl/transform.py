@@ -11,6 +11,7 @@ from operator import itemgetter
 from petl.util import close, asindices, rowgetter, FieldSelectionError, asdict,\
     expr, valueset, records, fields, data
 import re
+from petl.io import Uncacheable
 
 
 def rename(table, spec=dict()):
@@ -1003,9 +1004,75 @@ class SortView(object):
         self.source = source
         self.key = key
         self.reverse = reverse
+        self.fldcache = None
+        self.memcache = None
+        self.memcachetag = None
+        
+    def _iterfromcache(self):
+        yield self.fldcache
+        for row in self.memcache:
+            yield row
+        
+    def _iternocache(self, source, key, reverse):
+        it = iter(source)
+        try:
+            flds = it.next()
+            yield flds
+            
+            # TODO merge sort on large dataset!!!
+            rows = list(it)
+    
+            if key is not None:
+    
+                # convert field selection into field indices
+                indices = asindices(flds, key)
+                 
+                # now use field indices to construct a getkey function
+                # N.B., this will probably raise an exception on short rows
+                getkey = itemgetter(*indices)
+    
+                rows.sort(key=getkey, reverse=reverse)
+    
+            else:
+                rows.sort(reverse=reverse)
+            
+            try:
+                # TODO possible race condition here, attributes determining
+                # cachetag have changed since we entered this function?
+                self.memcachetag = self.cachetag()
+                self.fldcache = flds
+                self.memcache = rows
+            except Uncacheable:
+                self.memcachetag = None
+                self.fldcache = None
+                self.memcache = None
+    
+            for row in rows:
+                yield row
+            
+        finally:
+            close(it)
+            
         
     def __iter__(self):
-        return itersort(self.source, self.key, self.reverse)
+        source = self.source
+        key = self.key
+        reverse = self.reverse
+        try:
+            currcachetag = self.cachetag()
+            if self.memcachetag == currcachetag:
+                return self._iterfromcache()
+            else:
+                return self._iternocache(source, key, reverse)
+        except Uncacheable:
+            return self._iternocache(source, key, reverse)
+        
+
+    def cachetag(self):
+        if hasattr(self.source, 'cachetag'):
+            return hash((self.key, self.reverse, self.source.cachetag()))
+        else:
+            raise Uncacheable
     
 
 def itersort(source, key, reverse):
