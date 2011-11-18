@@ -69,7 +69,7 @@
 
 - [done] refactor join functions
 
-- implement crossjoin
+- [done] implement crossjoin
 
 - implement antijoin
 

@@ -9,7 +9,7 @@ from operator import itemgetter
 
 
 from petl.util import close, asindices, rowgetter, FieldSelectionError, asdict,\
-    expr, valueset, records, fields
+    expr, valueset, records, fields, data
 import re
 
 
@@ -3503,3 +3503,57 @@ def iternaturaljoin(left, right, presorted=False, leftouter=False,
                     missing=missing)
 
 
+def crossjoin(left, right):
+    """
+    Construct the cartesian product of the two tables. E.g.::
+
+        >>> from petl import crossjoin, look
+        >>> table1 = [['id', 'colour'],
+        ...           [1, 'blue'],
+        ...           [2, 'red']]
+        >>> table2 = [['id', 'shape'],
+        ...           [1, 'circle'],
+        ...           [3, 'square']]
+        >>> table3 = crossjoin(table1, table2)
+        >>> look(table3)
+        +------+----------+------+----------+
+        | 'id' | 'colour' | 'id' | 'shape'  |
+        +======+==========+======+==========+
+        | 1    | 'blue'   | 1    | 'circle' |
+        +------+----------+------+----------+
+        | 1    | 'blue'   | 3    | 'square' |
+        +------+----------+------+----------+
+        | 2    | 'red'    | 1    | 'circle' |
+        +------+----------+------+----------+
+        | 2    | 'red'    | 3    | 'square' |
+        +------+----------+------+----------+
+
+    """
+    
+    return CrossJoinView(left, right)
+
+
+class CrossJoinView(object):
+    
+    def __init__(self, left, right):
+        self.left = left
+        self.right = right
+        
+    def __iter__(self):
+        return itercrossjoin(self.left, self.right)
+    
+    
+def itercrossjoin(left, right):
+    lflds = fields(left)
+    rflds = fields(right)
+
+    outflds = list(lflds)
+    outflds.extend(rflds)
+    yield outflds
+    
+    for lrow in data(left):
+        for rrow in data(right):
+            outrow = list(lrow)
+            outrow.extend(rrow)
+            yield outrow
+        
