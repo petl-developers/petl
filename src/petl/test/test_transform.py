@@ -801,11 +801,11 @@ def test_capture():
                    ['1', '12', 'A', '1'],  
                    ['2', '15', 'A', '2'],
                    ['3', '18', 'B', '1'],
-                   ['4', '19', 'C', '1']]
+                   ['4', '19', 'C', '12']]
     
-    result = capture(table, 'variable', '(\\w)(\\d)', ('treat', 'time'))
+    result = capture(table, 'variable', '(\\w)(\\d+)', ('treat', 'time'))
     iassertequal(expectation, result)
-    result = capture(table, 'variable', '(\\w)(\\d)', ('treat', 'time'),
+    result = capture(table, 'variable', '(\\w)(\\d+)', ('treat', 'time'),
                            include_original=False)
     iassertequal(expectation, result)
 
@@ -814,8 +814,8 @@ def test_capture():
                    ['1', 'A1', '12', 'A', '1'],  
                    ['2', 'A2', '15', 'A', '2'],
                    ['3', 'B1', '18', 'B', '1'],
-                   ['4', 'C12', '19', 'C', '1']]
-    result = capture(table, 'variable', '(\\w)(\\d)', ('treat', 'time'),
+                   ['4', 'C12', '19', 'C', '12']]
+    result = capture(table, 'variable', '(\\w)(\\d+)', ('treat', 'time'),
                            include_original=True)
     iassertequal(expectation, result)
     
@@ -824,8 +824,8 @@ def test_capture():
                    ['1', '12', 'A', '1'],  
                    ['2', '15', 'A', '2'],
                    ['3', '18', 'B', '1'],
-                   ['4', '19', 'C', '1']]
-    result = capture(table, 'variable', '(\\w)(\\d)')
+                   ['4', '19', 'C', '12']]
+    result = capture(table, 'variable', '(\\w)(\\d+)')
     iassertequal(expectation, result)
     
     
@@ -937,13 +937,13 @@ def test_select():
               ['a', 4, 9.3]]
     iassertequal(expect, actual)
 
-    actual = select(table, expr("{foo} == 'a'"))
+    actual = select(table, "{foo} == 'a'")
     expect = [['foo', 'bar', 'baz'],
               ['a', 4, 9.3],
               ['a', 2, 88.2]]
     iassertequal(expect, actual)
 
-    actual = select(table, expr( "{foo} == 'a' and {bar} > 3"))
+    actual = select(table, "{foo} == 'a' and {bar} > 3")
     expect = [['foo', 'bar', 'baz'],
               ['a', 4, 9.3]]
     iassertequal(expect, actual)
@@ -1428,24 +1428,29 @@ def test_leftjoin():
     iassertequal(expect3, table3)
     iassertequal(expect3, table3) # check twice
     
+    # natural join
+    table4 = leftjoin(table1, table2)
+    expect4 = expect3
+    iassertequal(expect4, table4)
+    
     
 def test_leftjoin_compound_keys():
     
     # compound keys
-    table4 = [['id', 'time', 'height'],
+    table5 = [['id', 'time', 'height'],
               [1, 1, 12.3],
               [1, 2, 34.5],
               [2, 1, 56.7]]
-    table5 = [['id', 'time', 'weight', 'bp'],
+    table6 = [['id', 'time', 'weight', 'bp'],
               [1, 2, 4.5, 120],
               [2, 1, 6.7, 110],
               [2, 2, 8.9, 100]]
-    table6 = leftjoin(table4, table5, key=['id', 'time'])
-    expect6 = [['id', 'time', 'height', 'weight', 'bp'],
+    table7 = leftjoin(table5, table6, key=['id', 'time'])
+    expect7 = [['id', 'time', 'height', 'weight', 'bp'],
                 [1, 1, 12.3, None, None],
                 [1, 2, 34.5, 4.5, 120],
                 [2, 1, 56.7, 6.7, 110]]
-    iassertequal(expect6, table6)
+    iassertequal(expect7, table7)
 
 
 def test_rightjoin():
@@ -1466,6 +1471,11 @@ def test_rightjoin():
     iassertequal(expect3, table3)
     iassertequal(expect3, table3) # check twice
     
+    # natural join
+    table4 = rightjoin(table1, table2)
+    expect4 = expect3
+    iassertequal(expect4, table4)
+    
     
 def test_outerjoin():
     
@@ -1485,6 +1495,11 @@ def test_outerjoin():
                [4, None, 'ellipse']]
     iassertequal(expect3, table3)
     iassertequal(expect3, table3) # check twice
+
+    # natural join
+    table4 = outerjoin(table1, table2)
+    expect4 = expect3
+    iassertequal(expect4, table4)
     
     
 def test_outerjoin_fieldorder():

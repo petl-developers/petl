@@ -65,9 +65,9 @@
 
 - [done] implement full outer join
 
-- document leftjoin, rightjoin, outerjoin
+- [done] document leftjoin, rightjoin, outerjoin
 
-- refactor join functions
+- [done] refactor join functions
 
 - implement crossjoin
 

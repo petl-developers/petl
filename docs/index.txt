@@ -205,11 +205,14 @@ Extracting (reading) tables from files and databases
 Transforming tables
 -------------------
 
-.. autofunction:: petl.rename
 .. autofunction:: petl.setfields
+.. autofunction:: petl.rename
 .. autofunction:: petl.extendfields
 .. autofunction:: petl.pushfields
 .. autofunction:: petl.skip
+.. autofunction:: petl.rowslice
+.. autofunction:: petl.head
+.. autofunction:: petl.tail
 .. autofunction:: petl.project
 .. autofunction:: petl.select
 .. autofunction:: petl.selecteq
@@ -220,12 +223,15 @@ Transforming tables
 .. autofunction:: petl.extend
 .. autofunction:: petl.capture
 .. autofunction:: petl.split
+.. autofunction:: petl.unpack
+.. autofunction:: petl.fieldmap
+.. autofunction:: petl.rowmap
+.. autofunction:: petl.recordmap
+.. autofunction:: petl.rowmapmany
+.. autofunction:: petl.recordmapmany
 .. autofunction:: petl.cat
 .. autofunction:: petl.duplicates
 .. autofunction:: petl.conflicts
-.. autofunction:: petl.rowslice
-.. autofunction:: petl.head
-.. autofunction:: petl.tail
 .. autofunction:: petl.sort
 .. autofunction:: petl.join
 .. autofunction:: petl.leftjoin
@@ -235,11 +241,6 @@ Transforming tables
 .. autofunction:: petl.antijoin
 .. autofunction:: petl.complement
 .. autofunction:: petl.diff
-.. autofunction:: petl.fieldmap
-.. autofunction:: petl.rowmap
-.. autofunction:: petl.recordmap
-.. autofunction:: petl.rowmapmany
-.. autofunction:: petl.recordmapmany
 .. autofunction:: petl.aggregate
 .. autofunction:: petl.rowreduce
 .. autofunction:: petl.recordreduce
@@ -247,7 +248,6 @@ Transforming tables
 .. autofunction:: petl.merge
 .. autofunction:: petl.melt
 .. autofunction:: petl.recast
-.. autofunction:: petl.unpack
 .. autofunction:: petl.filldown
 .. autofunction:: petl.fillup
 .. autofunction:: petl.fillleft

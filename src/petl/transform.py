@@ -1738,7 +1738,7 @@ def capture(table, field, pattern, newfields=None, include_original=False,
         ...           ['2', 'A2', '15'],
         ...           ['3', 'B1', '18'],
         ...           ['4', 'C12', '19']]
-        >>> table2 = capture(table1, 'variable', '(\\w)(\\d)', ['treat', 'time'])
+        >>> table2 = capture(table1, 'variable', '(\\w)(\\d+)', ['treat', 'time'])
         >>> look(table2)
         +------+---------+---------+--------+
         | 'id' | 'value' | 'treat' | 'time' |
@@ -1749,7 +1749,7 @@ def capture(table, field, pattern, newfields=None, include_original=False,
         +------+---------+---------+--------+
         | '3'  | '18'    | 'B'     | '1'    |
         +------+---------+---------+--------+
-        | '4'  | '19'    | 'C'     | '1'    |
+        | '4'  | '19'    | 'C'     | '12'   |
         +------+---------+---------+--------+
 
     See also :func:`re.search`.
@@ -1757,7 +1757,7 @@ def capture(table, field, pattern, newfields=None, include_original=False,
     By default the field on which the capture is performed is omitted. It can
     be included using the `include_original` argument, e.g.::
     
-        >>> table3 = capture(table1, 'variable', '(\\w)(\\d)', ['treat', 'time'], include_original=True)
+        >>> table3 = capture(table1, 'variable', '(\\w)(\\d+)', ['treat', 'time'], include_original=True)
         >>> look(table3)
         +------+------------+---------+---------+--------+
         | 'id' | 'variable' | 'value' | 'treat' | 'time' |
@@ -1768,7 +1768,7 @@ def capture(table, field, pattern, newfields=None, include_original=False,
         +------+------------+---------+---------+--------+
         | '3'  | 'B1'       | '18'    | 'B'     | '1'    |
         +------+------------+---------+---------+--------+
-        | '4'  | 'C12'      | '19'    | 'C'     | '1'    |
+        | '4'  | 'C12'      | '19'    | 'C'     | '12'   |
         +------+------------+---------+---------+--------+
 
     """
@@ -1917,7 +1917,7 @@ def itersplit(source, field, pattern, newfields, include_original, maxsplit,
     
 def select(table, where, padding=None):
     """
-    Select rows meeting a condition. The `where` condition can be a function
+    Select rows meeting a condition. The `where` argument can be a function
     accepting a record (i.e., a dictionary representation of a row) e.g.::
     
         >>> from petl import select, look     
@@ -1936,10 +1936,10 @@ def select(table, where, padding=None):
         | 'a'   | 2     | 88.2  |
         +-------+-------+-------+
 
-    The where condition can also be constructed from an expression string using
-    :func:`expr`, e.g.::
+    The `where` argument can also be an expression string, which will be converted
+    to a function using :func:`expr`, e.g.::
     
-        >>> table3 = select(table1, expr("{foo} == 'a' and {baz} > 88.1"))
+        >>> table3 = select(table1, "{foo} == 'a' and {baz} > 88.1")
         >>> look(table3)
         +-------+-------+-------+
         | 'foo' | 'bar' | 'baz' |
@@ -2148,6 +2148,8 @@ def facet(table, field):
         ...           ['d', 7, 100.9],
         ...           ['c', 2]]
         >>> foo = facet(table1, 'foo')
+        >>> foo.keys()
+        ['a', 'c', 'b', 'd']
         >>> look(foo['a'])
         +-------+-------+-------+
         | 'foo' | 'bar' | 'baz' |
@@ -3141,7 +3143,7 @@ def iterunpack(source, field, newfields, max, include_original):
         
 def join(left, right, key=None, presorted=False):
     """
-    Perform an equi-join on the two tables. E.g.::
+    Perform an equi-join on the given tables. E.g.::
         
         >>> from petl import join, look    
         >>> table1 = [['id', 'colour'],
@@ -3225,21 +3227,262 @@ def join(left, right, key=None, presorted=False):
     if key is None:
         return NaturalJoinView(left, right, presorted)
     else:
-        return EquiJoinView(left, right, key, presorted)
+        return JoinView(left, right, key, presorted)
 
 
 class NaturalJoinView(object):
     
-    def __init__(self, left, right, presorted=False):
+    def __init__(self, left, right, presorted=False, leftouter=False, 
+                 rightouter=False, missing=None):
         self.left = left
         self.right = right
         self.presorted = presorted
+        self.leftouter = leftouter
+        self.rightouter = rightouter
+        self.missing = missing
         
     def __iter__(self):
-        return iternaturaljoin(self.left, self.right, self.presorted)
+        return iternaturaljoin(self.left, self.right, self.presorted, 
+                               leftouter=self.leftouter, 
+                               rightouter=self.rightouter, 
+                               missing=self.missing)
     
 
-def iternaturaljoin(left, right, presorted):
+class JoinView(object):
+    
+    def __init__(self, left, right, key, presorted=False, leftouter=False, 
+                 rightouter=False, missing=None):
+        if presorted:
+            self.left = left
+            self.right = right
+        else:
+            self.left = sort(left, key)
+            self.right = sort(right, key)
+            # TODO what if someone sets self.key to something else after __init__?
+            # (sort will be incorrect - maybe need to protect key with property setter?)
+        self.key = key
+        self.leftouter = leftouter
+        self.rightouter = rightouter
+        self.missing = missing
+        
+    def __iter__(self):
+        return iterjoin(self.left, self.right, self.key, leftouter=self.leftouter,
+                        rightouter=self.rightouter, missing=self.missing)
+    
+    
+def leftjoin(left, right, key=None, missing=None, presorted=False):
+    """
+    Perform a left outer join on the given tables. E.g.::
+    
+        >>> from petl import leftjoin, look
+        >>> table1 = [['id', 'colour'],
+        ...           [1, 'blue'],
+        ...           [2, 'red'],
+        ...           [3, 'purple']]
+        >>> table2 = [['id', 'shape'],
+        ...           [1, 'circle'],
+        ...           [3, 'square'],
+        ...           [4, 'ellipse']]
+        >>> table3 = leftjoin(table1, table2, key='id')
+        >>> look(table3)
+        +------+----------+----------+
+        | 'id' | 'colour' | 'shape'  |
+        +======+==========+==========+
+        | 1    | 'blue'   | 'circle' |
+        +------+----------+----------+
+        | 2    | 'red'    | None     |
+        +------+----------+----------+
+        | 3    | 'purple' | 'square' |
+        +------+----------+----------+
+
+    """
+    
+    if key is None:
+        return NaturalJoinView(left, right, presorted=presorted, leftouter=True, 
+                               rightouter=False, missing=missing)
+    else:
+        return JoinView(left, right, key, presorted=presorted, leftouter=True, 
+                        rightouter=False, missing=missing)
+
+    
+def rightjoin(left, right, key=None, missing=None, presorted=False):
+    """
+    Perform a right outer join on the given tables. E.g.::
+
+        >>> from petl import rightjoin, look
+        >>> table1 = [['id', 'colour'],
+        ...           [1, 'blue'],
+        ...           [2, 'red'],
+        ...           [3, 'purple']]
+        >>> table2 = [['id', 'shape'],
+        ...           [1, 'circle'],
+        ...           [3, 'square'],
+        ...           [4, 'ellipse']]
+        >>> table3 = rightjoin(table1, table2, key='id')
+        >>> look(table3)
+        +------+----------+-----------+
+        | 'id' | 'colour' | 'shape'   |
+        +======+==========+===========+
+        | 1    | 'blue'   | 'circle'  |
+        +------+----------+-----------+
+        | 3    | 'purple' | 'square'  |
+        +------+----------+-----------+
+        | 4    | None     | 'ellipse' |
+        +------+----------+-----------+
+
+    """
+    
+    if key is None:
+        return NaturalJoinView(left, right, presorted=presorted, leftouter=False, 
+                               rightouter=True, missing=missing)
+    else:
+        return JoinView(left, right, key, presorted=presorted, leftouter=False, 
+                        rightouter=True, missing=missing)
+    
+    
+def outerjoin(left, right, key=None, missing=None, presorted=False):
+    """
+    Perform a full outer join on the given tables. E.g.::
+
+        >>> from petl import outerjoin, look
+        >>> table1 = [['id', 'colour'],
+        ...           [1, 'blue'],
+        ...           [2, 'red'],
+        ...           [3, 'purple']]
+        >>> table2 = [['id', 'shape'],
+        ...           [1, 'circle'],
+        ...           [3, 'square'],
+        ...           [4, 'ellipse']]
+        >>> table3 = outerjoin(table1, table2, key='id')
+        >>> look(table3)
+        +------+----------+-----------+
+        | 'id' | 'colour' | 'shape'   |
+        +======+==========+===========+
+        | 1    | 'blue'   | 'circle'  |
+        +------+----------+-----------+
+        | 2    | 'red'    | None      |
+        +------+----------+-----------+
+        | 3    | 'purple' | 'square'  |
+        +------+----------+-----------+
+        | 4    | None     | 'ellipse' |
+        +------+----------+-----------+
+
+    """
+
+    if key is None:
+        return NaturalJoinView(left, right, presorted=presorted, leftouter=True, 
+                               rightouter=True, missing=missing)
+    else:
+        return JoinView(left, right, key, presorted=presorted, leftouter=True, 
+                        rightouter=True, missing=missing)
+    
+    
+def iterjoin(left, right, key, leftouter=False, rightouter=False, missing=None):
+    lit = iter(left)
+    rit = iter(right)
+    try:
+        lflds = lit.next()
+        rflds = rit.next()
+        
+        # determine indices of the key fields in left and right tables
+        lkind = asindices(lflds, key)
+        rkind = asindices(rflds, key)
+        
+        # construct functions to extract key values from both tables
+        lgetk = itemgetter(*lkind)
+        rgetk = itemgetter(*rkind)
+        
+        # determine indices of non-key fields in the right table
+        # (in the output, we only include key fields from the left table - we
+        # don't want to duplicate fields)
+        rvind = [i for i in range(len(rflds)) if i not in rkind]
+        rgetv = rowgetter(*rvind)
+        
+        # determine the output fields
+        outflds = list(lflds)
+        outflds.extend(rgetv(rflds))
+        yield outflds
+        
+        # define a function to join two groups of rows
+        def joinrows(lrowgrp, rrowgrp):
+            if rrowgrp is None:
+                for lrow in lrowgrp:
+                    outrow = list(lrow) # start with the left row
+                    # extend with missing values in place of the right row
+                    outrow.extend([missing] * len(rvind))
+                    yield outrow
+            elif lrowgrp is None:
+                for rrow in rrowgrp:
+                    # start with missing values in place of the left row
+                    outrow = [missing] * len(lflds)
+                    # set key values
+                    for li, ri in zip(lkind, rkind):
+                        outrow[li] = rrow[ri]
+                    # extend with non-key values from the right row  
+                    outrow.extend(rgetv(rrow))
+                    yield outrow
+            else:
+                rrowgrp = list(rrowgrp) # may need to iterate more than once
+                for lrow in lrowgrp:
+                    for rrow in rrowgrp:
+                        # start with the left row
+                        outrow = list(lrow)
+                        # extend with non-key values from the right row
+                        outrow.extend(rgetv(rrow))
+                        yield outrow
+
+        # construct group iterators for both tables
+        lgit = groupby(lit, key=lgetk)
+        rgit = groupby(rit, key=rgetk)
+        
+        # pick off initial row groups
+        lkval, lrowgrp = lgit.next() 
+        rkval, rrowgrp = rgit.next()
+        
+        # loop until *either* of the iterators is exhausted
+        try:
+            while True:
+                if lkval < rkval:
+                    if leftouter:
+                        for row in joinrows(lrowgrp, None):
+                            yield row
+                    # advance left
+                    lkval, lrowgrp = lgit.next()
+                elif lkval > rkval:
+                    if rightouter:
+                        for row in joinrows(None, rrowgrp):
+                            yield row
+                    # advance right
+                    rkval, rrowgrp = rgit.next()
+                else:
+                    for row in joinrows(lrowgrp, rrowgrp):
+                        yield row
+                    # advance both
+                    lkval, lrowgrp = lgit.next()
+                    rkval, rrowgrp = rgit.next()
+            
+        except StopIteration:
+            pass
+        
+        if leftouter:
+            # any left over?
+            for lkval, lrowgrp in lgit:
+                for row in joinrows(lrowgrp, None):
+                    yield row
+
+        if rightouter:
+            # any left over?
+            for rkval, rrowgrp in rgit:
+                for row in joinrows(None, rrowgrp):
+                    yield row
+                
+    finally:
+        close(lit)
+        close(rit)
+        
+        
+def iternaturaljoin(left, right, presorted=False, leftouter=False, 
+                    rightouter=False, missing=None):
     # determine key field or fields
     lflds = fields(left)
     rflds = fields(right)
@@ -3255,317 +3498,8 @@ def iternaturaljoin(left, right, presorted):
         # dynamically from the data
         left = sort(left, key)
         right = sort(right, key)
-    # delegate the rest
-    return iterequijoin(left, right, key)
+    # from here on it's the same as a normal join
+    return iterjoin(left, right, key, leftouter=leftouter, rightouter=rightouter,
+                    missing=missing)
 
 
-class EquiJoinView(object):
-    
-    def __init__(self, left, right, key, presorted=False):
-        if presorted:
-            self.left = left
-            self.right = right
-        else:
-            self.left = sort(left, key)
-            self.right = sort(right, key)
-            # TODO what if someone sets self.key to something else after __init__?
-            # (sort will be incorrect - maybe need to protect key with property setter?)
-        self.key = key
-        
-    def __iter__(self):
-        return iterequijoin(self.left, self.right, self.key)
-    
-    
-def iterequijoin(left, right, key):
-    lit = iter(left)
-    rit = iter(right)
-    try:
-        lflds = lit.next()
-        rflds = rit.next()
-        lkind = asindices(lflds, key)
-        rkind = asindices(rflds, key)
-        lgetk = itemgetter(*lkind)
-        rgetk = itemgetter(*rkind)
-        rvind = [i for i in range(len(rflds)) if i not in rkind]
-        rgetv = rowgetter(*rvind)
-        outflds = list(lflds)
-        outflds.extend(rgetv(rflds))
-        yield outflds
-
-        lgit = groupby(lit, key=lgetk)
-        rgit = groupby(rit, key=rgetk)
-        lkval, lrows = lgit.next() 
-        rkval, rrows = rgit.next()
-        try:
-            while True:
-                if lkval < rkval:
-                    # advance left
-                    lkval, lrows = lgit.next()
-                elif lkval > rkval: 
-                    # advance right
-                    rkval, rrows = rgit.next()
-                else:
-                    # need to cache, may iterate more than once
-                    lrows = list(lrows)
-                    rrows = list(rrows)
-                    for lrow in lrows:
-                        for rrow in rrows:
-                            outrow = list(lrow)
-                            outrow.extend(rgetv(rrow))
-                            yield outrow
-                    # advance both
-                    lkval, lrows = lgit.next()
-                    rkval, rrows = rgit.next()
-        except StopIteration:
-            pass # no more rows 
-        
-    finally:
-        close(lit)
-        close(rit)
-        
-        
-def leftjoin(left, right, key, missing=None, presorted=False):
-    """
-    TODO doc me
-    
-    """
-    
-    return LeftJoinView(left, right, key, missing, presorted)
-    
-    
-class LeftJoinView(object):
-    
-    def __init__(self, left, right, key, missing=None, presorted=False):
-        if presorted:
-            self.left = left
-            self.right = right
-        else:
-            self.left = sort(left, key)
-            self.right = sort(right, key)
-            # TODO what if someone sets self.key to something else after __init__?
-            # (sort will be incorrect - maybe need to protect key with property setter?)
-        self.key = key
-        self.missing = missing
-
-    def __iter__(self):
-        return iterleftjoin(self.left, self.right, self.key, self.missing)
-    
-    
-def iterleftjoin(left, right, key, missing):
-    lit = iter(left)
-    rit = iter(right)
-    try:
-        lflds = lit.next()
-        rflds = rit.next()
-        lkind = asindices(lflds, key)
-        rkind = asindices(rflds, key)
-        lgetk = itemgetter(*lkind)
-        rgetk = itemgetter(*rkind)
-        rvind = [i for i in range(len(rflds)) if i not in rkind]
-        rgetv = rowgetter(*rvind)
-        outflds = list(lflds)
-        outflds.extend(rgetv(rflds))
-        yield outflds
-
-        lgit = groupby(lit, key=lgetk)
-        rgit = groupby(rit, key=rgetk)
-        lkval, lrows = lgit.next() 
-        rkval, rrows = rgit.next()
-        try:
-            while True:
-                if lkval < rkval:
-                    for row in lrows:
-                        outrow = list(row)
-                        outrow.extend([missing] * len(rvind))
-                        yield outrow
-                    # advance left
-                    lkval, lrows = lgit.next()
-                elif lkval > rkval: 
-                    # advance right
-                    rkval, rrows = rgit.next()
-                else:
-                    # need to cache, may iterate more than once
-                    lrows = list(lrows)
-                    rrows = list(rrows)
-                    for lrow in lrows:
-                        for rrow in rrows:
-                            outrow = list(lrow)
-                            outrow.extend(rgetv(rrow))
-                            yield outrow
-                    # advance both
-                    lkval, lrows = lgit.next()
-                    rkval, rrows = rgit.next()
-        except StopIteration:
-            pass # no more rows 
-        
-    finally:
-        close(lit)
-        close(rit)
-        
-        
-def rightjoin(left, right, key, missing=None, presorted=False):
-    """
-    TODO doc me
-    
-    """
-    
-    return RightJoinView(left, right, key, missing, presorted)
-    
-    
-class RightJoinView(object):
-    
-    def __init__(self, left, right, key, missing=None, presorted=False):
-        if presorted:
-            self.left = left
-            self.right = right
-        else:
-            self.left = sort(left, key)
-            self.right = sort(right, key)
-            # TODO what if someone sets self.key to something else after __init__?
-            # (sort will be incorrect - maybe need to protect key with property setter?)
-        self.key = key
-        self.missing = missing
-
-    def __iter__(self):
-        return iterrightjoin(self.left, self.right, self.key, self.missing)
-    
-    
-def iterrightjoin(left, right, key, missing):
-    lit = iter(left)
-    rit = iter(right)
-    try:
-        lflds = lit.next()
-        rflds = rit.next()
-        lkind = asindices(lflds, key)
-        rkind = asindices(rflds, key)
-        lgetk = itemgetter(*lkind)
-        rgetk = itemgetter(*rkind)
-        rvind = [i for i in range(len(rflds)) if i not in rkind]
-        rgetv = rowgetter(*rvind)
-        outflds = list(lflds)
-        outflds.extend(rgetv(rflds))
-        yield outflds
-
-        lgit = groupby(lit, key=lgetk)
-        rgit = groupby(rit, key=rgetk)
-        lkval, lrows = lgit.next() 
-        rkval, rrows = rgit.next()
-        try:
-            while True:
-                if lkval < rkval:
-                    # advance left
-                    lkval, lrows = lgit.next()
-                elif lkval > rkval:
-                    for rrow in rrows:
-                        outrow = [missing] * len(lflds)
-                        for li, ri in zip(lkind, rkind):
-                            outrow[li] = rrow[ri] 
-                        outrow.extend(rgetv(rrow))
-                        yield outrow
-                    # advance right
-                    rkval, rrows = rgit.next()
-                else:
-                    # need to cache, may iterate more than once
-                    lrows = list(lrows)
-                    rrows = list(rrows)
-                    for lrow in lrows:
-                        for rrow in rrows:
-                            outrow = list(lrow)
-                            outrow.extend(rgetv(rrow))
-                            yield outrow
-                    # advance both
-                    lkval, lrows = lgit.next()
-                    rkval, rrows = rgit.next()
-        except StopIteration:
-            pass # no more rows 
-        
-    finally:
-        close(lit)
-        close(rit)
-        
-        
-def outerjoin(left, right, key, missing=None, presorted=False):
-    """
-    TODO doc me
-    
-    """
-
-    return OuterJoinView(left, right, key, missing, presorted)
-    
-    
-class OuterJoinView(object):
-    
-    def __init__(self, left, right, key, missing=None, presorted=False):
-        if presorted:
-            self.left = left
-            self.right = right
-        else:
-            self.left = sort(left, key)
-            self.right = sort(right, key)
-            # TODO what if someone sets self.key to something else after __init__?
-            # (sort will be incorrect - maybe need to protect key with property setter?)
-        self.key = key
-        self.missing = missing
-
-    def __iter__(self):
-        return iterouterjoin(self.left, self.right, self.key, self.missing)
-    
-    
-def iterouterjoin(left, right, key, missing):
-    lit = iter(left)
-    rit = iter(right)
-    try:
-        lflds = lit.next()
-        rflds = rit.next()
-        lkind = asindices(lflds, key)
-        rkind = asindices(rflds, key)
-        lgetk = itemgetter(*lkind)
-        rgetk = itemgetter(*rkind)
-        rvind = [i for i in range(len(rflds)) if i not in rkind]
-        rgetv = rowgetter(*rvind)
-        outflds = list(lflds)
-        outflds.extend(rgetv(rflds))
-        yield outflds
-
-        lgit = groupby(lit, key=lgetk)
-        rgit = groupby(rit, key=rgetk)
-        lkval, lrows = lgit.next() 
-        rkval, rrows = rgit.next()
-        try:
-            while True:
-                if lkval < rkval:
-                    for lrow in lrows:
-                        outrow = list(lrow)
-                        outrow.extend([missing] * len(rvind))
-                        yield outrow
-                    # advance left
-                    lkval, lrows = lgit.next()
-                elif lkval > rkval:
-                    for rrow in rrows:
-                        outrow = [missing] * len(lflds)
-                        for li, ri in zip(lkind, rkind):
-                            outrow[li] = rrow[ri] 
-                        outrow.extend(rgetv(rrow))
-                        yield outrow
-                    # advance right
-                    rkval, rrows = rgit.next()
-                else:
-                    # need to cache, may iterate more than once
-                    lrows = list(lrows)
-                    rrows = list(rrows)
-                    for lrow in lrows:
-                        for rrow in rrows:
-                            outrow = list(lrow)
-                            outrow.extend(rgetv(rrow))
-                            yield outrow
-                    # advance both
-                    lkval, lrows = lgit.next()
-                    rkval, rrows = rgit.next()
-        except StopIteration:
-            pass # no more rows 
-        
-    finally:
-        close(lit)
-        close(rit)
-        
-        
