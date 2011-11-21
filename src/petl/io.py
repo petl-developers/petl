@@ -11,7 +11,7 @@ import cPickle as pickle
 import sqlite3
 
 
-from petl.util import data, fields, fieldnames, asdict
+from petl.util import data, header, fieldnames, asdict
 
 
 class Uncacheable(Exception):
@@ -655,7 +655,7 @@ def appendsqlite3(table, filename, tablename):
     tablename = _quote(tablename)
 
     conn = sqlite3.connect(filename)
-    flds = fields(table) # just need to know how many fields there are
+    flds = header(table) # just need to know how many fields there are
     placeholders = ', '.join(['?'] * len(flds))
     _insert(conn, tablename, placeholders, table)
     conn.commit()

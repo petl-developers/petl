@@ -3,7 +3,7 @@ TODO doc me
 
 """
 
-from petl.util import fields, fieldnames, data, records, rowcount, look, see, values, valuecounter, valuecounts, \
+from petl.util import header, fieldnames, data, records, rowcount, look, see, values, valuecounter, valuecounts, \
            valueset, unique, lookup, lookupone, recordlookup, recordlookupone, \
            typecounter, typecounts, typeset, parsecounter, parsecounts, \
            stats, rowlengths, DuplicateKeyError, datetimeparser, dateparser, timeparser, boolparser, \
@@ -18,8 +18,8 @@ from petl.transform import rename, project, cat, convert, fieldconvert, translat
            head, tail, sort, melt, recast, duplicates, conflicts, \
            mergereduce, select, complement, diff, capture, \
            split, fieldmap, facet, selecteq, rowreduce, merge, aggregate, recordreduce, \
-           rowmap, recordmap, rowmapmany, recordmapmany, setfields, pushfields, skip, \
-           extendfields, unpack, join, leftjoin, rightjoin, outerjoin, crossjoin, \
+           rowmap, recordmap, rowmapmany, recordmapmany, setheader, pushheader, skip, \
+           extendheader, unpack, join, leftjoin, rightjoin, outerjoin, crossjoin, \
            antijoin
            
            

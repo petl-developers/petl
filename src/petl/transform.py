@@ -10,10 +10,10 @@ import cPickle as pickle
 
 
 from petl.util import close, asindices, rowgetter, FieldSelectionError, asdict,\
-    expr, valueset, records, fields, data
+    expr, valueset, records, header, data
 import re
-from petl.io import Uncacheable, frompickle
-from tempfile import NamedTemporaryFile, TemporaryFile
+from petl.io import Uncacheable
+from tempfile import NamedTemporaryFile
 import heapq
 
 
@@ -3031,15 +3031,15 @@ def iterrecordmapmany(source, rowgenerator, header, failonerror):
         close(it)
         
         
-def setfields(table, flds):
+def setheader(table, flds):
     """
     Override fields in the given table. E.g.::
     
-        >>> from petl import setfields, look
+        >>> from petl import setheader, look
         >>> table1 = [['foo', 'bar'],
         ...           ['a', 1],
         ...           ['b', 2]]
-        >>> table2 = setfields(table1, ['foofoo', 'barbar'])
+        >>> table2 = setheader(table1, ['foofoo', 'barbar'])
         >>> look(table2)
         +----------+----------+
         | 'foofoo' | 'barbar' |
@@ -3051,20 +3051,20 @@ def setfields(table, flds):
 
     """
     
-    return SetFieldsView(table, flds) 
+    return SetHeaderView(table, flds) 
 
 
-class SetFieldsView(object):
+class SetHeaderView(object):
     
     def __init__(self, source, flds):
         self.source = source
         self.flds = flds
         
     def __iter__(self):
-        return itersetfields(self.source, self.flds)   
+        return itersetheader(self.source, self.flds)   
 
 
-def itersetfields(source, flds):
+def itersetheader(source, flds):
     it = iter(source)
     try:
         it.next() # discard source fields
@@ -3075,15 +3075,15 @@ def itersetfields(source, flds):
         close(it)
         
         
-def extendfields(table, flds):
+def extendheader(table, flds):
     """
     Extend fields in the given table. E.g.::
     
-        >>> from petl import extendfields, look
+        >>> from petl import extendheader, look
         >>> table1 = [['foo'],
         ...           ['a', 1, True],
         ...           ['b', 2, False]]
-        >>> table2 = extendfields(table1, ['bar', 'baz'])
+        >>> table2 = extendheader(table1, ['bar', 'baz'])
         >>> look(table2)
         +-------+-------+-------+
         | 'foo' | 'bar' | 'baz' |
@@ -3095,20 +3095,20 @@ def extendfields(table, flds):
 
     """
     
-    return ExtendFieldsView(table, flds) 
+    return ExtendHeaderView(table, flds) 
 
 
-class ExtendFieldsView(object):
+class ExtendHeaderView(object):
     
     def __init__(self, source, flds):
         self.source = source
         self.flds = flds
         
     def __iter__(self):
-        return iterextendfields(self.source, self.flds)   
+        return iterextendheader(self.source, self.flds)   
 
 
-def iterextendfields(source, flds):
+def iterextendheader(source, flds):
     it = iter(source)
     try:
         srcflds = it.next() 
@@ -3121,14 +3121,14 @@ def iterextendfields(source, flds):
         close(it)
         
         
-def pushfields(table, flds):
+def pushheader(table, flds):
     """
     Push rows down and prepend a header row. E.g.::
 
-        >>> from petl import pushfields, look    
+        >>> from petl import pushheader, look    
         >>> table1 = [['a', 1],
         ...           ['b', 2]]
-        >>> table2 = pushfields(table1, ['foo', 'bar'])
+        >>> table2 = pushheader(table1, ['foo', 'bar'])
         >>> look(table2)
         +-------+-------+
         | 'foo' | 'bar' |
@@ -3143,20 +3143,20 @@ def pushfields(table, flds):
     
     """ 
 
-    return PushFieldsView(table, flds)
+    return PushHeaderView(table, flds)
 
 
-class PushFieldsView(object):
+class PushHeaderView(object):
     
     def __init__(self, source, flds):
         self.source = source
         self.flds = flds
         
     def __iter__(self):
-        return iterpushfields(self.source, self.flds)   
+        return iterpushheader(self.source, self.flds)   
 
 
-def iterpushfields(source, flds):
+def iterpushheader(source, flds):
     it = iter(source)
     try:
         yield flds
@@ -3639,8 +3639,8 @@ def iterjoin(left, right, key, leftouter=False, rightouter=False, missing=None):
 def iterimplicitjoin(left, right, presorted=False, leftouter=False, 
                     rightouter=False, missing=None):
     # determine key field or fields
-    lflds = fields(left)
-    rflds = fields(right)
+    lflds = header(left)
+    rflds = header(right)
     key = []
     for f in lflds:
         if f in rflds:
@@ -3702,7 +3702,7 @@ def itercrossjoin(sources):
     # construct fields
     outflds = list()
     for s in sources:
-        outflds.extend(fields(s))
+        outflds.extend(header(s))
     yield outflds
 
     datasrcs = [data(src) for src in sources]
@@ -3840,8 +3840,8 @@ class ImplicitAntiJoinView(object):
     
 def iterimplicitantijoin(left, right, presorted=False):
     # determine key field or fields
-    lflds = fields(left)
-    rflds = fields(right)
+    lflds = header(left)
+    rflds = header(right)
     key = []
     for f in lflds:
         if f in rflds:

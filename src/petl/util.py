@@ -11,13 +11,13 @@ import datetime
 import re
 
 
-def fields(table):
+def header(table):
     """
     Return the header row for the given table. E.g.::
     
-        >>> from petl import fields
+        >>> from petl import header
         >>> table = [['foo', 'bar'], ['a', 1], ['b', 2]]
-        >>> fields(table)
+        >>> header(table)
         ['foo', 'bar']
     
     """
@@ -36,15 +36,15 @@ def fields(table):
 def fieldnames(table):
     """
     Return the string values of all fields for the given table. If the fields
-    are strings, then this function is equivalent to :func:`fields`, i.e.::
+    are strings, then this function is equivalent to :func:`header`, i.e.::
     
-        >>> from petl import fields, fieldnames
+        >>> from petl import header, fieldnames
         >>> table = [['foo', 'bar'], ['a', 1], ['b', 2]]
-        >>> fields(table)
+        >>> header(table)
         ['foo', 'bar']
         >>> fieldnames(table)
         ['foo', 'bar']
-        >>> fields(table) == fieldnames(table)
+        >>> header(table) == fieldnames(table)
         True
     
     Allows for custom field objects, e.g.::
@@ -61,14 +61,14 @@ def fieldnames(table):
         >>> table = [[CustomField('foo', 'Get some foo.'), CustomField('bar', 'A lot of bar.')], 
         ...          ['a', 1], 
         ...          ['b', 2]]
-        >>> fields(table)
+        >>> header(table)
         [CustomField('foo', 'Get some foo.'), CustomField('bar', 'A lot of bar.')]
         >>> fieldnames(table)    
         ['foo', 'bar']
 
     """
     
-    return [str(f) for f in fields(table)]
+    return [str(f) for f in header(table)]
 
     
 def data(table, start=0, stop=None, step=1):
@@ -367,6 +367,24 @@ def values(table, fieldspec, start=0, stop=None, step=1):
         >>> bar.next()
         False
         >>> bar.next()
+        Traceback (most recent call last):
+          File "<stdin>", line 1, in <module>
+        StopIteration
+        
+    More than one field can be selected, e.g.::
+    
+        >>> table = [['foo', 'bar', 'baz'],
+        ...          [1, 'a', True],
+        ...          [2, 'bb', True],
+        ...          [3, 'd', False]]
+        >>> foobaz = values(table, ('foo', 'baz'))
+        >>> foobaz.next()
+        (1, True)
+        >>> foobaz.next()
+        (2, True)
+        >>> foobaz.next()
+        (3, False)
+        >>> foobaz.next()
         Traceback (most recent call last):
           File "<stdin>", line 1, in <module>
         StopIteration
@@ -1101,7 +1119,7 @@ def typeset(table, fieldspec, start=0, stop=None, step=1):
 
 def parsecounter(table, fieldspec, parsers={'int': int, 'float': float}, start=0, stop=None, step=1):    
     """
-    Count the number of `str` or `unicode` values in the given fields that can 
+    Count the number of `str` or `unicode` values under the given fields that can 
     be parsed as ints, floats or via custom parser functions. Return a pair of 
     `Counter` objects, the first mapping parser names to the number of strings 
     successfully parsed, the second mapping parser names to the number of errors. 

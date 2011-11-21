@@ -91,7 +91,7 @@
 
 - [done] modify sort to use merge sort above a given buffer size
 
-- change 'fields' to 'header'
+- [done] change 'fields' to 'header'
 
 - fix sort to warn about no support for reverse=True when above buffer size
 
@@ -104,6 +104,8 @@
 - [done] modify sort to keep cached data and check cachetag values
 
 - [done] implement setfields
+
+- make sure we don't get tripped up by attempts to compare tuples with lists
 
 - implement selectlen - select by row length
 

@@ -156,7 +156,7 @@ transformation script.
 Utility functions
 -----------------
 
-.. autofunction:: petl.fields
+.. autofunction:: petl.header
 .. autofunction:: petl.data
 .. autofunction:: petl.fieldnames
 .. autofunction:: petl.records
@@ -201,10 +201,10 @@ Extracting (reading) tables from files and databases
 Transforming tables
 -------------------
 
-.. autofunction:: petl.setfields
 .. autofunction:: petl.rename
-.. autofunction:: petl.extendfields
-.. autofunction:: petl.pushfields
+.. autofunction:: petl.setheader
+.. autofunction:: petl.extendheader
+.. autofunction:: petl.pushheader
 .. autofunction:: petl.skip
 .. autofunction:: petl.rowslice
 .. autofunction:: petl.head

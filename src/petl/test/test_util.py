@@ -3,18 +3,18 @@ TODO doc me
 
 """
 
-from petl import fields, fieldnames, data, records, rowcount, look, see, values, valuecounter, valuecounts, valueset,\
+from petl import header, fieldnames, data, records, rowcount, look, see, values, valuecounter, valuecounts, valueset,\
                 unique, lookup, lookupone, recordlookup, recordlookupone, \
                 DuplicateKeyError, rowlengths, stats, typecounts, parsecounts, typeset
 
-from petl.testfun import *
+from petl.testfun import assertequal, iassertequal
 
 
-def test_fields():
-    """Test the fields function."""
+def test_header():
+    """Test the header function."""
     
     table = [['foo', 'bar'], ['a', 1], ['b', 2]]
-    actual = fields(table)
+    actual = header(table)
     expect = ['foo', 'bar']
     assertequal(expect, actual)
     

@@ -11,8 +11,8 @@ from petl import rename, fieldnames, project, cat, convert, fieldconvert, transl
                 rowslice, head, tail, sort, melt, recast, duplicates, conflicts, \
                 mergereduce, select, complement, diff, capture, \
                 split, expr, fieldmap, facet, rowreduce, aggregate, recordreduce, \
-                rowmap, recordmap, rowmapmany, recordmapmany, setfields, pushfields, \
-                skip, extendfields, unpack, join, leftjoin, rightjoin, outerjoin, \
+                rowmap, recordmap, rowmapmany, recordmapmany, setheader, pushheader, \
+                skip, extendheader, unpack, join, leftjoin, rightjoin, outerjoin, \
                 crossjoin, antijoin
 
 
@@ -1295,7 +1295,7 @@ def test_setfields():
     table1 = [['foo', 'bar'],
               ['a', 1],
               ['b', 2]]
-    table2 = setfields(table1, ['foofoo', 'barbar'])
+    table2 = setheader(table1, ['foofoo', 'barbar'])
     expect2 = [['foofoo', 'barbar'],
                ['a', 1],
                ['b', 2]]
@@ -1308,7 +1308,7 @@ def test_extendfields():
     table1 = [['foo'],
               ['a', 1, True],
               ['b', 2, False]]
-    table2 = extendfields(table1, ['bar', 'baz'])
+    table2 = extendheader(table1, ['bar', 'baz'])
     expect2 = [['foo', 'bar', 'baz'],
                ['a', 1, True],
                ['b', 2, False]]
@@ -1320,7 +1320,7 @@ def test_pushfields():
     
     table1 = [['a', 1],
               ['b', 2]]
-    table2 = pushfields(table1, ['foo', 'bar'])
+    table2 = pushheader(table1, ['foo', 'bar'])
     expect2 = [['foo', 'bar'],
                ['a', 1],
                ['b', 2]]
