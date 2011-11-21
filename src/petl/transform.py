@@ -1020,7 +1020,14 @@ Keyed = namedtuple('Keyed', ['key', 'obj'])
 # that heapq.merge is faster, but might be worth profiling the two?
 
     
-def mergesort(key=None, *iterables):
+def mergesort(key=None, reverse=False, *iterables):
+    if reverse:
+        return shortlistmergesort(key, True, *iterables)
+    else:
+        return heapqmergesort(key, *iterables)
+
+
+def heapqmergesort(key=None, *iterables):            
     if key is None:
         keyed_iterables = iterables
         for element in heapq.merge(*keyed_iterables):
@@ -1029,15 +1036,19 @@ def mergesort(key=None, *iterables):
         keyed_iterables = [(Keyed(key(obj), obj) for obj in iterable) for iterable in iterables]
         for element in heapq.merge(*keyed_iterables):
             yield element.obj
-            
-            
-def reversemergesort(key=None, *iterables):
+
+
+def shortlistmergesort(key=None, reverse=False, *iterables):
+    if reverse:
+        op = max
+    else:
+        op = min
     iterators = [iter(iterable) for iterable in iterables]
     shortlist = [it.next() for it in iterators]
     while iterators:
-        next = max(shortlist, key=key)
-        nextidx = shortlist.index(next)
+        next = op(shortlist, key=key)
         yield next
+        nextidx = shortlist.index(next)
         try:
             shortlist[nextidx] = iterators[nextidx].next()
         except StopIteration:
@@ -1052,35 +1063,44 @@ class SortView(object):
         self.key = key
         self.reverse = reverse
         self.buffersize = buffersize
-        self.fldcache = None
-        self.memcache = None
-        self.filecache = None
-        self.internalcachetag = None
-        self.getkey = None
+        self._fldcache = None
+        self._memcache = None
+        self._filecache = None
+        self._internalcachetag = None
+        self._getkey = None
         
     def _clearcache(self):
-        self.internalcachetag = None
-        self.fldcache = None
-        self.memcache = None
-        self.filecache = None
-        self.getkey = None
+        self._internalcachetag = None
+        self._fldcache = None
+        self._memcache = None
+        self._filecache = None
+        self._getkey = None
         
-    def _iterfromcache(self):
-        if self.memcache is not None:
-            yield self.fldcache
-            for row in self.memcache:
-                yield row
-        elif self.filecache is not None:
-            yield self.fldcache
-            chunkiters = [iterchunk(f.name) for f in self.filecache]
-            if self.reverse:
-                for row in reversemergesort(self.getkey, *chunkiters):
-                    yield row
+    def __iter__(self):
+        source = self.source
+        key = self.key
+        reverse = self.reverse
+        try:
+            currcachetag = self.cachetag()
+            if self._internalcachetag == currcachetag and self._memcache is not None:
+                return self._iterfrommemcache()
+            elif self._internalcachetag == currcachetag and self._filecache is not None:
+                return self._iterfromfilecache()
             else:
-                for row in mergesort(self.getkey, *chunkiters):
-                    yield row
-        else:
-            raise Exception('unexpected') # TODO could this happen?
+                return self._iternocache(source, key, reverse)
+        except Uncacheable:
+            return self._iternocache(source, key, reverse)
+        
+    def _iterfrommemcache(self):
+        yield self._fldcache
+        for row in self._memcache:
+            yield row
+            
+    def _iterfromfilecache(self):
+        yield self._fldcache
+        chunkiters = [iterchunk(f.name) for f in self._filecache]
+        for row in mergesort(self._getkey, self.reverse, *chunkiters):
+            yield row
         
     def _iternocache(self, source, key, reverse):
         it = iter(source)
@@ -1092,26 +1112,25 @@ class SortView(object):
             if key is not None:
                 # convert field selection into field indices
                 indices = asindices(flds, key)
-                # now use field indices to construct a getkey function
+                # now use field indices to construct a _getkey function
                 # N.B., this will probably raise an exception on short rows
                 getkey = itemgetter(*indices)
             
             # initialise the first chunk
             rows = list(islice(it, 0, self.buffersize))
+            rows.sort(key=getkey, reverse=reverse)
             
             # have we exhausted the source iterator?
             if len(rows) < self.buffersize:
 
-                rows.sort(key=getkey, reverse=reverse)
-    
                 self._clearcache()
                 try:
                     # TODO possible race condition here, attributes determining
                     # cachetag have changed since we entered this function?
-                    self.internalcachetag = self.cachetag()
-                    self.fldcache = flds
-                    self.memcache = rows
-                    self.getkey = getkey
+                    self._internalcachetag = self.cachetag()
+                    self._fldcache = flds
+                    self._memcache = rows
+                    self._getkey = getkey
                 except Uncacheable:
                     pass
         
@@ -1130,6 +1149,7 @@ class SortView(object):
                         pickle.dump(row, f, protocol=-1)
                     f.close()
                     chunkfiles.append(f)
+                    
                     # grab the next chunk
                     rows = list(islice(it, 0, self.buffersize))
                     rows.sort(key=getkey, reverse=reverse)
@@ -1138,40 +1158,21 @@ class SortView(object):
                 try:
                     # TODO possible race condition here, attributes determining
                     # cachetag have changed since we entered this function?
-                    self.internalcachetag = self.cachetag()
-                    self.fldcache = flds
-                    self.filecache = chunkfiles
-                    self.getkey = getkey
+                    self._internalcachetag = self.cachetag()
+                    self._fldcache = flds
+                    self._filecache = chunkfiles
+                    self._getkey = getkey
                 except Uncacheable:
                     pass
 
                 chunkiters = [iterchunk(f.name) for f in chunkfiles]
-                
-                if reverse:
-                    for row in reversemergesort(getkey, *chunkiters):
-                        yield row
-                else:
-                    for row in mergesort(getkey, *chunkiters):
-                        yield row
-                
+                for row in mergesort(getkey, reverse, *chunkiters):
+                    yield row
+
         finally:
             close(it)
             
         
-    def __iter__(self):
-        source = self.source
-        key = self.key
-        reverse = self.reverse
-        try:
-            currcachetag = self.cachetag()
-            if self.internalcachetag == currcachetag:
-                return self._iterfromcache()
-            else:
-                return self._iternocache(source, key, reverse)
-        except Uncacheable:
-            return self._iternocache(source, key, reverse)
-        
-
     def cachetag(self):
         if hasattr(self.source, 'cachetag'):
             return hash((self.key, self.reverse, self.source.cachetag()))
@@ -1179,36 +1180,6 @@ class SortView(object):
             raise Uncacheable
     
 
-def itersort(source, key, reverse):
-    it = iter(source)
-    try:
-        flds = it.next()
-        yield flds
-        
-        # TODO merge sort on large dataset!!!
-        rows = list(it)
-
-        if key is not None:
-
-            # convert field selection into field indices
-            indices = asindices(flds, key)
-             
-            # now use field indices to construct a getkey function
-            # N.B., this will probably raise an exception on short rows
-            getkey = itemgetter(*indices)
-
-            rows.sort(key=getkey, reverse=reverse)
-
-        else:
-            rows.sort(reverse=reverse)
-
-        for row in rows:
-            yield row
-        
-    finally:
-        close(it)
-    
-    
 def melt(table, key=[], variables=[], variable_field='variable', value_field='value'):
     """
     Reshape a table, melting fields into data. E.g.::
@@ -1637,7 +1608,7 @@ def iterduplicates(source, key):
         # convert field selection into field indices
         indices = asindices(flds, key)
             
-        # now use field indices to construct a getkey function
+        # now use field indices to construct a _getkey function
         # N.B., this may raise an exception on short rows, depending on
         # the field selection
         getkey = itemgetter(*indices)
@@ -1727,7 +1698,7 @@ def iterconflicts(source, key, missing):
         # convert field selection into field indices
         indices = asindices(flds, key)
                         
-        # now use field indices to construct a getkey function
+        # now use field indices to construct a _getkey function
         # N.B., this may raise an exception on short rows, depending on
         # the field selection
         getkey = itemgetter(*indices)
@@ -2437,7 +2408,7 @@ def iterrowreduce(source, key, reducer, header):
         # convert field selection into field indices
         indices = asindices(srcflds, key)
         
-        # now use field indices to construct a getkey function
+        # now use field indices to construct a _getkey function
         # N.B., this may raise an exception on short rows, depending on
         # the field selection
         getkey = itemgetter(*indices)
@@ -2513,7 +2484,7 @@ def iterrecordreduce(source, key, reducer, header):
         # convert field selection into field indices
         indices = asindices(srcflds, key)
         
-        # now use field indices to construct a getkey function
+        # now use field indices to construct a _getkey function
         # N.B., this may raise an exception on short rows, depending on
         # the field selection
         getkey = itemgetter(*indices)
@@ -2714,7 +2685,7 @@ def iteraggregate(source, key, aggregators, errorvalue):
         # convert field selection into field indices
         indices = asindices(srcflds, key)
         
-        # now use field indices to construct a getkey function
+        # now use field indices to construct a _getkey function
         # N.B., this may raise an exception on short rows, depending on
         # the field selection
         getkey = itemgetter(*indices)
