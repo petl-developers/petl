@@ -491,7 +491,7 @@ def test_sort_merge():
     result = sort(table, 'bar')
     iassertequal(expectation, result)
     result = sort(table, 'bar', buffersize=2)
-    print list(result)
+#    print list(result)
     iassertequal(expectation, result)
         
     # sort in reverse
@@ -504,10 +504,9 @@ def test_sort_merge():
     
     result = sort(table, 'bar', reverse=True)
     iassertequal(expectation, result)
-    # currently not supported - cannot reverse heapq.merge
-#    result = sort(table, 'bar', reverse=True, buffersize=2)
-#    print list(result)
-#    iassertequal(expectation, result)
+    result = sort(table, 'bar', reverse=True, buffersize=2)
+    print list(result)
+    iassertequal(expectation, result)
     
     
 def test_melt_1():

@@ -1015,6 +1015,11 @@ def iterchunk(filename):
 Keyed = namedtuple('Keyed', ['key', 'obj'])
     
     
+# TODO I've used heapq for normal merge sort and shortlist + max for reverse
+# merge sort because heapq.merge does not support reverse, and I've assumed
+# that heapq.merge is faster, but might be worth profiling the two?
+
+    
 def mergesort(key=None, *iterables):
     if key is None:
         keyed_iterables = iterables
@@ -1024,6 +1029,20 @@ def mergesort(key=None, *iterables):
         keyed_iterables = [(Keyed(key(obj), obj) for obj in iterable) for iterable in iterables]
         for element in heapq.merge(*keyed_iterables):
             yield element.obj
+            
+            
+def reversemergesort(key=None, *iterables):
+    iterators = [iter(iterable) for iterable in iterables]
+    shortlist = [it.next() for it in iterators]
+    while iterators:
+        next = max(shortlist, key=key)
+        nextidx = shortlist.index(next)
+        yield next
+        try:
+            shortlist[nextidx] = iterators[nextidx].next()
+        except StopIteration:
+            del shortlist[nextidx]
+            del iterators[nextidx]
         
     
 class SortView(object):
@@ -1039,18 +1058,29 @@ class SortView(object):
         self.internalcachetag = None
         self.getkey = None
         
+    def _clearcache(self):
+        self.internalcachetag = None
+        self.fldcache = None
+        self.memcache = None
+        self.filecache = None
+        self.getkey = None
+        
     def _iterfromcache(self):
         if self.memcache is not None:
             yield self.fldcache
             for row in self.memcache:
                 yield row
-        elif self.filecache:
+        elif self.filecache is not None:
             yield self.fldcache
             chunkiters = [iterchunk(f.name) for f in self.filecache]
-            for row in mergesort(self.getkey, *chunkiters):
-                yield row
+            if self.reverse:
+                for row in reversemergesort(self.getkey, *chunkiters):
+                    yield row
+            else:
+                for row in mergesort(self.getkey, *chunkiters):
+                    yield row
         else:
-            raise Exception('unexpected') # TODO could this happen
+            raise Exception('unexpected') # TODO could this happen?
         
     def _iternocache(self, source, key, reverse):
         it = iter(source)
@@ -1074,20 +1104,16 @@ class SortView(object):
 
                 rows.sort(key=getkey, reverse=reverse)
     
+                self._clearcache()
                 try:
                     # TODO possible race condition here, attributes determining
                     # cachetag have changed since we entered this function?
                     self.internalcachetag = self.cachetag()
                     self.fldcache = flds
                     self.memcache = rows
-                    self.filecache = None
                     self.getkey = getkey
                 except Uncacheable:
-                    self.internalcachetag = None
-                    self.fldcache = None
-                    self.memcache = None
-                    self.filecache = None
-                    self.getkey = None
+                    pass
         
                 for row in rows:
                     yield row
@@ -1108,24 +1134,25 @@ class SortView(object):
                     rows = list(islice(it, 0, self.buffersize))
                     rows.sort(key=getkey, reverse=reverse)
 
+                self._clearcache()
                 try:
                     # TODO possible race condition here, attributes determining
                     # cachetag have changed since we entered this function?
                     self.internalcachetag = self.cachetag()
                     self.fldcache = flds
-                    self.memcache = None
                     self.filecache = chunkfiles
                     self.getkey = getkey
                 except Uncacheable:
-                    self.internalcachetag = None
-                    self.fldcache = None
-                    self.memcache = None
-                    self.filecache = None
-                    self.getkey = None
+                    pass
 
                 chunkiters = [iterchunk(f.name) for f in chunkfiles]
-                for row in mergesort(getkey, *chunkiters):
-                    yield row
+                
+                if reverse:
+                    for row in reversemergesort(getkey, *chunkiters):
+                        yield row
+                else:
+                    for row in mergesort(getkey, *chunkiters):
+                        yield row
                 
         finally:
             close(it)
