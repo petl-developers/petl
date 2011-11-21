@@ -93,7 +93,7 @@
 
 - [done] change 'fields' to 'header'
 
-- fix sort to warn about no support for reverse=True when above buffer size
+- [done] support for reverse=True when above buffer size
 
 - add buffersize arg to all transformations that depend on sorting
 
@@ -137,6 +137,6 @@
 
 - (0.3) implement petl.fluent
 
-- implement validator module based on csvvalidator
+- (0.3) implement validator module based on csvvalidator
 
 - implement fromxml

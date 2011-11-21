@@ -1103,6 +1103,7 @@ class SortView(object):
             yield row
         
     def _iternocache(self, source, key, reverse):
+        self._clearcache()
         it = iter(source)
         try:
             flds = it.next()
@@ -1123,7 +1124,6 @@ class SortView(object):
             # have we exhausted the source iterator?
             if len(rows) < self.buffersize:
 
-                self._clearcache()
                 try:
                     # TODO possible race condition here, attributes determining
                     # cachetag have changed since we entered this function?
@@ -1154,7 +1154,6 @@ class SortView(object):
                     rows = list(islice(it, 0, self.buffersize))
                     rows.sort(key=getkey, reverse=reverse)
 
-                self._clearcache()
                 try:
                     # TODO possible race condition here, attributes determining
                     # cachetag have changed since we entered this function?
