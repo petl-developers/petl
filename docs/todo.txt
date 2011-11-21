@@ -89,11 +89,19 @@
 
 - [done] values on a combination of fields
 
-- modify sort to use merge sort above a given buffer size
+- [done] modify sort to use merge sort above a given buffer size
+
+- change 'fields' to 'header'
+
+- fix sort to warn about no support for reverse=True when above buffer size
+
+- add buffersize arg to all transformations that depend on sorting
+
+- provide ability to set default buffersize globally
 
 - implement cachetag for all view classes
 
-- modify sort to keep cached data and check cachetag values
+- [done] modify sort to keep cached data and check cachetag values
 
 - [done] implement setfields
 
@@ -126,3 +134,7 @@
 - (0.3) implement petl.interactive with cache wrappers
 
 - (0.3) implement petl.fluent
+
+- implement validator module based on csvvalidator
+
+- implement fromxml
