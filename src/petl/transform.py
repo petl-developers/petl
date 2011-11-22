@@ -300,13 +300,13 @@ def itercat(sources, missing=None):
     its = [iter(t) for t in sources]
     try:
         
-        # determine output flds by gathering all flds found in the sources
+        # determine output fields by gathering all fields found in the sources
         source_flds_lists = [it.next() for it in its]
         out_flds = list()
         for flds in source_flds_lists:
             for f in flds:
                 if f not in out_flds:
-                    # add any new flds as we find them
+                    # add any new fields as we find them
                     out_flds.append(f)
         yield out_flds
 
@@ -319,7 +319,7 @@ def itercat(sources, missing=None):
             def get_value(row, f):
                 try:
                     value = row[flds.index(f)]
-                except ValueError: # source does not have f in flds
+                except ValueError: # source does not have f in fields
                     value = missing
                 except IndexError: # row is short
                     value = missing
@@ -835,7 +835,7 @@ def iterrowslice(source, start, stop, step):
 
 def head(table, n):
     """
-    Choose the first n rows. E.g.::
+    Choose the first n data rows. E.g.::
 
         >>> from petl import head, look    
         >>> table1 = [['foo', 'bar'],
@@ -870,7 +870,7 @@ def head(table, n):
         
 def tail(table, n):
     """
-    Choose the last n rows. E.g.::
+    Choose the last n data rows. E.g.::
 
         >>> from petl import tail, look    
         >>> table1 = [['foo', 'bar'],
@@ -928,7 +928,7 @@ def itertail(source, n):
         close(it)
 
 
-def sort(table, key=None, reverse=False, buffersize=100000):
+def sort(table, key=None, reverse=False, buffersize=None):
     """
     Sort the table. E.g.::
     
@@ -993,10 +993,21 @@ def sort(table, key=None, reverse=False, buffersize=100000):
         | 'F'   | 1     |
         +-------+-------+
         
+    The `buffersize` argument should be an `int` or `None`.
+    
     If the number of rows in the table is less than `buffersize`, the table
     will be sorted in memory. Otherwise, the table is sorted in chunks of
     no more than `buffersize` rows, each chunk is written to a temporary file, 
     and then a merge sort is performed on the temporary files.
+    
+    If `buffersize` is `None`, the value of `petl.transform.defaultbuffersize` 
+    will be used. By default this is set to 100000 rows, but can be changed, e.g.::
+    
+        >>> import petl.transform
+        >>> petl.transform.defaultbuffersize = 500000
+        
+    If `petl.transform.defaultbuffersize` is set to `None`, this forces all
+    sorting to be done entirely in memory.
 
     """
     
@@ -1015,12 +1026,14 @@ def iterchunk(filename):
 Keyed = namedtuple('Keyed', ['key', 'obj'])
     
     
-# TODO I've used heapq for normal merge sort and shortlist + max for reverse
-# merge sort because heapq.merge does not support reverse, and I've assumed
-# that heapq.merge is faster, but might be worth profiling the two?
-
-    
 def mergesort(key=None, reverse=False, *iterables):
+
+    # N.B., I've used heapq for normal merge sort and shortlist merge sort for reverse
+    # merge sort because I've assumed that heapq.merge is faster and so is preferable
+    # but it doesn't support reverse sorting so the shortlist merge sort has to
+    # be used for reverse sorting. Some casual profiling suggests there isn't much
+    # between the two in terms of speed, but might be worth profiling more carefully
+    
     if reverse:
         return shortlistmergesort(key, True, *iterables)
     else:
@@ -1043,10 +1056,14 @@ def shortlistmergesort(key=None, reverse=False, *iterables):
         op = max
     else:
         op = min
+    if key is not None:
+        opkwargs = {'key': key}
+    else:
+        opkwargs = dict()
     iterators = [iter(iterable) for iterable in iterables]
     shortlist = [it.next() for it in iterators]
     while iterators:
-        next = op(shortlist, key=key)
+        next = op(shortlist, **opkwargs)
         yield next
         nextidx = shortlist.index(next)
         try:
@@ -1056,13 +1073,19 @@ def shortlistmergesort(key=None, reverse=False, *iterables):
             del iterators[nextidx]
         
     
+defaultbuffersize = 100000
+    
+    
 class SortView(object):
     
-    def __init__(self, source, key=None, reverse=False, buffersize=100000):
+    def __init__(self, source, key=None, reverse=False, buffersize=None):
         self.source = source
         self.key = key
         self.reverse = reverse
-        self.buffersize = buffersize
+        if buffersize is None:
+            self.buffersize = defaultbuffersize
+        else:
+            self.buffersize = buffersize
         self._fldcache = None
         self._memcache = None
         self._filecache = None
@@ -1122,7 +1145,7 @@ class SortView(object):
             rows.sort(key=getkey, reverse=reverse)
             
             # have we exhausted the source iterator?
-            if len(rows) < self.buffersize:
+            if self.buffersize is None or len(rows) < self.buffersize:
 
                 try:
                     # TODO possible race condition here, attributes determining
@@ -1276,13 +1299,13 @@ def itermelt(source, key, variables, variable_field, value_field):
             # shouldn't expect this, but ... ?
             variables = (variables,) # normalise to a tuple
         if not key:
-            # assume key is flds not in variables
+            # assume key is fields not in variables
             key = [f for f in flds if f not in variables]
         if not variables:
-            # assume variables are flds not in key
+            # assume variables are fields not in key
             variables = [f for f in flds if f not in key]
         
-        # determine the output flds
+        # determine the output fields
         out_flds = list(key)
         out_flds.append(variable_field)
         out_flds.append(value_field)
@@ -1536,7 +1559,7 @@ def iterrecast(source, key=[], variable_field='variable', value_field='value',
     
         
             
-def duplicates(table, key, presorted=False):
+def duplicates(table, key, presorted=False, buffersize=None):
     """
     Select rows with duplicate values under a given key. E.g.::
 
@@ -1577,18 +1600,23 @@ def duplicates(table, key, presorted=False):
         | 'B'   | 2     | 12.3  |
         +-------+-------+-------+
 
+    If `presorted` is True, it is assumed that the data are already sorted by
+    the given key, and the `buffersize` argument is ignored. Otherwise, the data 
+    are sorted, see also the discussion of the `buffersize` argument under the 
+    :func:`sort` function.
+    
     """
     
-    return DuplicatesView(table, key, presorted)
+    return DuplicatesView(table, key, presorted, buffersize)
 
 
 class DuplicatesView(object):
     
-    def __init__(self, source, key, presorted=False):
+    def __init__(self, source, key, presorted=False, buffersize=None):
         if presorted:
             self.source = source
         else:
-            self.source = sort(source, key)
+            self.source = sort(source, key, buffersize=buffersize)
         self.key = key
         
     def __iter__(self):
@@ -1637,7 +1665,7 @@ def iterduplicates(source, key):
     
     
     
-def conflicts(table, key, missing=None, presorted=False):
+def conflicts(table, key, missing=None, presorted=False, buffersize=None):
     """
     Select rows with the same key value but differing in some other field. E.g.::
 
@@ -1667,19 +1695,24 @@ def conflicts(table, key, missing=None, presorted=False):
     Missing values are not considered conflicts. By default, `None` is treated
     as the missing value, this can be changed via the `missing` keyword 
     argument.
+
+    If `presorted` is True, it is assumed that the data are already sorted by
+    the given key, and the `buffersize` argument is ignored. Otherwise, the data 
+    are sorted, see also the discussion of the `buffersize` argument under the 
+    :func:`sort` function.
     
     """
     
-    return ConflictsView(table, key, missing, presorted)
+    return ConflictsView(table, key, missing, presorted, buffersize)
 
 
 class ConflictsView(object):
     
-    def __init__(self, source, key, missing=None, presorted=False):
+    def __init__(self, source, key, missing=None, presorted=False, buffersize=None):
         if presorted:
             self.source = source
         else:
-            self.source = sort(source, key)
+            self.source = sort(source, key, buffersize=buffersize)
         self.key = key
         self.missing = missing
         
@@ -1732,7 +1765,7 @@ def iterconflicts(source, key, missing):
         close(it)
 
 
-def complement(a, b, presorted=False):
+def complement(a, b, presorted=False, buffersize=None):
     """
     Return rows in `a` that are not in `b`. E.g.::
     
@@ -1767,20 +1800,25 @@ def complement(a, b, presorted=False):
         | 'B' | 3   | True  |
         +-----+-----+-------+
 
+    If `presorted` is True, it is assumed that the data are already sorted by
+    the given key, and the `buffersize` argument is ignored. Otherwise, the data 
+    are sorted, see also the discussion of the `buffersize` argument under the 
+    :func:`sort` function.
+    
     """
     
-    return ComplementView(a, b, presorted)
+    return ComplementView(a, b, presorted, buffersize)
 
 
 class ComplementView(object):
     
-    def __init__(self, a, b, presorted=False):
+    def __init__(self, a, b, presorted=False, buffersize=None):
         if presorted:
             self.a = a
             self.b = b
         else:
-            self.a = sort(a)
-            self.b = sort(b)
+            self.a = sort(a, buffersize=buffersize)
+            self.b = sort(b, buffersize=buffersize)
             
     def __iter__(self):
         return itercomplement(self.a, self.b)
@@ -1819,7 +1857,7 @@ def itercomplement(a, b):
         close(itb)
         
     
-def diff(a, b, presorted=False):
+def diff(a, b, presorted=False, buffersize=None):
     """
     Find the difference between two tables. Returns a pair of tables, e.g.::
     
@@ -1857,13 +1895,18 @@ def diff(a, b, presorted=False):
         
     Convenient shorthand for ``(complement(b, a), complement(a, b))``.
 
+    If `presorted` is True, it is assumed that the data are already sorted by
+    the given key, and the `buffersize` argument is ignored. Otherwise, the data 
+    are sorted, see also the discussion of the `buffersize` argument under the 
+    :func:`sort` function.
+    
     """
 
     if not presorted:    
         a = sort(a)
         b = sort(b)
-    added = complement(b, a, presorted=True)
-    subtracted = complement(a, b, presorted=True)
+    added = complement(b, a, presorted=True, buffersize=buffersize)
+    subtracted = complement(a, b, presorted=True, buffersize=buffersize)
     return added, subtracted
     
     
@@ -1946,7 +1989,7 @@ def itercapture(source, field, pattern, newfields, include_original, flags):
         else:
             raise Exception('field invalid: must be either field name or index')
         
-        # determine output flds
+        # determine output fields
         out_flds = list(flds)
         if not include_original:
             out_flds.remove(field)
@@ -2034,7 +2077,7 @@ def itersplit(source, field, pattern, newfields, include_original, maxsplit,
         else:
             raise Exception('field invalid: must be either field name or index')
         
-        # determine output flds
+        # determine output fields
         out_flds = list(flds)
         if not include_original:
             out_flds.remove(field)
@@ -2344,7 +2387,7 @@ def selecteq(table, field, value):
     return select(table, lambda rec: rec[field] == value)
 
 
-def rowreduce(table, key, reducer, header=None, presorted=False):
+def rowreduce(table, key, reducer, header=None, presorted=False, buffersize=None):
     """
     Reduce rows grouped under the given key via an arbitrary function. E.g.::
 
@@ -2373,19 +2416,24 @@ def rowreduce(table, key, reducer, header=None, presorted=False):
 
     The `reducer` function should accept two arguments, a key and a sequence
     of rows, and return a single row.
+
+    If `presorted` is True, it is assumed that the data are already sorted by
+    the given key, and the `buffersize` argument is ignored. Otherwise, the data 
+    are sorted, see also the discussion of the `buffersize` argument under the 
+    :func:`sort` function.
     
     """
 
-    return RowReduceView(table, key, reducer, header, presorted)
+    return RowReduceView(table, key, reducer, header, presorted, buffersize)
 
 
 class RowReduceView(object):
     
-    def __init__(self, source, key, reducer, header=None, presorted=False):
+    def __init__(self, source, key, reducer, header=None, presorted=False, buffersize=None):
         if presorted:
             self.source = source
         else:
-            self.source = sort(source, key)
+            self.source = sort(source, key, buffersize=buffersize)
         self.key = key
         self.header = header
         self.reducer = reducer
@@ -2419,7 +2467,7 @@ def iterrowreduce(source, key, reducer, header):
         close(it)
 
 
-def recordreduce(table, key, reducer, header=None, presorted=False):
+def recordreduce(table, key, reducer, header=None, presorted=False, buffersize=None):
     """
     Reduce records grouped under the given key via an arbitrary function. E.g.::
 
@@ -2450,18 +2498,24 @@ def recordreduce(table, key, reducer, header=None, presorted=False):
     of records (i.e., dictionaries of values indexed by field) and return a single
     row.
     
+    If `presorted` is True, it is assumed that the data are already sorted by
+    the given key, and the `buffersize` argument is ignored. Otherwise, the data 
+    are sorted, see also the discussion of the `buffersize` argument under the 
+    :func:`sort` function.
+    
     """
 
-    return RecordReduceView(table, key, reducer, header, presorted)
+    return RecordReduceView(table, key, reducer, header, presorted, buffersize)
 
 
 class RecordReduceView(object):
     
-    def __init__(self, source, key, reducer, header=None, presorted=False):
+    def __init__(self, source, key, reducer, header=None, presorted=False,
+                 buffersize=None):
         if presorted:
             self.source = source
         else:
-            self.source = sort(source, key)
+            self.source = sort(source, key, buffersize=buffersize)
         self.key = key
         self.header = header
         self.reducer = reducer
@@ -2496,7 +2550,7 @@ def iterrecordreduce(source, key, reducer, header):
         close(it)
 
 
-def mergereduce(table, key, missing=None, presorted=False):
+def mergereduce(table, key, missing=None, presorted=False, buffersize=None):
     """
     Merge rows under the given key. E.g.::
     
@@ -2526,6 +2580,11 @@ def mergereduce(table, key, missing=None, presorted=False):
     Missing values are overridden by non-missing values. Conflicting values are
     reported as a list.
     
+    If `presorted` is True, it is assumed that the data are already sorted by
+    the given key, and the `buffersize` argument is ignored. Otherwise, the data 
+    are sorted, see also the discussion of the `buffersize` argument under the 
+    :func:`sort` function.
+    
     """
 
     def _mergereducer(key, rows):
@@ -2540,7 +2599,7 @@ def mergereduce(table, key, missing=None, presorted=False):
         merged = [vals[0] if len(vals) == 1 else missing if len(vals) == 0 else vals for vals in merged]
         return merged
     
-    return rowreduce(table, key, reducer=_mergereducer, presorted=presorted)
+    return rowreduce(table, key, reducer=_mergereducer, presorted=presorted, buffersize=buffersize)
 
 
 def merge(*tables, **kwargs):
@@ -2569,18 +2628,25 @@ def merge(*tables, **kwargs):
         | 4     | 'C'   | [False, True] | 12.4   |
         +-------+-------+---------------+--------+
 
+    If `presorted` is True, it is assumed that the data are already sorted by
+    the given key, and the `buffersize` argument is ignored. Otherwise, the data 
+    are sorted, see also the discussion of the `buffersize` argument under the 
+    :func:`sort` function.
+    
     """
     
     assert 'key' in kwargs, 'keyword argument "key" is required'
     key = kwargs['key']
     missing = kwargs['missing'] if 'missing' in kwargs else None
     presorted = kwargs['presorted'] if 'presorted' in kwargs else False
+    buffersize = kwargs['buffersize'] if 'buffersize' in kwargs else None
     t1 = cat(*tables, missing=missing)
-    t2 = mergereduce(t1, key=key, presorted=presorted)
+    t2 = mergereduce(t1, key=key, presorted=presorted, buffersize=buffersize)
     return t2
 
 
-def aggregate(table, key, aggregators=None, presorted=False, errorvalue=None):
+def aggregate(table, key, aggregators=None, presorted=False, errorvalue=None,
+              buffersize=None):
     """
     Group rows under the given key then apply aggregation functions. E.g.::
 
@@ -2640,18 +2706,24 @@ def aggregate(table, key, aggregators=None, presorted=False, errorvalue=None):
         | 'e'   | None     | None     | 0        | []        |
         +-------+----------+----------+----------+-----------+
 
+    If `presorted` is True, it is assumed that the data are already sorted by
+    the given key, and the `buffersize` argument is ignored. Otherwise, the data 
+    are sorted, see also the discussion of the `buffersize` argument under the 
+    :func:`sort` function.
+    
     """
 
-    return AggregateView(table, key, aggregators, presorted, errorvalue)
+    return AggregateView(table, key, aggregators, presorted, errorvalue, buffersize)
 
 
 class AggregateView(object):
     
-    def __init__(self, source, key, aggregators=None, presorted=False, errorvalue=None):
+    def __init__(self, source, key, aggregators=None, presorted=False, 
+                 errorvalue=None, buffersize=None):
         if presorted:
             self.source = source
         else:
-            self.source = sort(source, key)
+            self.source = sort(source, key, buffersize=buffersize)
         self.key = key
         if aggregators is None:
             self.aggregators = OrderedDict()
@@ -3028,7 +3100,7 @@ def iterrecordmapmany(source, rowgenerator, header, failonerror):
         close(it)
         
         
-def setheader(table, flds):
+def setheader(table, fields):
     """
     Override fields in the given table. E.g.::
     
@@ -3048,31 +3120,31 @@ def setheader(table, flds):
 
     """
     
-    return SetHeaderView(table, flds) 
+    return SetHeaderView(table, fields) 
 
 
 class SetHeaderView(object):
     
-    def __init__(self, source, flds):
+    def __init__(self, source, fields):
         self.source = source
-        self.flds = flds
+        self.fields = fields
         
     def __iter__(self):
-        return itersetheader(self.source, self.flds)   
+        return itersetheader(self.source, self.fields)   
 
 
-def itersetheader(source, flds):
+def itersetheader(source, fields):
     it = iter(source)
     try:
         it.next() # discard source fields
-        yield flds
+        yield fields
         for row in it:
             yield row
     finally:
         close(it)
         
         
-def extendheader(table, flds):
+def extendheader(table, fields):
     """
     Extend fields in the given table. E.g.::
     
@@ -3092,25 +3164,25 @@ def extendheader(table, flds):
 
     """
     
-    return ExtendHeaderView(table, flds) 
+    return ExtendHeaderView(table, fields) 
 
 
 class ExtendHeaderView(object):
     
-    def __init__(self, source, flds):
+    def __init__(self, source, fields):
         self.source = source
-        self.flds = flds
+        self.fields = fields
         
     def __iter__(self):
-        return iterextendheader(self.source, self.flds)   
+        return iterextendheader(self.source, self.fields)   
 
 
-def iterextendheader(source, flds):
+def iterextendheader(source, fields):
     it = iter(source)
     try:
         srcflds = it.next() 
         outflds = list(srcflds)
-        outflds.extend(flds)
+        outflds.extend(fields)
         yield outflds
         for row in it:
             yield row
@@ -3118,7 +3190,7 @@ def iterextendheader(source, flds):
         close(it)
         
         
-def pushheader(table, flds):
+def pushheader(table, fields):
     """
     Push rows down and prepend a header row. E.g.::
 
@@ -3140,23 +3212,23 @@ def pushheader(table, flds):
     
     """ 
 
-    return PushHeaderView(table, flds)
+    return PushHeaderView(table, fields)
 
 
 class PushHeaderView(object):
     
-    def __init__(self, source, flds):
+    def __init__(self, source, fields):
         self.source = source
-        self.flds = flds
+        self.fields = fields
         
     def __iter__(self):
-        return iterpushheader(self.source, self.flds)   
+        return iterpushheader(self.source, self.fields)   
 
 
-def iterpushheader(source, flds):
+def iterpushheader(source, fields):
     it = iter(source)
     try:
-        yield flds
+        yield fields
         for row in it:
             yield row
     finally:
@@ -3260,7 +3332,7 @@ def iterunpack(source, field, newfields, max, include_original):
         else:
             raise Exception('field invalid: must be either field name or index')
         
-        # determine output flds
+        # determine output fields
         out_flds = list(flds)
         if not include_original:
             out_flds.remove(field)
@@ -3282,7 +3354,7 @@ def iterunpack(source, field, newfields, max, include_original):
         close(it)
         
         
-def join(left, right, key=None, presorted=False):
+def join(left, right, key=None, presorted=False, buffersize=None):
     """
     Perform an equi-join on the given tables. E.g.::
         
@@ -3363,42 +3435,49 @@ def join(left, right, key=None, presorted=False):
         | 2    | 1      | 56.7     | 6.7      |
         +------+--------+----------+----------+
 
+    If `presorted` is True, it is assumed that the data are already sorted by
+    the given key, and the `buffersize` argument is ignored. Otherwise, the data 
+    are sorted, see also the discussion of the `buffersize` argument under the 
+    :func:`sort` function.
+    
     """
     
     if key is None:
-        return ImplicitJoinView(left, right, presorted)
+        return ImplicitJoinView(left, right, presorted=presorted, buffersize=buffersize)
     else:
-        return JoinView(left, right, key, presorted)
+        return JoinView(left, right, key, presorted=presorted, buffersize=buffersize)
 
 
 class ImplicitJoinView(object):
     
     def __init__(self, left, right, presorted=False, leftouter=False, 
-                 rightouter=False, missing=None):
+                 rightouter=False, missing=None, buffersize=None):
         self.left = left
         self.right = right
         self.presorted = presorted
         self.leftouter = leftouter
         self.rightouter = rightouter
         self.missing = missing
+        self.buffersize = buffersize
         
     def __iter__(self):
         return iterimplicitjoin(self.left, self.right, self.presorted, 
                                leftouter=self.leftouter, 
                                rightouter=self.rightouter, 
-                               missing=self.missing)
+                               missing=self.missing,
+                               buffersize=self.buffersize)
     
 
 class JoinView(object):
     
     def __init__(self, left, right, key, presorted=False, leftouter=False, 
-                 rightouter=False, missing=None):
+                 rightouter=False, missing=None, buffersize=None):
         if presorted:
             self.left = left
             self.right = right
         else:
-            self.left = sort(left, key)
-            self.right = sort(right, key)
+            self.left = sort(left, key, buffersize=buffersize)
+            self.right = sort(right, key, buffersize=buffersize)
             # TODO what if someone sets self.key to something else after __init__?
             # (sort will be incorrect - maybe need to protect key with property setter?)
         self.key = key
@@ -3411,7 +3490,7 @@ class JoinView(object):
                         rightouter=self.rightouter, missing=self.missing)
     
     
-def leftjoin(left, right, key=None, missing=None, presorted=False):
+def leftjoin(left, right, key=None, missing=None, presorted=False, buffersize=None):
     """
     Perform a left outer join on the given tables. E.g.::
     
@@ -3436,17 +3515,22 @@ def leftjoin(left, right, key=None, missing=None, presorted=False):
         | 3    | 'purple' | 'square' |
         +------+----------+----------+
 
+    If `presorted` is True, it is assumed that the data are already sorted by
+    the given key, and the `buffersize` argument is ignored. Otherwise, the data 
+    are sorted, see also the discussion of the `buffersize` argument under the 
+    :func:`sort` function.
+    
     """
     
     if key is None:
         return ImplicitJoinView(left, right, presorted=presorted, leftouter=True, 
-                               rightouter=False, missing=missing)
+                               rightouter=False, missing=missing, buffersize=buffersize)
     else:
         return JoinView(left, right, key, presorted=presorted, leftouter=True, 
-                        rightouter=False, missing=missing)
+                        rightouter=False, missing=missing, buffersize=buffersize)
 
     
-def rightjoin(left, right, key=None, missing=None, presorted=False):
+def rightjoin(left, right, key=None, missing=None, presorted=False, buffersize=None):
     """
     Perform a right outer join on the given tables. E.g.::
 
@@ -3471,17 +3555,22 @@ def rightjoin(left, right, key=None, missing=None, presorted=False):
         | 4    | None     | 'ellipse' |
         +------+----------+-----------+
 
+    If `presorted` is True, it is assumed that the data are already sorted by
+    the given key, and the `buffersize` argument is ignored. Otherwise, the data 
+    are sorted, see also the discussion of the `buffersize` argument under the 
+    :func:`sort` function.
+    
     """
     
     if key is None:
         return ImplicitJoinView(left, right, presorted=presorted, leftouter=False, 
-                               rightouter=True, missing=missing)
+                               rightouter=True, missing=missing, buffersize=buffersize)
     else:
         return JoinView(left, right, key, presorted=presorted, leftouter=False, 
-                        rightouter=True, missing=missing)
+                        rightouter=True, missing=missing, buffersize=buffersize)
     
     
-def outerjoin(left, right, key=None, missing=None, presorted=False):
+def outerjoin(left, right, key=None, missing=None, presorted=False, buffersize=None):
     """
     Perform a full outer join on the given tables. E.g.::
 
@@ -3508,14 +3597,19 @@ def outerjoin(left, right, key=None, missing=None, presorted=False):
         | 4    | None     | 'ellipse' |
         +------+----------+-----------+
 
+    If `presorted` is True, it is assumed that the data are already sorted by
+    the given key, and the `buffersize` argument is ignored. Otherwise, the data 
+    are sorted, see also the discussion of the `buffersize` argument under the 
+    :func:`sort` function.
+    
     """
 
     if key is None:
         return ImplicitJoinView(left, right, presorted=presorted, leftouter=True, 
-                               rightouter=True, missing=missing)
+                               rightouter=True, missing=missing, buffersize=buffersize)
     else:
         return JoinView(left, right, key, presorted=presorted, leftouter=True, 
-                        rightouter=True, missing=missing)
+                        rightouter=True, missing=missing, buffersize=buffersize)
     
     
 def iterjoin(left, right, key, leftouter=False, rightouter=False, missing=None):
@@ -3634,7 +3728,7 @@ def iterjoin(left, right, key, leftouter=False, rightouter=False, missing=None):
         
         
 def iterimplicitjoin(left, right, presorted=False, leftouter=False, 
-                    rightouter=False, missing=None):
+                    rightouter=False, missing=None, buffersize=None):
     # determine key field or fields
     lflds = header(left)
     rflds = header(right)
@@ -3648,8 +3742,8 @@ def iterimplicitjoin(left, right, presorted=False, leftouter=False,
     if not presorted:
         # this is not optimal, have to sort each time, because key is determined
         # dynamically from the data
-        left = sort(left, key)
-        right = sort(right, key)
+        left = sort(left, key, buffersize=buffersize)
+        right = sort(right, key, buffersize=buffersize)
     # from here on it's the same as a normal join
     return iterjoin(left, right, key, leftouter=leftouter, rightouter=rightouter,
                     missing=missing)
@@ -3710,7 +3804,7 @@ def itercrossjoin(sources):
         yield outrow
         
         
-def antijoin(left, right, key=None, presorted=False):
+def antijoin(left, right, key=None, presorted=False, buffersize=None):
     """
     Return rows from the `left` table where the key value does not occur in the
     `right` table. E.g.::
@@ -3739,23 +3833,28 @@ def antijoin(left, right, key=None, presorted=False):
         | 5    | 'white'  |
         +------+----------+
     
+    If `presorted` is True, it is assumed that the data are already sorted by
+    the given key, and the `buffersize` argument is ignored. Otherwise, the data 
+    are sorted, see also the discussion of the `buffersize` argument under the 
+    :func:`sort` function.
+    
     """
     
     if key is None:
-        return ImplicitAntiJoinView(left, right, presorted)
+        return ImplicitAntiJoinView(left, right, presorted, buffersize)
     else:
-        return AntiJoinView(left, right, key, presorted)
+        return AntiJoinView(left, right, key, presorted, buffersize)
 
 
 class AntiJoinView(object):
     
-    def __init__(self, left, right, key, presorted=False):
+    def __init__(self, left, right, key, presorted=False, buffersize=None):
         if presorted:
             self.left = left
             self.right = right
         else:
-            self.left = sort(left, key)
-            self.right = sort(right, key)
+            self.left = sort(left, key, buffersize=buffersize)
+            self.right = sort(right, key, buffersize=buffersize)
             # TODO what if someone sets self.key to something else after __init__?
             # (sort will be incorrect - maybe need to protect key with property setter?)
         self.key = key
@@ -3826,16 +3925,17 @@ def iterantijoin(left, right, key):
         
 class ImplicitAntiJoinView(object):
     
-    def __init__(self, left, right, presorted=False):
+    def __init__(self, left, right, presorted=False, buffersize=None):
         self.left = left
         self.right = right
         self.presorted = presorted
+        self.buffersize = buffersize
         
     def __iter__(self):
-        return iterimplicitantijoin(self.left, self.right, self.presorted)
+        return iterimplicitantijoin(self.left, self.right, self.presorted, self.buffersize)
     
     
-def iterimplicitantijoin(left, right, presorted=False):
+def iterimplicitantijoin(left, right, presorted=False, buffersize=None):
     # determine key field or fields
     lflds = header(left)
     rflds = header(right)
@@ -3849,8 +3949,8 @@ def iterimplicitantijoin(left, right, presorted=False):
     if not presorted:
         # this is not optimal, have to sort each time, because key is determined
         # dynamically from the data
-        left = sort(left, key)
-        right = sort(right, key)
+        left = sort(left, key, buffersize=buffersize)
+        right = sort(right, key, buffersize=buffersize)
     # from here on it's the same as a normal antijoin
     return iterantijoin(left, right, key)
 

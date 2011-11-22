@@ -475,11 +475,11 @@ def test_sort_6():
 def test_sort_merge():
     
     table = [['foo', 'bar'],
-            ['C', 2],
-            ['A', 9],
-            ['A', 6],
-            ['F', 1],
-            ['D', 10]]
+             ['C', 2],
+             ['A', 9],
+             ['A', 6],
+             ['F', 1],
+             ['D', 10]]
 
     # test sort forwards
     expectation = [['foo', 'bar'],
@@ -505,7 +505,18 @@ def test_sort_merge():
     result = sort(table, 'bar', reverse=True)
     iassertequal(expectation, result)
     result = sort(table, 'bar', reverse=True, buffersize=2)
-    print list(result)
+    iassertequal(expectation, result)
+
+    # no key
+    expectation = [['foo', 'bar'],
+                   ['F', 1],
+                   ['D', 10],
+                   ['C', 2],
+                   ['A', 9],
+                   ['A', 6]]
+    result = sort(table, reverse=True)
+    iassertequal(expectation, result)
+    result = sort(table, reverse=True, buffersize=2)
     iassertequal(expectation, result)
     
     

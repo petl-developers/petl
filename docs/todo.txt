@@ -95,15 +95,17 @@
 
 - [done] support for reverse=True when above buffer size
 
-- add buffersize arg to all transformations that depend on sorting
+- [done] profile forward and reverse sorting with big files
 
-- provide ability to set default buffersize globally
+- [done] add buffersize arg to all transformations that depend on sorting
 
-- implement cachetag for all view classes
+- [done] provide ability to set default buffersize globally
 
 - [done] modify sort to keep cached data and check cachetag values
 
 - [done] implement setfields
+
+- implement cachetag for all view classes
 
 - make sure we don't get tripped up by attempts to compare tuples with lists
 
