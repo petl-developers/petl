@@ -10,7 +10,7 @@ import cPickle as pickle
 
 
 from petl.util import close, asindices, rowgetter, FieldSelectionError, asdict,\
-    expr, valueset, records, header, data
+    expr, valueset, records, header, data, stats
 import re
 from petl.io import Uncacheable
 from tempfile import NamedTemporaryFile
@@ -1011,7 +1011,7 @@ def sort(table, key=None, reverse=False, buffersize=None):
 
     """
     
-    return SortView(table, key, reverse, buffersize)
+    return SortView(table, key=key, reverse=reverse, buffersize=buffersize)
     
 
 def iterchunk(filename):
@@ -2742,8 +2742,8 @@ class AggregateView(object):
 
     
 def iteraggregate(source, key, aggregators, errorvalue):
+    aggregators = OrderedDict(aggregators.items()) # take a copy
     it = iter(source)
-
     try:
         srcflds = it.next()
 
@@ -2796,6 +2796,158 @@ def iteraggregate(source, key, aggregators, errorvalue):
         close(it)
 
 
+def binaggregate(table, key, width=None, bins=None, aggregators=None, start=None, 
+                 presorted=False, errorvalue=None, buffersize=None):
+    """
+    Group rows into bins then apply aggregation functions. E.g.::
+    
+        >>> from petl import binaggregate, look
+        >>> table1 = [['foo', 'bar'],
+        ...           ['a', 3],
+        ...           ['a', 7],
+        ...           ['b', 2],
+        ...           ['b', 1],
+        ...           ['b', 9],
+        ...           ['c', 4],
+        ...           ['d', 3]]
+        >>> table2 = binaggregate(table1, 'bar', width=2)
+        >>> table2['foocount'] = 'foo', len
+        >>> table2['foolist'] = 'foo' # default is list
+        >>> look(table2)
+        +---------+------------+-----------------+
+        | 'bar'   | 'foocount' | 'foolist'       |
+        +=========+============+=================+
+        | (1, 3)  | 2          | ['b', 'b']      |
+        +---------+------------+-----------------+
+        | (3, 5)  | 3          | ['a', 'd', 'c'] |
+        +---------+------------+-----------------+
+        | (5, 7)  | 0          | []              |
+        +---------+------------+-----------------+
+        | (7, 9)  | 1          | ['a']           |
+        +---------+------------+-----------------+
+        | (9, 11) | 1          | ['b']           |
+        +---------+------------+-----------------+
+    
+    """
+    
+    assert bool(width) != bool(bins), 'either width or bins must be provided'
+    return BinAggregateView(table, key, width=width, bins=bins, 
+                            aggregators=aggregators, start=start, presorted=presorted, 
+                            errorvalue=errorvalue, buffersize=buffersize)
+    
+    
+class BinAggregateView(object):
+    
+    def __init__(self, source, key, width=None, bins=None, aggregators=None, 
+                 start=None, presorted=False, errorvalue=None, buffersize=None):
+        if presorted:
+            self.source = source
+        else:
+            self.source = sort(source, key, buffersize=buffersize)
+        self.key = key
+        self.width = width
+        self.bins = bins
+        if aggregators is None:
+            self.aggregators = OrderedDict()
+        else:
+            self.aggregators = aggregators
+        self.start = start
+        self.errorvalue = errorvalue
+
+    def __iter__(self):
+        return iterbinaggregate(self.source, self.key, self.width, self.bins, 
+                                self.aggregators, self.start, self.errorvalue)
+
+    def __getitem__(self, key):
+        return self.aggregators[key]
+    
+    def __setitem__(self, key, value):
+        self.aggregators[key] = value
+
+    
+def iterbinaggregate(source, key, width, bins, aggregators, start, errorvalue):
+
+    aggregators = OrderedDict(aggregators.items()) # take a copy
+    # normalise aggregators
+    for outfld in aggregators:
+        agg = aggregators[outfld]
+        if not isinstance(agg, (list, tuple)):
+            aggregators[outfld] = agg, list # list is default aggregation function
+
+    if not width:
+        # need to determine width
+        sts = stats(source, key)
+        if start is None:
+            start = sts['min']
+        width = (sts['max'] - start) / bins
+        
+    it = iter(source)
+    try:
+        srcflds = it.next()
+
+        # convert field selection into field indices
+        indices = asindices(srcflds, key)
+
+        # now use field indices to construct a getkey function
+        # N.B., this may raise an exception on short rows, depending on
+        # the field selection
+        getkey = itemgetter(*indices)
+        
+        if len(indices) == 1:
+            outflds = [getkey(srcflds)]
+        else:
+            outflds = list(getkey(srcflds))
+        outflds.extend(aggregators.keys())
+        yield outflds
+        
+        def buildoutrow(range, bin):
+            outrow = [range]
+            for outfld in aggregators:
+                srcfld, aggfun = aggregators[outfld]
+                idx = srcflds.index(srcfld)
+                try:
+                    # try using list comprehension
+                    vals = [row[idx] for row in bin]
+                except IndexError:
+                    # fall back to slower for loop
+                    vals = list()
+                    for row in bin:
+                        try:
+                            vals.append(row[idx])
+                        except IndexError:
+                            pass
+                try:
+                    aggval = aggfun(vals)
+                except:
+                    aggval = errorvalue
+                outrow.append(aggval)
+            return outrow
+
+        try:
+            # initialise range & bin
+            row = it.next()
+            keyv = getkey(row)
+            if start is None:
+                start = keyv
+            range = (start, start + width)
+            bin = []
+            while True:
+                while range[0] <= keyv < range[1]:
+                    bin.append(row)
+                    row = it.next()
+                    keyv = getkey(row)
+                # output current bin and move to next bin
+                yield buildoutrow(range, bin)
+                range = (range[1], range[1] + width)
+                bin = list()
+        except StopIteration:
+            # don't forget the last one
+            yield buildoutrow(range, bin)
+
+    finally:
+        close(it)
+        
+        
 def rowmap(table, rowmapper, header, failonerror=False):
     """
     Transform rows via an arbitrary function. E.g.::

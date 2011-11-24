@@ -13,7 +13,7 @@ from petl import rename, fieldnames, project, cat, convert, fieldconvert, transl
                 split, expr, fieldmap, facet, rowreduce, aggregate, recordreduce, \
                 rowmap, recordmap, rowmapmany, recordmapmany, setheader, pushheader, \
                 skip, extendheader, unpack, join, leftjoin, rightjoin, outerjoin, \
-                crossjoin, antijoin
+                crossjoin, antijoin, binaggregate
 
 
 def test_rename():
@@ -1154,6 +1154,40 @@ def test_aggregate():
     table3['sumbar'] = 'bar', sum
     table3['listbar'] = 'bar' # default aggregation is list
     iassertequal(expect2, table3)
+    
+    
+def test_binaggregate():
+    
+    table1 = [['foo', 'bar'],
+              ['a', 3],
+              ['a', 7],
+              ['b', 2],
+              ['b', 1],
+              ['b', 9],
+              ['c', 4],
+              ['d', 3]]
+
+    table2 = binaggregate(table1, 'bar', width=2)
+    table2['foocount'] = 'foo', len
+    table2['foolist'] = 'foo' # default is list
+    expect2 = [['bar', 'foocount', 'foolist'],
+               [(1, 3), 2, ['b', 'b']],
+               [(3, 5), 3, ['a', 'd', 'c']],
+               [(5, 7), 0, []],
+               [(7, 9), 1, ['a']],
+               [(9, 11), 1, ['b']]]
+    iassertequal(expect2, table2)
+    iassertequal(expect2, table2)
+
+    table3 = binaggregate(table1, 'bar', width=2, start=0)
+    table3['foocount'] = 'foo', len
+    expect3 = [['bar', 'foocount'],
+               [(0, 2), 1],
+               [(2, 4), 3],
+               [(4, 6), 1],
+               [(6, 8), 1],
+               [(8, 10), 1]]
+    iassertequal(expect3, table3)
 
 
 def test_rowmap():
