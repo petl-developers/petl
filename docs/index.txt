@@ -238,7 +238,7 @@ Transforming tables
 .. autofunction:: petl.complement
 .. autofunction:: petl.diff
 .. autofunction:: petl.aggregate
-.. autofunction:: petl.binaggregate
+.. autofunction:: petl.rangeaggregate
 .. autofunction:: petl.rowreduce
 .. autofunction:: petl.recordreduce
 .. autofunction:: petl.mergereduce

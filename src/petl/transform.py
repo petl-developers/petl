@@ -2796,12 +2796,12 @@ def iteraggregate(source, key, aggregators, errorvalue):
         close(it)
 
 
-def binaggregate(table, key, width=None, bins=None, aggregators=None, start=None, 
+def rangeaggregate(table, key, width=None, bins=None, aggregators=None, start=None, 
                  presorted=False, errorvalue=None, buffersize=None):
     """
     Group rows into bins then apply aggregation functions. E.g.::
     
-        >>> from petl import binaggregate, look
+        >>> from petl import rangeaggregate, look
         >>> table1 = [['foo', 'bar'],
         ...           ['a', 3],
         ...           ['a', 7],
@@ -2810,7 +2810,7 @@ def binaggregate(table, key, width=None, bins=None, aggregators=None, start=None
         ...           ['b', 9],
         ...           ['c', 4],
         ...           ['d', 3]]
-        >>> table2 = binaggregate(table1, 'bar', width=2)
+        >>> table2 = rangeaggregate(table1, 'bar', width=2)
         >>> table2['foocount'] = 'foo', len
         >>> table2['foolist'] = 'foo' # default is list
         >>> look(table2)
@@ -2831,12 +2831,12 @@ def binaggregate(table, key, width=None, bins=None, aggregators=None, start=None
     """
     
     assert bool(width) != bool(bins), 'either width or bins must be provided'
-    return BinAggregateView(table, key, width=width, bins=bins, 
+    return RangeAggregateView(table, key, width=width, bins=bins, 
                             aggregators=aggregators, start=start, presorted=presorted, 
                             errorvalue=errorvalue, buffersize=buffersize)
     
     
-class BinAggregateView(object):
+class RangeAggregateView(object):
     
     def __init__(self, source, key, width=None, bins=None, aggregators=None, 
                  start=None, presorted=False, errorvalue=None, buffersize=None):
@@ -2855,7 +2855,7 @@ class BinAggregateView(object):
         self.errorvalue = errorvalue
 
     def __iter__(self):
-        return iterbinaggregate(self.source, self.key, self.width, self.bins, 
+        return iterrangeaggregate(self.source, self.key, self.width, self.bins, 
                                 self.aggregators, self.start, self.errorvalue)
 
     def __getitem__(self, key):
@@ -2865,7 +2865,7 @@ class BinAggregateView(object):
         self.aggregators[key] = value
 
     
-def iterbinaggregate(source, key, width, bins, aggregators, start, errorvalue):
+def iterrangeaggregate(source, key, width, bins, aggregators, start, errorvalue):
 
     aggregators = OrderedDict(aggregators.items()) # take a copy
     # normalise aggregators

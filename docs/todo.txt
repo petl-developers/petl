@@ -81,9 +81,11 @@
 
 - (0.3) implement fillleft?
 
-- (0.3) implement rangefacet/bin/segregate/partition/... - facet by numerical field into any number of bins or by a given interval size?
+- implement rangefacet/bin/segregate/partition/... - facet by numerical field into any number of bins or by a given interval size?
 
-- (0.3) implement rangeaggregate/binaggregate/segagg/partitionaggregate ... aggregate by numerical field that has been partitioned
+- [done] implement rangeaggregate/binaggregate/segagg/partitionaggregate ... aggregate by numerical field that has been partitioned
+
+- implement rangerowreduce, rangerecordreduce
 
 - (0.3) partitioning of alpha fields?
 

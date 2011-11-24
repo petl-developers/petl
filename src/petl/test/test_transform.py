@@ -13,7 +13,7 @@ from petl import rename, fieldnames, project, cat, convert, fieldconvert, transl
                 split, expr, fieldmap, facet, rowreduce, aggregate, recordreduce, \
                 rowmap, recordmap, rowmapmany, recordmapmany, setheader, pushheader, \
                 skip, extendheader, unpack, join, leftjoin, rightjoin, outerjoin, \
-                crossjoin, antijoin, binaggregate
+                crossjoin, antijoin, rangeaggregate
 
 
 def test_rename():
@@ -1167,7 +1167,7 @@ def test_binaggregate():
               ['c', 4],
               ['d', 3]]
 
-    table2 = binaggregate(table1, 'bar', width=2)
+    table2 = rangeaggregate(table1, 'bar', width=2)
     table2['foocount'] = 'foo', len
     table2['foolist'] = 'foo' # default is list
     expect2 = [['bar', 'foocount', 'foolist'],
@@ -1179,7 +1179,7 @@ def test_binaggregate():
     iassertequal(expect2, table2)
     iassertequal(expect2, table2)
 
-    table3 = binaggregate(table1, 'bar', width=2, start=0)
+    table3 = rangeaggregate(table1, 'bar', width=2, start=0)
     table3['foocount'] = 'foo', len
     expect3 = [['bar', 'foocount'],
                [(0, 2), 1],
