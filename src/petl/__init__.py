@@ -20,7 +20,7 @@ from petl.transform import rename, project, cat, convert, fieldconvert, translat
            split, fieldmap, facet, selecteq, rowreduce, merge, aggregate, recordreduce, \
            rowmap, recordmap, rowmapmany, recordmapmany, setheader, pushheader, skip, \
            extendheader, unpack, join, leftjoin, rightjoin, outerjoin, crossjoin, \
-           antijoin, rangeaggregate
+           antijoin, rangeaggregate, rangecounts
            
            
 def lenstats(table, field):

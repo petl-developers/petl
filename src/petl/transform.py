@@ -2794,8 +2794,89 @@ def iteraggregate(source, key, aggregators, errorvalue):
             
     finally:
         close(it)
+        
+        
+def rangecounts(table, key, width=None, bins=None, start=None, presorted=False,
+                errorvalue=None, buffersize=None):
+    """
+    TODO doc me
+    
+    """
+    
+    assert bool(width) != bool(bins), 'either width or bins must be provided'
+    return RangeCountsView(table, key, width=width, bins=bins, start=start, 
+                           presorted=presorted, errorvalue=errorvalue, 
+                           buffersize=buffersize)
+    
+    
+class RangeCountsView(object):
+    
+    def __init__(self, source, key, width=None, bins=None, start=None, 
+                 presorted=False, errorvalue=None, buffersize=None):
+        if presorted:
+            self.source = source
+        else:
+            self.source = sort(source, key, buffersize=buffersize)
+        self.key = key
+        self.width = width
+        self.bins = bins
+        self.start = start
+        self.errorvalue = errorvalue
+
+    def __iter__(self):
+        return iterrangecounts(self.source, self.key, self.width, self.bins, 
+                               self.start, self.errorvalue)
 
 
+def iterrangecounts(source, key, width, bins, start, errorvalue):
+
+    if not width:
+        # need to determine width
+        sts = stats(source, key)
+        if start is None:
+            start = sts['min']
+        width = (sts['max'] - start) / bins
+        
+    it = iter(source)
+    try:
+        srcflds = it.next()
+
+        # convert field selection into field indices
+        indices = asindices(srcflds, key)
+
+        # now use field indices to construct a getkey function
+        # N.B., this may raise an exception on short rows, depending on
+        # the field selection
+        getkey = itemgetter(*indices)
+        
+        outflds = ['range', 'count']
+        yield outflds
+        
+        try:
+            # initialise range & bin
+            row = it.next()
+            keyv = getkey(row)
+            if start is None:
+                start = keyv
+            range = (start, start + width)
+            bin = []
+            while True:
+                while range[0] <= keyv < range[1]:
+                    bin.append(row)
+                    row = it.next()
+                    keyv = getkey(row)
+                # output current bin and move to next bin
+                yield [range, len(bin)]
+                range = (range[1], range[1] + width)
+                bin = list()
+        except StopIteration:
+            # don't forget the last one
+            yield [range, len(bin)]
+
+    finally:
+        close(it)
+        
+    
 def rangeaggregate(table, key, width=None, bins=None, aggregators=None, start=None, 
                  presorted=False, errorvalue=None, buffersize=None):
     """

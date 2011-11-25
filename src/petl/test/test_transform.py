@@ -13,7 +13,7 @@ from petl import rename, fieldnames, project, cat, convert, fieldconvert, transl
                 split, expr, fieldmap, facet, rowreduce, aggregate, recordreduce, \
                 rowmap, recordmap, rowmapmany, recordmapmany, setheader, pushheader, \
                 skip, extendheader, unpack, join, leftjoin, rightjoin, outerjoin, \
-                crossjoin, antijoin, rangeaggregate
+                crossjoin, antijoin, rangeaggregate, rangecounts
 
 
 def test_rename():
@@ -1156,7 +1156,7 @@ def test_aggregate():
     iassertequal(expect2, table3)
     
     
-def test_binaggregate():
+def test_rangeaggregate():
     
     table1 = [['foo', 'bar'],
               ['a', 3],
@@ -1182,6 +1182,37 @@ def test_binaggregate():
     table3 = rangeaggregate(table1, 'bar', width=2, start=0)
     table3['foocount'] = 'foo', len
     expect3 = [['bar', 'foocount'],
+               [(0, 2), 1],
+               [(2, 4), 3],
+               [(4, 6), 1],
+               [(6, 8), 1],
+               [(8, 10), 1]]
+    iassertequal(expect3, table3)
+
+
+def test_rangecounts():
+    
+    table1 = [['foo', 'bar'],
+              ['a', 3],
+              ['a', 7],
+              ['b', 2],
+              ['b', 1],
+              ['b', 9],
+              ['c', 4],
+              ['d', 3]]
+
+    table2 = rangecounts(table1, 'bar', width=2)
+    expect2 = [['range', 'count'],
+               [(1, 3), 2],
+               [(3, 5), 3],
+               [(5, 7), 0],
+               [(7, 9), 1],
+               [(9, 11), 1]]
+    iassertequal(expect2, table2)
+    iassertequal(expect2, table2)
+
+    table3 = rangecounts(table1, 'bar', width=2, start=0)
+    expect3 = [['range', 'count'],
                [(0, 2), 1],
                [(2, 4), 3],
                [(4, 6), 1],
