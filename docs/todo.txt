@@ -79,4 +79,12 @@
 - lookall
 - selectgt, selectlt, selectge, selectle
 - show rows/values causing conversion or translation errors
-- [done] rangecounts
+- [done] implement rangecounts
+- document rangecounts
+- rangecounts and rangeaggregate should have min and max params instead of start
+
+petlx
+-----
+
+- fromxslx
+- tondarray
