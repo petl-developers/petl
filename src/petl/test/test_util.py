@@ -136,7 +136,7 @@ def test_values():
     expect = [1, 2, 7]
     iassertequal(expect, actual) 
     
-    actual = values(table, ('foo', 'bar'))
+    actual = values(table, 'foo', 'bar')
     expect = [('a', 1), ('b', 2), ('b', 7)]
     iassertequal(expect, actual)
 

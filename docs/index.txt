@@ -158,12 +158,12 @@ Utility functions
 
 .. autofunction:: petl.header
 .. autofunction:: petl.data
-.. autofunction:: petl.fieldnames
+.. autofunction:: petl.values
 .. autofunction:: petl.records
+.. autofunction:: petl.fieldnames
 .. autofunction:: petl.rowcount
 .. autofunction:: petl.look
 .. autofunction:: petl.see
-.. autofunction:: petl.values
 .. autofunction:: petl.valueset
 .. autofunction:: petl.valuecounter
 .. autofunction:: petl.valuecounts
@@ -239,6 +239,7 @@ Transforming tables
 .. autofunction:: petl.diff
 .. autofunction:: petl.aggregate
 .. autofunction:: petl.rangeaggregate
+.. autofunction:: petl.rangecounts
 .. autofunction:: petl.rowreduce
 .. autofunction:: petl.recordreduce
 .. autofunction:: petl.mergereduce

@@ -71,7 +71,7 @@ def fieldnames(table):
     return [str(f) for f in header(table)]
 
     
-def data(table, start=0, stop=None, step=1):
+def data(table):
     """
     Return an iterator over the data rows for the given table. E.g.::
     
@@ -85,10 +85,10 @@ def data(table, start=0, stop=None, step=1):
     
     """
     
-    return islice(table, start + 1, stop, step)
+    return islice(table, 1, None)
 
     
-def records(table, start=0, stop=None, step=1, padding=None):
+def records(table, missing=None):
     """
     Return an iterator over the data in the table, yielding each row as a 
     dictionary of values indexed by field name. E.g.::
@@ -122,11 +122,11 @@ def records(table, start=0, stop=None, step=1, padding=None):
     
     it = iter(table)
     flds = it.next()
-    for row in islice(it, start, stop, step):
-        yield asdict(flds, row, padding)
+    for row in it:
+        yield asdict(flds, row, missing)
     
     
-def asdict(flds, row, padding=None):
+def asdict(flds, row, missing=None):
     names = [str(f) for f in flds]
     try:
         # list comprehension should be faster
@@ -138,7 +138,7 @@ def asdict(flds, row, padding=None):
             try:
                 v = row[i]
             except IndexError:
-                v = padding
+                v = missing
             items.append((f, v))
     return dict(items)
     
@@ -195,9 +195,9 @@ def look(table, start=0, stop=10, step=1):
     
 class Look(object):
     
-    def __init__(self, table, start=0, stop=10, step=1):
+    def __init__(self, table, min=0, stop=10, step=1):
         self.table = table
-        self.start = start
+        self.min = min
         self.stop = stop
         self.step = step
         
@@ -210,7 +210,7 @@ class Look(object):
             fldsrepr = [repr(f) for f in flds]
             
             # rows representations
-            rows = list(islice(it, self.start, self.stop, self.step))
+            rows = list(islice(it, self.min, self.stop, self.step))
             rowsrepr = [[repr(v) for v in row] for row in rows]
             
             # find maximum row length - may be uneven
@@ -305,9 +305,9 @@ def see(table, start=0, stop=10, step=1):
 
 class See(object):
     
-    def __init__(self, table, start=0, stop=5, step=1):
+    def __init__(self, table, min=0, stop=5, step=1):
         self.table = table
-        self.start = start
+        self.min = min
         self.stop = stop
         self.step = step
         
@@ -316,7 +316,7 @@ class See(object):
         try:
             flds = it.next()
             cols = defaultdict(list)
-            for row in islice(it, self.start, self.stop, self.step):
+            for row in islice(it, self.min, self.stop, self.step):
                 for i, f in enumerate(flds):
                     try:
                         cols[str(f)].append(repr(row[i]))
@@ -334,9 +334,9 @@ class See(object):
             close(it)
     
     
-def values(table, fieldspec, start=0, stop=None, step=1):
+def values(table, *fields):
     """
-    Return an iterator over values in a given field. E.g.::
+    Return an iterator over values in a given field or fields. E.g.::
     
         >>> from petl import values
         >>> table = [['foo', 'bar'], ['a', True], ['b'], ['b', True], ['c', False]]
@@ -354,7 +354,7 @@ def values(table, fieldspec, start=0, stop=None, step=1):
           File "<stdin>", line 1, in <module>
         StopIteration
 
-    The `fieldspec` argument can be a field name or index (starting from zero).    
+    The positional arguments can be field names or indexes (starting from zero).    
     
     If rows are uneven, any missing values are skipped, e.g.::
     
@@ -377,7 +377,7 @@ def values(table, fieldspec, start=0, stop=None, step=1):
         ...          [1, 'a', True],
         ...          [2, 'bb', True],
         ...          [3, 'd', False]]
-        >>> foobaz = values(table, ('foo', 'baz'))
+        >>> foobaz = values(table, 'foo', 'baz')
         >>> foobaz.next()
         (1, True)
         >>> foobaz.next()
@@ -388,16 +388,15 @@ def values(table, fieldspec, start=0, stop=None, step=1):
         Traceback (most recent call last):
           File "<stdin>", line 1, in <module>
         StopIteration
-    
+
     """
     
     it = iter(table)
     try:
-        flds = it.next()
-        indices = asindices(flds, fieldspec)
+        srcflds = it.next()
+        indices = asindices(srcflds, fields)
         assert len(indices) > 0, 'no field selected'
         getvalue = itemgetter(*indices)
-        it = islice(it, start, stop, step)
         for row in it:
             try:
                 value = getvalue(row)
@@ -410,9 +409,9 @@ def values(table, fieldspec, start=0, stop=None, step=1):
         close(it)
     
     
-def valueset(table, fieldspec, start=0, stop=None, step=1):
+def valueset(table, *fields):
     """
-    Find distinct values for the given field. Returns a set. E.g.::
+    Find distinct values for the given field or fields. Returns a set. E.g.::
 
         >>> from petl import valueset
         >>> table = [['foo', 'bar'], ['a', True], ['b'], ['b', True], ['c', False]]
@@ -421,16 +420,16 @@ def valueset(table, fieldspec, start=0, stop=None, step=1):
         >>> valueset(table, 'bar')
         set([False, True])
         
-    The `fieldspec` argument can be a field name or index (starting from zero).    
+    The positional arguments can be field names or indexes (starting from zero).    
 
-    Equivalent to ``set(values(table, fieldspec, start, stop, step))``.
+    Equivalent to ``set(values(table, *fields))``.
         
     """
 
-    return set(values(table, fieldspec, start, stop, step))
+    return set(values(table, *fields))
 
 
-def valuecounter(table, fieldspec, start=0, stop=None, step=1):
+def valuecounter(table, *fields):
     """
     Find distinct values for the given field and count the number of 
     occurrences. Returns a :class:`dict` mapping values to counts. E.g.::
@@ -447,12 +446,12 @@ def valuecounter(table, fieldspec, start=0, stop=None, step=1):
         >>> c
         Counter({'b': 2, 'a': 1, 'c': 1})
     
-    The `fieldspec` argument can be a field name or index (starting from zero).    
+    The positional arguments can be field names or indexes (starting from zero).    
 
     """
 
     counter = Counter()
-    for v in values(table, fieldspec, start, stop, step):
+    for v in values(table, *fields):
         try:
             counter[v] += 1
         except IndexError:
@@ -460,7 +459,7 @@ def valuecounter(table, fieldspec, start=0, stop=None, step=1):
     return counter
             
 
-def valuecounts(table, fieldspec, start=0, stop=None, step=1):    
+def valuecounts(table, *fields):    
     """
     Find distinct values for the given field and count the number of 
     occurrences. Returns a table mapping values to counts, with most common 
@@ -471,7 +470,7 @@ def valuecounts(table, fieldspec, start=0, stop=None, step=1):
         >>> valuecounts(table, 'foo')
         [('value', 'count'), ('b', 2), ('a', 1), ('c', 1)]
 
-    The `fieldspec` argument can be a field name or index (starting from zero).    
+    The positional arguments can be field names or indexes (starting from zero).    
 
     Can be combined with `look`, e.g.::
     
@@ -498,15 +497,15 @@ def valuecounts(table, fieldspec, start=0, stop=None, step=1):
             
     """
     
-    counter = valuecounter(table, fieldspec, start, stop, step)
+    counter = valuecounter(table, *fields)
     output = [('value', 'count')]
     output.extend(counter.most_common())
     return output
         
         
-def unique(table, fieldspec):
+def unique(table, *fields):
     """
-    Return True if there are no duplicate values for the given fieldspec, otherwise
+    Return True if there are no duplicate values for the given field(s), otherwise
     False. E.g.::
 
         >>> from petl import unique
@@ -516,12 +515,12 @@ def unique(table, fieldspec):
         >>> unique(table, 'bar')
         True
     
-    The `fieldspec` argument can be a field name or index (starting from zero).    
+    The positional arguments can be field names or indexes (starting from zero).    
 
     """    
 
     vals = set()
-    for v in values(table, fieldspec):
+    for v in values(table, *fields):
         if v in vals:
             return False
         else:
@@ -962,7 +961,7 @@ def rowgetter(*indices):
         return itemgetter(*indices)
     
     
-def rowlengths(table, start=0, stop=None, step=1):
+def rowlengths(table):
     """
     Report on row lengths found in the table. E.g.::
     
@@ -987,7 +986,7 @@ def rowlengths(table, start=0, stop=None, step=1):
 
     """
 
-    it = data(table, start, stop, step)
+    it = data(table)
     try:
         counter = Counter()
         for row in it:
@@ -1001,7 +1000,7 @@ def rowlengths(table, start=0, stop=None, step=1):
         close(it)
 
 
-def typecounter(table, fieldspec, start=0, stop=None, step=1):    
+def typecounter(table, field):    
     """
     Count the number of values found for each Python type. E.g.::
 
@@ -1019,12 +1018,12 @@ def typecounter(table, fieldspec, start=0, stop=None, step=1):
         >>> typecounter(table, 'baz')
         Counter({'int': 1, 'float': 1, 'unicode': 1, 'str': 1})
 
-    The `fieldspec` argument can be a field name or index (starting from zero).    
+    The `field` argument can be field names or indexes (starting from zero).    
     
     """
     
     counter = Counter()
-    for v in values(table, fieldspec, start, stop, step):
+    for v in values(table, field):
         try:
             counter[v.__class__.__name__] += 1
         except IndexError:
@@ -1032,7 +1031,7 @@ def typecounter(table, fieldspec, start=0, stop=None, step=1):
     return counter
 
 
-def typecounts(table, fieldspec, start=0, stop=None, step=1):    
+def typecounts(table, field):    
     """
     Count the number of values found for each Python type and return a table
     mapping class names to counts. E.g.::
@@ -1075,17 +1074,17 @@ def typecounts(table, fieldspec, start=0, stop=None, step=1):
         | 'str'     | 1       |
         +-----------+---------+
 
-    The `fieldspec` argument can be a field name or index (starting from zero).    
+    The `field` argument can be a field name or index (starting from zero).    
  
     """
     
-    counter = typecounter(table, fieldspec, start, stop, step)
+    counter = typecounter(table, field)
     output = [('type', 'count')]
     output.extend(counter.most_common())
     return output
 
 
-def typeset(table, fieldspec, start=0, stop=None, step=1):
+def typeset(table, field):
     """
     Return a set containing all Python types found for values in the given field.
     E.g.::
@@ -1104,12 +1103,12 @@ def typeset(table, fieldspec, start=0, stop=None, step=1):
         >>> typeset(table, 'baz') 
         set([<type 'float'>, <type 'str'>])
     
-    The `fieldspec` argument can be a field name or index (starting from zero).    
+    The `field` argument can be a field name or index (starting from zero).    
 
     """
 
     s = set()
-    for v in values(table, fieldspec, start, stop, step):
+    for v in values(table, field):
         try:
             s.add(v.__class__)
         except IndexError:
@@ -1117,7 +1116,7 @@ def typeset(table, fieldspec, start=0, stop=None, step=1):
     return s
     
 
-def parsecounter(table, fieldspec, parsers={'int': int, 'float': float}, start=0, stop=None, step=1):    
+def parsecounter(table, field, parsers={'int': int, 'float': float}):    
     """
     Count the number of `str` or `unicode` values under the given fields that can 
     be parsed as ints, floats or via custom parser functions. Return a pair of 
@@ -1138,12 +1137,12 @@ def parsecounter(table, fieldspec, parsers={'int': int, 'float': float}, start=0
         >>> errors
         Counter({'int': 2, 'float': 1})
         
-    The `fieldspec` argument can be a field name or index (starting from zero).    
+    The `field` argument can be a field name or index (starting from zero).    
 
     """
     
     counter, errors = Counter(), Counter()
-    for v in values(table, fieldspec, start, stop, step):
+    for v in values(table, field):
         if isinstance(v, basestring):
             for name, parser in parsers.items():
                 try:
@@ -1155,7 +1154,7 @@ def parsecounter(table, fieldspec, parsers={'int': int, 'float': float}, start=0
     return counter, errors
 
 
-def parsecounts(table, fieldspec, parsers={'int': int, 'float': float}, start=0, stop=None, step=1):    
+def parsecounts(table, field, parsers={'int': int, 'float': float}):    
     """
     Count the number of `str` or `unicode` values that can be parsed as ints, 
     floats or via custom parser functions. Return a table mapping parser names
@@ -1177,11 +1176,11 @@ def parsecounts(table, fieldspec, parsers={'int': int, 'float': float}, start=0,
         | 'int'   | 2       | 2        |
         +---------+---------+----------+
 
-    The `fieldspec` argument can be a field name or index (starting from zero).    
+    The `field` argument can be a field name or index (starting from zero).    
 
     """
     
-    counter, errors = parsecounter(table, fieldspec, parsers, start, stop, step)
+    counter, errors = parsecounter(table, field, parsers)
     output_fields = [('type', 'count', 'errors')]
     output_data = [(item, count, errors[item]) for (item, count) in counter.most_common()]
     output = output_fields + output_data
@@ -1390,7 +1389,7 @@ def boolparser(true_strings=['true', 't', 'yes', 'y', '1'],
     return parser
     
 
-def stats(table, fieldspec, start=0, stop=None, step=1):
+def stats(table, field):
     """
     Calculate basic descriptive statistics on a given field. E.g.::
     
@@ -1404,7 +1403,7 @@ def stats(table, fieldspec, start=0, stop=None, step=1):
         >>> stats(table, 'bar')    
         {'count': 3, 'errors': 2, 'min': 1.0, 'max': 3.0, 'sum': 6.0, 'mean': 2.0}
         
-    The `fieldspec` argument can be a field name or index (starting from zero).    
+    The `field` argument can be a field name or index (starting from zero).    
 
     """
     
@@ -1414,7 +1413,7 @@ def stats(table, fieldspec, start=0, stop=None, step=1):
               'mean': None, 
               'count': 0, 
               'errors': 0}
-    for v in values(table, fieldspec, start, stop, step):
+    for v in values(table, field):
         try:
             v = float(v)
         except:

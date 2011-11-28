@@ -1179,7 +1179,7 @@ def test_rangeaggregate():
     iassertequal(expect2, table2)
     iassertequal(expect2, table2)
 
-    table3 = rangeaggregate(table1, 'bar', width=2, start=0)
+    table3 = rangeaggregate(table1, 'bar', width=2, min=0)
     table3['foocount'] = 'foo', len
     expect3 = [['bar', 'foocount'],
                [(0, 2), 1],
@@ -1188,6 +1188,15 @@ def test_rangeaggregate():
                [(6, 8), 1],
                [(8, 10), 1]]
     iassertequal(expect3, table3)
+
+
+    table4 = rangeaggregate(table1, 'bar', width=2, min=0, max=6)
+    table4['foocount'] = 'foo', len
+    expect4 = [['bar', 'foocount'],
+               [(0, 2), 1],
+               [(2, 4), 3],
+               [(4, 6), 1]]
+    iassertequal(expect4, table4)
 
 
 def test_rangecounts():
@@ -1211,7 +1220,7 @@ def test_rangecounts():
     iassertequal(expect2, table2)
     iassertequal(expect2, table2)
 
-    table3 = rangecounts(table1, 'bar', width=2, start=0)
+    table3 = rangecounts(table1, 'bar', width=2, min=0)
     expect3 = [['range', 'count'],
                [(0, 2), 1],
                [(2, 4), 3],
@@ -1219,6 +1228,13 @@ def test_rangecounts():
                [(6, 8), 1],
                [(8, 10), 1]]
     iassertequal(expect3, table3)
+
+    table4 = rangecounts(table1, 'bar', width=2, min=0, max=6)
+    expect4 = [['range', 'count'],
+               [(0, 2), 1],
+               [(2, 4), 3],
+               [(4, 6), 1]]
+    iassertequal(expect4, table4)
 
 
 def test_rowmap():

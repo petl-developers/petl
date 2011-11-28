@@ -1,3 +1,5 @@
+Version 0.2
+-----------
 
 - [done] document rowreduce
 - [done] change merge to mergereduce, implement merge as cat then mergereduce
@@ -36,13 +38,7 @@
 - [done] refactor join functions
 - [done] implement crossjoin
 - [done] implement antijoin
-- (0.3) implement filldown
-- (0.3) implement fillup
-- (0.3) implement fillright? 
-- (0.3) implement fillleft?
-- implement rangefacet/bin/segregate/partition/... - facet by numerical field into any number of bins or by a given interval size?
 - [done] implement rangeaggregate/binaggregate/segagg/partitionaggregate ... aggregate by numerical field that has been partitioned
-- implement rangerowreduce, rangerecordreduce
 - (0.3) partitioning of alpha fields?
 - [done] values on a combination of fields
 - [done] modify sort to use merge sort above a given buffer size
@@ -53,38 +49,57 @@
 - [done] provide ability to set default buffersize globally
 - [done] modify sort to keep cached data and check cachetag values
 - [done] implement setfields
+- [done] implement rangecounts
+- [done] implement string lengths as utility function
+- [won't do] get rid of 'values', add *args to data instead?
+- [done] simplify args to values
+- [done] rangecounts and rangeaggregate should have min and max params instead of start
+- [done] document rangecounts
+
+- implement rangefacet - facet by numerical field into any number of bins by a given interval size
+- implement rangerowreduce, rangerecordreduce
+
+- make convert args more flexible
+- autoconvert multiple fields to numeric types - convenience function
+- translate/replace single value in a field, e.g., None to zero; maybe also apply to multiple fields
+- convert with dictionary (which translate is a convenience for)
+
 - implement cachetag for all view classes
+
 - make sure we don't get tripped up by attempts to compare tuples with lists
 - implement selectlen - select by row length
 - implement stringjoin as aggregation function (or can you just pass ', '.join?)
 - implement missingness
 - implement transpose
 - check how cat and cut handle long/short rows; are they using itemgetter where possible?
-- (0.3) implement rowgroupby? generate sequence of key/row iterator pairs?
-- (0.3) implement recordgroupby?
+
 - implement pivot?
 - implement crosstab?
-- [done] implement string lengths as utility function
-- (0.3) implement string patterns as utility function
-- (0.3) implement hash (lookup) alternatives to all join and other sort-dependent functions
-- (0.3) implement provenance trace
-- (0.3) implement petl.interactive with cache wrappers
-- (0.3) implement petl.fluent
-- (0.3) implement validator module based on csvvalidator
+
 - implement fromxml
-- make convert args more flexible
-- autoconvert multiple fields to numeric types - convenience function
-- translate single value in a field, e.g., None to zero; maybe also apply to multiple fields
-- convert with dictionary (which translate is a convenience for)
 - lookall
 - selectgt, selectlt, selectge, selectle
+- records s/padding/missing/ ?
+
+Version 0.3
+-----------
+
+- implement string patterns as utility function
+- implement hash (lookup) alternatives to all join and other sort-dependent functions
+- implement provenance trace
+- implement petl.interactive with cache wrappers
+- implement petl.fluent
+- implement validator module based on csvvalidator
+- implement filldown
+- implement fillup
+- implement fillright? 
+- implement fillleft?
+- implement rowgroupby? generate sequence of key/row iterator pairs?
+- implement recordgroupby?
 - show rows/values causing conversion or translation errors
-- [done] implement rangecounts
-- document rangecounts
-- rangecounts and rangeaggregate should have min and max params instead of start
 
 petlx
 -----
 
 - fromxslx
-- tondarray
+- [won't do] tondarray

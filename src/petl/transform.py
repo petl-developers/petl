@@ -815,12 +815,12 @@ class RowSliceView(object):
     
     def __init__(self, source, start=0, stop=None, step=1):
         self.source = source
-        self.start = start
+        self.min = start
         self.stop = stop
         self.step = step
         
     def __iter__(self):
-        return iterrowslice(self.source, self.start, self.stop, self.step)
+        return iterrowslice(self.source, self.min, self.stop, self.step)
 
 
 def iterrowslice(source, start, stop, step):    
@@ -2796,22 +2796,46 @@ def iteraggregate(source, key, aggregators, errorvalue):
         close(it)
         
         
-def rangecounts(table, key, width=None, bins=None, start=None, presorted=False,
+def rangecounts(table, key, width, min=None, max=None, presorted=False,
                 errorvalue=None, buffersize=None):
     """
-    TODO doc me
-    
+    Group rows into bins then count the number of rows in each bin. E.g.::
+
+        >>> from petl import rangecounts, look
+        >>> table1 = [['foo', 'bar'],
+        ...           ['a', 3],
+        ...           ['a', 7],
+        ...           ['b', 2],
+        ...           ['b', 1],
+        ...           ['b', 9],
+        ...           ['c', 4],
+        ...           ['d', 3]]
+        >>> table2 = rangecounts(table1, 'bar', width=2)
+        >>> look(table2)
+        +---------+---------+
+        | 'range' | 'count' |
+        +=========+=========+
+        | (1, 3)  | 2       |
+        +---------+---------+
+        | (3, 5)  | 3       |
+        +---------+---------+
+        | (5, 7)  | 0       |
+        +---------+---------+
+        | (7, 9)  | 1       |
+        +---------+---------+
+        | (9, 11) | 1       |
+        +---------+---------+
+
     """
     
-    assert bool(width) != bool(bins), 'either width or bins must be provided'
-    return RangeCountsView(table, key, width=width, bins=bins, start=start, 
+    return RangeCountsView(table, key, width, min=min, max=max, 
                            presorted=presorted, errorvalue=errorvalue, 
                            buffersize=buffersize)
     
     
 class RangeCountsView(object):
     
-    def __init__(self, source, key, width=None, bins=None, start=None, 
+    def __init__(self, source, key, width, min=None, max=None, 
                  presorted=False, errorvalue=None, buffersize=None):
         if presorted:
             self.source = source
@@ -2819,24 +2843,16 @@ class RangeCountsView(object):
             self.source = sort(source, key, buffersize=buffersize)
         self.key = key
         self.width = width
-        self.bins = bins
-        self.start = start
+        self.min, self.max = min, max
         self.errorvalue = errorvalue
 
     def __iter__(self):
-        return iterrangecounts(self.source, self.key, self.width, self.bins, 
-                               self.start, self.errorvalue)
+        return iterrangecounts(self.source, self.key, self.width, self.min, 
+                               self.max, self.errorvalue)
 
 
-def iterrangecounts(source, key, width, bins, start, errorvalue):
+def iterrangecounts(source, key, width, min, max, errorvalue):
 
-    if not width:
-        # need to determine width
-        sts = stats(source, key)
-        if start is None:
-            start = sts['min']
-        width = (sts['max'] - start) / bins
-        
     it = iter(source)
     try:
         srcflds = it.next()
@@ -2856,29 +2872,37 @@ def iterrangecounts(source, key, width, bins, start, errorvalue):
             # initialise range & bin
             row = it.next()
             keyv = getkey(row)
-            if start is None:
-                start = keyv
-            range = (start, start + width)
+            if min is None:
+                min = keyv
+            binmin = min
+            binmax = binmin + width
+            if max is not None and binmax > max:
+                binmax = max
             bin = []
-            while True:
-                while range[0] <= keyv < range[1]:
+            # keep iterating until we run out of items or we exceed max (if set)
+            while max is None or (max is not None and keyv < max):
+                while binmin <= keyv < binmax:
                     bin.append(row)
                     row = it.next()
                     keyv = getkey(row)
                 # output current bin and move to next bin
-                yield [range, len(bin)]
-                range = (range[1], range[1] + width)
+                yield [(binmin, binmax), len(bin)]
+                binmin = binmax
+                binmax = binmin + width
+                if max is not None and binmax > max:
+                    binmax = max
                 bin = list()
         except StopIteration:
             # don't forget the last one
-            yield [range, len(bin)]
+            yield [(binmin, binmax), len(bin)]
+
 
     finally:
         close(it)
         
     
-def rangeaggregate(table, key, width=None, bins=None, aggregators=None, start=None, 
-                 presorted=False, errorvalue=None, buffersize=None):
+def rangeaggregate(table, key, width, aggregators=None, min=None, max=None,
+                   presorted=False, errorvalue=None, buffersize=None):
     """
     Group rows into bins then apply aggregation functions. E.g.::
     
@@ -2908,36 +2932,36 @@ def rangeaggregate(table, key, width=None, bins=None, aggregators=None, start=No
         +---------+------------+-----------------+
         | (9, 11) | 1          | ['b']           |
         +---------+------------+-----------------+
-    
+
     """
     
-    assert bool(width) != bool(bins), 'either width or bins must be provided'
-    return RangeAggregateView(table, key, width=width, bins=bins, 
-                            aggregators=aggregators, start=start, presorted=presorted, 
-                            errorvalue=errorvalue, buffersize=buffersize)
+    return RangeAggregateView(table, key, width, 
+                              aggregators=aggregators, min=min, max=max,
+                              presorted=presorted, errorvalue=errorvalue, 
+                              buffersize=buffersize)
     
     
 class RangeAggregateView(object):
     
-    def __init__(self, source, key, width=None, bins=None, aggregators=None, 
-                 start=None, presorted=False, errorvalue=None, buffersize=None):
+    def __init__(self, source, key, width, aggregators=None, min=None, max=None, 
+                 presorted=False, errorvalue=None, buffersize=None):
         if presorted:
             self.source = source
         else:
             self.source = sort(source, key, buffersize=buffersize)
         self.key = key
         self.width = width
-        self.bins = bins
         if aggregators is None:
             self.aggregators = OrderedDict()
         else:
             self.aggregators = aggregators
-        self.start = start
+        self.min, self.max = min, max
         self.errorvalue = errorvalue
 
     def __iter__(self):
-        return iterrangeaggregate(self.source, self.key, self.width, self.bins, 
-                                self.aggregators, self.start, self.errorvalue)
+        return iterrangeaggregate(self.source, self.key, self.width, 
+                                  self.aggregators, self.min, self.max, 
+                                  self.errorvalue)
 
     def __getitem__(self, key):
         return self.aggregators[key]
@@ -2946,7 +2970,7 @@ class RangeAggregateView(object):
         self.aggregators[key] = value
 
     
-def iterrangeaggregate(source, key, width, bins, aggregators, start, errorvalue):
+def iterrangeaggregate(source, key, width, aggregators, min, max, errorvalue):
 
     aggregators = OrderedDict(aggregators.items()) # take a copy
     # normalise aggregators
@@ -2955,13 +2979,6 @@ def iterrangeaggregate(source, key, width, bins, aggregators, start, errorvalue)
         if not isinstance(agg, (list, tuple)):
             aggregators[outfld] = agg, list # list is default aggregation function
 
-    if not width:
-        # need to determine width
-        sts = stats(source, key)
-        if start is None:
-            start = sts['min']
-        width = (sts['max'] - start) / bins
-        
     it = iter(source)
     try:
         srcflds = it.next()
@@ -2981,8 +2998,8 @@ def iterrangeaggregate(source, key, width, bins, aggregators, start, errorvalue)
         outflds.extend(aggregators.keys())
         yield outflds
         
-        def buildoutrow(range, bin):
-            outrow = [range]
+        def buildoutrow(binmin, binmax, bin):
+            outrow = [(binmin, binmax)]
             for outfld in aggregators:
                 srcfld, aggfun = aggregators[outfld]
                 idx = srcflds.index(srcfld)
@@ -3008,22 +3025,29 @@ def iterrangeaggregate(source, key, width, bins, aggregators, start, errorvalue)
             # initialise range & bin
             row = it.next()
             keyv = getkey(row)
-            if start is None:
-                start = keyv
-            range = (start, start + width)
+            if min is None:
+                min = keyv
+            binmin = min
+            binmax = binmin + width
+            if max is not None and binmax > max:
+                binmax = max
             bin = []
-            while True:
-                while range[0] <= keyv < range[1]:
+            # keep iterating until we run out of items or we exceed max (if set)
+            while max is None or (max is not None and keyv < max):
+                while binmin <= keyv < binmax:
                     bin.append(row)
                     row = it.next()
                     keyv = getkey(row)
                 # output current bin and move to next bin
-                yield buildoutrow(range, bin)
-                range = (range[1], range[1] + width)
+                yield buildoutrow(binmin, binmax, bin)
+                binmin = binmax
+                binmax = binmin + width
+                if max is not None and binmax > max:
+                    binmax = max
                 bin = list()
         except StopIteration:
             # don't forget the last one
-            yield buildoutrow(range, bin)
+            yield buildoutrow(binmin, binmax, bin)
 
     finally:
         close(it)
@@ -3875,13 +3899,13 @@ def iterjoin(left, right, key, leftouter=False, rightouter=False, missing=None):
         def joinrows(lrowgrp, rrowgrp):
             if rrowgrp is None:
                 for lrow in lrowgrp:
-                    outrow = list(lrow) # start with the left row
+                    outrow = list(lrow) # min with the left row
                     # extend with missing values in place of the right row
                     outrow.extend([missing] * len(rvind))
                     yield outrow
             elif lrowgrp is None:
                 for rrow in rrowgrp:
-                    # start with missing values in place of the left row
+                    # min with missing values in place of the left row
                     outrow = [missing] * len(lflds)
                     # set key values
                     for li, ri in zip(lkind, rkind):
@@ -3893,7 +3917,7 @@ def iterjoin(left, right, key, leftouter=False, rightouter=False, missing=None):
                 rrowgrp = list(rrowgrp) # may need to iterate more than once
                 for lrow in lrowgrp:
                     for rrow in rrowgrp:
-                        # start with the left row
+                        # min with the left row
                         outrow = list(lrow)
                         # extend with non-key values from the right row
                         outrow.extend(rgetv(rrow))
