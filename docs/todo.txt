@@ -63,7 +63,8 @@ Version 0.2
 - [done] implement rangerowreduce, rangerecordreduce
 - [done] selectin, selectni
 
-- [started] review use of close - unnecessary
+- [done] review use of close - unnecessary
+
 - review use of errorvalue, sometimes not used e.g. in rangecounts
 - make everything return tuples
 - recast should not scan twice

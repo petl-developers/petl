@@ -1425,5 +1425,3 @@ def expr(s):
     return eval("lambda rec: " + prog.sub(repl, s))
     
     
-def close(it):
-    pass # TODO remove this

@@ -9,7 +9,7 @@ from operator import itemgetter
 import cPickle as pickle
 
 
-from petl.util import close, asindices, rowgetter, FieldSelectionError, asdict,\
+from petl.util import asindices, rowgetter, FieldSelectionError, asdict,\
     expr, valueset, records, header, data, limits, values
 import re
 from petl.io import Uncacheable
@@ -94,14 +94,11 @@ class RenameView(object):
 def iterrename(source, spec):
     it = iter(source)
     spec = spec.copy() # make sure nobody can change this midstream
-    try:
-        sourceflds = it.next()
-        newflds = [spec[f] if f in spec else f for f in sourceflds]
-        yield newflds
-        for row in it:
-            yield row
-    finally:
-        close(it)
+    sourceflds = it.next()
+    newflds = [spec[f] if f in spec else f for f in sourceflds]
+    yield newflds
+    for row in it:
+        yield row
         
         
 def project(table, *args, **kwargs):
@@ -207,30 +204,26 @@ class ProjectView(object):
 def iterproject(source, spec, missing=None):
     it = iter(source)
     spec = tuple(spec) # make sure no-one can change midstream
-    try:
-        
-        # convert field selection into field indices
-        flds = it.next()
-        indices = asindices(flds, spec)
-
-        # define a function to transform each row in the source data 
-        # according to the field selection
-        transform = rowgetter(*indices)
-        
-        # yield the transformed field names
-        yield transform(flds)
-        
-        # construct the transformed data
-        for row in it:
-            try:
-                yield transform(row) 
-            except IndexError:
-                # row is short, let's be kind and fill in any missing fields
-                yield [row[i] if i < len(row) else missing for i in indices]
-
-    finally:
-        close(it)
     
+    # convert field selection into field indices
+    flds = it.next()
+    indices = asindices(flds, spec)
+
+    # define a function to transform each row in the source data 
+    # according to the field selection
+    transform = rowgetter(*indices)
+    
+    # yield the transformed field names
+    yield transform(flds)
+    
+    # construct the transformed data
+    for row in it:
+        try:
+            yield transform(row) 
+        except IndexError:
+            # row is short, let's be kind and fill in any missing fields
+            yield [row[i] if i < len(row) else missing for i in indices]
+
     
 def cat(*tables, **kwargs):
     """
@@ -299,42 +292,36 @@ class CatView(object):
 
 def itercat(sources, missing=None):
     its = [iter(t) for t in sources]
-    try:
+    
+    # determine output fields by gathering all fields found in the sources
+    source_flds_lists = [it.next() for it in its]
+    out_flds = list()
+    for flds in source_flds_lists:
+        for f in flds:
+            if f not in out_flds:
+                # add any new fields as we find them
+                out_flds.append(f)
+    yield out_flds
+
+    # output data rows
+    for source_index, it in enumerate(its):
+        flds = source_flds_lists[source_index]
         
-        # determine output fields by gathering all fields found in the sources
-        source_flds_lists = [it.next() for it in its]
-        out_flds = list()
-        for flds in source_flds_lists:
-            for f in flds:
-                if f not in out_flds:
-                    # add any new fields as we find them
-                    out_flds.append(f)
-        yield out_flds
-
-        # output data rows
-        for source_index, it in enumerate(its):
-            flds = source_flds_lists[source_index]
-            
-            # let's define a function which will, for any row and field name,
-            # return the corresponding value, or fill in any missing values
-            def get_value(row, f):
-                try:
-                    value = row[flds.index(f)]
-                except ValueError: # source does not have f in fields
-                    value = missing
-                except IndexError: # row is short
-                    value = missing
-                return value
-            
-            # now construct and yield the data rows
-            for row in it:
-                out_row = [get_value(row, f) for f in out_flds]
-                yield out_row
-
-    finally:
-        # make sure all iterators are closed
-        for it in its:
-            close(it)
+        # let's define a function which will, for any row and field name,
+        # return the corresponding value, or fill in any missing values
+        def get_value(row, f):
+            try:
+                value = row[flds.index(f)]
+            except ValueError: # source does not have f in fields
+                value = missing
+            except IndexError: # row is short
+                value = missing
+            return value
+        
+        # now construct and yield the data rows
+        for row in it:
+            out_row = [get_value(row, f) for f in out_flds]
+            yield out_row
 
 
 def convert(table, field, *args, **kwargs):
@@ -559,40 +546,36 @@ def iterfieldconvert(source, converters, failonerror, errorvalue):
             converters[f] = methodcaller(methnm, *methargs)
         else:
             raise Exception('unexpected converter specification on field %r: %r' % (f, c))
-    try:
-        
-        # grab the fields in the source table
-        flds = it.next()
-        yield flds # these are not modified
-        
-        # define a function to transform a value
-        def transform_value(i, v):
-            try:
-                f = flds[i]
-            except IndexError:
-                # row is long, just return value as-is
+    
+    # grab the fields in the source table
+    flds = it.next()
+    yield flds # these are not modified
+    
+    # define a function to transform a value
+    def transform_value(i, v):
+        try:
+            f = flds[i]
+        except IndexError:
+            # row is long, just return value as-is
+            return v
+        else:
+            if f not in converters:
+                # no converter defined on this field, return value as-is
                 return v
             else:
-                if f not in converters:
-                    # no converter defined on this field, return value as-is
-                    return v
-                else:
-                    c = converters[f]
-                    try:
-                        return c(v)
-                    except:
-                        if failonerror:
-                            raise
-                        else:
-                            return errorvalue
+                c = converters[f]
+                try:
+                    return c(v)
+                except:
+                    if failonerror:
+                        raise
+                    else:
+                        return errorvalue
 
-        # construct the data rows
-        for row in it:
-            yield [transform_value(i, v) for i, v in enumerate(row)]
+    # construct the data rows
+    for row in it:
+        yield [transform_value(i, v) for i, v in enumerate(row)]
 
-    finally:
-        close(it)
-            
             
 def methodcaller(nm, *args):
     return lambda v: getattr(v, nm)(*args)
@@ -638,27 +621,23 @@ class TranslateView(object):
 def itertranslate(source, field, dictionary):
     it = iter(source)
     dictionary = dictionary.copy()
-    try:
-        
-        flds = it.next()
-        yield flds 
-        
-        if field in flds:
-            index = flds.index(field)
-        elif isinstance(field, int) and field < len(flds):
-            index = field
-        else:
-            raise FieldSelectionError(field)
-        
-        for row in it:
-            row = list(row) # copy, so we don't modify the source
-            value = row[index]
-            if value in dictionary:
-                row[index] = dictionary[value]
-            yield row
-            
-    finally:
-        close(it)
+    
+    flds = it.next()
+    yield flds 
+    
+    if field in flds:
+        index = flds.index(field)
+    elif isinstance(field, int) and field < len(flds):
+        index = field
+    else:
+        raise FieldSelectionError(field)
+    
+    for row in it:
+        row = list(row) # copy, so we don't modify the source
+        value = row[index]
+        if value in dictionary:
+            row[index] = dictionary[value]
+        yield row
         
         
 def extend(table, field, value):
@@ -732,22 +711,19 @@ class ExtendView(object):
 
 def iterextend(source, field, value):
     it = iter(source)
-    try:
-        flds = it.next()
-        out_flds = list(flds)
-        out_flds.append(field)
-        yield out_flds
+    flds = it.next()
+    out_flds = list(flds)
+    out_flds.append(field)
+    yield out_flds
 
-        for row in it:
-            out_row = list(row) # copy so we don't modify source
-            if callable(value):
-                rec = asdict(flds, row)
-                out_row.append(value(rec))
-            else:
-                out_row.append(value)
-            yield out_row
-    finally:
-        close(it)
+    for row in it:
+        out_row = list(row) # copy so we don't modify source
+        if callable(value):
+            rec = asdict(flds, row)
+            out_row.append(value(rec))
+        else:
+            out_row.append(value)
+        yield out_row
         
     
 def rowslice(table, start=0, stop=None, step=1):
@@ -826,12 +802,9 @@ class RowSliceView(object):
 
 def iterrowslice(source, start, stop, step):    
     it = iter(source)
-    try:
-        yield it.next() # fields
-        for row in islice(it, start, stop, step):
-            yield row
-    finally:
-        close(it)
+    yield it.next() # fields
+    for row in islice(it, start, stop, step):
+        yield row
 
 
 def head(table, n):
@@ -916,17 +889,14 @@ class TailView(object):
 
 def itertail(source, n):
     it = iter(source)
-    try:
-        yield it.next() # fields
-        cache = deque()
-        for row in it:
-            cache.append(row)
-            if len(cache) > n:
-                cache.popleft()
-        for row in cache:
-            yield row
-    finally:
-        close(it)
+    yield it.next() # fields
+    cache = deque()
+    for row in it:
+        cache.append(row)
+        if len(cache) > n:
+            cache.popleft()
+    for row in cache:
+        yield row
 
 
 def sort(table, key=None, reverse=False, buffersize=None):
@@ -1129,72 +1099,69 @@ class SortView(object):
     def _iternocache(self, source, key, reverse):
         self._clearcache()
         it = iter(source)
-        try:
-            flds = it.next()
-            yield flds
-            
-            getkey = None
-            if key is not None:
-                # convert field selection into field indices
-                indices = asindices(flds, key)
-                # now use field indices to construct a _getkey function
-                # N.B., this will probably raise an exception on short rows
-                getkey = itemgetter(*indices)
-            
-            # initialise the first chunk
-            rows = list(islice(it, 0, self.buffersize))
-            rows.sort(key=getkey, reverse=reverse)
-            
-            # have we exhausted the source iterator?
-            if self.buffersize is None or len(rows) < self.buffersize:
 
-                try:
-                    # TODO possible race condition here, attributes determining
-                    # cachetag have changed since we entered this function?
-                    self._internalcachetag = self.cachetag()
-                    self._fldcache = flds
-                    self._memcache = rows
-                    self._getkey = getkey
-                except Uncacheable:
-                    pass
+        flds = it.next()
+        yield flds
         
-                for row in rows:
-                    yield row
-                    
-            else:
+        getkey = None
+        if key is not None:
+            # convert field selection into field indices
+            indices = asindices(flds, key)
+            # now use field indices to construct a _getkey function
+            # N.B., this will probably raise an exception on short rows
+            getkey = itemgetter(*indices)
+        
+        # initialise the first chunk
+        rows = list(islice(it, 0, self.buffersize))
+        rows.sort(key=getkey, reverse=reverse)
+        
+        # have we exhausted the source iterator?
+        if self.buffersize is None or len(rows) < self.buffersize:
 
-                chunkfiles = []  
+            try:
+                # TODO possible race condition here, attributes determining
+                # cachetag have changed since we entered this function?
+                self._internalcachetag = self.cachetag()
+                self._fldcache = flds
+                self._memcache = rows
+                self._getkey = getkey
+            except Uncacheable:
+                pass
+    
+            for row in rows:
+                yield row
                 
-                while rows:
-                
-                    # dump the chunk
-                    f = NamedTemporaryFile(delete=False)
-                    for row in rows:
-                        pickle.dump(row, f, protocol=-1)
-                    f.close()
-                    chunkfiles.append(f)
-                    
-                    # grab the next chunk
-                    rows = list(islice(it, 0, self.buffersize))
-                    rows.sort(key=getkey, reverse=reverse)
+        else:
 
-                try:
-                    # TODO possible race condition here, attributes determining
-                    # cachetag have changed since we entered this function?
-                    self._internalcachetag = self.cachetag()
-                    self._fldcache = flds
-                    self._filecache = chunkfiles
-                    self._getkey = getkey
-                except Uncacheable:
-                    pass
-
-                chunkiters = [iterchunk(f.name) for f in chunkfiles]
-                for row in mergesort(getkey, reverse, *chunkiters):
-                    yield row
-
-        finally:
-            close(it)
+            chunkfiles = []  
             
+            while rows:
+            
+                # dump the chunk
+                f = NamedTemporaryFile(delete=False)
+                for row in rows:
+                    pickle.dump(row, f, protocol=-1)
+                f.close()
+                chunkfiles.append(f)
+                
+                # grab the next chunk
+                rows = list(islice(it, 0, self.buffersize))
+                rows.sort(key=getkey, reverse=reverse)
+
+            try:
+                # TODO possible race condition here, attributes determining
+                # cachetag have changed since we entered this function?
+                self._internalcachetag = self.cachetag()
+                self._fldcache = flds
+                self._filecache = chunkfiles
+                self._getkey = getkey
+            except Uncacheable:
+                pass
+
+            chunkiters = [iterchunk(f.name) for f in chunkfiles]
+            for row in mergesort(getkey, reverse, *chunkiters):
+                yield row
+
         
     def cachetag(self):
         if hasattr(self.source, 'cachetag'):
@@ -1290,45 +1257,40 @@ class MeltView(object):
     
 def itermelt(source, key, variables, variable_field, value_field):
     it = iter(source)
-    try:
-        
-        # normalise some stuff
-        flds = it.next()
-        if isinstance(key, basestring):
-            key = (key,) # normalise to a tuple
-        if isinstance(variables, basestring):
-            # shouldn't expect this, but ... ?
-            variables = (variables,) # normalise to a tuple
-        if not key:
-            # assume key is fields not in variables
-            key = [f for f in flds if f not in variables]
-        if not variables:
-            # assume variables are fields not in key
-            variables = [f for f in flds if f not in key]
-        
-        # determine the output fields
-        out_flds = list(key)
-        out_flds.append(variable_field)
-        out_flds.append(value_field)
-        yield out_flds
-        
-        key_indices = [flds.index(k) for k in key]
-        getkey = rowgetter(*key_indices)
-        variables_indices = [flds.index(v) for v in variables]
-        
-        # construct the output data
-        for row in it:
-            k = getkey(row)
-            for v, i in zip(variables, variables_indices):
-                o = list(k) # populate with key values initially
-                o.append(v) # add variable
-                o.append(row[i]) # add value
-                yield o
-                
-    finally:
-        close(it)
-
-
+    
+    # normalise some stuff
+    flds = it.next()
+    if isinstance(key, basestring):
+        key = (key,) # normalise to a tuple
+    if isinstance(variables, basestring):
+        # shouldn't expect this, but ... ?
+        variables = (variables,) # normalise to a tuple
+    if not key:
+        # assume key is fields not in variables
+        key = [f for f in flds if f not in variables]
+    if not variables:
+        # assume variables are fields not in key
+        variables = [f for f in flds if f not in key]
+    
+    # determine the output fields
+    out_flds = list(key)
+    out_flds.append(variable_field)
+    out_flds.append(value_field)
+    yield out_flds
+    
+    key_indices = [flds.index(k) for k in key]
+    getkey = rowgetter(*key_indices)
+    variables_indices = [flds.index(v) for v in variables]
+    
+    # construct the output data
+    for row in it:
+        k = getkey(row)
+        for v, i in zip(variables, variables_indices):
+            o = list(k) # populate with key values initially
+            o.append(v) # add variable
+            o.append(row[i]) # add value
+            yield o
+            
 
 def recast(table, key=[], variable_field='variable', value_field='value', 
            sample_size=1000, reducers=dict(), missing=None):
@@ -1468,97 +1430,91 @@ def iterrecast(source, key=[], variable_field='variable', value_field='value',
     # caching the rows sampled to discover variables to be recast as fields?
     #
     
-    try:
-        
-        it = iter(source)
-        fields = it.next()
-        
-        # normalise some stuff
-        key_fields = key
-        variable_fields = variable_field # N.B., could be more than one
-        if isinstance(key_fields, basestring):
-            key_fields = (key_fields,)
-        if isinstance(variable_fields, basestring):
-            variable_fields = (variable_fields,)
-        if not key_fields:
-            # assume key_fields is fields not in variables
-            key_fields = [f for f in fields if f not in variable_fields and f != value_field]
-        if not variable_fields:
-            # assume variables are fields not in key_fields
-            variable_fields = [f for f in fields if f not in key_fields and f != value_field]
-        
-        # sanity checks
-        assert value_field in fields, 'invalid value field: %s' % value_field
-        assert value_field not in key_fields, 'value field cannot be key_fields'
-        assert value_field not in variable_fields, 'value field cannot be variable field'
-        for f in key_fields:
-            assert f in fields, 'invalid key_fields field: %s' % f
-        for f in variable_fields:
-            assert f in fields, 'invalid variable field: %s' % f
-
-        # we'll need these later
-        value_index = fields.index(value_field)
-        key_indices = [fields.index(f) for f in key_fields]
-        variable_indices = [fields.index(f) for f in variable_fields]
-        
-        # determine the actual variable names to be cast as fields
-        if isinstance(variable_fields, dict):
-            # user supplied dictionary
-            variables = variable_fields
-        else:
-            variables = defaultdict(set)
-            # sample the data to discover variables to be cast as fields
-            for row in islice(it, 0, sample_size):
-                for i, f in zip(variable_indices, variable_fields):
-                    variables[f].add(row[i])
-            for f in variables:
-                variables[f] = sorted(variables[f]) # turn from sets to sorted lists
-        
-        close(it) # finished the first pass
-        
-        # determine the output fields
-        out_fields = list(key_fields)
-        for f in variable_fields:
-            out_fields.extend(variables[f])
-        yield out_fields
-        
-        # output data
-        
-        source = sort(source, key=key_fields)
-        it = iter(source)
-        it = islice(it, 1, None) # skip header row
-        getkey = itemgetter(*key_indices)
-        
-        # process sorted data in newfields
-        groups = groupby(it, key=getkey)
-        for key_value, group in groups:
-            group = list(group) # may need to iterate over the group more than once
-            if len(key_fields) > 1:
-                out_row = list(key_value)
-            else:
-                out_row = [key_value]
-            for f, i in zip(variable_fields, variable_indices):
-                for variable in variables[f]:
-                    # collect all values for the current variable
-                    values = [r[value_index] for r in group if r[i] == variable]
-                    if len(values) == 0:
-                        value = missing
-                    elif len(values) == 1:
-                        value = values[0]
-                    else:
-                        if variable in reducers:
-                            redu = reducers[variable]
-                        else:
-                            redu = list # list all values
-                        value = redu(values)
-                    out_row.append(value)
-            yield out_row
-                    
-    finally:
-        close(it)
-
     
+    it = iter(source)
+    fields = it.next()
+    
+    # normalise some stuff
+    key_fields = key
+    variable_fields = variable_field # N.B., could be more than one
+    if isinstance(key_fields, basestring):
+        key_fields = (key_fields,)
+    if isinstance(variable_fields, basestring):
+        variable_fields = (variable_fields,)
+    if not key_fields:
+        # assume key_fields is fields not in variables
+        key_fields = [f for f in fields if f not in variable_fields and f != value_field]
+    if not variable_fields:
+        # assume variables are fields not in key_fields
+        variable_fields = [f for f in fields if f not in key_fields and f != value_field]
+    
+    # sanity checks
+    assert value_field in fields, 'invalid value field: %s' % value_field
+    assert value_field not in key_fields, 'value field cannot be key_fields'
+    assert value_field not in variable_fields, 'value field cannot be variable field'
+    for f in key_fields:
+        assert f in fields, 'invalid key_fields field: %s' % f
+    for f in variable_fields:
+        assert f in fields, 'invalid variable field: %s' % f
+
+    # we'll need these later
+    value_index = fields.index(value_field)
+    key_indices = [fields.index(f) for f in key_fields]
+    variable_indices = [fields.index(f) for f in variable_fields]
+    
+    # determine the actual variable names to be cast as fields
+    if isinstance(variable_fields, dict):
+        # user supplied dictionary
+        variables = variable_fields
+    else:
+        variables = defaultdict(set)
+        # sample the data to discover variables to be cast as fields
+        for row in islice(it, 0, sample_size):
+            for i, f in zip(variable_indices, variable_fields):
+                variables[f].add(row[i])
+        for f in variables:
+            variables[f] = sorted(variables[f]) # turn from sets to sorted lists
+
+    # finished the first pass
         
+    # determine the output fields
+    out_fields = list(key_fields)
+    for f in variable_fields:
+        out_fields.extend(variables[f])
+    yield out_fields
+    
+    # output data
+    
+    source = sort(source, key=key_fields)
+    it = iter(source)
+    it = islice(it, 1, None) # skip header row
+    getkey = itemgetter(*key_indices)
+    
+    # process sorted data in newfields
+    groups = groupby(it, key=getkey)
+    for key_value, group in groups:
+        group = list(group) # may need to iterate over the group more than once
+        if len(key_fields) > 1:
+            out_row = list(key_value)
+        else:
+            out_row = [key_value]
+        for f, i in zip(variable_fields, variable_indices):
+            for variable in variables[f]:
+                # collect all values for the current variable
+                values = [r[value_index] for r in group if r[i] == variable]
+                if len(values) == 0:
+                    value = missing
+                elif len(values) == 1:
+                    value = values[0]
+                else:
+                    if variable in reducers:
+                        redu = reducers[variable]
+                    else:
+                        redu = list # list all values
+                    value = redu(values)
+                out_row.append(value)
+        yield out_row
+                
             
 def duplicates(table, key, presorted=False, buffersize=None):
     """
@@ -1629,41 +1585,35 @@ def iterduplicates(source, key):
     # first need to sort the data
     it = iter(source)
 
-    try:
-        flds = it.next()
-        yield flds
+    flds = it.next()
+    yield flds
 
-        # convert field selection into field indices
-        indices = asindices(flds, key)
-            
-        # now use field indices to construct a _getkey function
-        # N.B., this may raise an exception on short rows, depending on
-        # the field selection
-        getkey = itemgetter(*indices)
+    # convert field selection into field indices
+    indices = asindices(flds, key)
         
-        previous = None
-        previous_yielded = False
-        
-        for row in it:
-            if previous is None:
-                previous = row
-            else:
-                kprev = getkey(previous)
-                kcurr = getkey(row)
-                if kprev == kcurr:
-                    if not previous_yielded:
-                        yield previous
-                        previous_yielded = True
-                    yield row
-                else:
-                    # reset
-                    previous_yielded = False
-                previous = row
-        
-    finally:
-        close(it)
-
+    # now use field indices to construct a _getkey function
+    # N.B., this may raise an exception on short rows, depending on
+    # the field selection
+    getkey = itemgetter(*indices)
     
+    previous = None
+    previous_yielded = False
+    
+    for row in it:
+        if previous is None:
+            previous = row
+        else:
+            kprev = getkey(previous)
+            kcurr = getkey(row)
+            if kprev == kcurr:
+                if not previous_yielded:
+                    yield previous
+                    previous_yielded = True
+                yield row
+            else:
+                # reset
+                previous_yielded = False
+            previous = row
     
     
 def conflicts(table, key, missing=None, presorted=False, buffersize=None):
@@ -1724,47 +1674,43 @@ class ConflictsView(object):
     
 def iterconflicts(source, key, missing):
     it = iter(source)
-    try:
-        flds = it.next()
-        yield flds
+    flds = it.next()
+    yield flds
 
-        # convert field selection into field indices
-        indices = asindices(flds, key)
-                        
-        # now use field indices to construct a _getkey function
-        # N.B., this may raise an exception on short rows, depending on
-        # the field selection
-        getkey = itemgetter(*indices)
-        
-        previous = None
-        previous_yielded = False
-        
-        for row in it:
-            if previous is None:
-                previous = row
+    # convert field selection into field indices
+    indices = asindices(flds, key)
+                    
+    # now use field indices to construct a _getkey function
+    # N.B., this may raise an exception on short rows, depending on
+    # the field selection
+    getkey = itemgetter(*indices)
+    
+    previous = None
+    previous_yielded = False
+    
+    for row in it:
+        if previous is None:
+            previous = row
+        else:
+            kprev = getkey(previous)
+            kcurr = getkey(row)
+            if kprev == kcurr:
+                # is there a conflict?
+                conflict = False
+                for x, y in zip(previous, row):
+                    if missing not in (x, y) and x != y:
+                        conflict = True
+                        break
+                if conflict:
+                    if not previous_yielded:
+                        yield previous
+                        previous_yielded = True
+                    yield row
             else:
-                kprev = getkey(previous)
-                kcurr = getkey(row)
-                if kprev == kcurr:
-                    # is there a conflict?
-                    conflict = False
-                    for x, y in zip(previous, row):
-                        if missing not in (x, y) and x != y:
-                            conflict = True
-                            break
-                    if conflict:
-                        if not previous_yielded:
-                            yield previous
-                            previous_yielded = True
-                        yield row
-                else:
-                    # reset
-                    previous_yielded = False
-                previous = row
-        
-    finally:
-        close(it)
-
+                # reset
+                previous_yielded = False
+            previous = row
+    
 
 def complement(a, b, presorted=False, buffersize=None):
     """
@@ -1828,34 +1774,30 @@ class ComplementView(object):
 def itercomplement(a, b):
     ita = iter(a) 
     itb = iter(b)
-    try:
-        aflds = ita.next()
-        itb.next() # ignore b fields
-        yield aflds
-        
-        a = ita.next()
-        b = itb.next()
-        # we want the elements in a that are not in b
-        while True:
-            if b is None or a < b:
-                yield a
-                try:
-                    a = ita.next()
-                except StopIteration:
-                    break
-            elif a == b:
-                try:
-                    a = ita.next()
-                except StopIteration:
-                    break
-            else:
-                try:
-                    b = itb.next()
-                except StopIteration:
-                    b = None
-    finally:
-        close(ita)
-        close(itb)
+    aflds = ita.next()
+    itb.next() # ignore b fields
+    yield aflds
+    
+    a = ita.next()
+    b = itb.next()
+    # we want the elements in a that are not in b
+    while True:
+        if b is None or a < b:
+            yield a
+            try:
+                a = ita.next()
+            except StopIteration:
+                break
+        elif a == b:
+            try:
+                a = ita.next()
+            except StopIteration:
+                break
+        else:
+            try:
+                b = itb.next()
+            except StopIteration:
+                b = None
         
     
 def diff(a, b, presorted=False, buffersize=None):
@@ -1979,38 +1921,34 @@ class CaptureView(object):
 
 def itercapture(source, field, pattern, newfields, include_original, flags):
     it = iter(source)
-    try:
-        prog = re.compile(pattern, flags)
-        
-        flds = it.next()
-        if field in flds:
-            field_index = flds.index(field)
-        elif isinstance(field, int) and field < len(flds):
-            field_index = field
-        else:
-            raise Exception('field invalid: must be either field name or index')
-        
-        # determine output fields
-        out_flds = list(flds)
-        if not include_original:
-            out_flds.remove(field)
-        if newfields:   
-            out_flds.extend(newfields)
-        yield out_flds
-        
-        # construct the output data
-        for row in it:
-            value = row[field_index]
-            if include_original:
-                out_row = list(row)
-            else:
-                out_row = [v for i, v in enumerate(row) if i != field_index]
-            out_row.extend(prog.search(value).groups())
-            yield out_row
-            
-    finally:
-        close(it)
+    prog = re.compile(pattern, flags)
     
+    flds = it.next()
+    if field in flds:
+        field_index = flds.index(field)
+    elif isinstance(field, int) and field < len(flds):
+        field_index = field
+    else:
+        raise Exception('field invalid: must be either field name or index')
+    
+    # determine output fields
+    out_flds = list(flds)
+    if not include_original:
+        out_flds.remove(field)
+    if newfields:   
+        out_flds.extend(newfields)
+    yield out_flds
+    
+    # construct the output data
+    for row in it:
+        value = row[field_index]
+        if include_original:
+            out_row = list(row)
+        else:
+            out_row = [v for i, v in enumerate(row) if i != field_index]
+        out_row.extend(prog.search(value).groups())
+        yield out_row
+        
         
 def split(table, field, pattern, newfields=None, include_original=False,
           maxsplit=0, flags=0):
@@ -2067,37 +2005,33 @@ def itersplit(source, field, pattern, newfields, include_original, maxsplit,
               flags):
         
     it = iter(source)
-    try:
-        prog = re.compile(pattern, flags)
+    prog = re.compile(pattern, flags)
 
-        flds = it.next()
-        if field in flds:
-            field_index = flds.index(field)
-        elif isinstance(field, int) and field < len(flds):
-            field_index = field
+    flds = it.next()
+    if field in flds:
+        field_index = flds.index(field)
+    elif isinstance(field, int) and field < len(flds):
+        field_index = field
+    else:
+        raise Exception('field invalid: must be either field name or index')
+    
+    # determine output fields
+    out_flds = list(flds)
+    if not include_original:
+        out_flds.remove(field)
+    if newfields:
+        out_flds.extend(newfields)
+    yield out_flds
+    
+    # construct the output data
+    for row in it:
+        value = row[field_index]
+        if include_original:
+            out_row = list(row)
         else:
-            raise Exception('field invalid: must be either field name or index')
-        
-        # determine output fields
-        out_flds = list(flds)
-        if not include_original:
-            out_flds.remove(field)
-        if newfields:
-            out_flds.extend(newfields)
-        yield out_flds
-        
-        # construct the output data
-        for row in it:
-            value = row[field_index]
-            if include_original:
-                out_row = list(row)
-            else:
-                out_row = [v for i, v in enumerate(row) if i != field_index]
-            out_row.extend(prog.split(value, maxsplit))
-            yield out_row
-            
-    finally:
-        close(it)
+            out_row = [v for i, v in enumerate(row) if i != field_index]
+        out_row.extend(prog.split(value, maxsplit))
+        yield out_row
         
     
 def select(table, where, missing=None):
@@ -2154,15 +2088,12 @@ class SelectView(object):
     
 def iterselect(source, where, missing):
     it = iter(source)
-    try:
-        flds = it.next()
-        yield flds
-        for row in it:
-            rec = asdict(flds, row, missing)
-            if where(rec):
-                yield row
-    finally:
-        close(it)
+    flds = it.next()
+    yield flds
+    for row in it:
+        rec = asdict(flds, row, missing)
+        if where(rec):
+            yield row
         
         
 def fieldmap(table, mappings=None, errorvalue=None):
@@ -2257,52 +2188,48 @@ class FieldMapView(object):
     
 def iterfieldmap(source, mappings, errorvalue):
     it = iter(source)
-    try:
-        flds = it.next()
-        outflds = mappings.keys()
-        yield outflds
-        
-        mapfuns = dict()
-        for outfld, m in mappings.items():
-            if m in flds:
-                mapfuns[outfld] = itemgetter(m)
-            elif isinstance(m, int) and m < len(flds):
-                mapfuns[outfld] = itemgetter(m)
-            elif isinstance(m, basestring):
-                mapfuns[outfld] = expr(m)
-            elif callable(m):
-                mapfuns[outfld] = m
-            elif isinstance(m, (tuple, list)) and len(m) == 2:
-                srcfld = m[0]
-                fm = m[1]
-                if callable(fm):
-                    mapfuns[outfld] = composefun(fm, srcfld)
-                elif isinstance(fm, dict):
-                    mapfuns[outfld] = composedict(fm, srcfld)
-                else:
-                    raise Exception('expected callable or dict') # TODO better error
+    flds = it.next()
+    outflds = mappings.keys()
+    yield outflds
+    
+    mapfuns = dict()
+    for outfld, m in mappings.items():
+        if m in flds:
+            mapfuns[outfld] = itemgetter(m)
+        elif isinstance(m, int) and m < len(flds):
+            mapfuns[outfld] = itemgetter(m)
+        elif isinstance(m, basestring):
+            mapfuns[outfld] = expr(m)
+        elif callable(m):
+            mapfuns[outfld] = m
+        elif isinstance(m, (tuple, list)) and len(m) == 2:
+            srcfld = m[0]
+            fm = m[1]
+            if callable(fm):
+                mapfuns[outfld] = composefun(fm, srcfld)
+            elif isinstance(fm, dict):
+                mapfuns[outfld] = composedict(fm, srcfld)
             else:
-                raise Exception('invalid mapping', outfld, m) # TODO better error
+                raise Exception('expected callable or dict') # TODO better error
+        else:
+            raise Exception('invalid mapping', outfld, m) # TODO better error
+            
+    for row in it:
+        rec = asdict(flds, row)
+        try:
+            # use list comprehension if possible
+            outrow = [mapfuns[outfld](rec) for outfld in outflds]
+        except:
+            # fall back to doing it one field at a time
+            outrow = list()
+            for outfld in outflds:
+                try:
+                    val = mapfuns[outfld](rec)
+                except:
+                    val = errorvalue
+                outrow.append(val)
+        yield outrow
                 
-        for row in it:
-            rec = asdict(flds, row)
-            try:
-                # use list comprehension if possible
-                outrow = [mapfuns[outfld](rec) for outfld in outflds]
-            except:
-                # fall back to doing it one field at a time
-                outrow = list()
-                for outfld in outflds:
-                    try:
-                        val = mapfuns[outfld](rec)
-                    except:
-                        val = errorvalue
-                    outrow.append(val)
-            yield outrow
-                    
-    finally:
-        close(it)
-        
         
 def composefun(f, srcfld):
     def g(rec):
@@ -2541,27 +2468,23 @@ class RowReduceView(object):
 def iterrowreduce(source, key, reducer, fields):
     it = iter(source)
 
-    try:
-        srcflds = it.next()
-        if fields is None:
-            yield srcflds
-        else:
-            yield fields
+    srcflds = it.next()
+    if fields is None:
+        yield srcflds
+    else:
+        yield fields
 
-        # convert field selection into field indices
-        indices = asindices(srcflds, key)
+    # convert field selection into field indices
+    indices = asindices(srcflds, key)
+    
+    # now use field indices to construct a _getkey function
+    # N.B., this may raise an exception on short rows, depending on
+    # the field selection
+    getkey = itemgetter(*indices)
+    
+    for key, rows in groupby(it, key=getkey):
+        yield reducer(key, rows)
         
-        # now use field indices to construct a _getkey function
-        # N.B., this may raise an exception on short rows, depending on
-        # the field selection
-        getkey = itemgetter(*indices)
-        
-        for key, rows in groupby(it, key=getkey):
-            yield reducer(key, rows)
-        
-    finally:
-        close(it)
-
 
 def recordreduce(table, key, reducer, fields=None, presorted=False, buffersize=None):
     """
@@ -2623,28 +2546,24 @@ class RecordReduceView(object):
 def iterrecordreduce(source, key, reducer, fields):
     it = iter(source)
 
-    try:
-        srcflds = it.next()
-        if fields is None:
-            yield srcflds
-        else:
-            yield fields
+    srcflds = it.next()
+    if fields is None:
+        yield srcflds
+    else:
+        yield fields
 
-        # convert field selection into field indices
-        indices = asindices(srcflds, key)
-        
-        # now use field indices to construct a _getkey function
-        # N.B., this may raise an exception on short rows, depending on
-        # the field selection
-        getkey = itemgetter(*indices)
-        
-        for key, rows in groupby(it, key=getkey):
-            records = [asdict(srcflds, row) for row in rows]
-            yield reducer(key, records)
-        
-    finally:
-        close(it)
-
+    # convert field selection into field indices
+    indices = asindices(srcflds, key)
+    
+    # now use field indices to construct a _getkey function
+    # N.B., this may raise an exception on short rows, depending on
+    # the field selection
+    getkey = itemgetter(*indices)
+    
+    for key, rows in groupby(it, key=getkey):
+        records = [asdict(srcflds, row) for row in rows]
+        yield reducer(key, records)
+    
 
 def mergereduce(table, key, missing=None, presorted=False, buffersize=None):
     """
@@ -2840,57 +2759,53 @@ class AggregateView(object):
 def iteraggregate(source, key, aggregators, errorvalue):
     aggregators = OrderedDict(aggregators.items()) # take a copy
     it = iter(source)
-    try:
-        srcflds = it.next()
+    srcflds = it.next()
 
-        # normalise aggregators
+    # normalise aggregators
+    for outfld in aggregators:
+        agg = aggregators[outfld]
+        if not isinstance(agg, (list, tuple)):
+            aggregators[outfld] = agg, list # list is default aggregation function
+        
+    # convert field selection into field indices
+    indices = asindices(srcflds, key)
+    
+    # now use field indices to construct a _getkey function
+    # N.B., this may raise an exception on short rows, depending on
+    # the field selection
+    getkey = itemgetter(*indices)
+    
+    if len(indices) == 1:
+        outflds = [getkey(srcflds)]
+    else:
+        outflds = list(getkey(srcflds))
+    outflds.extend(aggregators.keys())
+    yield outflds
+    
+    for key, rows in groupby(it, key=getkey):
+        rows = list(rows) # may need to iterate over these more than once
+        outrow = list(key)
         for outfld in aggregators:
-            agg = aggregators[outfld]
-            if not isinstance(agg, (list, tuple)):
-                aggregators[outfld] = agg, list # list is default aggregation function
+            srcfld, aggfun = aggregators[outfld]
+            idx = srcflds.index(srcfld)
+            try:
+                # try using list comprehension
+                vals = [row[idx] for row in rows]
+            except IndexError:
+                # fall back to slower for loop
+                vals = list()
+                for row in rows:
+                    try:
+                        vals.append(row[idx])
+                    except IndexError:
+                        pass
+            try:
+                aggval = aggfun(vals)
+            except:
+                aggval = errorvalue
+            outrow.append(aggval)
+        yield outrow
             
-        # convert field selection into field indices
-        indices = asindices(srcflds, key)
-        
-        # now use field indices to construct a _getkey function
-        # N.B., this may raise an exception on short rows, depending on
-        # the field selection
-        getkey = itemgetter(*indices)
-        
-        if len(indices) == 1:
-            outflds = [getkey(srcflds)]
-        else:
-            outflds = list(getkey(srcflds))
-        outflds.extend(aggregators.keys())
-        yield outflds
-        
-        for key, rows in groupby(it, key=getkey):
-            rows = list(rows) # may need to iterate over these more than once
-            outrow = list(key)
-            for outfld in aggregators:
-                srcfld, aggfun = aggregators[outfld]
-                idx = srcflds.index(srcfld)
-                try:
-                    # try using list comprehension
-                    vals = [row[idx] for row in rows]
-                except IndexError:
-                    # fall back to slower for loop
-                    vals = list()
-                    for row in rows:
-                        try:
-                            vals.append(row[idx])
-                        except IndexError:
-                            pass
-                try:
-                    aggval = aggfun(vals)
-                except:
-                    aggval = errorvalue
-                outrow.append(aggval)
-            yield outrow
-            
-    finally:
-        close(it)
-
 
 def rangerowreduce(table, key, width, reducer, fields=None, minv=None, maxv=None, 
                    presorted=False, errorvalue=None, buffersize=None):
@@ -2955,58 +2870,54 @@ class RangeRowReduceView(object):
 def iterrangerowreduce(source, key, width, reducer, fields, minv, maxv, errorvalue):
 
     it = iter(source)
+    srcflds = it.next()
+    if fields is None:
+        yield srcflds
+    else:
+        yield fields
+
+    # convert field selection into field indices
+    indices = asindices(srcflds, key)
+
+    # now use field indices to construct a getkey function
+    # N.B., this may raise an exception on short rows, depending on
+    # the field selection
+    getkey = itemgetter(*indices)
+    
+    # initialise minimum
+    row = it.next()
+    keyv = getkey(row)
+    if minv is None:
+        minv = keyv
+
+    # iterate over bins
+    # N.B., we need to account for two possible scenarios
+    # (1) maxv is not specified, so keep making bins until we run out of rows
+    # (2) maxv is specified, so iterate over bins 
     try:
-        srcflds = it.next()
-        if fields is None:
-            yield srcflds
-        else:
-            yield fields
-
-        # convert field selection into field indices
-        indices = asindices(srcflds, key)
-
-        # now use field indices to construct a getkey function
-        # N.B., this may raise an exception on short rows, depending on
-        # the field selection
-        getkey = itemgetter(*indices)
-        
-        # initialise minimum
-        row = it.next()
-        keyv = getkey(row)
-        if minv is None:
-            minv = keyv
-
-        # iterate over bins
-        # N.B., we need to account for two possible scenarios
-        # (1) maxv is not specified, so keep making bins until we run out of rows
-        # (2) maxv is specified, so iterate over bins 
-        try:
-            for binminv in count(minv, width):
-                binmaxv = binminv + width
-                if maxv is not None and binmaxv >= maxv: # final bin
-                    binmaxv = maxv
-                bin = []
-                while keyv < binminv:
-                    row = it.next()
-                    keyv = getkey(row)
-                while binminv <= keyv < binmaxv:
-                    bin.append(row)
-                    row = it.next()
-                    keyv = getkey(row)
-                while maxv is not None and keyv == binmaxv == maxv:
-                    bin.append(row) # last bin is open
-                    row = it.next()
-                    keyv = getkey(row)
-                yield reducer(binminv, binmaxv, bin)
-                if maxv is not None and binmaxv == maxv:
-                    break
-        except StopIteration:
-            # don't forget the last one
+        for binminv in count(minv, width):
+            binmaxv = binminv + width
+            if maxv is not None and binmaxv >= maxv: # final bin
+                binmaxv = maxv
+            bin = []
+            while keyv < binminv:
+                row = it.next()
+                keyv = getkey(row)
+            while binminv <= keyv < binmaxv:
+                bin.append(row)
+                row = it.next()
+                keyv = getkey(row)
+            while maxv is not None and keyv == binmaxv == maxv:
+                bin.append(row) # last bin is open
+                row = it.next()
+                keyv = getkey(row)
             yield reducer(binminv, binmaxv, bin)
-        
-    finally:
-        close(it)
-        
+            if maxv is not None and binmaxv == maxv:
+                break
+    except StopIteration:
+        # don't forget the last one
+        yield reducer(binminv, binmaxv, bin)
+    
         
 def rangerecordreduce(table, key, width, reducer, fields=None, minv=None, maxv=None, 
                       presorted=False, errorvalue=None, buffersize=None):
@@ -3071,60 +2982,56 @@ class RangeRecordReduceView(object):
 def iterrangerecordreduce(source, key, width, reducer, fields, minv, maxv, errorvalue):
 
     it = iter(source)
+    srcflds = it.next()
+    if fields is None:
+        yield srcflds
+    else:
+        yield fields
+
+    # convert field selection into field indices
+    indices = asindices(srcflds, key)
+
+    # now use field indices to construct a getkey function
+    # N.B., this may raise an exception on short rows, depending on
+    # the field selection
+    getkey = itemgetter(*indices)
+    
+    # initialise minimum
+    row = it.next()
+    keyv = getkey(row)
+    if minv is None:
+        minv = keyv
+
+    # iterate over bins
+    # N.B., we need to account for two possible scenarios
+    # (1) maxv is not specified, so keep making bins until we run out of rows
+    # (2) maxv is specified, so iterate over bins 
     try:
-        srcflds = it.next()
-        if fields is None:
-            yield srcflds
-        else:
-            yield fields
-
-        # convert field selection into field indices
-        indices = asindices(srcflds, key)
-
-        # now use field indices to construct a getkey function
-        # N.B., this may raise an exception on short rows, depending on
-        # the field selection
-        getkey = itemgetter(*indices)
-        
-        # initialise minimum
-        row = it.next()
-        keyv = getkey(row)
-        if minv is None:
-            minv = keyv
-
-        # iterate over bins
-        # N.B., we need to account for two possible scenarios
-        # (1) maxv is not specified, so keep making bins until we run out of rows
-        # (2) maxv is specified, so iterate over bins 
-        try:
-            for binminv in count(minv, width):
-                binmaxv = binminv + width
-                if maxv is not None and binmaxv >= maxv: # final bin
-                    binmaxv = maxv
-                bin = []
-                while keyv < binminv:
-                    row = it.next()
-                    keyv = getkey(row)
-                while binminv <= keyv < binmaxv:
-                    rec = asdict(srcflds, row)
-                    bin.append(rec)
-                    row = it.next()
-                    keyv = getkey(row)
-                while maxv is not None and keyv == binmaxv == maxv:
-                    rec = asdict(srcflds, row)
-                    bin.append(rec) # last bin is open
-                    row = it.next()
-                    keyv = getkey(row)
-                yield reducer(binminv, binmaxv, bin)
-                if maxv is not None and binmaxv == maxv:
-                    break
-        except StopIteration:
-            # don't forget the last one
+        for binminv in count(minv, width):
+            binmaxv = binminv + width
+            if maxv is not None and binmaxv >= maxv: # final bin
+                binmaxv = maxv
+            bin = []
+            while keyv < binminv:
+                row = it.next()
+                keyv = getkey(row)
+            while binminv <= keyv < binmaxv:
+                rec = asdict(srcflds, row)
+                bin.append(rec)
+                row = it.next()
+                keyv = getkey(row)
+            while maxv is not None and keyv == binmaxv == maxv:
+                rec = asdict(srcflds, row)
+                bin.append(rec) # last bin is open
+                row = it.next()
+                keyv = getkey(row)
             yield reducer(binminv, binmaxv, bin)
-        
-    finally:
-        close(it)
-        
+            if maxv is not None and binmaxv == maxv:
+                break
+    except StopIteration:
+        # don't forget the last one
+        yield reducer(binminv, binmaxv, bin)
+    
         
 def rangecounts(table, key, width, minv=None, maxv=None, presorted=False,
                 errorvalue=None, buffersize=None):
@@ -3184,57 +3091,53 @@ class RangeCountsView(object):
 def iterrangecounts(source, key, width, minv, maxv, errorvalue):
 
     it = iter(source)
+    srcflds = it.next()
+
+    # convert field selection into field indices
+    indices = asindices(srcflds, key)
+
+    # now use field indices to construct a getkey function
+    # N.B., this may raise an exception on short rows, depending on
+    # the field selection
+    getkey = itemgetter(*indices)
+    
+    outflds = ['range', 'count']
+    yield outflds
+    
+    # initialise minimum
+    row = it.next()
+    keyv = getkey(row)
+    if minv is None:
+        minv = keyv
+
+    # iterate over bins
+    # N.B., we need to account for two possible scenarios
+    # (1) maxv is not specified, so keep making bins until we run out of rows
+    # (2) maxv is specified, so iterate over bins 
     try:
-        srcflds = it.next()
-
-        # convert field selection into field indices
-        indices = asindices(srcflds, key)
-
-        # now use field indices to construct a getkey function
-        # N.B., this may raise an exception on short rows, depending on
-        # the field selection
-        getkey = itemgetter(*indices)
-        
-        outflds = ['range', 'count']
-        yield outflds
-        
-        # initialise minimum
-        row = it.next()
-        keyv = getkey(row)
-        if minv is None:
-            minv = keyv
-
-        # iterate over bins
-        # N.B., we need to account for two possible scenarios
-        # (1) maxv is not specified, so keep making bins until we run out of rows
-        # (2) maxv is specified, so iterate over bins 
-        try:
-            for binminv in count(minv, width):
-                binmaxv = binminv + width
-                if maxv is not None and binmaxv >= maxv: # final bin
-                    binmaxv = maxv
-                bin = []
-                while keyv < binminv:
-                    row = it.next()
-                    keyv = getkey(row)
-                while binminv <= keyv < binmaxv:
-                    bin.append(row)
-                    row = it.next()
-                    keyv = getkey(row)
-                while maxv is not None and keyv == binmaxv == maxv:
-                    bin.append(row) # last bin is open
-                    row = it.next()
-                    keyv = getkey(row)
-                yield [(binminv, binmaxv), len(bin)]
-                if maxv is not None and binmaxv == maxv:
-                    break
-        except StopIteration:
-            # don't forget the last one
+        for binminv in count(minv, width):
+            binmaxv = binminv + width
+            if maxv is not None and binmaxv >= maxv: # final bin
+                binmaxv = maxv
+            bin = []
+            while keyv < binminv:
+                row = it.next()
+                keyv = getkey(row)
+            while binminv <= keyv < binmaxv:
+                bin.append(row)
+                row = it.next()
+                keyv = getkey(row)
+            while maxv is not None and keyv == binmaxv == maxv:
+                bin.append(row) # last bin is open
+                row = it.next()
+                keyv = getkey(row)
             yield [(binminv, binmaxv), len(bin)]
-        
-    finally:
-        close(it)
-        
+            if maxv is not None and binmaxv == maxv:
+                break
+    except StopIteration:
+        # don't forget the last one
+        yield [(binminv, binmaxv), len(bin)]
+    
     
 def rangeaggregate(table, key, width, aggregators=None, minv=None, maxv=None,
                    presorted=False, errorvalue=None, buffersize=None):
@@ -3315,84 +3218,80 @@ def iterrangeaggregate(source, key, width, aggregators, minv, maxv, errorvalue):
             aggregators[outfld] = agg, list # list is default aggregation function
 
     it = iter(source)
+    srcflds = it.next()
+
+    # convert field selection into field indices
+    indices = asindices(srcflds, key)
+
+    # now use field indices to construct a getkey function
+    # N.B., this may raise an exception on short rows, depending on
+    # the field selection
+    getkey = itemgetter(*indices)
+    
+    if len(indices) == 1:
+        outflds = [getkey(srcflds)]
+    else:
+        outflds = list(getkey(srcflds))
+    outflds.extend(aggregators.keys())
+    yield outflds
+    
+    def buildoutrow(binminv, binmaxv, bin):
+        outrow = [(binminv, binmaxv)]
+        for outfld in aggregators:
+            srcfld, aggfun = aggregators[outfld]
+            idx = srcflds.index(srcfld)
+            try:
+                # try using list comprehension
+                vals = [row[idx] for row in bin]
+            except IndexError:
+                # fall back to slower for loop
+                vals = list()
+                for row in bin:
+                    try:
+                        vals.append(row[idx])
+                    except IndexError:
+                        pass
+            try:
+                aggval = aggfun(vals)
+            except:
+                aggval = errorvalue
+            outrow.append(aggval)
+        return outrow
+
+    # initialise minimum
+    row = it.next()
+    keyv = getkey(row)
+    if minv is None:
+        minv = keyv
+
+    # iterate over bins
+    # N.B., we need to account for two possible scenarios
+    # (1) maxv is not specified, so keep making bins until we run out of rows
+    # (2) maxv is specified, so iterate over bins 
     try:
-        srcflds = it.next()
-
-        # convert field selection into field indices
-        indices = asindices(srcflds, key)
-
-        # now use field indices to construct a getkey function
-        # N.B., this may raise an exception on short rows, depending on
-        # the field selection
-        getkey = itemgetter(*indices)
-        
-        if len(indices) == 1:
-            outflds = [getkey(srcflds)]
-        else:
-            outflds = list(getkey(srcflds))
-        outflds.extend(aggregators.keys())
-        yield outflds
-        
-        def buildoutrow(binminv, binmaxv, bin):
-            outrow = [(binminv, binmaxv)]
-            for outfld in aggregators:
-                srcfld, aggfun = aggregators[outfld]
-                idx = srcflds.index(srcfld)
-                try:
-                    # try using list comprehension
-                    vals = [row[idx] for row in bin]
-                except IndexError:
-                    # fall back to slower for loop
-                    vals = list()
-                    for row in bin:
-                        try:
-                            vals.append(row[idx])
-                        except IndexError:
-                            pass
-                try:
-                    aggval = aggfun(vals)
-                except:
-                    aggval = errorvalue
-                outrow.append(aggval)
-            return outrow
-
-        # initialise minimum
-        row = it.next()
-        keyv = getkey(row)
-        if minv is None:
-            minv = keyv
-
-        # iterate over bins
-        # N.B., we need to account for two possible scenarios
-        # (1) maxv is not specified, so keep making bins until we run out of rows
-        # (2) maxv is specified, so iterate over bins 
-        try:
-            for binminv in count(minv, width):
-                binmaxv = binminv + width
-                if maxv is not None and binmaxv >= maxv: # final bin
-                    binmaxv = maxv
-                bin = []
-                while keyv < binminv:
-                    row = it.next()
-                    keyv = getkey(row)
-                while binminv <= keyv < binmaxv:
-                    bin.append(row)
-                    row = it.next()
-                    keyv = getkey(row)
-                while maxv is not None and keyv == binmaxv == maxv:
-                    bin.append(row) # last bin is open
-                    row = it.next()
-                    keyv = getkey(row)
-                yield buildoutrow(binminv, binmaxv, bin)
-                if maxv is not None and binmaxv == maxv:
-                    break
-        except StopIteration:
-            # don't forget the last one
+        for binminv in count(minv, width):
+            binmaxv = binminv + width
+            if maxv is not None and binmaxv >= maxv: # final bin
+                binmaxv = maxv
+            bin = []
+            while keyv < binminv:
+                row = it.next()
+                keyv = getkey(row)
+            while binminv <= keyv < binmaxv:
+                bin.append(row)
+                row = it.next()
+                keyv = getkey(row)
+            while maxv is not None and keyv == binmaxv == maxv:
+                bin.append(row) # last bin is open
+                row = it.next()
+                keyv = getkey(row)
             yield buildoutrow(binminv, binmaxv, bin)
+            if maxv is not None and binmaxv == maxv:
+                break
+    except StopIteration:
+        # don't forget the last one
+        yield buildoutrow(binminv, binmaxv, bin)
 
-    finally:
-        close(it)
-        
         
 def rowmap(table, rowmapper, fields, failonerror=False):
     """
@@ -3450,18 +3349,15 @@ class RowMapView(object):
     
 def iterrowmap(source, rowmapper, fields, failonerror):
     it = iter(source)
-    try:
-        it.next() # discard source fields
-        yield fields
-        for row in it:
-            try:
-                outrow = rowmapper(row)
-                yield outrow
-            except:
-                if failonerror:
-                    raise
-    finally:
-        close(it)
+    it.next() # discard source fields
+    yield fields
+    for row in it:
+        try:
+            outrow = rowmapper(row)
+            yield outrow
+        except:
+            if failonerror:
+                raise
         
         
 def recordmap(table, recmapper, fields, failonerror=False):
@@ -3520,19 +3416,16 @@ class RecordMapView(object):
     
 def iterrecordmap(source, recmapper, fields, failonerror):
     it = iter(source)
-    try:
-        flds = it.next() # discard source fields
-        yield fields
-        for row in it:
-            rec = asdict(flds, row)
-            try:
-                outrow = recmapper(rec)
-                yield outrow
-            except:
-                if failonerror:
-                    raise
-    finally:
-        close(it)
+    flds = it.next() # discard source fields
+    yield fields
+    for row in it:
+        rec = asdict(flds, row)
+        try:
+            outrow = recmapper(rec)
+            yield outrow
+        except:
+            if failonerror:
+                raise
         
         
 def rowmapmany(table, rowgenerator, fields, failonerror=False):
@@ -3602,18 +3495,15 @@ class RowMapManyView(object):
     
 def iterrowmapmany(source, rowgenerator, fields, failonerror):
     it = iter(source)
-    try:
-        it.next() # discard source fields
-        yield fields
-        for row in it:
-            try:
-                for outrow in rowgenerator(row):
-                    yield outrow
-            except:
-                if failonerror:
-                    raise
-    finally:
-        close(it)
+    it.next() # discard source fields
+    yield fields
+    for row in it:
+        try:
+            for outrow in rowgenerator(row):
+                yield outrow
+        except:
+            if failonerror:
+                raise
         
         
 def recordmapmany(table, rowgenerator, fields, failonerror=False):
@@ -3683,19 +3573,16 @@ class RecordMapManyView(object):
     
 def iterrecordmapmany(source, rowgenerator, fields, failonerror):
     it = iter(source)
-    try:
-        flds = it.next() # discard source fields
-        yield fields
-        for row in it:
-            rec = asdict(flds, row)
-            try:
-                for outrow in rowgenerator(rec):
-                    yield outrow
-            except:
-                if failonerror:
-                    raise
-    finally:
-        close(it)
+    flds = it.next() # discard source fields
+    yield fields
+    for row in it:
+        rec = asdict(flds, row)
+        try:
+            for outrow in rowgenerator(rec):
+                yield outrow
+        except:
+            if failonerror:
+                raise
         
         
 def setheader(table, fields):
@@ -3733,13 +3620,10 @@ class SetHeaderView(object):
 
 def itersetheader(source, fields):
     it = iter(source)
-    try:
-        it.next() # discard source fields
-        yield fields
-        for row in it:
-            yield row
-    finally:
-        close(it)
+    it.next() # discard source fields
+    yield fields
+    for row in it:
+        yield row
         
         
 def extendheader(table, fields):
@@ -3777,15 +3661,12 @@ class ExtendHeaderView(object):
 
 def iterextendheader(source, fields):
     it = iter(source)
-    try:
-        srcflds = it.next() 
-        outflds = list(srcflds)
-        outflds.extend(fields)
-        yield outflds
-        for row in it:
-            yield row
-    finally:
-        close(it)
+    srcflds = it.next() 
+    outflds = list(srcflds)
+    outflds.extend(fields)
+    yield outflds
+    for row in it:
+        yield row
         
         
 def pushheader(table, fields):
@@ -3825,12 +3706,9 @@ class PushHeaderView(object):
 
 def iterpushheader(source, fields):
     it = iter(source)
-    try:
-        yield fields
-        for row in it:
-            yield row
-    finally:
-        close(it)
+    yield fields
+    for row in it:
+        yield row
         
     
 def skip(table, n):
@@ -3869,12 +3747,7 @@ class SkipView(object):
 
 
 def iterskip(source, n):
-    it = iter(source)
-    try:
-        for row in islice(it, n, None):
-            yield row
-    finally:
-        close(it)
+    return islice(source, n, None)
         
     
 def unpack(table, field, newfields=None, maxv=None, include_original=False):
@@ -3920,36 +3793,32 @@ class UnpackView(object):
 
 def iterunpack(source, field, newfields, maxv, include_original):
     it = iter(source)
-    try:
 
-        flds = it.next()
-        if field in flds:
-            field_index = flds.index(field)
-        elif isinstance(field, int) and field < len(flds):
-            field_index = field
+    flds = it.next()
+    if field in flds:
+        field_index = flds.index(field)
+    elif isinstance(field, int) and field < len(flds):
+        field_index = field
+    else:
+        raise Exception('field invalid: must be either field name or index')
+    
+    # determine output fields
+    out_flds = list(flds)
+    if not include_original:
+        out_flds.remove(field)
+    if newfields:   
+        out_flds.extend(newfields)
+    yield out_flds
+    
+    # construct the output data
+    for row in it:
+        value = row[field_index]
+        if include_original:
+            out_row = list(row)
         else:
-            raise Exception('field invalid: must be either field name or index')
-        
-        # determine output fields
-        out_flds = list(flds)
-        if not include_original:
-            out_flds.remove(field)
-        if newfields:   
-            out_flds.extend(newfields)
-        yield out_flds
-        
-        # construct the output data
-        for row in it:
-            value = row[field_index]
-            if include_original:
-                out_row = list(row)
-            else:
-                out_row = [v for i, v in enumerate(row) if i != field_index]
-            out_row.extend(value[:maxv])
-            yield out_row
-            
-    finally:
-        close(it)
+            out_row = [v for i, v in enumerate(row) if i != field_index]
+        out_row.extend(value[:maxv])
+        yield out_row
         
         
 def join(left, right, key=None, presorted=False, buffersize=None):
@@ -4213,117 +4082,113 @@ def outerjoin(left, right, key=None, missing=None, presorted=False, buffersize=N
 def iterjoin(left, right, key, leftouter=False, rightouter=False, missing=None):
     lit = iter(left)
     rit = iter(right)
-    try:
-        lflds = lit.next()
-        rflds = rit.next()
-        
-        # determine indices of the key fields in left and right tables
-        lkind = asindices(lflds, key)
-        rkind = asindices(rflds, key)
-        
-        # construct functions to extract key values from both tables
-        lgetk = itemgetter(*lkind)
-        rgetk = itemgetter(*rkind)
-        
-        # determine indices of non-key fields in the right table
-        # (in the output, we only include key fields from the left table - we
-        # don't want to duplicate fields)
-        rvind = [i for i in range(len(rflds)) if i not in rkind]
-        rgetv = rowgetter(*rvind)
-        
-        # determine the output fields
-        outflds = list(lflds)
-        outflds.extend(rgetv(rflds))
-        yield outflds
-        
-        # define a function to join two groups of rows
-        def joinrows(lrowgrp, rrowgrp):
-            if rrowgrp is None:
-                for lrow in lrowgrp:
-                    outrow = list(lrow) # min with the left row
-                    # extend with missing values in place of the right row
-                    outrow.extend([missing] * len(rvind))
-                    yield outrow
-            elif lrowgrp is None:
+
+    lflds = lit.next()
+    rflds = rit.next()
+    
+    # determine indices of the key fields in left and right tables
+    lkind = asindices(lflds, key)
+    rkind = asindices(rflds, key)
+    
+    # construct functions to extract key values from both tables
+    lgetk = itemgetter(*lkind)
+    rgetk = itemgetter(*rkind)
+    
+    # determine indices of non-key fields in the right table
+    # (in the output, we only include key fields from the left table - we
+    # don't want to duplicate fields)
+    rvind = [i for i in range(len(rflds)) if i not in rkind]
+    rgetv = rowgetter(*rvind)
+    
+    # determine the output fields
+    outflds = list(lflds)
+    outflds.extend(rgetv(rflds))
+    yield outflds
+    
+    # define a function to join two groups of rows
+    def joinrows(lrowgrp, rrowgrp):
+        if rrowgrp is None:
+            for lrow in lrowgrp:
+                outrow = list(lrow) # min with the left row
+                # extend with missing values in place of the right row
+                outrow.extend([missing] * len(rvind))
+                yield outrow
+        elif lrowgrp is None:
+            for rrow in rrowgrp:
+                # min with missing values in place of the left row
+                outrow = [missing] * len(lflds)
+                # set key values
+                for li, ri in zip(lkind, rkind):
+                    outrow[li] = rrow[ri]
+                # extend with non-key values from the right row  
+                outrow.extend(rgetv(rrow))
+                yield outrow
+        else:
+            rrowgrp = list(rrowgrp) # may need to iterate more than once
+            for lrow in lrowgrp:
                 for rrow in rrowgrp:
-                    # min with missing values in place of the left row
-                    outrow = [missing] * len(lflds)
-                    # set key values
-                    for li, ri in zip(lkind, rkind):
-                        outrow[li] = rrow[ri]
-                    # extend with non-key values from the right row  
+                    # min with the left row
+                    outrow = list(lrow)
+                    # extend with non-key values from the right row
                     outrow.extend(rgetv(rrow))
                     yield outrow
-            else:
-                rrowgrp = list(rrowgrp) # may need to iterate more than once
-                for lrow in lrowgrp:
-                    for rrow in rrowgrp:
-                        # min with the left row
-                        outrow = list(lrow)
-                        # extend with non-key values from the right row
-                        outrow.extend(rgetv(rrow))
-                        yield outrow
 
-        # construct group iterators for both tables
-        lgit = groupby(lit, key=lgetk)
-        rgit = groupby(rit, key=rgetk)
-        
-        # loop until *either* of the iterators is exhausted
-        try:
+    # construct group iterators for both tables
+    lgit = groupby(lit, key=lgetk)
+    rgit = groupby(rit, key=rgetk)
+    
+    # loop until *either* of the iterators is exhausted
+    try:
 
-            # pick off initial row groups
-            lkval, lrowgrp = lgit.next() 
-            rkval, rrowgrp = rgit.next()
-        
-            while True:
-                if lkval < rkval:
-                    if leftouter:
-                        for row in joinrows(lrowgrp, None):
-                            yield row
-                    # advance left
-                    lkval, lrowgrp = lgit.next()
-                elif lkval > rkval:
-                    if rightouter:
-                        for row in joinrows(None, rrowgrp):
-                            yield row
-                    # advance right
-                    rkval, rrowgrp = rgit.next()
-                else:
-                    for row in joinrows(lrowgrp, rrowgrp):
-                        yield row
-                    # advance both
-                    lkval, lrowgrp = lgit.next()
-                    rkval, rrowgrp = rgit.next()
-            
-        except StopIteration:
-            pass
-        
-        # make sure any left rows remaining are yielded
-        if leftouter:
-            if lkval > rkval:
-                # yield anything that got left hanging
-                for row in joinrows(lrowgrp, None):
-                    yield row
-            # yield the rest
-            for lkval, lrowgrp in lgit:
-                for row in joinrows(lrowgrp, None):
-                    yield row
-
-        # make sure any right rows remaining are yielded
-        if rightouter:
+        # pick off initial row groups
+        lkval, lrowgrp = lgit.next() 
+        rkval, rrowgrp = rgit.next()
+    
+        while True:
             if lkval < rkval:
-                # yield anything that got left hanging
-                for row in joinrows(None, rrowgrp):
+                if leftouter:
+                    for row in joinrows(lrowgrp, None):
+                        yield row
+                # advance left
+                lkval, lrowgrp = lgit.next()
+            elif lkval > rkval:
+                if rightouter:
+                    for row in joinrows(None, rrowgrp):
+                        yield row
+                # advance right
+                rkval, rrowgrp = rgit.next()
+            else:
+                for row in joinrows(lrowgrp, rrowgrp):
                     yield row
-            # yield the rest
-            for rkval, rrowgrp in rgit:
-                for row in joinrows(None, rrowgrp):
-                    yield row
-                
-    finally:
-        close(lit)
-        close(rit)
+                # advance both
+                lkval, lrowgrp = lgit.next()
+                rkval, rrowgrp = rgit.next()
         
+    except StopIteration:
+        pass
+    
+    # make sure any left rows remaining are yielded
+    if leftouter:
+        if lkval > rkval:
+            # yield anything that got left hanging
+            for row in joinrows(lrowgrp, None):
+                yield row
+        # yield the rest
+        for lkval, lrowgrp in lgit:
+            for row in joinrows(lrowgrp, None):
+                yield row
+
+    # make sure any right rows remaining are yielded
+    if rightouter:
+        if lkval < rkval:
+            # yield anything that got left hanging
+            for row in joinrows(None, rrowgrp):
+                yield row
+        # yield the rest
+        for rkval, rrowgrp in rgit:
+            for row in joinrows(None, rrowgrp):
+                yield row
+            
         
 def iterimplicitjoin(left, right, presorted=False, leftouter=False, 
                     rightouter=False, missing=None, buffersize=None):
@@ -4464,62 +4329,57 @@ class AntiJoinView(object):
 def iterantijoin(left, right, key):
     lit = iter(left)
     rit = iter(right)
+
+    lflds = lit.next()
+    rflds = rit.next()
+    yield lflds
+
+    # determine indices of the key fields in left and right tables
+    lkind = asindices(lflds, key)
+    rkind = asindices(rflds, key)
+    
+    # construct functions to extract key values from both tables
+    lgetk = itemgetter(*lkind)
+    rgetk = itemgetter(*rkind)
+    
+    # construct group iterators for both tables
+    lgit = groupby(lit, key=lgetk)
+    rgit = groupby(rit, key=rgetk)
+    
+    # loop until *either* of the iterators is exhausted
     try:
-        lflds = lit.next()
-        rflds = rit.next()
-        yield lflds
 
-        # determine indices of the key fields in left and right tables
-        lkind = asindices(lflds, key)
-        rkind = asindices(rflds, key)
-        
-        # construct functions to extract key values from both tables
-        lgetk = itemgetter(*lkind)
-        rgetk = itemgetter(*rkind)
-        
-        # construct group iterators for both tables
-        lgit = groupby(lit, key=lgetk)
-        rgit = groupby(rit, key=rgetk)
-        
-        # loop until *either* of the iterators is exhausted
-        try:
+        # pick off initial row groups
+        lkval, lrowgrp = lgit.next() 
+        rkval, rrowgrp = rgit.next()
 
-            # pick off initial row groups
-            lkval, lrowgrp = lgit.next() 
-            rkval, rrowgrp = rgit.next()
-
-            while True:
-                if lkval < rkval:
-                    for row in lrowgrp:
-                        yield row
-                    # advance left
-                    lkval, lrowgrp = lgit.next()
-                elif lkval > rkval:
-                    # advance right
-                    rkval, rrowgrp = rgit.next()
-                else:
-                    # advance both
-                    lkval, lrowgrp = lgit.next()
-                    rkval, rrowgrp = rgit.next()
-            
-        except StopIteration:
-            pass
+        while True:
+            if lkval < rkval:
+                for row in lrowgrp:
+                    yield row
+                # advance left
+                lkval, lrowgrp = lgit.next()
+            elif lkval > rkval:
+                # advance right
+                rkval, rrowgrp = rgit.next()
+            else:
+                # advance both
+                lkval, lrowgrp = lgit.next()
+                rkval, rrowgrp = rgit.next()
         
-        # any left over?
-        if lkval > rkval:
-            # yield anything that got left hanging
-            for row in lrowgrp:
-                yield row
-        # and the rest...
-        for lkval, lrowgrp in lgit:
-            for row in lrowgrp:
-                yield row
-
-    finally:
-        close(lit)
-        close(rit)
+    except StopIteration:
+        pass
     
-    
+    # any left over?
+    if lkval > rkval:
+        # yield anything that got left hanging
+        for row in lrowgrp:
+            yield row
+    # and the rest...
+    for lkval, lrowgrp in lgit:
+        for row in lrowgrp:
+            yield row
+
         
 class ImplicitAntiJoinView(object):
     
