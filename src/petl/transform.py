@@ -10,7 +10,7 @@ import cPickle as pickle
 
 
 from petl.util import close, asindices, rowgetter, FieldSelectionError, asdict,\
-    expr, valueset, records, header, data, stats, limits, values
+    expr, valueset, records, header, data, limits, values
 import re
 from petl.io import Uncacheable
 from tempfile import NamedTemporaryFile

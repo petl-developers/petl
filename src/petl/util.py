@@ -23,14 +23,7 @@ def header(table):
     """
     
     it = iter(table)
-    flds = None
-    try:
-        flds = it.next()
-    except:
-        raise
-    finally:
-        close(it)
-    return flds
+    return it.next()
 
 
 def fieldnames(table):
@@ -203,82 +196,77 @@ class Look(object):
         
     def __repr__(self):
         it = iter(self.table)
-        try:
             
-            # fields representation
-            flds = it.next()
-            fldsrepr = [repr(f) for f in flds]
-            
-            # rows representations
-            rows = list(islice(it, self.min, self.stop, self.step))
-            rowsrepr = [[repr(v) for v in row] for row in rows]
-            
-            # find maximum row length - may be uneven
-            rowlens = [len(flds)]
-            rowlens.extend([len(row) for row in rows])
-            maxrowlen = max(rowlens)
-            
-            # pad short fields and rows
-            if len(flds) < maxrowlen:
-                fldsrepr.extend([u''] * (maxrowlen - len(flds)))
-            for valsrepr in rowsrepr:
-                if len(valsrepr) < maxrowlen:
-                    valsrepr.extend([u''] * (maxrowlen - len(valsrepr)))
-            
-            # find longest representations so we know how wide to make cells
-            colwidths = [0] * maxrowlen # initialise to 0
-            for i, fr in enumerate(fldsrepr):
-                colwidths[i] = len(fr)
-            for valsrepr in rowsrepr:
-                for i, vr in enumerate(valsrepr):
-                    if len(vr) > colwidths[i]:
-                        colwidths[i] = len(vr)
-                        
-            # construct a line separator
-            sep = u'+'
-            for w in colwidths:
-                sep += u'-' * (w + 2)
-                sep += u'+'
-            sep += u'\n'
-            
-            # construct a header separator
-            hedsep = u'+'
-            for w in colwidths:
-                hedsep += u'=' * (w + 2)
-                hedsep += u'+'
-            hedsep += u'\n'
-            
-            # construct a line for the header row
-            fldsline = u'|'
+        # fields representation
+        flds = it.next()
+        fldsrepr = [repr(f) for f in flds]
+        
+        # rows representations
+        rows = list(islice(it, self.min, self.stop, self.step))
+        rowsrepr = [[repr(v) for v in row] for row in rows]
+        
+        # find maximum row length - may be uneven
+        rowlens = [len(flds)]
+        rowlens.extend([len(row) for row in rows])
+        maxrowlen = max(rowlens)
+        
+        # pad short fields and rows
+        if len(flds) < maxrowlen:
+            fldsrepr.extend([u''] * (maxrowlen - len(flds)))
+        for valsrepr in rowsrepr:
+            if len(valsrepr) < maxrowlen:
+                valsrepr.extend([u''] * (maxrowlen - len(valsrepr)))
+        
+        # find longest representations so we know how wide to make cells
+        colwidths = [0] * maxrowlen # initialise to 0
+        for i, fr in enumerate(fldsrepr):
+            colwidths[i] = len(fr)
+        for valsrepr in rowsrepr:
+            for i, vr in enumerate(valsrepr):
+                if len(vr) > colwidths[i]:
+                    colwidths[i] = len(vr)
+                    
+        # construct a line separator
+        sep = u'+'
+        for w in colwidths:
+            sep += u'-' * (w + 2)
+            sep += u'+'
+        sep += u'\n'
+        
+        # construct a header separator
+        hedsep = u'+'
+        for w in colwidths:
+            hedsep += u'=' * (w + 2)
+            hedsep += u'+'
+        hedsep += u'\n'
+        
+        # construct a line for the header row
+        fldsline = u'|'
+        for i, w in enumerate(colwidths):
+            f = fldsrepr[i]
+            fldsline += u' ' + f
+            fldsline += u' ' * (w - len(f)) # padding
+            fldsline += u' |'
+        fldsline += u'\n'
+        
+        # construct a line for each data row
+        rowlines = list()
+        for valsrepr in rowsrepr:
+            rowline = u'|'
             for i, w in enumerate(colwidths):
-                f = fldsrepr[i]
-                fldsline += u' ' + f
-                fldsline += u' ' * (w - len(f)) # padding
-                fldsline += u' |'
-            fldsline += u'\n'
+                v = valsrepr[i]
+                rowline += u' ' + v
+                rowline += u' ' * (w - len(v)) # padding
+                rowline += u' |'
+            rowline += u'\n'
+            rowlines.append(rowline)
             
-            # construct a line for each data row
-            rowlines = list()
-            for valsrepr in rowsrepr:
-                rowline = u'|'
-                for i, w in enumerate(colwidths):
-                    v = valsrepr[i]
-                    rowline += u' ' + v
-                    rowline += u' ' * (w - len(v)) # padding
-                    rowline += u' |'
-                rowline += u'\n'
-                rowlines.append(rowline)
-                
-            # put it all together
-            output = sep + fldsline + hedsep
-            for line in rowlines:
-                output += line + sep
-            
-            return output
-        except:
-            raise
-        finally:
-            close(it)
+        # put it all together
+        output = sep + fldsline + hedsep
+        for line in rowlines:
+            output += line + sep
+        
+        return output
     
     
     def __str__(self):
@@ -313,26 +301,19 @@ class See(object):
         
     def __repr__(self):    
         it = iter(self.table)
-        try:
-            flds = it.next()
-            cols = defaultdict(list)
-            for row in islice(it, self.min, self.stop, self.step):
-                for i, f in enumerate(flds):
-                    try:
-                        cols[str(f)].append(repr(row[i]))
-                    except IndexError:
-                        cols[str(f)].append('')
-            close(it)
-            output = u''
-            for f in flds:
-                output += u'%r: %s\n' % (f, u', '.join(cols[str(f)]))
-            return output
+        flds = it.next()
+        cols = defaultdict(list)
+        for row in islice(it, self.min, self.stop, self.step):
+            for i, f in enumerate(flds):
+                try:
+                    cols[str(f)].append(repr(row[i]))
+                except IndexError:
+                    cols[str(f)].append('')
+        output = u''
+        for f in flds:
+            output += u'%r: %s\n' % (f, u', '.join(cols[str(f)]))
+        return output
         
-        except:
-            raise
-        finally:
-            close(it)
-    
     
 def values(table, *fields):
     """
@@ -392,21 +373,16 @@ def values(table, *fields):
     """
     
     it = iter(table)
-    try:
-        srcflds = it.next()
-        indices = asindices(srcflds, fields)
-        assert len(indices) > 0, 'no field selected'
-        getvalue = itemgetter(*indices)
-        for row in it:
-            try:
-                value = getvalue(row)
-                yield value
-            except IndexError:
-                pass # ignore short rows
-    except:
-        raise
-    finally:
-        close(it)
+    srcflds = it.next()
+    indices = asindices(srcflds, fields)
+    assert len(indices) > 0, 'no field selected'
+    getvalue = itemgetter(*indices)
+    for row in it:
+        try:
+            value = getvalue(row)
+            yield value
+        except IndexError:
+            pass # ignore short rows
     
     
 def valueset(table, *fields):
@@ -594,31 +570,26 @@ def lookup(table, keyspec, valuespec=None, dictionary=None):
         dictionary = dict()
         
     it = iter(table)
-    try:
-        flds = it.next()
-        if valuespec is None:
-            valuespec = flds # default valuespec is complete row
-        keyindices = asindices(flds, keyspec)
-        assert len(keyindices) > 0, 'no keyspec selected'
-        valueindices = asindices(flds, valuespec)
-        assert len(valueindices) > 0, 'no valuespec selected'
-        getkey = itemgetter(*keyindices)
-        getvalue = itemgetter(*valueindices)
-        for row in it:
-            k = getkey(row)
-            v = getvalue(row)
-            if k in dictionary:
-                # work properly with shelve
-                l = dictionary[k]
-                l.append(v)
-                dictionary[k] = l
-            else:
-                dictionary[k] = [v]
-        return dictionary
-    except:
-        raise
-    finally:
-        close(it)
+    flds = it.next()
+    if valuespec is None:
+        valuespec = flds # default valuespec is complete row
+    keyindices = asindices(flds, keyspec)
+    assert len(keyindices) > 0, 'no keyspec selected'
+    valueindices = asindices(flds, valuespec)
+    assert len(valueindices) > 0, 'no valuespec selected'
+    getkey = itemgetter(*keyindices)
+    getvalue = itemgetter(*valueindices)
+    for row in it:
+        k = getkey(row)
+        v = getvalue(row)
+        if k in dictionary:
+            # work properly with shelve
+            l = dictionary[k]
+            l.append(v)
+            dictionary[k] = l
+        else:
+            dictionary[k] = [v]
+    return dictionary
     
     
 def lookupone(table, keyspec, valuespec=None, dictionary=None, strict=True):
@@ -698,27 +669,22 @@ def lookupone(table, keyspec, valuespec=None, dictionary=None, strict=True):
         dictionary = dict()
 
     it = iter(table)
-    try:
-        flds = it.next()
-        if valuespec is None:
-            valuespec = flds
-        keyindices = asindices(flds, keyspec)
-        assert len(keyindices) > 0, 'no keyspec selected'
-        valueindices = asindices(flds, valuespec)
-        assert len(valueindices) > 0, 'no valuespec selected'
-        getkey = itemgetter(*keyindices)
-        getvalue = itemgetter(*valueindices)
-        for row in it:
-            k = getkey(row)
-            if strict and k in dictionary:
-                raise DuplicateKeyError
-            v = getvalue(row)
-            dictionary[k] = v
-        return dictionary
-    except:
-        raise
-    finally:
-        close(it)
+    flds = it.next()
+    if valuespec is None:
+        valuespec = flds
+    keyindices = asindices(flds, keyspec)
+    assert len(keyindices) > 0, 'no keyspec selected'
+    valueindices = asindices(flds, valuespec)
+    assert len(valueindices) > 0, 'no valuespec selected'
+    getkey = itemgetter(*keyindices)
+    getvalue = itemgetter(*valueindices)
+    for row in it:
+        k = getkey(row)
+        if strict and k in dictionary:
+            raise DuplicateKeyError
+        v = getvalue(row)
+        dictionary[k] = v
+    return dictionary
     
     
 def recordlookup(table, keyspec, dictionary=None):
@@ -774,26 +740,21 @@ def recordlookup(table, keyspec, dictionary=None):
         dictionary = dict()
 
     it = iter(table)
-    try:
-        flds = it.next()
-        keyindices = asindices(flds, keyspec)
-        assert len(keyindices) > 0, 'no keyspec selected'
-        getkey = itemgetter(*keyindices)
-        for row in it:
-            k = getkey(row)
-            rec = asdict(flds, row)
-            if k in dictionary:
-                # work properly with shelve
-                l = dictionary[k]
-                l.append(rec)
-                dictionary[k] = l
-            else:
-                dictionary[k] = [rec]
-        return dictionary
-    except:
-        raise
-    finally:
-        close(it)
+    flds = it.next()
+    keyindices = asindices(flds, keyspec)
+    assert len(keyindices) > 0, 'no keyspec selected'
+    getkey = itemgetter(*keyindices)
+    for row in it:
+        k = getkey(row)
+        rec = asdict(flds, row)
+        if k in dictionary:
+            # work properly with shelve
+            l = dictionary[k]
+            l.append(rec)
+            dictionary[k] = l
+        else:
+            dictionary[k] = [rec]
+    return dictionary
     
         
 def recordlookupone(table, keyspec, dictionary=None, strict=True):
@@ -872,34 +833,19 @@ def recordlookupone(table, keyspec, dictionary=None, strict=True):
         dictionary = dict()
 
     it = iter(table)
-    try:
-        flds = it.next()
-        keyindices = asindices(flds, keyspec)
-        assert len(keyindices) > 0, 'no keyspec selected'
-        getkey = itemgetter(*keyindices)
-        for row in it:
-            k = getkey(row)
-            if strict and k in dictionary:
-                raise DuplicateKeyError
-            d = asdict(flds, row)
-            dictionary[k] = d
-        return dictionary
-    except:
-        raise
-    finally:
-        close(it)
+    flds = it.next()
+    keyindices = asindices(flds, keyspec)
+    assert len(keyindices) > 0, 'no keyspec selected'
+    getkey = itemgetter(*keyindices)
+    for row in it:
+        k = getkey(row)
+        if strict and k in dictionary:
+            raise DuplicateKeyError
+        d = asdict(flds, row)
+        dictionary[k] = d
+    return dictionary
     
             
-def close(o):
-    """
-    If the object has a 'close' method, call it. 
-    
-    """
-
-    if hasattr(o, 'close') and callable(getattr(o, 'close')):
-        o.close()
-        
-        
 class DuplicateKeyError(Exception):
     pass
 
@@ -987,17 +933,12 @@ def rowlengths(table):
     """
 
     it = data(table)
-    try:
-        counter = Counter()
-        for row in it:
-            counter[len(row)] += 1
-        output = [('length', 'count')]
-        output.extend(counter.most_common())
-        return output
-    except:
-        raise
-    finally:
-        close(it)
+    counter = Counter()
+    for row in it:
+        counter[len(row)] += 1
+    output = [('length', 'count')]
+    output.extend(counter.most_common())
+    return output
 
 
 def typecounter(table, field):    
@@ -1484,3 +1425,5 @@ def expr(s):
     return eval("lambda rec: " + prog.sub(repl, s))
     
     
+def close(it):
+    pass # TODO remove this

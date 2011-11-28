@@ -61,14 +61,14 @@ Version 0.2
 - [done] reimplement rangefacet
 - [done] review rangecounts and rangeaggregate w.r.t. last bin behaviour
 - [done] implement rangerowreduce, rangerecordreduce
-- review use of close - unnecessary
+- [done] selectin, selectni
+
+- [started] review use of close - unnecessary
 - review use of errorvalue, sometimes not used e.g. in rangecounts
 - make everything return tuples
 - recast should not scan twice
-- [done] selectin, selectni
 - select signature for single field function
 - selectregex
-
 - make convert args more flexible
 - autoconvert multiple fields to numeric types - convenience function
 - translate/replace single value in a field, e.g., None to zero; maybe also apply to multiple fields
