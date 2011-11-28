@@ -15,6 +15,7 @@ import re
 from petl.io import Uncacheable
 from tempfile import NamedTemporaryFile
 import heapq
+import operator
 
 
 def rename(table, spec=dict()):
@@ -2099,7 +2100,7 @@ def itersplit(source, field, pattern, newfields, include_original, maxsplit,
         close(it)
         
     
-def select(table, where, padding=None):
+def select(table, where, missing=None):
     """
     Select rows meeting a condition. The `where` argument can be a function
     accepting a record (i.e., a dictionary representation of a row) e.g.::
@@ -2136,28 +2137,28 @@ def select(table, where, padding=None):
     if isinstance(where, basestring):
         # be kind to the user
         where = expr(where)
-    return SelectView(table, where, padding)
+    return SelectView(table, where, missing)
 
 
 class SelectView(object):
     
-    def __init__(self, source, where, padding=None):
+    def __init__(self, source, where, missing=None):
         self.source = source
         self.where = where
-        self.missing = padding
+        self.missing = missing
         
         
     def __iter__(self):
         return iterselect(self.source, self.where, self.missing)
     
     
-def iterselect(source, where, padding):
+def iterselect(source, where, missing):
     it = iter(source)
     try:
         flds = it.next()
         yield flds
         for row in it:
-            rec = asdict(flds, row, padding)
+            rec = asdict(flds, row, missing)
             if where(rec):
                 yield row
     finally:
@@ -2360,31 +2361,68 @@ def facet(table, field):
     return fct
 
 
-def selecteq(table, field, value):
+def selectop(table, field, value, op, missing=None):
     """
-    Select rows where values in the given field equal the given value. E.g.::
+    Select rows where the function `op` applied to the given field and the given 
+    value returns true.
     
-        >>> from petl import selecteq, look     
-        >>> table1 = [['foo', 'bar', 'baz'],
-        ...           ['a', 4, 9.3],
-        ...           ['a', 2, 88.2],
-        ...           ['b', 1, 23.3],
-        ...           ['c', 8, 42.0],
-        ...           ['d', 7, 100.9],
-        ...           ['c', 2]]
-        >>> table2 = selecteq(table1, 'foo', 'a')
-        >>> look(table2)
-        +-------+-------+-------+
-        | 'foo' | 'bar' | 'baz' |
-        +=======+=======+=======+
-        | 'a'   | 4     | 9.3   |
-        +-------+-------+-------+
-        | 'a'   | 2     | 88.2  |
-        +-------+-------+-------+
+    """
+    
+    return select(table, lambda rec: op(rec[field], value), missing=missing)
+
+
+def selecteq(table, field, value, missing=None):
+    """
+    Select rows where the given field equals the given value.
 
     """
     
-    return select(table, lambda rec: rec[field] == value)
+    return selectop(table, field, value, operator.eq, missing=missing)
+
+
+def selectne(table, field, value, missing=None):
+    """
+    Select rows where the given field does not equal the given value.
+
+    """
+    
+    return selectop(table, field, value, operator.ne, missing=missing)
+
+
+def selectlt(table, field, value, missing=None):
+    """
+    Select rows where the given field is less than the given value.
+
+    """
+    
+    return selectop(table, field, value, operator.lt, missing=missing)
+
+
+def selectle(table, field, value, missing=None):
+    """
+    Select rows where the given field is less than or equal to the given value.
+
+    """
+    
+    return selectop(table, field, value, operator.le, missing=missing)
+
+
+def selectgt(table, field, value, missing=None):
+    """
+    Select rows where the given field is greater than the given value.
+
+    """
+    
+    return selectop(table, field, value, operator.gt, missing=missing)
+
+
+def selectge(table, field, value, missing=None):
+    """
+    Select rows where the given field is greater than or equal to the given value.
+
+    """
+    
+    return selectop(table, field, value, operator.ge, missing=missing)
 
 
 def rowreduce(table, key, reducer, header=None, presorted=False, buffersize=None):

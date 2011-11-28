@@ -1,5 +1,5 @@
 """
-TODO doc me
+The `petl` module.
 
 """
 
@@ -20,7 +20,8 @@ from petl.transform import rename, project, cat, convert, fieldconvert, translat
            split, fieldmap, facet, selecteq, rowreduce, merge, aggregate, recordreduce, \
            rowmap, recordmap, rowmapmany, recordmapmany, setheader, pushheader, skip, \
            extendheader, unpack, join, leftjoin, rightjoin, outerjoin, crossjoin, \
-           antijoin, rangeaggregate, rangecounts
+           antijoin, rangeaggregate, rangecounts, selectop, selectne, selectgt, \
+           selectge, selectlt, selectle
            
            
 def lenstats(table, field):
@@ -40,5 +41,4 @@ def lenstats(table, field):
 
     """
 
-
-
+    return stats(convert(table, field, lambda v: len(v)), field)

@@ -211,7 +211,13 @@ Transforming tables
 .. autofunction:: petl.tail
 .. autofunction:: petl.project
 .. autofunction:: petl.select
+.. autofunction:: petl.selectop
 .. autofunction:: petl.selecteq
+.. autofunction:: petl.selectne
+.. autofunction:: petl.selectlt
+.. autofunction:: petl.selectle
+.. autofunction:: petl.selectgt
+.. autofunction:: petl.selectge
 .. autofunction:: petl.facet
 .. autofunction:: petl.convert
 .. autofunction:: petl.fieldconvert
