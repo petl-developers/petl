@@ -39,7 +39,6 @@ Version 0.2
 - [done] implement crossjoin
 - [done] implement antijoin
 - [done] implement rangeaggregate/binaggregate/segagg/partitionaggregate ... aggregate by numerical field that has been partitioned
-- (0.3) partitioning of alpha fields?
 - [done] values on a combination of fields
 - [done] modify sort to use merge sort above a given buffer size
 - [done] change 'fields' to 'header'
@@ -56,8 +55,9 @@ Version 0.2
 - [done] rangecounts and rangeaggregate should have min and max params instead of start
 - [done] document rangecounts
 
-- implement rangefacet - facet by numerical field into any number of bins by a given interval size
+- [done] implement rangefacet - facet by numerical field into any number of bins by a given interval size
 - implement rangerowreduce, rangerecordreduce
+- review use of errorvalue, sometimes not used e.g. in rangecounts
 
 - make convert args more flexible
 - autoconvert multiple fields to numeric types - convenience function
@@ -84,6 +84,8 @@ Version 0.2
 Version 0.3
 -----------
 
+- alpha facet?
+- partitioning of alpha fields?
 - implement string patterns as utility function
 - implement hash (lookup) alternatives to all join and other sort-dependent functions
 - implement provenance trace

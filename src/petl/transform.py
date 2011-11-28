@@ -4250,3 +4250,101 @@ def iterimplicitantijoin(left, right, presorted=False, buffersize=None):
     return iterantijoin(left, right, key)
 
 
+def selectrangeopenleft(table, field, min, max):
+    
+    return select(table, lambda rec: min <= rec[field] < max)
+
+
+def selectrangeopenright(table, field, min, max):
+    
+    return select(table, lambda rec: min < rec[field] <= max)
+
+
+def selectrangeopen(table, field, min, max):
+    
+    return select(table, lambda rec: min <= rec[field] <= max)
+
+
+def selectrangeclosed(table, field, min, max):
+    
+    return select(table, lambda rec: min < rec[field] < max)
+
+
+def rangefacet(table, field, width, min=None, max=None, errorvalue=None,
+               presorted=False, buffersize=None):
+    """
+    Return a dictionary mapping ranges to tables. E.g.::
+    
+        >>> from petl import rangefacet, look
+        >>> table1 = [['foo', 'bar'],
+        ...           ['a', 3],
+        ...           ['a', 7],
+        ...           ['b', 2],
+        ...           ['b', 1],
+        ...           ['b', 9],
+        ...           ['c', 4],
+        ...           ['d', 3]]
+        >>> rf = rangefacet(table1, 'bar', 2)
+        >>> rf.keys()
+        [(1, 3), (3, 5), (5, 7), (7, 9), (9, 11)]
+        >>> look(rf[(3, 5)])
+        +-------+-------+
+        | 'foo' | 'bar' |
+        +=======+=======+
+        | 'a'   | 3     |
+        +-------+-------+
+        | 'd'   | 3     |
+        +-------+-------+
+        | 'c'   | 4     |
+        +-------+-------+
+
+    """
+    
+    fct = OrderedDict()
+    
+    if not presorted:
+        table = sort(table, field, buffersize=buffersize)
+        
+    it = iter(table)
+    try:
+        
+        srcflds = it.next()
+        
+        # convert field selection into field indices
+        indices = asindices(srcflds, field)
+        
+        # now use field indices to construct a getkey function
+        # N.B., this may raise an exception on short rows, depending on
+        # the field selection
+        getkey = itemgetter(*indices)
+
+        try:
+            # initialise range & bin
+            row = it.next()
+            keyv = getkey(row)
+            if min is None:
+                min = keyv
+            binmin = min
+            binmax = binmin + width
+            if max is not None and binmax > max:
+                binmax = max
+            # keep iterating until we run out of items or we exceed max (if set)
+            while max is None or (max is not None and keyv < max):
+                while binmin <= keyv < binmax:
+                    row = it.next()
+                    keyv = getkey(row)
+                # output current bin and move to next bin
+                fct[(binmin, binmax)] = selectrangeopenleft(table, field, binmin, binmax)
+                binmin = binmax
+                binmax = binmin + width
+                if max is not None and binmax > max:
+                    binmax = max
+        except StopIteration:
+            # don't forget the last one
+            fct[(binmin, binmax)] = selectrangeopenleft(table, field, binmin, binmax)
+
+    finally:
+        close(it)
+
+    return fct
+    

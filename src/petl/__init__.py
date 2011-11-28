@@ -21,7 +21,8 @@ from petl.transform import rename, project, cat, convert, fieldconvert, translat
            rowmap, recordmap, rowmapmany, recordmapmany, setheader, pushheader, skip, \
            extendheader, unpack, join, leftjoin, rightjoin, outerjoin, crossjoin, \
            antijoin, rangeaggregate, rangecounts, selectop, selectne, selectgt, \
-           selectge, selectlt, selectle
+           selectge, selectlt, selectle, rangefacet, selectrangeopenleft, \
+           selectrangeopenright, selectrangeopen, selectrangeclosed
            
            
 def lenstats(table, field):

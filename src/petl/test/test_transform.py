@@ -13,7 +13,7 @@ from petl import rename, fieldnames, project, cat, convert, fieldconvert, transl
                 split, expr, fieldmap, facet, rowreduce, aggregate, recordreduce, \
                 rowmap, recordmap, rowmapmany, recordmapmany, setheader, pushheader, \
                 skip, extendheader, unpack, join, leftjoin, rightjoin, outerjoin, \
-                crossjoin, antijoin, rangeaggregate, rangecounts
+                crossjoin, antijoin, rangeaggregate, rangecounts, rangefacet
 
 
 def test_rename():
@@ -1076,6 +1076,25 @@ def test_facet():
     iassertequal(fct['c'], expect_fctc)
     iassertequal(fct['c'], expect_fctc) # check can iterate twice
     
+
+def test_rangefacet():
+    
+    table1 = [['foo', 'bar'],
+              ['a', 3],
+              ['a', 7],
+              ['b', 2],
+              ['b', 1],
+              ['b', 9],
+              ['c', 4],
+              ['d', 3]]
+    rf = rangefacet(table1, 'bar', 2)
+    assert rf.keys() == [(1, 3), (3, 5), (5, 7), (7, 9), (9, 11)]
+    expect_13 = [['foo', 'bar'],
+                 ['b', 1],
+                 ['b', 2]] # N.B., it get's sorted
+    iassertequal(expect_13, rf[(1, 3)])
+    iassertequal(expect_13, rf[(1, 3)])
+
 
 def test_rowreduce():
     
