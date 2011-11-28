@@ -1389,6 +1389,34 @@ def boolparser(true_strings=['true', 't', 'yes', 'y', '1'],
     return parser
     
 
+def limits(table, field):
+    """
+    Find minimum and maximum values under the given field. E.g.::
+    
+        >>> from petl import limits
+        >>> t1 = [['foo', 'bar'], ['a', 1], ['b', 2], ['b', 3]]
+        >>> minv, maxv = limits(t1, 'bar')
+        >>> minv
+        1
+        >>> maxv
+        3
+    
+    """
+    
+    vals = values(table, field)
+    try:
+        minv = maxv = vals.next()
+    except StopIteration:
+        return None, None
+    else:
+        for v in vals:
+            if v < minv:
+                minv = v
+            if v > maxv:
+                maxv = v
+        return minv, maxv
+
+
 def stats(table, field):
     """
     Calculate basic descriptive statistics on a given field. E.g.::

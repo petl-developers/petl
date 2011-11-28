@@ -6,14 +6,15 @@ Tests for the petl.transform module.
 
 from collections import OrderedDict
 
-from petl.testfun import iassertequal
+from petl.testfun import iassertequal, assertequal
 from petl import rename, fieldnames, project, cat, convert, fieldconvert, translate, extend, \
                 rowslice, head, tail, sort, melt, recast, duplicates, conflicts, \
                 mergereduce, select, complement, diff, capture, \
                 split, expr, fieldmap, facet, rowreduce, aggregate, recordreduce, \
                 rowmap, recordmap, rowmapmany, recordmapmany, setheader, pushheader, \
                 skip, extendheader, unpack, join, leftjoin, rightjoin, outerjoin, \
-                crossjoin, antijoin, rangeaggregate, rangecounts, rangefacet
+                crossjoin, antijoin, rangeaggregate, rangecounts, rangefacet, \
+                rangerowreduce, rangerecordreduce
 
 
 def test_rename():
@@ -1088,12 +1089,16 @@ def test_rangefacet():
               ['c', 4],
               ['d', 3]]
     rf = rangefacet(table1, 'bar', 2)
-    assert rf.keys() == [(1, 3), (3, 5), (5, 7), (7, 9), (9, 11)]
+    assertequal([(1, 3), (3, 5), (5, 7), (7, 9)], rf.keys())
     expect_13 = [['foo', 'bar'],
-                 ['b', 1],
-                 ['b', 2]] # N.B., it get's sorted
+                 ['b', 2],
+                 ['b', 1]] # N.B., it get's sorted
     iassertequal(expect_13, rf[(1, 3)])
     iassertequal(expect_13, rf[(1, 3)])
+    expect_79 = [['foo', 'bar'],
+                 ['a', 7],
+                 ['b', 9]]
+    iassertequal(expect_79, rf[(7, 9)])
 
 
 def test_rowreduce():
@@ -1109,7 +1114,7 @@ def test_rowreduce():
     def sumbar(key, rows):
         return [key, sum([row[1] for row in rows])]
         
-    table2 = rowreduce(table1, key='foo', reducer=sumbar, header=['foo', 'barsum'])
+    table2 = rowreduce(table1, key='foo', reducer=sumbar, fields=['foo', 'barsum'])
     expect2 = [['foo', 'barsum'],
                ['a', 10],
                ['b', 12],
@@ -1130,11 +1135,61 @@ def test_recordreduce():
     def sumbar(key, records):
         return [key, sum([rec['bar'] for rec in records])]
         
-    table2 = recordreduce(table1, key='foo', reducer=sumbar, header=['foo', 'barsum'])
+    table2 = recordreduce(table1, key='foo', reducer=sumbar, fields=['foo', 'barsum'])
     expect2 = [['foo', 'barsum'],
                ['a', 10],
                ['b', 12],
                ['c', 4]]
+    iassertequal(expect2, table2)
+    
+
+def test_rangerowreduce():
+    
+    table1 = [['foo', 'bar'],
+              ['a', 3],
+              ['a', 7],
+              ['b', 2],
+              ['b', 1],
+              ['b', 9],
+              ['c', 4]]
+    
+    def redu(minv, maxv, rows):
+        return [minv, maxv, ''.join([row[0] for row in rows])]
+        
+    table2 = rangerowreduce(table1, 'bar', 2, reducer=redu, 
+                            fields=['minbar', 'maxbar', 'foos'])
+    expect2 = [['minbar', 'maxbar', 'foos'],
+               [1, 3, 'bb'],
+               [3, 5, 'ac'],
+               [5, 7, ''],
+               [7, 9, 'a'],
+               [9, 11, 'b']]
+    iassertequal(expect2, table2)
+    iassertequal(expect2, table2)
+    
+
+def test_rangerecordreduce():
+    
+    table1 = [['foo', 'bar'],
+              ['a', 3],
+              ['a', 7],
+              ['b', 2],
+              ['b', 1],
+              ['b', 9],
+              ['c', 4]]
+    
+    def redu(minv, maxv, recs):
+        return [minv, maxv, ''.join([rec['foo'] for rec in recs])]
+        
+    table2 = rangerecordreduce(table1, 'bar', 2, reducer=redu, 
+                               fields=['minbar', 'maxbar', 'foos'])
+    expect2 = [['minbar', 'maxbar', 'foos'],
+               [1, 3, 'bb'],
+               [3, 5, 'ac'],
+               [5, 7, ''],
+               [7, 9, 'a'],
+               [9, 11, 'b']]
+    iassertequal(expect2, table2)
     iassertequal(expect2, table2)
     
 
@@ -1198,7 +1253,7 @@ def test_rangeaggregate():
     iassertequal(expect2, table2)
     iassertequal(expect2, table2)
 
-    table3 = rangeaggregate(table1, 'bar', width=2, min=0)
+    table3 = rangeaggregate(table1, 'bar', width=2, minv=0)
     table3['foocount'] = 'foo', len
     expect3 = [['bar', 'foocount'],
                [(0, 2), 1],
@@ -1208,14 +1263,22 @@ def test_rangeaggregate():
                [(8, 10), 1]]
     iassertequal(expect3, table3)
 
-
-    table4 = rangeaggregate(table1, 'bar', width=2, min=0, max=6)
+    table4 = rangeaggregate(table1, 'bar', width=2, minv=2, maxv=6)
     table4['foocount'] = 'foo', len
     expect4 = [['bar', 'foocount'],
-               [(0, 2), 1],
                [(2, 4), 3],
                [(4, 6), 1]]
     iassertequal(expect4, table4)
+
+    # last bin is open if maxv is specified
+    table5 = rangeaggregate(table1, 'bar', width=2, maxv=9)
+    table5['foocount'] = 'foo', len
+    expect5 = [['bar', 'foocount'],
+               [(1, 3), 2],
+               [(3, 5), 3],
+               [(5, 7), 0],
+               [(7, 9), 2]]
+    iassertequal(expect5, table5)
 
 
 def test_rangecounts():
@@ -1239,7 +1302,7 @@ def test_rangecounts():
     iassertequal(expect2, table2)
     iassertequal(expect2, table2)
 
-    table3 = rangecounts(table1, 'bar', width=2, min=0)
+    table3 = rangecounts(table1, 'bar', width=2, minv=0)
     expect3 = [['range', 'count'],
                [(0, 2), 1],
                [(2, 4), 3],
@@ -1248,12 +1311,20 @@ def test_rangecounts():
                [(8, 10), 1]]
     iassertequal(expect3, table3)
 
-    table4 = rangecounts(table1, 'bar', width=2, min=0, max=6)
+    table4 = rangecounts(table1, 'bar', width=2, minv=2, maxv=6)
     expect4 = [['range', 'count'],
-               [(0, 2), 1],
                [(2, 4), 3],
                [(4, 6), 1]]
     iassertequal(expect4, table4)
+
+    # N.B., last bin is open if maxv is specified
+    table5 = rangecounts(table1, 'bar', width=2, maxv=9)
+    expect5 = [['range', 'count'],
+               [(1, 3), 2],
+               [(3, 5), 3],
+               [(5, 7), 0],
+               [(7, 9), 2]]
+    iassertequal(expect5, table5)
 
 
 def test_rowmap():
@@ -1271,7 +1342,7 @@ def test_rowmap():
                 transmf[row[1]] if row[1] in transmf else row[1],
                 row[2] * 12,
                 row[4] / row[3] ** 2]
-    actual = rowmap(table, rowmapper, header=['subject_id', 'gender', 'age_months', 'bmi'])  
+    actual = rowmap(table, rowmapper, fields=['subject_id', 'gender', 'age_months', 'bmi'])  
     expect = [['subject_id', 'gender', 'age_months', 'bmi'],
               [1, 'M', 16*12, 62.0/1.45**2],
               [2, 'F', 19*12, 55.4/1.34**2],
@@ -1293,7 +1364,7 @@ def test_rowmap():
               [2, 'F', 19*12, 55.4/1.34**2],
               [3, 'F', 17*12, 74.4/1.78**2],
               [4, 'M', 21*12, 45.2/1.33**2]]
-    actual = rowmap(table2, rowmapper, header=['subject_id', 'gender', 'age_months', 'bmi'])  
+    actual = rowmap(table2, rowmapper, fields=['subject_id', 'gender', 'age_months', 'bmi'])  
     iassertequal(expect, actual)
 
 
@@ -1312,7 +1383,7 @@ def test_recordmap():
                 transmf[rec['sex']] if rec['sex'] in transmf else rec['sex'],
                 rec['age'] * 12,
                 rec['weight'] / rec['height'] ** 2]
-    actual = recordmap(table, recmapper, header=['subject_id', 'gender', 'age_months', 'bmi'])  
+    actual = recordmap(table, recmapper, fields=['subject_id', 'gender', 'age_months', 'bmi'])  
     expect = [['subject_id', 'gender', 'age_months', 'bmi'],
               [1, 'M', 16*12, 62.0/1.45**2],
               [2, 'F', 19*12, 55.4/1.34**2],
@@ -1334,7 +1405,7 @@ def test_recordmap():
               [2, 'F', 19*12, 55.4/1.34**2],
               [3, 'F', 17*12, 74.4/1.78**2],
               [4, 'M', 21*12, 45.2/1.33**2]]
-    actual = recordmap(table2, recmapper, header=['subject_id', 'gender', 'age_months', 'bmi'])  
+    actual = recordmap(table2, recmapper, fields=['subject_id', 'gender', 'age_months', 'bmi'])  
     iassertequal(expect, actual)
 
 
@@ -1352,7 +1423,7 @@ def test_rowmapmany():
         yield [row[0], 'age_months', row[2] * 12]
         yield [row[0], 'bmi', row[4] / row[3] ** 2]
 
-    actual = rowmapmany(table, rowgenerator, header=['subject_id', 'variable', 'value'])  
+    actual = rowmapmany(table, rowgenerator, fields=['subject_id', 'variable', 'value'])  
     expect = [['subject_id', 'variable', 'value'],
               [1, 'gender', 'M'],
               [1, 'age_months', 16*12],
@@ -1383,7 +1454,7 @@ def test_recordmapmany():
         yield [rec['id'], 'age_months', rec['age'] * 12]
         yield [rec['id'], 'bmi', rec['weight'] / rec['height'] ** 2]
 
-    actual = recordmapmany(table, rowgenerator, header=['subject_id', 'variable', 'value'])  
+    actual = recordmapmany(table, rowgenerator, fields=['subject_id', 'variable', 'value'])  
     expect = [['subject_id', 'variable', 'value'],
               [1, 'gender', 'M'],
               [1, 'age_months', 16*12],
@@ -1475,8 +1546,8 @@ def test_unpack():
                [3, 'e', 'f']]
     iassertequal(expect3, table3)
     
-    # check max
-    table4 = unpack(table1, 'bar', ['baz'], max=1)
+    # check maxv
+    table4 = unpack(table1, 'bar', ['baz'], maxv=1)
     expect4 = [['foo', 'baz'],
                [1, 'a'],
                [2, 'c'],
@@ -1484,7 +1555,7 @@ def test_unpack():
     iassertequal(expect4, table4)
     
     # check include original
-    table5 = unpack(table1, 'bar', ['baz'], max=1, include_original=True)
+    table5 = unpack(table1, 'bar', ['baz'], maxv=1, include_original=True)
     expect5 = [['foo', 'bar', 'baz'],
               [1, ['a', 'b'], 'a'],
               [2, ['c', 'd'], 'c'],

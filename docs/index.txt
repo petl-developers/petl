@@ -177,6 +177,7 @@ Utility functions
 .. autofunction:: petl.timeparser
 .. autofunction:: petl.datetimeparser
 .. autofunction:: petl.boolparser
+.. autofunction:: petl.limits
 .. autofunction:: petl.stats
 .. autofunction:: petl.lenstats
 .. autofunction:: petl.rowlengths
@@ -218,6 +219,12 @@ Transforming tables
 .. autofunction:: petl.selectle
 .. autofunction:: petl.selectgt
 .. autofunction:: petl.selectge
+.. autofunction:: petl.selectin
+.. autofunction:: petl.selectni
+.. autofunction:: petl.selectrangeopen
+.. autofunction:: petl.selectrangeopenleft
+.. autofunction:: petl.selectrangeopenright
+.. autofunction:: petl.selectrangeclosed
 .. autofunction:: petl.facet
 .. autofunction:: petl.rangefacet
 .. autofunction:: petl.convert
@@ -249,6 +256,8 @@ Transforming tables
 .. autofunction:: petl.rangecounts
 .. autofunction:: petl.rowreduce
 .. autofunction:: petl.recordreduce
+.. autofunction:: petl.rangerowreduce
+.. autofunction:: petl.rangerecordreduce
 .. autofunction:: petl.mergereduce
 .. autofunction:: petl.merge
 .. autofunction:: petl.melt

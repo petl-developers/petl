@@ -3,14 +3,14 @@ TODO doc me
 
 """
 
-from itertools import islice, groupby, product
+from itertools import islice, groupby, product, count
 from collections import deque, defaultdict, OrderedDict, namedtuple
 from operator import itemgetter
 import cPickle as pickle
 
 
 from petl.util import close, asindices, rowgetter, FieldSelectionError, asdict,\
-    expr, valueset, records, header, data, stats
+    expr, valueset, records, header, data, stats, limits, values
 import re
 from petl.io import Uncacheable
 from tempfile import NamedTemporaryFile
@@ -816,12 +816,12 @@ class RowSliceView(object):
     
     def __init__(self, source, start=0, stop=None, step=1):
         self.source = source
-        self.min = start
+        self.minv = start
         self.stop = stop
         self.step = step
         
     def __iter__(self):
-        return iterrowslice(self.source, self.min, self.stop, self.step)
+        return iterrowslice(self.source, self.minv, self.stop, self.step)
 
 
 def iterrowslice(source, start, stop, step):    
@@ -2425,7 +2425,65 @@ def selectge(table, field, value, missing=None):
     return selectop(table, field, value, operator.ge, missing=missing)
 
 
-def rowreduce(table, key, reducer, header=None, presorted=False, buffersize=None):
+def selectin(table, field, value, missing=None):
+    """
+    Select rows where the given field is a member of the given value.
+
+    """
+    
+    return selectop(table, field, value, operator.contains, missing=missing)
+
+
+def selectni(table, field, value, missing=None):
+    """
+    Select rows where the given field is not a member of the given value.
+
+    """
+    
+    return selectop(table, field, value, lambda a, b: a not in b, missing=missing)
+
+
+def selectrangeopenleft(table, field, minv, maxv, missing=None):
+    """
+    Select rows where the given field is greater than or equal to `minv` and 
+    less than `maxv`.
+
+    """
+    
+    return select(table, lambda rec: minv <= rec[field] < maxv, missing=missing)
+
+
+def selectrangeopenright(table, field, minv, maxv, missing=None):
+    """
+    Select rows where the given field is greater than `minv` and 
+    less than or equal to `maxv`.
+
+    """
+    
+    return select(table, lambda rec: minv < rec[field] <= maxv, missing=missing)
+
+
+def selectrangeopen(table, field, minv, maxv, missing=None):
+    """
+    Select rows where the given field is greater than or equal to `minv` and 
+    less than or equal to `maxv`.
+
+    """
+    
+    return select(table, lambda rec: minv <= rec[field] <= maxv, missing=missing)
+
+
+def selectrangeclosed(table, field, minv, maxv, missing=None):
+    """
+    Select rows where the given field is greater than `minv` and 
+    less than `maxv`.
+
+    """
+    
+    return select(table, lambda rec: minv < rec[field] < maxv, missing=missing)
+
+
+def rowreduce(table, key, reducer, fields=None, presorted=False, buffersize=None):
     """
     Reduce rows grouped under the given key via an arbitrary function. E.g.::
 
@@ -2440,7 +2498,7 @@ def rowreduce(table, key, reducer, header=None, presorted=False, buffersize=None
         >>> def sumbar(key, rows):
         ...     return [key, sum([row[1] for row in rows])]
         ... 
-        >>> table2 = rowreduce(table1, key='foo', reducer=sumbar, header=['foo', 'barsum'])
+        >>> table2 = rowreduce(table1, key='foo', reducer=sumbar, fields=['foo', 'barsum'])
         >>> look(table2)
         +-------+----------+
         | 'foo' | 'barsum' |
@@ -2462,33 +2520,33 @@ def rowreduce(table, key, reducer, header=None, presorted=False, buffersize=None
     
     """
 
-    return RowReduceView(table, key, reducer, header, presorted, buffersize)
+    return RowReduceView(table, key, reducer, fields, presorted, buffersize)
 
 
 class RowReduceView(object):
     
-    def __init__(self, source, key, reducer, header=None, presorted=False, buffersize=None):
+    def __init__(self, source, key, reducer, fields=None, presorted=False, buffersize=None):
         if presorted:
             self.source = source
         else:
             self.source = sort(source, key, buffersize=buffersize)
         self.key = key
-        self.header = header
+        self.fields = fields
         self.reducer = reducer
 
     def __iter__(self):
-        return iterrowreduce(self.source, self.key, self.reducer, self.header)
+        return iterrowreduce(self.source, self.key, self.reducer, self.fields)
     
     
-def iterrowreduce(source, key, reducer, header):
+def iterrowreduce(source, key, reducer, fields):
     it = iter(source)
 
     try:
         srcflds = it.next()
-        if header is None:
+        if fields is None:
             yield srcflds
         else:
-            yield header
+            yield fields
 
         # convert field selection into field indices
         indices = asindices(srcflds, key)
@@ -2505,7 +2563,7 @@ def iterrowreduce(source, key, reducer, header):
         close(it)
 
 
-def recordreduce(table, key, reducer, header=None, presorted=False, buffersize=None):
+def recordreduce(table, key, reducer, fields=None, presorted=False, buffersize=None):
     """
     Reduce records grouped under the given key via an arbitrary function. E.g.::
 
@@ -2520,7 +2578,7 @@ def recordreduce(table, key, reducer, header=None, presorted=False, buffersize=N
         >>> def sumbar(key, records):
         ...     return [key, sum([rec['bar'] for rec in records])]
         ... 
-        >>> table2 = recordreduce(table1, key='foo', reducer=sumbar, header=['foo', 'barsum'])
+        >>> table2 = recordreduce(table1, key='foo', reducer=sumbar, fields=['foo', 'barsum'])
         >>> look(table2)
         +-------+----------+
         | 'foo' | 'barsum' |
@@ -2543,34 +2601,34 @@ def recordreduce(table, key, reducer, header=None, presorted=False, buffersize=N
     
     """
 
-    return RecordReduceView(table, key, reducer, header, presorted, buffersize)
+    return RecordReduceView(table, key, reducer, fields, presorted, buffersize)
 
 
 class RecordReduceView(object):
     
-    def __init__(self, source, key, reducer, header=None, presorted=False,
+    def __init__(self, source, key, reducer, fields=None, presorted=False,
                  buffersize=None):
         if presorted:
             self.source = source
         else:
             self.source = sort(source, key, buffersize=buffersize)
         self.key = key
-        self.header = header
+        self.fields = fields
         self.reducer = reducer
 
     def __iter__(self):
-        return iterrecordreduce(self.source, self.key, self.reducer, self.header)
+        return iterrecordreduce(self.source, self.key, self.reducer, self.fields)
     
     
-def iterrecordreduce(source, key, reducer, header):
+def iterrecordreduce(source, key, reducer, fields):
     it = iter(source)
 
     try:
         srcflds = it.next()
-        if header is None:
+        if fields is None:
             yield srcflds
         else:
-            yield header
+            yield fields
 
         # convert field selection into field indices
         indices = asindices(srcflds, key)
@@ -2832,9 +2890,243 @@ def iteraggregate(source, key, aggregators, errorvalue):
             
     finally:
         close(it)
+
+
+def rangerowreduce(table, key, width, reducer, fields=None, minv=None, maxv=None, 
+                   presorted=False, errorvalue=None, buffersize=None):
+    """
+    Reduce rows grouped into bins under the given key via an arbitrary function. 
+    E.g.::
+
+        >>> from petl import rangerowreduce, look
+        >>> table1 = [['foo', 'bar'],
+        ...           ['a', 3],
+        ...           ['a', 7],
+        ...           ['b', 2],
+        ...           ['b', 1],
+        ...           ['b', 9],
+        ...           ['c', 4]]
+        >>> def redu(minv, maxv, rows):
+        ...     return [minv, maxv, ''.join([row[0] for row in rows])]
+        ... 
+        >>> table2 = rangerowreduce(table1, 'bar', 2, reducer=redu, fields=['frombar', 'tobar', 'foos'])
+        >>> look(table2)
+        +-----------+---------+--------+
+        | 'frombar' | 'tobar' | 'foos' |
+        +===========+=========+========+
+        | 1         | 3       | 'bb'   |
+        +-----------+---------+--------+
+        | 3         | 5       | 'ac'   |
+        +-----------+---------+--------+
+        | 5         | 7       | ''     |
+        +-----------+---------+--------+
+        | 7         | 9       | 'a'    |
+        +-----------+---------+--------+
+        | 9         | 11      | 'b'    |
+        +-----------+---------+--------+
+
+    """
+    
+    return RangeRowReduceView(table, key, width, reducer, fields=fields, minv=minv, 
+                              maxv=maxv, presorted=presorted, errorvalue=errorvalue,
+                              buffersize=buffersize)
+        
+
+class RangeRowReduceView(object):
+    
+    def __init__(self, source, key, width, reducer, fields=None, minv=None, maxv=None, 
+                 presorted=False, errorvalue=None, buffersize=None):
+        if presorted:
+            self.source = source
+        else:
+            self.source = sort(source, key, buffersize=buffersize)
+        self.key = key
+        self.width = width
+        self.reducer = reducer
+        self.fields = fields
+        self.minv, self.maxv = minv, maxv
+        self.errorvalue = errorvalue
+
+    def __iter__(self):
+        return iterrangerowreduce(self.source, self.key, self.width, self.reducer,
+                                  self.fields, self.minv, self.maxv, self.errorvalue)
+
+
+def iterrangerowreduce(source, key, width, reducer, fields, minv, maxv, errorvalue):
+
+    it = iter(source)
+    try:
+        srcflds = it.next()
+        if fields is None:
+            yield srcflds
+        else:
+            yield fields
+
+        # convert field selection into field indices
+        indices = asindices(srcflds, key)
+
+        # now use field indices to construct a getkey function
+        # N.B., this may raise an exception on short rows, depending on
+        # the field selection
+        getkey = itemgetter(*indices)
+        
+        # initialise minimum
+        row = it.next()
+        keyv = getkey(row)
+        if minv is None:
+            minv = keyv
+
+        # iterate over bins
+        # N.B., we need to account for two possible scenarios
+        # (1) maxv is not specified, so keep making bins until we run out of rows
+        # (2) maxv is specified, so iterate over bins 
+        try:
+            for binminv in count(minv, width):
+                binmaxv = binminv + width
+                if maxv is not None and binmaxv >= maxv: # final bin
+                    binmaxv = maxv
+                bin = []
+                while keyv < binminv:
+                    row = it.next()
+                    keyv = getkey(row)
+                while binminv <= keyv < binmaxv:
+                    bin.append(row)
+                    row = it.next()
+                    keyv = getkey(row)
+                while maxv is not None and keyv == binmaxv == maxv:
+                    bin.append(row) # last bin is open
+                    row = it.next()
+                    keyv = getkey(row)
+                yield reducer(binminv, binmaxv, bin)
+                if maxv is not None and binmaxv == maxv:
+                    break
+        except StopIteration:
+            # don't forget the last one
+            yield reducer(binminv, binmaxv, bin)
+        
+    finally:
+        close(it)
         
         
-def rangecounts(table, key, width, min=None, max=None, presorted=False,
+def rangerecordreduce(table, key, width, reducer, fields=None, minv=None, maxv=None, 
+                      presorted=False, errorvalue=None, buffersize=None):
+    """
+    Reduce records grouped into bins under the given key via an arbitrary function. 
+    E.g.::
+
+        >>> from petl import rangerecordreduce, look    
+        >>> table1 = [['foo', 'bar'],
+        ...           ['a', 3],
+        ...           ['a', 7],
+        ...           ['b', 2],
+        ...           ['b', 1],
+        ...           ['b', 9],
+        ...           ['c', 4]]
+        >>> def redu(minv, maxv, recs):
+        ...     return [minv, maxv, ''.join([rec['foo'] for rec in recs])]
+        ... 
+        >>> table2 = rangerecordreduce(table1, 'bar', 2, reducer=redu, fields=['frombar', 'tobar', 'foos'])
+        >>> look(table2)
+        +-----------+---------+--------+
+        | 'frombar' | 'tobar' | 'foos' |
+        +===========+=========+========+
+        | 1         | 3       | 'bb'   |
+        +-----------+---------+--------+
+        | 3         | 5       | 'ac'   |
+        +-----------+---------+--------+
+        | 5         | 7       | ''     |
+        +-----------+---------+--------+
+        | 7         | 9       | 'a'    |
+        +-----------+---------+--------+
+        | 9         | 11      | 'b'    |
+        +-----------+---------+--------+
+
+    """
+    
+    return RangeRecordReduceView(table, key, width, reducer, fields=fields, minv=minv, 
+                                 maxv=maxv, presorted=presorted, errorvalue=errorvalue,
+                                 buffersize=buffersize)
+        
+
+class RangeRecordReduceView(object):
+    
+    def __init__(self, source, key, width, reducer, fields=None, minv=None, maxv=None, 
+                 presorted=False, errorvalue=None, buffersize=None):
+        if presorted:
+            self.source = source
+        else:
+            self.source = sort(source, key, buffersize=buffersize)
+        self.key = key
+        self.width = width
+        self.reducer = reducer
+        self.fields = fields
+        self.minv, self.maxv = minv, maxv
+        self.errorvalue = errorvalue
+
+    def __iter__(self):
+        return iterrangerecordreduce(self.source, self.key, self.width, self.reducer,
+                                     self.fields, self.minv, self.maxv, self.errorvalue)
+
+
+def iterrangerecordreduce(source, key, width, reducer, fields, minv, maxv, errorvalue):
+
+    it = iter(source)
+    try:
+        srcflds = it.next()
+        if fields is None:
+            yield srcflds
+        else:
+            yield fields
+
+        # convert field selection into field indices
+        indices = asindices(srcflds, key)
+
+        # now use field indices to construct a getkey function
+        # N.B., this may raise an exception on short rows, depending on
+        # the field selection
+        getkey = itemgetter(*indices)
+        
+        # initialise minimum
+        row = it.next()
+        keyv = getkey(row)
+        if minv is None:
+            minv = keyv
+
+        # iterate over bins
+        # N.B., we need to account for two possible scenarios
+        # (1) maxv is not specified, so keep making bins until we run out of rows
+        # (2) maxv is specified, so iterate over bins 
+        try:
+            for binminv in count(minv, width):
+                binmaxv = binminv + width
+                if maxv is not None and binmaxv >= maxv: # final bin
+                    binmaxv = maxv
+                bin = []
+                while keyv < binminv:
+                    row = it.next()
+                    keyv = getkey(row)
+                while binminv <= keyv < binmaxv:
+                    rec = asdict(srcflds, row)
+                    bin.append(rec)
+                    row = it.next()
+                    keyv = getkey(row)
+                while maxv is not None and keyv == binmaxv == maxv:
+                    rec = asdict(srcflds, row)
+                    bin.append(rec) # last bin is open
+                    row = it.next()
+                    keyv = getkey(row)
+                yield reducer(binminv, binmaxv, bin)
+                if maxv is not None and binmaxv == maxv:
+                    break
+        except StopIteration:
+            # don't forget the last one
+            yield reducer(binminv, binmaxv, bin)
+        
+    finally:
+        close(it)
+        
+        
+def rangecounts(table, key, width, minv=None, maxv=None, presorted=False,
                 errorvalue=None, buffersize=None):
     """
     Group rows into bins then count the number of rows in each bin. E.g.::
@@ -2866,14 +3158,14 @@ def rangecounts(table, key, width, min=None, max=None, presorted=False,
 
     """
     
-    return RangeCountsView(table, key, width, min=min, max=max, 
+    return RangeCountsView(table, key, width, minv=minv, maxv=maxv, 
                            presorted=presorted, errorvalue=errorvalue, 
                            buffersize=buffersize)
     
     
 class RangeCountsView(object):
     
-    def __init__(self, source, key, width, min=None, max=None, 
+    def __init__(self, source, key, width, minv=None, maxv=None, 
                  presorted=False, errorvalue=None, buffersize=None):
         if presorted:
             self.source = source
@@ -2881,15 +3173,15 @@ class RangeCountsView(object):
             self.source = sort(source, key, buffersize=buffersize)
         self.key = key
         self.width = width
-        self.min, self.max = min, max
+        self.minv, self.maxv = minv, maxv
         self.errorvalue = errorvalue
 
     def __iter__(self):
-        return iterrangecounts(self.source, self.key, self.width, self.min, 
-                               self.max, self.errorvalue)
+        return iterrangecounts(self.source, self.key, self.width, self.minv, 
+                               self.maxv, self.errorvalue)
 
 
-def iterrangecounts(source, key, width, min, max, errorvalue):
+def iterrangecounts(source, key, width, minv, maxv, errorvalue):
 
     it = iter(source)
     try:
@@ -2906,40 +3198,45 @@ def iterrangecounts(source, key, width, min, max, errorvalue):
         outflds = ['range', 'count']
         yield outflds
         
+        # initialise minimum
+        row = it.next()
+        keyv = getkey(row)
+        if minv is None:
+            minv = keyv
+
+        # iterate over bins
+        # N.B., we need to account for two possible scenarios
+        # (1) maxv is not specified, so keep making bins until we run out of rows
+        # (2) maxv is specified, so iterate over bins 
         try:
-            # initialise range & bin
-            row = it.next()
-            keyv = getkey(row)
-            if min is None:
-                min = keyv
-            binmin = min
-            binmax = binmin + width
-            if max is not None and binmax > max:
-                binmax = max
-            bin = []
-            # keep iterating until we run out of items or we exceed max (if set)
-            while max is None or (max is not None and keyv < max):
-                while binmin <= keyv < binmax:
+            for binminv in count(minv, width):
+                binmaxv = binminv + width
+                if maxv is not None and binmaxv >= maxv: # final bin
+                    binmaxv = maxv
+                bin = []
+                while keyv < binminv:
+                    row = it.next()
+                    keyv = getkey(row)
+                while binminv <= keyv < binmaxv:
                     bin.append(row)
                     row = it.next()
                     keyv = getkey(row)
-                # output current bin and move to next bin
-                yield [(binmin, binmax), len(bin)]
-                binmin = binmax
-                binmax = binmin + width
-                if max is not None and binmax > max:
-                    binmax = max
-                bin = list()
+                while maxv is not None and keyv == binmaxv == maxv:
+                    bin.append(row) # last bin is open
+                    row = it.next()
+                    keyv = getkey(row)
+                yield [(binminv, binmaxv), len(bin)]
+                if maxv is not None and binmaxv == maxv:
+                    break
         except StopIteration:
             # don't forget the last one
-            yield [(binmin, binmax), len(bin)]
-
-
+            yield [(binminv, binmaxv), len(bin)]
+        
     finally:
         close(it)
         
     
-def rangeaggregate(table, key, width, aggregators=None, min=None, max=None,
+def rangeaggregate(table, key, width, aggregators=None, minv=None, maxv=None,
                    presorted=False, errorvalue=None, buffersize=None):
     """
     Group rows into bins then apply aggregation functions. E.g.::
@@ -2974,14 +3271,14 @@ def rangeaggregate(table, key, width, aggregators=None, min=None, max=None,
     """
     
     return RangeAggregateView(table, key, width, 
-                              aggregators=aggregators, min=min, max=max,
+                              aggregators=aggregators, minv=minv, maxv=maxv,
                               presorted=presorted, errorvalue=errorvalue, 
                               buffersize=buffersize)
     
     
 class RangeAggregateView(object):
     
-    def __init__(self, source, key, width, aggregators=None, min=None, max=None, 
+    def __init__(self, source, key, width, aggregators=None, minv=None, maxv=None, 
                  presorted=False, errorvalue=None, buffersize=None):
         if presorted:
             self.source = source
@@ -2993,12 +3290,12 @@ class RangeAggregateView(object):
             self.aggregators = OrderedDict()
         else:
             self.aggregators = aggregators
-        self.min, self.max = min, max
+        self.minv, self.maxv = minv, maxv
         self.errorvalue = errorvalue
 
     def __iter__(self):
         return iterrangeaggregate(self.source, self.key, self.width, 
-                                  self.aggregators, self.min, self.max, 
+                                  self.aggregators, self.minv, self.maxv, 
                                   self.errorvalue)
 
     def __getitem__(self, key):
@@ -3008,7 +3305,7 @@ class RangeAggregateView(object):
         self.aggregators[key] = value
 
     
-def iterrangeaggregate(source, key, width, aggregators, min, max, errorvalue):
+def iterrangeaggregate(source, key, width, aggregators, minv, maxv, errorvalue):
 
     aggregators = OrderedDict(aggregators.items()) # take a copy
     # normalise aggregators
@@ -3036,8 +3333,8 @@ def iterrangeaggregate(source, key, width, aggregators, min, max, errorvalue):
         outflds.extend(aggregators.keys())
         yield outflds
         
-        def buildoutrow(binmin, binmax, bin):
-            outrow = [(binmin, binmax)]
+        def buildoutrow(binminv, binmaxv, bin):
+            outrow = [(binminv, binmaxv)]
             for outfld in aggregators:
                 srcfld, aggfun = aggregators[outfld]
                 idx = srcflds.index(srcfld)
@@ -3059,39 +3356,45 @@ def iterrangeaggregate(source, key, width, aggregators, min, max, errorvalue):
                 outrow.append(aggval)
             return outrow
 
+        # initialise minimum
+        row = it.next()
+        keyv = getkey(row)
+        if minv is None:
+            minv = keyv
+
+        # iterate over bins
+        # N.B., we need to account for two possible scenarios
+        # (1) maxv is not specified, so keep making bins until we run out of rows
+        # (2) maxv is specified, so iterate over bins 
         try:
-            # initialise range & bin
-            row = it.next()
-            keyv = getkey(row)
-            if min is None:
-                min = keyv
-            binmin = min
-            binmax = binmin + width
-            if max is not None and binmax > max:
-                binmax = max
-            bin = []
-            # keep iterating until we run out of items or we exceed max (if set)
-            while max is None or (max is not None and keyv < max):
-                while binmin <= keyv < binmax:
+            for binminv in count(minv, width):
+                binmaxv = binminv + width
+                if maxv is not None and binmaxv >= maxv: # final bin
+                    binmaxv = maxv
+                bin = []
+                while keyv < binminv:
+                    row = it.next()
+                    keyv = getkey(row)
+                while binminv <= keyv < binmaxv:
                     bin.append(row)
                     row = it.next()
                     keyv = getkey(row)
-                # output current bin and move to next bin
-                yield buildoutrow(binmin, binmax, bin)
-                binmin = binmax
-                binmax = binmin + width
-                if max is not None and binmax > max:
-                    binmax = max
-                bin = list()
+                while maxv is not None and keyv == binmaxv == maxv:
+                    bin.append(row) # last bin is open
+                    row = it.next()
+                    keyv = getkey(row)
+                yield buildoutrow(binminv, binmaxv, bin)
+                if maxv is not None and binmaxv == maxv:
+                    break
         except StopIteration:
             # don't forget the last one
-            yield buildoutrow(binmin, binmax, bin)
+            yield buildoutrow(binminv, binmaxv, bin)
 
     finally:
         close(it)
         
         
-def rowmap(table, rowmapper, header, failonerror=False):
+def rowmap(table, rowmapper, fields, failonerror=False):
     """
     Transform rows via an arbitrary function. E.g.::
 
@@ -3109,7 +3412,7 @@ def rowmap(table, rowmapper, header, failonerror=False):
         ...             row[2] * 12,
         ...             row[4] / row[3] ** 2]
         ... 
-        >>> table2 = rowmap(table1, rowmapper, header=['subject_id', 'gender', 'age_months', 'bmi'])  
+        >>> table2 = rowmap(table1, rowmapper, fields=['subject_id', 'gender', 'age_months', 'bmi'])  
         >>> look(table2)    
         +--------------+----------+--------------+--------------------+
         | 'subject_id' | 'gender' | 'age_months' | 'bmi'              |
@@ -3130,26 +3433,26 @@ def rowmap(table, rowmapper, header, failonerror=False):
     
     """
     
-    return RowMapView(table, rowmapper, header, failonerror)
+    return RowMapView(table, rowmapper, fields, failonerror)
     
     
 class RowMapView(object):
     
-    def __init__(self, source, rowmapper, header, failonerror=False):
+    def __init__(self, source, rowmapper, fields, failonerror=False):
         self.source = source
         self.rowmapper = rowmapper
-        self.header = header
+        self.fields = fields
         self.failonerror = failonerror
         
     def __iter__(self):
-        return iterrowmap(self.source, self.rowmapper, self.header, self.failonerror)
+        return iterrowmap(self.source, self.rowmapper, self.fields, self.failonerror)
     
     
-def iterrowmap(source, rowmapper, header, failonerror):
+def iterrowmap(source, rowmapper, fields, failonerror):
     it = iter(source)
     try:
-        it.next() # discard source header
-        yield header
+        it.next() # discard source fields
+        yield fields
         for row in it:
             try:
                 outrow = rowmapper(row)
@@ -3161,7 +3464,7 @@ def iterrowmap(source, rowmapper, header, failonerror):
         close(it)
         
         
-def recordmap(table, recmapper, header, failonerror=False):
+def recordmap(table, recmapper, fields, failonerror=False):
     """
     Transform records via an arbitrary function. E.g.::
 
@@ -3179,7 +3482,7 @@ def recordmap(table, recmapper, header, failonerror=False):
         ...             rec['age'] * 12,
         ...             rec['weight'] / rec['height'] ** 2]
         ... 
-        >>> table2 = recordmap(table1, recmapper, header=['subject_id', 'gender', 'age_months', 'bmi'])  
+        >>> table2 = recordmap(table1, recmapper, fields=['subject_id', 'gender', 'age_months', 'bmi'])  
         >>> look(table2)
         +--------------+----------+--------------+--------------------+
         | 'subject_id' | 'gender' | 'age_months' | 'bmi'              |
@@ -3200,26 +3503,26 @@ def recordmap(table, recmapper, header, failonerror=False):
     
     """
     
-    return RecordMapView(table, recmapper, header, failonerror)
+    return RecordMapView(table, recmapper, fields, failonerror)
     
     
 class RecordMapView(object):
     
-    def __init__(self, source, recmapper, header, failonerror=False):
+    def __init__(self, source, recmapper, fields, failonerror=False):
         self.source = source
         self.recmapper = recmapper
-        self.header = header
+        self.fields = fields
         self.failonerror = failonerror
         
     def __iter__(self):
-        return iterrecordmap(self.source, self.recmapper, self.header, self.failonerror)
+        return iterrecordmap(self.source, self.recmapper, self.fields, self.failonerror)
     
     
-def iterrecordmap(source, recmapper, header, failonerror):
+def iterrecordmap(source, recmapper, fields, failonerror):
     it = iter(source)
     try:
-        flds = it.next() # discard source header
-        yield header
+        flds = it.next() # discard source fields
+        yield fields
         for row in it:
             rec = asdict(flds, row)
             try:
@@ -3232,7 +3535,7 @@ def iterrecordmap(source, recmapper, header, failonerror):
         close(it)
         
         
-def rowmapmany(table, rowgenerator, header, failonerror=False):
+def rowmapmany(table, rowgenerator, fields, failonerror=False):
     """
     Map each input row to any number of output rows via an arbitrary function.
     E.g.::
@@ -3249,7 +3552,7 @@ def rowmapmany(table, rowgenerator, header, failonerror=False):
         ...     yield [row[0], 'age_months', row[2] * 12]
         ...     yield [row[0], 'bmi', row[4] / row[3] ** 2]
         ... 
-        >>> table2 = rowmapmany(table1, rowgenerator, header=['subject_id', 'variable', 'value'])  
+        >>> table2 = rowmapmany(table1, rowgenerator, fields=['subject_id', 'variable', 'value'])  
         >>> look(table2)
         +--------------+--------------+--------------------+
         | 'subject_id' | 'variable'   | 'value'            |
@@ -3282,26 +3585,26 @@ def rowmapmany(table, rowgenerator, header, failonerror=False):
     
     """
     
-    return RowMapManyView(table, rowgenerator, header, failonerror)
+    return RowMapManyView(table, rowgenerator, fields, failonerror)
     
     
 class RowMapManyView(object):
     
-    def __init__(self, source, rowgenerator, header, failonerror=False):
+    def __init__(self, source, rowgenerator, fields, failonerror=False):
         self.source = source
         self.rowgenerator = rowgenerator
-        self.header = header
+        self.fields = fields
         self.failonerror = failonerror
         
     def __iter__(self):
-        return iterrowmapmany(self.source, self.rowgenerator, self.header, self.failonerror)
+        return iterrowmapmany(self.source, self.rowgenerator, self.fields, self.failonerror)
     
     
-def iterrowmapmany(source, rowgenerator, header, failonerror):
+def iterrowmapmany(source, rowgenerator, fields, failonerror):
     it = iter(source)
     try:
-        it.next() # discard source header
-        yield header
+        it.next() # discard source fields
+        yield fields
         for row in it:
             try:
                 for outrow in rowgenerator(row):
@@ -3313,7 +3616,7 @@ def iterrowmapmany(source, rowgenerator, header, failonerror):
         close(it)
         
         
-def recordmapmany(table, rowgenerator, header, failonerror=False):
+def recordmapmany(table, rowgenerator, fields, failonerror=False):
     """
     Map each input row (as a record) to any number of output rows via an 
     arbitrary function. E.g.::
@@ -3330,7 +3633,7 @@ def recordmapmany(table, rowgenerator, header, failonerror=False):
         ...     yield [rec['id'], 'age_months', rec['age'] * 12]
         ...     yield [rec['id'], 'bmi', rec['weight'] / rec['height'] ** 2]
         ... 
-        >>> table2 = recordmapmany(table1, rowgenerator, header=['subject_id', 'variable', 'value'])  
+        >>> table2 = recordmapmany(table1, rowgenerator, fields=['subject_id', 'variable', 'value'])  
         >>> look(table2)
         +--------------+--------------+--------------------+
         | 'subject_id' | 'variable'   | 'value'            |
@@ -3363,26 +3666,26 @@ def recordmapmany(table, rowgenerator, header, failonerror=False):
     
     """
     
-    return RecordMapManyView(table, rowgenerator, header, failonerror)
+    return RecordMapManyView(table, rowgenerator, fields, failonerror)
     
     
 class RecordMapManyView(object):
     
-    def __init__(self, source, rowgenerator, header, failonerror=False):
+    def __init__(self, source, rowgenerator, fields, failonerror=False):
         self.source = source
         self.rowgenerator = rowgenerator
-        self.header = header
+        self.fields = fields
         self.failonerror = failonerror
         
     def __iter__(self):
-        return iterrecordmapmany(self.source, self.rowgenerator, self.header, self.failonerror)
+        return iterrecordmapmany(self.source, self.rowgenerator, self.fields, self.failonerror)
     
     
-def iterrecordmapmany(source, rowgenerator, header, failonerror):
+def iterrecordmapmany(source, rowgenerator, fields, failonerror):
     it = iter(source)
     try:
-        flds = it.next() # discard source header
-        yield header
+        flds = it.next() # discard source fields
+        yield fields
         for row in it:
             rec = asdict(flds, row)
             try:
@@ -3574,7 +3877,7 @@ def iterskip(source, n):
         close(it)
         
     
-def unpack(table, field, newfields=None, max=None, include_original=False):
+def unpack(table, field, newfields=None, maxv=None, include_original=False):
     """
     Unpack data values that are lists or tuples. E.g.::
     
@@ -3597,25 +3900,25 @@ def unpack(table, field, newfields=None, max=None, include_original=False):
     
     """
     
-    return UnpackView(table, field, newfields, max, include_original)
+    return UnpackView(table, field, newfields, maxv, include_original)
 
 
 class UnpackView(object):
     
-    def __init__(self, source, field, newfields=None, max=None, 
+    def __init__(self, source, field, newfields=None, maxv=None, 
                  include_original=False):
         self.source = source
         self.field = field
         self.newfields = newfields
-        self.max = max
+        self.maxv = maxv
         self.include_original = include_original
         
     def __iter__(self):
-        return iterunpack(self.source, self.field, self.newfields, self.max, 
+        return iterunpack(self.source, self.field, self.newfields, self.maxv, 
                           self.include_original)
 
 
-def iterunpack(source, field, newfields, max, include_original):
+def iterunpack(source, field, newfields, maxv, include_original):
     it = iter(source)
     try:
 
@@ -3642,7 +3945,7 @@ def iterunpack(source, field, newfields, max, include_original):
                 out_row = list(row)
             else:
                 out_row = [v for i, v in enumerate(row) if i != field_index]
-            out_row.extend(value[:max])
+            out_row.extend(value[:maxv])
             yield out_row
             
     finally:
@@ -4250,27 +4553,7 @@ def iterimplicitantijoin(left, right, presorted=False, buffersize=None):
     return iterantijoin(left, right, key)
 
 
-def selectrangeopenleft(table, field, min, max):
-    
-    return select(table, lambda rec: min <= rec[field] < max)
-
-
-def selectrangeopenright(table, field, min, max):
-    
-    return select(table, lambda rec: min < rec[field] <= max)
-
-
-def selectrangeopen(table, field, min, max):
-    
-    return select(table, lambda rec: min <= rec[field] <= max)
-
-
-def selectrangeclosed(table, field, min, max):
-    
-    return select(table, lambda rec: min < rec[field] < max)
-
-
-def rangefacet(table, field, width, min=None, max=None, errorvalue=None,
+def rangefacet(table, field, width, minv=None, maxv=None, errorvalue=None,
                presorted=False, buffersize=None):
     """
     Return a dictionary mapping ranges to tables. E.g.::
@@ -4286,65 +4569,46 @@ def rangefacet(table, field, width, min=None, max=None, errorvalue=None,
         ...           ['d', 3]]
         >>> rf = rangefacet(table1, 'bar', 2)
         >>> rf.keys()
-        [(1, 3), (3, 5), (5, 7), (7, 9), (9, 11)]
-        >>> look(rf[(3, 5)])
+        [(1, 3), (3, 5), (5, 7), (7, 9)]
+        >>> look(rf[(1, 3)])
         +-------+-------+
         | 'foo' | 'bar' |
         +=======+=======+
-        | 'a'   | 3     |
+        | 'b'   | 2     |
         +-------+-------+
-        | 'd'   | 3     |
+        | 'b'   | 1     |
         +-------+-------+
-        | 'c'   | 4     |
+        
+        >>> look(rf[(7, 9)])
+        +-------+-------+
+        | 'foo' | 'bar' |
+        +=======+=======+
+        | 'a'   | 7     |
+        +-------+-------+
+        | 'b'   | 9     |
         +-------+-------+
 
+    Note that the last bin includes both edges.
+    
     """
-    
+
+    # determine minimum and maximum values
+    if minv is None and maxv is None:
+        minv, maxv = limits(table, field)
+    elif minv is None:
+        minv = min(values(table, field))
+    elif max is None:
+        maxv = max(values(table, field))
+        
     fct = OrderedDict()
-    
-    if not presorted:
-        table = sort(table, field, buffersize=buffersize)
-        
-    it = iter(table)
-    try:
-        
-        srcflds = it.next()
-        
-        # convert field selection into field indices
-        indices = asindices(srcflds, field)
-        
-        # now use field indices to construct a getkey function
-        # N.B., this may raise an exception on short rows, depending on
-        # the field selection
-        getkey = itemgetter(*indices)
-
-        try:
-            # initialise range & bin
-            row = it.next()
-            keyv = getkey(row)
-            if min is None:
-                min = keyv
-            binmin = min
-            binmax = binmin + width
-            if max is not None and binmax > max:
-                binmax = max
-            # keep iterating until we run out of items or we exceed max (if set)
-            while max is None or (max is not None and keyv < max):
-                while binmin <= keyv < binmax:
-                    row = it.next()
-                    keyv = getkey(row)
-                # output current bin and move to next bin
-                fct[(binmin, binmax)] = selectrangeopenleft(table, field, binmin, binmax)
-                binmin = binmax
-                binmax = binmin + width
-                if max is not None and binmax > max:
-                    binmax = max
-        except StopIteration:
-            # don't forget the last one
-            fct[(binmin, binmax)] = selectrangeopenleft(table, field, binmin, binmax)
-
-    finally:
-        close(it)
+    for binminv in xrange(minv, maxv, width):
+        binmaxv = binminv + width
+        if binmaxv >= maxv: # final bin
+            binmaxv = maxv
+            # final bin includes right edge
+            fct[(binminv, binmaxv)] = selectrangeopen(table, field, binminv, binmaxv)
+        else:
+            fct[(binminv, binmaxv)] = selectrangeopenleft(table, field, binminv, binmaxv)
 
     return fct
     

@@ -54,10 +54,20 @@ Version 0.2
 - [done] simplify args to values
 - [done] rangecounts and rangeaggregate should have min and max params instead of start
 - [done] document rangecounts
-
 - [done] implement rangefacet - facet by numerical field into any number of bins by a given interval size
-- implement rangerowreduce, rangerecordreduce
+
+- [done] implement limits
+- [done] fix use of 'min' and 'max' as variable names
+- [done] reimplement rangefacet
+- [done] review rangecounts and rangeaggregate w.r.t. last bin behaviour
+- [done] implement rangerowreduce, rangerecordreduce
+- review use of close - unnecessary
 - review use of errorvalue, sometimes not used e.g. in rangecounts
+- make everything return tuples
+- recast should not scan twice
+- [done] selectin, selectni
+- select signature for single field function
+- selectregex
 
 - make convert args more flexible
 - autoconvert multiple fields to numeric types - convenience function
@@ -84,6 +94,7 @@ Version 0.2
 Version 0.3
 -----------
 
+- to and from compressed files
 - alpha facet?
 - partitioning of alpha fields?
 - implement string patterns as utility function
