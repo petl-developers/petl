@@ -15,7 +15,7 @@ from petl import rename, fieldnames, cut, cat, convert, fieldconvert, extend, \
                 skip, extendheader, unpack, join, leftjoin, rightjoin, outerjoin, \
                 crossjoin, antijoin, rangeaggregate, rangecounts, rangefacet, \
                 rangerowreduce, rangerecordreduce, selectre, rowselect, recordselect, \
-                rowlenselect, strjoin
+                rowlenselect, strjoin, transpose
 
 
 def test_rename():
@@ -2038,4 +2038,19 @@ def test_antijoin():
     table4 = antijoin(table1, table2) 
     expect4 = expect3
     iassertequal(expect4, table4)
+    
+    
+def test_transpose():
+    table1 = (('id', 'colour'),
+              (1, 'blue'),
+              (2, 'red'),
+              (3, 'purple'),
+              (5, 'yellow'),
+              (7, 'orange'))
+    table2 = transpose(table1)
+    expect2 = (('id', 1, 2, 3, 5, 7),
+               ('colour', 'blue', 'red', 'purple', 'yellow', 'orange'))
+    iassertequal(expect2, table2)
+    iassertequal(expect2, table2)
+    
     

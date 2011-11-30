@@ -316,6 +316,7 @@ Transforming tables
 .. autofunction:: petl.merge
 .. autofunction:: petl.melt
 .. autofunction:: petl.recast
+.. autofunction:: petl.transpose
 
 
 Loading (writing) tables to files and databases

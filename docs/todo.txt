@@ -92,8 +92,8 @@ Version 0.2
 - [done] check how cat and cut handle long/short rows; are they using itemgetter where possible?
 - [done] lookall
 - [done] dataslice
+- [done] implement transpose - one row iterator per field 
 
-- implement transpose - one row iterator per field :)
 - implement intersect
 - implement pivot?
 - implement crosstab?
@@ -101,6 +101,7 @@ Version 0.2
 Version 0.3
 -----------
 
+- cut complement
 - implement fromxml using etree find and patterns
 - to and from compressed files
 - alpha facet?

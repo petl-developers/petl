@@ -4990,3 +4990,44 @@ def rangefacet(table, field, width, minv=None, maxv=None,
 
     return fct
     
+
+def transpose(table):
+    """
+    Transpose rows into columns. E.g.::
+
+        >>> from petl import transpose, look    
+        >>> table1 = (('id', 'colour'),
+        ...           (1, 'blue'),
+        ...           (2, 'red'),
+        ...           (3, 'purple'),
+        ...           (5, 'yellow'),
+        ...           (7, 'orange'))
+        >>> table2 = transpose(table1)
+        >>> look(table2)
+        +----------+--------+-------+----------+----------+----------+
+        | 'id'     | 1      | 2     | 3        | 5        | 7        |
+        +==========+========+=======+==========+==========+==========+
+        | 'colour' | 'blue' | 'red' | 'purple' | 'yellow' | 'orange' |
+        +----------+--------+-------+----------+----------+----------+
+
+    """
+    
+    return TransposeView(table)
+
+
+class TransposeView(object):
+    
+    def __init__(self, source):
+        self.source = source
+        
+    def __iter__(self):
+        return itertranspose(self.source)
+
+
+def itertranspose(source):
+    fields = header(source)
+    its = [iter(source) for f in fields]
+    for i in range(len(fields)):
+        yield tuple(row[i] for row in its[i])
+        
+        
