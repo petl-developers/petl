@@ -1462,9 +1462,9 @@ def iterrecast(source, key, variablefield, valuefield,
         assert f in fields, 'invalid variable field: %s' % f
 
     # we'll need these later
-    value_index = fields.index(valuefield)
-    key_indices = [fields.index(f) for f in keyfields]
-    variable_indices = [fields.index(f) for f in variablefields]
+    valueindex = fields.index(valuefield)
+    keyindices = [fields.index(f) for f in keyfields]
+    variableindices = [fields.index(f) for f in variablefields]
     
     # determine the actual variable names to be cast as fields
     if isinstance(variablefields, dict):
@@ -1474,7 +1474,7 @@ def iterrecast(source, key, variablefield, valuefield,
         variables = defaultdict(set)
         # sample the data to discover variables to be cast as fields
         for row in islice(it, 0, samplesize):
-            for i, f in zip(variable_indices, variablefields):
+            for i, f in zip(variableindices, variablefields):
                 variables[f].add(row[i])
         for f in variables:
             variables[f] = sorted(variables[f]) # turn from sets to sorted lists
@@ -1490,9 +1490,8 @@ def iterrecast(source, key, variablefield, valuefield,
     # output data
     
     source = sort(source, key=keyfields)
-    it = iter(source)
-    it = islice(it, 1, None) # skip header row
-    getkey = itemgetter(*key_indices)
+    it = islice(source, 1, None) # skip header row
+    getkey = itemgetter(*keyindices)
     
     # process sorted data in newfields
     groups = groupby(it, key=getkey)
@@ -1502,10 +1501,10 @@ def iterrecast(source, key, variablefield, valuefield,
             out_row = list(key_value)
         else:
             out_row = [key_value]
-        for f, i in zip(variablefields, variable_indices):
+        for f, i in zip(variablefields, variableindices):
             for variable in variables[f]:
                 # collect all values for the current variable
-                values = [r[value_index] for r in group if r[i] == variable]
+                values = [r[valueindex] for r in group if r[i] == variable]
                 if len(values) == 0:
                     value = missing
                 elif len(values) == 1:

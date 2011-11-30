@@ -71,8 +71,8 @@ Version 0.2
 - [done] make everything return tuples
 - [done] make sure we don't get tripped up by attempts to compare tuples with lists
 - [won't do] return tuple as default aggregator
-- remove _ from melt and recast args
-- recast should not scan twice
+- [done] remove _ from melt and recast args
+- [won't do] recast should not scan twice
 
 - select signature for single field function
 - selectregex
