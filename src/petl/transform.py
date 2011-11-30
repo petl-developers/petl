@@ -2566,126 +2566,153 @@ def facet(table, field):
     return fct
 
 
-def selectop(table, field, value, op, missing=None):
+def selectop(table, field, value, op):
     """
     Select rows where the function `op` applied to the given field and the given 
     value returns true.
     
     """
     
-    return select(table, lambda rec: op(rec[field], value), missing=missing)
+    return fieldselect(table, field, lambda v: op(v, value))
 
 
-def selecteq(table, field, value, missing=None):
+def selecteq(table, field, value):
     """
     Select rows where the given field equals the given value.
 
     """
     
-    return selectop(table, field, value, operator.eq, missing=missing)
+    return selectop(table, field, value, operator.eq)
 
 
-def selectne(table, field, value, missing=None):
+def selectne(table, field, value):
     """
     Select rows where the given field does not equal the given value.
 
     """
     
-    return selectop(table, field, value, operator.ne, missing=missing)
+    return selectop(table, field, value, operator.ne)
 
 
-def selectlt(table, field, value, missing=None):
+def selectlt(table, field, value):
     """
     Select rows where the given field is less than the given value.
 
     """
     
-    return selectop(table, field, value, operator.lt, missing=missing)
+    return selectop(table, field, value, operator.lt)
 
 
-def selectle(table, field, value, missing=None):
+def selectle(table, field, value):
     """
     Select rows where the given field is less than or equal to the given value.
 
     """
     
-    return selectop(table, field, value, operator.le, missing=missing)
+    return selectop(table, field, value, operator.le)
 
 
-def selectgt(table, field, value, missing=None):
+def selectgt(table, field, value):
     """
     Select rows where the given field is greater than the given value.
 
     """
     
-    return selectop(table, field, value, operator.gt, missing=missing)
+    return selectop(table, field, value, operator.gt)
 
 
-def selectge(table, field, value, missing=None):
+def selectge(table, field, value):
     """
     Select rows where the given field is greater than or equal to the given value.
 
     """
     
-    return selectop(table, field, value, operator.ge, missing=missing)
+    return selectop(table, field, value, operator.ge)
 
 
-def selectin(table, field, value, missing=None):
+def selectin(table, field, value):
     """
     Select rows where the given field is a member of the given value.
 
     """
     
-    return selectop(table, field, value, operator.contains, missing=missing)
+    return selectop(table, field, value, operator.contains)
 
 
-def selectni(table, field, value, missing=None):
+def selectnotin(table, field, value):
     """
     Select rows where the given field is not a member of the given value.
 
     """
     
-    return selectop(table, field, value, lambda a, b: a not in b, missing=missing)
+    return fieldselect(table, field, lambda v: v not in value)
 
 
-def selectrangeopenleft(table, field, minv, maxv, missing=None):
+def selectis(table, field, value):
+    """
+    Select rows where the given field `is` the given value.
+    
+    """
+    
+    return selectop(table, field, value, operator.is_)
+
+
+def selectisnot(table, field, value):
+    """
+    Select rows where the given field `is not` the given value.
+    
+    """
+    
+    return selectop(table, field, value, operator.is_not)
+
+
+def selectisinstance(table, field, value):
+    """
+    Select rows where the given field is an instance of the given type.
+    
+    """
+    
+    return selectop(table, field, value, isinstance)
+
+
+def selectrangeopenleft(table, field, minv, maxv):
     """
     Select rows where the given field is greater than or equal to `minv` and 
     less than `maxunpack`.
 
     """
     
-    return select(table, lambda rec: minv <= rec[field] < maxv, missing=missing)
+    return fieldselect(table, field, lambda v: minv <= v < maxv)
 
 
-def selectrangeopenright(table, field, minv, maxv, missing=None):
+def selectrangeopenright(table, field, minv, maxv):
     """
     Select rows where the given field is greater than `minv` and 
     less than or equal to `maxunpack`.
 
     """
     
-    return select(table, lambda rec: minv < rec[field] <= maxv, missing=missing)
+    return fieldselect(table, field, lambda v: minv < v <= maxv)
 
 
-def selectrangeopen(table, field, minv, maxv, missing=None):
+def selectrangeopen(table, field, minv, maxv):
     """
     Select rows where the given field is greater than or equal to `minv` and 
     less than or equal to `maxunpack`.
 
     """
     
-    return select(table, lambda rec: minv <= rec[field] <= maxv, missing=missing)
+    return fieldselect(table, field, lambda v: minv <= v <= maxv)
 
 
-def selectrangeclosed(table, field, minv, maxv, missing=None):
+def selectrangeclosed(table, field, minv, maxv):
     """
     Select rows where the given field is greater than `minv` and 
     less than `maxunpack`.
 
     """
     
-    return select(table, lambda rec: minv < rec[field] < maxv, missing=missing)
+    return fieldselect(table, field, lambda v: minv < v < maxv)
 
 
 def selectre(table, field, pattern, flags=0):
@@ -2719,7 +2746,7 @@ def selectre(table, field, pattern, flags=0):
     
     prog = re.compile(pattern, flags)
     test = lambda v: prog.search(v) is not None
-    return select(table, field, test)
+    return fieldselect(table, field, test)
 
 
 def rowreduce(table, key, reducer, fields=None, presorted=False, buffersize=None):

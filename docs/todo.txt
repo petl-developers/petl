@@ -83,9 +83,9 @@ Version 0.2
 - [done] handle errors in extend
 - [done] implement rowselect - generic `where` callable operating on the row (rather than the record)
 - [done] implement rowlenselect - select by row length
-- implement selectis, selectisnot
-- rename selectni to selectnotin
-- implement selectisinstance/selecttype?
+- [done] implement selectis, selectisnot
+- [done] rename selectni to selectnotin
+- [done] implement selectisinstance/selecttype?
 
 - implement stringjoin as aggregation function (or can you just pass ', '.join?)
 - implement missingness/frequency/valuecount ... valuecount(table, 'foo', None) -> count, frequency
