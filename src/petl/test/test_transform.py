@@ -14,7 +14,7 @@ from petl import rename, fieldnames, cut, cat, convert, fieldconvert, extend, \
                 rowmap, recordmap, rowmapmany, recordmapmany, setheader, pushheader, \
                 skip, extendheader, unpack, join, leftjoin, rightjoin, outerjoin, \
                 crossjoin, antijoin, rangeaggregate, rangecounts, rangefacet, \
-                rangerowreduce, rangerecordreduce, selectre
+                rangerowreduce, rangerecordreduce, selectre, rowselect, recordselect
 
 
 def test_rename():
@@ -1027,6 +1027,42 @@ def test_select():
     
     # check single field tests
     actual = select(table, 'foo', lambda v: v == 'a')
+    expect = (('foo', 'bar', 'baz'),
+              ('a', 4, 9.3),
+              ('a', 2, 88.2))
+    iassertequal(expect, actual)
+    iassertequal(expect, actual) # check can iterate twice
+
+
+def test_rowselect():
+    
+    table = (('foo', 'bar', 'baz'),
+             ('a', 4, 9.3),
+             ('a', 2, 88.2),
+             ('b', 1, 23.3),
+             ('c', 8, 42.0),
+             ('d', 7, 100.9),
+             ('c', 2))
+
+    actual = rowselect(table, lambda row: row[0] == 'a')
+    expect = (('foo', 'bar', 'baz'),
+              ('a', 4, 9.3),
+              ('a', 2, 88.2))
+    iassertequal(expect, actual)
+    iassertequal(expect, actual) # check can iterate twice
+
+
+def test_recordselect():
+    
+    table = (('foo', 'bar', 'baz'),
+             ('a', 4, 9.3),
+             ('a', 2, 88.2),
+             ('b', 1, 23.3),
+             ('c', 8, 42.0),
+             ('d', 7, 100.9),
+             ('c', 2))
+
+    actual = recordselect(table, lambda rec: rec['foo'] == 'a')
     expect = (('foo', 'bar', 'baz'),
               ('a', 4, 9.3),
               ('a', 2, 88.2))

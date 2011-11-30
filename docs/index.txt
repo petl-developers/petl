@@ -269,6 +269,9 @@ Transforming tables
 .. autofunction:: petl.selectrangeopenright
 .. autofunction:: petl.selectrangeclosed
 .. autofunction:: petl.selectre
+.. autofunction:: petl.rowselect
+.. autofunction:: petl.recordselect
+.. autofunction:: petl.fieldselect
 .. autofunction:: petl.facet
 .. autofunction:: petl.rangefacet
 .. autofunction:: petl.convert

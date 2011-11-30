@@ -7,7 +7,7 @@ from petl.testfun import dummytable
 from petl.transform import RenameView, CutView, CatView, FieldConvertView,\
     ExtendView, RowSliceView, TailView, SortView, MeltView, RecastView,\
     DuplicatesView, ConflictsView, ComplementView, CaptureView, SplitView,\
-    SelectView, FieldSelectView, FieldMapView, RowReduceView, RecordReduceView,\
+    RecordSelectView, FieldSelectView, FieldMapView, RowReduceView, RecordReduceView,\
     AggregateView, RangeRowReduceView, RangeRecordReduceView, RangeAggregateView,\
     RowMapView, RecordMapView, RowMapManyView, RecordMapManyView, SetHeaderView,\
     ExtendHeaderView, PushHeaderView, SkipView, UnpackView, JoinView,\
@@ -137,7 +137,7 @@ def test_split():
 
 def test_select():
     src = dummytable(4, 10)
-    tbl = SelectView(src, lambda rec: rec['f0'] > rec['f1'])
+    tbl = RecordSelectView(src, lambda rec: rec['f0'] > rec['f1'])
     before = tbl.cachetag()
     src.reseed()
     after = tbl.cachetag()

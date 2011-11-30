@@ -2218,7 +2218,7 @@ def select(table, *args, **kwargs):
             where = expr(where)
         else:
             assert callable(where), 'second argument must be string or callable'
-        return SelectView(table, where, missing)
+        return RecordSelectView(table, where, missing)
     else:
         field = args[0]
         where = args[1]
@@ -2226,7 +2226,18 @@ def select(table, *args, **kwargs):
         return FieldSelectView(table, field, where)
         
 
-class SelectView(object):
+def recordselect(table, where, missing=None):
+    """
+    Select rows matching a condition. The `where` argument should be a function
+    accepting a record (row as dictionary of values indexed by field name) as 
+    argument and returning True or False.
+
+    """
+    
+    return RecordSelectView(table, where, missing=missing)
+        
+        
+class RecordSelectView(object):
     
     def __init__(self, source, where, missing=None):
         self.source = source
@@ -2251,6 +2262,51 @@ def iterselect(source, where, missing):
         rec = asdict(flds, row, missing)
         if where(rec):
             yield tuple(row)
+        
+        
+def rowselect(table, where):
+    """
+    Select rows matching a condition. The `where` argument should be a function
+    accepting a row (list or tuple) as argument and returning True or False.
+
+    """
+    
+    return RowSelectView(table, where)
+        
+        
+class RowSelectView(object):
+    
+    def __init__(self, source, where):
+        self.source = source
+        self.where = where
+        
+    def __iter__(self):
+        return iterrowselect(self.source, self.where)
+    
+    def cachetag(self):
+        try:
+            return hash((self.source.cachetag(), self.where))
+        except Exception as e:
+            raise Uncacheable(e)
+
+    
+def iterrowselect(source, where):
+    it = iter(source)
+    flds = it.next()
+    yield tuple(flds)
+    for row in it:
+        if where(row):
+            yield tuple(row)
+        
+        
+def fieldselect(table, field, where):
+    """
+    Select rows matching a condition. The `where` argument should be a function
+    accepting a single data value as argument and returning True or False.
+
+    """
+    
+    return FieldSelectView(table, field, where)
         
         
 class FieldSelectView(object):
