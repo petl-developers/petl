@@ -201,6 +201,7 @@ Utility functions
 
 .. autofunction:: petl.header
 .. autofunction:: petl.data
+.. autofunction:: petl.dataslice
 .. autofunction:: petl.records
 .. autofunction:: petl.fieldnames
 .. autofunction:: petl.rowcount

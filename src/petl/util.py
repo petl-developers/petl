@@ -80,6 +80,16 @@ def data(table):
     
     return islice(table, 1, None)
 
+
+def dataslice(table, *args):
+    """
+    Syntactic sugar for ``itertools.islice(data(table), *args)``. See also
+    :func:`itertools.islice`.
+    
+    """
+    
+    return islice(data(table), *args)
+
     
 def records(table, missing=None):
     """
