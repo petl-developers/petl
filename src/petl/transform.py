@@ -314,33 +314,32 @@ def itercat(sources, missing=None):
     
     # determine output fields by gathering all fields found in the sources
     source_flds_lists = [it.next() for it in its]
-    out_flds = list()
+    outflds = list()
     for flds in source_flds_lists:
         for f in flds:
-            if f not in out_flds:
+            if f not in outflds:
                 # add any new fields as we find them
-                out_flds.append(f)
-    yield tuple(out_flds)
+                outflds.append(f)
+    yield tuple(outflds)
+
+    def rowmaker(row, indexmap):
+        outrow = [missing] * len(outflds)
+        for oi, i in indexmap:
+            try:
+                outrow[oi] = row[i]
+            except:
+                pass # be relaxed about short rows
+        return tuple(outrow)
 
     # output data rows
     for source_index, it in enumerate(its):
+
         flds = source_flds_lists[source_index]
-        
-        # let's define a function which will, for any row and field name,
-        # return the corresponding value, or fill in any missing values
-        def get_value(row, f):
-            try:
-                value = row[flds.index(f)]
-            except ValueError: # source does not have f in fields
-                value = missing
-            except IndexError: # row is short
-                value = missing
-            return value
+        indexmap = [(outflds.index(f), flds.index(f)) for f in flds]
         
         # now construct and yield the data rows
         for row in it:
-            out_row = [get_value(row, f) for f in out_flds]
-            yield tuple(out_row)
+            yield rowmaker(row, indexmap)
 
 
 def convert(table, field, *args, **kwargs):
