@@ -74,8 +74,7 @@ Version 0.2
 - [done] remove _ from melt and recast args
 - [won't do] recast should not scan twice
 - [done] select signature for single field function
-
-- selectregex
+- [done] selectregex
 - make convert args more flexible
 - autoconvert multiple fields to numeric types - convenience function
 - translate/replace single value in a field, e.g., None to zero; maybe also apply to multiple fields

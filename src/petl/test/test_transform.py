@@ -14,7 +14,7 @@ from petl import rename, fieldnames, cut, cat, convert, fieldconvert, translate,
                 rowmap, recordmap, rowmapmany, recordmapmany, setheader, pushheader, \
                 skip, extendheader, unpack, join, leftjoin, rightjoin, outerjoin, \
                 crossjoin, antijoin, rangeaggregate, rangecounts, rangefacet, \
-                rangerowreduce, rangerecordreduce
+                rangerowreduce, rangerecordreduce, selectre
 
 
 def test_rename():
@@ -1012,6 +1012,24 @@ def test_select():
               ('a', 2, 88.2))
     iassertequal(expect, actual)
     iassertequal(expect, actual) # check can iterate twice
+
+
+def test_selectre():
+    
+    table = (('foo', 'bar', 'baz'),
+             ('aa', 4, 9.3),
+             ('aaa', 2, 88.2),
+             ('b', 1, 23.3),
+             ('ccc', 8, 42.0),
+             ('bb', 7, 100.9),
+             ('c', 2))
+    actual = selectre(table, 'foo', '[ab]{2}')
+    expect = (('foo', 'bar', 'baz'),
+             ('aa', 4, 9.3),
+             ('aaa', 2, 88.2),
+             ('bb', 7, 100.9))
+    iassertequal(expect, actual)
+    iassertequal(expect, actual)
 
     
 def test_fieldmap():

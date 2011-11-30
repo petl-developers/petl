@@ -2469,6 +2469,40 @@ def selectrangeclosed(table, field, minv, maxv, missing=None):
     return select(table, lambda rec: minv < rec[field] < maxv, missing=missing)
 
 
+def selectre(table, field, pattern, flags=0):
+    """
+    Select rows where a regular expression search using the given pattern on the
+    given field returns a match. E.g.::
+
+        >>> from petl import selectre, look    
+        >>> table1 = (('foo', 'bar', 'baz'),
+        ...           ('aa', 4, 9.3),
+        ...           ('aaa', 2, 88.2),
+        ...           ('b', 1, 23.3),
+        ...           ('ccc', 8, 42.0),
+        ...           ('bb', 7, 100.9),
+        ...           ('c', 2))
+        >>> table2 = selectre(table1, 'foo', '[ab]{2}')
+        >>> look(table2)
+        +-------+-------+-------+
+        | 'foo' | 'bar' | 'baz' |
+        +=======+=======+=======+
+        | 'aa'  | 4     | 9.3   |
+        +-------+-------+-------+
+        | 'aaa' | 2     | 88.2  |
+        +-------+-------+-------+
+        | 'bb'  | 7     | 100.9 |
+        +-------+-------+-------+
+
+    See also :func:`re.search`.
+    
+    """
+    
+    prog = re.compile(pattern, flags)
+    test = lambda v: prog.search(v) is not None
+    return select(table, field, test)
+
+
 def rowreduce(table, key, reducer, fields=None, presorted=False, buffersize=None):
     """
     Reduce rows grouped under the given key via an arbitrary function. E.g.::

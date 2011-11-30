@@ -23,7 +23,7 @@ from petl.transform import rename, cut, cat, convert, fieldconvert, translate, e
            antijoin, rangeaggregate, rangecounts, selectop, selectne, selectgt, \
            selectge, selectlt, selectle, rangefacet, selectrangeopenleft, \
            selectrangeopenright, selectrangeopen, selectrangeclosed, rangerowreduce, \
-           rangerecordreduce, selectin, selectni
+           rangerecordreduce, selectin, selectni, selectre
            
            
 def lenstats(table, field):
