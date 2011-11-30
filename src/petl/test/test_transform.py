@@ -539,7 +539,7 @@ def test_melt_1():
     result = melt(table, key='id')
     iassertequal(expectation, result)
 
-    result = melt(table, key='id', variable_field='variable', value_field='value')
+    result = melt(table, key='id', variablefield='variable', valuefield='value')
     iassertequal(expectation, result)
 
 
@@ -586,13 +586,13 @@ def test_recast_1():
     result = recast(table) # by default lift 'variable' field, hold everything else
     iassertequal(expectation, result)
 
-    result = recast(table, variable_field='variable')
+    result = recast(table, variablefield='variable')
     iassertequal(expectation, result)
 
-    result = recast(table, key='id', variable_field='variable')
+    result = recast(table, key='id', variablefield='variable')
     iassertequal(expectation, result)
 
-    result = recast(table, key='id', variable_field='variable', value_field='value')
+    result = recast(table, key='id', variablefield='variable', valuefield='value')
     iassertequal(expectation, result)
 
 
@@ -613,7 +613,7 @@ def test_recast_2():
     
     # can manually pick which variables you want to recast as fields
     # TODO this is awkward
-    result = recast(table, key='id', variable_field={'variable':['gender']})
+    result = recast(table, key='id', variablefield={'variable':['gender']})
     iassertequal(expectation, result)
 
 
@@ -935,7 +935,7 @@ def test_melt_and_capture():
                    ('2', '45', '1'),
                    ('2', '67', '2'))
     
-    step1 = melt(table, key='id', value_field='parasitaemia')
+    step1 = melt(table, key='id', valuefield='parasitaemia')
     step2 = capture(step1, 'variable', 'parad(\\d+)', ('day',))
     iassertequal(expectation, step2)
 

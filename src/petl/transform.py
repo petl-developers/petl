@@ -1170,7 +1170,7 @@ class SortView(object):
             raise Uncacheable
     
 
-def melt(table, key=[], variables=[], variable_field='variable', value_field='value'):
+def melt(table, key=[], variables=[], variablefield='variable', valuefield='value'):
     """
     Reshape a table, melting fields into data. E.g.::
 
@@ -1237,25 +1237,27 @@ def melt(table, key=[], variables=[], variable_field='variable', value_field='va
 
     """
     
-    return MeltView(table, key, variables, variable_field, value_field)
+    return MeltView(table, key=key, variables=variables, 
+                    variablefield=variablefield, 
+                    valuefield=valuefield)
     
     
 class MeltView(object):
     
     def __init__(self, source, key=[], variables=[], 
-                 variable_field='variable', value_field='value'):
+                 variablefield='variable', valuefield='value'):
         self.source = source
         self.key = key
         self.variables = variables
-        self.variable_field = variable_field
-        self.value_field = value_field
+        self.variablefield = variablefield
+        self.valuefield = valuefield
         
     def __iter__(self):
         return itermelt(self.source, self.key, self.variables, 
-                        self.variable_field, self.value_field)
+                        self.variablefield, self.valuefield)
     
     
-def itermelt(source, key, variables, variable_field, value_field):
+def itermelt(source, key, variables, variablefield, valuefield):
     it = iter(source)
     
     # normalise some stuff
@@ -1274,8 +1276,8 @@ def itermelt(source, key, variables, variable_field, value_field):
     
     # determine the output fields
     out_flds = list(key)
-    out_flds.append(variable_field)
-    out_flds.append(value_field)
+    out_flds.append(variablefield)
+    out_flds.append(valuefield)
     yield tuple(out_flds)
     
     key_indices = [flds.index(k) for k in key]
@@ -1292,8 +1294,8 @@ def itermelt(source, key, variables, variable_field, value_field):
             yield tuple(o)
             
 
-def recast(table, key=[], variable_field='variable', value_field='value', 
-           sample_size=1000, reducers=dict(), missing=None):
+def recast(table, key=[], variablefield='variable', valuefield='value', 
+           samplesize=1000, reducers=dict(), missing=None):
     """
     Recast molten data. E.g.::
     
@@ -1326,7 +1328,7 @@ def recast(table, key=[], variable_field='variable', value_field='value',
         ...           [2, 'age', 17],
         ...           [1, 'age', 12],
         ...           [3, 'gender', 'M']]
-        >>> table4 = recast(table3, variable_field='vars', value_field='vals')
+        >>> table4 = recast(table3, variablefield='vars', valuefield='vals')
         >>> look(table4)
         +------+-------+----------+
         | 'id' | 'age' | 'gender' |
@@ -1399,30 +1401,32 @@ def recast(table, key=[], variable_field='variable', value_field='value',
 
     """
     
-    return RecastView(table, key, variable_field, value_field, sample_size, reducers, missing)
+    return RecastView(table, key=key, variablefield=variablefield, 
+                      valuefield=valuefield, samplesize=samplesize, 
+                      reducers=reducers, missing=missing)
     
 
 class RecastView(object):
     
-    def __init__(self, source, key=[], variable_field='variable', 
-                 value_field='value', sample_size=1000, reducers=dict(), 
+    def __init__(self, source, key=[], variablefield='variable', 
+                 valuefield='value', samplesize=1000, reducers=dict(), 
                  missing=None):
         self.source = source
         self.key = key
-        self.variable_field = variable_field
-        self.value_field = value_field
-        self.sample_size = sample_size
+        self.variablefield = variablefield
+        self.valuefield = valuefield
+        self.samplesize = samplesize
         self.reducers = reducers
         self.missing = missing
         
     def __iter__(self):
-        return iterrecast(self.source, self.key, self.variable_field, 
-                          self.value_field, self.sample_size, self.reducers,
+        return iterrecast(self.source, self.key, self.variablefield, 
+                          self.valuefield, self.samplesize, self.reducers,
                           self.missing)
 
 
-def iterrecast(source, key=[], variable_field='variable', value_field='value', 
-               sample_size=1000, reducers=dict(), missing=None):        
+def iterrecast(source, key, variablefield, valuefield, 
+               samplesize, reducers, missing):        
     #
     # TODO implementing this by making two passes through the data is a bit
     # ugly, and could be costly if there are several upstream transformations
@@ -1435,42 +1439,42 @@ def iterrecast(source, key=[], variable_field='variable', value_field='value',
     fields = it.next()
     
     # normalise some stuff
-    key_fields = key
-    variable_fields = variable_field # N.B., could be more than one
-    if isinstance(key_fields, basestring):
-        key_fields = (key_fields,)
-    if isinstance(variable_fields, basestring):
-        variable_fields = (variable_fields,)
-    if not key_fields:
-        # assume key_fields is fields not in variables
-        key_fields = [f for f in fields if f not in variable_fields and f != value_field]
-    if not variable_fields:
-        # assume variables are fields not in key_fields
-        variable_fields = [f for f in fields if f not in key_fields and f != value_field]
+    keyfields = key
+    variablefields = variablefield # N.B., could be more than one
+    if isinstance(keyfields, basestring):
+        keyfields = (keyfields,)
+    if isinstance(variablefields, basestring):
+        variablefields = (variablefields,)
+    if not keyfields:
+        # assume keyfields is fields not in variables
+        keyfields = [f for f in fields if f not in variablefields and f != valuefield]
+    if not variablefields:
+        # assume variables are fields not in keyfields
+        variablefields = [f for f in fields if f not in keyfields and f != valuefield]
     
     # sanity checks
-    assert value_field in fields, 'invalid value field: %s' % value_field
-    assert value_field not in key_fields, 'value field cannot be key_fields'
-    assert value_field not in variable_fields, 'value field cannot be variable field'
-    for f in key_fields:
-        assert f in fields, 'invalid key_fields field: %s' % f
-    for f in variable_fields:
+    assert valuefield in fields, 'invalid value field: %s' % valuefield
+    assert valuefield not in keyfields, 'value field cannot be keyfields'
+    assert valuefield not in variablefields, 'value field cannot be variable field'
+    for f in keyfields:
+        assert f in fields, 'invalid keyfields field: %s' % f
+    for f in variablefields:
         assert f in fields, 'invalid variable field: %s' % f
 
     # we'll need these later
-    value_index = fields.index(value_field)
-    key_indices = [fields.index(f) for f in key_fields]
-    variable_indices = [fields.index(f) for f in variable_fields]
+    value_index = fields.index(valuefield)
+    key_indices = [fields.index(f) for f in keyfields]
+    variable_indices = [fields.index(f) for f in variablefields]
     
     # determine the actual variable names to be cast as fields
-    if isinstance(variable_fields, dict):
+    if isinstance(variablefields, dict):
         # user supplied dictionary
-        variables = variable_fields
+        variables = variablefields
     else:
         variables = defaultdict(set)
         # sample the data to discover variables to be cast as fields
-        for row in islice(it, 0, sample_size):
-            for i, f in zip(variable_indices, variable_fields):
+        for row in islice(it, 0, samplesize):
+            for i, f in zip(variable_indices, variablefields):
                 variables[f].add(row[i])
         for f in variables:
             variables[f] = sorted(variables[f]) # turn from sets to sorted lists
@@ -1478,14 +1482,14 @@ def iterrecast(source, key=[], variable_field='variable', value_field='value',
     # finished the first pass
         
     # determine the output fields
-    out_fields = list(key_fields)
-    for f in variable_fields:
-        out_fields.extend(variables[f])
-    yield tuple(out_fields)
+    outfields = list(keyfields)
+    for f in variablefields:
+        outfields.extend(variables[f])
+    yield tuple(outfields)
     
     # output data
     
-    source = sort(source, key=key_fields)
+    source = sort(source, key=keyfields)
     it = iter(source)
     it = islice(it, 1, None) # skip header row
     getkey = itemgetter(*key_indices)
@@ -1494,11 +1498,11 @@ def iterrecast(source, key=[], variable_field='variable', value_field='value',
     groups = groupby(it, key=getkey)
     for key_value, group in groups:
         group = list(group) # may need to iterate over the group more than once
-        if len(key_fields) > 1:
+        if len(keyfields) > 1:
             out_row = list(key_value)
         else:
             out_row = [key_value]
-        for f, i in zip(variable_fields, variable_indices):
+        for f, i in zip(variablefields, variable_indices):
             for variable in variables[f]:
                 # collect all values for the current variable
                 values = [r[value_index] for r in group if r[i] == variable]

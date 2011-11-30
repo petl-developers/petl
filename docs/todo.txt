@@ -71,6 +71,7 @@ Version 0.2
 - [done] make everything return tuples
 - [done] make sure we don't get tripped up by attempts to compare tuples with lists
 - [won't do] return tuple as default aggregator
+- remove _ from melt and recast args
 - recast should not scan twice
 
 - select signature for single field function
@@ -88,13 +89,11 @@ Version 0.2
 - implement missingness
 - implement transpose
 - check how cat and cut handle long/short rows; are they using itemgetter where possible?
-- remove _ from melt and recast args
 - implement intersect
 - implement pivot?
 - implement crosstab?
 - implement fromxml
 - lookall
-- recast shouldn't scan twice
 
 Version 0.3
 -----------
