@@ -88,11 +88,10 @@ Version 0.2
 - [done] implement selectisinstance/selecttype?
 - [done] implement stringjoin as aggregation function (or can you just pass ', '.join?)
 - [done] implement missingness/frequency/valuecount ... valuecount(table, 'foo', None) -> count, frequency
-- add proportions/frequency/ratio to valuecounts
+- [done] add proportions/frequency/ratio to valuecounts
+- [done] check how cat and cut handle long/short rows; are they using itemgetter where possible?
+- [done] lookall
 
-- check how cat and cut handle long/short rows; are they using itemgetter where possible?
-- implement fromxml using etree find and patterns
-- lookall
 - dataslice
 - implement transpose - one row iterator per field :)
 - implement intersect
@@ -102,6 +101,7 @@ Version 0.2
 Version 0.3
 -----------
 
+- implement fromxml using etree find and patterns
 - to and from compressed files
 - alpha facet?
 - partitioning of alpha fields?

@@ -205,6 +205,7 @@ Utility functions
 .. autofunction:: petl.fieldnames
 .. autofunction:: petl.rowcount
 .. autofunction:: petl.look
+.. autofunction:: petl.lookall
 .. autofunction:: petl.see
 .. autofunction:: petl.values
 .. autofunction:: petl.valueset

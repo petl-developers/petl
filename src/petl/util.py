@@ -184,6 +184,16 @@ def look(table, start=0, stop=10, step=1):
     """
     
     return Look(table, start, stop, step)
+
+
+def lookall(table):
+    """
+    Format the entire table as text for inspection in an interactive session.
+    
+    N.B., this will load the entire table into memory.
+    """
+    
+    return look(table, 0, None)
     
     
 class Look(object):

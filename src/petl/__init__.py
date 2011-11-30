@@ -7,7 +7,7 @@ from petl.util import header, fieldnames, data, records, rowcount, look, see, va
            valueset, unique, lookup, lookupone, recordlookup, recordlookupone, \
            typecounter, typecounts, typeset, parsecounter, parsecounts, \
            stats, rowlengths, DuplicateKeyError, datetimeparser, dateparser, timeparser, boolparser, \
-           expr, limits, strjoin, valuecount
+           expr, limits, strjoin, valuecount, lookall
 
 from petl.io import fromcsv, frompickle, fromsqlite3, tocsv, topickle, \
            tosqlite3, crc32sum, adler32sum, statsum, fromdb, \
