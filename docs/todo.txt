@@ -86,9 +86,9 @@ Version 0.2
 - [done] implement selectis, selectisnot
 - [done] rename selectni to selectnotin
 - [done] implement selectisinstance/selecttype?
+- [done] implement stringjoin as aggregation function (or can you just pass ', '.join?)
+- [done] implement missingness/frequency/valuecount ... valuecount(table, 'foo', None) -> count, frequency
 
-- implement stringjoin as aggregation function (or can you just pass ', '.join?)
-- implement missingness/frequency/valuecount ... valuecount(table, 'foo', None) -> count, frequency
 - add proportions/frequency/ratio to valuecounts
 - check how cat and cut handle long/short rows; are they using itemgetter where possible?
 - implement fromxml using etree find and patterns

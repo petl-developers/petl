@@ -405,6 +405,34 @@ def valueset(table, *fields):
     return set(values(table, *fields))
 
 
+def valuecount(table, field, value):
+    """
+    Count the number of occurrences of `value` under the given field. Returns
+    the absolute count and relative frequency as a pair. E.g.::
+    
+        >>> from petl import valuecount
+        >>> table = (('foo', 'bar'), ('a', 1), ('b', 2), ('b', 7))
+        >>> n, f = valuecount(table, 'foo', 'b')
+        >>> n
+        2
+        >>> f
+        0.6666666666666666
+
+    """
+    
+    if isinstance(field, (list, tuple)):
+        it = values(table, *field)
+    else:
+        it = values(table, field)
+    total = 0
+    vs = 0
+    for v in it:
+        total += 1
+        if v == value:
+            vs += 1
+    return vs, float(vs)/total
+    
+    
 def valuecounter(table, *fields):
     """
     Find distinct values for the given field and count the number of 
@@ -1425,3 +1453,12 @@ def expr(s):
     return eval("lambda rec: " + prog.sub(repl, s))
     
     
+def strjoin(s):
+    """
+    Return a function to join sequences using `s` as the separator.
+    
+    """
+    
+    return lambda l: s.join(map(str, l))
+
+

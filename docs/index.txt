@@ -201,16 +201,21 @@ Utility functions
 
 .. autofunction:: petl.header
 .. autofunction:: petl.data
-.. autofunction:: petl.values
 .. autofunction:: petl.records
 .. autofunction:: petl.fieldnames
 .. autofunction:: petl.rowcount
 .. autofunction:: petl.look
 .. autofunction:: petl.see
+.. autofunction:: petl.values
 .. autofunction:: petl.valueset
+.. autofunction:: petl.valuecount
 .. autofunction:: petl.valuecounter
 .. autofunction:: petl.valuecounts
 .. autofunction:: petl.unique
+.. autofunction:: petl.limits
+.. autofunction:: petl.stats
+.. autofunction:: petl.lenstats
+.. autofunction:: petl.rowlengths
 .. autofunction:: petl.typecounter
 .. autofunction:: petl.typecounts
 .. autofunction:: petl.typeset
@@ -220,10 +225,6 @@ Utility functions
 .. autofunction:: petl.timeparser
 .. autofunction:: petl.datetimeparser
 .. autofunction:: petl.boolparser
-.. autofunction:: petl.limits
-.. autofunction:: petl.stats
-.. autofunction:: petl.lenstats
-.. autofunction:: petl.rowlengths
 .. autofunction:: petl.lookup
 .. autofunction:: petl.lookupone
 .. autofunction:: petl.recordlookup
@@ -232,6 +233,7 @@ Utility functions
 .. autofunction:: petl.adler32sum
 .. autofunction:: petl.crc32sum
 .. autofunction:: petl.expr
+.. autofunction:: petl.strjoin
 
 Extracting (reading) tables from files and databases
 ----------------------------------------------------
@@ -312,10 +314,6 @@ Transforming tables
 .. autofunction:: petl.merge
 .. autofunction:: petl.melt
 .. autofunction:: petl.recast
-.. autofunction:: petl.filldown
-.. autofunction:: petl.fillup
-.. autofunction:: petl.fillleft
-.. autofunction:: petl.fillright
 
 
 Loading (writing) tables to files and databases

@@ -5,7 +5,8 @@ TODO doc me
 
 from petl import header, fieldnames, data, records, rowcount, look, see, values, valuecounter, valuecounts, valueset,\
                 unique, lookup, lookupone, recordlookup, recordlookupone, \
-                DuplicateKeyError, rowlengths, stats, typecounts, parsecounts, typeset
+                DuplicateKeyError, rowlengths, stats, typecounts, parsecounts, typeset, \
+                valuecount
 
 from petl.testfun import assertequal, iassertequal
 
@@ -141,6 +142,15 @@ def test_values():
     iassertequal(expect, actual)
 
 
+def test_valuecount():
+    """Test the valuecount function."""
+    
+    table = (('foo', 'bar'), ('a', 1), ('b', 2), ('b', 7))
+    n, f = valuecount(table, 'foo', 'b')
+    assertequal(2, n)
+    assertequal(2./3, f) 
+    
+        
 def test_valuecounter():
     """Test the valuecounter function."""
     

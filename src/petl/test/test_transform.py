@@ -15,7 +15,7 @@ from petl import rename, fieldnames, cut, cat, convert, fieldconvert, extend, \
                 skip, extendheader, unpack, join, leftjoin, rightjoin, outerjoin, \
                 crossjoin, antijoin, rangeaggregate, rangecounts, rangefacet, \
                 rangerowreduce, rangerecordreduce, selectre, rowselect, recordselect, \
-                rowlenselect
+                rowlenselect, strjoin
 
 
 def test_rename():
@@ -1315,14 +1315,15 @@ def test_aggregate():
     aggregators['maxbar'] = 'bar', max
     aggregators['sumbar'] = 'bar', sum
     aggregators['listbar'] = 'bar', list
+    aggregators['bars'] = 'bar', strjoin(', ')
 
     table2 = aggregate(table1, 'foo', aggregators)
-    expect2 = (('foo', 'minbar', 'maxbar', 'sumbar', 'listbar'),
-               ('a', 3, 7, 10, [3, 7]),
-               ('b', 1, 9, 12, [2, 1, 9]),
-               ('c', 4, 4, 4, [4]),
-               ('d', 3, 3, 3, [3]),
-               ('e', None, None, 0, []))
+    expect2 = (('foo', 'minbar', 'maxbar', 'sumbar', 'listbar', 'bars'),
+               ('a', 3, 7, 10, [3, 7], '3, 7'),
+               ('b', 1, 9, 12, [2, 1, 9], '2, 1, 9'),
+               ('c', 4, 4, 4, [4], '4'),
+               ('d', 3, 3, 3, [3], '3'),
+               ('e', None, None, 0, [], ''))
     iassertequal(expect2, table2)
     iassertequal(expect2, table2) # check can iterate twice
     
@@ -1331,6 +1332,7 @@ def test_aggregate():
     table3['maxbar'] = 'bar', max
     table3['sumbar'] = 'bar', sum
     table3['listbar'] = 'bar' # default aggregation is list
+    table3['bars'] = 'bar', strjoin(', ')
     iassertequal(expect2, table3)
     
     

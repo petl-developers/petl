@@ -7,7 +7,7 @@ from petl.util import header, fieldnames, data, records, rowcount, look, see, va
            valueset, unique, lookup, lookupone, recordlookup, recordlookupone, \
            typecounter, typecounts, typeset, parsecounter, parsecounts, \
            stats, rowlengths, DuplicateKeyError, datetimeparser, dateparser, timeparser, boolparser, \
-           expr, limits
+           expr, limits, strjoin, valuecount
 
 from petl.io import fromcsv, frompickle, fromsqlite3, tocsv, topickle, \
            tosqlite3, crc32sum, adler32sum, statsum, fromdb, \
@@ -24,7 +24,7 @@ from petl.transform import rename, cut, cat, convert, fieldconvert, extend, rows
            selectge, selectlt, selectle, rangefacet, selectrangeopenleft, \
            selectrangeopenright, selectrangeopen, selectrangeclosed, rangerowreduce, \
            rangerecordreduce, selectin, selectnotin, selectre, rowselect, recordselect, \
-           fieldselect, rowlenselect, selectis, selectisnot
+           fieldselect, rowlenselect, selectis, selectisnot, selectisinstance
            
             
            
