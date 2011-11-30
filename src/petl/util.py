@@ -398,7 +398,7 @@ def valueset(table, *fields):
         
     The positional arguments can be field names or indexes (starting from zero).    
 
-    Equivalent to ``set(values(table, *fields))``.
+    Syntactic sugar for ``set(values(table, *fields))``, see also :func:`values`.
         
     """
 

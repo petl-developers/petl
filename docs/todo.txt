@@ -77,16 +77,15 @@ Version 0.2
 - [done] selectregex
 - [done] make convert args more flexible
 - [done] convert with dictionary (which translate is a convenience for)
-- translate/replace single value in a field, e.g., None to zero; maybe also apply to multiple fields
+- [done] translate/replace single value in a field, e.g., None to zero; maybe also apply to multiple fields
 
-
-- code smells in reduce functions - refactor with generic grouper and reducer functions?
-- dataslice
 - implement cachetag for all view classes
 - handle errors in extend
 - implement selectlen - select by row length
+- implement selecttype?
 - implement stringjoin as aggregation function (or can you just pass ', '.join?)
-- implement missingness
+- implement missingness/frequency/valuecount
+- add proportions/frequency/ratio to valuecounts
 - implement transpose
 - check how cat and cut handle long/short rows; are they using itemgetter where possible?
 - implement intersect
@@ -94,6 +93,8 @@ Version 0.2
 - implement crosstab?
 - implement fromxml
 - lookall
+- code smells in reduce functions - refactor with generic grouper and reducer functions?
+- dataslice
 
 Version 0.3
 -----------

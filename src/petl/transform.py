@@ -620,6 +620,16 @@ def dictconverter(d):
             return v
     return conv
 
+
+def replace(table, field, a, b):
+    """
+    Replace all occurrences of `a` with `b` under the given field. Syntactic
+    sugar for ``convert(table, field, {a: b})``, see also :func:`convert`.
+    
+    """
+    
+    return convert(table, field, {a: b})
+
     
 def extend(table, field, value):
     """
