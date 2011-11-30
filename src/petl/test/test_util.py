@@ -145,7 +145,7 @@ def test_values():
     iassertequal(expect, actual)
     
     actual = values(table, 'baz')
-    expect = (True, None, False)
+    expect = (True, False)
     iassertequal(expect, actual)
 
 
@@ -177,14 +177,11 @@ def test_valuecounts():
 
 
 def test_valuecounts_shortrows():
-    """Test the valuecounts function with short rows."""
+    """Test the values function with short rows."""
     
     table = (('foo', 'bar'), ('a', True), ('b',), ('b', True), ('c', False))
     actual = valuecounts(table, 'bar')
-    expect = (('value', 'count', 'frequency'), 
-              (True, 2, 2./4), 
-              (False, 1, 1./4), 
-              (None, 1, 1./4))
+    expect = (('value', 'count', 'frequency'), (True, 2, 2./3), (False, 1, 1./3))
     iassertequal(expect, actual) 
 
     
@@ -198,7 +195,7 @@ def test_valueset():
     assertequal(expect, actual)
 
     actual = valueset(table, 'bar')
-    expect = {True, False, None}
+    expect = {True, False}
     assertequal(expect, actual)
 
 
@@ -388,7 +385,7 @@ def test_typecounts():
     iassertequal(expect, actual)
 
     actual = typecounts(table, 'baz') 
-    expect = (('type', 'count'), ('str', 3), ('float', 1), ('NoneType', 1))
+    expect = (('type', 'count'), ('str', 3), ('float', 1))
     iassertequal(expect, actual)
 
 
