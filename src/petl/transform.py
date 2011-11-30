@@ -101,18 +101,18 @@ def iterrename(source, spec):
         yield row
         
         
-def project(table, *args, **kwargs):
+def cut(table, *args, **kwargs):
     """
     Choose and/or re-order columns. E.g.::
 
-        >>> from petl import look, project    
+        >>> from petl import look, cut    
         >>> table1 = [['foo', 'bar', 'baz'],
         ...           ['A', 1, 2.7],
         ...           ['B', 2, 3.4],
         ...           ['B', 3, 7.8],
         ...           ['D', 42, 9.0],
         ...           ['E', 12]]
-        >>> table2 = project(table1, 'foo', 'baz')
+        >>> table2 = cut(table1, 'foo', 'baz')
         >>> look(table2)
         +-------+-------+
         | 'foo' | 'baz' |
@@ -133,7 +133,7 @@ def project(table, *args, **kwargs):
     
     Fields can also be specified by index, starting from zero. E.g.::
 
-        >>> table3 = project(table1, 0, 2)
+        >>> table3 = cut(table1, 0, 2)
         >>> look(table3)
         +-------+-------+
         | 'foo' | 'baz' |
@@ -151,7 +151,7 @@ def project(table, *args, **kwargs):
 
     Field names and indices can be mixed, e.g.::
 
-        >>> table4 = project(table1, 'bar', 0)
+        >>> table4 = cut(table1, 'bar', 0)
         >>> look(table4)
         +-------+-------+
         | 'bar' | 'foo' |
@@ -169,7 +169,7 @@ def project(table, *args, **kwargs):
 
     Use the standard :func:`range` runction to select a range of fields, e.g.::
     
-        >>> table5 = project(table1, *range(0, 2))
+        >>> table5 = cut(table1, *range(0, 2))
         >>> look(table5)    
         +-------+-------+
         | 'foo' | 'bar' |
@@ -187,10 +187,10 @@ def project(table, *args, **kwargs):
 
     """
     
-    return ProjectView(table, args, **kwargs)
+    return CutView(table, args, **kwargs)
 
 
-class ProjectView(object):
+class CutView(object):
     
     def __init__(self, source, spec, missing=None):
         self.source = source
@@ -198,10 +198,10 @@ class ProjectView(object):
         self.missing = missing
         
     def __iter__(self):
-        return iterproject(self.source, self.spec, self.missing)
+        return itercut(self.source, self.spec, self.missing)
         
         
-def iterproject(source, spec, missing=None):
+def itercut(source, spec, missing=None):
     it = iter(source)
     spec = tuple(spec) # make sure no-one can change midstream
     

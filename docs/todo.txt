@@ -77,6 +77,7 @@ Version 0.2
 
 - dataslice
 - implement cachetag for all view classes
+- handle errors in extend
 
 - make sure we don't get tripped up by attempts to compare tuples with lists
 - implement selectlen - select by row length
@@ -84,7 +85,9 @@ Version 0.2
 - implement missingness
 - implement transpose
 - check how cat and cut handle long/short rows; are they using itemgetter where possible?
+- remove _ from melt and recast args
 
+- implement intersect
 - implement pivot?
 - implement crosstab?
 
