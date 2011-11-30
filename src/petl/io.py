@@ -15,7 +15,9 @@ from petl.util import data, header, fieldnames, asdict
 
 
 class Uncacheable(Exception):
-    pass # TODO
+    
+    def __init__(self, nested=None):
+        self.nested = nested
 
 
 def crc32sum(filename):

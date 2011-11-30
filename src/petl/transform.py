@@ -9,7 +9,7 @@ from operator import itemgetter
 import cPickle as pickle
 
 
-from petl.util import asindices, rowgetter, FieldSelectionError, asdict,\
+from petl.util import asindices, rowgetter, asdict,\
     expr, valueset, records, header, data, limits, values
 import re
 from petl.io import Uncacheable
@@ -89,6 +89,12 @@ class RenameView(object):
         
     def __getitem__(self, key):
         return self.spec[key]
+    
+    def cachetag(self):
+        try:
+            return hash((self.source.cachetag(), tuple(self.spec.items())))
+        except Exception as e:
+            raise Uncacheable(e)
     
     
 def iterrename(source, spec):
@@ -199,6 +205,12 @@ class CutView(object):
         
     def __iter__(self):
         return itercut(self.source, self.spec, self.missing)
+    
+    def cachetag(self):
+        try:
+            return hash((self.source.cachetag(), self.spec, self.missing))
+        except Exception as e:
+            raise Uncacheable(e)
         
         
 def itercut(source, spec, missing=None):
@@ -222,7 +234,7 @@ def itercut(source, spec, missing=None):
             yield transform(row) 
         except IndexError:
             # row is short, let's be kind and fill in any missing fields
-            yield tuple([row[i] if i < len(row) else missing for i in indices])
+            yield tuple(row[i] if i < len(row) else missing for i in indices)
 
     
 def cat(*tables, **kwargs):
@@ -289,6 +301,13 @@ class CatView(object):
     def __iter__(self):
         return itercat(self.sources, self.missing)
     
+    def cachetag(self):
+        try:
+            sourcetags = tuple(source.cachetag() for source in self.sources)
+            return hash((sourcetags, self.missing))
+        except Exception as e:
+            raise Uncacheable(e)
+        
 
 def itercat(sources, missing=None):
     its = [iter(t) for t in sources]
@@ -556,6 +575,24 @@ class FieldConvertView(object):
         
     def __getitem__(self, key):
         return self.converters[key]
+
+    def cachetag(self):
+        try:
+            # need to make converters hashable
+            convhashable = list()
+            for f, c in self.converters.items():
+                if isinstance(c, list):
+                    convhashable.append((f, tuple(c)))
+                elif isinstance(c, dict):
+                    convhashable.append((f, tuple(c.items())))
+                else:
+                    convhashable.append((f, c))
+            return hash((self.source.cachetag(), 
+                         tuple(convhashable),
+                         self.failonerror,
+                         self.errorvalue))
+        except Exception as e:
+            raise Uncacheable(e)
     
     
 def iterfieldconvert(source, converters, failonerror, errorvalue):
@@ -605,7 +642,7 @@ def iterfieldconvert(source, converters, failonerror, errorvalue):
 
     # construct the data rows
     for row in it:
-        yield tuple([transform_value(i, v) for i, v in enumerate(row)])
+        yield tuple(transform_value(i, v) for i, v in enumerate(row))
 
             
 def methodcaller(nm, *args):
@@ -698,6 +735,12 @@ class ExtendView(object):
         
     def __iter__(self):
         return iterextend(self.source, self.field, self.value)
+    
+    def cachetag(self):
+        try:
+            return hash((self.source.cachetag(), self.field, self.value))
+        except Exception as e:
+            raise Uncacheable(e)
 
 
 def iterextend(source, field, value):
@@ -790,6 +833,12 @@ class RowSliceView(object):
     def __iter__(self):
         return iterrowslice(self.source, self.minv, self.stop, self.step)
 
+    def cachetag(self):
+        try:
+            return hash((self.source.cachetag(), self.minv, self.stop, self.step))
+        except Exception as e:
+            raise Uncacheable(e)
+
 
 def iterrowslice(source, start, stop, step):    
     it = iter(source)
@@ -876,6 +925,12 @@ class TailView(object):
         
     def __iter__(self):
         return itertail(self.source, self.n)
+
+    def cachetag(self):
+        try:
+            return hash((self.source.cachetag(), self.n))
+        except Exception as e:
+            raise Uncacheable(e)
 
 
 def itertail(source, n):
@@ -1155,13 +1210,13 @@ class SortView(object):
 
         
     def cachetag(self):
-        if hasattr(self.source, 'cachetag'):
+        try:
             return hash((self.key, self.reverse, self.source.cachetag()))
-        else:
-            raise Uncacheable
-    
+        except Exception as e:
+            raise Uncacheable(e)
 
-def melt(table, key=[], variables=[], variablefield='variable', valuefield='value'):
+
+def melt(table, key=None, variables=None, variablefield='variable', valuefield='value'):
     """
     Reshape a table, melting fields into data. E.g.::
 
@@ -1235,7 +1290,7 @@ def melt(table, key=[], variables=[], variablefield='variable', valuefield='valu
     
 class MeltView(object):
     
-    def __init__(self, source, key=[], variables=[], 
+    def __init__(self, source, key=None, variables=None, 
                  variablefield='variable', valuefield='value'):
         self.source = source
         self.key = key
@@ -1247,7 +1302,17 @@ class MeltView(object):
         return itermelt(self.source, self.key, self.variables, 
                         self.variablefield, self.valuefield)
     
-    
+    def cachetag(self):
+        try:
+            return hash((self.source.cachetag(), 
+                         self.key, 
+                         self.variables,
+                         self.variablefield,
+                         self.valuefield))
+        except Exception as e:
+            raise Uncacheable(e)
+
+
 def itermelt(source, key, variables, variablefield, valuefield):
     it = iter(source)
     
@@ -1285,8 +1350,8 @@ def itermelt(source, key, variables, variablefield, valuefield):
             yield tuple(o)
             
 
-def recast(table, key=[], variablefield='variable', valuefield='value', 
-           samplesize=1000, reducers=dict(), missing=None):
+def recast(table, key=None, variablefield='variable', valuefield='value', 
+           samplesize=1000, reducers=None, missing=None):
     """
     Recast molten data. E.g.::
     
@@ -1399,21 +1464,37 @@ def recast(table, key=[], variablefield='variable', valuefield='value',
 
 class RecastView(object):
     
-    def __init__(self, source, key=[], variablefield='variable', 
-                 valuefield='value', samplesize=1000, reducers=dict(), 
+    def __init__(self, source, key=None, variablefield='variable', 
+                 valuefield='value', samplesize=1000, reducers=None, 
                  missing=None):
         self.source = source
         self.key = key
         self.variablefield = variablefield
         self.valuefield = valuefield
         self.samplesize = samplesize
-        self.reducers = reducers
+        if reducers is None:
+            self.reducers = dict()
+        else:
+            self.reducers = reducers
         self.missing = missing
         
     def __iter__(self):
         return iterrecast(self.source, self.key, self.variablefield, 
                           self.valuefield, self.samplesize, self.reducers,
                           self.missing)
+
+    def cachetag(self):
+        try:
+            return hash((self.source.cachetag(),
+                         tuple(self.key) if isinstance(self.key, list) else self.key,
+                         self.variablefield,
+                         self.valuefield,
+                         self.samplesize,
+                         tuple(self.reducers.items()) if self.reducers is not None else self.reducers,
+                         self.missing))
+        except Exception as e:
+            print e
+            raise Uncacheable(e)
 
 
 def iterrecast(source, key, variablefield, valuefield, 
@@ -1568,10 +1649,16 @@ class DuplicatesView(object):
             self.source = source
         else:
             self.source = sort(source, key, buffersize=buffersize)
-        self.key = key
+        self.key = key # TODO property
         
     def __iter__(self):
         return iterduplicates(self.source, self.key)
+
+    def cachetag(self):
+        try:
+            return hash((self.source.cachetag(), self.key))
+        except Exception as e:
+            raise Uncacheable(e)
 
 
 def iterduplicates(source, key):
@@ -1665,6 +1752,12 @@ class ConflictsView(object):
     def __iter__(self):
         return iterconflicts(self.source, self.key, self.missing)
     
+    def cachetag(self):
+        try:
+            return hash((self.source.cachetag(), self.key, self.missing))
+        except Exception as e:
+            raise Uncacheable(e)
+
     
 def iterconflicts(source, key, missing):
     it = iter(source)
@@ -1763,6 +1856,12 @@ class ComplementView(object):
             
     def __iter__(self):
         return itercomplement(self.a, self.b)
+
+    def cachetag(self):
+        try:
+            return hash((self.a.cachetag(), self.b.cachetag()))
+        except Exception as e:
+            raise Uncacheable(e)
 
 
 def itercomplement(a, b):
@@ -1912,6 +2011,17 @@ class CaptureView(object):
         return itercapture(self.source, self.field, self.pattern, self.newfields, 
                            self.include_original, self.flags)
 
+    def cachetag(self):
+        try:
+            return hash((self.source.cachetag(), 
+                         self.field,
+                         self.pattern,
+                         tuple(self.newfields),
+                         self.include_original,
+                         self.flags))
+        except Exception as e:
+            raise Uncacheable(e)
+
 
 def itercapture(source, field, pattern, newfields, include_original, flags):
     it = iter(source)
@@ -1993,6 +2103,18 @@ class SplitView(object):
     def __iter__(self):
         return itersplit(self.source, self.field, self.pattern, self.newfields, 
                          self.include_original, self.maxsplit, self.flags)
+
+    def cachetag(self):
+        try:
+            return hash((self.source.cachetag(), 
+                         self.field,
+                         self.pattern,
+                         tuple(self.newfields),
+                         self.include_original,
+                         self.maxsplit,
+                         self.flags))
+        except Exception as e:
+            raise Uncacheable(e)
 
 
 def itersplit(source, field, pattern, newfields, include_original, maxsplit,
@@ -2102,10 +2224,15 @@ class SelectView(object):
         self.where = where
         self.missing = missing
         
-        
     def __iter__(self):
         return iterselect(self.source, self.where, self.missing)
     
+    def cachetag(self):
+        try:
+            return hash((self.source.cachetag(), self.where, self.missing))
+        except Exception as e:
+            raise Uncacheable(e)
+
     
 def iterselect(source, where, missing):
     it = iter(source)
@@ -2124,9 +2251,14 @@ class FieldSelectView(object):
         self.field = field
         self.where = where
         
-        
     def __iter__(self):
         return iterfieldselect(self.source, self.field, self.where)
+
+    def cachetag(self):
+        try:
+            return hash((self.source.cachetag(), self.field, self.where))
+        except Exception as e:
+            raise Uncacheable(e)
     
     
 def iterfieldselect(source, field, where):
@@ -2231,6 +2363,27 @@ class FieldMapView(object):
         
     def __iter__(self):
         return iterfieldmap(self.source, self.mappings, self.failonerror, self.errorvalue)
+    
+    def cachetag(self):
+        try:
+            # need to make converters hashable
+            maphashable = list()
+            for outfld, m in self.mappings.items():
+                if isinstance(m, (tuple, list)) and len(m) == 2:
+                    srcfld = m[0]
+                    fm = m[1]
+                    if isinstance(fm, dict):
+                        maphashable.append((outfld, srcfld, tuple(fm.items())))
+                    else:
+                        maphashable.append((outfld, srcfld, fm))
+                else:
+                    maphashable.append((outfld, m))
+            return hash((self.source.cachetag(), 
+                         tuple(maphashable),
+                         self.failonerror,
+                         self.errorvalue))
+        except Exception as e:
+            raise Uncacheable(e)
     
     
 def iterfieldmap(source, mappings, failonerror, errorvalue):
@@ -2423,7 +2576,7 @@ def selectni(table, field, value, missing=None):
 def selectrangeopenleft(table, field, minv, maxv, missing=None):
     """
     Select rows where the given field is greater than or equal to `minv` and 
-    less than `maxv`.
+    less than `maxunpack`.
 
     """
     
@@ -2433,7 +2586,7 @@ def selectrangeopenleft(table, field, minv, maxv, missing=None):
 def selectrangeopenright(table, field, minv, maxv, missing=None):
     """
     Select rows where the given field is greater than `minv` and 
-    less than or equal to `maxv`.
+    less than or equal to `maxunpack`.
 
     """
     
@@ -2443,7 +2596,7 @@ def selectrangeopenright(table, field, minv, maxv, missing=None):
 def selectrangeopen(table, field, minv, maxv, missing=None):
     """
     Select rows where the given field is greater than or equal to `minv` and 
-    less than or equal to `maxv`.
+    less than or equal to `maxunpack`.
 
     """
     
@@ -2453,7 +2606,7 @@ def selectrangeopen(table, field, minv, maxv, missing=None):
 def selectrangeclosed(table, field, minv, maxv, missing=None):
     """
     Select rows where the given field is greater than `minv` and 
-    less than `maxv`.
+    less than `maxunpack`.
 
     """
     
@@ -2547,7 +2700,15 @@ class RowReduceView(object):
 
     def __iter__(self):
         return iterrowreduce(self.source, self.key, self.reducer, self.fields)
-    
+
+    def cachetag(self):
+        try:
+            return hash((self.source.cachetag(), self.key, 
+                         tuple(self.fields) if self.fields else self.fields, 
+                         self.reducer))
+        except Exception as e:
+            raise Uncacheable(e)
+
     
 def iterrowreduce(source, key, reducer, fields):
     it = iter(source)
@@ -2626,6 +2787,14 @@ class RecordReduceView(object):
     def __iter__(self):
         return iterrecordreduce(self.source, self.key, self.reducer, self.fields)
     
+    def cachetag(self):
+        try:
+            return hash((self.source.cachetag(), self.key, 
+                         tuple(self.fields) if self.fields else self.fields, 
+                         self.reducer))
+        except Exception as e:
+            raise Uncacheable(e)
+
     
 def iterrecordreduce(source, key, reducer, fields):
     it = iter(source)
@@ -2846,6 +3015,13 @@ class AggregateView(object):
     def __setitem__(self, key, value):
         self.aggregators[key] = value
 
+    def cachetag(self):
+        try:
+            return hash((self.source.cachetag(), self.key, self.failonerror,
+                         self.errorvalue, tuple(self.aggregators.items())))
+        except Exception as e:
+            raise Uncacheable(e)
+
     
 def iteraggregate(source, key, aggregators, failonerror, errorvalue):
     aggregators = OrderedDict(aggregators.items()) # take a copy
@@ -2915,8 +3091,8 @@ def rangerowreduce(table, key, width, reducer, fields=None, minv=None, maxv=None
         ...           ['b', 1],
         ...           ['b', 9],
         ...           ['c', 4]]
-        >>> def redu(minv, maxv, rows):
-        ...     return [minv, maxv, ''.join([row[0] for row in rows])]
+        >>> def redu(minv, maxunpack, rows):
+        ...     return [minv, maxunpack, ''.join([row[0] for row in rows])]
         ... 
         >>> table2 = rangerowreduce(table1, 'bar', 2, reducer=redu, fields=['frombar', 'tobar', 'foos'])
         >>> look(table2)
@@ -2953,12 +3129,20 @@ class RangeRowReduceView(object):
         self.width = width
         self.reducer = reducer
         self.fields = fields
-        self.minv, self.maxv = minv, maxv
+        self.minv, self.maxunpack = minv, maxv
         self.failonerror = failonerror
 
     def __iter__(self):
         return iterrangerowreduce(self.source, self.key, self.width, self.reducer,
-                                  self.fields, self.minv, self.maxv, self.failonerror)
+                                  self.fields, self.minv, self.maxunpack, self.failonerror)
+
+    def cachetag(self):
+        try:
+            return hash((self.source.cachetag(), self.key, self.width,
+                         tuple(self.fields) if self.fields else self.fields, 
+                         self.reducer, self.minv, self.maxunpack, self.failonerror))
+        except Exception as e:
+            raise Uncacheable(e)
 
 
 def iterrangerowreduce(source, key, width, reducer, fields, minv, maxv, failonerror):
@@ -2986,8 +3170,8 @@ def iterrangerowreduce(source, key, width, reducer, fields, minv, maxv, failoner
 
     # iterate over bins
     # N.B., we need to account for two possible scenarios
-    # (1) maxv is not specified, so keep making bins until we run out of rows
-    # (2) maxv is specified, so iterate over bins 
+    # (1) maxunpack is not specified, so keep making bins until we run out of rows
+    # (2) maxunpack is specified, so iterate over bins 
     try:
         for binminv in count(minv, width):
             binmaxv = binminv + width
@@ -3035,8 +3219,8 @@ def rangerecordreduce(table, key, width, reducer, fields=None, minv=None, maxv=N
         ...           ['b', 1],
         ...           ['b', 9],
         ...           ['c', 4]]
-        >>> def redu(minv, maxv, recs):
-        ...     return [minv, maxv, ''.join([rec['foo'] for rec in recs])]
+        >>> def redu(minv, maxunpack, recs):
+        ...     return [minv, maxunpack, ''.join([rec['foo'] for rec in recs])]
         ... 
         >>> table2 = rangerecordreduce(table1, 'bar', 2, reducer=redu, fields=['frombar', 'tobar', 'foos'])
         >>> look(table2)
@@ -3073,12 +3257,20 @@ class RangeRecordReduceView(object):
         self.width = width
         self.reducer = reducer
         self.fields = fields
-        self.minv, self.maxv = minv, maxv
+        self.minv, self.maxunpack = minv, maxv
         self.failonerror = failonerror
 
     def __iter__(self):
         return iterrangerecordreduce(self.source, self.key, self.width, self.reducer,
-                                     self.fields, self.minv, self.maxv, self.failonerror)
+                                     self.fields, self.minv, self.maxunpack, self.failonerror)
+
+    def cachetag(self):
+        try:
+            return hash((self.source.cachetag(), self.key, self.width,
+                         tuple(self.fields) if self.fields else self.fields, 
+                         self.reducer, self.minv, self.maxunpack, self.failonerror))
+        except Exception as e:
+            raise Uncacheable(e)
 
 
 def iterrangerecordreduce(source, key, width, reducer, fields, minv, maxv, failonerror):
@@ -3106,8 +3298,8 @@ def iterrangerecordreduce(source, key, width, reducer, fields, minv, maxv, failo
 
     # iterate over bins
     # N.B., we need to account for two possible scenarios
-    # (1) maxv is not specified, so keep making bins until we run out of rows
-    # (2) maxv is specified, so iterate over bins 
+    # (1) maxunpack is not specified, so keep making bins until we run out of rows
+    # (2) maxunpack is specified, so iterate over bins 
     try:
         for binminv in count(minv, width):
             binmaxv = binminv + width
@@ -3189,11 +3381,18 @@ class RangeCountsView(object):
             self.source = sort(source, key, buffersize=buffersize)
         self.key = key
         self.width = width
-        self.minv, self.maxv = minv, maxv
+        self.minv, self.maxunpack = minv, maxv
 
     def __iter__(self):
         return iterrangecounts(self.source, self.key, self.width, self.minv, 
-                               self.maxv)
+                               self.maxunpack)
+
+    def cachetag(self):
+        try:
+            return hash((self.source.cachetag(), self.key, self.width,
+                         self.minv, self.maxunpack))
+        except Exception as e:
+            raise Uncacheable(e)
 
 
 def iterrangecounts(source, key, width, minv, maxv):
@@ -3220,8 +3419,8 @@ def iterrangecounts(source, key, width, minv, maxv):
 
     # iterate over bins
     # N.B., we need to account for two possible scenarios
-    # (1) maxv is not specified, so keep making bins until we run out of rows
-    # (2) maxv is specified, so iterate over bins 
+    # (1) maxunpack is not specified, so keep making bins until we run out of rows
+    # (2) maxunpack is specified, so iterate over bins 
     try:
         for binminv in count(minv, width):
             binmaxv = binminv + width
@@ -3301,13 +3500,13 @@ class RangeAggregateView(object):
             self.aggregators = OrderedDict()
         else:
             self.aggregators = aggregators
-        self.minv, self.maxv = minv, maxv
+        self.minv, self.maxunpack = minv, maxv
         self.failonerror = failonerror
         self.errorvalue = errorvalue
 
     def __iter__(self):
         return iterrangeaggregate(self.source, self.key, self.width, 
-                                  self.aggregators, self.minv, self.maxv, 
+                                  self.aggregators, self.minv, self.maxunpack, 
                                   self.failonerror, self.errorvalue)
 
     def __getitem__(self, key):
@@ -3315,6 +3514,14 @@ class RangeAggregateView(object):
     
     def __setitem__(self, key, value):
         self.aggregators[key] = value
+
+    def cachetag(self):
+        try:
+            return hash((self.source.cachetag(), self.key, self.width, 
+                         self.minv, self.maxunpack, self.failonerror,
+                         self.errorvalue, tuple(self.aggregators.items())))
+        except Exception as e:
+            raise Uncacheable(e)
 
     
 def iterrangeaggregate(source, key, width, aggregators, minv, maxv, failonerror, errorvalue):
@@ -3378,8 +3585,8 @@ def iterrangeaggregate(source, key, width, aggregators, minv, maxv, failonerror,
 
     # iterate over bins
     # N.B., we need to account for two possible scenarios
-    # (1) maxv is not specified, so keep making bins until we run out of rows
-    # (2) maxv is specified, so iterate over bins 
+    # (1) maxunpack is not specified, so keep making bins until we run out of rows
+    # (2) maxunpack is specified, so iterate over bins 
     try:
         for binminv in count(minv, width):
             binmaxv = binminv + width
@@ -3457,7 +3664,14 @@ class RowMapView(object):
         
     def __iter__(self):
         return iterrowmap(self.source, self.rowmapper, self.fields, self.failonerror)
-    
+
+    def cachetag(self):
+        try:
+            return hash((self.source.cachetag(), self.rowmapper, tuple(self.fields),
+                         self.failonerror))
+        except Exception as e:
+            raise Uncacheable(e)
+
     
 def iterrowmap(source, rowmapper, fields, failonerror):
     it = iter(source)
@@ -3525,7 +3739,15 @@ class RecordMapView(object):
     def __iter__(self):
         return iterrecordmap(self.source, self.recmapper, self.fields, self.failonerror)
     
+    def cachetag(self):
+        try:
+            return hash((self.source.cachetag(), self.recmapper, tuple(self.fields),
+                         self.failonerror))
+        except Exception as e:
+            raise Uncacheable(e)
+
     
+   
 def iterrecordmap(source, recmapper, fields, failonerror):
     it = iter(source)
     flds = it.next() # discard source fields
@@ -3604,6 +3826,13 @@ class RowMapManyView(object):
     def __iter__(self):
         return iterrowmapmany(self.source, self.rowgenerator, self.fields, self.failonerror)
     
+    def cachetag(self):
+        try:
+            return hash((self.source.cachetag(), self.rowgenerator, tuple(self.fields),
+                         self.failonerror))
+        except Exception as e:
+            raise Uncacheable(e)
+
     
 def iterrowmapmany(source, rowgenerator, fields, failonerror):
     it = iter(source)
@@ -3682,6 +3911,13 @@ class RecordMapManyView(object):
     def __iter__(self):
         return iterrecordmapmany(self.source, self.rowgenerator, self.fields, self.failonerror)
     
+    def cachetag(self):
+        try:
+            return hash((self.source.cachetag(), self.rowgenerator, tuple(self.fields),
+                         self.failonerror))
+        except Exception as e:
+            raise Uncacheable(e)
+
     
 def iterrecordmapmany(source, rowgenerator, fields, failonerror):
     it = iter(source)
@@ -3729,6 +3965,12 @@ class SetHeaderView(object):
     def __iter__(self):
         return itersetheader(self.source, self.fields)   
 
+    def cachetag(self):
+        try:
+            return hash((self.source.cachetag(), tuple(self.fields)))
+        except Exception as e:
+            raise Uncacheable(e)
+
 
 def itersetheader(source, fields):
     it = iter(source)
@@ -3769,6 +4011,12 @@ class ExtendHeaderView(object):
         
     def __iter__(self):
         return iterextendheader(self.source, self.fields)   
+
+    def cachetag(self):
+        try:
+            return hash((self.source.cachetag(), tuple(self.fields)))
+        except Exception as e:
+            raise Uncacheable(e)
 
 
 def iterextendheader(source, fields):
@@ -3815,6 +4063,12 @@ class PushHeaderView(object):
     def __iter__(self):
         return iterpushheader(self.source, self.fields)   
 
+    def cachetag(self):
+        try:
+            return hash((self.source.cachetag(), tuple(self.fields)))
+        except Exception as e:
+            raise Uncacheable(e)
+
 
 def iterpushheader(source, fields):
     it = iter(source)
@@ -3857,12 +4111,18 @@ class SkipView(object):
     def __iter__(self):
         return iterskip(self.source, self.n)   
 
+    def cachetag(self):
+        try:
+            return hash((self.source.cachetag(), self.n))
+        except Exception as e:
+            raise Uncacheable(e)
+
 
 def iterskip(source, n):
     return islice(source, n, None)
         
     
-def unpack(table, field, newfields=None, maxv=None, include_original=False):
+def unpack(table, field, newfields=None, maxunpack=None, include_original=False):
     """
     Unpack data values that are lists or tuples. E.g.::
     
@@ -3885,22 +4145,30 @@ def unpack(table, field, newfields=None, maxv=None, include_original=False):
     
     """
     
-    return UnpackView(table, field, newfields, maxv, include_original)
+    return UnpackView(table, field, newfields, maxunpack, include_original)
 
 
 class UnpackView(object):
     
-    def __init__(self, source, field, newfields=None, maxv=None, 
+    def __init__(self, source, field, newfields=None, maxunpack=None, 
                  include_original=False):
         self.source = source
         self.field = field
         self.newfields = newfields
-        self.maxv = maxv
+        self.maxunpack = maxunpack
         self.include_original = include_original
         
     def __iter__(self):
-        return iterunpack(self.source, self.field, self.newfields, self.maxv, 
+        return iterunpack(self.source, self.field, self.newfields, self.maxunpack, 
                           self.include_original)
+
+    def cachetag(self):
+        try:
+            return hash((self.source.cachetag(), self.field, 
+                         tuple(self.newfields) if self.newfields else self.newfields,
+                         self.maxunpack, self.include_original))
+        except Exception as e:
+            raise Uncacheable(e)
 
 
 def iterunpack(source, field, newfields, maxv, include_original):
@@ -4045,7 +4313,15 @@ class ImplicitJoinView(object):
                                rightouter=self.rightouter, 
                                missing=self.missing,
                                buffersize=self.buffersize)
-    
+
+    def cachetag(self):
+        try:
+            return hash((self.left.cachetag(), self.right.cachetag(),
+                         self.presorted, self.leftouter, self.rightouter,
+                         self.missing))
+        except Exception as e:
+            raise Uncacheable(e)
+
 
 class JoinView(object):
     
@@ -4068,6 +4344,14 @@ class JoinView(object):
         return iterjoin(self.left, self.right, self.key, leftouter=self.leftouter,
                         rightouter=self.rightouter, missing=self.missing)
     
+    def cachetag(self):
+        try:
+            return hash((self.left.cachetag(), self.right.cachetag(), 
+                         tuple(self.key) if isinstance(self.key, list) else self.key,
+                         self.leftouter, self.rightouter, self.missing))
+        except Exception as e:
+            raise Uncacheable(e)
+
     
 def leftjoin(left, right, key=None, missing=None, presorted=False, buffersize=None):
     """
@@ -4362,6 +4646,12 @@ class CrossJoinView(object):
     def __iter__(self):
         return itercrossjoin(self.sources)
     
+    def cachetag(self):
+        try:
+            return hash(tuple(source.cachetag() for source in self.sources))
+        except Exception as e:
+            raise Uncacheable(e)
+
     
 def itercrossjoin(sources):
 
@@ -4437,6 +4727,13 @@ class AntiJoinView(object):
     def __iter__(self):
         return iterantijoin(self.left, self.right, self.key)
     
+    def cachetag(self):
+        try:
+            return hash((self.left.cachetag(), self.right.cachetag(), 
+                         tuple(self.key) if isinstance(self.key, list) else self.key))
+        except Exception as e:
+            raise Uncacheable(e)
+
     
 def iterantijoin(left, right, key):
     lit = iter(left)
@@ -4504,6 +4801,13 @@ class ImplicitAntiJoinView(object):
     def __iter__(self):
         return iterimplicitantijoin(self.left, self.right, self.presorted, self.buffersize)
     
+    def cachetag(self):
+        try:
+            return hash((self.left.cachetag(), self.right.cachetag(), 
+                         self.presorted))
+        except Exception as e:
+            raise Uncacheable(e)
+
     
 def iterimplicitantijoin(left, right, presorted=False, buffersize=None):
     # determine key field or fields

@@ -1593,7 +1593,7 @@ def test_unpack():
     iassertequal(expect3, table3)
     
     # check maxv
-    table4 = unpack(table1, 'bar', ['baz'], maxv=1)
+    table4 = unpack(table1, 'bar', ['baz'], maxunpack=1)
     expect4 = (('foo', 'baz'),
                (1, 'a'),
                (2, 'c'),
@@ -1601,7 +1601,7 @@ def test_unpack():
     iassertequal(expect4, table4)
     
     # check include original
-    table5 = unpack(table1, 'bar', ['baz'], maxv=1, include_original=True)
+    table5 = unpack(table1, 'bar', ['baz'], maxunpack=1, include_original=True)
     expect5 = (('foo', 'bar', 'baz'),
               (1, ['a', 'b'], 'a'),
               (2, ['c', 'd'], 'c'),
