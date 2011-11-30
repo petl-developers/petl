@@ -5035,7 +5035,26 @@ def intersection(a, b, presorted=False, buffersize=None):
     """
     Return rows in `a` that are also in `b`. E.g.::
     
-TODO
+        >>> from petl import intersection, look
+        >>> table1 = (('foo', 'bar', 'baz'),
+        ...           ('A', 1, True),
+        ...           ('C', 7, False),
+        ...           ('B', 2, False),
+        ...           ('C', 9, True))
+        >>> table2 = (('x', 'y', 'z'),
+        ...           ('B', 2, False),
+        ...           ('A', 9, False),
+        ...           ('B', 3, True),
+        ...           ('C', 9, True))
+        >>> table3 = intersection(table1, table2)
+        >>> look(table3)
+        +-------+-------+-------+
+        | 'foo' | 'bar' | 'baz' |
+        +=======+=======+=======+
+        | 'B'   | 2     | False |
+        +-------+-------+-------+
+        | 'C'   | 9     | True  |
+        +-------+-------+-------+
 
     If `presorted` is True, it is assumed that the data are already sorted by
     the given key, and the `buffersize` argument is ignored. Otherwise, the data 
@@ -5088,4 +5107,107 @@ def iterintersection(a, b):
     except StopIteration:
         pass
     
+    
+def pivot(table, f1, f2, f3, aggfun, presorted=False, buffersize=None, missing=None):
+    """
+    Construct a pivot table. E.g.::
+
+        >>> from petl import pivot, look
+        >>> table1 = (('region', 'gender', 'style', 'units'),
+        ...           ('east', 'boy', 'tee', 12),
+        ...           ('east', 'boy', 'golf', 14),
+        ...           ('east', 'boy', 'fancy', 7),
+        ...           ('east', 'girl', 'tee', 3),
+        ...           ('east', 'girl', 'golf', 8),
+        ...           ('east', 'girl', 'fancy', 18),
+        ...           ('west', 'boy', 'tee', 12),
+        ...           ('west', 'boy', 'golf', 15),
+        ...           ('west', 'boy', 'fancy', 8),
+        ...           ('west', 'girl', 'tee', 6),
+        ...           ('west', 'girl', 'golf', 16),
+        ...           ('west', 'girl', 'fancy', 1))
+        >>> table2 = pivot(table1, 'region', 'gender', 'units', sum)
+        >>> look(table2)
+        +----------+-------+--------+
+        | 'region' | 'boy' | 'girl' |
+        +==========+=======+========+
+        | 'east'   | 33    | 29     |
+        +----------+-------+--------+
+        | 'west'   | 35    | 23     |
+        +----------+-------+--------+
         
+        >>> table3 = pivot(table1, 'region', 'style', 'units', sum)
+        >>> look(table3)
+        +----------+---------+--------+-------+
+        | 'region' | 'fancy' | 'golf' | 'tee' |
+        +==========+=========+========+=======+
+        | 'east'   | 25      | 22     | 15    |
+        +----------+---------+--------+-------+
+        | 'west'   | 9       | 31     | 18    |
+        +----------+---------+--------+-------+
+        
+        >>> table4 = pivot(table1, 'gender', 'style', 'units', sum)
+        >>> look(table4)
+        +----------+---------+--------+-------+
+        | 'gender' | 'fancy' | 'golf' | 'tee' |
+        +==========+=========+========+=======+
+        | 'boy'    | 15      | 29     | 24    |
+        +----------+---------+--------+-------+
+        | 'girl'   | 19      | 24     | 9     |
+        +----------+---------+--------+-------+
+
+    See also :func:`recast`.
+
+    """
+    
+    return PivotView(table, f1, f2, f3, aggfun,
+                     presorted=presorted, buffersize=buffersize, missing=missing)
+
+
+class PivotView(object):
+    
+    def __init__(self, source, f1, f2, f3, aggfun, presorted=False, buffersize=None,
+                 missing=None):
+        if presorted:
+            self.source = source
+        else:
+            self.source = sort(source, key=(f1, f2), buffersize=buffersize)
+        self.f1, self.f2, self.f3 = f1, f2, f3
+        self.aggfun = aggfun
+        self.missing = missing
+        
+    def __iter__(self):
+        return iterpivot(self.source, self.f1, self.f2, self.f3, self.aggfun, self.missing)
+    
+    def cachetag(self):
+        try:
+            return hash((self.source.cachetag(), self.f1, self.f2, self.f3,
+                         self.aggfun, self.missing))
+        except Exception as e:
+            raise Uncacheable(e)
+    
+    
+def iterpivot(source, f1, f2, f3, aggfun, missing):
+    
+    # first pass - collect fields
+    f2vals = set(values(source, f2)) # TODO sampling
+    f2vals = list(f2vals)
+    f2vals.sort()
+    outflds = [f1]
+    outflds.extend(f2vals)
+    yield tuple(outflds)
+    
+    # second pass - generate output
+    it = iter(source)
+    srcflds = it.next()
+    f1i = srcflds.index(f1)
+    f2i = srcflds.index(f2)
+    f3i = srcflds.index(f3)
+    for v1, v1rows in groupby(it, key=itemgetter(f1i)):
+        outrow = [v1] + [missing] * len(f2vals)
+        for v2, v12rows in groupby(v1rows, key=itemgetter(f2i)):
+            aggval = aggfun([row[f3i] for row in v12rows])
+            outrow[1 + f2vals.index(v2)] = aggval
+        yield tuple(outrow) 
+    
+    

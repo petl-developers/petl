@@ -15,7 +15,7 @@ from petl import rename, fieldnames, cut, cat, convert, fieldconvert, extend, \
                 skip, extendheader, unpack, join, leftjoin, rightjoin, outerjoin, \
                 crossjoin, antijoin, rangeaggregate, rangecounts, rangefacet, \
                 rangerowreduce, rangerecordreduce, selectre, rowselect, recordselect, \
-                rowlenselect, strjoin, transpose, intersection
+                rowlenselect, strjoin, transpose, intersection, pivot
 
 
 def test_rename():
@@ -2075,13 +2075,13 @@ def test_intersection_1():
     
 def test_intersection_2():
 
-    tablea = (('foo', 'bar', 'baz'),
+    table1 = (('foo', 'bar', 'baz'),
               ('A', 1, True),
               ('C', 7, False),
               ('B', 2, False),
               ('C', 9, True))
     
-    tableb = (('x', 'y', 'z'),
+    table2 = (('x', 'y', 'z'),
               ('B', 2, False),
               ('A', 9, False),
               ('B', 3, True),
@@ -2091,11 +2091,32 @@ def test_intersection_2():
               ('B', 2, False),
               ('C', 9, True))
     
-    result = intersection(tablea, tableb)
-    iassertequal(expect, result)
-    
+    table3 = intersection(table1, table2)
+    iassertequal(expect, table3)
     
 
+def test_pivot():
+    
+    table1 = (('region', 'gender', 'style', 'units'),
+              ('east', 'boy', 'tee', 12),
+              ('east', 'boy', 'golf', 14),
+              ('east', 'boy', 'fancy', 7),
+              ('east', 'girl', 'tee', 3),
+              ('east', 'girl', 'golf', 8),
+              ('east', 'girl', 'fancy', 18),
+              ('west', 'boy', 'tee', 12),
+              ('west', 'boy', 'golf', 15),
+              ('west', 'boy', 'fancy', 8),
+              ('west', 'girl', 'tee', 6),
+              ('west', 'girl', 'golf', 16),
+              ('west', 'girl', 'fancy', 1))
+    
+    table2 = pivot(table1, 'region', 'gender', 'units', sum)
+    expect2 = (('region', 'boy', 'girl'),
+               ('east', 33, 29),
+               ('west', 35, 23))
+    iassertequal(expect2, table2)
+    iassertequal(expect2, table2)
     
     
     

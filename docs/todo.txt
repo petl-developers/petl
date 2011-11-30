@@ -96,13 +96,14 @@ Version 0.2
 
 - [done] implement intersect
 - [won't do] values should not skip short rows
-- implement pivot?
-- implement crosstab?
+- [done] implement pivot?
+
 
 Version 0.3
 -----------
 
 - cut complement
+- sampling for pivot, avoid two complete passes
 - implement fromxml using etree find and patterns
 - to and from compressed files
 - alpha facet?
