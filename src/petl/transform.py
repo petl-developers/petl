@@ -2297,6 +2297,16 @@ def iterrowselect(source, where):
     for row in it:
         if where(row):
             yield tuple(row)
+     
+     
+def rowlenselect(table, n):
+    """
+    Select rows of length `n`.
+    
+    """
+    
+    where = lambda row: len(row) == n
+    return rowselect(table, where)   
         
         
 def fieldselect(table, field, where):

@@ -82,7 +82,7 @@ Version 0.2
 - [done] implement cachetag for all view classes
 - [done] handle errors in extend
 - [done] implement rowselect - generic `where` callable operating on the row (rather than the record)
-- implement rowlenselect - select by row length
+- [done] implement rowlenselect - select by row length
 - implement selectis, selectisnot
 - rename selectni to selectnotin
 - implement selectisinstance/selecttype?
