@@ -10,7 +10,7 @@ import sqlite3
 
 from petl import fromcsv, frompickle, fromsqlite3, adler32sum, crc32sum, fromdb, \
                 tocsv, topickle, appendcsv, appendpickle, tosqlite3, appendsqlite3, \
-                todb, appenddb, fromtext, totext, appendtext
+                todb, appenddb, fromtext, totext
                 
 
 
@@ -22,19 +22,19 @@ def test_fromcsv():
     
     f = NamedTemporaryFile(delete=False)
     writer = csv.writer(f, delimiter='\t')
-    table = [['foo', 'bar'],
-             ['a', 1],
-             ['b', 2],
-             ['c', 2]]
+    table = (('foo', 'bar'),
+             ('a', 1),
+             ('b', 2),
+             ('c', 2))
     for row in table:
         writer.writerow(row)
     f.close()
     
     actual = fromcsv(f.name, delimiter='\t')
-    expect = [['foo', 'bar'],
-              ['a', '1'],
-              ['b', '2'],
-              ['c', '2']]
+    expect = (('foo', 'bar'),
+              ('a', '1'),
+              ('b', '2'),
+              ('c', '2'))
     iassertequal(expect, actual)
     iassertequal(expect, actual) # verify can iterate twice
     
@@ -45,10 +45,10 @@ def test_fromcsv_cachetag():
     # initial data
     f = NamedTemporaryFile(delete=False)
     writer = csv.writer(f)
-    table = [['foo', 'bar'],
-             ['a', 1],
-             ['b', 2],
-             ['c', 2]]
+    table = (('foo', 'bar'),
+             ('a', 1),
+             ('b', 2),
+             ('c', 2))
     for row in table:
         writer.writerow(row)
     f.close()
@@ -60,10 +60,10 @@ def test_fromcsv_cachetag():
     # make a change
     with open(f.name, 'wb') as f:
         writer = csv.writer(f)
-        rows = [['foo', 'bar'],
-                ['d', 3],
-#                ['e', 5],
-                ['f', 4]]
+        rows = (('foo', 'bar'),
+                ('d', 3),
+#                ('e', 5),
+                ('f', 4))
         for row in rows:
             writer.writerow(row)
 
@@ -78,10 +78,10 @@ def test_fromcsv_cachetag_strict():
     # initial data
     f = NamedTemporaryFile(delete=False)
     writer = csv.writer(f)
-    table = [['foo', 'bar'],
-             ['a', 1],
-             ['b', 2],
-             ['c', 2]]
+    table = (('foo', 'bar'),
+             ('a', 1),
+             ('b', 2),
+             ('c', 2))
     for row in table:
         writer.writerow(row)
     f.close()
@@ -93,10 +93,10 @@ def test_fromcsv_cachetag_strict():
     # make a change, preserving file size
     with open(f.name, 'wb') as f:
         writer = csv.writer(f)
-        rows = [['foo', 'bar'],
-                ['d', 3],
-                ['e', 5],
-                ['f', 4]]
+        rows = (('foo', 'bar'),
+                ('d', 3),
+                ('e', 5),
+                ('f', 4))
         for row in rows:
             writer.writerow(row)
 
@@ -109,10 +109,10 @@ def test_frompickle():
     """Test the frompickle function."""
     
     f = NamedTemporaryFile(delete=False)
-    table = [['foo', 'bar'],
-             ['a', 1],
-             ['b', 2],
-             ['c', 2]]
+    table = (('foo', 'bar'),
+             ('a', 1),
+             ('b', 2),
+             ('c', 2))
     for row in table:
         pickle.dump(row, f)
     f.close()
@@ -127,10 +127,10 @@ def test_frompickle_cachetag():
     
     # initial data
     f = NamedTemporaryFile(delete=False)
-    table = [['foo', 'bar'],
-             ['a', 1],
-             ['b', 2],
-             ['c', 2]]
+    table = (('foo', 'bar'),
+             ('a', 1),
+             ('b', 2),
+             ('c', 2))
     for row in table:
         pickle.dump(row, f)
     f.close()
@@ -141,10 +141,10 @@ def test_frompickle_cachetag():
     
     # make a change
     with open(f.name, 'wb') as f:
-        rows = [['foo', 'bar'],
-                ['d', 3],
-#                ['e', 5],
-                ['f', 4]]
+        rows = (('foo', 'bar'),
+                ('d', 3),
+#                ('e', 5),
+                ('f', 4))
         for row in rows:
             pickle.dump(row, f)
 
@@ -158,10 +158,10 @@ def test_frompickle_cachetag_strict():
     
     # initial data
     f = NamedTemporaryFile(delete=False)
-    table = [['foo', 'bar'],
-             ['a', 1],
-             ['b', 2],
-             ['c', 2]]
+    table = (('foo', 'bar'),
+             ('a', 1),
+             ('b', 2),
+             ('c', 2))
     for row in table:
         pickle.dump(row, f)
     f.close()
@@ -172,10 +172,10 @@ def test_frompickle_cachetag_strict():
     
     # make a change, preserving file size
     with open(f.name, 'wb') as f:
-        rows = [['foo', 'bar'],
-                ['d', 3],
-                ['e', 5],
-                ['f', 4]]
+        rows = (('foo', 'bar'),
+                ('d', 3),
+                ('e', 5),
+                ('f', 4))
         for row in rows:
             pickle.dump(row, f)
 
@@ -189,9 +189,9 @@ def test_fromsqlite3():
     
     # initial data
     f = NamedTemporaryFile(delete=False)
-    data = [['a', 1],
-            ['b', 2],
-            ['c', 2.0]]
+    data = (('a', 1),
+            ('b', 2),
+            ('c', 2.0))
     connection = sqlite3.connect(f.name)
     c = connection.cursor()
     c.execute('create table foobar (foo, bar)')
@@ -202,10 +202,10 @@ def test_fromsqlite3():
     
     # test the function
     actual = fromsqlite3(f.name, 'select * from foobar')
-    expect = [['foo', 'bar'],
-              ['a', 1],
-              ['b', 2],
-              ['c', 2.0]]
+    expect = (('foo', 'bar'),
+              ('a', 1),
+              ('b', 2),
+              ('c', 2.0))
     iassertequal(expect, actual)
     iassertequal(expect, actual) # verify can iterate twice
 
@@ -215,9 +215,9 @@ def test_fromsqlite3_cachetag():
     
     # initial data
     f = NamedTemporaryFile(delete=False)
-    data = [['a', 1],
-            ['b', 2],
-            ['c', 2.0]]
+    data = (('a', 1),
+            ('b', 2),
+            ('c', 2.0))
     connection = sqlite3.connect(f.name)
     c = connection.cursor()
     c.execute('create table foobar (foo, bar)')
@@ -231,9 +231,9 @@ def test_fromsqlite3_cachetag():
     tag1 = tbl.cachetag()
     
     # update the data
-    modata = [['d', 1],
-              ['e', 2],
-              ['f', 2.0]]
+    modata = (('d', 1),
+              ('e', 2),
+              ('f', 2.0))
     c = connection.cursor()
     for i in range(100):
         for row in modata:
@@ -250,9 +250,9 @@ def test_fromsqlite3_cachetag_strict():
     
     # initial data
     f = NamedTemporaryFile(delete=False)
-    data = [['a', 1],
-            ['b', 2],
-            ['c', 2.0]]
+    data = (('a', 1),
+            ('b', 2),
+            ('c', 2.0))
     connection = sqlite3.connect(f.name)
     c = connection.cursor()
     c.execute('create table foobar (foo, bar)')
@@ -277,9 +277,9 @@ def test_fromdb():
     """Test the fromdb function."""
     
     # initial data
-    data = [['a', 1],
-            ['b', 2],
-            ['c', 2.0]]
+    data = (('a', 1),
+            ('b', 2),
+            ('c', 2.0))
     connection = sqlite3.connect(':memory:')
     c = connection.cursor()
     c.execute('create table foobar (foo, bar)')
@@ -290,10 +290,10 @@ def test_fromdb():
     
     # test the function
     actual = fromdb(connection, 'select * from foobar')
-    expect = [['foo', 'bar'],
-              ['a', 1],
-              ['b', 2],
-              ['c', 2.0]]
+    expect = (('foo', 'bar'),
+              ('a', 1),
+              ('b', 2),
+              ('c', 2.0))
     iassertequal(expect, actual)
     iassertequal(expect, actual) # verify can iterate twice
 
@@ -309,11 +309,11 @@ def test_fromtext():
     f.close()
     
     actual = fromtext(f.name)
-    expect = [['lines'],
-              ['foo\tbar\n'],
-              ['a\t1\n'],
-              ['b\t2\n'],
-              ['c\t3\n']]
+    expect = (('lines',),
+              ('foo\tbar\n',),
+              ('a\t1\n',),
+              ('b\t2\n',),
+              ('c\t3\n',))
     iassertequal(expect, actual)
     iassertequal(expect, actual) # verify can iterate twice
 
@@ -322,10 +322,10 @@ def test_tocsv_appendcsv():
     """Test the tocsv and appendcsv function."""
     
     # exercise function
-    table = [['foo', 'bar'],
-             ['a', 1],
-             ['b', 2],
-             ['c', 2]]
+    table = (('foo', 'bar'),
+             ('a', 1),
+             ('b', 2),
+             ('c', 2))
     f = NamedTemporaryFile(delete=False)
     tocsv(table, f.name, delimiter='\t')
     
@@ -339,10 +339,10 @@ def test_tocsv_appendcsv():
         iassertequal(expect, actual)
     
     # check appending
-    table2 = [['foo', 'bar'],
-              ['d', 7],
-              ['e', 9],
-              ['f', 1]]
+    table2 = (('foo', 'bar'),
+              ('d', 7),
+              ('e', 9),
+              ('f', 1))
     appendcsv(table2, f.name, delimiter='\t') 
 
     # check what it did
@@ -363,10 +363,10 @@ def test_topickle_appendpickle():
     """Test the topickle and appendpickle functions."""
     
     # exercise function
-    table = [['foo', 'bar'],
-             ['a', 1],
-             ['b', 2],
-             ['c', 2]]
+    table = (('foo', 'bar'),
+             ('a', 1),
+             ('b', 2),
+             ('c', 2))
     f = NamedTemporaryFile(delete=False)
     topickle(table, f.name)
     
@@ -383,22 +383,22 @@ def test_topickle_appendpickle():
         iassertequal(table, actual)
     
     # check appending
-    table2 = [['foo', 'bar'],
-              ['d', 7],
-              ['e', 9],
-              ['f', 1]]
+    table2 = (('foo', 'bar'),
+              ('d', 7),
+              ('e', 9),
+              ('f', 1))
     appendpickle(table2, f.name) 
 
     # check what it did
     with open(f.name, 'rb') as file:
         actual = picklereader(file)
-        expect = [['foo', 'bar'],
-                  ['a', 1],
-                  ['b', 2],
-                  ['c', 2],
-                  ['d', 7],
-                  ['e', 9],
-                  ['f', 1]]
+        expect = (('foo', 'bar'),
+                  ('a', 1),
+                  ('b', 2),
+                  ('c', 2),
+                  ('d', 7),
+                  ('e', 9),
+                  ('f', 1))
         iassertequal(expect, actual)
     
         
@@ -406,37 +406,37 @@ def test_tosqlite3_appendsqlite3():
     """Test the tosqlite3 and appendsqlite3 functions."""
     
     # exercise function
-    table = [['foo', 'bar'],
-             ['a', 1],
-             ['b', 2],
-             ['c', 2]]
+    table = (('foo', 'bar'),
+             ('a', 1),
+             ('b', 2),
+             ('c', 2))
     f = NamedTemporaryFile(delete=False)
     tosqlite3(table, f.name, 'foobar', create=True)
     
     # check what it did
     conn = sqlite3.connect(f.name)
     actual = conn.execute('select * from foobar')
-    expect = [['a', 1],
-              ['b', 2],
-              ['c', 2]]
+    expect = (('a', 1),
+              ('b', 2),
+              ('c', 2))
     iassertequal(expect, actual)
     
     # check appending
-    table2 = [['foo', 'bar'],
-              ['d', 7],
-              ['e', 9],
-              ['f', 1]]
+    table2 = (('foo', 'bar'),
+              ('d', 7),
+              ('e', 9),
+              ('f', 1))
     appendsqlite3(table2, f.name, 'foobar') 
 
     # check what it did
     conn = sqlite3.connect(f.name)
     actual = conn.execute('select * from foobar')
-    expect = [['a', 1],
-              ['b', 2],
-              ['c', 2],
-              ['d', 7],
-              ['e', 9],
-              ['f', 1]]
+    expect = (('a', 1),
+              ('b', 2),
+              ('c', 2),
+              ('d', 7),
+              ('e', 9),
+              ('f', 1))
     iassertequal(expect, actual)
     
         
@@ -444,19 +444,19 @@ def test_tosqlite3_identifiers():
     """Test the tosqlite3 function with funky table and field names."""
     
     # exercise function
-    table = [['foo foo', 'bar.baz.spong"'],
-             ['a', 1],
-             ['b', 2],
-             ['c', 2]]
+    table = (('foo foo', 'bar.baz.spong"'),
+             ('a', 1),
+             ('b', 2),
+             ('c', 2))
     f = NamedTemporaryFile(delete=False)
     tosqlite3(table, f.name, 'foo bar"', create=True)
     
     # check what it did
     conn = sqlite3.connect(f.name)
     actual = conn.execute('select * from "foo bar"')
-    expect = [['a', 1],
-              ['b', 2],
-              ['c', 2]]
+    expect = (('a', 1),
+              ('b', 2),
+              ('c', 2))
     iassertequal(expect, actual)
 
 
@@ -472,44 +472,44 @@ def test_todb_appenddb():
     conn.commit()
 
     # exercise function
-    table = [['foo', 'bar'],
-             ['a', 1],
-             ['b', 2],
-             ['c', 2]]
+    table = (('foo', 'bar'),
+             ('a', 1),
+             ('b', 2),
+             ('c', 2))
     todb(table, conn, 'foobar')
     
     # check what it did
     actual = conn.execute('select * from foobar')
-    expect = [['a', 1],
-              ['b', 2],
-              ['c', 2]]
+    expect = (('a', 1),
+              ('b', 2),
+              ('c', 2))
     iassertequal(expect, actual)
     
     # try appending
-    table2 = [['foo', 'bar'],
-              ['d', 7],
-              ['e', 9],
-              ['f', 1]]
+    table2 = (('foo', 'bar'),
+              ('d', 7),
+              ('e', 9),
+              ('f', 1))
     appenddb(table2, conn, 'foobar') 
 
     # check what it did
     actual = conn.execute('select * from foobar')
-    expect = [['a', 1],
-              ['b', 2],
-              ['c', 2],
-              ['d', 7],
-              ['e', 9],
-              ['f', 1]]
+    expect = (('a', 1),
+              ('b', 2),
+              ('c', 2),
+              ('d', 7),
+              ('e', 9),
+              ('f', 1))
     iassertequal(expect, actual)
     
         
 def test_totext():
     
     # exercise function
-    table = [['foo', 'bar'],
-             ['a', 1],
-             ['b', 2],
-             ['c', 2]]
+    table = (('foo', 'bar'),
+             ('a', 1),
+             ('b', 2),
+             ('c', 2))
     f = NamedTemporaryFile(delete=False)
     prologue = """{| class="wikitable"
 |-

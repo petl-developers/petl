@@ -139,7 +139,7 @@ class CSVView(object):
         with open(self.filename, 'rb') as file:
             reader = csv.reader(file, **self.kwargs)
             for row in reader:
-                yield row
+                yield tuple(row)
                 
     def cachetag(self):
         p = self.filename
@@ -198,7 +198,7 @@ class PickleView(object):
         with open(self.filename, 'rb') as file:
             try:
                 while True:
-                    yield pickle.load(file)
+                    yield tuple(pickle.load(file))
             except EOFError:
                 pass
                 
@@ -268,9 +268,9 @@ class Sqlite3View(object):
         connection = sqlite3.connect(self.filename)
         cursor = connection.execute(self.query)
         fields = [d[0] for d in cursor.description]
-        yield fields
+        yield tuple(fields)
         for result in cursor:
-            yield result
+            yield tuple(result)
         connection.close()
 
     def cachetag(self):
@@ -326,9 +326,9 @@ class DbView(object):
     def __iter__(self):
         cursor = self.connection.execute(self.query)
         fields = [d[0] for d in cursor.description]
-        yield fields
+        yield tuple(fields)
         for result in cursor:
-            yield result
+            yield tuple(result)
             
             
 def fromtext(filename, header=['lines'], checksumfun=None):
@@ -385,9 +385,9 @@ class TextView(object):
     def __iter__(self):
         with open(self.filename, 'rU') as file:
             if self.header is not None:
-                yield self.header
+                yield tuple(self.header)
             for line in file:
-                yield [line]
+                yield (line,)
                 
     def cachetag(self):
         p = self.filename

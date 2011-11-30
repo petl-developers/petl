@@ -64,37 +64,37 @@ Version 0.2
 - [done] selectin, selectni
 
 - [done] review use of close - unnecessary
+- [done] selectgt, selectlt, selectge, selectle
+- [done] records s/padding/missing/ ?
 
-- review use of errorvalue, sometimes not used e.g. in rangecounts
-- make everything return tuples
+- [done] review use of errorvalue, sometimes not used e.g. in rangecounts
+- [done] make everything return tuples
+- [done] make sure we don't get tripped up by attempts to compare tuples with lists
+- [won't do] return tuple as default aggregator
 - recast should not scan twice
+
 - select signature for single field function
 - selectregex
 - make convert args more flexible
 - autoconvert multiple fields to numeric types - convenience function
 - translate/replace single value in a field, e.g., None to zero; maybe also apply to multiple fields
 - convert with dictionary (which translate is a convenience for)
-
+- code smells in reduce functions - refactor with generic grouper and reducer functions?
 - dataslice
 - implement cachetag for all view classes
 - handle errors in extend
-
-- make sure we don't get tripped up by attempts to compare tuples with lists
 - implement selectlen - select by row length
 - implement stringjoin as aggregation function (or can you just pass ', '.join?)
 - implement missingness
 - implement transpose
 - check how cat and cut handle long/short rows; are they using itemgetter where possible?
 - remove _ from melt and recast args
-
 - implement intersect
 - implement pivot?
 - implement crosstab?
-
 - implement fromxml
 - lookall
-- selectgt, selectlt, selectge, selectle
-- records s/padding/missing/ ?
+- recast shouldn't scan twice
 
 Version 0.3
 -----------
@@ -119,5 +119,5 @@ Version 0.3
 petlx
 -----
 
-- fromxslx
+- from and to xslx
 - [won't do] tondarray

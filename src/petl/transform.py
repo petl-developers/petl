@@ -96,9 +96,9 @@ def iterrename(source, spec):
     spec = spec.copy() # make sure nobody can change this midstream
     sourceflds = it.next()
     newflds = [spec[f] if f in spec else f for f in sourceflds]
-    yield newflds
+    yield tuple(newflds)
     for row in it:
-        yield row
+        yield tuple(row)
         
         
 def cut(table, *args, **kwargs):
@@ -222,7 +222,7 @@ def itercut(source, spec, missing=None):
             yield transform(row) 
         except IndexError:
             # row is short, let's be kind and fill in any missing fields
-            yield [row[i] if i < len(row) else missing for i in indices]
+            yield tuple([row[i] if i < len(row) else missing for i in indices])
 
     
 def cat(*tables, **kwargs):
@@ -301,7 +301,7 @@ def itercat(sources, missing=None):
             if f not in out_flds:
                 # add any new fields as we find them
                 out_flds.append(f)
-    yield out_flds
+    yield tuple(out_flds)
 
     # output data rows
     for source_index, it in enumerate(its):
@@ -321,7 +321,7 @@ def itercat(sources, missing=None):
         # now construct and yield the data rows
         for row in it:
             out_row = [get_value(row, f) for f in out_flds]
-            yield out_row
+            yield tuple(out_row)
 
 
 def convert(table, field, *args, **kwargs):
@@ -549,7 +549,7 @@ def iterfieldconvert(source, converters, failonerror, errorvalue):
     
     # grab the fields in the source table
     flds = it.next()
-    yield flds # these are not modified
+    yield tuple(flds) # these are not modified
     
     # define a function to transform a value
     def transform_value(i, v):
@@ -574,7 +574,7 @@ def iterfieldconvert(source, converters, failonerror, errorvalue):
 
     # construct the data rows
     for row in it:
-        yield [transform_value(i, v) for i, v in enumerate(row)]
+        yield tuple([transform_value(i, v) for i, v in enumerate(row)])
 
             
 def methodcaller(nm, *args):
@@ -623,7 +623,7 @@ def itertranslate(source, field, dictionary):
     dictionary = dictionary.copy()
     
     flds = it.next()
-    yield flds 
+    yield tuple(flds )
     
     if field in flds:
         index = flds.index(field)
@@ -637,7 +637,7 @@ def itertranslate(source, field, dictionary):
         value = row[index]
         if value in dictionary:
             row[index] = dictionary[value]
-        yield row
+        yield tuple(row)
         
         
 def extend(table, field, value):
@@ -714,7 +714,7 @@ def iterextend(source, field, value):
     flds = it.next()
     out_flds = list(flds)
     out_flds.append(field)
-    yield out_flds
+    yield tuple(out_flds)
 
     for row in it:
         out_row = list(row) # copy so we don't modify source
@@ -723,7 +723,7 @@ def iterextend(source, field, value):
             out_row.append(value(rec))
         else:
             out_row.append(value)
-        yield out_row
+        yield tuple(out_row)
         
     
 def rowslice(table, start=0, stop=None, step=1):
@@ -802,9 +802,9 @@ class RowSliceView(object):
 
 def iterrowslice(source, start, stop, step):    
     it = iter(source)
-    yield it.next() # fields
+    yield tuple(it.next()) # fields
     for row in islice(it, start, stop, step):
-        yield row
+        yield tuple(row)
 
 
 def head(table, n):
@@ -889,14 +889,14 @@ class TailView(object):
 
 def itertail(source, n):
     it = iter(source)
-    yield it.next() # fields
+    yield tuple(it.next()) # fields
     cache = deque()
     for row in it:
         cache.append(row)
         if len(cache) > n:
             cache.popleft()
     for row in cache:
-        yield row
+        yield tuple(row)
 
 
 def sort(table, key=None, reverse=False, buffersize=None):
@@ -1086,22 +1086,22 @@ class SortView(object):
             return self._iternocache(source, key, reverse)
         
     def _iterfrommemcache(self):
-        yield self._fldcache
+        yield tuple(self._fldcache)
         for row in self._memcache:
-            yield row
+            yield tuple(row)
             
     def _iterfromfilecache(self):
-        yield self._fldcache
+        yield tuple(self._fldcache)
         chunkiters = [iterchunk(f.name) for f in self._filecache]
         for row in mergesort(self._getkey, self.reverse, *chunkiters):
-            yield row
+            yield tuple(row)
         
     def _iternocache(self, source, key, reverse):
         self._clearcache()
         it = iter(source)
 
         flds = it.next()
-        yield flds
+        yield tuple(flds)
         
         getkey = None
         if key is not None:
@@ -1129,7 +1129,7 @@ class SortView(object):
                 pass
     
             for row in rows:
-                yield row
+                yield tuple(row)
                 
         else:
 
@@ -1160,7 +1160,7 @@ class SortView(object):
 
             chunkiters = [iterchunk(f.name) for f in chunkfiles]
             for row in mergesort(getkey, reverse, *chunkiters):
-                yield row
+                yield tuple(row)
 
         
     def cachetag(self):
@@ -1276,7 +1276,7 @@ def itermelt(source, key, variables, variable_field, value_field):
     out_flds = list(key)
     out_flds.append(variable_field)
     out_flds.append(value_field)
-    yield out_flds
+    yield tuple(out_flds)
     
     key_indices = [flds.index(k) for k in key]
     getkey = rowgetter(*key_indices)
@@ -1289,7 +1289,7 @@ def itermelt(source, key, variables, variable_field, value_field):
             o = list(k) # populate with key values initially
             o.append(v) # add variable
             o.append(row[i]) # add value
-            yield o
+            yield tuple(o)
             
 
 def recast(table, key=[], variable_field='variable', value_field='value', 
@@ -1481,7 +1481,7 @@ def iterrecast(source, key=[], variable_field='variable', value_field='value',
     out_fields = list(key_fields)
     for f in variable_fields:
         out_fields.extend(variables[f])
-    yield out_fields
+    yield tuple(out_fields)
     
     # output data
     
@@ -1513,7 +1513,7 @@ def iterrecast(source, key=[], variable_field='variable', value_field='value',
                         redu = list # list all values
                     value = redu(values)
                 out_row.append(value)
-        yield out_row
+        yield tuple(out_row)
                 
             
 def duplicates(table, key, presorted=False, buffersize=None):
@@ -1586,7 +1586,7 @@ def iterduplicates(source, key):
     it = iter(source)
 
     flds = it.next()
-    yield flds
+    yield tuple(flds)
 
     # convert field selection into field indices
     indices = asindices(flds, key)
@@ -1607,9 +1607,9 @@ def iterduplicates(source, key):
             kcurr = getkey(row)
             if kprev == kcurr:
                 if not previous_yielded:
-                    yield previous
+                    yield tuple(previous)
                     previous_yielded = True
-                yield row
+                yield tuple(row)
             else:
                 # reset
                 previous_yielded = False
@@ -1675,7 +1675,7 @@ class ConflictsView(object):
 def iterconflicts(source, key, missing):
     it = iter(source)
     flds = it.next()
-    yield flds
+    yield tuple(flds)
 
     # convert field selection into field indices
     indices = asindices(flds, key)
@@ -1703,9 +1703,9 @@ def iterconflicts(source, key, missing):
                         break
                 if conflict:
                     if not previous_yielded:
-                        yield previous
+                        yield tuple(previous)
                         previous_yielded = True
-                    yield row
+                    yield tuple(row)
             else:
                 # reset
                 previous_yielded = False
@@ -1776,10 +1776,10 @@ def itercomplement(a, b):
     itb = iter(b)
     aflds = ita.next()
     itb.next() # ignore b fields
-    yield aflds
+    yield tuple(aflds)
     
-    a = ita.next()
-    b = itb.next()
+    a = tuple(ita.next())
+    b = tuple(itb.next())
     # we want the elements in a that are not in b
     while True:
         if b is None or a < b:
@@ -1937,7 +1937,7 @@ def itercapture(source, field, pattern, newfields, include_original, flags):
         out_flds.remove(field)
     if newfields:   
         out_flds.extend(newfields)
-    yield out_flds
+    yield tuple(out_flds)
     
     # construct the output data
     for row in it:
@@ -1947,7 +1947,7 @@ def itercapture(source, field, pattern, newfields, include_original, flags):
         else:
             out_row = [v for i, v in enumerate(row) if i != field_index]
         out_row.extend(prog.search(value).groups())
-        yield out_row
+        yield tuple(out_row)
         
         
 def split(table, field, pattern, newfields=None, include_original=False,
@@ -2021,7 +2021,7 @@ def itersplit(source, field, pattern, newfields, include_original, maxsplit,
         out_flds.remove(field)
     if newfields:
         out_flds.extend(newfields)
-    yield out_flds
+    yield tuple(out_flds)
     
     # construct the output data
     for row in it:
@@ -2031,7 +2031,7 @@ def itersplit(source, field, pattern, newfields, include_original, maxsplit,
         else:
             out_row = [v for i, v in enumerate(row) if i != field_index]
         out_row.extend(prog.split(value, maxsplit))
-        yield out_row
+        yield tuple(out_row)
         
     
 def select(table, where, missing=None):
@@ -2089,14 +2089,14 @@ class SelectView(object):
 def iterselect(source, where, missing):
     it = iter(source)
     flds = it.next()
-    yield flds
+    yield tuple(flds)
     for row in it:
         rec = asdict(flds, row, missing)
         if where(rec):
-            yield row
+            yield tuple(row)
         
         
-def fieldmap(table, mappings=None, errorvalue=None):
+def fieldmap(table, mappings=None, failonerror=False, errorvalue=None):
     """
     Transform a table, mapping fields arbitrarily between input and output. E.g.::
     
@@ -2163,17 +2163,19 @@ def fieldmap(table, mappings=None, errorvalue=None):
 
     """    
     
-    return FieldMapView(table, mappings, errorvalue)
+    return FieldMapView(table, mappings=mappings, failonerror=failonerror,
+                        errorvalue=errorvalue)
     
     
 class FieldMapView(object):
     
-    def __init__(self, source, mappings=None, errorvalue=None):
+    def __init__(self, source, mappings=None, failonerror=False, errorvalue=None):
         self.source = source
         if mappings is None:
             self.mappings = OrderedDict()
         else:
             self.mappings = mappings
+        self.failonerror = failonerror
         self.errorvalue = errorvalue
         
     def __getitem__(self, key):
@@ -2183,14 +2185,14 @@ class FieldMapView(object):
         self.mappings[key] = value
         
     def __iter__(self):
-        return iterfieldmap(self.source, self.mappings, self.errorvalue)
+        return iterfieldmap(self.source, self.mappings, self.failonerror, self.errorvalue)
     
     
-def iterfieldmap(source, mappings, errorvalue):
+def iterfieldmap(source, mappings, failonerror, errorvalue):
     it = iter(source)
     flds = it.next()
     outflds = mappings.keys()
-    yield outflds
+    yield tuple(outflds)
     
     mapfuns = dict()
     for outfld, m in mappings.items():
@@ -2226,9 +2228,12 @@ def iterfieldmap(source, mappings, errorvalue):
                 try:
                     val = mapfuns[outfld](rec)
                 except:
-                    val = errorvalue
+                    if failonerror:
+                        raise
+                    else:
+                        val = errorvalue
                 outrow.append(val)
-        yield outrow
+        yield tuple(outrow)
                 
         
 def composefun(f, srcfld):
@@ -2470,9 +2475,9 @@ def iterrowreduce(source, key, reducer, fields):
 
     srcflds = it.next()
     if fields is None:
-        yield srcflds
+        yield tuple(srcflds)
     else:
-        yield fields
+        yield tuple(fields)
 
     # convert field selection into field indices
     indices = asindices(srcflds, key)
@@ -2483,7 +2488,7 @@ def iterrowreduce(source, key, reducer, fields):
     getkey = itemgetter(*indices)
     
     for key, rows in groupby(it, key=getkey):
-        yield reducer(key, rows)
+        yield tuple(reducer(key, rows))
         
 
 def recordreduce(table, key, reducer, fields=None, presorted=False, buffersize=None):
@@ -2548,9 +2553,9 @@ def iterrecordreduce(source, key, reducer, fields):
 
     srcflds = it.next()
     if fields is None:
-        yield srcflds
+        yield tuple(srcflds)
     else:
-        yield fields
+        yield tuple(fields)
 
     # convert field selection into field indices
     indices = asindices(srcflds, key)
@@ -2562,7 +2567,7 @@ def iterrecordreduce(source, key, reducer, fields):
     
     for key, rows in groupby(it, key=getkey):
         records = [asdict(srcflds, row) for row in rows]
-        yield reducer(key, records)
+        yield tuple(reducer(key, records))
     
 
 def mergereduce(table, key, missing=None, presorted=False, buffersize=None):
@@ -2660,8 +2665,8 @@ def merge(*tables, **kwargs):
     return t2
 
 
-def aggregate(table, key, aggregators=None, presorted=False, errorvalue=None,
-              buffersize=None):
+def aggregate(table, key, aggregators=None, failonerror=False, errorvalue=None,
+              presorted=False, buffersize=None):
     """
     Group rows under the given key then apply aggregation functions. E.g.::
 
@@ -2728,13 +2733,18 @@ def aggregate(table, key, aggregators=None, presorted=False, errorvalue=None,
     
     """
 
-    return AggregateView(table, key, aggregators, presorted, errorvalue, buffersize)
+    return AggregateView(table, key, 
+                         aggregators=aggregators, 
+                         failonerror=failonerror,
+                         errorvalue=errorvalue, 
+                         presorted=presorted, 
+                         buffersize=buffersize)
 
 
 class AggregateView(object):
     
-    def __init__(self, source, key, aggregators=None, presorted=False, 
-                 errorvalue=None, buffersize=None):
+    def __init__(self, source, key, aggregators=None, failonerror=False,
+                 errorvalue=None, presorted=False, buffersize=None):
         if presorted:
             self.source = source
         else:
@@ -2744,10 +2754,12 @@ class AggregateView(object):
             self.aggregators = OrderedDict()
         else:
             self.aggregators = aggregators
+        self.failonerror = failonerror
         self.errorvalue = errorvalue
 
     def __iter__(self):
-        return iteraggregate(self.source, self.key, self.aggregators, self.errorvalue)
+        return iteraggregate(self.source, self.key, self.aggregators, 
+                             self.failonerror, self.errorvalue)
     
     def __getitem__(self, key):
         return self.aggregators[key]
@@ -2756,7 +2768,7 @@ class AggregateView(object):
         self.aggregators[key] = value
 
     
-def iteraggregate(source, key, aggregators, errorvalue):
+def iteraggregate(source, key, aggregators, failonerror, errorvalue):
     aggregators = OrderedDict(aggregators.items()) # take a copy
     it = iter(source)
     srcflds = it.next()
@@ -2780,7 +2792,7 @@ def iteraggregate(source, key, aggregators, errorvalue):
     else:
         outflds = list(getkey(srcflds))
     outflds.extend(aggregators.keys())
-    yield outflds
+    yield tuple(outflds)
     
     for key, rows in groupby(it, key=getkey):
         rows = list(rows) # may need to iterate over these more than once
@@ -2802,13 +2814,16 @@ def iteraggregate(source, key, aggregators, errorvalue):
             try:
                 aggval = aggfun(vals)
             except:
-                aggval = errorvalue
+                if failonerror:
+                    raise
+                else:
+                    aggval = errorvalue
             outrow.append(aggval)
-        yield outrow
+        yield tuple(outrow)
             
 
 def rangerowreduce(table, key, width, reducer, fields=None, minv=None, maxv=None, 
-                   presorted=False, errorvalue=None, buffersize=None):
+                   failonerror=False, presorted=False, buffersize=None):
     """
     Reduce rows grouped into bins under the given key via an arbitrary function. 
     E.g.::
@@ -2843,14 +2858,14 @@ def rangerowreduce(table, key, width, reducer, fields=None, minv=None, maxv=None
     """
     
     return RangeRowReduceView(table, key, width, reducer, fields=fields, minv=minv, 
-                              maxv=maxv, presorted=presorted, errorvalue=errorvalue,
-                              buffersize=buffersize)
+                              maxv=maxv, failonerror=failonerror,  
+                              presorted=presorted, buffersize=buffersize)
         
 
 class RangeRowReduceView(object):
     
     def __init__(self, source, key, width, reducer, fields=None, minv=None, maxv=None, 
-                 presorted=False, errorvalue=None, buffersize=None):
+                 failonerror=False, presorted=False, buffersize=None):
         if presorted:
             self.source = source
         else:
@@ -2860,21 +2875,21 @@ class RangeRowReduceView(object):
         self.reducer = reducer
         self.fields = fields
         self.minv, self.maxv = minv, maxv
-        self.errorvalue = errorvalue
+        self.failonerror = failonerror
 
     def __iter__(self):
         return iterrangerowreduce(self.source, self.key, self.width, self.reducer,
-                                  self.fields, self.minv, self.maxv, self.errorvalue)
+                                  self.fields, self.minv, self.maxv, self.failonerror)
 
 
-def iterrangerowreduce(source, key, width, reducer, fields, minv, maxv, errorvalue):
+def iterrangerowreduce(source, key, width, reducer, fields, minv, maxv, failonerror):
 
     it = iter(source)
     srcflds = it.next()
     if fields is None:
-        yield srcflds
+        yield tuple(srcflds)
     else:
-        yield fields
+        yield tuple(fields)
 
     # convert field selection into field indices
     indices = asindices(srcflds, key)
@@ -2911,16 +2926,24 @@ def iterrangerowreduce(source, key, width, reducer, fields, minv, maxv, errorval
                 bin.append(row) # last bin is open
                 row = it.next()
                 keyv = getkey(row)
-            yield reducer(binminv, binmaxv, bin)
+            try:
+                yield tuple(reducer(binminv, binmaxv, bin))
+            except:
+                if failonerror:
+                    raise
             if maxv is not None and binmaxv == maxv:
                 break
     except StopIteration:
         # don't forget the last one
-        yield reducer(binminv, binmaxv, bin)
+        try:
+            yield tuple(reducer(binminv, binmaxv, bin))
+        except:
+            if failonerror:
+                raise
     
         
 def rangerecordreduce(table, key, width, reducer, fields=None, minv=None, maxv=None, 
-                      presorted=False, errorvalue=None, buffersize=None):
+                      failonerror=False, presorted=False, buffersize=None):
     """
     Reduce records grouped into bins under the given key via an arbitrary function. 
     E.g.::
@@ -2955,14 +2978,14 @@ def rangerecordreduce(table, key, width, reducer, fields=None, minv=None, maxv=N
     """
     
     return RangeRecordReduceView(table, key, width, reducer, fields=fields, minv=minv, 
-                                 maxv=maxv, presorted=presorted, errorvalue=errorvalue,
-                                 buffersize=buffersize)
+                                 maxv=maxv, failonerror=failonerror, 
+                                 presorted=presorted, buffersize=buffersize)
         
 
 class RangeRecordReduceView(object):
     
     def __init__(self, source, key, width, reducer, fields=None, minv=None, maxv=None, 
-                 presorted=False, errorvalue=None, buffersize=None):
+                 failonerror=False, presorted=False, buffersize=None):
         if presorted:
             self.source = source
         else:
@@ -2972,21 +2995,21 @@ class RangeRecordReduceView(object):
         self.reducer = reducer
         self.fields = fields
         self.minv, self.maxv = minv, maxv
-        self.errorvalue = errorvalue
+        self.failonerror = failonerror
 
     def __iter__(self):
         return iterrangerecordreduce(self.source, self.key, self.width, self.reducer,
-                                     self.fields, self.minv, self.maxv, self.errorvalue)
+                                     self.fields, self.minv, self.maxv, self.failonerror)
 
 
-def iterrangerecordreduce(source, key, width, reducer, fields, minv, maxv, errorvalue):
+def iterrangerecordreduce(source, key, width, reducer, fields, minv, maxv, failonerror):
 
     it = iter(source)
     srcflds = it.next()
     if fields is None:
-        yield srcflds
+        yield tuple(srcflds)
     else:
-        yield fields
+        yield tuple(fields)
 
     # convert field selection into field indices
     indices = asindices(srcflds, key)
@@ -3025,16 +3048,24 @@ def iterrangerecordreduce(source, key, width, reducer, fields, minv, maxv, error
                 bin.append(rec) # last bin is open
                 row = it.next()
                 keyv = getkey(row)
-            yield reducer(binminv, binmaxv, bin)
+            try:
+                yield tuple(reducer(binminv, binmaxv, bin))
+            except:
+                if failonerror:
+                    raise
             if maxv is not None and binmaxv == maxv:
                 break
     except StopIteration:
         # don't forget the last one
-        yield reducer(binminv, binmaxv, bin)
+        try:
+            yield tuple(reducer(binminv, binmaxv, bin))
+        except:
+            if failonerror:
+                raise
     
         
 def rangecounts(table, key, width, minv=None, maxv=None, presorted=False,
-                errorvalue=None, buffersize=None):
+                buffersize=None):
     """
     Group rows into bins then count the number of rows in each bin. E.g.::
 
@@ -3066,14 +3097,13 @@ def rangecounts(table, key, width, minv=None, maxv=None, presorted=False,
     """
     
     return RangeCountsView(table, key, width, minv=minv, maxv=maxv, 
-                           presorted=presorted, errorvalue=errorvalue, 
-                           buffersize=buffersize)
+                           presorted=presorted, buffersize=buffersize)
     
     
 class RangeCountsView(object):
     
     def __init__(self, source, key, width, minv=None, maxv=None, 
-                 presorted=False, errorvalue=None, buffersize=None):
+                 presorted=False, buffersize=None):
         if presorted:
             self.source = source
         else:
@@ -3081,14 +3111,13 @@ class RangeCountsView(object):
         self.key = key
         self.width = width
         self.minv, self.maxv = minv, maxv
-        self.errorvalue = errorvalue
 
     def __iter__(self):
         return iterrangecounts(self.source, self.key, self.width, self.minv, 
-                               self.maxv, self.errorvalue)
+                               self.maxv)
 
 
-def iterrangecounts(source, key, width, minv, maxv, errorvalue):
+def iterrangecounts(source, key, width, minv, maxv):
 
     it = iter(source)
     srcflds = it.next()
@@ -3101,7 +3130,7 @@ def iterrangecounts(source, key, width, minv, maxv, errorvalue):
     # the field selection
     getkey = itemgetter(*indices)
     
-    outflds = ['range', 'count']
+    outflds = ('range', 'count')
     yield outflds
     
     # initialise minimum
@@ -3131,16 +3160,16 @@ def iterrangecounts(source, key, width, minv, maxv, errorvalue):
                 bin.append(row) # last bin is open
                 row = it.next()
                 keyv = getkey(row)
-            yield [(binminv, binmaxv), len(bin)]
+            yield ((binminv, binmaxv), len(bin))
             if maxv is not None and binmaxv == maxv:
                 break
     except StopIteration:
         # don't forget the last one
-        yield [(binminv, binmaxv), len(bin)]
+        yield ((binminv, binmaxv), len(bin))
     
     
 def rangeaggregate(table, key, width, aggregators=None, minv=None, maxv=None,
-                   presorted=False, errorvalue=None, buffersize=None):
+                   failonerror=False, errorvalue=None, presorted=False, buffersize=None):
     """
     Group rows into bins then apply aggregation functions. E.g.::
     
@@ -3175,14 +3204,14 @@ def rangeaggregate(table, key, width, aggregators=None, minv=None, maxv=None,
     
     return RangeAggregateView(table, key, width, 
                               aggregators=aggregators, minv=minv, maxv=maxv,
-                              presorted=presorted, errorvalue=errorvalue, 
-                              buffersize=buffersize)
+                              failonerror=failonerror, errorvalue=errorvalue, 
+                              presorted=presorted, buffersize=buffersize)
     
     
 class RangeAggregateView(object):
     
     def __init__(self, source, key, width, aggregators=None, minv=None, maxv=None, 
-                 presorted=False, errorvalue=None, buffersize=None):
+                 failonerror=False, errorvalue=None, presorted=False, buffersize=None):
         if presorted:
             self.source = source
         else:
@@ -3194,12 +3223,13 @@ class RangeAggregateView(object):
         else:
             self.aggregators = aggregators
         self.minv, self.maxv = minv, maxv
+        self.failonerror = failonerror
         self.errorvalue = errorvalue
 
     def __iter__(self):
         return iterrangeaggregate(self.source, self.key, self.width, 
                                   self.aggregators, self.minv, self.maxv, 
-                                  self.errorvalue)
+                                  self.failonerror, self.errorvalue)
 
     def __getitem__(self, key):
         return self.aggregators[key]
@@ -3208,7 +3238,7 @@ class RangeAggregateView(object):
         self.aggregators[key] = value
 
     
-def iterrangeaggregate(source, key, width, aggregators, minv, maxv, errorvalue):
+def iterrangeaggregate(source, key, width, aggregators, minv, maxv, failonerror, errorvalue):
 
     aggregators = OrderedDict(aggregators.items()) # take a copy
     # normalise aggregators
@@ -3233,7 +3263,7 @@ def iterrangeaggregate(source, key, width, aggregators, minv, maxv, errorvalue):
     else:
         outflds = list(getkey(srcflds))
     outflds.extend(aggregators.keys())
-    yield outflds
+    yield tuple(outflds)
     
     def buildoutrow(binminv, binmaxv, bin):
         outrow = [(binminv, binmaxv)]
@@ -3254,9 +3284,12 @@ def iterrangeaggregate(source, key, width, aggregators, minv, maxv, errorvalue):
             try:
                 aggval = aggfun(vals)
             except:
-                aggval = errorvalue
+                if failonerror:
+                    raise
+                else:
+                    aggval = errorvalue
             outrow.append(aggval)
-        return outrow
+        return tuple(outrow)
 
     # initialise minimum
     row = it.next()
@@ -3350,11 +3383,11 @@ class RowMapView(object):
 def iterrowmap(source, rowmapper, fields, failonerror):
     it = iter(source)
     it.next() # discard source fields
-    yield fields
+    yield tuple(fields)
     for row in it:
         try:
             outrow = rowmapper(row)
-            yield outrow
+            yield tuple(outrow)
         except:
             if failonerror:
                 raise
@@ -3417,12 +3450,12 @@ class RecordMapView(object):
 def iterrecordmap(source, recmapper, fields, failonerror):
     it = iter(source)
     flds = it.next() # discard source fields
-    yield fields
+    yield tuple(fields)
     for row in it:
         rec = asdict(flds, row)
         try:
             outrow = recmapper(rec)
-            yield outrow
+            yield tuple(outrow)
         except:
             if failonerror:
                 raise
@@ -3496,11 +3529,11 @@ class RowMapManyView(object):
 def iterrowmapmany(source, rowgenerator, fields, failonerror):
     it = iter(source)
     it.next() # discard source fields
-    yield fields
+    yield tuple(fields)
     for row in it:
         try:
             for outrow in rowgenerator(row):
-                yield outrow
+                yield tuple(outrow)
         except:
             if failonerror:
                 raise
@@ -3574,12 +3607,12 @@ class RecordMapManyView(object):
 def iterrecordmapmany(source, rowgenerator, fields, failonerror):
     it = iter(source)
     flds = it.next() # discard source fields
-    yield fields
+    yield tuple(fields)
     for row in it:
         rec = asdict(flds, row)
         try:
             for outrow in rowgenerator(rec):
-                yield outrow
+                yield tuple(outrow)
         except:
             if failonerror:
                 raise
@@ -3621,9 +3654,9 @@ class SetHeaderView(object):
 def itersetheader(source, fields):
     it = iter(source)
     it.next() # discard source fields
-    yield fields
+    yield tuple(fields)
     for row in it:
-        yield row
+        yield tuple(row)
         
         
 def extendheader(table, fields):
@@ -3664,9 +3697,9 @@ def iterextendheader(source, fields):
     srcflds = it.next() 
     outflds = list(srcflds)
     outflds.extend(fields)
-    yield outflds
+    yield tuple(outflds)
     for row in it:
-        yield row
+        yield tuple(row)
         
         
 def pushheader(table, fields):
@@ -3706,9 +3739,9 @@ class PushHeaderView(object):
 
 def iterpushheader(source, fields):
     it = iter(source)
-    yield fields
+    yield tuple(fields)
     for row in it:
-        yield row
+        yield tuple(row)
         
     
 def skip(table, n):
@@ -3808,7 +3841,7 @@ def iterunpack(source, field, newfields, maxv, include_original):
         out_flds.remove(field)
     if newfields:   
         out_flds.extend(newfields)
-    yield out_flds
+    yield tuple(out_flds)
     
     # construct the output data
     for row in it:
@@ -3818,7 +3851,7 @@ def iterunpack(source, field, newfields, maxv, include_original):
         else:
             out_row = [v for i, v in enumerate(row) if i != field_index]
         out_row.extend(value[:maxv])
-        yield out_row
+        yield tuple(out_row)
         
         
 def join(left, right, key=None, presorted=False, buffersize=None):
@@ -4103,7 +4136,7 @@ def iterjoin(left, right, key, leftouter=False, rightouter=False, missing=None):
     # determine the output fields
     outflds = list(lflds)
     outflds.extend(rgetv(rflds))
-    yield outflds
+    yield tuple(outflds)
     
     # define a function to join two groups of rows
     def joinrows(lrowgrp, rrowgrp):
@@ -4112,7 +4145,7 @@ def iterjoin(left, right, key, leftouter=False, rightouter=False, missing=None):
                 outrow = list(lrow) # min with the left row
                 # extend with missing values in place of the right row
                 outrow.extend([missing] * len(rvind))
-                yield outrow
+                yield tuple(outrow)
         elif lrowgrp is None:
             for rrow in rrowgrp:
                 # min with missing values in place of the left row
@@ -4122,7 +4155,7 @@ def iterjoin(left, right, key, leftouter=False, rightouter=False, missing=None):
                     outrow[li] = rrow[ri]
                 # extend with non-key values from the right row  
                 outrow.extend(rgetv(rrow))
-                yield outrow
+                yield tuple(outrow)
         else:
             rrowgrp = list(rrowgrp) # may need to iterate more than once
             for lrow in lrowgrp:
@@ -4131,7 +4164,7 @@ def iterjoin(left, right, key, leftouter=False, rightouter=False, missing=None):
                     outrow = list(lrow)
                     # extend with non-key values from the right row
                     outrow.extend(rgetv(rrow))
-                    yield outrow
+                    yield tuple(outrow)
 
     # construct group iterators for both tables
     lgit = groupby(lit, key=lgetk)
@@ -4148,18 +4181,18 @@ def iterjoin(left, right, key, leftouter=False, rightouter=False, missing=None):
             if lkval < rkval:
                 if leftouter:
                     for row in joinrows(lrowgrp, None):
-                        yield row
+                        yield tuple(row)
                 # advance left
                 lkval, lrowgrp = lgit.next()
             elif lkval > rkval:
                 if rightouter:
                     for row in joinrows(None, rrowgrp):
-                        yield row
+                        yield tuple(row)
                 # advance right
                 rkval, rrowgrp = rgit.next()
             else:
                 for row in joinrows(lrowgrp, rrowgrp):
-                    yield row
+                    yield tuple(row)
                 # advance both
                 lkval, lrowgrp = lgit.next()
                 rkval, rrowgrp = rgit.next()
@@ -4172,22 +4205,22 @@ def iterjoin(left, right, key, leftouter=False, rightouter=False, missing=None):
         if lkval > rkval:
             # yield anything that got left hanging
             for row in joinrows(lrowgrp, None):
-                yield row
+                yield tuple(row)
         # yield the rest
         for lkval, lrowgrp in lgit:
             for row in joinrows(lrowgrp, None):
-                yield row
+                yield tuple(row)
 
     # make sure any right rows remaining are yielded
     if rightouter:
         if lkval < rkval:
             # yield anything that got left hanging
             for row in joinrows(None, rrowgrp):
-                yield row
+                yield tuple(row)
         # yield the rest
         for rkval, rrowgrp in rgit:
             for row in joinrows(None, rrowgrp):
-                yield row
+                yield tuple(row)
             
         
 def iterimplicitjoin(left, right, presorted=False, leftouter=False, 
@@ -4257,14 +4290,14 @@ def itercrossjoin(sources):
     outflds = list()
     for s in sources:
         outflds.extend(header(s))
-    yield outflds
+    yield tuple(outflds)
 
     datasrcs = [data(src) for src in sources]
     for prod in product(*datasrcs):
         outrow = list()
         for row in prod:
             outrow.extend(row)
-        yield outrow
+        yield tuple(outrow)
         
         
 def antijoin(left, right, key=None, presorted=False, buffersize=None):
@@ -4332,7 +4365,7 @@ def iterantijoin(left, right, key):
 
     lflds = lit.next()
     rflds = rit.next()
-    yield lflds
+    yield tuple(lflds)
 
     # determine indices of the key fields in left and right tables
     lkind = asindices(lflds, key)
@@ -4356,7 +4389,7 @@ def iterantijoin(left, right, key):
         while True:
             if lkval < rkval:
                 for row in lrowgrp:
-                    yield row
+                    yield tuple(row)
                 # advance left
                 lkval, lrowgrp = lgit.next()
             elif lkval > rkval:
@@ -4374,11 +4407,11 @@ def iterantijoin(left, right, key):
     if lkval > rkval:
         # yield anything that got left hanging
         for row in lrowgrp:
-            yield row
+            yield tuple(row)
     # and the rest...
     for lkval, lrowgrp in lgit:
         for row in lrowgrp:
-            yield row
+            yield tuple(row)
 
         
 class ImplicitAntiJoinView(object):
@@ -4413,7 +4446,7 @@ def iterimplicitantijoin(left, right, presorted=False, buffersize=None):
     return iterantijoin(left, right, key)
 
 
-def rangefacet(table, field, width, minv=None, maxv=None, errorvalue=None,
+def rangefacet(table, field, width, minv=None, maxv=None, 
                presorted=False, buffersize=None):
     """
     Return a dictionary mapping ranges to tables. E.g.::

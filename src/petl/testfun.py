@@ -14,10 +14,10 @@ def iassertequal(expect, actual):
     ie = iter(expect)
     ia = iter(actual)
     for e, a in izip_longest(ie, ia, fillvalue=None):
-        if isinstance(e, list):
-            e = tuple(e)
-        if isinstance(a, list):
-            a = tuple(a)
+#        if isinstance(e, list):
+#            e = tuple(e)
+#        if isinstance(a, list):
+#            a = tuple(a)
         assert e == a, (e, a)
 
 
