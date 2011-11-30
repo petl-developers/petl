@@ -75,6 +75,7 @@ Version 0.2
 - translate/replace single value in a field, e.g., None to zero; maybe also apply to multiple fields
 - convert with dictionary (which translate is a convenience for)
 
+- dataslice
 - implement cachetag for all view classes
 
 - make sure we don't get tripped up by attempts to compare tuples with lists
