@@ -95,7 +95,7 @@ Version 0.2
 - [done] implement transpose - one row iterator per field 
 
 - [done] implement intersect
-- [done] values should not skip short rows
+- [won't do] values should not skip short rows
 - implement pivot?
 - implement crosstab?
 
