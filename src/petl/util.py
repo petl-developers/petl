@@ -465,45 +465,48 @@ def valuecounter(table, *fields):
 
 def valuecounts(table, *fields):    
     """
-    Find distinct values for the given field and count the number of 
-    occurrences. Returns a table mapping values to counts, with most common 
+    Find distinct values for the given field and count the number and relative
+    frequency of occurrences. Returns a table mapping values to counts, with most common 
     values first. E.g.::
 
         >>> from petl import valuecounts
         >>> table = [['foo', 'bar'], ['a', True], ['b'], ['b', True], ['c', False]]
         >>> valuecounts(table, 'foo')
-        [('value', 'count'), ('b', 2), ('a', 1), ('c', 1)]
+        [('value', 'count', 'frequency'), ('b', 2, 0.5), ('a', 1, 0.25), ('c', 1, 0.25)]
 
     The positional arguments can be field names or indexes (starting from zero).    
 
     Can be combined with `look`, e.g.::
-    
-        >>> table = [['foo', 'bar'], ['a', True], ['b'], ['b', True], ['c', False]]
+
+        >>> from petl import look    
         >>> look(valuecounts(table, 'foo'))
-        +---------+---------+
-        | 'value' | 'count' |
-        +=========+=========+
-        | 'b'     | 2       |
-        +---------+---------+
-        | 'a'     | 1       |
-        +---------+---------+
-        | 'c'     | 1       |
-        +---------+---------+
+        +---------+---------+-------------+
+        | 'value' | 'count' | 'frequency' |
+        +=========+=========+=============+
+        | 'b'     | 2       | 0.5         |
+        +---------+---------+-------------+
+        | 'a'     | 1       | 0.25        |
+        +---------+---------+-------------+
+        | 'c'     | 1       | 0.25        |
+        +---------+---------+-------------+
         
         >>> look(valuecounts(table, 'bar'))
-        +---------+---------+
-        | 'value' | 'count' |
-        +=========+=========+
-        | True    | 2       |
-        +---------+---------+
-        | False   | 1       |
-        +---------+---------+
+        +---------+---------+--------------------+
+        | 'value' | 'count' | 'frequency'        |
+        +=========+=========+====================+
+        | True    | 2       | 0.6666666666666666 |
+        +---------+---------+--------------------+
+        | False   | 1       | 0.3333333333333333 |
+        +---------+---------+--------------------+
             
     """
     
     counter = valuecounter(table, *fields)
-    output = [('value', 'count')]
-    output.extend(counter.most_common())
+    output = [('value', 'count', 'frequency')]
+    counts = counter.most_common()
+    total = sum(c[1] for c in counts)
+    counts = [(c[0], c[1], float(c[1])/total) for c in counts]
+    output.extend(counts)
     return output
         
         

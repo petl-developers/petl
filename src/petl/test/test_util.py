@@ -165,7 +165,7 @@ def test_valuecounts():
     
     table = (('foo', 'bar'), ('a', 1), ('b', 2), ('b', 7))
     actual = valuecounts(table, 'foo')
-    expect = (('value', 'count'), ('b', 2), ('a', 1))
+    expect = (('value', 'count', 'frequency'), ('b', 2, 2./3), ('a', 1, 1./3))
     iassertequal(expect, actual) 
 
 
@@ -174,7 +174,7 @@ def test_valuecounts_shortrows():
     
     table = (('foo', 'bar'), ('a', True), ('b',), ('b', True), ('c', False))
     actual = valuecounts(table, 'bar')
-    expect = (('value', 'count'), (True, 2), (False, 1))
+    expect = (('value', 'count', 'frequency'), (True, 2, 2./3), (False, 1, 1./3))
     iassertequal(expect, actual) 
 
     
