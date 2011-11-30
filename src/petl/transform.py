@@ -668,7 +668,7 @@ def replace(table, field, a, b):
     return convert(table, field, {a: b})
 
     
-def extend(table, field, value):
+def extend(table, field, value, failonerror=False, errorvalue=None):
     """
     Extend a table with a fixed value or calculated field. E.g., using a fixed
     value::
@@ -723,18 +723,21 @@ def extend(table, field, value):
 
     """
     
-    return ExtendView(table, field, value)
+    return ExtendView(table, field, value, failonerror=failonerror, errorvalue=errorvalue)
 
 
 class ExtendView(object):
     
-    def __init__(self, source, field, value):
+    def __init__(self, source, field, value, failonerror=False, errorvalue=None):
         self.source = source
         self.field = field
         self.value = value
+        self.failonerror = failonerror
+        self.errorvalue = errorvalue
         
     def __iter__(self):
-        return iterextend(self.source, self.field, self.value)
+        return iterextend(self.source, self.field, self.value, self.failonerror,
+                          self.errorvalue)
     
     def cachetag(self):
         try:
@@ -743,21 +746,27 @@ class ExtendView(object):
             raise Uncacheable(e)
 
 
-def iterextend(source, field, value):
+def iterextend(source, field, value, failonerror, errorvalue):
     it = iter(source)
     flds = it.next()
-    out_flds = list(flds)
-    out_flds.append(field)
-    yield tuple(out_flds)
+    outflds = list(flds)
+    outflds.append(field)
+    yield tuple(outflds)
 
     for row in it:
-        out_row = list(row) # copy so we don't modify source
+        outrow = list(row) 
         if callable(value):
             rec = asdict(flds, row)
-            out_row.append(value(rec))
+            try:
+                outrow.append(value(rec))
+            except:
+                if failonerror:
+                    raise
+                else:
+                    outrow.append(errorvalue)
         else:
-            out_row.append(value)
-        yield tuple(out_row)
+            outrow.append(value)
+        yield tuple(outrow)
         
     
 def rowslice(table, start=0, stop=None, step=1):
