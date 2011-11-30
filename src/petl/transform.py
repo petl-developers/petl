@@ -2037,9 +2037,9 @@ def itersplit(source, field, pattern, newfields, include_original, maxsplit,
         yield tuple(out_row)
         
     
-def select(table, where, missing=None):
+def select(table, *args, **kwargs):
     """
-    Select rows meeting a condition. The `where` argument can be a function
+    Select rows meeting a condition. The second positional argument can be a function
     accepting a record (i.e., a dictionary representation of a row) e.g.::
     
         >>> from petl import select, look     
@@ -2058,7 +2058,7 @@ def select(table, where, missing=None):
         | 'a'   | 2     | 88.2  |
         +-------+-------+-------+
 
-    The `where` argument can also be an expression string, which will be converted
+    The second positional argument can also be an expression string, which will be converted
     to a function using :func:`expr`, e.g.::
     
         >>> table3 = select(table1, "{foo} == 'a' and {baz} > 88.1")
@@ -2068,14 +2068,41 @@ def select(table, where, missing=None):
         +=======+=======+=======+
         | 'a'   | 2     | 88.2  |
         +-------+-------+-------+
+        
+    The condition can also be applied to a single field, e.g.::
+    
+        >>> table4 = select(table1, 'foo', lambda v: v == 'a')
+        >>> look(table4)
+        +-------+-------+-------+
+        | 'foo' | 'bar' | 'baz' |
+        +=======+=======+=======+
+        | 'a'   | 4     | 9.3   |
+        +-------+-------+-------+
+        | 'a'   | 2     | 88.2  |
+        +-------+-------+-------+
 
     """
     
-    if isinstance(where, basestring):
-        # be kind to the user
-        where = expr(where)
-    return SelectView(table, where, missing)
-
+    if 'missing' in kwargs:
+        missing = kwargs['missing']
+    else:
+        missing = None
+        
+    if len(args) == 0:
+        raise Exception('missing positional argument')
+    elif len(args) == 1:
+        where = args[0]
+        if isinstance(where, basestring):
+            where = expr(where)
+        else:
+            assert callable(where), 'second argument must be string or callable'
+        return SelectView(table, where, missing)
+    else:
+        field = args[0]
+        where = args[1]
+        assert callable(where), 'third argument must be callable'
+        return FieldSelectView(table, field, where)
+        
 
 class SelectView(object):
     
@@ -2096,6 +2123,30 @@ def iterselect(source, where, missing):
     for row in it:
         rec = asdict(flds, row, missing)
         if where(rec):
+            yield tuple(row)
+        
+        
+class FieldSelectView(object):
+    
+    def __init__(self, source, field, where):
+        self.source = source
+        self.field = field
+        self.where = where
+        
+        
+    def __iter__(self):
+        return iterfieldselect(self.source, self.field, self.where)
+    
+    
+def iterfieldselect(source, field, where):
+    it = iter(source)
+    flds = it.next()
+    yield tuple(flds)
+    indices = asindices(flds, field)
+    getv = itemgetter(*indices)
+    for row in it:
+        v = getv(row)
+        if where(v):
             yield tuple(row)
         
         

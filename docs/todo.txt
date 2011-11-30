@@ -73,13 +73,14 @@ Version 0.2
 - [won't do] return tuple as default aggregator
 - [done] remove _ from melt and recast args
 - [won't do] recast should not scan twice
+- [done] select signature for single field function
 
-- select signature for single field function
 - selectregex
 - make convert args more flexible
 - autoconvert multiple fields to numeric types - convenience function
 - translate/replace single value in a field, e.g., None to zero; maybe also apply to multiple fields
 - convert with dictionary (which translate is a convenience for)
+
 - code smells in reduce functions - refactor with generic grouper and reducer functions?
 - dataslice
 - implement cachetag for all view classes

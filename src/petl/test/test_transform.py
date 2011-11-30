@@ -1005,6 +1005,14 @@ def test_select():
               ('d', 7, 100.9))
     iassertequal(expect, actual)
     
+    # check single field tests
+    actual = select(table, 'foo', lambda v: v == 'a')
+    expect = (('foo', 'bar', 'baz'),
+              ('a', 4, 9.3),
+              ('a', 2, 88.2))
+    iassertequal(expect, actual)
+    iassertequal(expect, actual) # check can iterate twice
+
     
 def test_fieldmap():
     
