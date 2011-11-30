@@ -322,24 +322,25 @@ def itercat(sources, missing=None):
                 outflds.append(f)
     yield tuple(outflds)
 
-    def rowmaker(row, indexmap):
-        outrow = [missing] * len(outflds)
-        for oi, i in indexmap:
-            try:
-                outrow[oi] = row[i]
-            except:
-                pass # be relaxed about short rows
-        return tuple(outrow)
-
     # output data rows
     for source_index, it in enumerate(its):
 
         flds = source_flds_lists[source_index]
-        indexmap = [(outflds.index(f), flds.index(f)) for f in flds]
         
         # now construct and yield the data rows
         for row in it:
-            yield rowmaker(row, indexmap)
+            try:
+                # should be quickest to do this way
+                yield tuple(row[flds.index(f)] if f in flds else missing for f in outflds)
+            except IndexError:
+                # handle short rows
+                outrow = [missing] * len(outflds)
+                for i, f in enumerate(flds):
+                    try:
+                        outrow[outflds.index(f)] = row[i]
+                    except IndexError:
+                        pass # be relaxed about short rows
+                yield tuple(outrow)
 
 
 def convert(table, field, *args, **kwargs):
