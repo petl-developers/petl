@@ -1887,17 +1887,17 @@ def itercomplement(a, b):
         if b is None or a < b:
             yield a
             try:
-                a = ita.next()
+                a = tuple(ita.next())
             except StopIteration:
                 break
         elif a == b:
             try:
-                a = ita.next()
+                a = tuple(ita.next())
             except StopIteration:
                 break
         else:
             try:
-                b = itb.next()
+                b = tuple(itb.next())
             except StopIteration:
                 b = None
         
@@ -5030,4 +5030,62 @@ def itertranspose(source):
     for i in range(len(fields)):
         yield tuple(row[i] for row in its[i])
         
+
+def intersection(a, b, presorted=False, buffersize=None):
+    """
+    Return rows in `a` that are also in `b`. E.g.::
+    
+TODO
+
+    If `presorted` is True, it is assumed that the data are already sorted by
+    the given key, and the `buffersize` argument is ignored. Otherwise, the data 
+    are sorted, see also the discussion of the `buffersize` argument under the 
+    :func:`sort` function.
+    
+    """
+    
+    return IntersectionView(a, b, presorted, buffersize)
+
+
+class IntersectionView(object):
+    
+    def __init__(self, a, b, presorted=False, buffersize=None):
+        if presorted:
+            self.a = a
+            self.b = b
+        else:
+            self.a = sort(a, buffersize=buffersize)
+            self.b = sort(b, buffersize=buffersize)
+            
+    def __iter__(self):
+        return iterintersection(self.a, self.b)
+
+    def cachetag(self):
+        try:
+            return hash((self.a.cachetag(), self.b.cachetag()))
+        except Exception as e:
+            raise Uncacheable(e)
+
+
+def iterintersection(a, b):
+    ita = iter(a) 
+    itb = iter(b)
+    aflds = ita.next()
+    itb.next() # ignore b fields
+    yield tuple(aflds)
+    try:
+        a = tuple(ita.next())
+        b = tuple(itb.next())
+        while True:
+            if a < b:
+                a = tuple(ita.next())
+            elif a == b:
+                yield a
+                a = tuple(ita.next())
+                b = tuple(itb.next())
+            else:
+                b = tuple(itb.next())
+    except StopIteration:
+        pass
+    
         

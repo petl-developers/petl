@@ -24,7 +24,8 @@ from petl.transform import rename, cut, cat, convert, fieldconvert, extend, rows
            selectge, selectlt, selectle, rangefacet, selectrangeopenleft, \
            selectrangeopenright, selectrangeopen, selectrangeclosed, rangerowreduce, \
            rangerecordreduce, selectin, selectnotin, selectre, rowselect, recordselect, \
-           fieldselect, rowlenselect, selectis, selectisnot, selectisinstance, transpose
+           fieldselect, rowlenselect, selectis, selectisnot, selectisinstance, transpose, \
+           intersection
            
             
            

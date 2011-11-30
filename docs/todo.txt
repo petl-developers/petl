@@ -94,7 +94,8 @@ Version 0.2
 - [done] dataslice
 - [done] implement transpose - one row iterator per field 
 
-- implement intersect
+- [done] implement intersect
+- [done] values should not skip short rows
 - implement pivot?
 - implement crosstab?
 

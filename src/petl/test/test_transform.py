@@ -15,7 +15,7 @@ from petl import rename, fieldnames, cut, cat, convert, fieldconvert, extend, \
                 skip, extendheader, unpack, join, leftjoin, rightjoin, outerjoin, \
                 crossjoin, antijoin, rangeaggregate, rangecounts, rangefacet, \
                 rangerowreduce, rangerecordreduce, selectre, rowselect, recordselect, \
-                rowlenselect, strjoin, transpose
+                rowlenselect, strjoin, transpose, intersection
 
 
 def test_rename():
@@ -2052,5 +2052,50 @@ def test_transpose():
                ('colour', 'blue', 'red', 'purple', 'yellow', 'orange'))
     iassertequal(expect2, table2)
     iassertequal(expect2, table2)
+    
+    
+def test_intersection_1():
+
+    table1 = (('foo', 'bar'),
+              ('A', 1),
+              ('B', 2),
+              ('C', 7))
+    
+    table2 = (('foo', 'bar'),
+              ('A', 9),
+              ('B', 2),
+              ('B', 3))
+    
+    expectation = (('foo', 'bar'),
+                   ('B', 2))
+    
+    result = intersection(table1, table2)
+    iassertequal(expectation, result)
+    
+    
+def test_intersection_2():
+
+    tablea = (('foo', 'bar', 'baz'),
+              ('A', 1, True),
+              ('C', 7, False),
+              ('B', 2, False),
+              ('C', 9, True))
+    
+    tableb = (('x', 'y', 'z'),
+              ('B', 2, False),
+              ('A', 9, False),
+              ('B', 3, True),
+              ('C', 9, True))
+    
+    expect = (('foo', 'bar', 'baz'),
+              ('B', 2, False),
+              ('C', 9, True))
+    
+    result = intersection(tablea, tableb)
+    iassertequal(expect, result)
+    
+    
+
+    
     
     

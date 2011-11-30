@@ -335,7 +335,7 @@ class See(object):
         return output
         
     
-def values(table, *fields):
+def values(table, *fields, **kwargs):
     """
     Return an iterator over values in a given field or fields. E.g.::
     
@@ -357,20 +357,15 @@ def values(table, *fields):
 
     The positional arguments can be field names or indexes (starting from zero).    
     
-    If rows are uneven, any missing values are skipped, e.g.::
+    If rows are uneven, the value of the `missing` keyword argument is reported,
+    which defaults to `None`. E.g.::
     
-        >>> table = [['foo', 'bar'], ['a', True], ['b'], ['b', True], ['c', False]]
-        >>> bar = values(table, 'bar')
-        >>> bar.next()
-        True
-        >>> bar.next()
-        True
-        >>> bar.next()
-        False
-        >>> bar.next()
-        Traceback (most recent call last):
-          File "<stdin>", line 1, in <module>
-        StopIteration
+table = [['foo', 'bar'], ['a', True], ['b'], ['b', True], ['c', False]]
+bar = values(table, 'bar')
+bar.next()
+bar.next()
+bar.next()
+bar.next()
         
     More than one field can be selected, e.g.::
     
@@ -392,6 +387,10 @@ def values(table, *fields):
 
     """
     
+    if 'missing' in kwargs:
+        missing = kwargs['missing']
+    else:
+        missing = None
     it = iter(table)
     srcflds = it.next()
     indices = asindices(srcflds, fields)
@@ -401,11 +400,11 @@ def values(table, *fields):
         try:
             value = getvalue(row)
             yield value
-        except IndexError:
-            pass # ignore short rows
+        except IndexError: # short row
+            yield missing
     
     
-def valueset(table, *fields):
+def valueset(table, *fields, **kwargs):
     """
     Find distinct values for the given field or fields. Returns a set. E.g.::
 
@@ -418,14 +417,15 @@ def valueset(table, *fields):
         
     The positional arguments can be field names or indexes (starting from zero).    
 
-    Syntactic sugar for ``set(values(table, *fields))``, see also :func:`values`.
+    Syntactic sugar for ``set(values(table, *fields, **kwargs))``, see also 
+    :func:`values`.
         
     """
 
-    return set(values(table, *fields))
+    return set(values(table, *fields, **kwargs))
 
 
-def valuecount(table, field, value):
+def valuecount(table, field, value, **kwargs):
     """
     Count the number of occurrences of `value` under the given field. Returns
     the absolute count and relative frequency as a pair. E.g.::
@@ -441,9 +441,9 @@ def valuecount(table, field, value):
     """
     
     if isinstance(field, (list, tuple)):
-        it = values(table, *field)
+        it = values(table, *field, **kwargs)
     else:
-        it = values(table, field)
+        it = values(table, field, **kwargs)
     total = 0
     vs = 0
     for v in it:
@@ -453,7 +453,7 @@ def valuecount(table, field, value):
     return vs, float(vs)/total
     
     
-def valuecounter(table, *fields):
+def valuecounter(table, *fields, **kwargs):
     """
     Find distinct values for the given field and count the number of 
     occurrences. Returns a :class:`dict` mapping values to counts. E.g.::
@@ -475,7 +475,7 @@ def valuecounter(table, *fields):
     """
 
     counter = Counter()
-    for v in values(table, *fields):
+    for v in values(table, *fields, **kwargs):
         try:
             counter[v] += 1
         except IndexError:
@@ -483,7 +483,7 @@ def valuecounter(table, *fields):
     return counter
             
 
-def valuecounts(table, *fields):    
+def valuecounts(table, *fields, **kwargs):    
     """
     Find distinct values for the given field and count the number and relative
     frequency of occurrences. Returns a table mapping values to counts, with most common 
@@ -521,7 +521,7 @@ def valuecounts(table, *fields):
             
     """
     
-    counter = valuecounter(table, *fields)
+    counter = valuecounter(table, *fields, **kwargs)
     output = [('value', 'count', 'frequency')]
     counts = counter.most_common()
     total = sum(c[1] for c in counts)
@@ -530,7 +530,7 @@ def valuecounts(table, *fields):
     return output
         
         
-def unique(table, *fields):
+def unique(table, *fields, **kwargs):
     """
     Return True if there are no duplicate values for the given field(s), otherwise
     False. E.g.::
@@ -547,7 +547,7 @@ def unique(table, *fields):
     """    
 
     vals = set()
-    for v in values(table, *fields):
+    for v in values(table, *fields, **kwargs):
         if v in vals:
             return False
         else:
@@ -992,7 +992,7 @@ def rowlengths(table):
     return output
 
 
-def typecounter(table, field):    
+def typecounter(table, field, **kwargs):    
     """
     Count the number of values found for each Python type. E.g.::
 
@@ -1015,7 +1015,7 @@ def typecounter(table, field):
     """
     
     counter = Counter()
-    for v in values(table, field):
+    for v in values(table, field, **kwargs):
         try:
             counter[v.__class__.__name__] += 1
         except IndexError:
@@ -1023,7 +1023,7 @@ def typecounter(table, field):
     return counter
 
 
-def typecounts(table, field):    
+def typecounts(table, field, **kwargs):    
     """
     Count the number of values found for each Python type and return a table
     mapping class names to counts. E.g.::
@@ -1070,13 +1070,13 @@ def typecounts(table, field):
  
     """
     
-    counter = typecounter(table, field)
+    counter = typecounter(table, field, **kwargs)
     output = [('type', 'count')]
     output.extend(counter.most_common())
     return output
 
 
-def typeset(table, field):
+def typeset(table, field, **kwargs):
     """
     Return a set containing all Python types found for values in the given field.
     E.g.::
@@ -1100,7 +1100,7 @@ def typeset(table, field):
     """
 
     s = set()
-    for v in values(table, field):
+    for v in values(table, field, **kwargs):
         try:
             s.add(v.__class__)
         except IndexError:
@@ -1108,7 +1108,7 @@ def typeset(table, field):
     return s
     
 
-def parsecounter(table, field, parsers={'int': int, 'float': float}):    
+def parsecounter(table, field, parsers={'int': int, 'float': float}, **kwargs):    
     """
     Count the number of `str` or `unicode` values under the given fields that can 
     be parsed as ints, floats or via custom parser functions. Return a pair of 
@@ -1134,7 +1134,7 @@ def parsecounter(table, field, parsers={'int': int, 'float': float}):
     """
     
     counter, errors = Counter(), Counter()
-    for v in values(table, field):
+    for v in values(table, field, **kwargs):
         if isinstance(v, basestring):
             for name, parser in parsers.items():
                 try:
@@ -1146,7 +1146,7 @@ def parsecounter(table, field, parsers={'int': int, 'float': float}):
     return counter, errors
 
 
-def parsecounts(table, field, parsers={'int': int, 'float': float}):    
+def parsecounts(table, field, parsers={'int': int, 'float': float}, **kwargs):    
     """
     Count the number of `str` or `unicode` values that can be parsed as ints, 
     floats or via custom parser functions. Return a table mapping parser names
@@ -1172,7 +1172,7 @@ def parsecounts(table, field, parsers={'int': int, 'float': float}):
 
     """
     
-    counter, errors = parsecounter(table, field, parsers)
+    counter, errors = parsecounter(table, field, parsers, **kwargs)
     output_fields = [('type', 'count', 'errors')]
     output_data = [(item, count, errors[item]) for (item, count) in counter.most_common()]
     output = output_fields + output_data
@@ -1381,7 +1381,7 @@ def boolparser(true_strings=['true', 't', 'yes', 'y', '1'],
     return parser
     
 
-def limits(table, field):
+def limits(table, field, **kwargs):
     """
     Find minimum and maximum values under the given field. E.g.::
     
@@ -1395,7 +1395,7 @@ def limits(table, field):
     
     """
     
-    vals = values(table, field)
+    vals = values(table, field, **kwargs)
     try:
         minv = maxv = vals.next()
     except StopIteration:
@@ -1409,7 +1409,7 @@ def limits(table, field):
         return minv, maxv
 
 
-def stats(table, field):
+def stats(table, field, **kwargs):
     """
     Calculate basic descriptive statistics on a given field. E.g.::
     
@@ -1433,7 +1433,7 @@ def stats(table, field):
               'mean': None, 
               'count': 0, 
               'errors': 0}
-    for v in values(table, field):
+    for v in values(table, field, **kwargs):
         try:
             v = float(v)
         except:
