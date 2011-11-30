@@ -14,7 +14,7 @@ from petl.io import fromcsv, frompickle, fromsqlite3, tocsv, topickle, \
            appendcsv, appendpickle, appendsqlite3, todb, appenddb, fromtext, \
            totext, appendtext
 
-from petl.transform import rename, cut, cat, convert, fieldconvert, translate, extend, rowslice, \
+from petl.transform import rename, cut, cat, convert, fieldconvert, extend, rowslice, \
            head, tail, sort, melt, recast, duplicates, conflicts, \
            mergereduce, select, complement, diff, capture, \
            split, fieldmap, facet, selecteq, rowreduce, merge, aggregate, recordreduce, \

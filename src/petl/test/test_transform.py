@@ -7,7 +7,7 @@ Tests for the petl.transform module.
 from collections import OrderedDict
 
 from petl.testfun import iassertequal, assertequal
-from petl import rename, fieldnames, cut, cat, convert, fieldconvert, translate, extend, \
+from petl import rename, fieldnames, cut, cat, convert, fieldconvert, extend, \
                 rowslice, head, tail, sort, melt, recast, duplicates, conflicts, \
                 mergereduce, select, complement, diff, capture, \
                 split, expr, fieldmap, facet, rowreduce, aggregate, recordreduce, \
@@ -246,7 +246,7 @@ def test_translate():
              ('-', 56))
     
     trans = {'M': 'male', 'F': 'female'}
-    result = translate(table, 'foo', trans)
+    result = convert(table, 'foo', trans)
     expectation = (('foo', 'bar'),
                    ('male', 12),
                    ('female', 34),
