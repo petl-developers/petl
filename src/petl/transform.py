@@ -401,22 +401,24 @@ def convert(table, field, *args, **kwargs):
     on the `str <http://docs.python.org/library/stdtypes.html#string-methods>`_ 
     type.
     
-    The values can also be translated via a dictionary, e.g.::
+    Values can also be translated via a dictionary, e.g.::
     
-        >>> table6 = convert(table1, 'foo', {'A': 'Z', 'B': 'Y'})
-        >>> look(table6)
-        +-------+-------+
-        | 'foo' | 'bar' |
-        +=======+=======+
-        | 'Z'   | '2.4' |
-        +-------+-------+
-        | 'Y'   | '5.7' |
-        +-------+-------+
-        | 'C'   | '1.2' |
-        +-------+-------+
-        | 'D'   | '8.3' |
-        +-------+-------+
-
+        >>> table6 = [['gender', 'age'],
+        ...           ['M', 12],
+        ...           ['F', 34],
+        ...           ['-', 56]]
+        >>> table7 = convert(table6, 'gender', {'M': 'male', 'F': 'female'})
+        >>> look(table7)
+        +----------+-------+
+        | 'gender' | 'age' |
+        +==========+=======+
+        | 'male'   | 12    |
+        +----------+-------+
+        | 'female' | 34    |
+        +----------+-------+
+        | '-'      | 56    |
+        +----------+-------+
+    
     Note that the `field` argument can be a list or tuple of fields, in which
     case the conversion will be applied to all of the fields given.
     
@@ -619,65 +621,6 @@ def dictconverter(d):
     return conv
 
     
-def translate(table, field, dictionary=dict()):
-    """
-    Translate values in a given field using a dictionary. E.g.::
-    
-        >>> from petl import translate, look
-        >>> table1 = [['gender', 'age'],
-        ...           ['M', 12],
-        ...           ['F', 34],
-        ...           ['-', 56]]
-        >>> table2 = translate(table1, 'gender', {'M': 'male', 'F': 'female'})
-        >>> look(table2)
-        +----------+-------+
-        | 'gender' | 'age' |
-        +==========+=======+
-        | 'male'   | 12    |
-        +----------+-------+
-        | 'female' | 34    |
-        +----------+-------+
-        | '-'      | 56    |
-        +----------+-------+
-
-    """
-    
-    return TranslateView(table, field, dictionary)
-
-
-class TranslateView(object):
-    
-    def __init__(self, source, field, dictionary=dict()):
-        self.source = source
-        self.field = field
-        self.dictionary = dictionary
-        
-    def __iter__(self):
-        return itertranslate(self.source, self.field, self.dictionary)
-
-
-def itertranslate(source, field, dictionary):
-    it = iter(source)
-    dictionary = dictionary.copy()
-    
-    flds = it.next()
-    yield tuple(flds )
-    
-    if field in flds:
-        index = flds.index(field)
-    elif isinstance(field, int) and field < len(flds):
-        index = field
-    else:
-        raise FieldSelectionError(field)
-    
-    for row in it:
-        row = list(row) # copy, so we don't modify the source
-        value = row[index]
-        if value in dictionary:
-            row[index] = dictionary[value]
-        yield tuple(row)
-        
-        
 def extend(table, field, value):
     """
     Extend a table with a fixed value or calculated field. E.g., using a fixed

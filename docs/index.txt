@@ -273,7 +273,6 @@ Transforming tables
 .. autofunction:: petl.rangefacet
 .. autofunction:: petl.convert
 .. autofunction:: petl.fieldconvert
-.. autofunction:: petl.translate
 .. autofunction:: petl.extend
 .. autofunction:: petl.capture
 .. autofunction:: petl.split
