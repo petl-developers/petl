@@ -81,20 +81,23 @@ Version 0.2
 
 - implement cachetag for all view classes
 - handle errors in extend
-- implement selectlen - select by row length
-- implement selecttype?
+- implement rowselect - generic `where` callable operating on the row (rather than the record)
+- implement selectrowlen - select by row length
+- implement selectis, selectisnot
+- rename selectni to selectnotin
+- implement selectisinstance?
 - implement stringjoin as aggregation function (or can you just pass ', '.join?)
 - implement missingness/frequency/valuecount
 - add proportions/frequency/ratio to valuecounts
-- implement transpose
 - check how cat and cut handle long/short rows; are they using itemgetter where possible?
+- implement fromxml
+- lookall
+- dataslice
+- implement transpose
 - implement intersect
 - implement pivot?
 - implement crosstab?
-- implement fromxml
-- lookall
 - code smells in reduce functions - refactor with generic grouper and reducer functions?
-- dataslice
 
 Version 0.3
 -----------
