@@ -364,7 +364,7 @@ def convert(table, field, *args, **kwargs):
         +-------+-------------------+
         | 'D'   | 68.89000000000001 |
         +-------+-------------------+
-
+        
     A method of the data value can also be invoked by passing the method name. E.g.::
     
         >>> table4 = convert(table1, 'foo', 'lower')
@@ -401,13 +401,37 @@ def convert(table, field, *args, **kwargs):
     on the `str <http://docs.python.org/library/stdtypes.html#string-methods>`_ 
     type.
     
+    The values can also be translated via a dictionary, e.g.::
+    
+        >>> table6 = convert(table1, 'foo', {'A': 'Z', 'B': 'Y'})
+        >>> look(table6)
+        +-------+-------+
+        | 'foo' | 'bar' |
+        +=======+=======+
+        | 'Z'   | '2.4' |
+        +-------+-------+
+        | 'Y'   | '5.7' |
+        +-------+-------+
+        | 'C'   | '1.2' |
+        +-------+-------+
+        | 'D'   | '8.3' |
+        +-------+-------+
+
+    Note that the `field` argument can be a list or tuple of fields, in which
+    case the conversion will be applied to all of the fields given.
+    
     """
     
     converters = dict()
     if len(args) == 1:
-        converters[field] = args[0]
+        conv = args[0]
     elif len(args) > 1:
-        converters[field] = args
+        conv = args
+    if isinstance(field, (list, tuple)): # allow for multiple fields
+        for f in field:
+            converters[f] = conv
+    else:
+        converters[field] = conv
     return fieldconvert(table, converters, **kwargs)
 
     
@@ -506,6 +530,9 @@ def fieldconvert(table, converters=None, failonerror=False, errorvalue=None):
         | None  | 'd'   | 'z'   |
         +-------+-------+-------+
 
+    Converters can also be dictionaries, which will be used to translate values
+    under the specified field.
+    
     """
 
     return FieldConvertView(table, converters, failonerror, errorvalue)
@@ -544,6 +571,8 @@ def iterfieldconvert(source, converters, failonerror, errorvalue):
             methnm = c[0]
             methargs = c[1:]
             converters[f] = methodcaller(methnm, *methargs)
+        elif isinstance(c, dict):
+            converters[f] = dictconverter(c)
         else:
             raise Exception('unexpected converter specification on field %r: %r' % (f, c))
     
@@ -581,6 +610,15 @@ def methodcaller(nm, *args):
     return lambda v: getattr(v, nm)(*args)
 
 
+def dictconverter(d):
+    def conv(v):
+        if v in d:
+            return d[v]
+        else:
+            return v
+    return conv
+
+    
 def translate(table, field, dictionary=dict()):
     """
     Translate values in a given field using a dictionary. E.g.::

@@ -170,6 +170,26 @@ def test_convert():
                ('D', 'xyz', 9.0),
                ('E', None))
     iassertequal(expect4, table4)
+    
+    # test multiple fields with the same conversion
+    table5 = convert(table1, ('bar', 'baz'), str)
+    expect5 = (('foo', 'bar', 'baz'),
+               ('A', '1', '2'),
+               ('B', '2', '3.4'),
+               (u'B', u'3', u'7.8', True),
+               ('D', 'xyz', '9.0'),
+               ('E', 'None'))
+    iassertequal(expect5, table5)
+    
+    # test convert with dictionary
+    table6 = convert(table1, 'foo', {'A': 'Z', 'B': 'Y'})
+    expect6 = (('foo', 'bar', 'baz'),
+               ('Z', 1, 2),
+               ('Y', '2', '3.4'),
+               (u'Y', u'3', u'7.8', True),
+               ('D', 'xyz', 9.0),
+               ('E', None))
+    iassertequal(expect6, table6)
 
 
 def test_fieldconvert():
