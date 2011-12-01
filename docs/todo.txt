@@ -123,6 +123,8 @@ Version 0.3
 - implement recordgroupby?
 - show rows/values causing conversion or translation errors
 - autoconvert multiple fields to numeric types - convenience function
+- handling of comments in text files
+
 
 petlx
 -----

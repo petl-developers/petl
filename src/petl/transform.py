@@ -1464,6 +1464,10 @@ def recast(table, key=None, variablefield='variable', valuefield='value',
         | 3    | None  | 'M'      |
         +------+-------+----------+
 
+    Note that the table is scanned once to discover variables, then a second
+    time to reshape the data and recast variables as fields. How many rows are
+    scanned in the first pass is determined by the `samplesize` argument.
+    
     """
     
     return RecastView(table, key=key, variablefield=variablefield, 
@@ -2678,7 +2682,7 @@ def selectisinstance(table, field, value):
 def selectrangeopenleft(table, field, minv, maxv):
     """
     Select rows where the given field is greater than or equal to `minv` and 
-    less than `maxunpack`.
+    less than `maxv`.
 
     """
     
@@ -2688,7 +2692,7 @@ def selectrangeopenleft(table, field, minv, maxv):
 def selectrangeopenright(table, field, minv, maxv):
     """
     Select rows where the given field is greater than `minv` and 
-    less than or equal to `maxunpack`.
+    less than or equal to `maxv`.
 
     """
     
@@ -2698,7 +2702,7 @@ def selectrangeopenright(table, field, minv, maxv):
 def selectrangeopen(table, field, minv, maxv):
     """
     Select rows where the given field is greater than or equal to `minv` and 
-    less than or equal to `maxunpack`.
+    less than or equal to `maxv`.
 
     """
     
@@ -2708,7 +2712,7 @@ def selectrangeopen(table, field, minv, maxv):
 def selectrangeclosed(table, field, minv, maxv):
     """
     Select rows where the given field is greater than `minv` and 
-    less than `maxunpack`.
+    less than `maxv`.
 
     """
     
