@@ -64,7 +64,7 @@ def fieldnames(table):
     return [str(f) for f in header(table)]
 
     
-def data(table):
+def data(table, *sliceargs):
     """
     Return an iterator over the data rows for the given table. E.g.::
     
@@ -75,16 +75,25 @@ def data(table):
         ['a', 1]
         >>> it.next()
         ['b', 2]
+        
+    .. versionchanged:: 0.3
+    
+    Positional arguments can be used to slice the data rows. The `sliceargs` are 
+    passed to :func:`itertools.islice`.
     
     """
     
-    return islice(table, 1, None)
+    it = islice(table, 1, None) # skip header row
+    if sliceargs:
+        it = islice(it, *sliceargs)
+    return it
 
 
 def dataslice(table, *args):
     """
-    Syntactic sugar for ``itertools.islice(data(table), *args)``. See also
-    :func:`itertools.islice`.
+    .. deprecated:: 0.3
+    
+    Use :func:`data` instead, it supports slice arguments.
     
     """
     
@@ -162,7 +171,7 @@ def rowcount(table):
     return n
     
     
-def look(table, start=0, stop=10, step=1):
+def look(table, *sliceargs):
     """
     Format a portion of the table as text for inspection in an interactive
     session. E.g.::
@@ -191,9 +200,14 @@ def look(table, start=0, stop=10, step=1):
         | 'b'   | 2     | True |
         +-------+-------+------+
         
+    .. versionchanged:: 0.3
+    
+    Positional arguments can be used to slice the data rows. The `sliceargs` are 
+    passed to :func:`itertools.islice`.
+
     """
     
-    return Look(table, start, stop, step)
+    return Look(table, *sliceargs)
 
 
 def lookall(table):
@@ -208,11 +222,12 @@ def lookall(table):
     
 class Look(object):
     
-    def __init__(self, table, min=0, stop=10, step=1):
+    def __init__(self, table, *sliceargs):
         self.table = table
-        self.min = min
-        self.stop = stop
-        self.step = step
+        if not sliceargs:
+            self.sliceargs = (10,)
+        else:
+            self.sliceargs = sliceargs
         
     def __repr__(self):
         it = iter(self.table)
@@ -222,7 +237,7 @@ class Look(object):
         fldsrepr = [repr(f) for f in flds]
         
         # rows representations
-        rows = list(islice(it, self.min, self.stop, self.step))
+        rows = list(islice(it, *self.sliceargs))
         rowsrepr = [[repr(v) for v in row] for row in rows]
         
         # find maximum row length - may be uneven
@@ -293,7 +308,7 @@ class Look(object):
         return repr(self)
         
         
-def see(table, start=0, stop=10, step=1):
+def see(table, *sliceargs):
     """
     Format a portion of a table as text in a column-oriented layout for 
     inspection in an interactive session. E.g.::
@@ -306,24 +321,30 @@ def see(table, start=0, stop=10, step=1):
 
     Useful for tables with a larger number of fields.
     
+    .. versionchanged:: 0.3
+    
+    Positional arguments can be used to slice the data rows. The `sliceargs` are 
+    passed to :func:`itertools.islice`.
+
     """
 
-    return See(table, start, stop, step)
+    return See(table, *sliceargs)
 
 
 class See(object):
     
-    def __init__(self, table, min=0, stop=5, step=1):
+    def __init__(self, table, *sliceargs):
         self.table = table
-        self.min = min
-        self.stop = stop
-        self.step = step
+        if not sliceargs:
+            self.sliceargs = (10,)
+        else:
+            self.sliceargs = sliceargs
         
     def __repr__(self):    
         it = iter(self.table)
         flds = it.next()
         cols = defaultdict(list)
-        for row in islice(it, self.min, self.stop, self.step):
+        for row in islice(it, *self.sliceargs):
             for i, f in enumerate(flds):
                 try:
                     cols[str(f)].append(repr(row[i]))
@@ -335,7 +356,7 @@ class See(object):
         return output
         
     
-def values(table, *fields):
+def values(table, field, *sliceargs):
     """
     Return an iterator over values in a given field or fields. E.g.::
     
@@ -378,7 +399,7 @@ def values(table, *fields):
         ...          [1, 'a', True],
         ...          [2, 'bb', True],
         ...          [3, 'd', False]]
-        >>> foobaz = values(table, 'foo', 'baz')
+        >>> foobaz = values(table, ('foo', 'baz'))
         >>> foobaz.next()
         (1, True)
         >>> foobaz.next()
@@ -390,13 +411,20 @@ def values(table, *fields):
           File "<stdin>", line 1, in <module>
         StopIteration
 
+    .. versionchanged:: 0.3
+    
+    Positional arguments can be used to slice the data rows. The `sliceargs` are 
+    passed to :func:`itertools.islice`.
+
     """
     
     it = iter(table)
     srcflds = it.next()
-    indices = asindices(srcflds, fields)
+    indices = asindices(srcflds, field)
     assert len(indices) > 0, 'no field selected'
     getvalue = itemgetter(*indices)
+    if sliceargs:
+        it = islice(it, *sliceargs)
     for row in it:
         try:
             value = getvalue(row)
@@ -405,24 +433,15 @@ def values(table, *fields):
             pass # ignore short rows
     
     
-def valueset(table, *fields):
+def valueset(table, field):
     """
-    Find distinct values for the given field or fields. Returns a set. E.g.::
-
-        >>> from petl import valueset
-        >>> table = [['foo', 'bar'], ['a', True], ['b'], ['b', True], ['c', False]]
-        >>> valueset(table, 'foo')
-        set(['a', 'c', 'b'])
-        >>> valueset(table, 'bar')
-        set([False, True])
-        
-    The positional arguments can be field names or indexes (starting from zero).    
-
-    Syntactic sugar for ``set(values(table, *fields))``, see also :func:`values`.
+    .. deprecated:: 0.3
+    
+    Use ``set(values(table, *fields))`` instead, see also :func:`values`.
         
     """
 
-    return set(values(table, *fields))
+    return set(values(table, field))
 
 
 def valuecount(table, field, value):
