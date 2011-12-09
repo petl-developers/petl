@@ -376,8 +376,9 @@ def values(table, field, *sliceargs):
           File "<stdin>", line 1, in <module>
         StopIteration
 
-    The positional arguments can be field names or indexes (starting from zero).    
-    
+    The `field` argument can be a single field name or index (starting from zero)
+    or a tuple of field names and/or indexes.    
+
     If rows are uneven, any missing values are skipped, e.g.::
     
         >>> table = [['foo', 'bar'], ['a', True], ['b'], ['b', True], ['c', False]]
@@ -457,6 +458,9 @@ def valuecount(table, field, value):
         >>> f
         0.6666666666666666
 
+    The `field` argument can be a single field name or index (starting from zero)
+    or a tuple of field names and/or indexes.    
+
     """
     
     if isinstance(field, (list, tuple)):
@@ -472,7 +476,7 @@ def valuecount(table, field, value):
     return vs, float(vs)/total
     
     
-def valuecounter(table, *fields):
+def valuecounter(table, field):
     """
     Find distinct values for the given field and count the number of 
     occurrences. Returns a :class:`dict` mapping values to counts. E.g.::
@@ -489,12 +493,13 @@ def valuecounter(table, *fields):
         >>> c
         Counter({'b': 2, 'a': 1, 'c': 1})
     
-    The positional arguments can be field names or indexes (starting from zero).    
+    The `field` argument can be a single field name or index (starting from zero)
+    or a tuple of field names and/or indexes.    
 
     """
 
     counter = Counter()
-    for v in values(table, *fields):
+    for v in values(table, field):
         try:
             counter[v] += 1
         except IndexError:
@@ -502,7 +507,7 @@ def valuecounter(table, *fields):
     return counter
             
 
-def valuecounts(table, *fields):    
+def valuecounts(table, field):    
     """
     Find distinct values for the given field and count the number and relative
     frequency of occurrences. Returns a table mapping values to counts, with most common 
@@ -513,7 +518,8 @@ def valuecounts(table, *fields):
         >>> valuecounts(table, 'foo')
         [('value', 'count', 'frequency'), ('b', 2, 0.5), ('a', 1, 0.25), ('c', 1, 0.25)]
 
-    The positional arguments can be field names or indexes (starting from zero).    
+    The `field` argument can be a single field name or index (starting from zero)
+    or a tuple of field names and/or indexes.    
 
     Can be combined with `look`, e.g.::
 
@@ -540,7 +546,7 @@ def valuecounts(table, *fields):
             
     """
     
-    counter = valuecounter(table, *fields)
+    counter = valuecounter(table, field)
     output = [('value', 'count', 'frequency')]
     counts = counter.most_common()
     total = sum(c[1] for c in counts)
@@ -549,7 +555,7 @@ def valuecounts(table, *fields):
     return output
         
         
-def unique(table, *fields):
+def unique(table, field):
     """
     Return True if there are no duplicate values for the given field(s), otherwise
     False. E.g.::
@@ -561,12 +567,13 @@ def unique(table, *fields):
         >>> unique(table, 'bar')
         True
     
-    The positional arguments can be field names or indexes (starting from zero).    
+    The `field` argument can be a single field name or index (starting from zero)
+    or a tuple of field names and/or indexes.    
 
     """    
 
     vals = set()
-    for v in values(table, *fields):
+    for v in values(table, field):
         if v in vals:
             return False
         else:
@@ -1029,7 +1036,7 @@ def typecounter(table, field):
         >>> typecounter(table, 'baz')
         Counter({'int': 1, 'float': 1, 'unicode': 1, 'str': 1})
 
-    The `field` argument can be field names or indexes (starting from zero).    
+    The `field` argument can be a field name or index (starting from zero).    
     
     """
     
@@ -1412,6 +1419,8 @@ def limits(table, field):
         >>> maxv
         3
     
+    The `field` argument can be a field name or index (starting from zero).    
+
     """
     
     vals = values(table, field)
