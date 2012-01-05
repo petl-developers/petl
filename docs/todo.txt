@@ -1,12 +1,7 @@
-Version 0.3
+Version 0.4
 -----------
 
-- [done] dataslice() not needed, provide args to data() instead
-- [done] unify all slice args, e.g., look(), see()
-- [done] recordcomplement and recorddiff - compare tables independently of field order
-- [done] use tuple in mergereduce for conflicts (hashable)
-- [done] implement cutout (cut complement)
-
+- ignore some fields when finding conflicts
 - selectout - select complement
 - regex replace (re.sub)
 - convertall - convenience function to convert all fields the same way
@@ -33,6 +28,16 @@ Version 0.3
 - show rows/values causing conversion or translation errors
 - autoconvert multiple fields to numeric types - convenience function
 - handling of comments in text files
+
+
+Version 0.3
+-----------
+
+- [done] dataslice() not needed, provide args to data() instead
+- [done] unify all slice args, e.g., look(), see()
+- [done] recordcomplement and recorddiff - compare tables independently of field order
+- [done] use tuple in mergereduce for conflicts (hashable)
+- [done] implement cutout (cut complement)
 
 
 Version 0.2
