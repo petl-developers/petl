@@ -191,6 +191,8 @@ def cut(table, *args, **kwargs):
         | 'E'   | 12    |
         +-------+-------+
 
+    See also :func:`cutout`.
+    
     """
     
     return CutView(table, args, **kwargs)
@@ -221,6 +223,84 @@ def itercut(source, spec, missing=None):
     flds = it.next()
     indices = asindices(flds, spec)
 
+    # define a function to transform each row in the source data 
+    # according to the field selection
+    transform = rowgetter(*indices)
+    
+    # yield the transformed field names
+    yield transform(flds)
+    
+    # construct the transformed data
+    for row in it:
+        try:
+            yield transform(row) 
+        except IndexError:
+            # row is short, let's be kind and fill in any missing fields
+            yield tuple(row[i] if i < len(row) else missing for i in indices)
+
+    
+def cutout(table, *args, **kwargs):
+    """
+    Remove fields. E.g.::
+
+        >>> from petl import cutout, look
+        >>> table1 = (('foo', 'bar', 'baz'),
+        ...           ('A', 1, 2),
+        ...           ('B', '2', '3.4'),
+        ...           (u'B', u'3', u'7.8', True),
+        ...           ('D', 'xyz', 9.0),
+        ...           ('E', None))
+        >>> table2 = cutout(table1, 'bar')
+        >>> look(table2)
+        +-------+--------+
+        | 'foo' | 'baz'  |
+        +=======+========+
+        | 'A'   | 2      |
+        +-------+--------+
+        | 'B'   | '3.4'  |
+        +-------+--------+
+        | u'B'  | u'7.8' |
+        +-------+--------+
+        | 'D'   | 9.0    |
+        +-------+--------+
+        | 'E'   | None   |
+        +-------+--------+
+
+    See also :func:`cut`.
+    
+    .. versionadded:: 0.3
+    
+    """
+    
+    return CutOutView(table, args, **kwargs)
+
+
+class CutOutView(object):
+    
+    def __init__(self, source, spec, missing=None):
+        self.source = source
+        self.spec = spec
+        self.missing = missing
+        
+    def __iter__(self):
+        return itercutout(self.source, self.spec, self.missing)
+    
+    def cachetag(self):
+        try:
+            return hash((self.source.cachetag(), self.spec, self.missing))
+        except Exception as e:
+            raise Uncacheable(e)
+        
+        
+def itercutout(source, spec, missing=None):
+    it = iter(source)
+    spec = tuple(spec) # make sure no-one can change midstream
+    
+    # convert field selection into field indices
+    flds = it.next()
+    indicesout = asindices(flds, spec)
+    indices = [i for i in range(len(flds)) if i not in indicesout]
+    
     # define a function to transform each row in the source data 
     # according to the field selection
     transform = rowgetter(*indices)

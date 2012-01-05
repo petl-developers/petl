@@ -265,6 +265,7 @@ Transforming tables
 .. autofunction:: petl.head
 .. autofunction:: petl.tail
 .. autofunction:: petl.cut
+.. autofunction:: petl.cutout
 .. autofunction:: petl.select
 .. autofunction:: petl.selectop
 .. autofunction:: petl.selecteq

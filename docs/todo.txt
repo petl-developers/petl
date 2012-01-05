@@ -2,16 +2,16 @@ Version 0.3
 -----------
 
 - [done] dataslice() not needed, provide args to data() instead
+- [done] unify all slice args, e.g., look(), see()
 - [done] recordcomplement and recorddiff - compare tables independently of field order
-
 - [done] use tuple in mergereduce for conflicts (hashable)
+- [done] implement cutout (cut complement)
 
+- selectout - select complement
 - regex replace (re.sub)
-- look args consistent with slice (e.g., look(t, 20) finds first 20 rows)
 - convertall - convenience function to convert all fields the same way
 - replace, replaceall - convenience function to convert replacing a single value
 - categorise/classify - convenient way to extend table with a classification field? or just use extend with function? example, convert continuous variable to categorical variable using custom ranges
-- cut complement???
 - sampling for pivot, avoid two complete passes
 - implement fromxml using etree find and patterns
 - to and from compressed files
