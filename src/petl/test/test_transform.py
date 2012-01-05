@@ -15,7 +15,8 @@ from petl import rename, fieldnames, cut, cat, convert, fieldconvert, extend, \
                 skip, extendheader, unpack, join, leftjoin, rightjoin, outerjoin, \
                 crossjoin, antijoin, rangeaggregate, rangecounts, rangefacet, \
                 rangerowreduce, rangerecordreduce, selectre, rowselect, recordselect, \
-                rowlenselect, strjoin, transpose, intersection, pivot
+                rowlenselect, strjoin, transpose, intersection, pivot, recorddiff, \
+                recordcomplement
 
 
 def test_rename():
@@ -858,6 +859,82 @@ def test_diff():
     added, subtracted = diff(tablea, tableb)
     iassertequal(bminusa, added)
     iassertequal(aminusb, subtracted)
+    
+
+def test_recordcomplement_1():
+
+    table1 = (('foo', 'bar'),
+              ('A', 1),
+              ('B', 2),
+              ('C', 7))
+    
+    table2 = (('bar', 'foo'),
+              (9, 'A'),
+              (2, 'B'),
+              (3, 'B'))
+    
+    expectation = (('foo', 'bar'),
+                   ('A', 1),
+                   ('C', 7))
+    
+    result = recordcomplement(table1, table2)
+    iassertequal(expectation, result)
+    
+    
+def test_recordcomplement_2():
+
+    tablea = (('foo', 'bar', 'baz'),
+              ('A', 1, True),
+              ('C', 7, False),
+              ('B', 2, False),
+              ('C', 9, True))
+    
+    tableb = (('bar', 'foo', 'baz'),
+              (2, 'B', False),
+              (9, 'A', False),
+              (3, 'B', True),
+              (9, 'C', True))
+    
+    aminusb = (('foo', 'bar', 'baz'),
+               ('A', 1, True),
+               ('C', 7, False))
+    
+    result = recordcomplement(tablea, tableb)
+    iassertequal(aminusb, result)
+    
+    bminusa = (('bar', 'foo', 'baz'),
+               (3, 'B', True),
+               (9, 'A', False))
+    
+    result = recordcomplement(tableb, tablea)
+    iassertequal(bminusa, result)
+    
+
+def test_recorddiff():
+
+    tablea = (('foo', 'bar', 'baz'),
+              ('A', 1, True),
+              ('C', 7, False),
+              ('B', 2, False),
+              ('C', 9, True))
+    
+    tableb = (('bar', 'foo', 'baz'),
+              (2, 'B', False),
+              (9, 'A', False),
+              (3, 'B', True),
+              (9, 'C', True))
+    
+    aminusb = (('foo', 'bar', 'baz'),
+               ('A', 1, True),
+               ('C', 7, False))
+    
+    bminusa = (('bar', 'foo', 'baz'),
+               (3, 'B', True),
+               (9, 'A', False))
+    
+    added, subtracted = recorddiff(tablea, tableb)
+    iassertequal(aminusb, subtracted)
+    iassertequal(bminusa, added)
     
 
 def test_capture():

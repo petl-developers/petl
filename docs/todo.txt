@@ -1,3 +1,37 @@
+Version 0.3
+-----------
+
+- [done] dataslice() not needed, provide args to data() instead
+- [done] recordcomplement and recorddiff - compare tables independently of field order
+
+- look args consistent with slice (e.g., look(t, 20) finds first 20 rows)
+- convertall - convenience function to convert all fields the same way
+- replace, replaceall - convenience function to convert replacing a single value
+- categorise/classify - convenient way to extend table with a classification field? or just use extend with function? example, convert continuous variable to categorical variable using custom ranges
+- cut complement???
+- sampling for pivot, avoid two complete passes
+- implement fromxml using etree find and patterns
+- to and from compressed files
+- alpha facet?
+- partitioning of alpha fields?
+- code smells in reduce functions - refactor with generic grouper and reducer functions?
+- implement string patterns as utility function
+- implement hash (lookup) alternatives to all join and other sort-dependent functions
+- implement provenance trace
+- implement petl.interactive with cache wrappers
+- implement petl.fluent
+- implement validator module based on csvvalidator
+- implement filldown
+- implement fillup
+- implement fillright? 
+- implement fillleft?
+- implement rowgroupby? generate sequence of key/row iterator pairs?
+- implement recordgroupby?
+- show rows/values causing conversion or translation errors
+- autoconvert multiple fields to numeric types - convenience function
+- handling of comments in text files
+
+
 Version 0.2
 -----------
 
@@ -97,35 +131,6 @@ Version 0.2
 - [done] implement intersect
 - [won't do] values should not skip short rows
 - [done] implement pivot?
-
-
-Version 0.3
------------
-
-- [done] dataslice() not needed, provide args to data() instead
-
-- cut complement
-- sampling for pivot, avoid two complete passes
-- implement fromxml using etree find and patterns
-- to and from compressed files
-- alpha facet?
-- partitioning of alpha fields?
-- code smells in reduce functions - refactor with generic grouper and reducer functions?
-- implement string patterns as utility function
-- implement hash (lookup) alternatives to all join and other sort-dependent functions
-- implement provenance trace
-- implement petl.interactive with cache wrappers
-- implement petl.fluent
-- implement validator module based on csvvalidator
-- implement filldown
-- implement fillup
-- implement fillright? 
-- implement fillleft?
-- implement rowgroupby? generate sequence of key/row iterator pairs?
-- implement recordgroupby?
-- show rows/values causing conversion or translation errors
-- autoconvert multiple fields to numeric types - convenience function
-- handling of comments in text files
 
 
 petlx

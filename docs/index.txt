@@ -312,6 +312,8 @@ Transforming tables
 .. autofunction:: petl.antijoin
 .. autofunction:: petl.complement
 .. autofunction:: petl.diff
+.. autofunction:: petl.recordcomplement
+.. autofunction:: petl.recorddiff
 .. autofunction:: petl.intersection
 .. autofunction:: petl.aggregate
 .. autofunction:: petl.rangeaggregate

@@ -1847,6 +1847,9 @@ def complement(a, b, presorted=False, buffersize=None):
         | 'B' | 3   | True  |
         +-----+-----+-------+
 
+    Note that the field names of each table are ignored - rows are simply compared
+    following a lexical sort. See also the :func:`recordcomplement` function.
+    
     If `presorted` is True, it is assumed that the data are already sorted by
     the given key, and the `buffersize` argument is ignored. Otherwise, the data 
     are sorted, see also the discussion of the `buffersize` argument under the 
@@ -1854,7 +1857,7 @@ def complement(a, b, presorted=False, buffersize=None):
     
     """
     
-    return ComplementView(a, b, presorted, buffersize)
+    return ComplementView(a, b, presorted=presorted, buffersize=buffersize)
 
 
 class ComplementView(object):
@@ -1906,9 +1909,62 @@ def itercomplement(a, b):
                 b = None
         
     
+def recordcomplement(a, b, buffersize=None):
+    """
+    Find records in `a` that are not in `b`. E.g.::
+    
+        >>> from petl import recordcomplement, look
+        >>> tablea = (('foo', 'bar', 'baz'),
+        ...           ('A', 1, True),
+        ...           ('C', 7, False),
+        ...           ('B', 2, False),
+        ...           ('C', 9, True))
+        >>> tableb = (('bar', 'foo', 'baz'),
+        ...           (2, 'B', False),
+        ...           (9, 'A', False),
+        ...           (3, 'B', True),
+        ...           (9, 'C', True))
+        >>> aminusb = recordcomplement(tablea, tableb)
+        >>> look(aminusb)
+        +-------+-------+-------+
+        | 'foo' | 'bar' | 'baz' |
+        +=======+=======+=======+
+        | 'A'   | 1     | True  |
+        +-------+-------+-------+
+        | 'C'   | 7     | False |
+        +-------+-------+-------+
+        
+        >>> bminusa = recordcomplement(tableb, tablea)
+        >>> look(bminusa)
+        +-------+-------+-------+
+        | 'bar' | 'foo' | 'baz' |
+        +=======+=======+=======+
+        | 3     | 'B'   | True  |
+        +-------+-------+-------+
+        | 9     | 'A'   | False |
+        +-------+-------+-------+
+    
+    Note that both tables must have the same set of fields, but that the order
+    of the fields does not matter. See also the :func:`complement` function.
+    
+    See also the discussion of the `buffersize` argument under the :func:`sort` 
+    function.
+    
+    .. versionadded:: 0.3
+    
+    """
+    
+    ha = header(a)
+    hb = header(b)
+    assert set(ha) == set(hb), 'both tables must have the same set of fields'
+    # make sure fields are in the same order
+    bv = cut(b, *ha)
+    return complement(a, bv, buffersize=buffersize)
+
+
 def diff(a, b, presorted=False, buffersize=None):
     """
-    Find the difference between two tables. Returns a pair of tables, e.g.::
+    Find the difference between rows in two tables. Returns a pair of tables, e.g.::
     
         >>> from petl import diff, look
         >>> a = [['foo', 'bar', 'baz'],
@@ -1942,7 +1998,8 @@ def diff(a, b, presorted=False, buffersize=None):
         | 'C'   | 7     | False |
         +-------+-------+-------+
         
-    Convenient shorthand for ``(complement(b, a), complement(a, b))``.
+    Convenient shorthand for ``(complement(b, a), complement(a, b))``. See also
+    :func:`complement`.
 
     If `presorted` is True, it is assumed that the data are already sorted by
     the given key, and the `buffersize` argument is ignored. Otherwise, the data 
@@ -1956,6 +2013,55 @@ def diff(a, b, presorted=False, buffersize=None):
         b = sort(b)
     added = complement(b, a, presorted=True, buffersize=buffersize)
     subtracted = complement(a, b, presorted=True, buffersize=buffersize)
+    return added, subtracted
+    
+    
+def recorddiff(a, b, buffersize=None):
+    """
+    Find the difference between records in two tables. E.g.::
+
+        >>> from petl import recorddiff, look    
+        >>> tablea = (('foo', 'bar', 'baz'),
+        ...           ('A', 1, True),
+        ...           ('C', 7, False),
+        ...           ('B', 2, False),
+        ...           ('C', 9, True))
+        >>> tableb = (('bar', 'foo', 'baz'),
+        ...           (2, 'B', False),
+        ...           (9, 'A', False),
+        ...           (3, 'B', True),
+        ...           (9, 'C', True))
+        >>> added, subtracted = recorddiff(tablea, tableb)
+        >>> look(added)
+        +-------+-------+-------+
+        | 'bar' | 'foo' | 'baz' |
+        +=======+=======+=======+
+        | 3     | 'B'   | True  |
+        +-------+-------+-------+
+        | 9     | 'A'   | False |
+        +-------+-------+-------+
+        
+        >>> look(subtracted)
+        +-------+-------+-------+
+        | 'foo' | 'bar' | 'baz' |
+        +=======+=======+=======+
+        | 'A'   | 1     | True  |
+        +-------+-------+-------+
+        | 'C'   | 7     | False |
+        +-------+-------+-------+
+
+    Convenient shorthand for ``(recordcomplement(b, a), recordcomplement(a, b))``. 
+    See also :func:`recordcomplement`.
+
+    See also the discussion of the `buffersize` argument under the :func:`sort` 
+    function.
+    
+    .. versionadded:: 0.3
+    
+    """
+
+    added = recordcomplement(b, a, buffersize=buffersize)
+    subtracted = recordcomplement(a, b, buffersize=buffersize)
     return added, subtracted
     
     
