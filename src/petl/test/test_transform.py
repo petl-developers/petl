@@ -334,7 +334,7 @@ def test_rowslice():
              ('D', 'xyz', 9.0),
              ('E', None))
 
-    result = rowslice(table, 0, 2)
+    result = rowslice(table, 2)
     expectation = (('foo', 'bar', 'baz'),
                    ('A', 1, 2),
                    ('B', '2', '3.4'))

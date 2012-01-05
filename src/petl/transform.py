@@ -849,9 +849,9 @@ def iterextend(source, field, value, failonerror, errorvalue):
         yield tuple(outrow)
         
     
-def rowslice(table, start=0, stop=None, step=1):
+def rowslice(table, *sliceargs):
     """
-    Choose a subset of data rows. E.g.::
+    Choose a subsequence of data rows. E.g.::
     
         >>> from petl import rowslice, look
         >>> table1 = [['foo', 'bar'],
@@ -860,7 +860,7 @@ def rowslice(table, start=0, stop=None, step=1):
         ...           ['c', 5],
         ...           ['d', 7],
         ...           ['f', 42]]
-        >>> table2 = rowslice(table1, 0, 2)
+        >>> table2 = rowslice(table1, 2)
         >>> look(table2)
         +-------+-------+
         | 'foo' | 'bar' |
@@ -894,45 +894,39 @@ def rowslice(table, start=0, stop=None, step=1):
         | 'f'   | 42    |
         +-------+-------+
         
-        >>> table5 = rowslice(table1, step=2)
-        >>> look(table5)
-        +-------+-------+
-        | 'foo' | 'bar' |
-        +=======+=======+
-        | 'a'   | 1     |
-        +-------+-------+
-        | 'c'   | 5     |
-        +-------+-------+
-        | 'f'   | 42    |
-        +-------+-------+
+    .. versionchanged:: 0.3
+    
+    Positional arguments can be used to slice the data rows. The `sliceargs` are 
+    passed to :func:`itertools.islice`.
 
     """
     
-    return RowSliceView(table, start, stop, step)
+    return RowSliceView(table, *sliceargs)
 
 
 class RowSliceView(object):
     
-    def __init__(self, source, start=0, stop=None, step=1):
+    def __init__(self, source, *sliceargs):
         self.source = source
-        self.minv = start
-        self.stop = stop
-        self.step = step
+        if not sliceargs:
+            self.sliceargs = (None,)
+        else:
+            self.sliceargs = sliceargs
         
     def __iter__(self):
-        return iterrowslice(self.source, self.minv, self.stop, self.step)
+        return iterrowslice(self.source, self.sliceargs)
 
     def cachetag(self):
         try:
-            return hash((self.source.cachetag(), self.minv, self.stop, self.step))
+            return hash((self.source.cachetag(), self.sliceargs))
         except Exception as e:
             raise Uncacheable(e)
 
 
-def iterrowslice(source, start, stop, step):    
+def iterrowslice(source, sliceargs):    
     it = iter(source)
     yield tuple(it.next()) # fields
-    for row in islice(it, start, stop, step):
+    for row in islice(it, *sliceargs):
         yield tuple(row)
 
 
@@ -966,9 +960,11 @@ def head(table, n):
         | 'd'   | 7     |
         +-------+-------+
     
+    Syntactic sugar: equivalent to ``rowslice(table, n)``.
+    
     """
     
-    return rowslice(table, stop=n)
+    return rowslice(table, n)
 
         
 def tail(table, n):

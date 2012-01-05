@@ -34,7 +34,7 @@ Version 0.3
 -----------
 
 - [done] dataslice() not needed, provide args to data() instead
-- [done] unify all slice args, e.g., look(), see()
+- [done] unify all slice args, e.g., look(), see(), rowslice()
 - [done] recordcomplement and recorddiff - compare tables independently of field order
 - [done] use tuple in mergereduce for conflicts (hashable)
 - [done] implement cutout (cut complement)
