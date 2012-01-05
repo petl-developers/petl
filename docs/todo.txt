@@ -4,6 +4,9 @@ Version 0.3
 - [done] dataslice() not needed, provide args to data() instead
 - [done] recordcomplement and recorddiff - compare tables independently of field order
 
+- [done] use tuple in mergereduce for conflicts (hashable)
+
+- regex replace (re.sub)
 - look args consistent with slice (e.g., look(t, 20) finds first 20 rows)
 - convertall - convenience function to convert all fields the same way
 - replace, replaceall - convenience function to convert replacing a single value

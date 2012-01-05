@@ -778,9 +778,9 @@ def test_mergereduce():
     # value overrides missing; last value wins
     result = mergereduce(table, 'foo', missing=None)
     expectation = (('foo', 'bar', 'baz'),
-                   ('A', [1, 2], 2),
+                   ('A', (1, 2), 2),
                    ('B', '2', u'7.8', True),
-                   ('D', 'xyz', [9.4, 12.3]),
+                   ('D', 'xyz', (9.4, 12.3)),
                    ('E', None))
     iassertequal(expectation, result)
     

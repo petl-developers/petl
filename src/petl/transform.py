@@ -3048,22 +3048,27 @@ def mergereduce(table, key, missing=None, presorted=False, buffersize=None):
         +-------+--------+-------------+
         | 'foo' | 'bar'  | 'baz'       |
         +=======+========+=============+
-        | 'A'   | [1, 2] | 2.7         |
+        | 'A'   | (1, 2) | 2.7         |
         +-------+--------+-------------+
         | 'B'   | 2      | 7.8         |
         +-------+--------+-------------+
-        | 'D'   | 3      | [9.4, 12.3] |
+        | 'D'   | 3      | (9.4, 12.3) |
         +-------+--------+-------------+
         | 'E'   | None   |             |
         +-------+--------+-------------+
 
     Missing values are overridden by non-missing values. Conflicting values are
-    reported as a list.
+    reported as a tuple.
     
     If `presorted` is True, it is assumed that the data are already sorted by
     the given key, and the `buffersize` argument is ignored. Otherwise, the data 
     are sorted, see also the discussion of the `buffersize` argument under the 
     :func:`sort` function.
+    
+    .. versionchanged:: 0.3
+    
+    Previously conflicts were reported as a list, this is changed to a tuple in 
+    version 0.3.
     
     """
 
@@ -3076,7 +3081,7 @@ def mergereduce(table, key, missing=None, presorted=False, buffersize=None):
                 if v != missing and v not in merged[i]:
                     merged[i].append(v)    
         # replace singletons and empty lists
-        merged = [vals[0] if len(vals) == 1 else missing if len(vals) == 0 else vals for vals in merged]
+        merged = [vals[0] if len(vals) == 1 else missing if len(vals) == 0 else tuple(vals) for vals in merged]
         return merged
     
     return rowreduce(table, key, reducer=_mergereducer, presorted=presorted, buffersize=buffersize)
