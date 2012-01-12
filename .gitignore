@@ -1,5 +1,6 @@
 *.txt~
 *.py~
+*.html~
 *.pyc
 docs/_build
 build
