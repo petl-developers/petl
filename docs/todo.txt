@@ -4,6 +4,8 @@ Version 0.4
 - docs - merge() example has an error, uses list instead of tuple for conflict
 - docs - add section about dependencies and petlx
 - docs - add section about chaining and pipelining
+- docs - add python-pipeline and continuum.io to related work
+- docs - fix link to pandas?
 - ignore some fields when finding conflicts
 - selectout - select complement
 - regex replace (re.sub)
