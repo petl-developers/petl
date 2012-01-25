@@ -1,6 +1,9 @@
 Version 0.4
 -----------
 
+- [done] bug in aggregate where key is string?
+- [done] head and tail default n arg to 10
+
 - docs - merge() example has an error, uses list instead of tuple for conflict
 - docs - add section about dependencies and petlx
 - docs - add section about chaining and pipelining

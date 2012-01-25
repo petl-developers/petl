@@ -1297,6 +1297,29 @@ def test_facet():
     iassertequal(fct['c'], expect_fctc) # check can iterate twice
     
 
+def test_facet_2():
+
+    table = (('foo', 'bar', 'baz'),
+             ('aa', 4, 9.3),
+             ('aa', 2, 88.2),
+             ('bb', 1, 23.3),
+             ('cc', 8, 42.0),
+             ('dd', 7, 100.9),
+             ('cc', 2))
+    fct = facet(table, 'foo')
+    assert set(fct.keys()) == {'aa', 'bb', 'cc', 'dd'}
+    expect_fcta = (('foo', 'bar', 'baz'),
+                   ('aa', 4, 9.3),
+                   ('aa', 2, 88.2))
+    iassertequal(fct['aa'], expect_fcta)
+    iassertequal(fct['aa'], expect_fcta) # check can iterate twice
+    expect_fctc = (('foo', 'bar', 'baz'),
+                   ('cc', 8, 42.0),
+                   ('cc', 2))
+    iassertequal(fct['cc'], expect_fctc)
+    iassertequal(fct['cc'], expect_fctc) # check can iterate twice
+    
+
 def test_rangefacet():
     
     table1 = (('foo', 'bar'),
@@ -1359,6 +1382,27 @@ def test_recordreduce():
                ('a', 10),
                ('b', 12),
                ('c', 4))
+    iassertequal(expect2, table2)
+    
+
+def test_recordreduce_2():
+    
+    table1 = (('foo', 'bar'),
+              ('aa', 3),
+              ('aa', 7),
+              ('bb', 2),
+              ('bb', 1),
+              ('bb', 9),
+              ('cc', 4))
+    
+    def sumbar(key, records):
+        return [key, sum([rec['bar'] for rec in records])]
+        
+    table2 = recordreduce(table1, key='foo', reducer=sumbar, fields=['foo', 'barsum'])
+    expect2 = (('foo', 'barsum'),
+               ('aa', 10),
+               ('bb', 12),
+               ('cc', 4))
     iassertequal(expect2, table2)
     
 
@@ -1451,6 +1495,45 @@ def test_aggregate():
     iassertequal(expect2, table3)
     
     
+def test_aggregate_2():
+    
+    table1 = (('foo', 'bar'),
+              ('aa', 3),
+              ('aa', 7),
+              ('bb', 2),
+              ('bb', 1),
+              ('bb', 9),
+              ('cc', 4),
+              ('dd', 3),
+              ('dd',),
+              ('ee',))
+    
+    aggregators = OrderedDict()
+    aggregators['minbar'] = 'bar', min
+    aggregators['maxbar'] = 'bar', max
+    aggregators['sumbar'] = 'bar', sum
+    aggregators['listbar'] = 'bar', list
+    aggregators['bars'] = 'bar', strjoin(', ')
+
+    table2 = aggregate(table1, 'foo', aggregators)
+    expect2 = (('foo', 'minbar', 'maxbar', 'sumbar', 'listbar', 'bars'),
+               ('aa', 3, 7, 10, [3, 7], '3, 7'),
+               ('bb', 1, 9, 12, [2, 1, 9], '2, 1, 9'),
+               ('cc', 4, 4, 4, [4], '4'),
+               ('dd', 3, 3, 3, [3], '3'),
+               ('ee', None, None, 0, [], ''))
+    iassertequal(expect2, table2)
+    iassertequal(expect2, table2) # check can iterate twice
+    
+    table3 = aggregate(table1, 'foo')
+    table3['minbar'] = 'bar', min
+    table3['maxbar'] = 'bar', max
+    table3['sumbar'] = 'bar', sum
+    table3['listbar'] = 'bar' # default aggregation is list
+    table3['bars'] = 'bar', strjoin(', ')
+    iassertequal(expect2, table3)
+    
+    
 def test_rangeaggregate():
     
     table1 = (('foo', 'bar'),
@@ -1500,6 +1583,30 @@ def test_rangeaggregate():
                ((5, 7), 0),
                ((7, 9), 2))
     iassertequal(expect5, table5)
+
+
+def test_rangeaggregate_2():
+    
+    table1 = (('foo', 'bar'),
+              ('aa', 3),
+              ('aa', 7),
+              ('bb', 2),
+              ('bb', 1),
+              ('bb', 9),
+              ('cc', 4),
+              ('dd', 3))
+
+    table2 = rangeaggregate(table1, 'bar', width=2)
+    table2['foocount'] = 'foo', len
+    table2['foolist'] = 'foo' # default is list
+    expect2 = (('bar', 'foocount', 'foolist'),
+               ((1, 3), 2, ['bb', 'bb']),
+               ((3, 5), 3, ['aa', 'dd', 'cc']),
+               ((5, 7), 0, []),
+               ((7, 9), 1, ['aa']),
+               ((9, 11), 1, ['bb']))
+    iassertequal(expect2, table2)
+    iassertequal(expect2, table2)
 
 
 def test_rangecounts():
@@ -1851,6 +1958,26 @@ def test_join_compound_keys():
     iassertequal(expect11, table11)
     
     
+def test_join_string_key():
+    
+    table1 = (('id', 'colour'),
+              ('aa', 'blue'),
+              ('bb', 'red'),
+              ('cc', 'purple'))
+    table2 = (('id', 'shape'),
+              ('aa', 'circle'),
+              ('cc', 'square'),
+              ('dd', 'ellipse'))
+    
+    # normal inner join
+    table3 = join(table1, table2, key='id')
+    expect3 = (('id', 'colour', 'shape'),
+               ('aa', 'blue', 'circle'),
+               ('cc', 'purple', 'square'))
+    iassertequal(expect3, table3)
+    iassertequal(expect3, table3) # check twice
+
+
 def test_leftjoin():
     
     table1 = (('id', 'colour'),

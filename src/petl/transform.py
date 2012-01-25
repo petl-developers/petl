@@ -930,7 +930,7 @@ def iterrowslice(source, sliceargs):
         yield tuple(row)
 
 
-def head(table, n):
+def head(table, n=10):
     """
     Choose the first n data rows. E.g.::
 
@@ -967,7 +967,7 @@ def head(table, n):
     return rowslice(table, n)
 
         
-def tail(table, n):
+def tail(table, n=10):
     """
     Choose the last n data rows. E.g.::
 
@@ -3344,7 +3344,10 @@ def iteraggregate(source, key, aggregators, failonerror, errorvalue):
     
     for key, rows in groupby(it, key=getkey):
         rows = list(rows) # may need to iterate over these more than once
-        outrow = list(key)
+        if isinstance(key, basestring):
+            outrow = [key]
+        else:
+            outrow = list(key)
         for outfld in aggregators:
             srcfld, aggfun = aggregators[outfld]
             idx = srcflds.index(srcfld)
