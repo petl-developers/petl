@@ -4,6 +4,7 @@ Version 0.4
 - [done] bug in aggregate where key is string?
 - [done] head and tail default n arg to 10
 
+- fromtext, strip trailing newline character
 - alternative signature to rename when you want to rename a single field only
 - convertnumbers - attempt to convert string values to ints, floats etc.
 - exclude - convenience functions as complement of select...
