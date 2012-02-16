@@ -1,0 +1,163 @@
+Future
+------
+
+- implement fromjson somehow?
+- ignore some fields when finding conflicts
+- regex replace (re.sub)
+- replace, replaceall - convenience function to convert replacing a single value
+- categorise/classify - convenient way to extend table with a classification field? or just use extend with function? example, convert continuous variable to categorical variable using custom ranges
+- sampling for pivot, avoid two complete passes
+- to and from compressed files
+- alpha facet?
+- partitioning of alpha fields?
+- code smells in reduce functions - refactor with generic grouper and reducer functions?
+- implement string patterns as utility function
+- implement hash (lookup) alternatives to all join and other sort-dependent functions
+- implement provenance trace
+- implement petl.interactive with cache wrappers
+- implement petl.fluent
+- implement validator module based on csvvalidator
+- implement filldown
+- implement fillup
+- implement fillright? 
+- implement fillleft?
+- implement rowgroupby? generate sequence of key/row iterator pairs?
+- implement recordgroupby?
+- show rows/values causing conversion or translation errors
+- optimised implementation of merge() where input files are presorted? I.e., avoid need to concatenate then sort the concatenation, rather just do the merge sort then reduce
+
+Version 0.4
+-----------
+
+- [done] bug in aggregate where key is string?
+- [done] head and tail default n arg to 10
+
+- [done] skipcomments - handling of comments in text files
+- [done] fromtext, strip trailing newline character
+- [done] alternative signature to rename when you want to rename a single field only
+- [done] convertall - convenience function to convert all fields the same way
+- [done] convertnumbers - attempt to convert string values to ints, floats etc.
+- [done] docs - merge() example has an error, uses list instead of tuple for conflict
+- [done] docs - add section about dependencies and petlx
+- [done] docs - add section about chaining and pipelining
+- [done] docs - add python-pipeline and continuum.io to related work
+- [done] docs - fix link to pandas
+- [done] complement of select...
+- [done] implement fromxml using etree find and patterns
+
+Version 0.3
+-----------
+
+- [done] dataslice() not needed, provide args to data() instead
+- [done] unify all slice args, e.g., look(), see(), rowslice()
+- [done] recordcomplement and recorddiff - compare tables independently of field order
+- [done] use tuple in mergereduce for conflicts (hashable)
+- [done] implement cutout (cut complement)
+
+
+Version 0.2
+-----------
+
+- [done] document rowreduce
+- [done] change merge to mergereduce, implement merge as cat then mergereduce
+- [done] implement aggregate
+- [done] implement recordreduce
+- [done] implement rowmap
+- [done] implement recordmap
+- [done] implement rowmapmany
+- [done] implement recordmapmany
+- [done] implement setfields
+- [done] implement pushfields
+- [done] implement skip - discard first n rows, including header
+- [won't do] modify fromcsv, frompickle, add header argument
+- [won't do] modify tocsv, topickle, add writeheader argument
+- [done] implement fromtext(filename, header=['lines'])
+- [done] document fromtext
+- [won't do] implement stringreplace as a conversion function
+- [won't do] implement stringsubstring as a conversion function
+- [done] change signature of convert, support signature for single field conversion, also applying methods
+- [won't do] implement trim as a conversion function
+- [won't do] implement stripstring as a conversion function
+- [done] implement totext(table, filename, template, prologue=None, epilogue=None)
+- [done] implement appendtext(table, filename, template, prologue=None, epilogue=None)
+- [done] review split behaviour when there are more splits than fields
+- [done] review capture behaviour when there are more splits than fields
+- [done] implement extendfields
+- [done] implement unpack, or some other way to go from a single field containing list or tuple values to multiple fields
+- [done] review aggregate behaviour with no reducer function - produce list? (like recast)
+- [done] review mergereduce behaviour - set or list?
+- [done] implement join (inner equijoin) with key argument
+- [done] implement join (inner equijoin) without key argument (natural join) 
+- [done] implement left outer join
+- [done] implement right outer join
+- [done] implement full outer join
+- [done] document leftjoin, rightjoin, outerjoin
+- [done] refactor join functions
+- [done] implement crossjoin
+- [done] implement antijoin
+- [done] implement rangeaggregate/binaggregate/segagg/partitionaggregate ... aggregate by numerical field that has been partitioned
+- [done] values on a combination of fields
+- [done] modify sort to use merge sort above a given buffer size
+- [done] change 'fields' to 'header'
+- [done] support for reverse=True when above buffer size
+- [done] profile forward and reverse sorting with big files
+- [done] add buffersize arg to all transformations that depend on sorting
+- [done] provide ability to set default buffersize globally
+- [done] modify sort to keep cached data and check cachetag values
+- [done] implement setfields
+- [done] implement rangecounts
+- [done] implement string lengths as utility function
+- [won't do] get rid of 'values', add *args to data instead?
+- [done] simplify args to values
+- [done] rangecounts and rangeaggregate should have min and max params instead of start
+- [done] document rangecounts
+- [done] implement rangefacet - facet by numerical field into any number of bins by a given interval size
+
+- [done] implement limits
+- [done] fix use of 'min' and 'max' as variable names
+- [done] reimplement rangefacet
+- [done] review rangecounts and rangeaggregate w.r.t. last bin behaviour
+- [done] implement rangerowreduce, rangerecordreduce
+- [done] selectin, selectni
+
+- [done] review use of close - unnecessary
+- [done] selectgt, selectlt, selectge, selectle
+- [done] records s/padding/missing/ ?
+
+- [done] review use of errorvalue, sometimes not used e.g. in rangecounts
+- [done] make everything return tuples
+- [done] make sure we don't get tripped up by attempts to compare tuples with lists
+- [won't do] return tuple as default aggregator
+- [done] remove _ from melt and recast args
+- [won't do] recast should not scan twice
+- [done] select signature for single field function
+- [done] selectregex
+- [done] make convert args more flexible
+- [done] convert with dictionary (which translate is a convenience for)
+- [done] translate/replace single value in a field, e.g., None to zero; maybe also apply to multiple fields
+
+- [done] implement cachetag for all view classes
+- [done] handle errors in extend
+- [done] implement rowselect - generic `where` callable operating on the row (rather than the record)
+- [done] implement rowlenselect - select by row length
+- [done] implement selectis, selectisnot
+- [done] rename selectni to selectnotin
+- [done] implement selectisinstance/selecttype?
+- [done] implement stringjoin as aggregation function (or can you just pass ', '.join?)
+- [done] implement missingness/frequency/valuecount ... valuecount(table, 'foo', None) -> count, frequency
+- [done] add proportions/frequency/ratio to valuecounts
+- [done] check how cat and cut handle long/short rows; are they using itemgetter where possible?
+- [done] lookall
+- [done] dataslice
+- [done] implement transpose - one row iterator per field 
+
+- [done] implement intersect
+- [won't do] values should not skip short rows
+- [done] implement pivot?
+
+
+petlx
+-----
+
+- from and to xslx
+- [won't do] tondarray

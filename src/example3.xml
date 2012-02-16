@@ -1,0 +1,11 @@
+<table>
+    <row>
+        <foo>a</foo><baz><bar v='1'/></baz>
+    </row>
+    <row>
+        <foo>b</foo><baz><bar v='2'/></baz>
+    </row>
+    <row>
+        <foo>c</foo><baz><bar v='2'/></baz>
+    </row>
+</table>

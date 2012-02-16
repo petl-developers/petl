@@ -1,0 +1,450 @@
+.. py:module:: petl
+
+petl - Extract, Transform and Load (Tables of Data)
+===================================================
+
+:mod:`petl` is a tentative Python package for extracting, transforming
+and loading tables of data. For an overview of all functions in the
+package, see the :ref:`genindex`.
+
+- Documentation: http://packages.python.org/petl
+- Source Code: https://github.com/alimanfoo/petl
+- Download: http://pypi.python.org/pypi/petl
+- Mailing List: http://groups.google.com/group/python-etl 
+
+E.g., given the following data in a file at 'example.csv' in the current working directory::
+
+	foo,bar,baz
+	a,1,3.4
+	b,2,7.4
+	c,6,2.2
+	d,9,8.1
+
+...the interactive session below illustrates some simple uses of this module::
+
+	>>> from petl import *
+	>>> table1 = fromcsv('example.csv')
+	>>> look(table1)
+	+-------+-------+-------+
+	| 'foo' | 'bar' | 'baz' |
+	+=======+=======+=======+
+	| 'a'   | '1'   | '3.4' |
+	+-------+-------+-------+
+	| 'b'   | '2'   | '7.4' |
+	+-------+-------+-------+
+	| 'c'   | '6'   | '2.2' |
+	+-------+-------+-------+
+	| 'd'   | '9'   | '8.1' |
+	+-------+-------+-------+
+	
+	>>> table2 = convert(table1, 'foo', 'upper')
+	>>> table3 = convert(table2, 'bar', int)
+	>>> table4 = convert(table3, 'baz', float)
+	>>> table5 = extend(table4, 'quux', expr('{bar} * {baz}'))
+	>>> table6 = cut(table5, 'foo', 'quux')
+	>>> table7 = selectgt(table6, 'quux', 10)
+	>>> table8 = sort(table7, 'quux')
+	>>> look(table8)
+	+-------+--------------------+
+	| 'foo' | 'quux'             |
+	+=======+====================+
+	| 'C'   | 13.200000000000001 |
+	+-------+--------------------+
+	| 'B'   | 14.8               |
+	+-------+--------------------+
+	| 'D'   | 72.89999999999999  |
+	+-------+--------------------+
+
+        >>> tocsv(table8, 'output.csv')
+
+Installation
+------------
+
+This module is available from the `Python Package Index
+<http://pypi.python.org/pypi/petl>`_. On Linux distributions you
+should be able to do ``easy_install petl`` or ``pip install petl``. On
+Windows or Mac you can download manually, extract and run ``python
+setup.py install``.
+
+Dependencies
+------------
+
+This package has been written with no dependencies other than the
+Python core modules, for ease of installation and
+maintenance. However, there are many third party packages which could
+usefuly be used with :mod:`petl`, e.g., providing access to data from
+other file types. Some extensions with these additional dependencies
+are provided by the `petlx <http://pypi.python.org/pypi/petlx>`_ package, a
+companion package to :mod:`petl`.
+
+Conventions - row containers and row iterators
+----------------------------------------------
+
+This package defines the following convention for objects acting as
+containers of tabular data and supporting row-oriented iteration over
+the data.
+
+A *row container* (also referred to here informally as a *table*) is
+any object which satisfies the following:
+
+1. implements the `__iter__` method
+
+2. `__iter__` returns a *row iterator* (see below)
+
+3. all row iterators returned by `__iter__` are independent, i.e., consuming items from one iterator will not affect any other iterators
+
+A *row iterator* is an iterator which satisfies the following:
+
+4. each item returned by the iterator is either a list or a tuple
+
+5. the first item returned by the iterator is a header row comprising a list or tuple of *fields*
+
+6. each subsequent item returned by the iterator is a *data row* comprising a list or tuple of *data values*
+
+7. a *field* is typically a string (`str` or `unicode`) but may be an object of any type as long as it implements `__str__`, is immutable (can be used as a dictionary key) and is pickleable
+
+8. a *data value* is any pickleable object
+
+So, for example, the list of lists shown below is a table::
+
+>>> table = [['foo', 'bar'], ['a', 1], ['b', 2]]
+
+Note that, under this convention, an object returned by the
+:func:`csv.reader` function from the standard Python :mod:`csv` module
+is a row iterator and *not* a row container, because it can only be
+iterated over once, e.g.::
+
+ >>> from StringIO import StringIO
+ >>> import csv
+ >>> csvdata = """foo,bar
+ ... a,1
+ ... b,2
+ ... """
+ >>> rowiterator = csv.reader(StringIO(csvdata))
+ >>> for row in rowiterator:
+ ...     print row
+ ... 
+ ['foo', 'bar']
+ ['a', '1']
+ ['b', '2']
+ >>> for row in rowiterator:
+ ...     print row
+ ... 
+ >>> # can only iterate once
+
+However, it is straightforward to define functions that support the
+above convention for row containers and provide access to data from
+CSV or other types of file or data source, see e.g. the
+:func:`fromcsv` function in this package.
+
+The main reason for requiring that row containers support independent
+row iterators (point 3) is that data from a table may need to be
+iterated over several times. E.g., when using `petl` in interactive
+mode to build up a sequence of data transformation steps, the user
+might want to examine outputs from several intermediate steps, before
+the transformation is complete.
+
+Note that this convention does not place any restrictions on the
+lengths of header and data rows. A table may return a header row
+and/or data rows of varying lengths. 
+
+Chaining / transformation pipelines
+-----------------------------------
+
+Note that this package makes extensive use of lazy evaluation and
+iterators. This means, generally, that a transformation will not
+actually be executed until data is requested.
+
+E.g., given the following data in a file at 'example1.csv' in the
+current working directory::
+
+	foo,bar,baz
+	a,1,3.4
+	b,2,7.4
+	c,6,2.2
+	d,9,8.1
+
+...the following code does not actually read the file, nor does it
+load any of its contents into memory::
+
+	>>> from petl import *
+	>>> table1 = fromcsv('example1.csv')
+
+Rather, `table1` is a row container object, which can be iterated over. 
+
+Similarly, if one or more transformation functions are applied, e.g.:::
+
+	>>> table2 = convert(table1, 'foo', 'upper')
+	>>> table3 = convert(table2, 'bar', int)
+	>>> table4 = convert(table3, 'baz', float)
+	>>> table5 = extend(table4, 'quux', expr('{bar} * {baz}'))
+
+...no actual transformation work will be done, until data are
+requested from `table5` or any of the other row containers returned by
+the intermediate steps. 
+
+So in effect, a 5 step transformation pipeline has been set up, and
+rows will pass through the pipeline on demand, as they are pulled from
+the end of the pipeline via iteration.
+
+A call to a function like :func:`look`, or any of the functions which
+write data to a file or database (e.g., :func:`tocsv`, :func:`totext`,
+:func:`tosqlite3`, :func:`todb`), will pull data through the pipeline
+and cause all of the transformation steps to be executed on the
+requested rows, e.g.::
+
+	>>> look(table5)
+	+-------+-------+-------+--------------------+
+	| 'foo' | 'bar' | 'baz' | 'quux'             |
+	+=======+=======+=======+====================+
+	| 'A'   | 1     | 3.4   | 3.4                |
+	+-------+-------+-------+--------------------+
+	| 'B'   | 2     | 7.4   | 14.8               |
+	+-------+-------+-------+--------------------+
+	| 'C'   | 6     | 2.2   | 13.200000000000001 |
+	+-------+-------+-------+--------------------+
+	| 'D'   | 9     | 8.1   | 72.89999999999999  |
+	+-------+-------+-------+--------------------+
+
+...although note that :func:`look` will by default only request the
+first 10 rows, and so at most only 10 rows will be processed. Calling
+:func:`look` to inspect the first few rows of a table is often an
+efficient way to examine the output of a transformation pipeline,
+without having to execute the transformation over all of the input
+data.
+
+Caching / memoization
+---------------------
+
+This package tries to make efficient use of memory by using iterators
+and lazy evaluation where possible. However, some transformations
+cannot be done without building data structures, either in memory or
+on disk.
+
+An example is the :func:`sort` function, which will either sort a
+table entirely in memory, or will sort the table in memory in chunks,
+writing chunks to disk and performing a final merge sort on the
+chunks. Which strategy is used will depend on the arguments passed
+into the :func:`sort` function when it is called.
+
+In either case, the sorting can take some time, and if the sorted data
+will be used more than once, it is obviously undesirable to throw away
+the sorted data and start again from scratch each time. It is better
+to cache (a.k.a., memoize) the sorted data, if possible, so it can be
+re-used. However, if a table upstream of the sort is mutable, there
+needs to be some way of discovering whether data have been changed
+since the last sort was performed, and hence whether the cached data
+are still fresh or not.
+
+There are also cases where, even though data are generated in a purely
+iterative fashion, some programs may still want to cache some or all
+of the data. E.g., where data are calculated dynamically and are
+relatively expensive to compute, or require scanning many rows, or
+where data are being retrieved via a network and there is
+latency. Again, there needs to be some way of finding out whether
+cached data are fresh or not.
+
+To support caching, it is recommended (but not required) that table
+container objects also implement the `cachetag` method. This method
+should return an integer which changes whenever the table's fields or
+data changes (i.e., a row iterator would yield a different sequence of
+items). All :mod:`petl` table objects implement this method, where
+applicable.
+
+Note in particular that the functions :func:`fromcsv`,
+:func:`frompickle` and :func:`fromsqlite3` return tables that
+implement the `cachetag` method, and that the implementation of
+`cachetag` in these cases depends on a checksum function operating on
+the underlying data file. By default, :func:`statsum` is used as the
+checksum function, which is cheap to compute but crude because it
+relies only on file name, size and time of modification, and on some
+systems this will **not** reveal changes within the same second that
+preserve file size. If you need a finer level of granularity, use
+either :func:`adler32sum` or :func:`crc32sum` instead. These can be
+passed in as arguments to :func:`fromcsv`, :func:`frompickle` and
+:func:`fromsqlite3`, or can be set globally, e.g.::
+
+    >>> import petl.io
+    >>> petl.io.defaultsumfun = petl.io.adler32sum
+
+
+Care must be taken to ensure correct implementation of the `cachetag`
+method where a table is generating data dynamically from another table
+or tables. In these cases, the state of the upstream tables must be
+considered when generating a `cachetag` value. One strategy is to
+construct `cachetag` values by hashing the internal configuration
+attributes of a table, along with the `cachetag` values from any
+tables immediately upstream.
+
+In some cases, it may be difficult to determine whether data have
+changed, e.g., where data are being retrieved from a database. In
+these cases it is suggested that table objects use a user-configurable
+time to live (TTL) to generate `cachetag` values. E.g., where a
+database table is updated once a day at most, a TTL of a few hours
+would enable data to be cached during an interactive session, which
+might improve usability for someone exploring the data or developing a 
+transformation script.
+
+Utility functions
+-----------------
+
+.. autofunction:: petl.header
+.. autofunction:: petl.data
+.. autofunction:: petl.dataslice
+.. autofunction:: petl.records
+.. autofunction:: petl.fieldnames
+.. autofunction:: petl.rowcount
+.. autofunction:: petl.look
+.. autofunction:: petl.lookall
+.. autofunction:: petl.see
+.. autofunction:: petl.values
+.. autofunction:: petl.valueset
+.. autofunction:: petl.valuecount
+.. autofunction:: petl.valuecounter
+.. autofunction:: petl.valuecounts
+.. autofunction:: petl.unique
+.. autofunction:: petl.limits
+.. autofunction:: petl.stats
+.. autofunction:: petl.lenstats
+.. autofunction:: petl.rowlengths
+.. autofunction:: petl.typecounter
+.. autofunction:: petl.typecounts
+.. autofunction:: petl.typeset
+.. autofunction:: petl.parsecounter
+.. autofunction:: petl.parsecounts
+.. autofunction:: petl.dateparser
+.. autofunction:: petl.timeparser
+.. autofunction:: petl.datetimeparser
+.. autofunction:: petl.boolparser
+.. autofunction:: petl.parsenumber
+.. autofunction:: petl.lookup
+.. autofunction:: petl.lookupone
+.. autofunction:: petl.recordlookup
+.. autofunction:: petl.recordlookupone
+.. autofunction:: petl.statsum
+.. autofunction:: petl.adler32sum
+.. autofunction:: petl.crc32sum
+.. autofunction:: petl.expr
+.. autofunction:: petl.strjoin
+
+Extracting (reading) tables from files and databases
+----------------------------------------------------
+
+.. autofunction:: petl.fromcsv
+.. autofunction:: petl.frompickle
+.. autofunction:: petl.fromsqlite3
+.. autofunction:: petl.fromdb
+.. autofunction:: petl.fromtext
+.. autofunction:: petl.fromxml
+
+Transforming tables
+-------------------
+
+.. autofunction:: petl.rename
+.. autofunction:: petl.setheader
+.. autofunction:: petl.extendheader
+.. autofunction:: petl.pushheader
+.. autofunction:: petl.skip
+.. autofunction:: petl.skipcomments
+.. autofunction:: petl.rowslice
+.. autofunction:: petl.head
+.. autofunction:: petl.tail
+.. autofunction:: petl.cut
+.. autofunction:: petl.cutout
+.. autofunction:: petl.select
+.. autofunction:: petl.selectop
+.. autofunction:: petl.selecteq
+.. autofunction:: petl.selectne
+.. autofunction:: petl.selectlt
+.. autofunction:: petl.selectle
+.. autofunction:: petl.selectgt
+.. autofunction:: petl.selectge
+.. autofunction:: petl.selectrangeopen
+.. autofunction:: petl.selectrangeopenleft
+.. autofunction:: petl.selectrangeopenright
+.. autofunction:: petl.selectrangeclosed
+.. autofunction:: petl.selectin
+.. autofunction:: petl.selectnotin
+.. autofunction:: petl.selectis
+.. autofunction:: petl.selectisnot
+.. autofunction:: petl.selectisinstance
+.. autofunction:: petl.selectre
+.. autofunction:: petl.rowselect
+.. autofunction:: petl.recordselect
+.. autofunction:: petl.rowlenselect
+.. autofunction:: petl.fieldselect
+.. autofunction:: petl.facet
+.. autofunction:: petl.rangefacet
+.. autofunction:: petl.convert
+.. autofunction:: petl.fieldconvert
+.. autofunction:: petl.convertall
+.. autofunction:: petl.convertnumbers
+.. autofunction:: petl.extend
+.. autofunction:: petl.capture
+.. autofunction:: petl.split
+.. autofunction:: petl.unpack
+.. autofunction:: petl.fieldmap
+.. autofunction:: petl.rowmap
+.. autofunction:: petl.recordmap
+.. autofunction:: petl.rowmapmany
+.. autofunction:: petl.recordmapmany
+.. autofunction:: petl.cat
+.. autofunction:: petl.duplicates
+.. autofunction:: petl.conflicts
+.. autofunction:: petl.sort
+.. autofunction:: petl.join
+.. autofunction:: petl.leftjoin
+.. autofunction:: petl.rightjoin
+.. autofunction:: petl.outerjoin
+.. autofunction:: petl.crossjoin
+.. autofunction:: petl.antijoin
+.. autofunction:: petl.complement
+.. autofunction:: petl.diff
+.. autofunction:: petl.recordcomplement
+.. autofunction:: petl.recorddiff
+.. autofunction:: petl.intersection
+.. autofunction:: petl.aggregate
+.. autofunction:: petl.rangeaggregate
+.. autofunction:: petl.rangecounts
+.. autofunction:: petl.rowreduce
+.. autofunction:: petl.recordreduce
+.. autofunction:: petl.rangerowreduce
+.. autofunction:: petl.rangerecordreduce
+.. autofunction:: petl.mergereduce
+.. autofunction:: petl.merge
+.. autofunction:: petl.melt
+.. autofunction:: petl.recast
+.. autofunction:: petl.transpose
+.. autofunction:: petl.pivot
+
+
+Loading (writing) tables to files and databases
+-----------------------------------------------
+
+.. autofunction:: petl.tocsv
+.. autofunction:: petl.appendcsv
+.. autofunction:: petl.topickle
+.. autofunction:: petl.appendpickle
+.. autofunction:: petl.tosqlite3
+.. autofunction:: petl.appendsqlite3
+.. autofunction:: petl.todb
+.. autofunction:: petl.appenddb
+.. autofunction:: petl.totext
+.. autofunction:: petl.appendtext
+
+
+Further Reading
+---------------
+
+.. toctree::
+   :maxdepth: 2
+
+   related_work
+
+
+Indices and tables
+------------------
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`
