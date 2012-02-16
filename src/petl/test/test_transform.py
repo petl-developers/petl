@@ -16,7 +16,7 @@ from petl import rename, fieldnames, cut, cat, convert, fieldconvert, extend, \
                 crossjoin, antijoin, rangeaggregate, rangecounts, rangefacet, \
                 rangerowreduce, rangerecordreduce, selectre, rowselect, recordselect, \
                 rowlenselect, strjoin, transpose, intersection, pivot, recorddiff, \
-                recordcomplement, cutout, skipcomments, convertall
+                recordcomplement, cutout, skipcomments, convertall, convertnumbers
 
 
 def test_rename():
@@ -287,6 +287,19 @@ def test_convertall():
     expect2 = (('foo', 'bar', 'baz'),
                (1, 3, 9),
                (2, 1, 7))
+    iassertequal(expect2, table2)
+    iassertequal(expect2, table2)
+    
+    
+def test_convertnumbers():
+    
+    table1 = (('foo', 'bar', 'baz', 'quux'),
+              ('1', '3.0', '9+3j', 'aaa'),
+              ('2', '1.3', '7+2j', None))
+    table2 = convertnumbers(table1)
+    expect2 = (('foo', 'bar', 'baz', 'quux'),
+               (1, 3.0, 9+3j, 'aaa'),
+               (2, 1.3, 7+2j, None))
     iassertequal(expect2, table2)
     iassertequal(expect2, table2)
     

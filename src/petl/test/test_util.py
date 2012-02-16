@@ -6,9 +6,10 @@ TODO doc me
 from petl import header, fieldnames, data, records, rowcount, look, see, values, valuecounter, valuecounts, valueset,\
                 unique, lookup, lookupone, recordlookup, recordlookupone, \
                 DuplicateKeyError, rowlengths, stats, typecounts, parsecounts, typeset, \
-                valuecount
+                valuecount, parsenumber
 
 from petl.testfun import assertequal, iassertequal
+import sys
 
 
 def test_header():
@@ -415,3 +416,13 @@ def test_parsecounts():
     actual = parsecounts(table, 'bar') 
     expect = (('type', 'count', 'errors'), ('float', 3, 1), ('int', 2, 2))
     iassertequal(expect, actual)
+    
+    
+def test_parsenumber():
+    
+    assert parsenumber('1') == 1
+    assert parsenumber('1.0') == 1.0
+    assert parsenumber(str(sys.maxint + 1)) == sys.maxint + 1
+    assert parsenumber('3+4j') == 3 + 4j
+    assert parsenumber('aaa') == 'aaa'
+    assert parsenumber(None) == None

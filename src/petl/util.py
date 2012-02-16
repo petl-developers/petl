@@ -1513,3 +1513,30 @@ def strjoin(s):
     return lambda l: s.join(map(str, l))
 
 
+def parsenumber(v):
+    """
+    Attempt to parse the value as a number, trying :func:`int`, :func:`long`,
+    :func:`float` and :func:`complex` in that order. If all fail, return the
+    value as-is.
+    
+    .. versionadded:: 0.4
+    
+    """
+    
+    try:
+        return int(v)
+    except:
+        pass
+    try:
+        return long(v)
+    except:
+        pass
+    try:
+        return float(v)
+    except:
+        pass
+    try:
+        return complex(v)
+    except:
+        pass
+    return v

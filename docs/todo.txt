@@ -8,20 +8,19 @@ Version 0.4
 - [done] fromtext, strip trailing newline character
 - [done] alternative signature to rename when you want to rename a single field only
 - [done] convertall - convenience function to convert all fields the same way
+- [done] convertnumbers - attempt to convert string values to ints, floats etc.
+- [done] docs - merge() example has an error, uses list instead of tuple for conflict
+- [done] docs - add section about dependencies and petlx
+- [done] docs - add section about chaining and pipelining
 
-- convertnumbers - attempt to convert string values to ints, floats etc.
+- docs - add python-pipeline and continuum.io to related work
+- docs - fix link to pandas?
 
 - exclude - convenience functions as complement of select...
-- selectout - select complement
 
 - implement fromjson somehow?
 - implement fromxml using etree find and patterns
 
-- docs - merge() example has an error, uses list instead of tuple for conflict
-- docs - add section about dependencies and petlx
-- docs - add section about chaining and pipelining
-- docs - add python-pipeline and continuum.io to related work
-- docs - fix link to pandas?
 
 - ignore some fields when finding conflicts
 - regex replace (re.sub)

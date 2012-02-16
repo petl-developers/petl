@@ -10,7 +10,7 @@ import cPickle as pickle
 
 
 from petl.util import asindices, rowgetter, asdict,\
-    expr, valueset, records, header, data, limits, values
+    expr, valueset, records, header, data, limits, values, parsenumber
 import re
 from petl.io import Uncacheable
 from tempfile import NamedTemporaryFile
@@ -89,6 +89,11 @@ def rename(table, *args):
         +----------+-------+
         | '-'      | 56    |
         +----------+-------+
+        
+    .. versionchanged:: 0.4
+    
+    Function signature changed to support the simple 2 argument form when renaming
+    a single field.
 
     """
     
@@ -566,9 +571,36 @@ def convertall(table, *args, **kwargs):
     Convenience function to convert all fields in the table using a common 
     function or mapping. See also :func:`convert`.
     
+    .. versionadded:: 0.4
+    
     """
     
     return convert(table, header(table), *args, **kwargs)
+
+
+def convertnumbers(table):
+    """
+    Convenience function to convert all field values to numbers where possible. E.g.::
+
+        >>> from petl import convertnumbers, look
+        >>> table1 = [['foo', 'bar', 'baz', 'quux'],
+        ...           ['1', '3.0', '9+3j', 'aaa'],
+        ...           ['2', '1.3', '7+2j', None]]
+        >>> table2 = convertnumbers(table1)
+        >>> look(table2)
+        +-------+-------+--------+--------+
+        | 'foo' | 'bar' | 'baz'  | 'quux' |
+        +=======+=======+========+========+
+        | 1     | 3.0   | (9+3j) | 'aaa'  |
+        +-------+-------+--------+--------+
+        | 2     | 1.3   | (7+2j) | None   |
+        +-------+-------+--------+--------+
+    
+    .. versionadded:: 0.4
+    
+    """
+    
+    return convertall(table, parsenumber)
 
 
 def fieldconvert(table, converters=None, failonerror=False, errorvalue=None):
@@ -3221,7 +3253,7 @@ def merge(*tables, **kwargs):
         +-------+-------+---------------+--------+
         | 2     | 'B'   | False         | 79.3   |
         +-------+-------+---------------+--------+
-        | 4     | 'C'   | [False, True] | 12.4   |
+        | 4     | 'C'   | (False, True) | 12.4   |
         +-------+-------+---------------+--------+
 
     If `presorted` is True, it is assumed that the data are already sorted by
@@ -4474,6 +4506,8 @@ def skipcomments(table, prefix):
         +--------+-------+
         | 'b'    | 2     |
         +--------+-------+
+        
+    .. versionadded:: 0.4
 
     """ 
 

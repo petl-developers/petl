@@ -4,15 +4,13 @@ petl - Extract, Transform and Load (Tables of Data)
 ===================================================
 
 :mod:`petl` is a tentative Python package for extracting, transforming
-and loading tables of data.
+and loading tables of data. For an overview of all functions in the
+package, see the :ref:`genindex`.
 
 - Documentation: http://packages.python.org/petl
 - Source Code: https://github.com/alimanfoo/petl
 - Download: http://pypi.python.org/pypi/petl
 - Mailing List: http://groups.google.com/group/python-etl 
-
-For an overview of all functions in the package, see the
-:ref:`genindex`.
 
 E.g., given the following data in a file at 'example.csv' in the current working directory::
 
@@ -62,17 +60,32 @@ E.g., given the following data in a file at 'example.csv' in the current working
 Installation
 ------------
 
-This module is available from the `Python Package Index <http://pypi.python.org/pypi/petl>`_. On Linux distributions you should be able to do ``easy_install petl`` or ``pip install petl``. On Windows or Mac you can download manually, extract and run ``python setup.py install``.
+This module is available from the `Python Package Index
+<http://pypi.python.org/pypi/petl>`_. On Linux distributions you
+should be able to do ``easy_install petl`` or ``pip install petl``. On
+Windows or Mac you can download manually, extract and run ``python
+setup.py install``.
 
-Table containers and row iterators
-----------------------------------
+Dependencies
+------------
+
+This package has been written with no dependencies other than the
+Python core modules, for ease of installation and
+maintenance. However, there are many third party packages which could
+usefuly be used with :mod:`petl`, e.g., providing access to data from
+other file types. Some extensions with these additional dependencies
+are provided by the `petlx <http://pypi.python.org/pypi/petlx>`_ package, a
+companion package to :mod:`petl`.
+
+Conventions - row containers and row iterators
+----------------------------------------------
 
 This package defines the following convention for objects acting as
 containers of tabular data and supporting row-oriented iteration over
 the data.
 
-A *table container* (or simply a *table*) is any object which
-satisfies the following:
+A *row container* (also referred to here informally as a *table*) is
+any object which satisfies the following:
 
 1. implements the `__iter__` method
 
@@ -98,8 +111,8 @@ So, for example, the list of lists shown below is a table::
 
 Note that, under this convention, an object returned by the
 :func:`csv.reader` function from the standard Python :mod:`csv` module
-is a row iterator and *not* a table, because it can only be iterated
-over once, e.g.::
+is a row iterator and *not* a row container, because it can only be
+iterated over once, e.g.::
 
  >>> from StringIO import StringIO
  >>> import csv
@@ -120,19 +133,85 @@ over once, e.g.::
  >>> # can only iterate once
 
 However, it is straightforward to define functions that support the
-above convention for table objects and provide access to data from CSV
-or other types of file or data source, see e.g. the :func:`fromcsv`
-function in this package.
+above convention for row containers and provide access to data from
+CSV or other types of file or data source, see e.g. the
+:func:`fromcsv` function in this package.
 
-The main reason for requiring that table objects support independent
+The main reason for requiring that row containers support independent
 row iterators (point 3) is that data from a table may need to be
 iterated over several times. E.g., when using `petl` in interactive
 mode to build up a sequence of data transformation steps, the user
-might want to examine outputs from several intermediate steps.
+might want to examine outputs from several intermediate steps, before
+the transformation is complete.
 
 Note that this convention does not place any restrictions on the
 lengths of header and data rows. A table may return a header row
 and/or data rows of varying lengths. 
+
+Chaining / transformation pipelines
+-----------------------------------
+
+Note that this package makes extensive use of lazy evaluation and
+iterators. This means, generally, that a transformation will not
+actually be executed until data is requested.
+
+E.g., given the following data in a file at 'example1.csv' in the
+current working directory::
+
+	foo,bar,baz
+	a,1,3.4
+	b,2,7.4
+	c,6,2.2
+	d,9,8.1
+
+...the following code does not actually read the file, nor does it
+load any of its contents into memory::
+
+	>>> from petl import *
+	>>> table1 = fromcsv('example1.csv')
+
+Rather, `table1` is a row container object, which can be iterated over. 
+
+Similarly, if one or more transformation functions are applied, e.g.:::
+
+	>>> table2 = convert(table1, 'foo', 'upper')
+	>>> table3 = convert(table2, 'bar', int)
+	>>> table4 = convert(table3, 'baz', float)
+	>>> table5 = extend(table4, 'quux', expr('{bar} * {baz}'))
+
+...no actual transformation work will be done, until data are
+requested from `table5` or any of the other row containers returned by
+the intermediate steps. 
+
+So in effect, a 5 step transformation pipeline has been set up, and
+rows will pass through the pipeline on demand, as they are pulled from
+the end of the pipeline via iteration.
+
+A call to a function like :func:`look`, or any of the functions which
+write data to a file or database (e.g., :func:`tocsv`, :func:`totext`,
+:func:`tosqlite3`, :func:`todb`), will pull data through the pipeline
+and cause all of the transformation steps to be executed on the
+requested rows, e.g.::
+
+	>>> look(table5)
+	+-------+-------+-------+--------------------+
+	| 'foo' | 'bar' | 'baz' | 'quux'             |
+	+=======+=======+=======+====================+
+	| 'A'   | 1     | 3.4   | 3.4                |
+	+-------+-------+-------+--------------------+
+	| 'B'   | 2     | 7.4   | 14.8               |
+	+-------+-------+-------+--------------------+
+	| 'C'   | 6     | 2.2   | 13.200000000000001 |
+	+-------+-------+-------+--------------------+
+	| 'D'   | 9     | 8.1   | 72.89999999999999  |
+	+-------+-------+-------+--------------------+
+
+...although note that :func:`look` will by default only request the
+first 10 rows, and so at most only 10 rows will be processed. Calling
+:func:`look` to inspect the first few rows of a table is often an
+efficient way to examine the output of a transformation pipeline,
+without having to execute the transformation over all of the input
+data.
 
 Caching / memoization
 ---------------------
@@ -237,6 +316,7 @@ Utility functions
 .. autofunction:: petl.timeparser
 .. autofunction:: petl.datetimeparser
 .. autofunction:: petl.boolparser
+.. autofunction:: petl.parsenumber
 .. autofunction:: petl.lookup
 .. autofunction:: petl.lookupone
 .. autofunction:: petl.recordlookup
@@ -295,8 +375,9 @@ Transforming tables
 .. autofunction:: petl.facet
 .. autofunction:: petl.rangefacet
 .. autofunction:: petl.convert
-.. autofunction:: petl.convertall
 .. autofunction:: petl.fieldconvert
+.. autofunction:: petl.convertall
+.. autofunction:: petl.convertnumbers
 .. autofunction:: petl.extend
 .. autofunction:: petl.capture
 .. autofunction:: petl.split

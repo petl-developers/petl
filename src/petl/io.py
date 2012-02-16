@@ -356,10 +356,6 @@ def fromtext(filename, header=['lines'], strip=None, checksumfun=None):
         | 'c\\t3'     |
         +--------------+
 
-    Note that the strip() function will be applied to each line, which by default
-    will remove leading and trailing whitespace - use the `strip` keyword argument
-    to provide alternative characters.
-    
     The :func:`fromtext` function provides a starting point for custom handling of 
     text files. E.g., using :func:`capture`::
     
@@ -376,6 +372,12 @@ def fromtext(filename, header=['lines'], strip=None, checksumfun=None):
         | 'c'   | '3'   |
         +-------+-------+
 
+    .. versionchanged:: 0.4
+    
+    The strip() function is called on each line, which by default will remove 
+    leading and trailing whitespace, including the end-of-line character - use 
+    the `strip` keyword argument to specify alternative characters to strip.    
+    
     """
 
     return TextView(filename, header, strip=strip, checksumfun=checksumfun)
