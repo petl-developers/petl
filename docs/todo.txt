@@ -26,6 +26,9 @@ Future
 - show rows/values causing conversion or translation errors
 - optimised implementation of merge() where input files are presorted? I.e., avoid need to concatenate then sort the concatenation, rather just do the merge sort then reduce
 
+Version 0.5
+-----------
+
 Version 0.4
 -----------
 
