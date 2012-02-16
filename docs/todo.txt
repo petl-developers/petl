@@ -12,9 +12,8 @@ Version 0.4
 - [done] docs - merge() example has an error, uses list instead of tuple for conflict
 - [done] docs - add section about dependencies and petlx
 - [done] docs - add section about chaining and pipelining
-
-- docs - add python-pipeline and continuum.io to related work
-- docs - fix link to pandas?
+- [done] docs - add python-pipeline and continuum.io to related work
+- [done] docs - fix link to pandas
 
 - exclude - convenience functions as complement of select...
 
