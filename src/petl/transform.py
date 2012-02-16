@@ -4418,6 +4418,37 @@ def iterskip(source, n):
     return islice(source, n, None)
         
     
+def skipcomments(table, prefix):
+    """
+    Skip any row where the first value is a string and starts with 
+    `prefix`. E.g.::
+    
+TODO    
+    """ 
+
+    return SkipCommentsView(table, prefix)
+
+
+class SkipCommentsView(object):
+    
+    def __init__(self, source, prefix):
+        self.source = source
+        self.prefix = prefix
+        
+    def __iter__(self):
+        return iterskipcomments(self.source, self.prefix)   
+
+    def cachetag(self):
+        try:
+            return hash((self.source.cachetag(), self.prefix))
+        except Exception as e:
+            raise Uncacheable(e)
+
+
+def iterskipcomments(source, prefix):
+    return (row for row in source if len(row) > 0 and not(isinstance(row[0], basestring) and row[0].startswith(prefix)))
+        
+    
 def unpack(table, field, newfields=None, maxunpack=None, include_original=False):
     """
     Unpack data values that are lists or tuples. E.g.::

@@ -11,6 +11,9 @@ and loading tables of data.
 - Download: http://pypi.python.org/pypi/petl
 - Mailing List: http://groups.google.com/group/python-etl 
 
+For an overview of all functions in the package, see the
+:ref:`genindex`.
+
 E.g., given the following data in a file at 'example.csv' in the current working directory::
 
 	foo,bar,baz

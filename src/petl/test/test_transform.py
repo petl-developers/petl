@@ -16,7 +16,7 @@ from petl import rename, fieldnames, cut, cat, convert, fieldconvert, extend, \
                 crossjoin, antijoin, rangeaggregate, rangecounts, rangefacet, \
                 rangerowreduce, rangerecordreduce, selectre, rowselect, recordselect, \
                 rowlenselect, strjoin, transpose, intersection, pivot, recorddiff, \
-                recordcomplement, cutout
+                recordcomplement, cutout, skipcomments 
 
 
 def test_rename():
@@ -1846,6 +1846,22 @@ def test_skip():
               ('b', 2))
     table2 = skip(table1, 2)
     expect2 = (('foo', 'bar'),
+               ('a', 1),
+               ('b', 2))
+    iassertequal(expect2, table2)
+    iassertequal(expect2, table2) # can iterate twice?
+    
+    
+def test_skipcomments():
+
+    table1 = (('##aaa', 'bbb', 'ccc'),
+              ('##mmm',),
+              ('#foo', 'bar'),
+              ('##nnn', 1),
+              ('a', 1),
+              ('b', 2))
+    table2 = skipcomments(table1, '##')
+    expect2 = (('#foo', 'bar'),
                ('a', 1),
                ('b', 2))
     iassertequal(expect2, table2)
