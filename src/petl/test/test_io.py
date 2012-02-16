@@ -10,7 +10,7 @@ import sqlite3
 
 from petl import fromcsv, frompickle, fromsqlite3, adler32sum, crc32sum, fromdb, \
                 tocsv, topickle, appendcsv, appendpickle, tosqlite3, appendsqlite3, \
-                todb, appenddb, fromtext, totext
+                todb, appenddb, fromtext, totext, fromxml
                 
 
 
@@ -314,6 +314,93 @@ def test_fromtext():
               ('a\t1',),
               ('b\t2',),
               ('c\t3',))
+    iassertequal(expect, actual)
+    iassertequal(expect, actual) # verify can iterate twice
+
+
+def test_fromxml():
+    
+    # initial data
+    f = NamedTemporaryFile(delete=False)
+    data = """<table>
+    <tr>
+        <td>foo</td><td>bar</td>
+    </tr>
+    <tr>
+        <td>a</td><td>1</td>
+    </tr>
+    <tr>
+        <td>b</td><td>2</td>
+    </tr>
+    <tr>
+        <td>c</td><td>2</td>
+    </tr>
+</table>"""
+    f.write(data)
+    f.close()
+    
+    actual = fromxml(f.name, 'tr', 'td')
+    expect = (('foo', 'bar'),
+              ('a', '1'),
+              ('b', '2'),
+              ('c', '2'))
+    iassertequal(expect, actual)
+    iassertequal(expect, actual) # verify can iterate twice
+
+
+def test_fromxml_2():
+    
+    # initial data
+    f = NamedTemporaryFile(delete=False)
+    data = """<table>
+    <tr>
+        <td v='foo'/><td v='bar'/>
+    </tr>
+    <tr>
+        <td v='a'/><td v='1'/>
+    </tr>
+    <tr>
+        <td v='b'/><td v='2'/>
+    </tr>
+    <tr>
+        <td v='c'/><td v='2'/>
+    </tr>
+</table>"""
+    f.write(data)
+    f.close()
+    
+    actual = fromxml(f.name, 'tr', 'td', 'v')
+    expect = (('foo', 'bar'),
+              ('a', '1'),
+              ('b', '2'),
+              ('c', '2'))
+    iassertequal(expect, actual)
+    iassertequal(expect, actual) # verify can iterate twice
+
+
+def test_fromxml_3():
+    
+    # initial data
+    f = NamedTemporaryFile(delete=False)
+    data = """<table>
+    <row>
+        <foo>a</foo><baz><bar v='1'/></baz>
+    </row>
+    <row>
+        <foo>b</foo><baz><bar v='2'/></baz>
+    </row>
+    <row>
+        <foo>c</foo><baz><bar v='2'/></baz>
+    </row>
+</table>"""
+    f.write(data)
+    f.close()
+    
+    actual = fromxml(f.name, 'row', {'foo': 'foo', 'bar': ('baz/bar', 'v')})
+    expect = (('foo', 'bar'),
+              ('a', '1'),
+              ('b', '2'),
+              ('c', '2'))
     iassertequal(expect, actual)
     iassertequal(expect, actual) # verify can iterate twice
 

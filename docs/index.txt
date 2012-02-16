@@ -335,6 +335,7 @@ Extracting (reading) tables from files and databases
 .. autofunction:: petl.fromsqlite3
 .. autofunction:: petl.fromdb
 .. autofunction:: petl.fromtext
+.. autofunction:: petl.fromxml
 
 Transforming tables
 -------------------

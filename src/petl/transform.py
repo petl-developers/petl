@@ -2456,12 +2456,22 @@ def select(table, *args, **kwargs):
         | 'a'   | 2     | 88.2  |
         +-------+-------+-------+
 
+    .. versionchanged:: 0.4
+    
+    The complement of the selection can be returned (i.e., the query can be 
+    inverted) by providing `complement=True` as a keyword argument.
+
     """
     
     if 'missing' in kwargs:
         missing = kwargs['missing']
     else:
         missing = None
+        
+    if 'complement' in kwargs:
+        complement = kwargs['complement']
+    else:
+        complement = False
         
     if len(args) == 0:
         raise Exception('missing positional argument')
@@ -2471,125 +2481,148 @@ def select(table, *args, **kwargs):
             where = expr(where)
         else:
             assert callable(where), 'second argument must be string or callable'
-        return RecordSelectView(table, where, missing)
+        return RecordSelectView(table, where, missing=missing, complement=complement)
     else:
         field = args[0]
         where = args[1]
         assert callable(where), 'third argument must be callable'
-        return FieldSelectView(table, field, where)
+        return FieldSelectView(table, field, where, complement=complement)
         
 
-def recordselect(table, where, missing=None):
+def recordselect(table, where, missing=None, complement=False):
     """
     Select rows matching a condition. The `where` argument should be a function
     accepting a record (row as dictionary of values indexed by field name) as 
     argument and returning True or False.
 
+    .. versionchanged:: 0.4
+    
+    The complement of the selection can be returned (i.e., the query can be 
+    inverted) by providing `complement=True` as a keyword argument.
+
     """
     
-    return RecordSelectView(table, where, missing=missing)
+    return RecordSelectView(table, where, missing=missing, complement=complement)
         
         
 class RecordSelectView(object):
     
-    def __init__(self, source, where, missing=None):
+    def __init__(self, source, where, missing=None, complement=False):
         self.source = source
         self.where = where
         self.missing = missing
+        self.complement = complement
         
     def __iter__(self):
-        return iterselect(self.source, self.where, self.missing)
+        return iterselect(self.source, self.where, self.missing, self.complement)
     
     def cachetag(self):
         try:
-            return hash((self.source.cachetag(), self.where, self.missing))
+            return hash((self.source.cachetag(), self.where, self.missing, self.complement))
         except Exception as e:
             raise Uncacheable(e)
 
     
-def iterselect(source, where, missing):
+def iterselect(source, where, missing, complement):
     it = iter(source)
     flds = it.next()
     yield tuple(flds)
     for row in it:
         rec = asdict(flds, row, missing)
-        if where(rec):
+        if where(rec) != complement: # XOR
             yield tuple(row)
         
         
-def rowselect(table, where):
+def rowselect(table, where, complement=False):
     """
     Select rows matching a condition. The `where` argument should be a function
     accepting a row (list or tuple) as argument and returning True or False.
 
+    .. versionchanged:: 0.4
+    
+    The complement of the selection can be returned (i.e., the query can be 
+    inverted) by providing `complement=True` as a keyword argument.
+
     """
     
-    return RowSelectView(table, where)
+    return RowSelectView(table, where, complement=complement)
         
         
 class RowSelectView(object):
     
-    def __init__(self, source, where):
+    def __init__(self, source, where, complement=False):
         self.source = source
         self.where = where
+        self.complement = complement
         
     def __iter__(self):
-        return iterrowselect(self.source, self.where)
+        return iterrowselect(self.source, self.where, self.complement)
     
     def cachetag(self):
         try:
-            return hash((self.source.cachetag(), self.where))
+            return hash((self.source.cachetag(), self.where, self.complement))
         except Exception as e:
             raise Uncacheable(e)
 
     
-def iterrowselect(source, where):
+def iterrowselect(source, where, complement):
     it = iter(source)
     flds = it.next()
     yield tuple(flds)
     for row in it:
-        if where(row):
+        if where(row) != complement: # XOR
             yield tuple(row)
      
      
-def rowlenselect(table, n):
+def rowlenselect(table, n, complement=False):
     """
     Select rows of length `n`.
+
+    .. versionchanged:: 0.4
+    
+    The complement of the selection can be returned (i.e., the query can be 
+    inverted) by providing `complement=True` as a keyword argument.
     
     """
     
     where = lambda row: len(row) == n
-    return rowselect(table, where)   
+    return rowselect(table, where, complement=complement)   
         
         
-def fieldselect(table, field, where):
+def fieldselect(table, field, where, complement=False):
     """
     Select rows matching a condition. The `where` argument should be a function
     accepting a single data value as argument and returning True or False.
 
+    .. versionchanged:: 0.4
+    
+    The complement of the selection can be returned (i.e., the query can be 
+    inverted) by providing `complement=True` as a keyword argument.
+
     """
     
-    return FieldSelectView(table, field, where)
+    return FieldSelectView(table, field, where, complement=complement)
         
         
 class FieldSelectView(object):
     
-    def __init__(self, source, field, where):
+    def __init__(self, source, field, where, complement=False):
         self.source = source
         self.field = field
         self.where = where
+        self.complement = complement
         
     def __iter__(self):
-        return iterfieldselect(self.source, self.field, self.where)
+        return iterfieldselect(self.source, self.field, self.where, self.complement)
 
     def cachetag(self):
         try:
-            return hash((self.source.cachetag(), self.field, self.where))
+            return hash((self.source.cachetag(), self.field, self.where, self.complement))
         except Exception as e:
             raise Uncacheable(e)
     
     
-def iterfieldselect(source, field, where):
+def iterfieldselect(source, field, where, complement):
     it = iter(source)
     flds = it.next()
     yield tuple(flds)
@@ -2597,7 +2630,7 @@ def iterfieldselect(source, field, where):
     getv = itemgetter(*indices)
     for row in it:
         v = getv(row)
-        if where(v):
+        if where(v) != complement: # XOR
             yield tuple(row)
         
         
@@ -2819,156 +2852,236 @@ def facet(table, field):
     return fct
 
 
-def selectop(table, field, value, op):
+def selectop(table, field, value, op, complement=False):
     """
     Select rows where the function `op` applied to the given field and the given 
     value returns true.
     
+    .. versionchanged:: 0.4
+    
+    The complement of the selection can be returned (i.e., the query can be 
+    inverted) by providing `complement=True` as a keyword argument.
+
     """
     
-    return fieldselect(table, field, lambda v: op(v, value))
+    return fieldselect(table, field, lambda v: op(v, value), complement=complement)
 
 
-def selecteq(table, field, value):
+def selecteq(table, field, value, complement=False):
     """
     Select rows where the given field equals the given value.
 
+    .. versionchanged:: 0.4
+    
+    The complement of the selection can be returned (i.e., the query can be 
+    inverted) by providing `complement=True` as a keyword argument.
+
     """
     
-    return selectop(table, field, value, operator.eq)
+    return selectop(table, field, value, operator.eq, complement=complement)
 
 
-def selectne(table, field, value):
+def selectne(table, field, value, complement=False):
     """
     Select rows where the given field does not equal the given value.
 
+    .. versionchanged:: 0.4
+    
+    The complement of the selection can be returned (i.e., the query can be 
+    inverted) by providing `complement=True` as a keyword argument.
+
     """
     
-    return selectop(table, field, value, operator.ne)
+    return selectop(table, field, value, operator.ne, complement=complement)
 
 
-def selectlt(table, field, value):
+def selectlt(table, field, value, complement=False):
     """
     Select rows where the given field is less than the given value.
 
+    .. versionchanged:: 0.4
+    
+    The complement of the selection can be returned (i.e., the query can be 
+    inverted) by providing `complement=True` as a keyword argument.
+
     """
     
-    return selectop(table, field, value, operator.lt)
+    return selectop(table, field, value, operator.lt, complement=complement)
 
 
-def selectle(table, field, value):
+def selectle(table, field, value, complement=False):
     """
     Select rows where the given field is less than or equal to the given value.
 
+    .. versionchanged:: 0.4
+    
+    The complement of the selection can be returned (i.e., the query can be 
+    inverted) by providing `complement=True` as a keyword argument.
+
     """
     
-    return selectop(table, field, value, operator.le)
+    return selectop(table, field, value, operator.le, complement=complement)
 
 
-def selectgt(table, field, value):
+def selectgt(table, field, value, complement=False):
     """
     Select rows where the given field is greater than the given value.
 
+    .. versionchanged:: 0.4
+    
+    The complement of the selection can be returned (i.e., the query can be 
+    inverted) by providing `complement=True` as a keyword argument.
+
     """
     
-    return selectop(table, field, value, operator.gt)
+    return selectop(table, field, value, operator.gt, complement=complement)
 
 
-def selectge(table, field, value):
+def selectge(table, field, value, complement=False):
     """
     Select rows where the given field is greater than or equal to the given value.
 
+    .. versionchanged:: 0.4
+    
+    The complement of the selection can be returned (i.e., the query can be 
+    inverted) by providing `complement=True` as a keyword argument.
+
     """
     
-    return selectop(table, field, value, operator.ge)
+    return selectop(table, field, value, operator.ge, complement=complement)
 
 
-def selectin(table, field, value):
+def selectin(table, field, value, complement=False):
     """
     Select rows where the given field is a member of the given value.
 
+    .. versionchanged:: 0.4
+    
+    The complement of the selection can be returned (i.e., the query can be 
+    inverted) by providing `complement=True` as a keyword argument.
+
     """
     
-    return selectop(table, field, value, operator.contains)
+    return selectop(table, field, value, operator.contains, complement=complement)
 
 
-def selectnotin(table, field, value):
+def selectnotin(table, field, value, complement=False):
     """
     Select rows where the given field is not a member of the given value.
 
+    .. versionchanged:: 0.4
+    
+    The complement of the selection can be returned (i.e., the query can be 
+    inverted) by providing `complement=True` as a keyword argument.
+
     """
     
-    return fieldselect(table, field, lambda v: v not in value)
+    return fieldselect(table, field, lambda v: v not in value, complement=complement)
 
 
-def selectis(table, field, value):
+def selectis(table, field, value, complement=False):
     """
     Select rows where the given field `is` the given value.
     
+    .. versionchanged:: 0.4
+    
+    The complement of the selection can be returned (i.e., the query can be 
+    inverted) by providing `complement=True` as a keyword argument.
+
     """
     
-    return selectop(table, field, value, operator.is_)
+    return selectop(table, field, value, operator.is_, complement=complement)
 
 
-def selectisnot(table, field, value):
+def selectisnot(table, field, value, complement=False):
     """
     Select rows where the given field `is not` the given value.
     
+    .. versionchanged:: 0.4
+    
+    The complement of the selection can be returned (i.e., the query can be 
+    inverted) by providing `complement=True` as a keyword argument.
+
     """
     
-    return selectop(table, field, value, operator.is_not)
+    return selectop(table, field, value, operator.is_not, complement=complement)
 
 
-def selectisinstance(table, field, value):
+def selectisinstance(table, field, value, complement=False):
     """
     Select rows where the given field is an instance of the given type.
     
+    .. versionchanged:: 0.4
+    
+    The complement of the selection can be returned (i.e., the query can be 
+    inverted) by providing `complement=True` as a keyword argument.
+
     """
     
-    return selectop(table, field, value, isinstance)
+    return selectop(table, field, value, isinstance, complement=complement)
 
 
-def selectrangeopenleft(table, field, minv, maxv):
+def selectrangeopenleft(table, field, minv, maxv, complement=False):
     """
     Select rows where the given field is greater than or equal to `minv` and 
     less than `maxv`.
 
+    .. versionchanged:: 0.4
+    
+    The complement of the selection can be returned (i.e., the query can be 
+    inverted) by providing `complement=True` as a keyword argument.
+
     """
     
-    return fieldselect(table, field, lambda v: minv <= v < maxv)
+    return fieldselect(table, field, lambda v: minv <= v < maxv, complement=complement)
 
 
-def selectrangeopenright(table, field, minv, maxv):
+def selectrangeopenright(table, field, minv, maxv, complement=False):
     """
     Select rows where the given field is greater than `minv` and 
     less than or equal to `maxv`.
 
+    .. versionchanged:: 0.4
+    
+    The complement of the selection can be returned (i.e., the query can be 
+    inverted) by providing `complement=True` as a keyword argument.
+
     """
     
-    return fieldselect(table, field, lambda v: minv < v <= maxv)
+    return fieldselect(table, field, lambda v: minv < v <= maxv, complement=complement)
 
 
-def selectrangeopen(table, field, minv, maxv):
+def selectrangeopen(table, field, minv, maxv, complement=False):
     """
     Select rows where the given field is greater than or equal to `minv` and 
     less than or equal to `maxv`.
 
+    .. versionchanged:: 0.4
+    
+    The complement of the selection can be returned (i.e., the query can be 
+    inverted) by providing `complement=True` as a keyword argument.
+
     """
     
-    return fieldselect(table, field, lambda v: minv <= v <= maxv)
+    return fieldselect(table, field, lambda v: minv <= v <= maxv, complement=complement)
 
 
-def selectrangeclosed(table, field, minv, maxv):
+def selectrangeclosed(table, field, minv, maxv, complement=False):
     """
     Select rows where the given field is greater than `minv` and 
     less than `maxv`.
 
+    .. versionchanged:: 0.4
+    
+    The complement of the selection can be returned (i.e., the query can be 
+    inverted) by providing `complement=True` as a keyword argument.
+
     """
     
-    return fieldselect(table, field, lambda v: minv < v < maxv)
+    return fieldselect(table, field, lambda v: minv < v < maxv, complement=complement)
 
 
-def selectre(table, field, pattern, flags=0):
+def selectre(table, field, pattern, flags=0, complement=False):
     """
     Select rows where a regular expression search using the given pattern on the
     given field returns a match. E.g.::
@@ -2995,11 +3108,16 @@ def selectre(table, field, pattern, flags=0):
 
     See also :func:`re.search`.
     
+    .. versionchanged:: 0.4
+    
+    The complement of the selection can be returned (i.e., the query can be 
+    inverted) by providing `complement=True` as a keyword argument.
+
     """
     
     prog = re.compile(pattern, flags)
     test = lambda v: prog.search(v) is not None
-    return fieldselect(table, field, test)
+    return fieldselect(table, field, test, complement=complement)
 
 
 def rowreduce(table, key, reducer, fields=None, presorted=False, buffersize=None):

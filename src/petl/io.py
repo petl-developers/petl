@@ -12,7 +12,8 @@ import sqlite3
 
 
 from petl.util import data, header, fieldnames, asdict
-
+from xml.etree import ElementTree
+from operator import attrgetter
 
 class Uncacheable(Exception):
     
@@ -408,7 +409,178 @@ class TextView(object):
         else:
             raise Uncacheable
 
+
+def fromxml(filename, *args, **kwargs):
+    """
+    Access data in an XML file. E.g.::
+
+        >>> from petl import fromxml, look
+        >>> data = \"""<table>
+        ...     <tr>
+        ...         <td>foo</td><td>bar</td>
+        ...     </tr>
+        ...     <tr>
+        ...         <td>a</td><td>1</td>
+        ...     </tr>
+        ...     <tr>
+        ...         <td>b</td><td>2</td>
+        ...     </tr>
+        ...     <tr>
+        ...         <td>c</td><td>2</td>
+        ...     </tr>
+        ... </table>\"""
+        >>> with open('example1.xml', 'w') as f:    
+        ...     f.write(data)
+        ...     f.close()
+        ... 
+        >>> table1 = fromxml('example1.xml', 'tr', 'td')
+        >>> look(table1)
+        +-------+-------+
+        | 'foo' | 'bar' |
+        +=======+=======+
+        | 'a'   | '1'   |
+        +-------+-------+
+        | 'b'   | '2'   |
+        +-------+-------+
+        | 'c'   | '2'   |
+        +-------+-------+
+        
+    If the data values are stored in an attribute, provide the attribute name
+    as an extra positional argument, e.g.:
+
+        >>> data = \"""<table>
+        ...     <tr>
+        ...         <td v='foo'/><td v='bar'/>
+        ...     </tr>
+        ...     <tr>
+        ...         <td v='a'/><td v='1'/>
+        ...     </tr>
+        ...     <tr>
+        ...         <td v='b'/><td v='2'/>
+        ...     </tr>
+        ...     <tr>
+        ...         <td v='c'/><td v='2'/>
+        ...     </tr>
+        ... </table>\"""
+        >>> with open('example2.xml', 'w') as f:    
+        ...     f.write(data)
+        ...     f.close()
+        ... 
+        >>> table2 = fromxml('example2.xml', 'tr', 'td', 'v')
+        >>> look(table2)
+        +-------+-------+
+        | 'foo' | 'bar' |
+        +=======+=======+
+        | 'a'   | '1'   |
+        +-------+-------+
+        | 'b'   | '2'   |
+        +-------+-------+
+        | 'c'   | '2'   |
+        +-------+-------+
+        
+    Data values can also be extracted by providing a mapping of field names
+    to element paths, e.g.::
     
+        >>> data = \"""<table>
+        ...     <row>
+        ...         <foo>a</foo><baz><bar v='1'/></baz>
+        ...     </row>
+        ...     <row>
+        ...         <foo>b</foo><baz><bar v='2'/></baz>
+        ...     </row>
+        ...     <row>
+        ...         <foo>c</foo><baz><bar v='2'/></baz>
+        ...     </row>
+        ... </table>\"""
+        >>> with open('example3.xml', 'w') as f:    
+        ...     f.write(data)
+        ...     f.close()
+        ... 
+        >>> table3 = fromxml('example3.xml', 'row', {'foo': 'foo', 'bar': ('baz/bar', 'v')})
+        >>> look(table3)
+        +-------+-------+
+        | 'foo' | 'bar' |
+        +=======+=======+
+        | 'a'   | '1'   |
+        +-------+-------+
+        | 'b'   | '2'   |
+        +-------+-------+
+        | 'c'   | '2'   |
+        +-------+-------+
+
+    Note that the implementation is currently *not*
+    streaming, i.e., the whole document is loaded into memory.
+    
+    .. versionadded:: 0.4
+    
+    """
+
+    return XmlView(filename, *args, **kwargs)
+
+
+class XmlView(object):
+    
+    def __init__(self, filename, *args, **kwargs):
+        self.filename = filename
+        self.args = args
+        if len(args) == 2 and isinstance(args[1], basestring):
+            self.rmatch = args[0]
+            self.vmatch = args[1]
+            self.vdict = None
+            self.attr = None
+        elif len(args) == 2 and isinstance(args[1], dict):
+            self.rmatch = args[0]
+            self.vmatch = None
+            self.vdict = args[1]
+            self.attr = None
+        elif len(args) == 3:
+            self.rmatch = args[0]
+            self.vmatch = args[1]
+            self.vdict = None
+            self.attr = args[2]
+        else:
+            assert False, 'TODO'
+        if 'checksumfun' in kwargs:
+            self.checksumfun = kwargs['checksumfun']
+        else:
+            self.checksumfun = None
+        
+    def __iter__(self):
+        tree = ElementTree.parse(self.filename)
+        if self.vmatch is not None:
+            for relm in tree.iterfind(self.rmatch):
+                if self.attr is None:
+                    getv = attrgetter('text')
+                else:
+                    getv = lambda e: e.get(self.attr)
+                yield tuple(getv(velm) for velm in relm.findall(self.vmatch))
+        else:
+            fields = tuple(self.vdict.keys())
+            yield fields
+            vmatches = dict()
+            vgetters = dict()
+            for f in fields:
+                vmatch = self.vdict[f]
+                if isinstance(vmatch, basestring):
+                    vmatches[f] = vmatch
+                    vgetters[f] = attrgetter('text')
+                else:
+                    vmatches[f] = vmatch[0]
+                    vgetters[f] = lambda e: e.get(vmatch[1])
+            for relm in tree.iterfind(self.rmatch):
+                yield tuple(vgetters[f](relm.find(vmatches[f])) for f in fields)
+            
+                    
+    def cachetag(self):
+        p = self.filename
+        if os.path.isfile(p):
+            sumfun = self.checksumfun if self.checksumfun is not None else defaultsumfun
+            checksum = sumfun(p)
+            return hash((checksum, self.args))
+        else:
+            raise Uncacheable
+
+
 def tocsv(table, filename, **kwargs):
     """
     Write the table to a CSV file. E.g.::

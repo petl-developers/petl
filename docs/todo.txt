@@ -1,26 +1,7 @@
-Version 0.4
------------
-
-- [done] bug in aggregate where key is string?
-- [done] head and tail default n arg to 10
-
-- [done] skipcomments - handling of comments in text files
-- [done] fromtext, strip trailing newline character
-- [done] alternative signature to rename when you want to rename a single field only
-- [done] convertall - convenience function to convert all fields the same way
-- [done] convertnumbers - attempt to convert string values to ints, floats etc.
-- [done] docs - merge() example has an error, uses list instead of tuple for conflict
-- [done] docs - add section about dependencies and petlx
-- [done] docs - add section about chaining and pipelining
-- [done] docs - add python-pipeline and continuum.io to related work
-- [done] docs - fix link to pandas
-
-- exclude - convenience functions as complement of select...
+Future
+------
 
 - implement fromjson somehow?
-- implement fromxml using etree find and patterns
-
-
 - ignore some fields when finding conflicts
 - regex replace (re.sub)
 - replace, replaceall - convenience function to convert replacing a single value
@@ -45,6 +26,24 @@ Version 0.4
 - show rows/values causing conversion or translation errors
 - optimised implementation of merge() where input files are presorted? I.e., avoid need to concatenate then sort the concatenation, rather just do the merge sort then reduce
 
+Version 0.4
+-----------
+
+- [done] bug in aggregate where key is string?
+- [done] head and tail default n arg to 10
+
+- [done] skipcomments - handling of comments in text files
+- [done] fromtext, strip trailing newline character
+- [done] alternative signature to rename when you want to rename a single field only
+- [done] convertall - convenience function to convert all fields the same way
+- [done] convertnumbers - attempt to convert string values to ints, floats etc.
+- [done] docs - merge() example has an error, uses list instead of tuple for conflict
+- [done] docs - add section about dependencies and petlx
+- [done] docs - add section about chaining and pipelining
+- [done] docs - add python-pipeline and continuum.io to related work
+- [done] docs - fix link to pandas
+- [done] complement of select...
+- [done] implement fromxml using etree find and patterns
 
 Version 0.3
 -----------

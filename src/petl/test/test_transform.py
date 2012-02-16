@@ -1145,6 +1145,16 @@ def test_select():
     iassertequal(expect, actual)
     iassertequal(expect, actual) # check can iterate twice
  
+    # check select complement
+    actual = select(table, lambda rec: rec['foo'] == 'a', complement=True)
+    expect = (('foo', 'bar', 'baz'),
+              ('b', 1, 23.3),
+              ('c', 8, 42.0),
+              ('d', 7, 100.9),
+              ('c', 2))
+    iassertequal(expect, actual)
+    iassertequal(expect, actual) # check can iterate twice
+
     actual = select(table, lambda rec: rec['foo'] == 'a' and rec['bar'] > 3)
     expect = (('foo', 'bar', 'baz'),
               ('a', 4, 9.3))
@@ -1173,6 +1183,16 @@ def test_select():
     expect = (('foo', 'bar', 'baz'),
               ('a', 4, 9.3),
               ('a', 2, 88.2))
+    iassertequal(expect, actual)
+    iassertequal(expect, actual) # check can iterate twice
+    
+    # check select complement
+    actual = select(table, 'foo', lambda v: v == 'a', complement=True)
+    expect = (('foo', 'bar', 'baz'),
+              ('b', 1, 23.3),
+              ('c', 8, 42.0),
+              ('d', 7, 100.9),
+              ('c', 2))
     iassertequal(expect, actual)
     iassertequal(expect, actual) # check can iterate twice
 
