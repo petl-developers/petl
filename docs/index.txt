@@ -295,6 +295,7 @@ Transforming tables
 .. autofunction:: petl.facet
 .. autofunction:: petl.rangefacet
 .. autofunction:: petl.convert
+.. autofunction:: petl.convertall
 .. autofunction:: petl.fieldconvert
 .. autofunction:: petl.extend
 .. autofunction:: petl.capture

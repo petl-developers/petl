@@ -7,8 +7,8 @@ Version 0.4
 - [done] skipcomments - handling of comments in text files
 - [done] fromtext, strip trailing newline character
 - [done] alternative signature to rename when you want to rename a single field only
+- [done] convertall - convenience function to convert all fields the same way
 
-- convertall - convenience function to convert all fields the same way
 - convertnumbers - attempt to convert string values to ints, floats etc.
 
 - exclude - convenience functions as complement of select...

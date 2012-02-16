@@ -561,6 +561,16 @@ def convert(table, field, *args, **kwargs):
     return fieldconvert(table, converters, **kwargs)
 
     
+def convertall(table, *args, **kwargs):
+    """
+    Convenience function to convert all fields in the table using a common 
+    function or mapping. See also :func:`convert`.
+    
+    """
+    
+    return convert(table, header(table), *args, **kwargs)
+
+
 def fieldconvert(table, converters=None, failonerror=False, errorvalue=None):
     """
     Transform values in one or more fields via functions or method invocations. 
