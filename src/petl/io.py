@@ -333,7 +333,7 @@ class DbView(object):
             yield tuple(result)
             
             
-def fromtext(filename, header=['lines'], checksumfun=None):
+def fromtext(filename, header=['lines'], strip=None, checksumfun=None):
     """
     Construct a table from lines in the given text file. E.g.::
 
@@ -349,15 +349,19 @@ def fromtext(filename, header=['lines'], checksumfun=None):
         +--------------+
         | 'lines'      |
         +==============+
-        | 'a\\t1\\n'     |
+        | 'a\\t1'     |
         +--------------+
-        | 'b\\t2\\n'     |
+        | 'b\\t2'     |
         +--------------+
-        | 'c\\t3\\n'     |
+        | 'c\\t3'     |
         +--------------+
 
-    Provides a starting point for custom handling of text files. E.g., using
-    :func:`capture`::
+    Note that the strip() function will be applied to each line, which by default
+    will remove leading and trailing whitespace - use the `strip` keyword argument
+    to provide alternative characters.
+    
+    The :func:`fromtext` function provides a starting point for custom handling of 
+    text files. E.g., using :func:`capture`::
     
         >>> from petl import capture
         >>> table2 = capture(table1, 'lines', '(.*)\\\\t(.*)$', ['foo', 'bar'])
@@ -374,22 +378,24 @@ def fromtext(filename, header=['lines'], checksumfun=None):
 
     """
 
-    return TextView(filename, header, checksumfun=checksumfun)
+    return TextView(filename, header, strip=strip, checksumfun=checksumfun)
 
 
 class TextView(object):
     
-    def __init__(self, filename, header=['lines'], checksumfun=None):
+    def __init__(self, filename, header=['lines'], strip=None, checksumfun=None):
         self.filename = filename
         self.header = header
+        self.strip = strip
         self.checksumfun = checksumfun
         
     def __iter__(self):
         with open(self.filename, 'rU') as file:
             if self.header is not None:
                 yield tuple(self.header)
+            s = self.strip
             for line in file:
-                yield (line,)
+                yield (line.strip(s),)
                 
     def cachetag(self):
         p = self.filename

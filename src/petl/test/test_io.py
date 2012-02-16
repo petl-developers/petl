@@ -310,10 +310,10 @@ def test_fromtext():
     
     actual = fromtext(f.name)
     expect = (('lines',),
-              ('foo\tbar\n',),
-              ('a\t1\n',),
-              ('b\t2\n',),
-              ('c\t3\n',))
+              ('foo\tbar',),
+              ('a\t1',),
+              ('b\t2',),
+              ('c\t3',))
     iassertequal(expect, actual)
     iassertequal(expect, actual) # verify can iterate twice
 

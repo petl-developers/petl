@@ -264,6 +264,7 @@ Transforming tables
 .. autofunction:: petl.extendheader
 .. autofunction:: petl.pushheader
 .. autofunction:: petl.skip
+.. autofunction:: petl.skipcomments
 .. autofunction:: petl.rowslice
 .. autofunction:: petl.head
 .. autofunction:: petl.tail

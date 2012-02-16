@@ -4423,7 +4423,23 @@ def skipcomments(table, prefix):
     Skip any row where the first value is a string and starts with 
     `prefix`. E.g.::
     
-TODO    
+        >>> from petl import skipcomments, look
+        >>> table1 = [['##aaa', 'bbb', 'ccc'],
+        ...           ['##mmm',],
+        ...           ['#foo', 'bar'],
+        ...           ['##nnn', 1],
+        ...           ['a', 1],
+        ...           ['b', 2]]
+        >>> table2 = skipcomments(table1, '##')
+        >>> look(table2)
+        +--------+-------+
+        | '#foo' | 'bar' |
+        +========+=======+
+        | 'a'    | 1     |
+        +--------+-------+
+        | 'b'    | 2     |
+        +--------+-------+
+
     """ 
 
     return SkipCommentsView(table, prefix)
