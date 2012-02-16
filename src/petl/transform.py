@@ -18,9 +18,29 @@ import heapq
 import operator
 
 
-def rename(table, spec=dict()):
+def rename(table, *args):
     """
-    Replace one or more fields in the table's header row. E.g.::
+    Replace one or more fields in the table's header row. E.g., to rename a 
+    single field::
+    
+        >>> from petl import look, rename
+        >>> tbl1 = [['sex', 'age'],
+        ...         ['M', 12],
+        ...         ['F', 34],
+        ...         ['-', 56]]
+        >>> tbl2 = rename(tbl1, 'sex', 'gender')
+        >>> look(tbl2)
+        +----------+-------+
+        | 'gender' | 'age' |
+        +==========+=======+
+        | 'M'      | 12    |
+        +----------+-------+
+        | 'F'      | 34    |
+        +----------+-------+
+        | '-'      | 56    |
+        +----------+-------+
+
+    To rename multiple fields, pass a dictionary as the second argument, e.g.::
 
         >>> from petl import look, rename
         >>> tbl1 = [['sex', 'age'],
@@ -72,14 +92,19 @@ def rename(table, spec=dict()):
 
     """
     
-    return RenameView(table, spec)
+    return RenameView(table, *args)
 
 
 class RenameView(object):
     
-    def __init__(self, table, spec=dict()):
+    def __init__(self, table, *args):
         self.source = table
-        self.spec = spec
+        if len(args) == 0:
+            self.spec = dict()
+        elif len(args) == 1:
+            self.spec = args[0]
+        elif len(args) == 2:
+            self.spec = {args[0]: args[1]}
         
     def __iter__(self):
         return iterrename(self.source, self.spec)

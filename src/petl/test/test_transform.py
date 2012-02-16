@@ -27,6 +27,9 @@ def test_rename():
              ('F', 34),
              ('-', 56))
     
+    result = rename(table, 'foo', 'foofoo')
+    assert fieldnames(result) == ['foofoo', 'bar']
+    
     result = rename(table, {'foo': 'foofoo', 'bar': 'barbar'})
     assert fieldnames(result) == ['foofoo', 'barbar']
     
@@ -34,8 +37,6 @@ def test_rename():
     result['foo'] = 'spong'
     assert fieldnames(result) == ['spong', 'bar']
     
-    # TODO test cachetag
-
 
 def test_cut():
     """Test the cut function."""
