@@ -105,7 +105,7 @@ A *row iterator* is an iterator which satisfies the following:
 
 8. a *data value* is any pickleable object
 
-So, for example, the list of lists shown below is a table::
+So, for example, the list of lists shown below is a row container::
 
 >>> table = [['foo', 'bar'], ['a', 1], ['b', 2]]
 
