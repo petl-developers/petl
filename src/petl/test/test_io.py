@@ -10,11 +10,13 @@ import sqlite3
 
 from petl import fromcsv, frompickle, fromsqlite3, adler32sum, crc32sum, fromdb, \
                 tocsv, topickle, appendcsv, appendpickle, tosqlite3, appendsqlite3, \
-                todb, appenddb, fromtext, totext, fromxml
+                todb, appenddb, fromtext, totext, fromxml, fromjson, fromdicts, \
+                tojson
                 
 
 
 from petl.testfun import iassertequal, assertequal
+import json
 
 
 def test_fromcsv():
@@ -405,6 +407,90 @@ def test_fromxml_3():
     iassertequal(expect, actual) # verify can iterate twice
 
 
+def test_fromjson_1():
+    
+    f = NamedTemporaryFile(delete=False)
+    data = '[{"foo": "a", "bar": 1}, {"foo": "b", "bar": 2}, {"foo": "c", "bar": 2}]'
+    f.write(data)
+    f.close()
+    
+    actual = fromjson(f.name)
+    expect = (('foo', 'bar'),
+              ('a', 1),
+              ('b', 2),
+              ('c', 2))
+    iassertequal(expect, actual)
+    iassertequal(expect, actual) # verify can iterate twice
+    
+
+def test_fromjson_2():
+    
+    f = NamedTemporaryFile(delete=False)
+    data = '[{"foo": "a", "bar": 1}, {"foo": "b"}, {"foo": "c", "bar": 2, "baz": true}]'
+    f.write(data)
+    f.close()
+    
+    actual = fromjson(f.name)
+    expect = (('foo', 'bar', 'baz'),
+              ('a', 1, None),
+              ('b', None, None),
+              ('c', 2, True))
+    iassertequal(expect, actual)
+    iassertequal(expect, actual) # verify can iterate twice
+    
+
+def test_fromjson_3():
+    
+    f = NamedTemporaryFile(delete=False)
+    data = '[{"foo": "a", "bar": 1}, {"foo": "b"}, {"foo": "c", "bar": 2, "baz": true}]'
+    f.write(data)
+    f.close()
+    
+    actual = fromjson(f.name, header=['foo', 'bar'])
+    expect = (('foo', 'bar'),
+              ('a', 1),
+              ('b', None),
+              ('c', 2))
+    iassertequal(expect, actual)
+    iassertequal(expect, actual) # verify can iterate twice
+    
+
+def test_fromdicts_1():
+    
+    data = [{"foo": "a", "bar": 1}, {"foo": "b", "bar": 2}, {"foo": "c", "bar": 2}]
+    actual = fromdicts(data)
+    expect = (('foo', 'bar'),
+              ('a', 1),
+              ('b', 2),
+              ('c', 2))
+    iassertequal(expect, actual)
+    iassertequal(expect, actual) # verify can iterate twice
+    
+
+def test_fromdicts_2():
+    
+    data = [{"foo": "a", "bar": 1}, {"foo": "b"}, {"foo": "c", "bar": 2, "baz": True}]
+    actual = fromdicts(data)
+    expect = (('foo', 'bar', 'baz'),
+              ('a', 1, None),
+              ('b', None, None),
+              ('c', 2, True))
+    iassertequal(expect, actual)
+    iassertequal(expect, actual) # verify can iterate twice
+    
+
+def test_fromdicts_3():
+    
+    data = [{"foo": "a", "bar": 1}, {"foo": "b"}, {"foo": "c", "bar": 2, "baz": True}]
+    actual = fromdicts(data, header=['foo', 'bar'])
+    expect = (('foo', 'bar'),
+              ('a', 1),
+              ('b', None),
+              ('c', 2))
+    iassertequal(expect, actual)
+    iassertequal(expect, actual) # verify can iterate twice
+    
+
 def test_tocsv_appendcsv():
     """Test the tocsv and appendcsv function."""
     
@@ -628,4 +714,23 @@ def test_totext():
 | 2
 |}"""
         assertequal(expect, actual)
+    
+    
+def test_tojson():
+    
+    # exercise function
+    table = (('foo', 'bar'),
+             ('a', 1),
+             ('b', 2),
+             ('c', 2))
+    f = NamedTemporaryFile(delete=False)
+    tojson(table, f.name)
+    result = json.load(f)
+    assert len(result) == 3
+    assert result[0]['foo'] == 'a'
+    assert result[0]['bar'] == 1
+    assert result[1]['foo'] == 'b'
+    assert result[1]['bar'] == 2
+    assert result[2]['foo'] == 'c'
+    assert result[2]['bar'] == 2
     

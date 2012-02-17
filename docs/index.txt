@@ -288,6 +288,8 @@ transformation script.
 Using petl in interactive mode (experimental)
 ---------------------------------------------
 
+.. versionadded:: 0.5 
+
 The module :mod:`petl.interactive` provides all of the functions
 present in the root :mod:`petl` module, but with a couple of
 optimisations for use within an interactive session.
@@ -451,8 +453,8 @@ Utility functions
 .. autofunction:: petl.strjoin
 .. autofunction:: petl.dummytable
 
-Extracting (reading) tables from files and databases
-----------------------------------------------------
+Extracting (reading) tables from files, databases and other sources
+-------------------------------------------------------------------
 
 .. autofunction:: petl.fromcsv
 .. autofunction:: petl.frompickle
@@ -460,6 +462,8 @@ Extracting (reading) tables from files and databases
 .. autofunction:: petl.fromdb
 .. autofunction:: petl.fromtext
 .. autofunction:: petl.fromxml
+.. autofunction:: petl.fromjson
+.. autofunction:: petl.fromdicts
 
 Transforming tables
 -------------------
@@ -555,7 +559,7 @@ Loading (writing) tables to files and databases
 .. autofunction:: petl.appenddb
 .. autofunction:: petl.totext
 .. autofunction:: petl.appendtext
-
+.. autofunction:: petl.tojson
 
 Further Reading
 ---------------

@@ -11,9 +11,11 @@ import cPickle as pickle
 import sqlite3
 
 
-from petl.util import data, header, fieldnames, asdict
+from petl.util import data, header, fieldnames, asdict, records
 from xml.etree import ElementTree
 from operator import attrgetter
+import json
+from json.encoder import JSONEncoder
 
 class Uncacheable(Exception):
     
@@ -539,7 +541,7 @@ class XmlView(object):
             self.vdict = None
             self.attr = args[2]
         else:
-            assert False, 'TODO'
+            assert False, 'bad parameters'
         if 'checksumfun' in kwargs:
             self.checksumfun = kwargs['checksumfun']
         else:
@@ -579,6 +581,139 @@ class XmlView(object):
             return hash((checksum, self.args))
         else:
             raise Uncacheable
+
+
+def fromjson(filename, *args, **kwargs):
+    """
+    Extract data from a JSON file. The file must contain a JSON array as the top
+    level object, and each member of the array will be treated as a row of data.
+    E.g.::
+
+        >>> from petl import fromjson, look
+        >>> data = '[{"foo": "a", "bar": 1}, {"foo": "b", "bar": 2}, {"foo": "c", "bar": 2}]'
+        >>> with open('example1.json', 'w') as f:
+        ...     f.write(data)
+        ... 
+        >>> table1 = fromjson('example1.json')
+        >>> look(table1)
+        +--------+--------+
+        | u'foo' | u'bar' |
+        +========+========+
+        | u'a'   | 1      |
+        +--------+--------+
+        | u'b'   | 2      |
+        +--------+--------+
+        | u'c'   | 2      |
+        +--------+--------+
+        
+    If your JSON file does not fit this structure, you will need to parse it
+    via :func:`json.load` and select the array to treat as the data, see also 
+    :func:`fromdicts`.
+
+    .. versionadded:: 0.5
+    
+    """
+
+    return JsonView(filename, *args, **kwargs)
+
+
+class JsonView(object):
+    
+    def __init__(self, filename, *args, **kwargs):
+        self.filename = filename
+        self.args = args
+        self.kwargs = kwargs
+        self.checksumfun = None
+        self.missing = None
+        self.header = None
+        if 'checksumfun' in kwargs:
+            self.checksumfun = kwargs['checksumfun']
+            del self.kwargs['checksumfun']
+        if 'missing' in kwargs:
+            self.missing = kwargs['missing']
+            del self.kwargs['missing']
+        if 'header' in kwargs:
+            self.header = kwargs['header']
+            del self.kwargs['header']
+        
+    def __iter__(self):
+        with open(self.filename) as f:
+            result = json.load(f, *self.args, **self.kwargs)
+            if self.header is None:
+                # determine fields
+                header = list()
+                for o in result:
+                    if hasattr(o, 'keys'):
+                        header.extend(k for k in o.keys() if k not in header)
+            else:
+                header = self.header
+            yield tuple(header)
+            # output data rows
+            for o in result:
+                row = tuple(o[f] if f in o else None for f in header)
+                yield row
+                    
+    def cachetag(self):
+        p = self.filename
+        if os.path.isfile(p):
+            sumfun = self.checksumfun if self.checksumfun is not None else defaultsumfun
+            checksum = sumfun(p)
+            return hash((checksum, self.args, tuple(self.kwargs.items())))
+        else:
+            raise Uncacheable
+
+
+def fromdicts(dicts, header=None):
+    """
+    View a sequence of Python :class:`dict` as a table. E.g.::
+    
+        >>> from petl import fromdicts, look
+        >>> dicts = [{"foo": "a", "bar": 1}, {"foo": "b", "bar": 2}, {"foo": "c", "bar": 2}]
+        >>> table = fromdicts(dicts)
+        >>> look(table)
+        +-------+-------+
+        | 'foo' | 'bar' |
+        +=======+=======+
+        | 'a'   | 1     |
+        +-------+-------+
+        | 'b'   | 2     |
+        +-------+-------+
+        | 'c'   | 2     |
+        +-------+-------+
+        
+    See also :func:`fromjson`.
+
+    .. versionadded:: 0.5
+    
+    """
+
+    return DictsView(dicts, header=header)
+
+
+class DictsView(object):
+    
+    def __init__(self, dicts, header=None):
+        self.dicts = dicts
+        self.header = header
+        
+    def __iter__(self):
+        result = self.dicts
+        if self.header is None:
+            # determine fields
+            header = list()
+            for o in result:
+                if hasattr(o, 'keys'):
+                    header.extend(k for k in o.keys() if k not in header)
+        else:
+            header = self.header
+        yield tuple(header)
+        # output data rows
+        for o in result:
+            row = tuple(o[f] if f in o else None for f in header)
+            yield row
+                    
+    def cachetag(self):
+        raise Uncacheable
 
 
 def tocsv(table, filename, **kwargs):
@@ -1066,5 +1201,35 @@ def appendtext(table, filename, template, prologue=None, epilogue=None):
             f.write(s)
         if epilogue is not None:
             f.write(epilogue)
+            
+            
+def tojson(table, filename, *args, **kwargs):
+    """
+    Write a table in JSON format. E.g.::
+
+        >>> from petl import tojson    
+        >>> table = [['foo', 'bar'],
+        ...          ['a', 1],
+        ...          ['b', 2],
+        ...          ['c', 2]]
+        >>> tojson(table, 'example.json')
+        >>> # check what it did
+        ... import json
+        >>> with open('example.json') as f:
+        ...     json.load(f)
+        ... 
+        [{u'foo': u'a', u'bar': 1}, {u'foo': u'b', u'bar': 2}, {u'foo': u'c', u'bar': 2}]
+    
+    Note that this is currently not streaming, all data is loaded into memory
+    before being written to the file.
+    
+    .. versionadded:: 0.5
+    
+    """
+    
+    encoder = JSONEncoder(*args, **kwargs)
+    with open(filename, 'w') as f:
+        for chunk in encoder.iterencode(list(records(table))):
+            f.write(chunk)
             
 

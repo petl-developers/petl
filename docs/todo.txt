@@ -1,25 +1,25 @@
 Future
 ------
 
-- implement fromjson somehow?
-- ignore some fields when finding conflicts
-- regex replace (re.sub)
+- hash (lookup) alternatives to all join and other sort-dependent functions
+- string patterns as utility function
 - replace, replaceall - convenience function to convert replacing a single value
+- regex replace (re.sub)
+- from compressed files
+- to compressed files
+- ignore some fields when finding conflicts
 - categorise/classify - convenient way to extend table with a classification field? or just use extend with function? example, convert continuous variable to categorical variable using custom ranges
 - sampling for pivot, avoid two complete passes
-- to and from compressed files
 - alpha facet?
 - partitioning of alpha fields?
 - code smells in reduce functions - refactor with generic grouper and reducer functions?
-- implement string patterns as utility function
-- implement hash (lookup) alternatives to all join and other sort-dependent functions
-- implement provenance trace
-- implement petl.fluent
-- implement validator module based on csvvalidator
-- implement filldown
-- implement fillup
-- implement fillright? 
-- implement fillleft?
+- provenance trace
+- petl.fluent
+- validator module based on csvvalidator
+- filldown
+- fillup
+- fillright? 
+- fillleft?
 - implement rowgroupby? generate sequence of key/row iterator pairs?
 - implement recordgroupby?
 - show rows/values causing conversion or translation errors
@@ -30,6 +30,9 @@ Version 0.5
 
 - [done] pad a table to fit a given set of fields (header kwarg to cat())
 - [done] implement petl.interactive with cache wrappers
+- [done] fromjson
+- [done] fromdicts
+- [done] tojson
 
 Version 0.4
 -----------
