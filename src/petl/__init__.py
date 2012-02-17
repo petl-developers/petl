@@ -26,7 +26,7 @@ from petl.transform import rename, cut, cat, convert, fieldconvert, extend, rows
            rangerecordreduce, selectin, selectnotin, selectre, rowselect, recordselect, \
            fieldselect, rowlenselect, selectis, selectisnot, selectisinstance, transpose, \
            intersection, pivot, recordcomplement, recorddiff, cutout, skipcomments, \
-           convertall, convertnumbers
+           convertall, convertnumbers, hashjoin, hashleftjoin, hashrightjoin
            
 from petl.testfun import dummytable
            

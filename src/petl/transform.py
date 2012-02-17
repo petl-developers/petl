@@ -10,7 +10,7 @@ import cPickle as pickle
 
 
 from petl.util import asindices, rowgetter, asdict,\
-    expr, valueset, records, header, data, limits, values, parsenumber
+    expr, valueset, records, header, data, limits, values, parsenumber, lookup
 import re
 from petl.io import Uncacheable
 from tempfile import NamedTemporaryFile
@@ -5084,13 +5084,13 @@ def iterjoin(left, right, key, leftouter=False, rightouter=False, missing=None):
     def joinrows(lrowgrp, rrowgrp):
         if rrowgrp is None:
             for lrow in lrowgrp:
-                outrow = list(lrow) # min with the left row
+                outrow = list(lrow) # start with the left row
                 # extend with missing values in place of the right row
                 outrow.extend([missing] * len(rvind))
                 yield tuple(outrow)
         elif lrowgrp is None:
             for rrow in rrowgrp:
-                # min with missing values in place of the left row
+                # start with missing values in place of the left row
                 outrow = [missing] * len(lflds)
                 # set key values
                 for li, ri in zip(lkind, rkind):
@@ -5102,7 +5102,7 @@ def iterjoin(left, right, key, leftouter=False, rightouter=False, missing=None):
             rrowgrp = list(rrowgrp) # may need to iterate more than once
             for lrow in lrowgrp:
                 for rrow in rrowgrp:
-                    # min with the left row
+                    # start with the left row
                     outrow = list(lrow)
                     # extend with non-key values from the right row
                     outrow.extend(rgetv(rrow))
@@ -5688,3 +5688,351 @@ def iterpivot(source, f1, f2, f3, aggfun, missing):
         yield tuple(outrow) 
     
     
+def hashjoin(left, right, key=None):
+    """
+    Alternative implementation of :func:`join`, where the join is executed
+    by constructing a lookup for the right hand table, then iterating over rows 
+    from the left hand table.
+    
+    May be faster and/or more resource efficient where the right table is small
+    and the left table is large.
+    
+    """
+    
+    if key is None:
+        return ImplicitHashJoinView(left, right)
+    else:
+        return HashJoinView(left, right, key)
+
+
+class ImplicitHashJoinView(object):
+    
+    def __init__(self, left, right):
+        self.left = left
+        self.right = right
+        
+    def __iter__(self):
+        return iterimplicithashjoin(self.left, self.right)
+
+    def cachetag(self):
+        try:
+            return hash((self.left.cachetag(), self.right.cachetag()))
+        except Exception as e:
+            raise Uncacheable(e)
+
+
+class HashJoinView(object):
+    
+    def __init__(self, left, right, key):
+        self.left = left
+        self.right = right
+        self.key = key
+        
+    def __iter__(self):
+        return iterhashjoin(self.left, self.right, self.key)
+    
+    def cachetag(self):
+        try:
+            return hash((self.left.cachetag(), self.right.cachetag(), 
+                         tuple(self.key) if isinstance(self.key, list) else self.key))
+        except Exception as e:
+            raise Uncacheable(e)
+
+
+def iterhashjoin(left, right, key):
+    lit = iter(left)
+    rit = iter(right)
+
+    lflds = lit.next()
+    rflds = rit.next()
+    
+    # determine indices of the key fields in left and right tables
+    lkind = asindices(lflds, key)
+    rkind = asindices(rflds, key)
+    
+    # construct functions to extract key values from left table
+    lgetk = itemgetter(*lkind)
+    
+    # determine indices of non-key fields in the right table
+    # (in the output, we only include key fields from the left table - we
+    # don't want to duplicate fields)
+    rvind = [i for i in range(len(rflds)) if i not in rkind]
+    rgetv = rowgetter(*rvind)
+    
+    # determine the output fields
+    outflds = list(lflds)
+    outflds.extend(rgetv(rflds))
+    yield tuple(outflds)
+    
+    # define a function to join rows
+    def joinrows(lrow, rrows):
+        for rrow in rrows:
+            # start with the left row
+            outrow = list(lrow)
+            # extend with non-key values from the right row
+            outrow.extend(rgetv(rrow))
+            yield tuple(outrow)
+
+    rlookup = lookup(right, key)
+    for lrow in lit:
+        k = lgetk(lrow)
+        if k in rlookup:
+            rrows = rlookup[k]
+            for outrow in joinrows(lrow, rrows):
+                yield outrow
+        
+        
+def iterimplicithashjoin(left, right):
+    # determine key field or fields
+    lflds = header(left)
+    rflds = header(right)
+    key = []
+    for f in lflds:
+        if f in rflds:
+            key.append(f)
+    assert len(key) > 0, 'no fields in common'
+    if len(key) == 1:
+        key = key[0] # deal with singletons
+    # from here on it's the same as a normal join
+    return iterhashjoin(left, right, key)
+
+
+def hashleftjoin(left, right, key=None, missing=None):
+    """
+    Alternative implementation of :func:`leftjoin`, where the join is executed
+    by constructing a lookup for the right hand table, then iterating over rows 
+    from the left hand table.
+    
+    May be faster and/or more resource efficient where the right table is small
+    and the left table is large.
+    
+    """
+
+    if key is None:
+        return ImplicitHashLeftJoinView(left, right)
+    else:
+        return HashLeftJoinView(left, right, key)
+
+
+class ImplicitHashLeftJoinView(object):
+    
+    def __init__(self, left, right, missing=None):
+        self.left = left
+        self.right = right
+        self.missing = missing
+        
+    def __iter__(self):
+        return iterimplicithashleftjoin(self.left, self.right, self.missing)
+
+    def cachetag(self):
+        try:
+            return hash((self.left.cachetag(), self.right.cachetag(), self.missing))
+        except Exception as e:
+            raise Uncacheable(e)
+
+
+class HashLeftJoinView(object):
+    
+    def __init__(self, left, right, key, missing=None):
+        self.left = left
+        self.right = right
+        self.key = key
+        self.missing = missing
+        
+    def __iter__(self):
+        return iterhashleftjoin(self.left, self.right, self.key, self.missing)
+    
+    def cachetag(self):
+        try:
+            return hash((self.left.cachetag(), self.right.cachetag(), 
+                         tuple(self.key) if isinstance(self.key, list) else self.key,
+                         self.missing))
+        except Exception as e:
+            raise Uncacheable(e)
+
+
+def iterhashleftjoin(left, right, key, missing):
+    lit = iter(left)
+    rit = iter(right)
+
+    lflds = lit.next()
+    rflds = rit.next()
+    
+    # determine indices of the key fields in left and right tables
+    lkind = asindices(lflds, key)
+    rkind = asindices(rflds, key)
+    
+    # construct functions to extract key values from left table
+    lgetk = itemgetter(*lkind)
+    
+    # determine indices of non-key fields in the right table
+    # (in the output, we only include key fields from the left table - we
+    # don't want to duplicate fields)
+    rvind = [i for i in range(len(rflds)) if i not in rkind]
+    rgetv = rowgetter(*rvind)
+    
+    # determine the output fields
+    outflds = list(lflds)
+    outflds.extend(rgetv(rflds))
+    yield tuple(outflds)
+    
+    # define a function to join rows
+    def joinrows(lrow, rrows):
+        for rrow in rrows:
+            # start with the left row
+            outrow = list(lrow)
+            # extend with non-key values from the right row
+            outrow.extend(rgetv(rrow))
+            yield tuple(outrow)
+
+    rlookup = lookup(right, key)
+    for lrow in lit:
+        k = lgetk(lrow)
+        if k in rlookup:
+            rrows = rlookup[k]
+            for outrow in joinrows(lrow, rrows):
+                yield outrow
+        else:
+            outrow = list(lrow) # start with the left row
+            # extend with missing values in place of the right row
+            outrow.extend([missing] * len(rvind))
+            yield tuple(outrow)
+        
+        
+def iterimplicithashleftjoin(left, right, missing):
+    # determine key field or fields
+    lflds = header(left)
+    rflds = header(right)
+    key = []
+    for f in lflds:
+        if f in rflds:
+            key.append(f)
+    assert len(key) > 0, 'no fields in common'
+    if len(key) == 1:
+        key = key[0] # deal with singletons
+    # from here on it's the same as a normal join
+    return iterhashleftjoin(left, right, key, missing)
+
+
+
+def hashrightjoin(left, right, key=None, missing=None):
+    """
+    Alternative implementation of :func:`rightjoin`, where the join is executed
+    by constructing a lookup for the left hand table, then iterating over rows 
+    from the right hand table.
+    
+    May be faster and/or more resource efficient where the left table is small
+    and the right table is large.
+    
+    """
+
+    if key is None:
+        return ImplicitHashRightJoinView(left, right)
+    else:
+        return HashRightJoinView(left, right, key)
+
+
+class ImplicitHashRightJoinView(object):
+    
+    def __init__(self, left, right, missing=None):
+        self.left = left
+        self.right = right
+        self.missing = missing
+        
+    def __iter__(self):
+        return iterimplicithashrightjoin(self.left, self.right, self.missing)
+
+    def cachetag(self):
+        try:
+            return hash((self.left.cachetag(), self.right.cachetag(), self.missing))
+        except Exception as e:
+            raise Uncacheable(e)
+
+
+class HashRightJoinView(object):
+    
+    def __init__(self, left, right, key, missing=None):
+        self.left = left
+        self.right = right
+        self.key = key
+        self.missing = missing
+        
+    def __iter__(self):
+        return iterhashrightjoin(self.left, self.right, self.key, self.missing)
+    
+    def cachetag(self):
+        try:
+            return hash((self.left.cachetag(), self.right.cachetag(), 
+                         tuple(self.key) if isinstance(self.key, list) else self.key,
+                         self.missing))
+        except Exception as e:
+            raise Uncacheable(e)
+
+
+def iterhashrightjoin(left, right, key, missing):
+    lit = iter(left)
+    rit = iter(right)
+
+    lflds = lit.next()
+    rflds = rit.next()
+    
+    # determine indices of the key fields in left and right tables
+    lkind = asindices(lflds, key)
+    rkind = asindices(rflds, key)
+    
+    # construct functions to extract key values from left table
+    rgetk = itemgetter(*rkind)
+    
+    # determine indices of non-key fields in the right table
+    # (in the output, we only include key fields from the left table - we
+    # don't want to duplicate fields)
+    rvind = [i for i in range(len(rflds)) if i not in rkind]
+    rgetv = rowgetter(*rvind)
+    
+    # determine the output fields
+    outflds = list(lflds)
+    outflds.extend(rgetv(rflds))
+    yield tuple(outflds)
+    
+    # define a function to join rows
+    def joinrows(rrow, lrows):
+        for lrow in lrows:
+            # start with the left row
+            outrow = list(lrow)
+            # extend with non-key values from the right row
+            outrow.extend(rgetv(rrow))
+            yield tuple(outrow)
+
+    llookup = lookup(left, key)
+    for rrow in rit:
+        k = rgetk(rrow)
+        if k in llookup:
+            lrows = llookup[k]
+            for outrow in joinrows(rrow, lrows):
+                yield outrow
+        else:
+            # start with missing values in place of the left row
+            outrow = [missing] * len(lflds)
+            # set key values
+            for li, ri in zip(lkind, rkind):
+                outrow[li] = rrow[ri]
+            # extend with non-key values from the right row  
+            outrow.extend(rgetv(rrow))
+            yield tuple(outrow)
+        
+        
+def iterimplicithashrightjoin(left, right, missing):
+    # determine key field or fields
+    lflds = header(left)
+    rflds = header(right)
+    key = []
+    for f in lflds:
+        if f in rflds:
+            key.append(f)
+    assert len(key) > 0, 'no fields in common'
+    if len(key) == 1:
+        key = key[0] # deal with singletons
+    # from here on it's the same as a normal join
+    return iterhashrightjoin(left, right, key, missing)
+
+

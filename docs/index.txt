@@ -544,6 +544,9 @@ Transforming tables
 .. autofunction:: petl.recast
 .. autofunction:: petl.transpose
 .. autofunction:: petl.pivot
+.. autofunction:: petl.hashjoin
+.. autofunction:: petl.hashleftjoin
+.. autofunction:: petl.hashrightjoin
 
 
 Loading (writing) tables to files and databases

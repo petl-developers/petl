@@ -16,7 +16,8 @@ from petl import rename, fieldnames, cut, cat, convert, fieldconvert, extend, \
                 crossjoin, antijoin, rangeaggregate, rangecounts, rangefacet, \
                 rangerowreduce, rangerecordreduce, selectre, rowselect, recordselect, \
                 rowlenselect, strjoin, transpose, intersection, pivot, recorddiff, \
-                recordcomplement, cutout, skipcomments, convertall, convertnumbers
+                recordcomplement, cutout, skipcomments, convertall, convertnumbers, \
+                hashjoin, hashleftjoin, hashrightjoin
 
 
 def test_rename():
@@ -2447,6 +2448,276 @@ def test_pivot():
                ('west', 35, 23))
     iassertequal(expect2, table2)
     iassertequal(expect2, table2)
+    
+    
+def test_hashjoin():
+    
+    table1 = (('id', 'colour'),
+              (1, 'blue'),
+              (2, 'red'),
+              (3, 'purple'))
+    table2 = (('id', 'shape'),
+              (3, 'square'),
+              (1, 'circle'),
+              (4, 'ellipse'))
+    
+    # normal inner join
+    table3 = hashjoin(table1, table2, key='id')
+    expect3 = (('id', 'colour', 'shape'),
+               (1, 'blue', 'circle'),
+               (3, 'purple', 'square'))
+    iassertequal(expect3, table3)
+    iassertequal(expect3, table3) # check twice
+    
+    # natural join
+    table4 = hashjoin(table1, table2)
+    expect4 = expect3
+    iassertequal(expect4, table4)
+    iassertequal(expect4, table4) # check twice
+    
+    # multiple rows for each key
+    table5 = (('id', 'colour'),
+              (1, 'blue'),
+              (1, 'red'),
+              (2, 'purple'))
+    table6 = (('id', 'shape'),
+              (1, 'circle'),
+              (1, 'square'),
+              (2, 'ellipse'))
+    table7 = hashjoin(table5, table6, key='id')
+    expect7 = (('id', 'colour', 'shape'),
+               (1, 'blue', 'circle'),
+               (1, 'blue', 'square'),
+               (1, 'red', 'circle'),
+               (1, 'red', 'square'),
+               (2, 'purple', 'ellipse'))
+    iassertequal(expect7, table7)
+    
+    
+def test_hashjoin_compound_keys():
+    
+    # compound keys
+    table8 = (('id', 'time', 'height'),
+              (1, 1, 12.3),
+              (1, 2, 34.5),
+              (2, 1, 56.7))
+    table9 = (('id', 'time', 'weight'),
+              (1, 2, 4.5),
+              (2, 1, 6.7),
+              (2, 2, 8.9))
+    table10 = hashjoin(table8, table9, key=['id', 'time'])
+    expect10 = (('id', 'time', 'height', 'weight'),
+                (1, 2, 34.5, 4.5),
+                (2, 1, 56.7, 6.7))
+    iassertequal(expect10, table10)
+
+    # natural join on compound key
+    table11 = hashjoin(table8, table9)
+    expect11 = expect10
+    iassertequal(expect11, table11)
+    
+    
+def test_hashjoin_string_key():
+    
+    table1 = (('id', 'colour'),
+              ('aa', 'blue'),
+              ('bb', 'red'),
+              ('cc', 'purple'))
+    table2 = (('id', 'shape'),
+              ('aa', 'circle'),
+              ('cc', 'square'),
+              ('dd', 'ellipse'))
+    
+    # normal inner join
+    table3 = hashjoin(table1, table2, key='id')
+    expect3 = (('id', 'colour', 'shape'),
+               ('aa', 'blue', 'circle'),
+               ('cc', 'purple', 'square'))
+    iassertequal(expect3, table3)
+    iassertequal(expect3, table3) # check twice
+
+
+def test_hashleftjoin():
+    
+    table1 = (('id', 'colour'),
+              (1, 'blue'),
+              (2, 'red'),
+              (3, 'purple'),
+              (5, 'yellow'),
+              (7, 'orange'))
+    table2 = (('id', 'shape'),
+              (3, 'square'),
+              (1, 'circle'),
+              (4, 'ellipse'))
+    table3 = hashleftjoin(table1, table2, key='id')
+    expect3 = (('id', 'colour', 'shape'),
+               (1, 'blue', 'circle'),
+               (2, 'red', None),
+               (3, 'purple', 'square'),
+               (5, 'yellow', None,),
+               (7, 'orange', None))
+    iassertequal(expect3, table3)
+    iassertequal(expect3, table3) # check twice
+    
+    # natural join
+    table4 = hashleftjoin(table1, table2)
+    expect4 = expect3
+    iassertequal(expect4, table4)
+    
+    
+def test_hashleftjoin_2():
+    
+    table1 = (('id', 'colour'),
+              (1, 'blue'),
+              (2, 'red'),
+              (3, 'purple'),
+              (5, 'yellow'),
+              (7, 'orange'))
+    table2 = (('id', 'shape'),
+              (1, 'circle'),
+              (3, 'square'))
+    table3 = hashleftjoin(table1, table2, key='id')
+    expect3 = (('id', 'colour', 'shape'),
+               (1, 'blue', 'circle'),
+               (2, 'red', None),
+               (3, 'purple', 'square'),
+               (5, 'yellow', None,),
+               (7, 'orange', None))
+    iassertequal(expect3, table3)
+    iassertequal(expect3, table3) # check twice
+    
+    # natural join
+    table4 = hashleftjoin(table1, table2)
+    expect4 = expect3
+    iassertequal(expect4, table4)
+    
+    
+def test_hashleftjoin_3():
+    
+    table1 = (('id', 'colour'),
+              (1, 'blue'),
+              (2, 'red'),
+              (3, 'purple'))
+    table2 = (('id', 'shape'),
+              (1, 'circle'),
+              (3, 'square'),
+              (4, 'ellipse'),
+              (5, 'triangle'))
+    table3 = hashleftjoin(table1, table2, key='id')
+    expect3 = (('id', 'colour', 'shape'),
+               (1, 'blue', 'circle'),
+               (2, 'red', None),
+               (3, 'purple', 'square'))
+    iassertequal(expect3, table3)
+    iassertequal(expect3, table3) # check twice
+    
+    # natural join
+    table4 = hashleftjoin(table1, table2)
+    expect4 = expect3
+    iassertequal(expect4, table4)
+    
+    
+def test_hashleftjoin_compound_keys():
+    
+    # compound keys
+    table5 = (('id', 'time', 'height'),
+              (1, 1, 12.3),
+              (1, 2, 34.5),
+              (2, 1, 56.7))
+    table6 = (('id', 'time', 'weight', 'bp'),
+              (1, 2, 4.5, 120),
+              (2, 1, 6.7, 110),
+              (2, 2, 8.9, 100))
+    table7 = hashleftjoin(table5, table6, key=['id', 'time'])
+    expect7 = (('id', 'time', 'height', 'weight', 'bp'),
+                (1, 1, 12.3, None, None),
+                (1, 2, 34.5, 4.5, 120),
+                (2, 1, 56.7, 6.7, 110))
+    iassertequal(expect7, table7)
+
+
+def test_hashrightjoin():
+    
+    table1 = (('id', 'colour'),
+              (1, 'blue'),
+              (2, 'red'),
+              (3, 'purple'))
+    table2 = (('id', 'shape'),
+              (0, 'triangle'),
+              (1, 'circle'),
+              (3, 'square'),
+              (4, 'ellipse'),
+              (5, 'pentagon'))
+    table3 = hashrightjoin(table1, table2, key='id')
+    expect3 = (('id', 'colour', 'shape'),
+               (0, None, 'triangle'),
+               (1, 'blue', 'circle'),
+               (3, 'purple', 'square'),
+               (4, None, 'ellipse'),
+               (5, None, 'pentagon'))
+    iassertequal(expect3, table3)
+    iassertequal(expect3, table3) # check twice
+    
+    # natural join
+    table4 = hashrightjoin(table1, table2)
+    expect4 = expect3
+    iassertequal(expect4, table4)
+    
+    
+def test_hashrightjoin_2():
+    
+    table1 = (('id', 'colour'),
+              (0, 'black'),
+              (1, 'blue'),
+              (2, 'red'),
+              (3, 'purple'),
+              (5, 'yellow'),
+              (7, 'white'))
+    table2 = (('id', 'shape'),
+              (1, 'circle'),
+              (3, 'square'),
+              (4, 'ellipse'))
+    table3 = hashrightjoin(table1, table2, key='id')
+    expect3 = (('id', 'colour', 'shape'),
+               (1, 'blue', 'circle'),
+               (3, 'purple', 'square'),
+               (4, None, 'ellipse'))
+    iassertequal(expect3, table3)
+    iassertequal(expect3, table3) # check twice
+    
+    # natural join
+    table4 = hashrightjoin(table1, table2)
+    expect4 = expect3
+    iassertequal(expect4, table4)
+    
+    
+def test_hashrightjoin_3():
+    
+    table1 = (('id', 'colour'),
+              (1, 'blue'),
+              (2, 'red'),
+              (3, 'purple'),
+              (4, 'orange'))
+    table2 = (('id', 'shape'),
+              (0, 'triangle'),
+              (1, 'circle'),
+              (3, 'square'),
+              (5, 'ellipse'),
+              (7, 'pentagon'))
+    table3 = hashrightjoin(table1, table2, key='id')
+    expect3 = (('id', 'colour', 'shape'),
+               (0, None, 'triangle'),
+               (1, 'blue', 'circle'),
+               (3, 'purple', 'square'),
+               (5, None, 'ellipse'),
+               (7, None, 'pentagon'))
+    iassertequal(expect3, table3)
+    iassertequal(expect3, table3) # check twice
+    
+    # natural join
+    table4 = hashrightjoin(table1, table2)
+    expect4 = expect3
+    iassertequal(expect4, table4)
     
     
     

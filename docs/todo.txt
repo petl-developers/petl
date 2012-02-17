@@ -1,13 +1,11 @@
 Future
 ------
 
-- hash (lookup) alternatives to all join and other sort-dependent functions
-- string patterns as utility function
-- replace, replaceall - convenience function to convert replacing a single value
-- regex replace (re.sub)
-- from compressed files
-- to compressed files
-- ignore some fields when finding conflicts
+- validator module based on csvvalidator
+- filldown
+- fillup
+- fillright? 
+- fillleft?
 - categorise/classify - convenient way to extend table with a classification field? or just use extend with function? example, convert continuous variable to categorical variable using custom ranges
 - sampling for pivot, avoid two complete passes
 - alpha facet?
@@ -15,11 +13,6 @@ Future
 - code smells in reduce functions - refactor with generic grouper and reducer functions?
 - provenance trace
 - petl.fluent
-- validator module based on csvvalidator
-- filldown
-- fillup
-- fillright? 
-- fillleft?
 - implement rowgroupby? generate sequence of key/row iterator pairs?
 - implement recordgroupby?
 - show rows/values causing conversion or translation errors
@@ -33,6 +26,19 @@ Version 0.5
 - [done] fromjson
 - [done] fromdicts
 - [done] tojson
+- [done] hashjoin
+- [done] hashleftjoin
+- [done] hashrightjoin
+- hashantijoin
+- hashcomplement
+- hashdiff
+- hashintersection
+- string patterns as utility function
+- replace, replaceall - convenience function to convert replacing a single value
+- regex replace (re.sub)
+- from compressed files
+- to compressed files
+- ignore some fields when finding conflicts
 
 Version 0.4
 -----------
