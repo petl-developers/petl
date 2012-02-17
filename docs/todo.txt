@@ -1,7 +1,10 @@
 Future
 ------
 
+- from compressed files
+- to compressed files
 - validator module based on csvvalidator
+- show rows/values causing conversion or translation errors
 - filldown
 - fillup
 - fillright? 
@@ -11,11 +14,11 @@ Future
 - alpha facet?
 - partitioning of alpha fields?
 - code smells in reduce functions - refactor with generic grouper and reducer functions?
+- code smells in hash join functions
 - provenance trace
 - petl.fluent
 - implement rowgroupby? generate sequence of key/row iterator pairs?
 - implement recordgroupby?
-- show rows/values causing conversion or translation errors
 - optimised implementation of merge() where input files are presorted? I.e., avoid need to concatenate then sort the concatenation, rather just do the merge sort then reduce
 
 Version 0.5
@@ -33,10 +36,8 @@ Version 0.5
 - [done] hashcomplement
 - [done] hashintersection
 - [done] string patterns as utility function
-- replace, replaceall - convenience function to convert replacing a single value
+- [done] replace, replaceall - convenience function to convert replacing a single value
 - regex replace (re.sub)
-- from compressed files
-- to compressed files
 - ignore some fields when finding conflicts
 
 Version 0.4

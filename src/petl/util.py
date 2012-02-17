@@ -1548,6 +1548,8 @@ def stringpatterncounter(table, field):
     Profile string patterns in the given field, returning a :class:`dict` 
     mapping patterns to counts. 
 
+    .. versionadded:: 0.5
+
     """
     
     trans = maketrans('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789', 
@@ -1595,6 +1597,8 @@ def stringpatterns(table, field):
         +---------------+---------+---------------------+
         | '999-9999-AA' | 1       | 0.16666666666666666 |
         +---------------+---------+---------------------+
+
+    .. versionadded:: 0.5
 
     """
     

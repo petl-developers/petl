@@ -505,9 +505,11 @@ Transforming tables
 .. autofunction:: petl.fieldselect
 .. autofunction:: petl.facet
 .. autofunction:: petl.rangefacet
+.. autofunction:: petl.replace
+.. autofunction:: petl.replaceall
 .. autofunction:: petl.convert
-.. autofunction:: petl.fieldconvert
 .. autofunction:: petl.convertall
+.. autofunction:: petl.fieldconvert
 .. autofunction:: petl.convertnumbers
 .. autofunction:: petl.extend
 .. autofunction:: petl.capture

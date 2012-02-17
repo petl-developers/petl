@@ -8,7 +8,7 @@ from petl.util import header, fieldnames, data, records, rowcount, look, see, va
            typecounter, typecounts, typeset, parsecounter, parsecounts, \
            stats, rowlengths, DuplicateKeyError, datetimeparser, dateparser, timeparser, boolparser, \
            expr, limits, strjoin, valuecount, lookall, dataslice, parsenumber, \
-           stringpatterns
+           stringpatterns, stringpatterncounter
 
 from petl.io import fromcsv, frompickle, fromsqlite3, tocsv, topickle, \
            tosqlite3, crc32sum, adler32sum, statsum, fromdb, \
@@ -28,7 +28,7 @@ from petl.transform import rename, cut, cat, convert, fieldconvert, extend, rows
            fieldselect, rowlenselect, selectis, selectisnot, selectisinstance, transpose, \
            intersection, pivot, recordcomplement, recorddiff, cutout, skipcomments, \
            convertall, convertnumbers, hashjoin, hashleftjoin, hashrightjoin, \
-           hashantijoin, hashcomplement, hashintersection
+           hashantijoin, hashcomplement, hashintersection, replace, replaceall
            
 from petl.testfun import dummytable
            

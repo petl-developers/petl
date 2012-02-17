@@ -627,6 +627,18 @@ def convertall(table, *args, **kwargs):
     return convert(table, header(table), *args, **kwargs)
 
 
+def replaceall(table, a, b):
+    """
+    Convenience function to replace all instances of `a` with `b` under all 
+    fields. See also :func:`convertall`.
+     
+    .. versionadded:: 0.5
+
+    """
+    
+    return convertall(table, {a: b})
+    
+
 def convertnumbers(table):
     """
     Convenience function to convert all field values to numbers where possible. E.g.::
@@ -856,8 +868,10 @@ def dictconverter(d):
 
 def replace(table, field, a, b):
     """
-    Replace all occurrences of `a` with `b` under the given field. Syntactic
-    sugar for ``convert(table, field, {a: b})``, see also :func:`convert`.
+    Convenience function to replace all occurrences of `a` with `b` under the 
+    given field. See also :func:`convert`.
+    
+    .. versionadded:: 0.5
     
     """
     
@@ -5697,6 +5711,8 @@ def hashjoin(left, right, key=None):
     May be faster and/or more resource efficient where the right table is small
     and the left table is large.
     
+    .. versionadded:: 0.5
+
     """
     
     if key is None:
@@ -5806,6 +5822,8 @@ def hashleftjoin(left, right, key=None, missing=None):
     May be faster and/or more resource efficient where the right table is small
     and the left table is large.
     
+    .. versionadded:: 0.5
+
     """
 
     if key is None:
@@ -5924,6 +5942,8 @@ def hashrightjoin(left, right, key=None, missing=None):
     May be faster and/or more resource efficient where the left table is small
     and the right table is large.
     
+    .. versionadded:: 0.5
+
     """
 
     if key is None:
@@ -6045,6 +6065,8 @@ def hashantijoin(left, right, key=None):
     May be faster and/or more resource efficient where the right table is small
     and the left table is large.
     
+    .. versionadded:: 0.5
+
     """
     
     if key is None:
@@ -6138,6 +6160,8 @@ def hashcomplement(a, b):
     May be faster and/or more resource efficient where the right table is small
     and the left table is large.
     
+    .. versionadded:: 0.5
+
     """
     
     return HashComplementView(a, b)
@@ -6182,6 +6206,8 @@ def hashintersection(a, b):
     May be faster and/or more resource efficient where the right table is small
     and the left table is large.
         
+    .. versionadded:: 0.5
+
     """
     
     return HashIntersectionView(a, b)
