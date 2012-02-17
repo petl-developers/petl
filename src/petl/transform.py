@@ -6129,3 +6129,91 @@ def iterimplicithashantijoin(left, right):
     return iterhashantijoin(left, right, key)
 
 
+def hashcomplement(a, b):
+    """
+    Alternative implementation of :func:`complement`, where the complement is executed
+    by constructing an in-memory set for all rows found in the right hand table, then 
+    iterating over rows from the left hand table.
+    
+    May be faster and/or more resource efficient where the right table is small
+    and the left table is large.
+    
+    """
+    
+    return HashComplementView(a, b)
+
+
+class HashComplementView(object):
+    
+    def __init__(self, a, b):
+        self.a = a
+        self.b = b
+            
+    def __iter__(self):
+        return iterhashcomplement(self.a, self.b)
+
+    def cachetag(self):
+        try:
+            return hash((self.a.cachetag(), self.b.cachetag()))
+        except Exception as e:
+            raise Uncacheable(e)
+
+
+def iterhashcomplement(a, b):
+    ita = iter(a) 
+    aflds = ita.next()
+    yield tuple(aflds)
+    itb = iter(b)
+    itb.next() # discard b fields, assume they are the same
+
+    blkp = set(tuple(br) for br in itb)
+    for ar in ita:
+        t = tuple(ar)
+        if t not in blkp:
+            yield t 
+        
+    
+def hashintersection(a, b):
+    """
+    Alternative implementation of :func:`intersection`, where the intersection is executed
+    by constructing an in-memory set for all rows found in the right hand table, then 
+    iterating over rows from the left hand table.
+    
+    May be faster and/or more resource efficient where the right table is small
+    and the left table is large.
+        
+    """
+    
+    return HashIntersectionView(a, b)
+
+
+class HashIntersectionView(object):
+    
+    def __init__(self, a, b):
+        self.a = a
+        self.b = b
+            
+    def __iter__(self):
+        return iterhashintersection(self.a, self.b)
+
+    def cachetag(self):
+        try:
+            return hash((self.a.cachetag(), self.b.cachetag()))
+        except Exception as e:
+            raise Uncacheable(e)
+
+
+def iterhashintersection(a, b):
+    ita = iter(a) 
+    aflds = ita.next()
+    yield tuple(aflds)
+    itb = iter(b)
+    itb.next() # discard b fields, assume they are the same
+
+    blkp = set(tuple(br) for br in itb)
+    for ar in ita:
+        t = tuple(ar)
+        if t in blkp:
+            yield t 
+        
+    

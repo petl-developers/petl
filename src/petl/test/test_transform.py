@@ -17,7 +17,8 @@ from petl import rename, fieldnames, cut, cat, convert, fieldconvert, extend, \
                 rangerowreduce, rangerecordreduce, selectre, rowselect, recordselect, \
                 rowlenselect, strjoin, transpose, intersection, pivot, recorddiff, \
                 recordcomplement, cutout, skipcomments, convertall, convertnumbers, \
-                hashjoin, hashleftjoin, hashrightjoin, hashantijoin
+                hashjoin, hashleftjoin, hashrightjoin, hashantijoin, hashcomplement, \
+                hashintersection
 
 
 def test_rename():
@@ -2744,4 +2745,96 @@ def test_hashantijoin():
     iassertequal(expect4, table4)
     
     
+def test_hashcomplement_1():
+
+    table1 = (('foo', 'bar'),
+              ('A', 1),
+              ('B', 2),
+              ('C', 7))
+    
+    table2 = (('foo', 'bar'),
+              ('A', 9),
+              ('B', 2),
+              ('B', 3))
+    
+    expectation = (('foo', 'bar'),
+                   ('A', 1),
+                   ('C', 7))
+    
+    result = hashcomplement(table1, table2)
+    iassertequal(expectation, result)
+    
+    
+def test_hashcomplement_2():
+
+    tablea = (('foo', 'bar', 'baz'),
+              ('B', 2, False),
+              ('C', 7, False),
+              ('A', 1, True),
+              ('C', 9, True))
+    
+    tableb = (('x', 'y', 'z'),
+              ('B', 2, False),
+              ('A', 9, False),
+              ('B', 3, True),
+              ('C', 9, True))
+    
+    aminusb = (('foo', 'bar', 'baz'),
+               ('C', 7, False),
+               ('A', 1, True))
+    
+    result = hashcomplement(tablea, tableb)
+    iassertequal(aminusb, result)
+    
+    bminusa = (('x', 'y', 'z'),
+               ('A', 9, False),
+               ('B', 3, True))
+    
+    result = hashcomplement(tableb, tablea)
+    iassertequal(bminusa, result)
+    
+
+def test_hashintersection_1():
+
+    table1 = (('foo', 'bar'),
+              ('A', 1),
+              ('B', 2),
+              ('C', 7))
+    
+    table2 = (('foo', 'bar'),
+              ('A', 9),
+              ('B', 2),
+              ('B', 3))
+    
+    expectation = (('foo', 'bar'),
+                   ('B', 2))
+    
+    result = hashintersection(table1, table2)
+    iassertequal(expectation, result)
+    
+    
+def test_hashintersection_2():
+
+    table1 = (('foo', 'bar', 'baz'),
+              ('A', 1, True),
+              ('C', 7, False),
+              ('B', 2, False),
+              ('C', 9, True))
+    
+    table2 = (('x', 'y', 'z'),
+              ('B', 2, False),
+              ('A', 9, False),
+              ('B', 3, True),
+              ('C', 9, True))
+    
+    expect = (('foo', 'bar', 'baz'),
+              ('B', 2, False),
+              ('C', 9, True))
+    
+    table3 = hashintersection(table1, table2)
+    iassertequal(expect, table3)
+    
+
+    
+
     

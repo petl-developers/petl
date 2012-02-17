@@ -27,7 +27,7 @@ from petl.transform import rename, cut, cat, convert, fieldconvert, extend, rows
            fieldselect, rowlenselect, selectis, selectisnot, selectisinstance, transpose, \
            intersection, pivot, recordcomplement, recorddiff, cutout, skipcomments, \
            convertall, convertnumbers, hashjoin, hashleftjoin, hashrightjoin, \
-           hashantijoin
+           hashantijoin, hashcomplement, hashintersection
            
 from petl.testfun import dummytable
            

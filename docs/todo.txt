@@ -30,9 +30,8 @@ Version 0.5
 - [done] hashleftjoin
 - [done] hashrightjoin
 - [done] hashantijoin
-- hashcomplement
-- hashdiff
-- hashintersection
+- [done] hashcomplement
+- [done] hashintersection
 - string patterns as utility function
 - replace, replaceall - convenience function to convert replacing a single value
 - regex replace (re.sub)
