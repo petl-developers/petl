@@ -376,13 +376,13 @@ def cat(*tables, **kwargs):
 
     This function can also be used to square up a table with uneven rows, e.g.::
 
-        >>> table = [['foo', 'bar', 'baz'],
+        >>> table4 = [['foo', 'bar', 'baz'],
         ...          ['A', 1, 2],
         ...          ['B', '2', '3.4'],
         ...          [u'B', u'3', u'7.8', True],
         ...          ['D', 'xyz', 9.0],
         ...          ['E', None]]
-        >>> look(cat(table))
+        >>> look(cat(table4))
         +-------+-------+--------+
         | 'foo' | 'bar' | 'baz'  |
         +=======+=======+========+
@@ -397,6 +397,48 @@ def cat(*tables, **kwargs):
         | 'E'   | None  | None   |
         +-------+-------+--------+
 
+    .. versionchanged:: 0.5
+    
+    By default, the fields for the output table will be determined as the 
+    union of all fields found in the input tables. Use the `header` keyword 
+    argument to override this behaviour and specify a fixed set of fields for 
+    the output table. E.g., with a single input table::
+    
+        >>> table5 = [['bar', 'foo'],
+        ...           ['A', 1],
+        ...           ['B', 2]]
+        >>> table6 = cat(table5, header=['A', 'foo', 'B', 'bar', 'C'])
+        >>> look(table6)
+        +------+-------+------+-------+------+
+        | 'A'  | 'foo' | 'B'  | 'bar' | 'C'  |
+        +======+=======+======+=======+======+
+        | None | 1     | None | 'A'   | None |
+        +------+-------+------+-------+------+
+        | None | 2     | None | 'B'   | None |
+        +------+-------+------+-------+------+
+
+    E.g., with two input tables::
+
+        >>> table7 = [['bar', 'foo'],
+        ...           ['A', 1],
+        ...           ['B', 2]]
+        >>> table8 = [['bar', 'baz'],
+        ...           ['C', True],
+        ...           ['D', False]]
+        >>> table9 = cat(table7, table8, header=['A', 'foo', 'B', 'bar', 'C'])
+        >>> look(table9)
+        +------+-------+------+-------+------+
+        | 'A'  | 'foo' | 'B'  | 'bar' | 'C'  |
+        +======+=======+======+=======+======+
+        | None | 1     | None | 'A'   | None |
+        +------+-------+------+-------+------+
+        | None | 2     | None | 'B'   | None |
+        +------+-------+------+-------+------+
+        | None | None  | None | 'C'   | None |
+        +------+-------+------+-------+------+
+        | None | None  | None | 'D'   | None |
+        +------+-------+------+-------+------+
+
     """
     
     return CatView(tables, **kwargs)
@@ -404,32 +446,39 @@ def cat(*tables, **kwargs):
     
 class CatView(object):
     
-    def __init__(self, sources, missing=None):
+    def __init__(self, sources, missing=None, header=None):
         self.sources = sources
         self.missing = missing
+        if header is not None:
+            header = tuple(header) # ensure hashable
+        self.header = header
 
     def __iter__(self):
-        return itercat(self.sources, self.missing)
+        return itercat(self.sources, self.missing, self.header)
     
     def cachetag(self):
         try:
             sourcetags = tuple(source.cachetag() for source in self.sources)
-            return hash((sourcetags, self.missing))
+            return hash((sourcetags, self.missing, self.header))
         except Exception as e:
             raise Uncacheable(e)
         
 
-def itercat(sources, missing=None):
+def itercat(sources, missing, header):
     its = [iter(t) for t in sources]
-    
-    # determine output fields by gathering all fields found in the sources
     source_flds_lists = [it.next() for it in its]
-    outflds = list()
-    for flds in source_flds_lists:
-        for f in flds:
-            if f not in outflds:
-                # add any new fields as we find them
-                outflds.append(f)
+
+    if header is None:
+        # determine output fields by gathering all fields found in the sources
+        outflds = list()
+        for flds in source_flds_lists:
+            for f in flds:
+                if f not in outflds:
+                    # add any new fields as we find them
+                    outflds.append(f)
+    else:
+        # predetermined output fields
+        outflds = header
     yield tuple(outflds)
 
     # output data rows

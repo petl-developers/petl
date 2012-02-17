@@ -12,7 +12,7 @@ from petl.util import header, fieldnames, data, records, rowcount, look, see, va
 from petl.io import fromcsv, frompickle, fromsqlite3, tocsv, topickle, \
            tosqlite3, crc32sum, adler32sum, statsum, fromdb, \
            appendcsv, appendpickle, appendsqlite3, todb, appenddb, fromtext, \
-           totext, appendtext, fromxml
+           totext, appendtext, fromxml, Uncacheable
 
 from petl.transform import rename, cut, cat, convert, fieldconvert, extend, rowslice, \
            head, tail, sort, melt, recast, duplicates, conflicts, \
@@ -27,6 +27,8 @@ from petl.transform import rename, cut, cat, convert, fieldconvert, extend, rows
            fieldselect, rowlenselect, selectis, selectisnot, selectisinstance, transpose, \
            intersection, pivot, recordcomplement, recorddiff, cutout, skipcomments, \
            convertall, convertnumbers
+           
+from petl.testfun import dummytable
            
             
            

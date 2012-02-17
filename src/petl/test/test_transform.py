@@ -174,7 +174,32 @@ def test_cat():
                    ('E', None, None))
     iassertequal(expectation, cat4)
     
-    # TODO test cachetag
+
+def test_cat_with_header():
+
+    table1 = (('bar', 'foo'),
+              ('A', 1),
+              ('B', 2))
+
+    table2 = (('bar', 'baz'),
+              ('C', True),
+              ('D', False))
+
+    actual = cat(table1, header=['A', 'foo', 'B', 'bar', 'C'])
+    expect = (('A', 'foo', 'B', 'bar', 'C'),
+              (None, 1, None, 'A', None),
+              (None, 2, None, 'B', None))
+    iassertequal(expect, actual)
+    iassertequal(expect, actual)
+
+    actual = cat(table1, table2, header=['A', 'foo', 'B', 'bar', 'C'])
+    expect = (('A', 'foo', 'B', 'bar', 'C'),
+              (None, 1, None, 'A', None),
+              (None, 2, None, 'B', None),
+              (None, None, None, 'C', None),
+              (None, None, None, 'D', None))
+    iassertequal(expect, actual)
+    iassertequal(expect, actual)
 
 
 def test_convert():

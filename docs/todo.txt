@@ -14,7 +14,6 @@ Future
 - implement string patterns as utility function
 - implement hash (lookup) alternatives to all join and other sort-dependent functions
 - implement provenance trace
-- implement petl.interactive with cache wrappers
 - implement petl.fluent
 - implement validator module based on csvvalidator
 - implement filldown
@@ -28,6 +27,9 @@ Future
 
 Version 0.5
 -----------
+
+- [done] pad a table to fit a given set of fields (header kwarg to cat())
+- [done] implement petl.interactive with cache wrappers
 
 Version 0.4
 -----------
