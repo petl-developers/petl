@@ -1930,7 +1930,7 @@ def iterduplicates(source, key):
             previous = row
     
     
-def conflicts(table, key, missing=None, presorted=False, buffersize=None):
+def conflicts(table, key, missing=None, ignore=None, presorted=False, buffersize=None):
     """
     Select rows with the same key value but differing in some other field. E.g.::
 
@@ -1966,33 +1966,53 @@ def conflicts(table, key, missing=None, presorted=False, buffersize=None):
     are sorted, see also the discussion of the `buffersize` argument under the 
     :func:`sort` function.
     
+    .. versionchanged:: 0.5
+    
+    One or more fields can be ignored when determining conflicts by providing
+    the `ignore` keyword argument. E.g.::
+
+        >>> table3 = conflicts(table1, 'foo', ignore='baz')
+        >>> look(table3)
+        +-------+-------+-------+
+        | 'foo' | 'bar' | 'baz' |
+        +=======+=======+=======+
+        | 'A'   | 1     | 2.7   |
+        +-------+-------+-------+
+        | 'A'   | 2     | None  |
+        +-------+-------+-------+
+    
     """
     
-    return ConflictsView(table, key, missing, presorted, buffersize)
+    return ConflictsView(table, key, missing=missing, ignore=ignore,
+                         presorted=presorted, buffersize=buffersize)
 
 
 class ConflictsView(object):
     
-    def __init__(self, source, key, missing=None, presorted=False, buffersize=None):
+    def __init__(self, source, key, missing=None, ignore=None, presorted=False, buffersize=None):
         if presorted:
             self.source = source
         else:
             self.source = sort(source, key, buffersize=buffersize)
         self.key = key
         self.missing = missing
-        
+        self.ignore = ignore
         
     def __iter__(self):
-        return iterconflicts(self.source, self.key, self.missing)
+        return iterconflicts(self.source, self.key, self.missing, self.ignore)
     
     def cachetag(self):
         try:
-            return hash((self.source.cachetag(), self.key, self.missing))
+            return hash((self.source.cachetag(), self.key, self.missing, self.ignore))
         except Exception as e:
             raise Uncacheable(e)
 
     
-def iterconflicts(source, key, missing):
+def iterconflicts(source, key, missing, ignore):
+    # normalise ignore
+    if isinstance(ignore, basestring):
+        ignore = (ignore,)
+        
     it = iter(source)
     flds = it.next()
     yield tuple(flds)
@@ -2017,10 +2037,11 @@ def iterconflicts(source, key, missing):
             if kprev == kcurr:
                 # is there a conflict?
                 conflict = False
-                for x, y in zip(previous, row):
-                    if missing not in (x, y) and x != y:
-                        conflict = True
-                        break
+                for x, y, f in zip(previous, row, flds):
+                    if ignore is None or f not in ignore:
+                        if missing not in (x, y) and x != y:
+                            conflict = True
+                            break
                 if conflict:
                     if not previous_yielded:
                         yield tuple(previous)

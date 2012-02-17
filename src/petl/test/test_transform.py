@@ -854,6 +854,19 @@ def test_conflicts():
                    ('D', 'xyz', 9.4),
                    ('D', 'xyz', 12.3))
     iassertequal(expectation, result)
+    iassertequal(expectation, result)
+    
+    result = conflicts(table, 'foo', missing=None, ignore='baz')
+    expectation = (('foo', 'bar', 'baz'),
+                   ('A', 1, 2),
+                   ('A', 2, None))
+    iassertequal(expectation, result)
+    iassertequal(expectation, result)
+    
+    result = conflicts(table, 'foo', missing=None, ignore=('bar', 'baz'))
+    expectation = (('foo', 'bar', 'baz'),)
+    iassertequal(expectation, result)
+    iassertequal(expectation, result)
     
     
 def test_mergereduce():
