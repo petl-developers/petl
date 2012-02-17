@@ -5691,7 +5691,7 @@ def iterpivot(source, f1, f2, f3, aggfun, missing):
 def hashjoin(left, right, key=None):
     """
     Alternative implementation of :func:`join`, where the join is executed
-    by constructing a lookup for the right hand table, then iterating over rows 
+    by constructing an in-memory lookup for the right hand table, then iterating over rows 
     from the left hand table.
     
     May be faster and/or more resource efficient where the right table is small
@@ -5800,7 +5800,7 @@ def iterimplicithashjoin(left, right):
 def hashleftjoin(left, right, key=None, missing=None):
     """
     Alternative implementation of :func:`leftjoin`, where the join is executed
-    by constructing a lookup for the right hand table, then iterating over rows 
+    by constructing an in-memory lookup for the right hand table, then iterating over rows 
     from the left hand table.
     
     May be faster and/or more resource efficient where the right table is small
@@ -5918,7 +5918,7 @@ def iterimplicithashleftjoin(left, right, missing):
 def hashrightjoin(left, right, key=None, missing=None):
     """
     Alternative implementation of :func:`rightjoin`, where the join is executed
-    by constructing a lookup for the left hand table, then iterating over rows 
+    by constructing an in-memory lookup for the left hand table, then iterating over rows 
     from the right hand table.
     
     May be faster and/or more resource efficient where the left table is small
@@ -6034,5 +6034,98 @@ def iterimplicithashrightjoin(left, right, missing):
         key = key[0] # deal with singletons
     # from here on it's the same as a normal join
     return iterhashrightjoin(left, right, key, missing)
+
+
+def hashantijoin(left, right, key=None):
+    """
+    Alternative implementation of :func:`antijoin`, where the join is executed
+    by constructing an in-memory set for all keys found in the right hand table, then 
+    iterating over rows from the left hand table.
+    
+    May be faster and/or more resource efficient where the right table is small
+    and the left table is large.
+    
+    """
+    
+    if key is None:
+        return ImplicitHashAntiJoinView(left, right)
+    else:
+        return HashAntiJoinView(left, right, key)
+
+
+class HashAntiJoinView(object):
+    
+    def __init__(self, left, right, key):
+        self.left = left
+        self.right = right
+        self.key = key
+        
+    def __iter__(self):
+        return iterhashantijoin(self.left, self.right, self.key)
+    
+    def cachetag(self):
+        try:
+            return hash((self.left.cachetag(), self.right.cachetag(), 
+                         tuple(self.key) if isinstance(self.key, list) else self.key))
+        except Exception as e:
+            raise Uncacheable(e)
+
+    
+def iterhashantijoin(left, right, key):
+    lit = iter(left)
+    rit = iter(right)
+
+    lflds = lit.next()
+    rflds = rit.next()
+    yield tuple(lflds)
+
+    # determine indices of the key fields in left and right tables
+    lkind = asindices(lflds, key)
+    rkind = asindices(rflds, key)
+    
+    # construct functions to extract key values from both tables
+    lgetk = itemgetter(*lkind)
+    rgetk = itemgetter(*rkind)
+    
+    rkeys = set()
+    for rrow in rit:
+        rk = rgetk(rrow)
+        rkeys.add(rk)
+        
+    for lrow in lit:
+        lk = lgetk(lrow)
+        if lk not in rkeys:
+            yield tuple(lrow)
+
+        
+class ImplicitHashAntiJoinView(object):
+    
+    def __init__(self, left, right):
+        self.left = left
+        self.right = right
+        
+    def __iter__(self):
+        return iterimplicithashantijoin(self.left, self.right)
+    
+    def cachetag(self):
+        try:
+            return hash((self.left.cachetag(), self.right.cachetag()))
+        except Exception as e:
+            raise Uncacheable(e)
+
+    
+def iterimplicithashantijoin(left, right):
+    # determine key field or fields
+    lflds = header(left)
+    rflds = header(right)
+    key = []
+    for f in lflds:
+        if f in rflds:
+            key.append(f)
+    assert len(key) > 0, 'no fields in common'
+    if len(key) == 1:
+        key = key[0] # deal with singletons
+    # from here on it's the same as a normal antijoin
+    return iterhashantijoin(left, right, key)
 
 

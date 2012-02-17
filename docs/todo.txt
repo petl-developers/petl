@@ -29,7 +29,7 @@ Version 0.5
 - [done] hashjoin
 - [done] hashleftjoin
 - [done] hashrightjoin
-- hashantijoin
+- [done] hashantijoin
 - hashcomplement
 - hashdiff
 - hashintersection

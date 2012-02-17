@@ -17,7 +17,7 @@ from petl import rename, fieldnames, cut, cat, convert, fieldconvert, extend, \
                 rangerowreduce, rangerecordreduce, selectre, rowselect, recordselect, \
                 rowlenselect, strjoin, transpose, intersection, pivot, recorddiff, \
                 recordcomplement, cutout, skipcomments, convertall, convertnumbers, \
-                hashjoin, hashleftjoin, hashrightjoin
+                hashjoin, hashleftjoin, hashrightjoin, hashantijoin
 
 
 def test_rename():
@@ -2716,6 +2716,30 @@ def test_hashrightjoin_3():
     
     # natural join
     table4 = hashrightjoin(table1, table2)
+    expect4 = expect3
+    iassertequal(expect4, table4)
+    
+    
+def test_hashantijoin():
+    
+    table1 = (('id', 'colour'),
+              (0, 'black'),
+              (4, 'yellow'),
+              (1, 'blue'),
+              (2, 'red'),
+              (5, 'white'))
+    table2 = (('id', 'shape'),
+              (1, 'circle'),
+              (3, 'square'))
+    table3 = hashantijoin(table1, table2, key='id')
+    expect3 = (('id', 'colour'),
+               (0, 'black'),
+               (4, 'yellow'),
+               (2, 'red'),
+               (5, 'white'))
+    iassertequal(expect3, table3)
+
+    table4 = hashantijoin(table1, table2) 
     expect4 = expect3
     iassertequal(expect4, table4)
     

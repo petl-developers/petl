@@ -547,6 +547,7 @@ Transforming tables
 .. autofunction:: petl.hashjoin
 .. autofunction:: petl.hashleftjoin
 .. autofunction:: petl.hashrightjoin
+.. autofunction:: petl.hashantijoin
 
 
 Loading (writing) tables to files and databases
