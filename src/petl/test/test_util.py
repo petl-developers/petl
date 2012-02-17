@@ -6,7 +6,7 @@ TODO doc me
 from petl import header, fieldnames, data, records, rowcount, look, see, values, valuecounter, valuecounts, valueset,\
                 unique, lookup, lookupone, recordlookup, recordlookupone, \
                 DuplicateKeyError, rowlengths, stats, typecounts, parsecounts, typeset, \
-                valuecount, parsenumber
+                valuecount, parsenumber, stringpatterns
 
 from petl.testfun import assertequal, iassertequal
 import sys
@@ -426,3 +426,29 @@ def test_parsenumber():
     assert parsenumber('3+4j') == 3 + 4j
     assert parsenumber('aaa') == 'aaa'
     assert parsenumber(None) == None
+    
+    
+def test_stringpatterns():
+    
+    table = (('foo', 'bar'),
+             ('Mr. Foo', '123-1254'),
+             ('Mrs. Bar', '234-1123'),
+             ('Mr. Spo', '123-1254'),
+             (u'Mr. Baz', u'321 1434'),
+             (u'Mrs. Baz', u'321 1434'),
+             ('Mr. Quux', '123-1254-XX'))
+    
+    actual = stringpatterns(table, 'foo')
+    expect = (('pattern', 'count', 'frequency'), 
+              ('Aa. Aaa', 3, 3./6), 
+              ('Aaa. Aaa', 2, 2./6), 
+              ('Aa. Aaaa', 1, 1./6))
+    iassertequal(expect, actual) 
+    
+    actual = stringpatterns(table, 'bar')
+    expect = (('pattern', 'count', 'frequency'), 
+              ('999-9999', 3, 3./6), 
+              ('999 9999', 2, 2./6),
+              ('999-9999-AA', 1, 1./6))
+    iassertequal(expect, actual) 
+    

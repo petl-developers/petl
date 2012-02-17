@@ -9,6 +9,7 @@ from collections import defaultdict, Counter
 from operator import itemgetter
 import datetime
 import re
+from string import maketrans
 
 
 def header(table):
@@ -1540,3 +1541,69 @@ def parsenumber(v):
     except:
         pass
     return v
+
+
+def stringpatterncounter(table, field):
+    """
+    Profile string patterns in the given field, returning a :class:`dict` 
+    mapping patterns to counts. 
+
+    """
+    
+    trans = maketrans('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789', 
+                      'AAAAAAAAAAAAAAAAAAAAAAAAAAaaaaaaaaaaaaaaaaaaaaaaaaaa9999999999')
+    counter = Counter()
+    for v in values(table, field):
+        p = str(v).translate(trans)
+        counter[p] += 1
+    return counter
+
+
+def stringpatterns(table, field):
+    """
+    Profile string patterns in the given field, returning a table of patterns,
+    counts and frequencies. E.g.::
+
+        >>> from petl import stringpatterns, look    
+        >>> table = [['foo', 'bar'],
+        ...          ['Mr. Foo', '123-1254'],
+        ...          ['Mrs. Bar', '234-1123'],
+        ...          ['Mr. Spo', '123-1254'],
+        ...          [u'Mr. Baz', u'321 1434'],
+        ...          [u'Mrs. Baz', u'321 1434'],
+        ...          ['Mr. Quux', '123-1254-XX']]
+        >>> foopats = stringpatterns(table, 'foo')
+        >>> look(foopats)
+        +------------+---------+---------------------+
+        | 'pattern'  | 'count' | 'frequency'         |
+        +============+=========+=====================+
+        | 'Aa. Aaa'  | 3       | 0.5                 |
+        +------------+---------+---------------------+
+        | 'Aaa. Aaa' | 2       | 0.3333333333333333  |
+        +------------+---------+---------------------+
+        | 'Aa. Aaaa' | 1       | 0.16666666666666666 |
+        +------------+---------+---------------------+
+        
+        >>> barpats = stringpatterns(table, 'bar')
+        >>> look(barpats)
+        +---------------+---------+---------------------+
+        | 'pattern'     | 'count' | 'frequency'         |
+        +===============+=========+=====================+
+        | '999-9999'    | 3       | 0.5                 |
+        +---------------+---------+---------------------+
+        | '999 9999'    | 2       | 0.3333333333333333  |
+        +---------------+---------+---------------------+
+        | '999-9999-AA' | 1       | 0.16666666666666666 |
+        +---------------+---------+---------------------+
+
+    """
+    
+    counter = stringpatterncounter(table, field)
+    output = [('pattern', 'count', 'frequency')]
+    counter = counter.most_common()
+    total = sum(c[1] for c in counter)
+    counts = [(c[0], c[1], float(c[1])/total) for c in counter]
+    output.extend(counts)
+    return output
+
+
