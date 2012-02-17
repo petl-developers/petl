@@ -37,7 +37,7 @@ Version 0.5
 - [done] hashintersection
 - [done] string patterns as utility function
 - [done] replace, replaceall - convenience function to convert replacing a single value
-- regex replace (re.sub)
+- [done] regex replace (re.sub)
 - ignore some fields when finding conflicts
 
 Version 0.4

@@ -511,6 +511,7 @@ Transforming tables
 .. autofunction:: petl.convertall
 .. autofunction:: petl.fieldconvert
 .. autofunction:: petl.convertnumbers
+.. autofunction:: petl.resub
 .. autofunction:: petl.extend
 .. autofunction:: petl.capture
 .. autofunction:: petl.split

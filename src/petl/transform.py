@@ -877,6 +877,20 @@ def replace(table, field, a, b):
     
     return convert(table, field, {a: b})
 
+
+def resub(table, field, pattern, repl, count=0, flags=0):
+    """
+    Convenience function to convert values under the given field using a 
+    regular expression substitution. See also :func:`re.sub`.
+    
+    .. versionadded:: 0.5
+
+    """
+    
+    prog = re.compile(pattern, flags)
+    conv = lambda v: prog.sub(repl, v, count=count)
+    return convert(table, field, conv)
+
     
 def extend(table, field, value, failonerror=False, errorvalue=None):
     """
