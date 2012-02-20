@@ -453,6 +453,7 @@ Utility functions
 .. autofunction:: petl.crc32sum
 .. autofunction:: petl.expr
 .. autofunction:: petl.strjoin
+.. autofunction:: petl.randomtable
 .. autofunction:: petl.dummytable
 
 Extracting (reading) tables from files, databases and other sources
