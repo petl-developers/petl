@@ -1653,6 +1653,10 @@ def randomtable(numflds=5, numrows=100, wait=0):
     Note that the data are generated on the fly and are not stored in memory,
     so this function can be used to simulate very large tables.
     
+    .. versionadded:: 0.6
+    
+    See also :func:`dummytable`.
+    
     """
     
     return RandomTable(numflds, numrows, wait=wait)
@@ -1765,6 +1769,11 @@ def dummytable(numrows=100,
         +---------------------+-------+--------------+
         | 0.166428545780258   | 59    | 'vanilla'    |
         +---------------------+-------+--------------+
+        
+    .. versionchanged:: 0.6
+    
+    Now supports different field types, e.g., non-numeric. Previous functionality
+    is available as :func:`randomtable`.
         
     """
     

@@ -25,7 +25,6 @@ class ContainerCache(object):
         self._inner = inner
         self._cache = []
         self._tag = None
-        self._complete = False
         
     def __iter__(self):
         try:
@@ -39,9 +38,7 @@ class ContainerCache(object):
                 # _tag is not fresh
                 if debug: print repr(self._inner) + ' :: stale, clearing cache'
                 self._tag = tag
-                it = iter(self._inner)
                 self._cache = list() # reset cache
-            # serve from _cache
             return self._iterwithcache()
             
     def _iterwithcache(self):
@@ -72,7 +69,7 @@ class ContainerCache(object):
         self._inner[item] = value
     
     def __setattr__(self, attr, value):
-        if attr in {'_inner', '_cache', '_tag', '_complete'}:
+        if attr in {'_inner', '_cache', '_tag'}:
             object.__setattr__(self, attr, value)
         else:
             setattr(self._inner, attr, value)
@@ -95,7 +92,7 @@ for n, c in petl.__dict__.items():
         setattr(thismodule, n, c)
         
         
-# need to manually override for facet
+# need to manually override for facet, because it returns a dict 
 def facet(table, field):
     fct = dict()
     for v in valueset(table, field):
