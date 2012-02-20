@@ -378,15 +378,15 @@ def test_typecounts():
              ('E', 42))
 
     actual = typecounts(table, 'foo') 
-    expect = (('type', 'count'), ('str', 4), ('unicode', 1))
+    expect = (('type', 'count', 'frequency'), ('str', 4, 4./5), ('unicode', 1, 1./5))
     iassertequal(expect, actual)
 
     actual = typecounts(table, 'bar') 
-    expect = (('type', 'count'), ('unicode', 3), ('int', 2))
+    expect = (('type', 'count', 'frequency'), ('unicode', 3, 3./5), ('int', 2, 2./5))
     iassertequal(expect, actual)
 
     actual = typecounts(table, 'baz') 
-    expect = (('type', 'count'), ('str', 3), ('float', 1))
+    expect = (('type', 'count', 'frequency'), ('str', 3, 3./4), ('float', 1, 1./4))
     iassertequal(expect, actual)
 
 

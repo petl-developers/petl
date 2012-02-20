@@ -552,14 +552,39 @@ def valuecounts(table, field):
             
     """
     
-    counter = valuecounter(table, field)
-    output = [('value', 'count', 'frequency')]
-    counts = counter.most_common()
-    total = sum(c[1] for c in counts)
-    counts = [(c[0], c[1], float(c[1])/total) for c in counts]
-    output.extend(counts)
-    return output
+    return ValueCountsView(table, field)
+
+
+class ValueCountsView(object):
+    
+    def __init__(self, table, field):
+        self.table = table
+        self.field = field
+        self.counter = None
+        self.tag = None
         
+    def cachetag(self):
+        return hash((self.table.cachetag(), self.field))
+    
+    def __iter__(self):
+        
+        try:
+            tag = self.table.cachetag()
+        except: # uncacheable
+            self.counter = valuecounter(self.table, self.field)
+        else:
+            if self.tag is None or tag != self.tag:
+                self.tag = tag
+                self.counter = valuecounter(self.table, self.field)
+            else:
+                pass # don't need to update counter
+
+        yield ('value', 'count', 'frequency')
+        counts = self.counter.most_common()
+        total = sum(c[1] for c in counts)
+        for c in counts:
+            yield (c[0], c[1], float(c[1])/total)
+
         
 def unique(table, field):
     """
@@ -1058,7 +1083,7 @@ def typecounter(table, field):
 def typecounts(table, field):    
     """
     Count the number of values found for each Python type and return a table
-    mapping class names to counts. E.g.::
+    mapping class names to counts and frequencies. E.g.::
 
         >>> from petl import look, typecounts
         >>> table = [['foo', 'bar', 'baz'],
@@ -1068,44 +1093,76 @@ def typecounts(table, field):
         ...          ['D', u'xyz', 9.0],
         ...          ['E', 42]]
         >>> look(typecounts(table, 'foo'))
-        +-----------+---------+
-        | 'type'    | 'count' |
-        +===========+=========+
-        | 'str'     | 4       |
-        +-----------+---------+
-        | 'unicode' | 1       |
-        +-----------+---------+
+        +-----------+---------+-------------+
+        | 'type'    | 'count' | 'frequency' |
+        +===========+=========+=============+
+        | 'str'     | 4       | 0.8         |
+        +-----------+---------+-------------+
+        | 'unicode' | 1       | 0.2         |
+        +-----------+---------+-------------+
         
         >>> look(typecounts(table, 'bar'))
-        +-----------+---------+
-        | 'type'    | 'count' |
-        +===========+=========+
-        | 'unicode' | 3       |
-        +-----------+---------+
-        | 'int'     | 2       |
-        +-----------+---------+
+        +-----------+---------+-------------+
+        | 'type'    | 'count' | 'frequency' |
+        +===========+=========+=============+
+        | 'unicode' | 3       | 0.6         |
+        +-----------+---------+-------------+
+        | 'int'     | 2       | 0.4         |
+        +-----------+---------+-------------+
         
         >>> look(typecounts(table, 'baz'))
-        +-----------+---------+
-        | 'type'    | 'count' |
-        +===========+=========+
-        | 'int'     | 1       |
-        +-----------+---------+
-        | 'float'   | 1       |
-        +-----------+---------+
-        | 'unicode' | 1       |
-        +-----------+---------+
-        | 'str'     | 1       |
-        +-----------+---------+
-
-    The `field` argument can be a field name or index (starting from zero).    
+        +-----------+---------+-------------+
+        | 'type'    | 'count' | 'frequency' |
+        +===========+=========+=============+
+        | 'int'     | 1       | 0.25        |
+        +-----------+---------+-------------+
+        | 'float'   | 1       | 0.25        |
+        +-----------+---------+-------------+
+        | 'unicode' | 1       | 0.25        |
+        +-----------+---------+-------------+
+        | 'str'     | 1       | 0.25        |
+        +-----------+---------+-------------+
+        
+    The `field` argument can be a field name or index (starting from zero).
+    
+    .. versionchanged:: 0.6
+    
+    Added frequency.    
  
     """
     
-    counter = typecounter(table, field)
-    output = [('type', 'count')]
-    output.extend(counter.most_common())
-    return output
+    return TypeCountsView(table, field)
+
+
+class TypeCountsView(object):
+    
+    def __init__(self, table, field):
+        self.table = table
+        self.field = field
+        self.counter = None
+        self.tag = None
+        
+    def cachetag(self):
+        return hash((self.table.cachetag(), self.field))
+    
+    def __iter__(self):
+        
+        try:
+            tag = self.table.cachetag()
+        except: # uncacheable
+            self.counter = typecounter(self.table, self.field)
+        else:
+            if self.tag is None or tag != self.tag:
+                self.tag = tag
+                self.counter = typecounter(self.table, self.field)
+            else:
+                pass # don't need to update counter
+
+        yield ('type', 'count', 'frequency')
+        counts = self.counter.most_common()
+        total = sum(c[1] for c in counts)
+        for c in counts:
+            yield (c[0], c[1], float(c[1])/total)
 
 
 def typeset(table, field):
@@ -1166,6 +1223,10 @@ def parsecounter(table, field, parsers={'int': int, 'float': float}):
     """
     
     counter, errors = Counter(), Counter()
+    # need to initialise
+    for n in parsers.keys():
+        counter[n] = 0
+        errors[n] = 0
     for v in values(table, field):
         if isinstance(v, basestring):
             for name, parser in parsers.items():
@@ -1204,14 +1265,41 @@ def parsecounts(table, field, parsers={'int': int, 'float': float}):
 
     """
     
-    counter, errors = parsecounter(table, field, parsers)
-    output_fields = [('type', 'count', 'errors')]
-    output_data = [(item, count, errors[item]) for (item, count) in counter.most_common()]
-    output = output_fields + output_data
-    return output
+    return ParseCountsView(table, field, parsers=parsers)
 
 
-def datetimeparser(format):
+class ParseCountsView(object):
+    
+    def __init__(self, table, field, parsers={'int': int, 'float': float}):
+        self.table = table
+        self.field = field
+        self.parsers = parsers
+        self.counter = None
+        self.errors = None
+        self.tag = None
+        
+    def cachetag(self):
+        return hash((self.table.cachetag(), self.field, tuple(self.parsers.items())))
+    
+    def __iter__(self):
+        
+        try:
+            tag = self.table.cachetag()
+        except: # uncacheable
+            self.counter, self.errors = parsecounter(self.table, self.field, self.parsers)
+        else:
+            if self.tag is None or tag != self.tag:
+                self.tag = tag
+                self.counter, self.errors = parsecounter(self.table, self.field, self.parsers)
+            else:
+                pass # don't need to update counter
+
+        yield ('type', 'count', 'errors')
+        for (item, count) in self.counter.most_common():
+            yield (item, count, self.errors[item])
+
+
+def datetimeparser(fmt):
     """
     Return a function to parse strings as :class:`datetime.datetime` objects using a given format.
     E.g.::
@@ -1248,11 +1336,11 @@ def datetimeparser(format):
     """
     
     def parser(value):
-        return datetime.datetime.strptime(value.strip(), format)
+        return datetime.datetime.strptime(value.strip(), fmt)
     return parser
     
 
-def dateparser(format):
+def dateparser(fmt):
     """
     Return a function to parse strings as :class:`datetime.date` objects using a given format.
     E.g.::
@@ -1290,11 +1378,11 @@ def dateparser(format):
     """
     
     def parser(value):
-        return datetime.datetime.strptime(value.strip(), format).date()
+        return datetime.datetime.strptime(value.strip(), fmt).date()
     return parser
     
 
-def timeparser(format):
+def timeparser(fmt):
     """
     Return a function to parse strings as :class:`datetime.time` objects using a given format.
     E.g.::
@@ -1341,7 +1429,7 @@ def timeparser(format):
     """
     
     def parser(value):
-        return datetime.datetime.strptime(value.strip(), format).time()
+        return datetime.datetime.strptime(value.strip(), fmt).time()
     return parser
     
 
