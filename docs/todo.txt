@@ -28,8 +28,8 @@ Version 0.6
 - [done] manual override for facet in petl.interactive to ensure caching
 - [done] petl.fluent
 - [won't do] RowContainer base class to make life easier in petl.interactive and petl.fluent
-- diffheaders - difference of headers in two tables
-- diffvalues - difference of values in two fields
+- [done] diffheaders - difference of headers in two tables
+- [done] diffvalues - difference of values in two fields
 - return proper row container for ...counts functions so gets cached in petl.interactive but also changes if upstream data changes
 - parser functions with options to fall back to input value if parse fails, would support e.g. incremental parsing of mixed date field
 - cach data structures in hash... functions

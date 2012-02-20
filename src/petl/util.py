@@ -1823,3 +1823,58 @@ class DummyTable(object):
         return hash((self.numrows, self.seed, tuple(self.fields.items())))
         
 
+def diffheaders(t1, t2):
+    """
+    Return the difference between the headers of the two tables as a pair of
+    sets. E.g.::
+
+        >>> from petl import diffheaders    
+        >>> table1 = [['foo', 'bar', 'baz'],
+        ...           ['a', 1, .3]]
+        >>> table2 = [['baz', 'bar', 'quux'],
+        ...           ['a', 1, .3]]
+        >>> add, sub = diffheaders(table1, table2)
+        >>> add
+        set(['quux'])
+        >>> sub
+        set(['foo'])
+
+    .. versionadded:: 0.6
+    
+    """
+    
+    t1h = set(header(t1))
+    t2h = set(header(t2))
+    return t2h - t1h, t1h - t2h
+
+
+def diffvalues(t1, t2, f):
+    """
+    Return the difference between the values under the given field in the two
+    tables, e.g.::
+    
+        >>> from petl import diffvalues
+        >>> table1 = [['foo', 'bar'],
+        ...           ['a', 1],
+        ...           ['b', 3]]
+        >>> table2 = [['bar', 'foo'],
+        ...           [1, 'a'],
+        ...           [3, 'c']]
+        >>> add, sub = diffvalues(table1, table2, 'foo')
+        >>> add
+        set(['c'])
+        >>> sub
+        set(['b'])
+
+    .. versionadded:: 0.6
+    
+    """
+    
+    t1v = set(values(t1, f))
+    t2v = set(values(t2, f))
+    return t2v - t1v, t1v - t2v
+
+
+
+
+

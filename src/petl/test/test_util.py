@@ -6,7 +6,7 @@ TODO doc me
 from petl import header, fieldnames, data, records, rowcount, look, see, values, valuecounter, valuecounts, valueset,\
                 unique, lookup, lookupone, recordlookup, recordlookupone, \
                 DuplicateKeyError, rowlengths, stats, typecounts, parsecounts, typeset, \
-                valuecount, parsenumber, stringpatterns
+                valuecount, parsenumber, stringpatterns, diffheaders, diffvalues
 
 from petl.testutils import assertequal, iassertequal
 import sys
@@ -451,4 +451,33 @@ def test_stringpatterns():
               ('999 9999', 2, 2./6),
               ('999-9999-AA', 1, 1./6))
     iassertequal(expect, actual) 
+    
+
+def test_diffheaders():
+    
+    table1 = (('foo', 'bar', 'baz'),
+              ('a', 1, .3))
+
+    table2 = (('baz', 'bar', 'quux'),
+              ('a', 1, .3))
+    
+    add, sub = diffheaders(table1, table2)
+    assertequal({'quux'}, add)
+    assertequal({'foo'}, sub)
+    
+    
+def test_diffvalues():
+    
+    table1 = (('foo', 'bar'),
+              ('a', 1),
+              ('b', 3))
+
+    table2 = (('bar', 'foo'),
+              (1, 'a'),
+              (3, 'c'))
+    
+    add, sub = diffvalues(table1, table2, 'foo')
+    assertequal({'c'}, add)
+    assertequal({'b'}, sub)
+    
     
