@@ -6,7 +6,7 @@ Tests for the petl.transform module.
 
 from collections import OrderedDict
 
-from petl.testfun import iassertequal, assertequal
+from petl.testutils import iassertequal, assertequal
 from petl import rename, fieldnames, cut, cat, convert, fieldconvert, extend, \
                 rowslice, head, tail, sort, melt, recast, duplicates, conflicts, \
                 mergereduce, select, complement, diff, capture, \

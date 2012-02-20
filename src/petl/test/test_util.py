@@ -8,7 +8,7 @@ from petl import header, fieldnames, data, records, rowcount, look, see, values,
                 DuplicateKeyError, rowlengths, stats, typecounts, parsecounts, typeset, \
                 valuecount, parsenumber, stringpatterns
 
-from petl.testfun import assertequal, iassertequal
+from petl.testutils import assertequal, iassertequal
 import sys
 
 

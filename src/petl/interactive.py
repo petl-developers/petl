@@ -35,20 +35,12 @@ class IterCache(object):
         else:
             if self._tag is None or self._tag != tag:
                 # _tag is not fresh
-                if debug: print repr(self._inner) + ' :: stale, updating cache'
+                if debug: print repr(self._inner) + ' :: stale, clearing cache'
                 self._tag = tag
                 it = iter(self._inner)
-                self._cache = list(islice(it, 0, cachesize))
-                cache = list(self._cache) # need to copy _cache
-                if len(cache) < cachesize:
-                    self._complete = True
-                    return iter(cache)
-                else:
-                    self._complete = False
-                    return chain(cache, it) 
-            else:
-                # serve from _cache
-                return self._iterfromcache()
+                self._cache = list() # reset cache
+            # serve from _cache
+            return self._iterwithcache()
             
     def __repr__(self):
         if representation is not None:
@@ -56,17 +48,17 @@ class IterCache(object):
         else:
             return object.__repr__(self)
             
-    def _iterfromcache(self):
-        # serve from _cache
-        cache = list(self._cache) # need to copy _cache
-        if debug: print repr(self._inner) + ' :: fresh, serving from cache, cache size ' + str(len(cache))
-        for row in cache:
+    def _iterwithcache(self):
+        if debug: print repr(self._inner) + ' :: serving from cache, cache size ' + str(len(self._cache))
+        for row in self._cache:
             yield row
-        if not self._complete:
-            if debug: print repr(self._inner) + ' :: cache exhausted, serving from inner iterator'    
-            it = iter(self._inner)
-            for row in islice(it, len(cache), None):
-                yield row
+        if debug: print repr(self._inner) + ' :: cache exhausted, serving from inner iterator'    
+        it = iter(self._inner)
+        for row in islice(it, len(self._cache), None):
+            # maybe there's more room in the cache?
+            if len(self._cache) < cachesize:
+                self._cache.append(row)
+            yield row
         
     def __getitem__(self, item):
         return self._inner[item]

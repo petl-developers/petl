@@ -24,7 +24,7 @@ Version 0.6
 -----------
 
 - [done] fix randomtable and dummytable
-- fix caching to cache on demand, not ahead
+- [done] fix caching to cache on demand, not ahead
 - RowContainer base class to make life easier in petl.interactive and petl.fluent
 - petl.fluent
 - return proper row container for ...counts functions so gets cached in petl.interactive but also changes if upstream data changes
