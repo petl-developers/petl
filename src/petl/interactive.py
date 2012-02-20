@@ -1,11 +1,13 @@
 """
-TODO doc me
+As the root :mod:`petl` module but with optimisations for use in an interactive
+session.
 
 """
 
 
-from itertools import islice, chain
+from itertools import islice
 import sys
+from petl.util import valueset
 
 
 petl = sys.modules['petl']
@@ -17,7 +19,7 @@ debug = False
 representation = petl.look
 
 
-class IterCache(object):
+class ContainerCache(object):
     
     def __init__(self, inner):
         self._inner = inner
@@ -42,12 +44,6 @@ class IterCache(object):
             # serve from _cache
             return self._iterwithcache()
             
-    def __repr__(self):
-        if representation is not None:
-            return repr(representation(self))
-        else:
-            return object.__repr__(self)
-            
     def _iterwithcache(self):
         if debug: print repr(self._inner) + ' :: serving from cache, cache size ' + str(len(self._cache))
         for row in self._cache:
@@ -60,6 +56,12 @@ class IterCache(object):
                 self._cache.append(row)
             yield row
         
+    def __repr__(self):
+        if representation is not None:
+            return repr(representation(self))
+        else:
+            return object.__repr__(self)
+            
     def __getitem__(self, item):
         return self._inner[item]
     
@@ -78,11 +80,11 @@ class IterCache(object):
     
 def wrap(f):
     def wrapper(*args, **kwargs):
-        result = f(*args, **kwargs)
-        if hasattr(result, 'cachetag') and hasattr(result, '__iter__'):
-            return IterCache(result)
+        _innerresult = f(*args, **kwargs)
+        if hasattr(_innerresult, 'cachetag') and hasattr(_innerresult, '__iter__'):
+            return ContainerCache(_innerresult)
         else:
-            return result
+            return _innerresult
     return wrapper
 
         
@@ -91,3 +93,13 @@ for n, c in petl.__dict__.items():
         setattr(thismodule, n, wrap(c))
     else:
         setattr(thismodule, n, c)
+        
+        
+# need to manually override for facet
+def facet(table, field):
+    fct = dict()
+    for v in valueset(table, field):
+        fct[v] = getattr(thismodule, 'selecteq')(table, field, v)
+    return fct
+
+
