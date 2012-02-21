@@ -6,7 +6,8 @@ TODO doc me
 from petl import header, fieldnames, data, records, rowcount, look, see, values, valuecounter, valuecounts, valueset,\
                 unique, lookup, lookupone, recordlookup, recordlookupone, \
                 DuplicateKeyError, rowlengths, stats, typecounts, parsecounts, typeset, \
-                valuecount, parsenumber, stringpatterns, diffheaders, diffvalues
+                valuecount, parsenumber, stringpatterns, diffheaders, diffvalues, \
+                datetimeparser
 
 from petl.testutils import assertequal, iassertequal
 import sys
@@ -479,5 +480,25 @@ def test_diffvalues():
     add, sub = diffvalues(table1, table2, 'foo')
     assertequal({'c'}, add)
     assertequal({'b'}, sub)
+    
+    
+def test_laxparsers():
+    
+    p1 = datetimeparser('%Y-%m-%dT%H:%M:%S')
+    try:
+        v = p1('2002-12-25 00:00:00')
+    except:
+        pass
+    else:
+        assert False, 'expected exception'
+    
+    p2 = datetimeparser('%Y-%m-%dT%H:%M:%S', strict=False)
+    try:
+        v = p2('2002-12-25 00:00:00')
+    except:
+        assert False, 'did not expect exception'
+    else:
+        assertequal('2002-12-25 00:00:00', v)
+    
     
     

@@ -1299,7 +1299,7 @@ class ParseCountsView(object):
             yield (item, count, self.errors[item])
 
 
-def datetimeparser(fmt):
+def datetimeparser(fmt, strict=True):
     """
     Return a function to parse strings as :class:`datetime.datetime` objects using a given format.
     E.g.::
@@ -1332,15 +1332,27 @@ def datetimeparser(fmt):
         +============+=========+==========+
         | 'datetime' | 2       | 2        |
         +------------+---------+----------+
+        
+    .. versionchanged:: 0.6
+    
+    Added `strict` keyword argument. If ``strict=False`` then if an error occurs
+    when parsing, the original value will be returned as-is, and no error will
+    be raised. Allows for, e.g., incremental parsing of mixed format fields.
     
     """
     
     def parser(value):
-        return datetime.datetime.strptime(value.strip(), fmt)
+        try:
+            return datetime.datetime.strptime(value.strip(), fmt)
+        except:
+            if strict:
+                raise
+            else:
+                return value
     return parser
     
 
-def dateparser(fmt):
+def dateparser(fmt, strict=True):
     """
     Return a function to parse strings as :class:`datetime.date` objects using a given format.
     E.g.::
@@ -1375,14 +1387,26 @@ def dateparser(fmt):
         | 'date' | 2       | 2        |
         +--------+---------+----------+
         
+    .. versionchanged:: 0.6
+    
+    Added `strict` keyword argument. If ``strict=False`` then if an error occurs
+    when parsing, the original value will be returned as-is, and no error will
+    be raised. Allows for, e.g., incremental parsing of mixed format fields.
+    
     """
     
     def parser(value):
-        return datetime.datetime.strptime(value.strip(), fmt).date()
+        try:
+            return datetime.datetime.strptime(value.strip(), fmt).date()
+        except:
+            if strict:
+                raise
+            else:
+                return value
     return parser
     
 
-def timeparser(fmt):
+def timeparser(fmt, strict=True):
     """
     Return a function to parse strings as :class:`datetime.time` objects using a given format.
     E.g.::
@@ -1426,16 +1450,29 @@ def timeparser(fmt):
         | 'time' | 2       | 2        |
         +--------+---------+----------+
     
+    .. versionchanged:: 0.6
+    
+    Added `strict` keyword argument. If ``strict=False`` then if an error occurs
+    when parsing, the original value will be returned as-is, and no error will
+    be raised. Allows for, e.g., incremental parsing of mixed format fields.
+    
     """
     
     def parser(value):
-        return datetime.datetime.strptime(value.strip(), fmt).time()
+        try:
+            return datetime.datetime.strptime(value.strip(), fmt).time()
+        except:
+            if strict:
+                raise
+            else:
+                return value
     return parser
     
 
 def boolparser(true_strings=['true', 't', 'yes', 'y', '1'], 
                false_strings=['false', 'f', 'no', 'n', '0'],
-               case_sensitive=False):
+               case_sensitive=False, 
+               strict=True):
     """
     Return a function to parse strings as :class:`bool` objects using a given set of
     string representations for `True` and `False`.
@@ -1483,6 +1520,12 @@ def boolparser(true_strings=['true', 't', 'yes', 'y', '1'],
         | 'bool' | 2       | 2        |
         +--------+---------+----------+
 
+    .. versionchanged:: 0.6
+    
+    Added `strict` keyword argument. If ``strict=False`` then if an error occurs
+    when parsing, the original value will be returned as-is, and no error will
+    be raised. Allows for, e.g., incremental parsing of mixed format fields.
+    
     """
     
     if not case_sensitive:
@@ -1496,8 +1539,10 @@ def boolparser(true_strings=['true', 't', 'yes', 'y', '1'],
             return True
         elif value in false_strings:
             return False
-        else:
+        elif strict:
             raise ValueError('value is not one of recognised boolean strings: %r' % value)
+        else:
+            return value
     return parser
     
 

@@ -31,7 +31,7 @@ Version 0.6
 - [done] diffheaders - difference of headers in two tables
 - [done] diffvalues - difference of values in two fields
 - [done] return proper row container for ...counts functions so gets cached in petl.interactive but also changes if upstream data changes
-- parser functions with options to fall back to input value if parse fails, would support e.g. incremental parsing of mixed date field
+- [done] parser functions with options to fall back to input value if parse fails, would support e.g. incremental parsing of mixed date field
 - cach data structures in hash... functions
 
 Version 0.5
