@@ -33,7 +33,7 @@ Version 0.6
 - [done] return proper row container for ...counts functions so gets cached in petl.interactive but also changes if upstream data changes
 - [done] parser functions with options to fall back to input value if parse fails, would support e.g. incremental parsing of mixed date field
 - [won't do] cach data structures in hash... functions
-- fromxml multiple nodes as tuple value
+- [done] fromxml multiple nodes as tuple value
 
 Version 0.5
 -----------

@@ -1,5 +1,5 @@
 """
-TODO doc me
+Extract and load data to/from files, databases, etc.
 
 """
 
@@ -485,7 +485,7 @@ def fromxml(filename, *args, **kwargs):
     
         >>> data = \"""<table>
         ...     <row>
-        ...         <foo>a</foo><baz><bar v='1'/></baz>
+        ...         <foo>a</foo><baz><bar v='1'/><bar v='3'/></baz>
         ...     </row>
         ...     <row>
         ...         <foo>b</foo><baz><bar v='2'/></baz>
@@ -500,20 +500,22 @@ def fromxml(filename, *args, **kwargs):
         ... 
         >>> table3 = fromxml('example3.xml', 'row', {'foo': 'foo', 'bar': ('baz/bar', 'v')})
         >>> look(table3)
-        +-------+-------+
-        | 'foo' | 'bar' |
-        +=======+=======+
-        | 'a'   | '1'   |
-        +-------+-------+
-        | 'b'   | '2'   |
-        +-------+-------+
-        | 'c'   | '2'   |
-        +-------+-------+
+        +-------+------------+
+        | 'foo' | 'bar'      |
+        +=======+============+
+        | 'a'   | ('1', '3') |
+        +-------+------------+
+        | 'b'   | '2'        |
+        +-------+------------+
+        | 'c'   | '2'        |
+        +-------+------------+
 
     Note that the implementation is currently *not*
     streaming, i.e., the whole document is loaded into memory.
     
     .. versionadded:: 0.4
+    
+    .. versionchanged:: 0.6 If multiple elements match a given field, all values are reported as a tuple.
     
     """
 
@@ -546,17 +548,25 @@ class XmlView(object):
             self.checksumfun = kwargs['checksumfun']
         else:
             self.checksumfun = None
+        if 'missing' in kwargs:
+            self.missing = kwargs['missing']
+        else:
+            self.missing = None
         
     def __iter__(self):
         tree = ElementTree.parse(self.filename)
+        
         if self.vmatch is not None:
-            for relm in tree.iterfind(self.rmatch):
+            # simple case, all value paths are the same
+            for rowelm in tree.iterfind(self.rmatch):
                 if self.attr is None:
                     getv = attrgetter('text')
                 else:
                     getv = lambda e: e.get(self.attr)
-                yield tuple(getv(velm) for velm in relm.findall(self.vmatch))
+                yield tuple(getv(velm) for velm in rowelm.findall(self.vmatch))
+
         else:
+            # difficult case, deal with different paths for each field
             fields = tuple(self.vdict.keys())
             yield fields
             vmatches = dict()
@@ -564,13 +574,16 @@ class XmlView(object):
             for f in fields:
                 vmatch = self.vdict[f]
                 if isinstance(vmatch, basestring):
+                    # match element path
                     vmatches[f] = vmatch
-                    vgetters[f] = attrgetter('text')
+                    vgetters[f] = lambda v: tuple(e.text for e in v) if len(v) > 1 else v[0].text if len(v) == 1 else self.missing
                 else:
+                    # match element path and attribute name
                     vmatches[f] = vmatch[0]
-                    vgetters[f] = lambda e: e.get(vmatch[1])
-            for relm in tree.iterfind(self.rmatch):
-                yield tuple(vgetters[f](relm.find(vmatches[f])) for f in fields)
+                    attr = vmatch[1]
+                    vgetters[f] = lambda v: tuple(e.get(attr) for e in v) if len(v) > 1 else v[0].get(attr) if len(v) == 1 else self.missing
+            for rowelm in tree.iterfind(self.rmatch):
+                yield tuple(vgetters[f](rowelm.findall(vmatches[f])) for f in fields)
             
                     
     def cachetag(self):

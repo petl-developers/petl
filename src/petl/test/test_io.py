@@ -407,6 +407,60 @@ def test_fromxml_3():
     iassertequal(expect, actual) # verify can iterate twice
 
 
+def test_fromxml_4():
+    
+    # initial data
+    f = NamedTemporaryFile(delete=False)
+    data = """<table>
+    <row>
+        <foo>a</foo><baz><bar>1</bar><bar>3</bar></baz>
+    </row>
+    <row>
+        <foo>b</foo><baz><bar>2</bar></baz>
+    </row>
+    <row>
+        <foo>c</foo><baz><bar>2</bar></baz>
+    </row>
+</table>"""
+    f.write(data)
+    f.close()
+    
+    actual = fromxml(f.name, 'row', {'foo': 'foo', 'bar': './/bar'})
+    expect = (('foo', 'bar'),
+              ('a', ('1', '3')),
+              ('b', '2'),
+              ('c', '2'))
+    iassertequal(expect, actual)
+    iassertequal(expect, actual) # verify can iterate twice
+
+
+def test_fromxml_5():
+    
+    # initial data
+    f = NamedTemporaryFile(delete=False)
+    data = """<table>
+    <row>
+        <foo>a</foo><baz><bar v='1'/><bar v='3'/></baz>
+    </row>
+    <row>
+        <foo>b</foo><baz><bar v='2'/></baz>
+    </row>
+    <row>
+        <foo>c</foo><baz><bar v='2'/></baz>
+    </row>
+</table>"""
+    f.write(data)
+    f.close()
+    
+    actual = fromxml(f.name, 'row', {'foo': 'foo', 'bar': ('baz/bar', 'v')})
+    expect = (('foo', 'bar'),
+              ('a', ('1', '3')),
+              ('b', '2'),
+              ('c', '2'))
+    iassertequal(expect, actual)
+    iassertequal(expect, actual) # verify can iterate twice
+
+
 def test_fromjson_1():
     
     f = NamedTemporaryFile(delete=False)
