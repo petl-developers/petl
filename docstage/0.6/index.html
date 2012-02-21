@@ -110,8 +110,8 @@ should be able to do <tt class="docutils literal"><span class="pre">easy_install
 Windows or Mac you can download manually, extract and run <tt class="docutils literal"><span class="pre">python</span>
 <span class="pre">setup.py</span> <span class="pre">install</span></tt>.</p>
 </div>
-<div class="section" id="dependencies">
-<h2>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="dependencies-and-extensions">
+<h2>Dependencies and extensions<a class="headerlink" href="#dependencies-and-extensions" title="Permalink to this headline">¶</a></h2>
 <p>This package has been written with no dependencies other than the
 Python core modules, for ease of installation and
 maintenance. However, there are many third party packages which could
@@ -1563,7 +1563,7 @@ so this function can be used to simulate very large tables.</p>
 
 <dl class="function">
 <dt id="petl.dummytable">
-<tt class="descclassname">petl.</tt><tt class="descname">dummytable</tt><big>(</big><em>numrows=100, fields=[('foo', &lt;functools.partial object at 0x22a8310&gt;), ('bar', &lt;functools.partial object at 0x30b6ba8&gt;), ('baz', &lt;built-in method random of Random object at 0x1b400f0&gt;)], wait=0</em><big>)</big><a class="headerlink" href="#petl.dummytable" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">petl.</tt><tt class="descname">dummytable</tt><big>(</big><em>numrows=100, fields=[('foo', &lt;functools.partial object at 0x17cbdb8&gt;), ('bar', &lt;functools.partial object at 0x25dd838&gt;), ('baz', &lt;built-in method random of Random object at 0x1061ba0&gt;)], wait=0</em><big>)</big><a class="headerlink" href="#petl.dummytable" title="Permalink to this definition">¶</a></dt>
 <dd><p>Construct a table with dummy data. Use <cite>numrows</cite> to specify the number of 
 rows. Set <cite>wait</cite> to a float greater than zero to simulate a delay on each 
 row generation (number of seconds per row). E.g.:</p>
@@ -1948,7 +1948,7 @@ as an extra positional argument, e.g.:</p>
 to element paths, e.g.:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">data</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;&lt;table&gt;</span>
 <span class="gp">... </span><span class="s">    &lt;row&gt;</span>
-<span class="gp">... </span><span class="s">        &lt;foo&gt;a&lt;/foo&gt;&lt;baz&gt;&lt;bar v=&#39;1&#39;/&gt;&lt;/baz&gt;</span>
+<span class="gp">... </span><span class="s">        &lt;foo&gt;a&lt;/foo&gt;&lt;baz&gt;&lt;bar v=&#39;1&#39;/&gt;&lt;bar v=&#39;3&#39;/&gt;&lt;/baz&gt;</span>
 <span class="gp">... </span><span class="s">    &lt;/row&gt;</span>
 <span class="gp">... </span><span class="s">    &lt;row&gt;</span>
 <span class="gp">... </span><span class="s">        &lt;foo&gt;b&lt;/foo&gt;&lt;baz&gt;&lt;bar v=&#39;2&#39;/&gt;&lt;/baz&gt;</span>
@@ -1963,21 +1963,23 @@ to element paths, e.g.:</p>
 <span class="gp">... </span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">table3</span> <span class="o">=</span> <span class="n">fromxml</span><span class="p">(</span><span class="s">&#39;example3.xml&#39;</span><span class="p">,</span> <span class="s">&#39;row&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;foo&#39;</span><span class="p">:</span> <span class="s">&#39;foo&#39;</span><span class="p">,</span> <span class="s">&#39;bar&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s">&#39;baz/bar&#39;</span><span class="p">,</span> <span class="s">&#39;v&#39;</span><span class="p">)})</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">look</span><span class="p">(</span><span class="n">table3</span><span class="p">)</span>
-<span class="go">+-------+-------+</span>
-<span class="go">| &#39;foo&#39; | &#39;bar&#39; |</span>
-<span class="go">+=======+=======+</span>
-<span class="go">| &#39;a&#39;   | &#39;1&#39;   |</span>
-<span class="go">+-------+-------+</span>
-<span class="go">| &#39;b&#39;   | &#39;2&#39;   |</span>
-<span class="go">+-------+-------+</span>
-<span class="go">| &#39;c&#39;   | &#39;2&#39;   |</span>
-<span class="go">+-------+-------+</span>
+<span class="go">+-------+------------+</span>
+<span class="go">| &#39;foo&#39; | &#39;bar&#39;      |</span>
+<span class="go">+=======+============+</span>
+<span class="go">| &#39;a&#39;   | (&#39;1&#39;, &#39;3&#39;) |</span>
+<span class="go">+-------+------------+</span>
+<span class="go">| &#39;b&#39;   | &#39;2&#39;        |</span>
+<span class="go">+-------+------------+</span>
+<span class="go">| &#39;c&#39;   | &#39;2&#39;        |</span>
+<span class="go">+-------+------------+</span>
 </pre></div>
 </div>
 <p>Note that the implementation is currently <em>not</em>
 streaming, i.e., the whole document is loaded into memory.</p>
 <p class="versionadded">
 <span class="versionmodified">New in version 0.4.</span></p>
+<p class="versionchanged">
+<span class="versionmodified">Changed in version 0.6: </span>If multiple elements match a given field, all values are reported as a tuple.</p>
 </dd></dl>
 
 <dl class="function">
@@ -3638,7 +3640,7 @@ are sorted, see also the discussion of the <cite>buffersize</cite> argument unde
 
 <dl class="function">
 <dt id="petl.conflicts">
-<tt class="descclassname">petl.</tt><tt class="descname">conflicts</tt><big>(</big><em>table</em>, <em>key</em>, <em>missing=None</em>, <em>presorted=False</em>, <em>buffersize=None</em><big>)</big><a class="headerlink" href="#petl.conflicts" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">petl.</tt><tt class="descname">conflicts</tt><big>(</big><em>table</em>, <em>key</em>, <em>missing=None</em>, <em>ignore=None</em>, <em>presorted=False</em>, <em>buffersize=None</em><big>)</big><a class="headerlink" href="#petl.conflicts" title="Permalink to this definition">¶</a></dt>
 <dd><p>Select rows with the same key value but differing in some other field. E.g.:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">petl</span> <span class="kn">import</span> <span class="n">conflicts</span><span class="p">,</span> <span class="n">look</span>    
 <span class="gp">&gt;&gt;&gt; </span><span class="n">table1</span> <span class="o">=</span> <span class="p">[[</span><span class="s">&#39;foo&#39;</span><span class="p">,</span> <span class="s">&#39;bar&#39;</span><span class="p">,</span> <span class="s">&#39;baz&#39;</span><span class="p">],</span>
@@ -3671,6 +3673,21 @@ argument.</p>
 the given key, and the <cite>buffersize</cite> argument is ignored. Otherwise, the data 
 are sorted, see also the discussion of the <cite>buffersize</cite> argument under the 
 <a class="reference internal" href="#petl.sort" title="petl.sort"><tt class="xref py py-func docutils literal"><span class="pre">sort()</span></tt></a> function.</p>
+<p class="versionchanged">
+<span class="versionmodified">Changed in version 0.5.</span></p>
+<p>One or more fields can be ignored when determining conflicts by providing
+the <cite>ignore</cite> keyword argument. E.g.:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">table3</span> <span class="o">=</span> <span class="n">conflicts</span><span class="p">(</span><span class="n">table1</span><span class="p">,</span> <span class="s">&#39;foo&#39;</span><span class="p">,</span> <span class="n">ignore</span><span class="o">=</span><span class="s">&#39;baz&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">look</span><span class="p">(</span><span class="n">table3</span><span class="p">)</span>
+<span class="go">+-------+-------+-------+</span>
+<span class="go">| &#39;foo&#39; | &#39;bar&#39; | &#39;baz&#39; |</span>
+<span class="go">+=======+=======+=======+</span>
+<span class="go">| &#39;A&#39;   | 1     | 2.7   |</span>
+<span class="go">+-------+-------+-------+</span>
+<span class="go">| &#39;A&#39;   | 2     | None  |</span>
+<span class="go">+-------+-------+-------+</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">
@@ -5345,7 +5362,7 @@ before being written to the file.</p>
   <ul>
 <li><a class="reference internal" href="#">petl - Extract, Transform and Load (Tables of Data)</a><ul>
 <li><a class="reference internal" href="#installation">Installation</a></li>
-<li><a class="reference internal" href="#dependencies">Dependencies</a></li>
+<li><a class="reference internal" href="#dependencies-and-extensions">Dependencies and extensions</a></li>
 <li><a class="reference internal" href="#conventions-row-containers-and-row-iterators">Conventions - row containers and row iterators</a></li>
 <li><a class="reference internal" href="#transformation-pipelines">Transformation pipelines</a></li>
 <li><a class="reference internal" href="#caching-memoization">Caching / memoization</a></li>
