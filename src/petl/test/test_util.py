@@ -6,9 +6,10 @@ TODO doc me
 from petl import header, fieldnames, data, records, rowcount, look, see, values, valuecounter, valuecounts, valueset,\
                 unique, lookup, lookupone, recordlookup, recordlookupone, \
                 DuplicateKeyError, rowlengths, stats, typecounts, parsecounts, typeset, \
-                valuecount, parsenumber, stringpatterns
+                valuecount, parsenumber, stringpatterns, diffheaders, diffvalues, \
+                datetimeparser
 
-from petl.testfun import assertequal, iassertequal
+from petl.testutils import assertequal, iassertequal
 import sys
 
 
@@ -378,15 +379,15 @@ def test_typecounts():
              ('E', 42))
 
     actual = typecounts(table, 'foo') 
-    expect = (('type', 'count'), ('str', 4), ('unicode', 1))
+    expect = (('type', 'count', 'frequency'), ('str', 4, 4./5), ('unicode', 1, 1./5))
     iassertequal(expect, actual)
 
     actual = typecounts(table, 'bar') 
-    expect = (('type', 'count'), ('unicode', 3), ('int', 2))
+    expect = (('type', 'count', 'frequency'), ('unicode', 3, 3./5), ('int', 2, 2./5))
     iassertequal(expect, actual)
 
     actual = typecounts(table, 'baz') 
-    expect = (('type', 'count'), ('str', 3), ('float', 1))
+    expect = (('type', 'count', 'frequency'), ('str', 3, 3./4), ('float', 1, 1./4))
     iassertequal(expect, actual)
 
 
@@ -451,4 +452,53 @@ def test_stringpatterns():
               ('999 9999', 2, 2./6),
               ('999-9999-AA', 1, 1./6))
     iassertequal(expect, actual) 
+    
+
+def test_diffheaders():
+    
+    table1 = (('foo', 'bar', 'baz'),
+              ('a', 1, .3))
+
+    table2 = (('baz', 'bar', 'quux'),
+              ('a', 1, .3))
+    
+    add, sub = diffheaders(table1, table2)
+    assertequal({'quux'}, add)
+    assertequal({'foo'}, sub)
+    
+    
+def test_diffvalues():
+    
+    table1 = (('foo', 'bar'),
+              ('a', 1),
+              ('b', 3))
+
+    table2 = (('bar', 'foo'),
+              (1, 'a'),
+              (3, 'c'))
+    
+    add, sub = diffvalues(table1, table2, 'foo')
+    assertequal({'c'}, add)
+    assertequal({'b'}, sub)
+    
+    
+def test_laxparsers():
+    
+    p1 = datetimeparser('%Y-%m-%dT%H:%M:%S')
+    try:
+        v = p1('2002-12-25 00:00:00')
+    except:
+        pass
+    else:
+        assert False, 'expected exception'
+    
+    p2 = datetimeparser('%Y-%m-%dT%H:%M:%S', strict=False)
+    try:
+        v = p2('2002-12-25 00:00:00')
+    except:
+        assert False, 'did not expect exception'
+    else:
+        assertequal('2002-12-25 00:00:00', v)
+    
+    
     

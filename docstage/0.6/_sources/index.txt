@@ -66,8 +66,8 @@ should be able to do ``easy_install petl`` or ``pip install petl``. On
 Windows or Mac you can download manually, extract and run ``python
 setup.py install``.
 
-Dependencies and extensions
----------------------------
+Dependencies
+------------
 
 This package has been written with no dependencies other than the
 Python core modules, for ease of installation and

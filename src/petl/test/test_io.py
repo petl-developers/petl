@@ -15,7 +15,7 @@ from petl import fromcsv, frompickle, fromsqlite3, adler32sum, crc32sum, fromdb,
                 
 
 
-from petl.testfun import iassertequal, assertequal
+from petl.testutils import iassertequal, assertequal
 import json
 
 

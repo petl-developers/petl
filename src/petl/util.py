@@ -10,6 +10,11 @@ from operator import itemgetter
 import datetime
 import re
 from string import maketrans
+import random
+import time
+import datetime
+from collections import OrderedDict
+from functools import partial
 
 
 def header(table):
@@ -547,14 +552,39 @@ def valuecounts(table, field):
             
     """
     
-    counter = valuecounter(table, field)
-    output = [('value', 'count', 'frequency')]
-    counts = counter.most_common()
-    total = sum(c[1] for c in counts)
-    counts = [(c[0], c[1], float(c[1])/total) for c in counts]
-    output.extend(counts)
-    return output
+    return ValueCountsView(table, field)
+
+
+class ValueCountsView(object):
+    
+    def __init__(self, table, field):
+        self.table = table
+        self.field = field
+        self.counter = None
+        self.tag = None
         
+    def cachetag(self):
+        return hash((self.table.cachetag(), self.field))
+    
+    def __iter__(self):
+        
+        try:
+            tag = self.table.cachetag()
+        except: # uncacheable
+            self.counter = valuecounter(self.table, self.field)
+        else:
+            if self.tag is None or tag != self.tag:
+                self.tag = tag
+                self.counter = valuecounter(self.table, self.field)
+            else:
+                pass # don't need to update counter
+
+        yield ('value', 'count', 'frequency')
+        counts = self.counter.most_common()
+        total = sum(c[1] for c in counts)
+        for c in counts:
+            yield (c[0], c[1], float(c[1])/total)
+
         
 def unique(table, field):
     """
@@ -1053,7 +1083,7 @@ def typecounter(table, field):
 def typecounts(table, field):    
     """
     Count the number of values found for each Python type and return a table
-    mapping class names to counts. E.g.::
+    mapping class names to counts and frequencies. E.g.::
 
         >>> from petl import look, typecounts
         >>> table = [['foo', 'bar', 'baz'],
@@ -1063,44 +1093,76 @@ def typecounts(table, field):
         ...          ['D', u'xyz', 9.0],
         ...          ['E', 42]]
         >>> look(typecounts(table, 'foo'))
-        +-----------+---------+
-        | 'type'    | 'count' |
-        +===========+=========+
-        | 'str'     | 4       |
-        +-----------+---------+
-        | 'unicode' | 1       |
-        +-----------+---------+
+        +-----------+---------+-------------+
+        | 'type'    | 'count' | 'frequency' |
+        +===========+=========+=============+
+        | 'str'     | 4       | 0.8         |
+        +-----------+---------+-------------+
+        | 'unicode' | 1       | 0.2         |
+        +-----------+---------+-------------+
         
         >>> look(typecounts(table, 'bar'))
-        +-----------+---------+
-        | 'type'    | 'count' |
-        +===========+=========+
-        | 'unicode' | 3       |
-        +-----------+---------+
-        | 'int'     | 2       |
-        +-----------+---------+
+        +-----------+---------+-------------+
+        | 'type'    | 'count' | 'frequency' |
+        +===========+=========+=============+
+        | 'unicode' | 3       | 0.6         |
+        +-----------+---------+-------------+
+        | 'int'     | 2       | 0.4         |
+        +-----------+---------+-------------+
         
         >>> look(typecounts(table, 'baz'))
-        +-----------+---------+
-        | 'type'    | 'count' |
-        +===========+=========+
-        | 'int'     | 1       |
-        +-----------+---------+
-        | 'float'   | 1       |
-        +-----------+---------+
-        | 'unicode' | 1       |
-        +-----------+---------+
-        | 'str'     | 1       |
-        +-----------+---------+
-
-    The `field` argument can be a field name or index (starting from zero).    
+        +-----------+---------+-------------+
+        | 'type'    | 'count' | 'frequency' |
+        +===========+=========+=============+
+        | 'int'     | 1       | 0.25        |
+        +-----------+---------+-------------+
+        | 'float'   | 1       | 0.25        |
+        +-----------+---------+-------------+
+        | 'unicode' | 1       | 0.25        |
+        +-----------+---------+-------------+
+        | 'str'     | 1       | 0.25        |
+        +-----------+---------+-------------+
+        
+    The `field` argument can be a field name or index (starting from zero).
+    
+    .. versionchanged:: 0.6
+    
+    Added frequency.    
  
     """
     
-    counter = typecounter(table, field)
-    output = [('type', 'count')]
-    output.extend(counter.most_common())
-    return output
+    return TypeCountsView(table, field)
+
+
+class TypeCountsView(object):
+    
+    def __init__(self, table, field):
+        self.table = table
+        self.field = field
+        self.counter = None
+        self.tag = None
+        
+    def cachetag(self):
+        return hash((self.table.cachetag(), self.field))
+    
+    def __iter__(self):
+        
+        try:
+            tag = self.table.cachetag()
+        except: # uncacheable
+            self.counter = typecounter(self.table, self.field)
+        else:
+            if self.tag is None or tag != self.tag:
+                self.tag = tag
+                self.counter = typecounter(self.table, self.field)
+            else:
+                pass # don't need to update counter
+
+        yield ('type', 'count', 'frequency')
+        counts = self.counter.most_common()
+        total = sum(c[1] for c in counts)
+        for c in counts:
+            yield (c[0], c[1], float(c[1])/total)
 
 
 def typeset(table, field):
@@ -1161,6 +1223,10 @@ def parsecounter(table, field, parsers={'int': int, 'float': float}):
     """
     
     counter, errors = Counter(), Counter()
+    # need to initialise
+    for n in parsers.keys():
+        counter[n] = 0
+        errors[n] = 0
     for v in values(table, field):
         if isinstance(v, basestring):
             for name, parser in parsers.items():
@@ -1199,14 +1265,41 @@ def parsecounts(table, field, parsers={'int': int, 'float': float}):
 
     """
     
-    counter, errors = parsecounter(table, field, parsers)
-    output_fields = [('type', 'count', 'errors')]
-    output_data = [(item, count, errors[item]) for (item, count) in counter.most_common()]
-    output = output_fields + output_data
-    return output
+    return ParseCountsView(table, field, parsers=parsers)
 
 
-def datetimeparser(format):
+class ParseCountsView(object):
+    
+    def __init__(self, table, field, parsers={'int': int, 'float': float}):
+        self.table = table
+        self.field = field
+        self.parsers = parsers
+        self.counter = None
+        self.errors = None
+        self.tag = None
+        
+    def cachetag(self):
+        return hash((self.table.cachetag(), self.field, tuple(self.parsers.items())))
+    
+    def __iter__(self):
+        
+        try:
+            tag = self.table.cachetag()
+        except: # uncacheable
+            self.counter, self.errors = parsecounter(self.table, self.field, self.parsers)
+        else:
+            if self.tag is None or tag != self.tag:
+                self.tag = tag
+                self.counter, self.errors = parsecounter(self.table, self.field, self.parsers)
+            else:
+                pass # don't need to update counter
+
+        yield ('type', 'count', 'errors')
+        for (item, count) in self.counter.most_common():
+            yield (item, count, self.errors[item])
+
+
+def datetimeparser(fmt, strict=True):
     """
     Return a function to parse strings as :class:`datetime.datetime` objects using a given format.
     E.g.::
@@ -1239,15 +1332,27 @@ def datetimeparser(format):
         +============+=========+==========+
         | 'datetime' | 2       | 2        |
         +------------+---------+----------+
+        
+    .. versionchanged:: 0.6
+    
+    Added `strict` keyword argument. If ``strict=False`` then if an error occurs
+    when parsing, the original value will be returned as-is, and no error will
+    be raised. Allows for, e.g., incremental parsing of mixed format fields.
     
     """
     
     def parser(value):
-        return datetime.datetime.strptime(value.strip(), format)
+        try:
+            return datetime.datetime.strptime(value.strip(), fmt)
+        except:
+            if strict:
+                raise
+            else:
+                return value
     return parser
     
 
-def dateparser(format):
+def dateparser(fmt, strict=True):
     """
     Return a function to parse strings as :class:`datetime.date` objects using a given format.
     E.g.::
@@ -1282,14 +1387,26 @@ def dateparser(format):
         | 'date' | 2       | 2        |
         +--------+---------+----------+
         
+    .. versionchanged:: 0.6
+    
+    Added `strict` keyword argument. If ``strict=False`` then if an error occurs
+    when parsing, the original value will be returned as-is, and no error will
+    be raised. Allows for, e.g., incremental parsing of mixed format fields.
+    
     """
     
     def parser(value):
-        return datetime.datetime.strptime(value.strip(), format).date()
+        try:
+            return datetime.datetime.strptime(value.strip(), fmt).date()
+        except:
+            if strict:
+                raise
+            else:
+                return value
     return parser
     
 
-def timeparser(format):
+def timeparser(fmt, strict=True):
     """
     Return a function to parse strings as :class:`datetime.time` objects using a given format.
     E.g.::
@@ -1333,16 +1450,29 @@ def timeparser(format):
         | 'time' | 2       | 2        |
         +--------+---------+----------+
     
+    .. versionchanged:: 0.6
+    
+    Added `strict` keyword argument. If ``strict=False`` then if an error occurs
+    when parsing, the original value will be returned as-is, and no error will
+    be raised. Allows for, e.g., incremental parsing of mixed format fields.
+    
     """
     
     def parser(value):
-        return datetime.datetime.strptime(value.strip(), format).time()
+        try:
+            return datetime.datetime.strptime(value.strip(), fmt).time()
+        except:
+            if strict:
+                raise
+            else:
+                return value
     return parser
     
 
 def boolparser(true_strings=['true', 't', 'yes', 'y', '1'], 
                false_strings=['false', 'f', 'no', 'n', '0'],
-               case_sensitive=False):
+               case_sensitive=False, 
+               strict=True):
     """
     Return a function to parse strings as :class:`bool` objects using a given set of
     string representations for `True` and `False`.
@@ -1390,6 +1520,12 @@ def boolparser(true_strings=['true', 't', 'yes', 'y', '1'],
         | 'bool' | 2       | 2        |
         +--------+---------+----------+
 
+    .. versionchanged:: 0.6
+    
+    Added `strict` keyword argument. If ``strict=False`` then if an error occurs
+    when parsing, the original value will be returned as-is, and no error will
+    be raised. Allows for, e.g., incremental parsing of mixed format fields.
+    
     """
     
     if not case_sensitive:
@@ -1403,8 +1539,10 @@ def boolparser(true_strings=['true', 't', 'yes', 'y', '1'],
             return True
         elif value in false_strings:
             return False
-        else:
+        elif strict:
             raise ValueError('value is not one of recognised boolean strings: %r' % value)
+        else:
+            return value
     return parser
     
 
@@ -1609,5 +1747,267 @@ def stringpatterns(table, field):
     counts = [(c[0], c[1], float(c[1])/total) for c in counter]
     output.extend(counts)
     return output
+
+
+def randomtable(numflds=5, numrows=100, wait=0):
+    """
+    Construct a table with random numerical data. Use `numflds` and `numrows` to
+    specify the number of fields and rows respectively. Set `wait` to a float
+    greater than zero to simulate a delay on each row generation (number of 
+    seconds per row). E.g.::
+    
+        >>> from petl import randomtable, look
+        >>> t = randomtable(5, 10000)
+        >>> look(t)
+        +---------------------+---------------------+---------------------+----------------------+----------------------+
+        | 'f0'                | 'f1'                | 'f2'                | 'f3'                 | 'f4'                 |
+        +=====================+=====================+=====================+======================+======================+
+        | 0.37981479583619415 | 0.5651754962690851  | 0.5219839418441516  | 0.400507081757018    | 0.18772722969580335  |
+        +---------------------+---------------------+---------------------+----------------------+----------------------+
+        | 0.8523718373108918  | 0.9728988775985702  | 0.539819811070272   | 0.5253127991162814   | 0.032332586052070345 |
+        +---------------------+---------------------+---------------------+----------------------+----------------------+
+        | 0.15767415808765595 | 0.8723372406647985  | 0.8116271113050197  | 0.19606663402788693  | 0.02917384287810021  |
+        +---------------------+---------------------+---------------------+----------------------+----------------------+
+        | 0.29027126477145737 | 0.9458013821235983  | 0.0558711583090582  | 0.8388382491420909   | 0.533855533396786    |
+        +---------------------+---------------------+---------------------+----------------------+----------------------+
+        | 0.7299727877963395  | 0.7293822340944851  | 0.953624640847381   | 0.7161554959575555   | 0.8681001821667421   |
+        +---------------------+---------------------+---------------------+----------------------+----------------------+
+        | 0.7057077618876934  | 0.5222733323906424  | 0.26527912571554013 | 0.41069309093677264  | 0.7062831671289698   |
+        +---------------------+---------------------+---------------------+----------------------+----------------------+
+        | 0.9447075997744453  | 0.3980291877822444  | 0.5748113148854611  | 0.037655670603881974 | 0.30826709590498524  |
+        +---------------------+---------------------+---------------------+----------------------+----------------------+
+        | 0.21559911346698513 | 0.8353039675591192  | 0.5558847892537019  | 0.8561403358605812   | 0.01109608253313421  |
+        +---------------------+---------------------+---------------------+----------------------+----------------------+
+        | 0.27334411287843097 | 0.10064946027523636 | 0.7476185996637322  | 0.26201984851765325  | 0.6303996377010502   |
+        +---------------------+---------------------+---------------------+----------------------+----------------------+
+        | 0.8348722928576766  | 0.40319578510057763 | 0.3658094978577834  | 0.9829576880714145   | 0.6170025401631835   |
+        +---------------------+---------------------+---------------------+----------------------+----------------------+
+    
+    Note that the data are generated on the fly and are not stored in memory,
+    so this function can be used to simulate very large tables.
+    
+    .. versionadded:: 0.6
+    
+    See also :func:`dummytable`.
+    
+    """
+    
+    return RandomTable(numflds, numrows, wait=wait)
+    
+    
+class RandomTable(object):
+    
+    def __init__(self, numflds=5, numrows=100, wait=0):
+        self.numflds = numflds
+        self.numrows = numrows
+        self.wait = wait
+        self.seed = datetime.datetime.now()
+        
+    def __iter__(self):
+
+        nf = self.numflds
+        nr = self.numrows
+        seed = self.seed
+        
+        # N.B., we want this to be stable, i.e., same data each time
+        random.seed(seed)
+        
+        # construct fields
+        flds = ['f%s' % n for n in range(nf)]
+        yield tuple(flds)
+
+        # construct data rows
+        for i in xrange(nr):
+            # artificial delay
+            if self.wait:
+                time.sleep(self.wait)
+            yield tuple(random.random() for n in range(nf))
+            
+    def reseed(self):
+        self.seed = datetime.datetime.now()
+        
+    def cachetag(self):
+        return hash((self.numflds, self.numrows, self.seed))
+        
+        
+        
+def dummytable(numrows=100, 
+               fields=[('foo', partial(random.randint, 0, 100)), 
+                       ('bar', partial(random.choice, ['apples', 'pears', 'bananas', 'oranges'])), 
+                       ('baz', random.random)], 
+               wait=0):
+    """
+    Construct a table with dummy data. Use `numrows` to specify the number of 
+    rows. Set `wait` to a float greater than zero to simulate a delay on each 
+    row generation (number of seconds per row). E.g.::
+    
+        >>> from petl import dummytable, look
+        >>> t1 = dummytable(10000)
+        >>> look(t1)
+        +-------+-----------+----------------------+
+        | 'foo' | 'bar'     | 'baz'                |
+        +=======+===========+======================+
+        | 98    | 'oranges' | 0.017443519200384117 |
+        +-------+-----------+----------------------+
+        | 85    | 'pears'   | 0.6126183086894914   |
+        +-------+-----------+----------------------+
+        | 43    | 'apples'  | 0.8354915052285888   |
+        +-------+-----------+----------------------+
+        | 32    | 'pears'   | 0.9612740566307508   |
+        +-------+-----------+----------------------+
+        | 35    | 'bananas' | 0.4845179128370132   |
+        +-------+-----------+----------------------+
+        | 16    | 'pears'   | 0.150174888085586    |
+        +-------+-----------+----------------------+
+        | 98    | 'bananas' | 0.22592589109877748  |
+        +-------+-----------+----------------------+
+        | 82    | 'bananas' | 0.4887849296756226   |
+        +-------+-----------+----------------------+
+        | 75    | 'apples'  | 0.8414305202212253   |
+        +-------+-----------+----------------------+
+        | 78    | 'bananas' | 0.025845900016858714 |
+        +-------+-----------+----------------------+
+    
+    Note that the data are generated on the fly and are not stored in memory,
+    so this function can be used to simulate very large tables.
+    
+    Data generation functions can be specified via the `fields` keyword argument,
+    or set on the table via the suffix notation, e.g.::
+    
+        >>> import random
+        >>> from functools import partial
+        >>> t2 = dummytable(10000, fields=[('foo', random.random), ('bar', partial(random.randint, 0, 500))])
+        >>> t2['baz'] = partial(random.choice, ['chocolate', 'strawberry', 'vanilla'])
+        >>> look(t2)
+        +---------------------+-------+--------------+
+        | 'foo'               | 'bar' | 'baz'        |
+        +=====================+=======+==============+
+        | 0.04595169186388326 | 370   | 'strawberry' |
+        +---------------------+-------+--------------+
+        | 0.29252999472988905 | 90    | 'chocolate'  |
+        +---------------------+-------+--------------+
+        | 0.7939324498894116  | 146   | 'chocolate'  |
+        +---------------------+-------+--------------+
+        | 0.4964898678468417  | 123   | 'chocolate'  |
+        +---------------------+-------+--------------+
+        | 0.26250784199548494 | 327   | 'strawberry' |
+        +---------------------+-------+--------------+
+        | 0.748470693146964   | 275   | 'strawberry' |
+        +---------------------+-------+--------------+
+        | 0.8995553034254133  | 151   | 'strawberry' |
+        +---------------------+-------+--------------+
+        | 0.26331484411715367 | 211   | 'chocolate'  |
+        +---------------------+-------+--------------+
+        | 0.4740252948218193  | 364   | 'vanilla'    |
+        +---------------------+-------+--------------+
+        | 0.166428545780258   | 59    | 'vanilla'    |
+        +---------------------+-------+--------------+
+        
+    .. versionchanged:: 0.6
+    
+    Now supports different field types, e.g., non-numeric. Previous functionality
+    is available as :func:`randomtable`.
+        
+    """
+    
+    return DummyTable(numrows=numrows, fields=fields, wait=wait)
+
+
+class DummyTable(object):
+    
+    def __init__(self, numrows=100, fields=None, wait=0):
+        self.numrows = numrows
+        self.wait = wait
+        if fields is None:
+            self.fields = OrderedDict()
+        else:
+            self.fields = OrderedDict(fields)
+        self.seed = datetime.datetime.now()
+
+    def __setitem__(self, item, value):
+        self.fields[item] = value
+        
+    def __getitem__(self, item):
+        return self.fields[item]
+    
+    def __iter__(self):
+        nr = self.numrows
+        seed = self.seed
+        fields = self.fields.copy()
+        
+        # N.B., we want this to be stable, i.e., same data each time
+        random.seed(seed)
+        
+        # construct header row
+        header = tuple(str(f) for f in fields.keys())
+        yield header
+
+        # construct data rows
+        for i in xrange(nr):
+            # artificial delay
+            if self.wait:
+                time.sleep(self.wait)
+            yield tuple(fields[f]() for f in fields)
+            
+    def reseed(self):
+        self.seed = datetime.datetime.now()
+        
+    def cachetag(self):
+        return hash((self.numrows, self.seed, tuple(self.fields.items())))
+        
+
+def diffheaders(t1, t2):
+    """
+    Return the difference between the headers of the two tables as a pair of
+    sets. E.g.::
+
+        >>> from petl import diffheaders    
+        >>> table1 = [['foo', 'bar', 'baz'],
+        ...           ['a', 1, .3]]
+        >>> table2 = [['baz', 'bar', 'quux'],
+        ...           ['a', 1, .3]]
+        >>> add, sub = diffheaders(table1, table2)
+        >>> add
+        set(['quux'])
+        >>> sub
+        set(['foo'])
+
+    .. versionadded:: 0.6
+    
+    """
+    
+    t1h = set(header(t1))
+    t2h = set(header(t2))
+    return t2h - t1h, t1h - t2h
+
+
+def diffvalues(t1, t2, f):
+    """
+    Return the difference between the values under the given field in the two
+    tables, e.g.::
+    
+        >>> from petl import diffvalues
+        >>> table1 = [['foo', 'bar'],
+        ...           ['a', 1],
+        ...           ['b', 3]]
+        >>> table2 = [['bar', 'foo'],
+        ...           [1, 'a'],
+        ...           [3, 'c']]
+        >>> add, sub = diffvalues(table1, table2, 'foo')
+        >>> add
+        set(['c'])
+        >>> sub
+        set(['b'])
+
+    .. versionadded:: 0.6
+    
+    """
+    
+    t1v = set(values(t1, f))
+    t2v = set(values(t2, f))
+    return t2v - t1v, t1v - t2v
+
+
+
 
 
