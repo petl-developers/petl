@@ -1,6 +1,11 @@
 Future
 ------
 
+- compare tables case study
+- compare tables screen cast
+- columns function to return a dict mapping field names to lists of values
+- strict option in parsenumbers
+- unicode support in to/fromcsv and to/fromtext
 - from compressed files
 - to compressed files
 - validator module based on csvvalidator
@@ -19,6 +24,7 @@ Future
 - implement rowgroupby? generate sequence of key/row iterator pairs?
 - implement recordgroupby?
 - optimised implementation of merge() where input files are presorted? I.e., avoid need to concatenate then sort the concatenation, rather just do the merge sort then reduce
+- cache data structures in hash... functions?
 
 Version 0.6
 -----------
@@ -32,7 +38,6 @@ Version 0.6
 - [done] diffvalues - difference of values in two fields
 - [done] return proper row container for ...counts functions so gets cached in petl.interactive but also changes if upstream data changes
 - [done] parser functions with options to fall back to input value if parse fails, would support e.g. incremental parsing of mixed date field
-- [won't do] cach data structures in hash... functions
 - [done] fromxml multiple nodes as tuple value
 
 Version 0.5
