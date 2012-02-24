@@ -2,7 +2,7 @@ from distutils.core import setup
 
 setup(
     name='petl',
-    version='0.7',
+    version='0.8-SNAPSHOT',
     author='Alistair Miles',
     author_email='alimanfoo@googlemail.com',
     package_dir={'': 'src'},
