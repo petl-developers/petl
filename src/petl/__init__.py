@@ -3,13 +3,14 @@ The `petl` module.
 
 """
 
-from petl.util import header, fieldnames, data, records, rowcount, look, see, values, valuecounter, valuecounts, \
+from petl.util import header, fieldnames, data, records, rowcount, look, see, \
+           itervalues, values, valuecounter, valuecounts, \
            valueset, unique, lookup, lookupone, recordlookup, recordlookupone, \
            typecounter, typecounts, typeset, parsecounter, parsecounts, \
            stats, rowlengths, DuplicateKeyError, datetimeparser, dateparser, timeparser, boolparser, \
            expr, limits, strjoin, valuecount, lookall, dataslice, parsenumber, \
            stringpatterns, stringpatterncounter, randomtable, dummytable, \
-           diffheaders, diffvalues
+           diffheaders, diffvalues, columns
 
 from petl.io import fromcsv, frompickle, fromsqlite3, tocsv, topickle, \
            tosqlite3, crc32sum, adler32sum, statsum, fromdb, \
@@ -30,7 +31,7 @@ from petl.transform import rename, cut, cat, convert, fieldconvert, extend, rows
            intersection, pivot, recordcomplement, recorddiff, cutout, skipcomments, \
            convertall, convertnumbers, hashjoin, hashleftjoin, hashrightjoin, \
            hashantijoin, hashcomplement, hashintersection, replace, replaceall, \
-           resub
+           resub, flatten, unflatten
            
            
 def lenstats(table, field):

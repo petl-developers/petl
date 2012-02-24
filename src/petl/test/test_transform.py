@@ -18,7 +18,7 @@ from petl import rename, fieldnames, cut, cat, convert, fieldconvert, extend, \
                 rowlenselect, strjoin, transpose, intersection, pivot, recorddiff, \
                 recordcomplement, cutout, skipcomments, convertall, convertnumbers, \
                 hashjoin, hashleftjoin, hashrightjoin, hashantijoin, hashcomplement, \
-                hashintersection
+                hashintersection, flatten, unflatten
 
 
 def test_rename():
@@ -2848,6 +2848,62 @@ def test_hashintersection_2():
     iassertequal(expect, table3)
     
 
-    
+def test_flatten():
 
+    table1 = (('foo', 'bar', 'baz'),
+              ('A', 1, True),
+              ('C', 7, False),
+              ('B', 2, False),
+              ('C', 9, True))
+
+    expect1 = ('A', 1, True, 'C', 7, False, 'B', 2, False, 'C', 9, True)
+
+    actual1 = flatten(table1)
+    iassertequal(expect1, actual1)
+    iassertequal(expect1, actual1)
+    
+    
+def test_unflatten():
+    
+    table1 = (('lines',),
+              ('A',), 
+              (1,), 
+              (True,), 
+              ('C',), 
+              (7,), 
+              (False,),
+              ('B',), 
+              (2,), 
+              (False,),
+              ('C'), 
+              (9,))
+    
+    expect1 = (('f0', 'f1', 'f2'),
+               ('A', 1, True),
+               ('C', 7, False),
+               ('B', 2, False),
+               ('C', 9, None))
+    
+    actual1 = unflatten(table1, 'lines', 3)
+
+    iassertequal(expect1, actual1)
+    iassertequal(expect1, actual1)
+    
+    
+def test_unflatten_2():
+    
+    input = ('A', 1, True, 'C', 7, False, 'B', 2, False, 'C', 9)
+    
+    expect1 = (('f0', 'f1', 'f2'),
+               ('A', 1, True),
+               ('C', 7, False),
+               ('B', 2, False),
+               ('C', 9, None))
+    
+    actual1 = unflatten(input, 3)
+
+    iassertequal(expect1, actual1)
+    iassertequal(expect1, actual1)
+    
+    
     

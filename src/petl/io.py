@@ -16,6 +16,7 @@ from xml.etree import ElementTree
 from operator import attrgetter
 import json
 from json.encoder import JSONEncoder
+from petl.base import RowContainer
 
 class Uncacheable(Exception):
     
@@ -133,7 +134,7 @@ def fromcsv(filename, checksumfun=None, **kwargs):
     return CSVView(filename, checksumfun=checksumfun, **kwargs)
 
 
-class CSVView(object):
+class CSVView(RowContainer):
     
     def __init__(self, filename, checksumfun=None, **kwargs):
         self.filename = filename
@@ -193,7 +194,7 @@ def frompickle(filename, checksumfun=None):
     return PickleView(filename, checksumfun=checksumfun)
     
     
-class PickleView(object):
+class PickleView(RowContainer):
 
     def __init__(self, filename, checksumfun=None):
         self.filename = filename
@@ -262,7 +263,7 @@ def fromsqlite3(filename, query, checksumfun=None):
     return Sqlite3View(filename, query, checksumfun)
 
 
-class Sqlite3View(object):
+class Sqlite3View(RowContainer):
 
     def __init__(self, filename, query, checksumfun=None):
         self.filename = filename
@@ -322,7 +323,7 @@ def fromdb(connection, query):
     return DbView(connection, query)
 
 
-class DbView(object):
+class DbView(RowContainer):
 
     def __init__(self, connection, query):
         self.connection = connection
@@ -386,7 +387,7 @@ def fromtext(filename, header=['lines'], strip=None, checksumfun=None):
     return TextView(filename, header, strip=strip, checksumfun=checksumfun)
 
 
-class TextView(object):
+class TextView(RowContainer):
     
     def __init__(self, filename, header=['lines'], strip=None, checksumfun=None):
         self.filename = filename
@@ -522,7 +523,7 @@ def fromxml(filename, *args, **kwargs):
     return XmlView(filename, *args, **kwargs)
 
 
-class XmlView(object):
+class XmlView(RowContainer):
     
     def __init__(self, filename, *args, **kwargs):
         self.filename = filename
@@ -630,7 +631,7 @@ def fromjson(filename, *args, **kwargs):
     return JsonView(filename, *args, **kwargs)
 
 
-class JsonView(object):
+class JsonView(RowContainer):
     
     def __init__(self, filename, *args, **kwargs):
         self.filename = filename
@@ -703,7 +704,7 @@ def fromdicts(dicts, header=None):
     return DictsView(dicts, header=header)
 
 
-class DictsView(object):
+class DictsView(RowContainer):
     
     def __init__(self, dicts, header=None):
         self.dicts = dicts

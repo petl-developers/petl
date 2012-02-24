@@ -8,6 +8,7 @@ session.
 from itertools import islice
 import sys
 from petl.util import valueset
+from petl.base import RowContainer
 
 
 petl = sys.modules['petl']
@@ -19,7 +20,7 @@ debug = False
 representation = petl.look
 
 
-class ContainerCache(object):
+class RowContainerWrapper(object):
     
     def __init__(self, inner):
         self._inner = inner
@@ -78,8 +79,8 @@ class ContainerCache(object):
 def wrap(f):
     def wrapper(*args, **kwargs):
         _innerresult = f(*args, **kwargs)
-        if hasattr(_innerresult, 'cachetag') and hasattr(_innerresult, '__iter__'):
-            return ContainerCache(_innerresult)
+        if isinstance(_innerresult, RowContainer):
+            return RowContainerWrapper(_innerresult)
         else:
             return _innerresult
     return wrapper

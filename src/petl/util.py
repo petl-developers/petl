@@ -15,6 +15,7 @@ import time
 import datetime
 from collections import OrderedDict
 from functools import partial
+from itertools import izip_longest
 
 
 def header(table):
@@ -362,13 +363,13 @@ class See(object):
         return output
         
     
-def values(table, field, *sliceargs):
+def itervalues(table, field, *sliceargs, **kwargs):
     """
     Return an iterator over values in a given field or fields. E.g.::
     
-        >>> from petl import values
+        >>> from petl import itervalues
         >>> table = [['foo', 'bar'], ['a', True], ['b'], ['b', True], ['c', False]]
-        >>> foo = values(table, 'foo')
+        >>> foo = itervalues(table, 'foo')
         >>> foo.next()
         'a'
         >>> foo.next()
@@ -385,20 +386,7 @@ def values(table, field, *sliceargs):
     The `field` argument can be a single field name or index (starting from zero)
     or a tuple of field names and/or indexes.    
 
-    If rows are uneven, any missing values are skipped, e.g.::
-    
-        >>> table = [['foo', 'bar'], ['a', True], ['b'], ['b', True], ['c', False]]
-        >>> bar = values(table, 'bar')
-        >>> bar.next()
-        True
-        >>> bar.next()
-        True
-        >>> bar.next()
-        False
-        >>> bar.next()
-        Traceback (most recent call last):
-          File "<stdin>", line 1, in <module>
-        StopIteration
+    If rows are uneven, the value of the keyword argument `missing` is returned.
         
     More than one field can be selected, e.g.::
     
@@ -406,7 +394,7 @@ def values(table, field, *sliceargs):
         ...          [1, 'a', True],
         ...          [2, 'bb', True],
         ...          [3, 'd', False]]
-        >>> foobaz = values(table, ('foo', 'baz'))
+        >>> foobaz = itervalues(table, ('foo', 'baz'))
         >>> foobaz.next()
         (1, True)
         >>> foobaz.next()
@@ -422,9 +410,20 @@ def values(table, field, *sliceargs):
     
     Positional arguments can be used to slice the data rows. The `sliceargs` are 
     passed to :func:`itertools.islice`.
+    
+    .. versionchanged:: 0.7 
+    
+    In previous releases this function was known as 'values'. Also in this release
+    the behaviour with short rows is changed. Now for any value missing due to a 
+    short row, ``None`` is returned by default, or whatever is given by the
+    `missing` keyword argument.
 
     """
     
+    if 'missing' in kwargs:
+        missing = kwargs['missing']
+    else:
+        missing = None
     it = iter(table)
     srcflds = it.next()
     indices = asindices(srcflds, field)
@@ -437,9 +436,37 @@ def values(table, field, *sliceargs):
             value = getvalue(row)
             yield value
         except IndexError:
-            pass # ignore short rows
+            yield missing
     
     
+def values(table, field, *sliceargs, **kwargs):
+    """
+    Return a container supporting iteration over values in a given field or 
+    fields. I.e., like :func:`itervalues` only a container is returned so you 
+    can iterate over it multiple times.
+    
+    .. versionchanged:: 0.7 
+
+    Now returns a container, previously returned an iterator. See also 
+    :func:`itervalues`.
+    
+    """
+    
+    return ValuesContainer(table, field, *sliceargs, **kwargs)
+    
+    
+class ValuesContainer(object):
+
+    def __init__(self, table, field, *sliceargs, **kwargs):
+        self.table = table
+        self.field = field
+        self.sliceargs = sliceargs
+        self.kwargs = kwargs
+        
+    def __iter__(self):
+        return itervalues(self.table, self.field, *self.sliceargs, **self.kwargs)
+    
+        
 def valueset(table, field):
     """
     .. deprecated:: 0.3
@@ -448,7 +475,7 @@ def valueset(table, field):
         
     """
 
-    return set(values(table, field))
+    return set(itervalues(table, field))
 
 
 def valuecount(table, field, value):
@@ -470,9 +497,9 @@ def valuecount(table, field, value):
     """
     
     if isinstance(field, (list, tuple)):
-        it = values(table, *field)
+        it = itervalues(table, *field)
     else:
-        it = values(table, field)
+        it = itervalues(table, field)
     total = 0
     vs = 0
     for v in it:
@@ -505,7 +532,7 @@ def valuecounter(table, field):
     """
 
     counter = Counter()
-    for v in values(table, field):
+    for v in itervalues(table, field):
         try:
             counter[v] += 1
         except IndexError:
@@ -586,6 +613,32 @@ class ValueCountsView(object):
             yield (c[0], c[1], float(c[1])/total)
 
         
+def columns(table, missing=None):
+    """
+    Construct a :class:`dict` mapping field names to lists of values. E.g.::
+    
+        >>> from petl import columns
+        >>> table = [['foo', 'bar'], ['a', 1], ['b', 2], ['b', 3]]
+        >>> cols = columns(table)
+        >>> cols['foo']
+        ['a', 'b', 'b']
+        >>> cols['bar']    
+        [1, 2, 3]
+
+    """
+    
+    cols = dict()
+    it = iter(table)
+    fields = [str(f) for f in it.next()]
+    for f in fields:
+        cols[f] = list()
+    for row in it:
+        for f, v in izip_longest(fields, row, fillvalue=missing):
+            if f in cols:
+                cols[f].append(v)
+    return cols
+    
+    
 def unique(table, field):
     """
     Return True if there are no duplicate values for the given field(s), otherwise
@@ -604,7 +657,7 @@ def unique(table, field):
     """    
 
     vals = set()
-    for v in values(table, field):
+    for v in itervalues(table, field):
         if v in vals:
             return False
         else:
@@ -1072,7 +1125,7 @@ def typecounter(table, field):
     """
     
     counter = Counter()
-    for v in values(table, field):
+    for v in itervalues(table, field):
         try:
             counter[v.__class__.__name__] += 1
         except IndexError:
@@ -1189,7 +1242,7 @@ def typeset(table, field):
     """
 
     s = set()
-    for v in values(table, field):
+    for v in itervalues(table, field):
         try:
             s.add(v.__class__)
         except IndexError:
@@ -1227,7 +1280,7 @@ def parsecounter(table, field, parsers={'int': int, 'float': float}):
     for n in parsers.keys():
         counter[n] = 0
         errors[n] = 0
-    for v in values(table, field):
+    for v in itervalues(table, field):
         if isinstance(v, basestring):
             for name, parser in parsers.items():
                 try:
@@ -1562,7 +1615,7 @@ def limits(table, field):
 
     """
     
-    vals = values(table, field)
+    vals = itervalues(table, field)
     try:
         minv = maxv = vals.next()
     except StopIteration:
@@ -1600,7 +1653,7 @@ def stats(table, field):
               'mean': None, 
               'count': 0, 
               'errors': 0}
-    for v in values(table, field):
+    for v in itervalues(table, field):
         try:
             v = float(v)
         except:
@@ -1652,13 +1705,15 @@ def strjoin(s):
     return lambda l: s.join(map(str, l))
 
 
-def parsenumber(v):
+def parsenumber(v, strict=False):
     """
     Attempt to parse the value as a number, trying :func:`int`, :func:`long`,
     :func:`float` and :func:`complex` in that order. If all fail, return the
     value as-is.
     
     .. versionadded:: 0.4
+    
+    .. versionchanged:: 0.7 Set ``strict=True`` to get an exception if parsing fails.
     
     """
     
@@ -1677,7 +1732,8 @@ def parsenumber(v):
     try:
         return complex(v)
     except:
-        pass
+        if strict:
+            raise
     return v
 
 
@@ -1693,7 +1749,7 @@ def stringpatterncounter(table, field):
     trans = maketrans('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789', 
                       'AAAAAAAAAAAAAAAAAAAAAAAAAAaaaaaaaaaaaaaaaaaaaaaaaaaa9999999999')
     counter = Counter()
-    for v in values(table, field):
+    for v in itervalues(table, field):
         p = str(v).translate(trans)
         counter[p] += 1
     return counter
@@ -2003,8 +2059,8 @@ def diffvalues(t1, t2, f):
     
     """
     
-    t1v = set(values(t1, f))
-    t2v = set(values(t2, f))
+    t1v = set(itervalues(t1, f))
+    t2v = set(itervalues(t2, f))
     return t2v - t1v, t1v - t2v
 
 

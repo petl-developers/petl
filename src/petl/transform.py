@@ -10,12 +10,14 @@ import cPickle as pickle
 
 
 from petl.util import asindices, rowgetter, asdict,\
-    expr, valueset, records, header, data, limits, values, parsenumber, lookup
+    expr, valueset, records, header, data, limits, itervalues, parsenumber, lookup,\
+    values
 import re
 from petl.io import Uncacheable
 from tempfile import NamedTemporaryFile
 import heapq
 import operator
+from petl.base import RowContainer
 
 
 def rename(table, *args):
@@ -100,7 +102,7 @@ def rename(table, *args):
     return RenameView(table, *args)
 
 
-class RenameView(object):
+class RenameView(RowContainer):
     
     def __init__(self, table, *args):
         self.source = table
@@ -228,7 +230,7 @@ def cut(table, *args, **kwargs):
     return CutView(table, args, **kwargs)
 
 
-class CutView(object):
+class CutView(RowContainer):
     
     def __init__(self, source, spec, missing=None):
         self.source = source
@@ -305,7 +307,7 @@ def cutout(table, *args, **kwargs):
     return CutOutView(table, args, **kwargs)
 
 
-class CutOutView(object):
+class CutOutView(RowContainer):
     
     def __init__(self, source, spec, missing=None):
         self.source = source
@@ -444,7 +446,7 @@ def cat(*tables, **kwargs):
     return CatView(tables, **kwargs)
     
     
-class CatView(object):
+class CatView(RowContainer):
     
     def __init__(self, sources, missing=None, header=None):
         self.sources = sources
@@ -767,7 +769,7 @@ def fieldconvert(table, converters=None, failonerror=False, errorvalue=None):
     return FieldConvertView(table, converters, failonerror, errorvalue)
 
 
-class FieldConvertView(object):
+class FieldConvertView(RowContainer):
     
     def __init__(self, source, converters=None, failonerror=False, errorvalue=None):
         self.source = source
@@ -950,7 +952,7 @@ def extend(table, field, value, failonerror=False, errorvalue=None):
     return ExtendView(table, field, value, failonerror=failonerror, errorvalue=errorvalue)
 
 
-class ExtendView(object):
+class ExtendView(RowContainer):
     
     def __init__(self, source, field, value, failonerror=False, errorvalue=None):
         self.source = source
@@ -1048,7 +1050,7 @@ def rowslice(table, *sliceargs):
     return RowSliceView(table, *sliceargs)
 
 
-class RowSliceView(object):
+class RowSliceView(RowContainer):
     
     def __init__(self, source, *sliceargs):
         self.source = source
@@ -1146,7 +1148,7 @@ def tail(table, n=10):
     return TailView(table, n)
 
 
-class TailView(object):
+class TailView(RowContainer):
     
     def __init__(self, source, n):
         self.source = source
@@ -1322,7 +1324,7 @@ def shortlistmergesort(key=None, reverse=False, *iterables):
 defaultbuffersize = 100000
     
     
-class SortView(object):
+class SortView(RowContainer):
     
     def __init__(self, source, key=None, reverse=False, buffersize=None):
         self.source = source
@@ -1517,7 +1519,7 @@ def melt(table, key=None, variables=None, variablefield='variable', valuefield='
                     valuefield=valuefield)
     
     
-class MeltView(object):
+class MeltView(RowContainer):
     
     def __init__(self, source, key=None, variables=None, 
                  variablefield='variable', valuefield='value'):
@@ -1695,7 +1697,7 @@ def recast(table, key=None, variablefield='variable', valuefield='value',
                       reducers=reducers, missing=missing)
     
 
-class RecastView(object):
+class RecastView(RowContainer):
     
     def __init__(self, source, key=None, variablefield='variable', 
                  valuefield='value', samplesize=1000, reducers=None, 
@@ -1875,7 +1877,7 @@ def duplicates(table, key, presorted=False, buffersize=None):
     return DuplicatesView(table, key, presorted, buffersize)
 
 
-class DuplicatesView(object):
+class DuplicatesView(RowContainer):
     
     def __init__(self, source, key, presorted=False, buffersize=None):
         if presorted:
@@ -1987,7 +1989,7 @@ def conflicts(table, key, missing=None, ignore=None, presorted=False, buffersize
                          presorted=presorted, buffersize=buffersize)
 
 
-class ConflictsView(object):
+class ConflictsView(RowContainer):
     
     def __init__(self, source, key, missing=None, ignore=None, presorted=False, buffersize=None):
         if presorted:
@@ -2101,7 +2103,7 @@ def complement(a, b, presorted=False, buffersize=None):
     return ComplementView(a, b, presorted=presorted, buffersize=buffersize)
 
 
-class ComplementView(object):
+class ComplementView(RowContainer):
     
     def __init__(self, a, b, presorted=False, buffersize=None):
         if presorted:
@@ -2356,7 +2358,7 @@ def capture(table, field, pattern, newfields=None, include_original=False,
     return CaptureView(table, field, pattern, newfields, include_original, flags)
 
 
-class CaptureView(object):
+class CaptureView(RowContainer):
     
     def __init__(self, source, field, pattern, newfields=None, 
                  include_original=False, flags=0):
@@ -2448,7 +2450,7 @@ def split(table, field, pattern, newfields=None, include_original=False,
                      flags)
 
 
-class SplitView(object):
+class SplitView(RowContainer):
     
     def __init__(self, source, field, pattern, newfields=None, 
                  include_original=False, maxsplit=0, flags=0):
@@ -2603,7 +2605,7 @@ def recordselect(table, where, missing=None, complement=False):
     return RecordSelectView(table, where, missing=missing, complement=complement)
         
         
-class RecordSelectView(object):
+class RecordSelectView(RowContainer):
     
     def __init__(self, source, where, missing=None, complement=False):
         self.source = source
@@ -2646,7 +2648,7 @@ def rowselect(table, where, complement=False):
     return RowSelectView(table, where, complement=complement)
         
         
-class RowSelectView(object):
+class RowSelectView(RowContainer):
     
     def __init__(self, source, where, complement=False):
         self.source = source
@@ -2702,7 +2704,7 @@ def fieldselect(table, field, where, complement=False):
     return FieldSelectView(table, field, where, complement=complement)
         
         
-class FieldSelectView(object):
+class FieldSelectView(RowContainer):
     
     def __init__(self, source, field, where, complement=False):
         self.source = source
@@ -2803,7 +2805,7 @@ def fieldmap(table, mappings=None, failonerror=False, errorvalue=None):
                         errorvalue=errorvalue)
     
     
-class FieldMapView(object):
+class FieldMapView(RowContainer):
     
     def __init__(self, source, mappings=None, failonerror=False, errorvalue=None):
         self.source = source
@@ -3258,7 +3260,7 @@ def rowreduce(table, key, reducer, fields=None, presorted=False, buffersize=None
     return RowReduceView(table, key, reducer, fields, presorted, buffersize)
 
 
-class RowReduceView(object):
+class RowReduceView(RowContainer):
     
     def __init__(self, source, key, reducer, fields=None, presorted=False, buffersize=None):
         if presorted:
@@ -3343,7 +3345,7 @@ def recordreduce(table, key, reducer, fields=None, presorted=False, buffersize=N
     return RecordReduceView(table, key, reducer, fields, presorted, buffersize)
 
 
-class RecordReduceView(object):
+class RecordReduceView(RowContainer):
     
     def __init__(self, source, key, reducer, fields=None, presorted=False,
                  buffersize=None):
@@ -3565,7 +3567,7 @@ def aggregate(table, key, aggregators=None, failonerror=False, errorvalue=None,
                          buffersize=buffersize)
 
 
-class AggregateView(object):
+class AggregateView(RowContainer):
     
     def __init__(self, source, key, aggregators=None, failonerror=False,
                  errorvalue=None, presorted=False, buffersize=None):
@@ -3696,7 +3698,7 @@ def rangerowreduce(table, key, width, reducer, fields=None, minv=None, maxv=None
                               presorted=presorted, buffersize=buffersize)
         
 
-class RangeRowReduceView(object):
+class RangeRowReduceView(RowContainer):
     
     def __init__(self, source, key, width, reducer, fields=None, minv=None, maxv=None, 
                  failonerror=False, presorted=False, buffersize=None):
@@ -3824,7 +3826,7 @@ def rangerecordreduce(table, key, width, reducer, fields=None, minv=None, maxv=N
                                  presorted=presorted, buffersize=buffersize)
         
 
-class RangeRecordReduceView(object):
+class RangeRecordReduceView(RowContainer):
     
     def __init__(self, source, key, width, reducer, fields=None, minv=None, maxv=None, 
                  failonerror=False, presorted=False, buffersize=None):
@@ -3950,7 +3952,7 @@ def rangecounts(table, key, width, minv=None, maxv=None, presorted=False,
                            presorted=presorted, buffersize=buffersize)
     
     
-class RangeCountsView(object):
+class RangeCountsView(RowContainer):
     
     def __init__(self, source, key, width, minv=None, maxv=None, 
                  presorted=False, buffersize=None):
@@ -4065,7 +4067,7 @@ def rangeaggregate(table, key, width, aggregators=None, minv=None, maxv=None,
                               presorted=presorted, buffersize=buffersize)
     
     
-class RangeAggregateView(object):
+class RangeAggregateView(RowContainer):
     
     def __init__(self, source, key, width, aggregators=None, minv=None, maxv=None, 
                  failonerror=False, errorvalue=None, presorted=False, buffersize=None):
@@ -4233,7 +4235,7 @@ def rowmap(table, rowmapper, fields, failonerror=False):
     return RowMapView(table, rowmapper, fields, failonerror)
     
     
-class RowMapView(object):
+class RowMapView(RowContainer):
     
     def __init__(self, source, rowmapper, fields, failonerror=False):
         self.source = source
@@ -4307,7 +4309,7 @@ def recordmap(table, recmapper, fields, failonerror=False):
     return RecordMapView(table, recmapper, fields, failonerror)
     
     
-class RecordMapView(object):
+class RecordMapView(RowContainer):
     
     def __init__(self, source, recmapper, fields, failonerror=False):
         self.source = source
@@ -4394,7 +4396,7 @@ def rowmapmany(table, rowgenerator, fields, failonerror=False):
     return RowMapManyView(table, rowgenerator, fields, failonerror)
     
     
-class RowMapManyView(object):
+class RowMapManyView(RowContainer):
     
     def __init__(self, source, rowgenerator, fields, failonerror=False):
         self.source = source
@@ -4479,7 +4481,7 @@ def recordmapmany(table, rowgenerator, fields, failonerror=False):
     return RecordMapManyView(table, rowgenerator, fields, failonerror)
     
     
-class RecordMapManyView(object):
+class RecordMapManyView(RowContainer):
     
     def __init__(self, source, rowgenerator, fields, failonerror=False):
         self.source = source
@@ -4535,7 +4537,7 @@ def setheader(table, fields):
     return SetHeaderView(table, fields) 
 
 
-class SetHeaderView(object):
+class SetHeaderView(RowContainer):
     
     def __init__(self, source, fields):
         self.source = source
@@ -4582,7 +4584,7 @@ def extendheader(table, fields):
     return ExtendHeaderView(table, fields) 
 
 
-class ExtendHeaderView(object):
+class ExtendHeaderView(RowContainer):
     
     def __init__(self, source, fields):
         self.source = source
@@ -4633,7 +4635,7 @@ def pushheader(table, fields):
     return PushHeaderView(table, fields)
 
 
-class PushHeaderView(object):
+class PushHeaderView(RowContainer):
     
     def __init__(self, source, fields):
         self.source = source
@@ -4681,7 +4683,7 @@ def skip(table, n):
     return SkipView(table, n)
 
 
-class SkipView(object):
+class SkipView(RowContainer):
     
     def __init__(self, source, n):
         self.source = source
@@ -4730,7 +4732,7 @@ def skipcomments(table, prefix):
     return SkipCommentsView(table, prefix)
 
 
-class SkipCommentsView(object):
+class SkipCommentsView(RowContainer):
     
     def __init__(self, source, prefix):
         self.source = source
@@ -4776,7 +4778,7 @@ def unpack(table, field, newfields=None, maxunpack=None, include_original=False)
     return UnpackView(table, field, newfields, maxunpack, include_original)
 
 
-class UnpackView(object):
+class UnpackView(RowContainer):
     
     def __init__(self, source, field, newfields=None, maxunpack=None, 
                  include_original=False):
@@ -4923,7 +4925,7 @@ def join(left, right, key=None, presorted=False, buffersize=None):
         return JoinView(left, right, key, presorted=presorted, buffersize=buffersize)
 
 
-class ImplicitJoinView(object):
+class ImplicitJoinView(RowContainer):
     
     def __init__(self, left, right, presorted=False, leftouter=False, 
                  rightouter=False, missing=None, buffersize=None):
@@ -4951,7 +4953,7 @@ class ImplicitJoinView(object):
             raise Uncacheable(e)
 
 
-class JoinView(object):
+class JoinView(RowContainer):
     
     def __init__(self, left, right, key, presorted=False, leftouter=False, 
                  rightouter=False, missing=None, buffersize=None):
@@ -5266,7 +5268,7 @@ def crossjoin(*tables):
     return CrossJoinView(*tables)
 
 
-class CrossJoinView(object):
+class CrossJoinView(RowContainer):
     
     def __init__(self, *sources):
         self.sources = sources
@@ -5339,7 +5341,7 @@ def antijoin(left, right, key=None, presorted=False, buffersize=None):
         return AntiJoinView(left, right, key, presorted, buffersize)
 
 
-class AntiJoinView(object):
+class AntiJoinView(RowContainer):
     
     def __init__(self, left, right, key, presorted=False, buffersize=None):
         if presorted:
@@ -5418,7 +5420,7 @@ def iterantijoin(left, right, key):
             yield tuple(row)
 
         
-class ImplicitAntiJoinView(object):
+class ImplicitAntiJoinView(RowContainer):
     
     def __init__(self, left, right, presorted=False, buffersize=None):
         self.left = left
@@ -5500,9 +5502,9 @@ def rangefacet(table, field, width, minv=None, maxv=None,
     if minv is None and maxv is None:
         minv, maxv = limits(table, field)
     elif minv is None:
-        minv = min(values(table, field))
+        minv = min(itervalues(table, field))
     elif max is None:
-        maxv = max(values(table, field))
+        maxv = max(itervalues(table, field))
         
     fct = OrderedDict()
     for binminv in xrange(minv, maxv, width):
@@ -5541,7 +5543,7 @@ def transpose(table):
     return TransposeView(table)
 
 
-class TransposeView(object):
+class TransposeView(RowContainer):
     
     def __init__(self, source):
         self.source = source
@@ -5592,7 +5594,7 @@ def intersection(a, b, presorted=False, buffersize=None):
     return IntersectionView(a, b, presorted, buffersize)
 
 
-class IntersectionView(object):
+class IntersectionView(RowContainer):
     
     def __init__(self, a, b, presorted=False, buffersize=None):
         if presorted:
@@ -5690,7 +5692,7 @@ def pivot(table, f1, f2, f3, aggfun, presorted=False, buffersize=None, missing=N
                      presorted=presorted, buffersize=buffersize, missing=missing)
 
 
-class PivotView(object):
+class PivotView(RowContainer):
     
     def __init__(self, source, f1, f2, f3, aggfun, presorted=False, buffersize=None,
                  missing=None):
@@ -5716,7 +5718,7 @@ class PivotView(object):
 def iterpivot(source, f1, f2, f3, aggfun, missing):
     
     # first pass - collect fields
-    f2vals = set(values(source, f2)) # TODO sampling
+    f2vals = set(itervalues(source, f2)) # TODO sampling
     f2vals = list(f2vals)
     f2vals.sort()
     outflds = [f1]
@@ -5756,7 +5758,7 @@ def hashjoin(left, right, key=None):
         return HashJoinView(left, right, key)
 
 
-class ImplicitHashJoinView(object):
+class ImplicitHashJoinView(RowContainer):
     
     def __init__(self, left, right):
         self.left = left
@@ -5772,7 +5774,7 @@ class ImplicitHashJoinView(object):
             raise Uncacheable(e)
 
 
-class HashJoinView(object):
+class HashJoinView(RowContainer):
     
     def __init__(self, left, right, key):
         self.left = left
@@ -5867,7 +5869,7 @@ def hashleftjoin(left, right, key=None, missing=None):
         return HashLeftJoinView(left, right, key)
 
 
-class ImplicitHashLeftJoinView(object):
+class ImplicitHashLeftJoinView(RowContainer):
     
     def __init__(self, left, right, missing=None):
         self.left = left
@@ -5884,7 +5886,7 @@ class ImplicitHashLeftJoinView(object):
             raise Uncacheable(e)
 
 
-class HashLeftJoinView(object):
+class HashLeftJoinView(RowContainer):
     
     def __init__(self, left, right, key, missing=None):
         self.left = left
@@ -5987,7 +5989,7 @@ def hashrightjoin(left, right, key=None, missing=None):
         return HashRightJoinView(left, right, key)
 
 
-class ImplicitHashRightJoinView(object):
+class ImplicitHashRightJoinView(RowContainer):
     
     def __init__(self, left, right, missing=None):
         self.left = left
@@ -6004,7 +6006,7 @@ class ImplicitHashRightJoinView(object):
             raise Uncacheable(e)
 
 
-class HashRightJoinView(object):
+class HashRightJoinView(RowContainer):
     
     def __init__(self, left, right, key, missing=None):
         self.left = left
@@ -6110,7 +6112,7 @@ def hashantijoin(left, right, key=None):
         return HashAntiJoinView(left, right, key)
 
 
-class HashAntiJoinView(object):
+class HashAntiJoinView(RowContainer):
     
     def __init__(self, left, right, key):
         self.left = left
@@ -6155,7 +6157,7 @@ def iterhashantijoin(left, right, key):
             yield tuple(lrow)
 
         
-class ImplicitHashAntiJoinView(object):
+class ImplicitHashAntiJoinView(RowContainer):
     
     def __init__(self, left, right):
         self.left = left
@@ -6202,7 +6204,7 @@ def hashcomplement(a, b):
     return HashComplementView(a, b)
 
 
-class HashComplementView(object):
+class HashComplementView(RowContainer):
     
     def __init__(self, a, b):
         self.a = a
@@ -6248,7 +6250,7 @@ def hashintersection(a, b):
     return HashIntersectionView(a, b)
 
 
-class HashIntersectionView(object):
+class HashIntersectionView(RowContainer):
     
     def __init__(self, a, b):
         self.a = a
@@ -6277,4 +6279,133 @@ def iterhashintersection(a, b):
         if t in blkp:
             yield t 
         
+        
+def flatten(table):
+    """
+    Convert a table to a sequence of values in row-major order. E.g.::
+
+        >>> from petl import flatten    
+        >>> table1 = [['foo', 'bar', 'baz'],
+        ...           ['A', 1, True],
+        ...           ['C', 7, False],
+        ...           ['B', 2, False],
+        ...           ['C', 9, True]]
+        >>> list(flatten(table1))
+        ['A', 1, True, 'C', 7, False, 'B', 2, False, 'C', 9, True]
     
+    See also :func:`unflatten`.
+    
+    .. versionadded:: 0.7
+    
+    """
+    
+    return FlattenView(table)
+
+
+class FlattenView(RowContainer):
+    
+    def __init__(self, table):
+        self.table = table
+        
+    def __iter__(self):
+        for row in data(self.table):
+            for value in row:
+                yield value
+    
+    
+def unflatten(*args, **kwargs):
+    """
+    Convert a sequence of values in row-major order into a table. E.g.::
+    
+        >>> from petl import unflatten, look
+        >>> input = ['A', 1, True, 'C', 7, False, 'B', 2, False, 'C', 9]
+        >>> table = unflatten(input, 3)
+        >>> look(table)
+        +------+------+-------+
+        | 'f0' | 'f1' | 'f2'  |
+        +======+======+=======+
+        | 'A'  | 1    | True  |
+        +------+------+-------+
+        | 'C'  | 7    | False |
+        +------+------+-------+
+        | 'B'  | 2    | False |
+        +------+------+-------+
+        | 'C'  | 9    | None  |
+        +------+------+-------+
+
+    A table and field name can also be provided as arguments, e.g.::
+
+        >>> table1 = [['lines',],
+        ...           ['A',], 
+        ...           [1,], 
+        ...           [True,], 
+        ...           ['C',], 
+        ...           [7,], 
+        ...           [False,],
+        ...           ['B',], 
+        ...           [2,], 
+        ...           [False,],
+        ...           ['C'], 
+        ...           [9,]]
+        >>> table2 = unflatten(table1, 'lines', 3)
+        >>> look(table2)
+        +------+------+-------+
+        | 'f0' | 'f1' | 'f2'  |
+        +======+======+=======+
+        | 'A'  | 1    | True  |
+        +------+------+-------+
+        | 'C'  | 7    | False |
+        +------+------+-------+
+        | 'B'  | 2    | False |
+        +------+------+-------+
+        | 'C'  | 9    | None  |
+        +------+------+-------+
+
+    See also :func:`flatten`.
+    
+    .. versionadded:: 0.7
+    
+    """
+    
+    return UnflattenView(*args, **kwargs)
+
+
+class UnflattenView(RowContainer):
+    
+    def __init__(self, *args, **kwargs):
+        if len(args) == 2:
+            self.input = args[0]
+            self.period = args[1]
+        elif len(args) == 3:
+            self.input = values(args[0], args[1])
+            self.period = args[2]
+        else:
+            assert False, 'invalid arguments'
+        if 'missing' in kwargs:
+            self.missing = kwargs['missing']
+        else:
+            self.missing = None
+        
+    def __iter__(self):
+        input = self.input
+        period = self.period
+        missing = self.missing
+        
+        # generate header row
+        fields = tuple('f%s' % i for i in range(period))
+        yield fields
+        
+        # generate data rows
+        row = list()
+        for v in input:
+            if len(row) < period:
+                row.append(v)
+            else:
+                yield tuple(row)
+                row = [v]
+        
+        # deal with last row
+        if len(row) < period:
+            row.extend([missing] * (period - len(row)))
+        yield tuple(row)
+            
