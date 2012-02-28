@@ -1,4 +1,5 @@
-.. py:module:: petl
+.. module:: petl
+.. moduleauthor:: Alistair Miles <alimanfoo@googlemail.com>
 
 petl - Extract, Transform and Load (Tables of Data)
 ===================================================
@@ -59,7 +60,7 @@ E.g., given the following data in a file at 'example.csv' in the current working
 
 For more examples, see the case studies below:
 
-* Case Study 1 - TODO link
+* `Case Study 1 - Comparing Tables <case_study_1.html>`_
 
 Installation
 ------------

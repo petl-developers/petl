@@ -1,8 +1,14 @@
 Future
 ------
 
-- compare tables case study
-- compare tables screen cast
+- unpackdict deal with dict as data value and unpack into fields
+- tomediawiki, frommediawiki
+- flatten return container
+- unflatten implement cachetag
+- ...counts implement cachetag
+- fromcsv should guess dialect using sniffer?
+- diff could be more efficient, sort inputs then pass presorted to both complements
+- diff needs special handling in fluent and interactive packages
 - unicode support in to/fromcsv and to/fromtext
 - from compressed files
 - to compressed files
@@ -23,6 +29,18 @@ Future
 - implement recordgroupby?
 - optimised implementation of merge() where input files are presorted? I.e., avoid need to concatenate then sort the concatenation, rather just do the merge sort then reduce
 - cache data structures in hash... functions?
+
+Version 0.8
+-----------
+
+- [done] compare tables case study
+- change docs to use look on input table; hide input data as list; also somehow keep raw commands around in a separate string, so their not lost?
+- in conflicts function, have include and exclude args, rather than ignore, so can ask for conflicts in a single field without having to cut
+- update case study 1 to use new conflicts keyword args
+- compare tables screen cast
+- facetcolumns - like facet but return a dict of lists for each facet value, a.k.a. stratify?
+- look.n and look.p to page through
+
 
 Version 0.7
 -----------
