@@ -57,6 +57,10 @@ E.g., given the following data in a file at 'example.csv' in the current working
 
         >>> tocsv(table8, 'output.csv')
 
+For more examples, see the case studies below:
+
+* Case Study 1 - TODO link
+
 Installation
 ------------
 
@@ -552,6 +556,7 @@ Further Reading
 .. toctree::
    :maxdepth: 2
 
+   case_study_1
    related_work
 
 
