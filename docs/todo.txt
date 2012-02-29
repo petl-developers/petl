@@ -1,6 +1,8 @@
 Future
 ------
 
+- stringpatterns should have view class
+- rowlengths should have View class
 - unpackdict deal with dict as data value and unpack into fields
 - tomediawiki, frommediawiki
 - flatten return container

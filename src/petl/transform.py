@@ -1,5 +1,5 @@
 """
-TODO doc me
+Functions for transforming tables.
 
 """
 
@@ -22,54 +22,10 @@ from petl.base import RowContainer
 
 def rename(table, *args):
     """
-    Replace one or more fields in the table's header row. E.g., to rename a 
-    single field::
-    
+    Replace one or more fields in the table's header row. E.g.::
+        
         >>> from petl import look, rename
-        >>> tbl1 = [['sex', 'age'],
-        ...         ['M', 12],
-        ...         ['F', 34],
-        ...         ['-', 56]]
-        >>> tbl2 = rename(tbl1, 'sex', 'gender')
-        >>> look(tbl2)
-        +----------+-------+
-        | 'gender' | 'age' |
-        +==========+=======+
-        | 'M'      | 12    |
-        +----------+-------+
-        | 'F'      | 34    |
-        +----------+-------+
-        | '-'      | 56    |
-        +----------+-------+
-
-    To rename multiple fields, pass a dictionary as the second argument, e.g.::
-
-        >>> from petl import look, rename
-        >>> tbl1 = [['sex', 'age'],
-        ...         ['M', 12],
-        ...         ['F', 34],
-        ...         ['-', 56]]
-        >>> tbl2 = rename(tbl1, {'sex': 'gender', 'age': 'age_years'})
-        >>> look(tbl2)
-        +----------+-------------+
-        | 'gender' | 'age_years' |
-        +==========+=============+
-        | 'M'      | 12          |
-        +----------+-------------+
-        | 'F'      | 34          |
-        +----------+-------------+
-        | '-'      | 56          |
-        +----------+-------------+
-
-    The returned table object can also be used to modify the field mapping, 
-    using the suffix notation, e.g.::
-    
-        >>> tbl1 = [['sex', 'age'],
-        ...         ['M', 12],
-        ...         ['F', 34],
-        ...         ['-', 56]]
-        >>> tbl2 = rename(tbl1)
-        >>> look(tbl2)
+        >>> look(table1)
         +-------+-------+
         | 'sex' | 'age' |
         +=======+=======+
@@ -80,8 +36,9 @@ def rename(table, *args):
         | '-'   | 56    |
         +-------+-------+
         
-        >>> tbl2['sex'] = 'gender'
-        >>> look(tbl2)
+        >>> # rename a single field
+        ... table2 = rename(table1, 'sex', 'gender')
+        >>> look(table2)
         +----------+-------+
         | 'gender' | 'age' |
         +==========+=======+
@@ -92,12 +49,58 @@ def rename(table, *args):
         | '-'      | 56    |
         +----------+-------+
         
+        >>> # rename multiple fields by passing a dictionary as the second argument
+        ... table3 = rename(table1, {'sex': 'gender', 'age': 'age_years'})
+        >>> look(table3)
+        +----------+-------------+
+        | 'gender' | 'age_years' |
+        +==========+=============+
+        | 'M'      | 12          |
+        +----------+-------------+
+        | 'F'      | 34          |
+        +----------+-------------+
+        | '-'      | 56          |
+        +----------+-------------+
+        
+        >>> # the returned table object can also be used to modify the field mapping using the suffix notation
+        ... table4 = rename(table1)
+        >>> table4['sex'] = 'gender'
+        >>> table4['age'] = 'age_years'
+        >>> look(table4)
+        +----------+-------------+
+        | 'gender' | 'age_years' |
+        +==========+=============+
+        | 'M'      | 12          |
+        +----------+-------------+
+        | 'F'      | 34          |
+        +----------+-------------+
+        | '-'      | 56          |
+        +----------+-------------+
+        
     .. versionchanged:: 0.4
     
     Function signature changed to support the simple 2 argument form when renaming
     a single field.
 
     """
+
+#table1 = [['sex', 'age'],
+#        ['M', 12],
+#        ['F', 34],
+#        ['-', 56]]
+#from petl import look, rename
+#look(table1)
+## rename a single field
+#table2 = rename(table1, 'sex', 'gender')
+#look(table2)
+## rename multiple fields by passing a dictionary as the second argument
+#table3 = rename(table1, {'sex': 'gender', 'age': 'age_years'})
+#look(table3)
+## the returned table object can also be used to modify the field mapping using the suffix notation
+#table4 = rename(table1)
+#table4['sex'] = 'gender'
+#table4['age'] = 'age_years'
+#look(table4)
     
     return RenameView(table, *args)
 
@@ -144,12 +147,21 @@ def cut(table, *args, **kwargs):
     Choose and/or re-order columns. E.g.::
 
         >>> from petl import look, cut    
-        >>> table1 = [['foo', 'bar', 'baz'],
-        ...           ['A', 1, 2.7],
-        ...           ['B', 2, 3.4],
-        ...           ['B', 3, 7.8],
-        ...           ['D', 42, 9.0],
-        ...           ['E', 12]]
+        >>> look(table1)
+        +-------+-------+-------+
+        | 'foo' | 'bar' | 'baz' |
+        +=======+=======+=======+
+        | 'A'   | 1     | 2.7   |
+        +-------+-------+-------+
+        | 'B'   | 2     | 3.4   |
+        +-------+-------+-------+
+        | 'B'   | 3     | 7.8   |
+        +-------+-------+-------+
+        | 'D'   | 42    | 9.0   |
+        +-------+-------+-------+
+        | 'E'   | 12    |       |
+        +-------+-------+-------+
+        
         >>> table2 = cut(table1, 'foo', 'baz')
         >>> look(table2)
         +-------+-------+
@@ -165,13 +177,9 @@ def cut(table, *args, **kwargs):
         +-------+-------+
         | 'E'   | None  |
         +-------+-------+
-
-    Note that any short rows will be padded with `None` values (or whatever is
-    provided via the `missing` keyword argument).
-    
-    Fields can also be specified by index, starting from zero. E.g.::
-
-        >>> table3 = cut(table1, 0, 2)
+        
+        >>> # fields can also be specified by index, starting from zero
+        ... table3 = cut(table1, 0, 2)
         >>> look(table3)
         +-------+-------+
         | 'foo' | 'baz' |
@@ -186,10 +194,9 @@ def cut(table, *args, **kwargs):
         +-------+-------+
         | 'E'   | None  |
         +-------+-------+
-
-    Field names and indices can be mixed, e.g.::
-
-        >>> table4 = cut(table1, 'bar', 0)
+        
+        >>> # field names and indices can be mixed
+        ... table4 = cut(table1, 'bar', 0)
         >>> look(table4)
         +-------+-------+
         | 'bar' | 'foo' |
@@ -204,10 +211,9 @@ def cut(table, *args, **kwargs):
         +-------+-------+
         | 12    | 'E'   |
         +-------+-------+
-
-    Use the standard :func:`range` runction to select a range of fields, e.g.::
-    
-        >>> table5 = cut(table1, *range(0, 2))
+        
+        >>> # select a range of fields
+        ... table5 = cut(table1, *range(0, 2))
         >>> look(table5)    
         +-------+-------+
         | 'foo' | 'bar' |
@@ -223,9 +229,32 @@ def cut(table, *args, **kwargs):
         | 'E'   | 12    |
         +-------+-------+
 
+    Note that any short rows will be padded with `None` values (or whatever is
+    provided via the `missing` keyword argument).
+    
     See also :func:`cutout`.
     
     """
+
+#table1 = [['foo', 'bar', 'baz'],
+#          ['A', 1, 2.7],
+#          ['B', 2, 3.4],
+#          ['B', 3, 7.8],
+#          ['D', 42, 9.0],
+#          ['E', 12]]
+#from petl import look, cut    
+#look(table1)
+#table2 = cut(table1, 'foo', 'baz')
+#look(table2)
+## fields can also be specified by index, starting from zero
+#table3 = cut(table1, 0, 2)
+#look(table3)
+## field names and indices can be mixed
+#table4 = cut(table1, 'bar', 0)
+#look(table4)
+## select a range of fields
+#table5 = cut(table1, *range(0, 2))
+#look(table5)    
     
     return CutView(table, args, **kwargs)
 
@@ -276,33 +305,53 @@ def cutout(table, *args, **kwargs):
     Remove fields. E.g.::
 
         >>> from petl import cutout, look
-        >>> table1 = (('foo', 'bar', 'baz'),
-        ...           ('A', 1, 2),
-        ...           ('B', '2', '3.4'),
-        ...           (u'B', u'3', u'7.8', True),
-        ...           ('D', 'xyz', 9.0),
-        ...           ('E', None))
+        >>> look(table1)
+        +-------+-------+-------+
+        | 'foo' | 'bar' | 'baz' |
+        +=======+=======+=======+
+        | 'A'   | 1     | 2.7   |
+        +-------+-------+-------+
+        | 'B'   | 2     | 3.4   |
+        +-------+-------+-------+
+        | 'B'   | 3     | 7.8   |
+        +-------+-------+-------+
+        | 'D'   | 42    | 9.0   |
+        +-------+-------+-------+
+        | 'E'   | 12    |       |
+        +-------+-------+-------+
+        
         >>> table2 = cutout(table1, 'bar')
         >>> look(table2)
-        +-------+--------+
-        | 'foo' | 'baz'  |
-        +=======+========+
-        | 'A'   | 2      |
-        +-------+--------+
-        | 'B'   | '3.4'  |
-        +-------+--------+
-        | u'B'  | u'7.8' |
-        +-------+--------+
-        | 'D'   | 9.0    |
-        +-------+--------+
-        | 'E'   | None   |
-        +-------+--------+
-
+        +-------+-------+
+        | 'foo' | 'baz' |
+        +=======+=======+
+        | 'A'   | 2.7   |
+        +-------+-------+
+        | 'B'   | 3.4   |
+        +-------+-------+
+        | 'B'   | 7.8   |
+        +-------+-------+
+        | 'D'   | 9.0   |
+        +-------+-------+
+        | 'E'   | None  |
+        +-------+-------+
+        
     See also :func:`cut`.
     
     .. versionadded:: 0.3
     
     """
+
+#table1 = [['foo', 'bar', 'baz'],
+#          ['A', 1, 2.7],
+#          ['B', 2, 3.4],
+#          ['B', 3, 7.8],
+#          ['D', 42, 9.0],
+#          ['E', 12]]
+#from petl import cutout, look
+#look(table1)
+#table2 = cutout(table1, 'bar')
+#look(table2)
     
     return CutOutView(table, args, **kwargs)
 
@@ -351,17 +400,27 @@ def itercutout(source, spec, missing=None):
     
 def cat(*tables, **kwargs):
     """
-    Concatenate data from two or more tables. Note that the tables do not need
-    to share exactly the same fields, any missing fields will be padded with
-    `None` (or whatever is provided via the `missing` keyword argument). E.g.::
-
-        >>> from petl import look, cat    
-        >>> table1 = [['foo', 'bar'],
-        ...           [1, 'A'],
-        ...           [2, 'B']]
-        >>> table2 = [['bar', 'baz'],
-        ...           ['C', True],
-        ...           ['D', False]]
+    Concatenate data from two or more tables. E.g.::
+    
+        >>> from petl import look, cat
+        >>> look(table1)
+        +-------+-------+
+        | 'foo' | 'bar' |
+        +=======+=======+
+        | 1     | 'A'   |
+        +-------+-------+
+        | 2     | 'B'   |
+        +-------+-------+
+        
+        >>> look(table2)
+        +-------+-------+
+        | 'bar' | 'baz' |
+        +=======+=======+
+        | 'C'   | True  |
+        +-------+-------+
+        | 'D'   | False |
+        +-------+-------+
+        
         >>> table3 = cat(table1, table2)
         >>> look(table3)
         +-------+-------+-------+
@@ -375,15 +434,23 @@ def cat(*tables, **kwargs):
         +-------+-------+-------+
         | None  | 'D'   | False |
         +-------+-------+-------+
-
-    This function can also be used to square up a table with uneven rows, e.g.::
-
-        >>> table4 = [['foo', 'bar', 'baz'],
-        ...          ['A', 1, 2],
-        ...          ['B', '2', '3.4'],
-        ...          [u'B', u'3', u'7.8', True],
-        ...          ['D', 'xyz', 9.0],
-        ...          ['E', None]]
+        
+        >>> # can also be used to square up a single table with uneven rows
+        ... look(table4)
+        +-------+-------+--------+------+
+        | 'foo' | 'bar' | 'baz'  |      |
+        +=======+=======+========+======+
+        | 'A'   | 1     | 2      |      |
+        +-------+-------+--------+------+
+        | 'B'   | '2'   | '3.4'  |      |
+        +-------+-------+--------+------+
+        | u'B'  | u'3'  | u'7.8' | True |
+        +-------+-------+--------+------+
+        | 'D'   | 'xyz' | 9.0    |      |
+        +-------+-------+--------+------+
+        | 'E'   | None  |        |      |
+        +-------+-------+--------+------+
+        
         >>> look(cat(table4))
         +-------+-------+--------+
         | 'foo' | 'bar' | 'baz'  |
@@ -398,17 +465,17 @@ def cat(*tables, **kwargs):
         +-------+-------+--------+
         | 'E'   | None  | None   |
         +-------+-------+--------+
-
-    .. versionchanged:: 0.5
-    
-    By default, the fields for the output table will be determined as the 
-    union of all fields found in the input tables. Use the `header` keyword 
-    argument to override this behaviour and specify a fixed set of fields for 
-    the output table. E.g., with a single input table::
-    
-        >>> table5 = [['bar', 'foo'],
-        ...           ['A', 1],
-        ...           ['B', 2]]
+        
+        >>> # use the header keyword argument to specify a fixed set of fields 
+        ... look(table5)
+        +-------+-------+
+        | 'bar' | 'foo' |
+        +=======+=======+
+        | 'A'   | 1     |
+        +-------+-------+
+        | 'B'   | 2     |
+        +-------+-------+
+        
         >>> table6 = cat(table5, header=['A', 'foo', 'B', 'bar', 'C'])
         >>> look(table6)
         +------+-------+------+-------+------+
@@ -418,15 +485,26 @@ def cat(*tables, **kwargs):
         +------+-------+------+-------+------+
         | None | 2     | None | 'B'   | None |
         +------+-------+------+-------+------+
-
-    E.g., with two input tables::
-
-        >>> table7 = [['bar', 'foo'],
-        ...           ['A', 1],
-        ...           ['B', 2]]
-        >>> table8 = [['bar', 'baz'],
-        ...           ['C', True],
-        ...           ['D', False]]
+        
+        >>> # using the header keyword argument with two input tables
+        ... look(table7)
+        +-------+-------+
+        | 'bar' | 'foo' |
+        +=======+=======+
+        | 'A'   | 1     |
+        +-------+-------+
+        | 'B'   | 2     |
+        +-------+-------+
+        
+        >>> look(table8)
+        +-------+-------+
+        | 'bar' | 'baz' |
+        +=======+=======+
+        | 'C'   | True  |
+        +-------+-------+
+        | 'D'   | False |
+        +-------+-------+
+        
         >>> table9 = cat(table7, table8, header=['A', 'foo', 'B', 'bar', 'C'])
         >>> look(table9)
         +------+-------+------+-------+------+
@@ -439,9 +517,59 @@ def cat(*tables, **kwargs):
         | None | None  | None | 'C'   | None |
         +------+-------+------+-------+------+
         | None | None  | None | 'D'   | None |
-        +------+-------+------+-------+------+
+        +------+-------+------+-------+------+    
+    
+    Note that the tables do not need to share exactly the same fields, any 
+    missing fields will be padded with `None` or whatever is provided via the 
+    `missing` keyword argument. 
 
+    .. versionchanged:: 0.5
+    
+    By default, the fields for the output table will be determined as the 
+    union of all fields found in the input tables. Use the `header` keyword 
+    argument to override this behaviour and specify a fixed set of fields for 
+    the output table. 
+    
     """
+
+#table1 = [['foo', 'bar'],
+#          [1, 'A'],
+#          [2, 'B']]
+#table2 = [['bar', 'baz'],
+#          ['C', True],
+#          ['D', False]]
+#table4 = [['foo', 'bar', 'baz'],
+#          ['A', 1, 2],
+#          ['B', '2', '3.4'],
+#          [u'B', u'3', u'7.8', True],
+#          ['D', 'xyz', 9.0],
+#          ['E', None]]
+#table5 = [['bar', 'foo'],
+#          ['A', 1],
+#          ['B', 2]]
+#table7 = [['bar', 'foo'],
+#          ['A', 1],
+#          ['B', 2]]
+#table8 = [['bar', 'baz'],
+#          ['C', True],
+#          ['D', False]]
+#from petl import look, cat
+#look(table1)
+#look(table2)
+#table3 = cat(table1, table2)
+#look(table3)
+## can also be used to square up a single table with uneven rows
+#look(table4)
+#look(cat(table4))
+## use the header keyword argument to specify a fixed set of fields 
+#look(table5)
+#table6 = cat(table5, header=['A', 'foo', 'B', 'bar', 'C'])
+#look(table6)
+## using the header keyword argument with two input tables
+#look(table7)
+#look(table8)
+#table9 = cat(table7, table8, header=['A', 'foo', 'B', 'bar', 'C'])
+#look(table9)
     
     return CatView(tables, **kwargs)
     

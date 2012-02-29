@@ -1,5 +1,5 @@
 """
-TODO doc me
+Utility functions.
 
 """
 
@@ -7,7 +7,6 @@ TODO doc me
 from itertools import islice
 from collections import defaultdict, Counter
 from operator import itemgetter
-import datetime
 import re
 from string import maketrans
 import random
@@ -546,17 +545,8 @@ def valuecounts(table, field):
     frequency of occurrences. Returns a table mapping values to counts, with most common 
     values first. E.g.::
 
-        >>> from petl import valuecounts
+        >>> from petl import valuecounts, look
         >>> table = [['foo', 'bar'], ['a', True], ['b'], ['b', True], ['c', False]]
-        >>> valuecounts(table, 'foo')
-        [('value', 'count', 'frequency'), ('b', 2, 0.5), ('a', 1, 0.25), ('c', 1, 0.25)]
-
-    The `field` argument can be a single field name or index (starting from zero)
-    or a tuple of field names and/or indexes.    
-
-    Can be combined with `look`, e.g.::
-
-        >>> from petl import look    
         >>> look(valuecounts(table, 'foo'))
         +---------+---------+-------------+
         | 'value' | 'count' | 'frequency' |
@@ -577,6 +567,9 @@ def valuecounts(table, field):
         | False   | 1       | 0.3333333333333333 |
         +---------+---------+--------------------+
             
+    The `field` argument can be a single field name or index (starting from zero)
+    or a tuple of field names and/or indexes.    
+
     """
     
     return ValueCountsView(table, field)
@@ -1672,8 +1665,6 @@ def stats(table, field):
         output['mean'] = output['sum'] / output['count']
     return output
         
-# TODO string lengths, string patterns, ...
-
 
 def expr(s):
     """
@@ -2058,12 +2049,19 @@ def diffvalues(t1, t2, f):
     .. versionadded:: 0.6
     
     """
+
+#from petl import diffvalues
+#table1 = [['foo', 'bar'],
+#          ['a', 1],
+#          ['b', 3]]
+#table2 = [['bar', 'foo'],
+#          [1, 'a'],
+#          [3, 'c']]
+#add, sub = diffvalues(table1, table2, 'foo')
+#add
+#sub
     
     t1v = set(itervalues(t1, f))
     t2v = set(itervalues(t2, f))
     return t2v - t1v, t1v - t2v
-
-
-
-
 
