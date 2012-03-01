@@ -83,24 +83,6 @@ def rename(table, *args):
     a single field.
 
     """
-
-#table1 = [['sex', 'age'],
-#        ['M', 12],
-#        ['F', 34],
-#        ['-', 56]]
-#from petl import look, rename
-#look(table1)
-## rename a single field
-#table2 = rename(table1, 'sex', 'gender')
-#look(table2)
-## rename multiple fields by passing a dictionary as the second argument
-#table3 = rename(table1, {'sex': 'gender', 'age': 'age_years'})
-#look(table3)
-## the returned table object can also be used to modify the field mapping using the suffix notation
-#table4 = rename(table1)
-#table4['sex'] = 'gender'
-#table4['age'] = 'age_years'
-#look(table4)
     
     return RenameView(table, *args)
 
@@ -235,26 +217,6 @@ def cut(table, *args, **kwargs):
     See also :func:`cutout`.
     
     """
-
-#table1 = [['foo', 'bar', 'baz'],
-#          ['A', 1, 2.7],
-#          ['B', 2, 3.4],
-#          ['B', 3, 7.8],
-#          ['D', 42, 9.0],
-#          ['E', 12]]
-#from petl import look, cut    
-#look(table1)
-#table2 = cut(table1, 'foo', 'baz')
-#look(table2)
-## fields can also be specified by index, starting from zero
-#table3 = cut(table1, 0, 2)
-#look(table3)
-## field names and indices can be mixed
-#table4 = cut(table1, 'bar', 0)
-#look(table4)
-## select a range of fields
-#table5 = cut(table1, *range(0, 2))
-#look(table5)    
     
     return CutView(table, args, **kwargs)
 
@@ -342,17 +304,6 @@ def cutout(table, *args, **kwargs):
     
     """
 
-#table1 = [['foo', 'bar', 'baz'],
-#          ['A', 1, 2.7],
-#          ['B', 2, 3.4],
-#          ['B', 3, 7.8],
-#          ['D', 42, 9.0],
-#          ['E', 12]]
-#from petl import cutout, look
-#look(table1)
-#table2 = cutout(table1, 'bar')
-#look(table2)
-    
     return CutOutView(table, args, **kwargs)
 
 
@@ -531,45 +482,6 @@ def cat(*tables, **kwargs):
     the output table. 
     
     """
-
-#table1 = [['foo', 'bar'],
-#          [1, 'A'],
-#          [2, 'B']]
-#table2 = [['bar', 'baz'],
-#          ['C', True],
-#          ['D', False]]
-#table4 = [['foo', 'bar', 'baz'],
-#          ['A', 1, 2],
-#          ['B', '2', '3.4'],
-#          [u'B', u'3', u'7.8', True],
-#          ['D', 'xyz', 9.0],
-#          ['E', None]]
-#table5 = [['bar', 'foo'],
-#          ['A', 1],
-#          ['B', 2]]
-#table7 = [['bar', 'foo'],
-#          ['A', 1],
-#          ['B', 2]]
-#table8 = [['bar', 'baz'],
-#          ['C', True],
-#          ['D', False]]
-#from petl import look, cat
-#look(table1)
-#look(table2)
-#table3 = cat(table1, table2)
-#look(table3)
-## can also be used to square up a single table with uneven rows
-#look(table4)
-#look(cat(table4))
-## use the header keyword argument to specify a fixed set of fields 
-#look(table5)
-#table6 = cat(table5, header=['A', 'foo', 'B', 'bar', 'C'])
-#look(table6)
-## using the header keyword argument with two input tables
-#look(table7)
-#look(table8)
-#table9 = cat(table7, table8, header=['A', 'foo', 'B', 'bar', 'C'])
-#look(table9)
     
     return CatView(tables, **kwargs)
     
@@ -635,15 +547,24 @@ def itercat(sources, missing, header):
 def convert(table, field, *args, **kwargs):
     """
     Transform values under the given field via an arbitrary function or method
-    invocation. E.g., using the built-in :func:`float` function:
+    invocation. E.g.::
     
         >>> from petl import convert, look
-        >>> table1 = [['foo', 'bar'],
-        ...           ['A', '2.4'],
-        ...           ['B', '5.7'],
-        ...           ['C', '1.2'],
-        ...           ['D', '8.3']]
-        >>> table2 = convert(table1, 'bar', float)
+        >>> look(table1)
+        +-------+-------+
+        | 'foo' | 'bar' |
+        +=======+=======+
+        | 'A'   | '2.4' |
+        +-------+-------+
+        | 'B'   | '5.7' |
+        +-------+-------+
+        | 'C'   | '1.2' |
+        +-------+-------+
+        | 'D'   | '8.3' |
+        +-------+-------+
+        
+        >>> # using the built-in float function:
+        ... table2 = convert(table1, 'bar', float)
         >>> look(table2)
         +-------+-------+
         | 'foo' | 'bar' |
@@ -656,10 +577,9 @@ def convert(table, field, *args, **kwargs):
         +-------+-------+
         | 'D'   | 8.3   |
         +-------+-------+
-    
-    E.g., using a lambda function::
         
-        >>> table3 = convert(table2, 'bar', lambda v: v**2)
+        >>> # using a lambda function::
+        ... table3 = convert(table2, 'bar', lambda v: v**2)
         >>> look(table3)    
         +-------+-------------------+
         | 'foo' | 'bar'             |
@@ -673,9 +593,8 @@ def convert(table, field, *args, **kwargs):
         | 'D'   | 68.89000000000001 |
         +-------+-------------------+
         
-    A method of the data value can also be invoked by passing the method name. E.g.::
-    
-        >>> table4 = convert(table1, 'foo', 'lower')
+        >>> # a method of the data value can also be invoked by passing the method name
+        ... table4 = convert(table1, 'foo', 'lower')
         >>> look(table4)
         +-------+-------+
         | 'foo' | 'bar' |
@@ -689,9 +608,8 @@ def convert(table, field, *args, **kwargs):
         | 'd'   | '8.3' |
         +-------+-------+
         
-    Arguments to the method invocation can also be given, e.g.::
-        
-        >>> table5 = convert(table4, 'foo', 'replace', 'a', 'aa')
+        >>> # arguments to the method invocation can also be given
+        ... table5 = convert(table4, 'foo', 'replace', 'a', 'aa')
         >>> look(table5)
         +-------+-------+
         | 'foo' | 'bar' |
@@ -704,17 +622,19 @@ def convert(table, field, *args, **kwargs):
         +-------+-------+
         | 'd'   | '8.3' |
         +-------+-------+
-
-    Useful for, among other things, string manipulation, see also the methods
-    on the `str <http://docs.python.org/library/stdtypes.html#string-methods>`_ 
-    type.
-    
-    Values can also be translated via a dictionary, e.g.::
-    
-        >>> table6 = [['gender', 'age'],
-        ...           ['M', 12],
-        ...           ['F', 34],
-        ...           ['-', 56]]
+        
+        >>> # values can also be translated via a dictionary
+        ... look(table6)
+        +----------+-------+
+        | 'gender' | 'age' |
+        +==========+=======+
+        | 'M'      | 12    |
+        +----------+-------+
+        | 'F'      | 34    |
+        +----------+-------+
+        | '-'      | 56    |
+        +----------+-------+
+        
         >>> table7 = convert(table6, 'gender', {'M': 'male', 'F': 'female'})
         >>> look(table7)
         +----------+-------+
@@ -726,10 +646,14 @@ def convert(table, field, *args, **kwargs):
         +----------+-------+
         | '-'      | 56    |
         +----------+-------+
-    
+        
     Note that the `field` argument can be a list or tuple of fields, in which
     case the conversion will be applied to all of the fields given.
-    
+
+    Useful for, among other things, string manipulation, see also the methods
+    on the `str <http://docs.python.org/library/stdtypes.html#string-methods>`_ 
+    type.
+        
     """
     
     converters = dict()
@@ -771,12 +695,19 @@ def replaceall(table, a, b):
 
 def convertnumbers(table):
     """
-    Convenience function to convert all field values to numbers where possible. E.g.::
+    Convenience function to convert all field values to numbers where possible. 
+    E.g.::
 
         >>> from petl import convertnumbers, look
-        >>> table1 = [['foo', 'bar', 'baz', 'quux'],
-        ...           ['1', '3.0', '9+3j', 'aaa'],
-        ...           ['2', '1.3', '7+2j', None]]
+        >>> look(table1)
+        +-------+-------+--------+--------+
+        | 'foo' | 'bar' | 'baz'  | 'quux' |
+        +=======+=======+========+========+
+        | '1'   | '3.0' | '9+3j' | 'aaa'  |
+        +-------+-------+--------+--------+
+        | '2'   | '1.3' | '7+2j' | None   |
+        +-------+-------+--------+--------+
+        
         >>> table2 = convertnumbers(table1)
         >>> look(table2)
         +-------+-------+--------+--------+
@@ -800,12 +731,21 @@ def fieldconvert(table, converters=None, failonerror=False, errorvalue=None):
     E.g.::
 
         >>> from petl import fieldconvert, look    
-        >>> table1 = [['foo', 'bar'],
-        ...           ['1', '2.4'],
-        ...           ['3', '7.9'],
-        ...           ['7', '2'],
-        ...           ['8.3', '42.0'],
-        ...           ['2', 'abc']]
+        >>> look(table1)
+        +-------+--------+
+        | 'foo' | 'bar'  |
+        +=======+========+
+        | '1'   | '2.4'  |
+        +-------+--------+
+        | '3'   | '7.9'  |
+        +-------+--------+
+        | '7'   | '2'    |
+        +-------+--------+
+        | '8.3' | '42.0' |
+        +-------+--------+
+        | '2'   | 'abc'  |
+        +-------+--------+
+        
         >>> table2 = fieldconvert(table1, {'foo': int, 'bar': float})
         >>> look(table2)
         +-------+-------+
@@ -821,18 +761,9 @@ def fieldconvert(table, converters=None, failonerror=False, errorvalue=None):
         +-------+-------+
         | 2     | None  |
         +-------+-------+
-
-    Converters can also be added or updated using the suffix notation on the
-    returned table object. E.g.::
-
-        >>> table3 = [['foo', 'bar', 'baz'],
-        ...           ['1', '2.4', 14],
-        ...           ['3', '7.9', 47],
-        ...           ['7', '2', 11],
-        ...           ['8.3', '42.0', 33],
-        ...           ['2', 'abc', 'xyz']]
-        >>> table4 = fieldconvert(table3)
-        >>> look(table4)
+        
+        >>> # converters can be added or updated using the suffix notation 
+        ... look(table3)
         +-------+--------+-------+
         | 'foo' | 'bar'  | 'baz' |
         +=======+========+=======+
@@ -847,6 +778,7 @@ def fieldconvert(table, converters=None, failonerror=False, errorvalue=None):
         | '2'   | 'abc'  | 'xyz' |
         +-------+--------+-------+
         
+        >>> table4 = fieldconvert(table3)
         >>> table4['foo'] = int
         >>> table4['bar'] = float
         >>> table4['baz'] = lambda v: v**2
@@ -864,14 +796,21 @@ def fieldconvert(table, converters=None, failonerror=False, errorvalue=None):
         +-------+-------+-------+
         | 2     | None  | None  |
         +-------+-------+-------+
-
-    Converters can be functions, method names, or method names with arguments. E.g.::
-    
-        >>> table5 = [['foo', 'bar', 'baz'],
-        ...           ['2', 'A', 'x'],
-        ...           ['5', 'B', 'y'],
-        ...           ['1', 'C', 'y'],
-        ...           ['8.3', 'D', 'z']]
+        
+        >>> # converters can be functions, method names, or method names with arguments
+        ... look(table5)
+        +-------+-------+-------+
+        | 'foo' | 'bar' | 'baz' |
+        +=======+=======+=======+
+        | '2'   | 'A'   | 'x'   |
+        +-------+-------+-------+
+        | '5'   | 'B'   | 'y'   |
+        +-------+-------+-------+
+        | '1'   | 'C'   | 'y'   |
+        +-------+-------+-------+
+        | '8.3' | 'D'   | 'z'   |
+        +-------+-------+-------+
+        
         >>> table6 = fieldconvert(table5)
         >>> table6['foo'] = int
         >>> table6['bar'] = 'lower'
@@ -1024,15 +963,22 @@ def resub(table, field, pattern, repl, count=0, flags=0):
     
 def extend(table, field, value, failonerror=False, errorvalue=None):
     """
-    Extend a table with a fixed value or calculated field. E.g., using a fixed
-    value::
+    Extend a table with a fixed value or calculated field. E.g.::
     
         >>> from petl import extend, look
-        >>> table1 = [['foo', 'bar'],
-        ...           ['M', 12],
-        ...           ['F', 34],
-        ...           ['-', 56]]
-        >>> table2 = extend(table1, 'baz', 42)
+        >>> look(table1)
+        +-------+-------+
+        | 'foo' | 'bar' |
+        +=======+=======+
+        | 'M'   | 12    |
+        +-------+-------+
+        | 'F'   | 34    |
+        +-------+-------+
+        | '-'   | 56    |
+        +-------+-------+
+        
+        >>> # using a fixed value
+        ... table2 = extend(table1, 'baz', 42)
         >>> look(table2)
         +-------+-------+-------+
         | 'foo' | 'bar' | 'baz' |
@@ -1043,10 +989,9 @@ def extend(table, field, value, failonerror=False, errorvalue=None):
         +-------+-------+-------+
         | '-'   | 56    | 42    |
         +-------+-------+-------+
-
-    E.g., calculating the value::
-    
-        >>> table2 = extend(table1, 'baz', lambda rec: rec['bar'] * 2)
+        
+        >>> # calculating the value
+        ... table2 = extend(table1, 'baz', lambda rec: rec['bar'] * 2)
         >>> look(table2)
         +-------+-------+-------+
         | 'foo' | 'bar' | 'baz' |
@@ -1057,12 +1002,9 @@ def extend(table, field, value, failonerror=False, errorvalue=None):
         +-------+-------+-------+
         | '-'   | 56    | 112   |
         +-------+-------+-------+
-
-    When using a calculated value, the function should accept a record, i.e., a
-    dictionary representation of the row, with values indexed by field name.
-    
-    An expression string can also be used via :func:`expr`, e.g.::
-
+        
+        >>> # an expression string can also be used via expr
+        ... from petl import expr
         >>> table3 = extend(table1, 'baz', expr('{bar} * 2'))
         >>> look(table3)
         +-------+-------+-------+
@@ -1074,9 +1016,12 @@ def extend(table, field, value, failonerror=False, errorvalue=None):
         +-------+-------+-------+
         | '-'   | 56    | 112   |
         +-------+-------+-------+
-
-    """
+        
+    When using a calculated value, the function should accept a record, i.e., a
+    dictionary representation of the row, with values indexed by field name.
     
+    """
+
     return ExtendView(table, field, value, failonerror=failonerror, errorvalue=errorvalue)
 
 
@@ -1128,12 +1073,21 @@ def rowslice(table, *sliceargs):
     Choose a subsequence of data rows. E.g.::
     
         >>> from petl import rowslice, look
-        >>> table1 = [['foo', 'bar'],
-        ...           ['a', 1],
-        ...           ['b', 2],
-        ...           ['c', 5],
-        ...           ['d', 7],
-        ...           ['f', 42]]
+        >>> look(table1)
+        +-------+-------+
+        | 'foo' | 'bar' |
+        +=======+=======+
+        | 'a'   | 1     |
+        +-------+-------+
+        | 'b'   | 2     |
+        +-------+-------+
+        | 'c'   | 5     |
+        +-------+-------+
+        | 'd'   | 7     |
+        +-------+-------+
+        | 'f'   | 42    |
+        +-------+-------+
+        
         >>> table2 = rowslice(table1, 2)
         >>> look(table2)
         +-------+-------+
@@ -1174,7 +1128,7 @@ def rowslice(table, *sliceargs):
     passed to :func:`itertools.islice`.
 
     """
-    
+
     return RowSliceView(table, *sliceargs)
 
 
@@ -1208,18 +1162,26 @@ def head(table, n=10):
     """
     Choose the first n data rows. E.g.::
 
-        >>> from petl import head, look    
-        >>> table1 = [['foo', 'bar'],
-        ...           ['a', 1],
-        ...           ['b', 2],
-        ...           ['c', 5],
-        ...           ['d', 7],
-        ...           ['f', 42],
-        ...           ['f', 3],
-        ...           ['h', 90],
-        ...           ['k', 12],
-        ...           ['l', 77],
-        ...           ['q', 2]]
+        >>> from petl import head, look
+        >>> look(table1)
+        +-------+-------+
+        | 'foo' | 'bar' |
+        +=======+=======+
+        | 'a'   | 1     |
+        +-------+-------+
+        | 'b'   | 2     |
+        +-------+-------+
+        | 'c'   | 5     |
+        +-------+-------+
+        | 'd'   | 7     |
+        +-------+-------+
+        | 'f'   | 42    |
+        +-------+-------+
+        | 'f'   | 3     |
+        +-------+-------+
+        | 'h'   | 90    |
+        +-------+-------+
+        
         >>> table2 = head(table1, 4)
         >>> look(table2)    
         +-------+-------+
@@ -1233,11 +1195,11 @@ def head(table, n=10):
         +-------+-------+
         | 'd'   | 7     |
         +-------+-------+
-    
-    Syntactic sugar: equivalent to ``rowslice(table, n)``.
+
+    Syntactic sugar, equivalent to ``rowslice(table, n)``.
     
     """
-    
+
     return rowslice(table, n)
 
         
@@ -1245,18 +1207,32 @@ def tail(table, n=10):
     """
     Choose the last n data rows. E.g.::
 
-        >>> from petl import tail, look    
-        >>> table1 = [['foo', 'bar'],
-        ...           ['a', 1],
-        ...           ['b', 2],
-        ...           ['c', 5],
-        ...           ['d', 7],
-        ...           ['f', 42],
-        ...           ['f', 3],
-        ...           ['h', 90],
-        ...           ['k', 12],
-        ...           ['l', 77],
-        ...           ['q', 2]]
+        >>> from petl import tail, look
+        >>> look(table1)
+        +-------+-------+
+        | 'foo' | 'bar' |
+        +=======+=======+
+        | 'a'   | 1     |
+        +-------+-------+
+        | 'b'   | 2     |
+        +-------+-------+
+        | 'c'   | 5     |
+        +-------+-------+
+        | 'd'   | 7     |
+        +-------+-------+
+        | 'f'   | 42    |
+        +-------+-------+
+        | 'f'   | 3     |
+        +-------+-------+
+        | 'h'   | 90    |
+        +-------+-------+
+        | 'k'   | 12    |
+        +-------+-------+
+        | 'l'   | 77    |
+        +-------+-------+
+        | 'q'   | 2     |
+        +-------+-------+
+        
         >>> table2 = tail(table1, 4)
         >>> look(table2)    
         +-------+-------+
@@ -1306,15 +1282,25 @@ def itertail(source, n):
 
 def sort(table, key=None, reverse=False, buffersize=None):
     """
-    Sort the table. E.g.::
+    Sort the table. Field names or indices (from zero) can be used to specify 
+    the key. E.g.::
     
         >>> from petl import sort, look
-        >>> table1 = [['foo', 'bar'],
-        ...           ['C', 2],
-        ...           ['A', 9],
-        ...           ['A', 6],
-        ...           ['F', 1],
-        ...           ['D', 10]]
+        >>> look(table1)
+        +-------+-------+
+        | 'foo' | 'bar' |
+        +=======+=======+
+        | 'C'   | 2     |
+        +-------+-------+
+        | 'A'   | 9     |
+        +-------+-------+
+        | 'A'   | 6     |
+        +-------+-------+
+        | 'F'   | 1     |
+        +-------+-------+
+        | 'D'   | 10    |
+        +-------+-------+
+        
         >>> table2 = sort(table1, 'foo')
         >>> look(table2)
         +-------+-------+
@@ -1330,10 +1316,9 @@ def sort(table, key=None, reverse=False, buffersize=None):
         +-------+-------+
         | 'F'   | 1     |
         +-------+-------+
-
-    Sorting by compound key is supported, e.g.::
-    
-        >>> table3 = sort(table1, key=['foo', 'bar'])
+        
+        >>> # sorting by compound key is supported
+        ... table3 = sort(table1, key=['foo', 'bar'])
         >>> look(table3)
         +-------+-------+
         | 'foo' | 'bar' |
@@ -1348,12 +1333,9 @@ def sort(table, key=None, reverse=False, buffersize=None):
         +-------+-------+
         | 'F'   | 1     |
         +-------+-------+
-
-    Field names or indices (from zero) can be used to specify the key.
-    
-    If no key is specified, the default is a lexical sort, e.g.::
-
-        >>> table4 = sort(table1)
+        
+        >>> # if no key is specified, the default is a lexical sort
+        ... table4 = sort(table1)
         >>> look(table4)
         +-------+-------+
         | 'foo' | 'bar' |
@@ -1368,7 +1350,7 @@ def sort(table, key=None, reverse=False, buffersize=None):
         +-------+-------+
         | 'F'   | 1     |
         +-------+-------+
-        
+
     The `buffersize` argument should be an `int` or `None`.
     
     If the number of rows in the table is less than `buffersize`, the table
@@ -1580,10 +1562,17 @@ def melt(table, key=None, variables=None, variablefield='variable', valuefield='
     Reshape a table, melting fields into data. E.g.::
 
         >>> from petl import melt, look
-        >>> table1 = [['id', 'gender', 'age'],
-        ...           [1, 'F', 12],
-        ...           [2, 'M', 17],
-        ...           [3, 'M', 16]]
+        >>> look(table1)
+        +------+----------+-------+
+        | 'id' | 'gender' | 'age' |
+        +======+==========+=======+
+        | 1    | 'F'      | 12    |
+        +------+----------+-------+
+        | 2    | 'M'      | 17    |
+        +------+----------+-------+
+        | 3    | 'M'      | 16    |
+        +------+----------+-------+
+        
         >>> table2 = melt(table1, 'id')
         >>> look(table2)
         +------+------------+---------+
@@ -1601,13 +1590,19 @@ def melt(table, key=None, variables=None, variablefield='variable', valuefield='
         +------+------------+---------+
         | 3    | 'age'      | 16      |
         +------+------------+---------+
-
-    Compound keys are supported, e.g.::
-    
-        >>> table3 = [['id', 'time', 'height', 'weight'],
-        ...           [1, 11, 66.4, 12.2],
-        ...           [2, 16, 53.2, 17.3],
-        ...           [3, 12, 34.5, 9.4]]
+        
+        >>> # compound keys are supported
+        ... look(table3)
+        +------+--------+----------+----------+
+        | 'id' | 'time' | 'height' | 'weight' |
+        +======+========+==========+==========+
+        | 1    | 11     | 66.4     | 12.2     |
+        +------+--------+----------+----------+
+        | 2    | 16     | 53.2     | 17.3     |
+        +------+--------+----------+----------+
+        | 3    | 12     | 34.5     | 9.4      |
+        +------+--------+----------+----------+
+        
         >>> table4 = melt(table3, key=['id', 'time'])
         >>> look(table4)
         +------+--------+------------+---------+
@@ -1625,10 +1620,9 @@ def melt(table, key=None, variables=None, variablefield='variable', valuefield='
         +------+--------+------------+---------+
         | 3    | 12     | 'weight'   | 9.4     |
         +------+--------+------------+---------+
-
-    A subset of variable fields can be selected, e.g.::
-    
-        >>> table5 = melt(table3, key=['id', 'time'], variables=['height'])    
+        
+        >>> # a subset of variable fields can be selected
+        ... table5 = melt(table3, key=['id', 'time'], variables=['height'])    
         >>> look(table5)
         +------+--------+------------+---------+
         | 'id' | 'time' | 'variable' | 'value' |
@@ -1715,13 +1709,23 @@ def recast(table, key=None, variablefield='variable', valuefield='value',
     Recast molten data. E.g.::
     
         >>> from petl import recast, look
-        >>> table1 = [['id', 'variable', 'value'],
-        ...           [3, 'age', 16],
-        ...           [1, 'gender', 'F'],
-        ...           [2, 'gender', 'M'],
-        ...           [2, 'age', 17],
-        ...           [1, 'age', 12],
-        ...           [3, 'gender', 'M']]
+        >>> look(table1)
+        +------+------------+---------+
+        | 'id' | 'variable' | 'value' |
+        +======+============+=========+
+        | 3    | 'age'      | 16      |
+        +------+------------+---------+
+        | 1    | 'gender'   | 'F'     |
+        +------+------------+---------+
+        | 2    | 'gender'   | 'M'     |
+        +------+------------+---------+
+        | 2    | 'age'      | 17      |
+        +------+------------+---------+
+        | 1    | 'age'      | 12      |
+        +------+------------+---------+
+        | 3    | 'gender'   | 'M'     |
+        +------+------------+---------+
+        
         >>> table2 = recast(table1)
         >>> look(table2)
         +------+-------+----------+
@@ -1733,16 +1737,25 @@ def recast(table, key=None, variablefield='variable', valuefield='value',
         +------+-------+----------+
         | 3    | 16    | 'M'      |
         +------+-------+----------+
-
-    If variable and value fields are different from the defaults, e.g.::
-    
-        >>> table3 = [['id', 'vars', 'vals'],
-        ...           [3, 'age', 16],
-        ...           [1, 'gender', 'F'],
-        ...           [2, 'gender', 'M'],
-        ...           [2, 'age', 17],
-        ...           [1, 'age', 12],
-        ...           [3, 'gender', 'M']]
+        
+        >>> # specifying variable and value fields
+        ... look(table3)
+        +------+----------+--------+
+        | 'id' | 'vars'   | 'vals' |
+        +======+==========+========+
+        | 3    | 'age'    | 16     |
+        +------+----------+--------+
+        | 1    | 'gender' | 'F'    |
+        +------+----------+--------+
+        | 2    | 'gender' | 'M'    |
+        +------+----------+--------+
+        | 2    | 'age'    | 17     |
+        +------+----------+--------+
+        | 1    | 'age'    | 12     |
+        +------+----------+--------+
+        | 3    | 'gender' | 'M'    |
+        +------+----------+--------+
+        
         >>> table4 = recast(table3, variablefield='vars', valuefield='vals')
         >>> look(table4)
         +------+-------+----------+
@@ -1754,17 +1767,26 @@ def recast(table, key=None, variablefield='variable', valuefield='value',
         +------+-------+----------+
         | 3    | 16    | 'M'      |
         +------+-------+----------+
-
-    If there are multiple values for each key/variable pair, and no reducers
-    function is provided, then all values will be listed. E.g.::
-    
-        >>> table6 = [['id', 'time', 'variable', 'value'],
-        ...           [1, 11, 'weight', 66.4],
-        ...           [1, 14, 'weight', 55.2],
-        ...           [2, 12, 'weight', 53.2],
-        ...           [2, 16, 'weight', 43.3],
-        ...           [3, 12, 'weight', 34.5],
-        ...           [3, 17, 'weight', 49.4]]
+        
+        >>> # if there are multiple values for each key/variable pair, and no reducers
+        ... # function is provided, then all values will be listed
+        ... look(table6)
+        +------+--------+------------+---------+
+        | 'id' | 'time' | 'variable' | 'value' |
+        +======+========+============+=========+
+        | 1    | 11     | 'weight'   | 66.4    |
+        +------+--------+------------+---------+
+        | 1    | 14     | 'weight'   | 55.2    |
+        +------+--------+------------+---------+
+        | 2    | 12     | 'weight'   | 53.2    |
+        +------+--------+------------+---------+
+        | 2    | 16     | 'weight'   | 43.3    |
+        +------+--------+------------+---------+
+        | 3    | 12     | 'weight'   | 34.5    |
+        +------+--------+------------+---------+
+        | 3    | 17     | 'weight'   | 49.4    |
+        +------+--------+------------+---------+
+        
         >>> table7 = recast(table6, key='id')
         >>> look(table7)
         +------+--------------+
@@ -1776,10 +1798,9 @@ def recast(table, key=None, variablefield='variable', valuefield='value',
         +------+--------------+
         | 3    | [34.5, 49.4] |
         +------+--------------+
-
-    Multiple values can be reduced via an aggregation function, e.g.::
-
-        >>> def mean(values):
+        
+        >>> # multiple values can be reduced via an aggregation function
+        ... def mean(values):
         ...     return float(sum(values)) / len(values)
         ... 
         >>> table8 = recast(table6, key='id', reducers={'weight': mean})
@@ -1793,15 +1814,22 @@ def recast(table, key=None, variablefield='variable', valuefield='value',
         +------+--------------------+
         | 3    | 41.95              |
         +------+--------------------+
-
-    Missing values are padded with whatever is provided via the `missing` 
-    keyword argument (`None` by default), e.g.::
-
-        >>> table9 = [['id', 'variable', 'value'],
-        ...           [1, 'gender', 'F'],
-        ...           [2, 'age', 17],
-        ...           [1, 'age', 12],
-        ...           [3, 'gender', 'M']]
+        
+        >>> # missing values are padded with whatever is provided via the missing 
+        ... # keyword argument (None by default)
+        ... look(table9)
+        +------+------------+---------+
+        | 'id' | 'variable' | 'value' |
+        +======+============+=========+
+        | 1    | 'gender'   | 'F'     |
+        +------+------------+---------+
+        | 2    | 'age'      | 17      |
+        +------+------------+---------+
+        | 1    | 'age'      | 12      |
+        +------+------------+---------+
+        | 3    | 'gender'   | 'M'     |
+        +------+------------+---------+
+        
         >>> table10 = recast(table9, key='id')
         >>> look(table10)
         +------+-------+----------+
@@ -1959,14 +1987,25 @@ def duplicates(table, key, presorted=False, buffersize=None):
     Select rows with duplicate values under a given key. E.g.::
 
         >>> from petl import duplicates, look    
-        >>> table1 = [['foo', 'bar', 'baz'],
-        ...           ['A', 1, 2.0],
-        ...           ['B', 2, 3.4],
-        ...           ['D', 6, 9.3],
-        ...           ['B', 3, 7.8],
-        ...           ['B', 2, 12.3],
-        ...           ['E', None, 1.3],
-        ...           ['D', 4, 14.5]]
+        >>> look(table1)
+        +-------+-------+-------+
+        | 'foo' | 'bar' | 'baz' |
+        +=======+=======+=======+
+        | 'A'   | 1     | 2.0   |
+        +-------+-------+-------+
+        | 'B'   | 2     | 3.4   |
+        +-------+-------+-------+
+        | 'D'   | 6     | 9.3   |
+        +-------+-------+-------+
+        | 'B'   | 3     | 7.8   |
+        +-------+-------+-------+
+        | 'B'   | 2     | 12.3  |
+        +-------+-------+-------+
+        | 'E'   | None  | 1.3   |
+        +-------+-------+-------+
+        | 'D'   | 4     | 14.5  |
+        +-------+-------+-------+
+        
         >>> table2 = duplicates(table1, 'foo')
         >>> look(table2)
         +-------+-------+-------+
@@ -1982,10 +2021,9 @@ def duplicates(table, key, presorted=False, buffersize=None):
         +-------+-------+-------+
         | 'D'   | 4     | 14.5  |
         +-------+-------+-------+
-
-    Compound keys are supported, e.g.::
-    
-        >>> table3 = duplicates(table1, key=['foo', 'bar'])
+        
+        >>> # compound keys are supported
+        ... table3 = duplicates(table1, key=['foo', 'bar'])
         >>> look(table3)
         +-------+-------+-------+
         | 'foo' | 'bar' | 'baz' |
@@ -1994,14 +2032,14 @@ def duplicates(table, key, presorted=False, buffersize=None):
         +-------+-------+-------+
         | 'B'   | 2     | 12.3  |
         +-------+-------+-------+
-
+        
     If `presorted` is True, it is assumed that the data are already sorted by
     the given key, and the `buffersize` argument is ignored. Otherwise, the data 
     are sorted, see also the discussion of the `buffersize` argument under the 
     :func:`sort` function.
     
     """
-    
+
     return DuplicatesView(table, key, presorted, buffersize)
 
 
@@ -2065,14 +2103,25 @@ def conflicts(table, key, missing=None, ignore=None, presorted=False, buffersize
     Select rows with the same key value but differing in some other field. E.g.::
 
         >>> from petl import conflicts, look    
-        >>> table1 = [['foo', 'bar', 'baz'],
-        ...           ['A', 1, 2.7],
-        ...           ['B', 2, None],
-        ...           ['D', 3, 9.4],
-        ...           ['B', None, 7.8],
-        ...           ['E', None],
-        ...           ['D', 3, 12.3],
-        ...           ['A', 2, None]]
+        >>> look(table1)
+        +-------+-------+-------+
+        | 'foo' | 'bar' | 'baz' |
+        +=======+=======+=======+
+        | 'A'   | 1     | 2.7   |
+        +-------+-------+-------+
+        | 'B'   | 2     | None  |
+        +-------+-------+-------+
+        | 'D'   | 3     | 9.4   |
+        +-------+-------+-------+
+        | 'B'   | None  | 7.8   |
+        +-------+-------+-------+
+        | 'E'   | None  |       |
+        +-------+-------+-------+
+        | 'D'   | 3     | 12.3  |
+        +-------+-------+-------+
+        | 'A'   | 2     | None  |
+        +-------+-------+-------+
+        
         >>> table2 = conflicts(table1, 'foo')
         >>> look(table2)
         +-------+-------+-------+
@@ -2086,7 +2135,7 @@ def conflicts(table, key, missing=None, ignore=None, presorted=False, buffersize
         +-------+-------+-------+
         | 'D'   | 3     | 12.3  |
         +-------+-------+-------+
-
+        
     Missing values are not considered conflicts. By default, `None` is treated
     as the missing value, this can be changed via the `missing` keyword 
     argument.
@@ -2099,18 +2148,8 @@ def conflicts(table, key, missing=None, ignore=None, presorted=False, buffersize
     .. versionchanged:: 0.5
     
     One or more fields can be ignored when determining conflicts by providing
-    the `ignore` keyword argument. E.g.::
+    the `ignore` keyword argument. 
 
-        >>> table3 = conflicts(table1, 'foo', ignore='baz')
-        >>> look(table3)
-        +-------+-------+-------+
-        | 'foo' | 'bar' | 'baz' |
-        +=======+=======+=======+
-        | 'A'   | 1     | 2.7   |
-        +-------+-------+-------+
-        | 'A'   | 2     | None  |
-        +-------+-------+-------+
-    
     """
     
     return ConflictsView(table, key, missing=missing, ignore=ignore,
@@ -2188,16 +2227,32 @@ def complement(a, b, presorted=False, buffersize=None):
     Return rows in `a` that are not in `b`. E.g.::
     
         >>> from petl import complement, look
-        >>> a = [['foo', 'bar', 'baz'],
-        ...      ['A', 1, True],
-        ...      ['C', 7, False],
-        ...      ['B', 2, False],
-        ...      ['C', 9, True]]
-        >>> b = [['x', 'y', 'z'],
-        ...      ['B', 2, False],
-        ...      ['A', 9, False],
-        ...      ['B', 3, True],
-        ...      ['C', 9, True]]
+        >>> look(a)
+        +-------+-------+-------+
+        | 'foo' | 'bar' | 'baz' |
+        +=======+=======+=======+
+        | 'A'   | 1     | True  |
+        +-------+-------+-------+
+        | 'C'   | 7     | False |
+        +-------+-------+-------+
+        | 'B'   | 2     | False |
+        +-------+-------+-------+
+        | 'C'   | 9     | True  |
+        +-------+-------+-------+
+        
+        >>> look(b)
+        +-----+-----+-------+
+        | 'x' | 'y' | 'z'   |
+        +=====+=====+=======+
+        | 'B' | 2   | False |
+        +-----+-----+-------+
+        | 'A' | 9   | False |
+        +-----+-----+-------+
+        | 'B' | 3   | True  |
+        +-----+-----+-------+
+        | 'C' | 9   | True  |
+        +-----+-----+-------+
+        
         >>> aminusb = complement(a, b)
         >>> look(aminusb)
         +-------+-------+-------+
@@ -2217,7 +2272,7 @@ def complement(a, b, presorted=False, buffersize=None):
         +-----+-----+-------+
         | 'B' | 3   | True  |
         +-----+-----+-------+
-
+        
     Note that the field names of each table are ignored - rows are simply compared
     following a lexical sort. See also the :func:`recordcomplement` function.
     
@@ -2227,7 +2282,7 @@ def complement(a, b, presorted=False, buffersize=None):
     :func:`sort` function.
     
     """
-    
+
     return ComplementView(a, b, presorted=presorted, buffersize=buffersize)
 
 
@@ -2285,17 +2340,33 @@ def recordcomplement(a, b, buffersize=None):
     Find records in `a` that are not in `b`. E.g.::
     
         >>> from petl import recordcomplement, look
-        >>> tablea = (('foo', 'bar', 'baz'),
-        ...           ('A', 1, True),
-        ...           ('C', 7, False),
-        ...           ('B', 2, False),
-        ...           ('C', 9, True))
-        >>> tableb = (('bar', 'foo', 'baz'),
-        ...           (2, 'B', False),
-        ...           (9, 'A', False),
-        ...           (3, 'B', True),
-        ...           (9, 'C', True))
-        >>> aminusb = recordcomplement(tablea, tableb)
+        >>> look(a)
+        +-------+-------+-------+
+        | 'foo' | 'bar' | 'baz' |
+        +=======+=======+=======+
+        | 'A'   | 1     | True  |
+        +-------+-------+-------+
+        | 'C'   | 7     | False |
+        +-------+-------+-------+
+        | 'B'   | 2     | False |
+        +-------+-------+-------+
+        | 'C'   | 9     | True  |
+        +-------+-------+-------+
+        
+        >>> look(b)
+        +-------+-------+-------+
+        | 'bar' | 'foo' | 'baz' |
+        +=======+=======+=======+
+        | 2     | 'B'   | False |
+        +-------+-------+-------+
+        | 9     | 'A'   | False |
+        +-------+-------+-------+
+        | 3     | 'B'   | True  |
+        +-------+-------+-------+
+        | 9     | 'C'   | True  |
+        +-------+-------+-------+
+        
+        >>> aminusb = recordcomplement(a, b)
         >>> look(aminusb)
         +-------+-------+-------+
         | 'foo' | 'bar' | 'baz' |
@@ -2305,7 +2376,7 @@ def recordcomplement(a, b, buffersize=None):
         | 'C'   | 7     | False |
         +-------+-------+-------+
         
-        >>> bminusa = recordcomplement(tableb, tablea)
+        >>> bminusa = recordcomplement(b, a)
         >>> look(bminusa)
         +-------+-------+-------+
         | 'bar' | 'foo' | 'baz' |
@@ -2314,7 +2385,7 @@ def recordcomplement(a, b, buffersize=None):
         +-------+-------+-------+
         | 9     | 'A'   | False |
         +-------+-------+-------+
-    
+        
     Note that both tables must have the same set of fields, but that the order
     of the fields does not matter. See also the :func:`complement` function.
     
@@ -2335,19 +2406,36 @@ def recordcomplement(a, b, buffersize=None):
 
 def diff(a, b, presorted=False, buffersize=None):
     """
-    Find the difference between rows in two tables. Returns a pair of tables, e.g.::
+    Find the difference between rows in two tables. Returns a pair of tables. 
+    E.g.::
     
         >>> from petl import diff, look
-        >>> a = [['foo', 'bar', 'baz'],
-        ...      ['A', 1, True],
-        ...      ['C', 7, False],
-        ...      ['B', 2, False],
-        ...      ['C', 9, True]]
-        >>> b = [['x', 'y', 'z'],
-        ...      ['B', 2, False],
-        ...      ['A', 9, False],
-        ...      ['B', 3, True],
-        ...      ['C', 9, True]]
+        >>> look(a)
+        +-------+-------+-------+
+        | 'foo' | 'bar' | 'baz' |
+        +=======+=======+=======+
+        | 'A'   | 1     | True  |
+        +-------+-------+-------+
+        | 'C'   | 7     | False |
+        +-------+-------+-------+
+        | 'B'   | 2     | False |
+        +-------+-------+-------+
+        | 'C'   | 9     | True  |
+        +-------+-------+-------+
+        
+        >>> look(b)
+        +-----+-----+-------+
+        | 'x' | 'y' | 'z'   |
+        +=====+=====+=======+
+        | 'B' | 2   | False |
+        +-----+-----+-------+
+        | 'A' | 9   | False |
+        +-----+-----+-------+
+        | 'B' | 3   | True  |
+        +-----+-----+-------+
+        | 'C' | 9   | True  |
+        +-----+-----+-------+
+        
         >>> added, subtracted = diff(a, b)
         >>> # rows in b not in a
         ... look(added)
@@ -2392,17 +2480,33 @@ def recorddiff(a, b, buffersize=None):
     Find the difference between records in two tables. E.g.::
 
         >>> from petl import recorddiff, look    
-        >>> tablea = (('foo', 'bar', 'baz'),
-        ...           ('A', 1, True),
-        ...           ('C', 7, False),
-        ...           ('B', 2, False),
-        ...           ('C', 9, True))
-        >>> tableb = (('bar', 'foo', 'baz'),
-        ...           (2, 'B', False),
-        ...           (9, 'A', False),
-        ...           (3, 'B', True),
-        ...           (9, 'C', True))
-        >>> added, subtracted = recorddiff(tablea, tableb)
+        >>> look(a)
+        +-------+-------+-------+
+        | 'foo' | 'bar' | 'baz' |
+        +=======+=======+=======+
+        | 'A'   | 1     | True  |
+        +-------+-------+-------+
+        | 'C'   | 7     | False |
+        +-------+-------+-------+
+        | 'B'   | 2     | False |
+        +-------+-------+-------+
+        | 'C'   | 9     | True  |
+        +-------+-------+-------+
+        
+        >>> look(b)
+        +-------+-------+-------+
+        | 'bar' | 'foo' | 'baz' |
+        +=======+=======+=======+
+        | 2     | 'B'   | False |
+        +-------+-------+-------+
+        | 9     | 'A'   | False |
+        +-------+-------+-------+
+        | 3     | 'B'   | True  |
+        +-------+-------+-------+
+        | 9     | 'C'   | True  |
+        +-------+-------+-------+
+        
+        >>> added, subtracted = recorddiff(a, b)
         >>> look(added)
         +-------+-------+-------+
         | 'bar' | 'foo' | 'baz' |
@@ -2440,14 +2544,27 @@ def capture(table, field, pattern, newfields=None, include_original=False,
             flags=0):
     """
     Extend the table with one or more new fields with values captured from an
-    existing field searched via a regular expression. E.g.::
+    existing field searched via a regular expression. 
+    
+    By default the field on which the capture is performed is omitted. It can
+    be included using the `include_original` argument.
+    
+    E.g.::
 
         >>> from petl import capture, look
-        >>> table1 = [['id', 'variable', 'value'],
-        ...           ['1', 'A1', '12'],
-        ...           ['2', 'A2', '15'],
-        ...           ['3', 'B1', '18'],
-        ...           ['4', 'C12', '19']]
+        >>> look(table1)
+        +------+------------+---------+
+        | 'id' | 'variable' | 'value' |
+        +======+============+=========+
+        | '1'  | 'A1'       | '12'    |
+        +------+------------+---------+
+        | '2'  | 'A2'       | '15'    |
+        +------+------------+---------+
+        | '3'  | 'B1'       | '18'    |
+        +------+------------+---------+
+        | '4'  | 'C12'      | '19'    |
+        +------+------------+---------+
+        
         >>> table2 = capture(table1, 'variable', '(\\w)(\\d+)', ['treat', 'time'])
         >>> look(table2)
         +------+---------+---------+--------+
@@ -2461,13 +2578,9 @@ def capture(table, field, pattern, newfields=None, include_original=False,
         +------+---------+---------+--------+
         | '4'  | '19'    | 'C'     | '12'   |
         +------+---------+---------+--------+
-
-    See also :func:`re.search`.
-    
-    By default the field on which the capture is performed is omitted. It can
-    be included using the `include_original` argument, e.g.::
-    
-        >>> table3 = capture(table1, 'variable', '(\\w)(\\d+)', ['treat', 'time'], include_original=True)
+        
+        >>> # using the include_original argument
+        ... table3 = capture(table1, 'variable', '(\\w)(\\d+)', ['treat', 'time'], include_original=True)
         >>> look(table3)
         +------+------------+---------+---------+--------+
         | 'id' | 'variable' | 'value' | 'treat' | 'time' |
@@ -2480,7 +2593,9 @@ def capture(table, field, pattern, newfields=None, include_original=False,
         +------+------------+---------+---------+--------+
         | '4'  | 'C12'      | '19'    | 'C'     | '12'   |
         +------+------------+---------+---------+--------+
-
+        
+    See also :func:`re.search`.
+    
     """
     
     return CaptureView(table, field, pattern, newfields, include_original, flags)
@@ -2552,11 +2667,19 @@ def split(table, field, pattern, newfields=None, include_original=False,
     E.g.::
 
         >>> from petl import split, look
-        >>> table1 = [['id', 'variable', 'value'],
-        ...           ['1', 'parad1', '12'],
-        ...           ['2', 'parad2', '15'],
-        ...           ['3', 'tempd1', '18'],
-        ...           ['4', 'tempd2', '19']]
+        >>> look(table1)
+        +------+------------+---------+
+        | 'id' | 'variable' | 'value' |
+        +======+============+=========+
+        | '1'  | 'parad1'   | '12'    |
+        +------+------------+---------+
+        | '2'  | 'parad2'   | '15'    |
+        +------+------------+---------+
+        | '3'  | 'tempd1'   | '18'    |
+        +------+------------+---------+
+        | '4'  | 'tempd2'   | '19'    |
+        +------+------------+---------+
+        
         >>> table2 = split(table1, 'variable', 'd', ['variable', 'day'])
         >>> look(table2)
         +------+---------+------------+-------+
@@ -2570,8 +2693,9 @@ def split(table, field, pattern, newfields=None, include_original=False,
         +------+---------+------------+-------+
         | '4'  | '19'    | 'temp'     | '2'   |
         +------+---------+------------+-------+
-
+        
     See also :func:`re.split`.
+
     """
     
     return SplitView(table, field, pattern, newfields, include_original, maxsplit,
@@ -2642,29 +2766,39 @@ def itersplit(source, field, pattern, newfields, include_original, maxsplit,
     
 def select(table, *args, **kwargs):
     """
-    Select rows meeting a condition. The second positional argument can be a function
-    accepting a record (i.e., a dictionary representation of a row) e.g.::
+    Select rows meeting a condition. E.g.::
     
         >>> from petl import select, look     
-        >>> table1 = [['foo', 'bar', 'baz'],
-        ...           ['a', 4, 9.3],
-        ...           ['a', 2, 88.2],
-        ...           ['b', 1, 23.3],
-        ...           ['c', 8, 42.0],
-        ...           ['d', 7, 100.9],
-        ...           ['c', 2]]
-        >>> table2 = select(table1, lambda rec: rec['foo'] == 'a' and rec['baz'] > 88.1)
+        >>> look(table1)
+        +-------+-------+-------+
+        | 'foo' | 'bar' | 'baz' |
+        +=======+=======+=======+
+        | 'a'   | 4     | 9.3   |
+        +-------+-------+-------+
+        | 'a'   | 2     | 88.2  |
+        +-------+-------+-------+
+        | 'b'   | 1     | 23.3  |
+        +-------+-------+-------+
+        | 'c'   | 8     | 42.0  |
+        +-------+-------+-------+
+        | 'd'   | 7     | 100.9 |
+        +-------+-------+-------+
+        | 'c'   | 2     |       |
+        +-------+-------+-------+
+        
+        >>> # the second positional argument can be a function accepting a record (i.e., a 
+        ... # dictionary representation of a row).
+        ... table2 = select(table1, lambda rec: rec['foo'] == 'a' and rec['baz'] > 88.1)
         >>> look(table2)
         +-------+-------+-------+
         | 'foo' | 'bar' | 'baz' |
         +=======+=======+=======+
         | 'a'   | 2     | 88.2  |
         +-------+-------+-------+
-
-    The second positional argument can also be an expression string, which will be converted
-    to a function using :func:`expr`, e.g.::
-    
-        >>> table3 = select(table1, "{foo} == 'a' and {baz} > 88.1")
+        
+        >>> # the second positional argument can also be an expression string, which 
+        ... # will be converted to a function using expr()
+        ... table3 = select(table1, "{foo} == 'a' and {baz} > 88.1")
         >>> look(table3)
         +-------+-------+-------+
         | 'foo' | 'bar' | 'baz' |
@@ -2672,9 +2806,8 @@ def select(table, *args, **kwargs):
         | 'a'   | 2     | 88.2  |
         +-------+-------+-------+
         
-    The condition can also be applied to a single field, e.g.::
-    
-        >>> table4 = select(table1, 'foo', lambda v: v == 'a')
+        >>> # the condition can also be applied to a single field
+        ... table4 = select(table1, 'foo', lambda v: v == 'a')
         >>> look(table4)
         +-------+-------+-------+
         | 'foo' | 'bar' | 'baz' |
@@ -2683,7 +2816,7 @@ def select(table, *args, **kwargs):
         +-------+-------+-------+
         | 'a'   | 2     | 88.2  |
         +-------+-------+-------+
-
+        
     .. versionchanged:: 0.4
     
     The complement of the selection can be returned (i.e., the query can be 
@@ -2867,13 +3000,22 @@ def fieldmap(table, mappings=None, failonerror=False, errorvalue=None):
     Transform a table, mapping fields arbitrarily between input and output. E.g.::
     
         >>> from petl import fieldmap, look
+        >>> look(table1)
+        +------+----------+-------+----------+----------+
+        | 'id' | 'sex'    | 'age' | 'height' | 'weight' |
+        +======+==========+=======+==========+==========+
+        | 1    | 'male'   | 16    | 1.45     | 62.0     |
+        +------+----------+-------+----------+----------+
+        | 2    | 'female' | 19    | 1.34     | 55.4     |
+        +------+----------+-------+----------+----------+
+        | 3    | 'female' | 17    | 1.78     | 74.4     |
+        +------+----------+-------+----------+----------+
+        | 4    | 'male'   | 21    | 1.33     | 45.2     |
+        +------+----------+-------+----------+----------+
+        | 5    | '-'      | 25    | 1.65     | 51.9     |
+        +------+----------+-------+----------+----------+
+        
         >>> from collections import OrderedDict
-        >>> table1 = [['id', 'sex', 'age', 'height', 'weight'],
-        ...           [1, 'male', 16, 1.45, 62.0],
-        ...           [2, 'female', 19, 1.34, 55.4],
-        ...           [3, 'female', 17, 1.78, 74.4],
-        ...           [4, 'male', 21, 1.33, 45.2],
-        ...           [5, '-', 25, 1.65, 51.9]]
         >>> mappings = OrderedDict()
         >>> # rename a field
         ... mappings['subject_id'] = 'id'
@@ -2899,11 +3041,10 @@ def fieldmap(table, mappings=None, failonerror=False, errorvalue=None):
         +--------------+----------+--------------+--------------------+
         | 5            | '-'      | 300          | 19.0633608815427   |
         +--------------+----------+--------------+--------------------+
-
-    Field mappings can also be added and/or updated after the table is created via
-    the suffix notation. E.g.::
-    
-        >>> table3 = fieldmap(table1)
+        
+        >>> # field mappings can also be added and/or updated after the table is created 
+        ... # via the suffix notation
+        ... table3 = fieldmap(table1)
         >>> table3['subject_id'] = 'id'
         >>> table3['gender'] = 'sex', {'male': 'M', 'female': 'F'}
         >>> table3['age_months'] = 'age', lambda v: v * 12
@@ -2923,7 +3064,7 @@ def fieldmap(table, mappings=None, failonerror=False, errorvalue=None):
         +--------------+----------+--------------+--------------------+
         | 5            | '-'      | 300          | 19.0633608815427   |
         +--------------+----------+--------------+--------------------+
-
+        
     Note also that the mapping value can be an expression string, which will be 
     converted to a lambda function via :func:`expr`. 
 
@@ -3044,13 +3185,23 @@ def facet(table, field):
     Return a dictionary mapping field values to tables. E.g.::
     
         >>> from petl import facet, look
-        >>> table1 = [['foo', 'bar', 'baz'],
-        ...           ['a', 4, 9.3],
-        ...           ['a', 2, 88.2],
-        ...           ['b', 1, 23.3],
-        ...           ['c', 8, 42.0],
-        ...           ['d', 7, 100.9],
-        ...           ['c', 2]]
+        >>> look(table1)
+        +-------+-------+-------+
+        | 'foo' | 'bar' | 'baz' |
+        +=======+=======+=======+
+        | 'a'   | 4     | 9.3   |
+        +-------+-------+-------+
+        | 'a'   | 2     | 88.2  |
+        +-------+-------+-------+
+        | 'b'   | 1     | 23.3  |
+        +-------+-------+-------+
+        | 'c'   | 8     | 42.0  |
+        +-------+-------+-------+
+        | 'd'   | 7     | 100.9 |
+        +-------+-------+-------+
+        | 'c'   | 2     |       |
+        +-------+-------+-------+
+        
         >>> foo = facet(table1, 'foo')
         >>> foo.keys()
         ['a', 'c', 'b', 'd']
@@ -3071,7 +3222,7 @@ def facet(table, field):
         +-------+-------+-------+
         | 'c'   | 2     |       |
         +-------+-------+-------+
-
+        
     """
     
     fct = dict()
@@ -3315,13 +3466,23 @@ def selectre(table, field, pattern, flags=0, complement=False):
     given field returns a match. E.g.::
 
         >>> from petl import selectre, look    
-        >>> table1 = (('foo', 'bar', 'baz'),
-        ...           ('aa', 4, 9.3),
-        ...           ('aaa', 2, 88.2),
-        ...           ('b', 1, 23.3),
-        ...           ('ccc', 8, 42.0),
-        ...           ('bb', 7, 100.9),
-        ...           ('c', 2))
+        >>> look(table1)
+        +-------+-------+-------+
+        | 'foo' | 'bar' | 'baz' |
+        +=======+=======+=======+
+        | 'aa'  | 4     | 9.3   |
+        +-------+-------+-------+
+        | 'aaa' | 2     | 88.2  |
+        +-------+-------+-------+
+        | 'b'   | 1     | 23.3  |
+        +-------+-------+-------+
+        | 'ccc' | 8     | 42.0  |
+        +-------+-------+-------+
+        | 'bb'  | 7     | 100.9 |
+        +-------+-------+-------+
+        | 'c'   | 2     |       |
+        +-------+-------+-------+
+        
         >>> table2 = selectre(table1, 'foo', '[ab]{2}')
         >>> look(table2)
         +-------+-------+-------+
@@ -3333,7 +3494,7 @@ def selectre(table, field, pattern, flags=0, complement=False):
         +-------+-------+-------+
         | 'bb'  | 7     | 100.9 |
         +-------+-------+-------+
-
+        
     See also :func:`re.search`.
     
     .. versionchanged:: 0.4
@@ -3353,13 +3514,23 @@ def rowreduce(table, key, reducer, fields=None, presorted=False, buffersize=None
     Reduce rows grouped under the given key via an arbitrary function. E.g.::
 
         >>> from petl import rowreduce, look    
-        >>> table1 = [['foo', 'bar'],
-        ...           ['a', 3],
-        ...           ['a', 7],
-        ...           ['b', 2],
-        ...           ['b', 1],
-        ...           ['b', 9],
-        ...           ['c', 4]]
+        >>> look(table1)
+        +-------+-------+
+        | 'foo' | 'bar' |
+        +=======+=======+
+        | 'a'   | 3     |
+        +-------+-------+
+        | 'a'   | 7     |
+        +-------+-------+
+        | 'b'   | 2     |
+        +-------+-------+
+        | 'b'   | 1     |
+        +-------+-------+
+        | 'b'   | 9     |
+        +-------+-------+
+        | 'c'   | 4     |
+        +-------+-------+
+        
         >>> def sumbar(key, rows):
         ...     return [key, sum([row[1] for row in rows])]
         ... 
@@ -3374,7 +3545,7 @@ def rowreduce(table, key, reducer, fields=None, presorted=False, buffersize=None
         +-------+----------+
         | 'c'   | 4        |
         +-------+----------+
-
+        
     The `reducer` function should accept two arguments, a key and a sequence
     of rows, and return a single row.
 
@@ -3437,13 +3608,23 @@ def recordreduce(table, key, reducer, fields=None, presorted=False, buffersize=N
     Reduce records grouped under the given key via an arbitrary function. E.g.::
 
         >>> from petl import recordreduce, look    
-        >>> table1 = [['foo', 'bar'],
-        ...           ['a', 3],
-        ...           ['a', 7],
-        ...           ['b', 2],
-        ...           ['b', 1],
-        ...           ['b', 9],
-        ...           ['c', 4]]
+        >>> look(table1)
+        +-------+-------+
+        | 'foo' | 'bar' |
+        +=======+=======+
+        | 'a'   | 3     |
+        +-------+-------+
+        | 'a'   | 7     |
+        +-------+-------+
+        | 'b'   | 2     |
+        +-------+-------+
+        | 'b'   | 1     |
+        +-------+-------+
+        | 'b'   | 9     |
+        +-------+-------+
+        | 'c'   | 4     |
+        +-------+-------+
+        
         >>> def sumbar(key, records):
         ...     return [key, sum([rec['bar'] for rec in records])]
         ... 
@@ -3458,7 +3639,7 @@ def recordreduce(table, key, reducer, fields=None, presorted=False, buffersize=N
         +-------+----------+
         | 'c'   | 4        |
         +-------+----------+
-
+        
     The `reducer` function should accept two arguments, a key and a sequence
     of records (i.e., dictionaries of values indexed by field) and return a single
     row.
@@ -3524,14 +3705,25 @@ def mergereduce(table, key, missing=None, presorted=False, buffersize=None):
     Merge rows under the given key. E.g.::
     
         >>> from petl import mergereduce, look    
-        >>> table1 = [['foo', 'bar', 'baz'],
-        ...           ['A', 1, 2.7],
-        ...           ['B', 2, None],
-        ...           ['D', 3, 9.4],
-        ...           ['B', None, 7.8],
-        ...           ['E', None],
-        ...           ['D', 3, 12.3],
-        ...           ['A', 2, None]]
+        >>> look(table1)
+        +-------+-------+-------+
+        | 'foo' | 'bar' | 'baz' |
+        +=======+=======+=======+
+        | 'A'   | 1     | 2.7   |
+        +-------+-------+-------+
+        | 'B'   | 2     | None  |
+        +-------+-------+-------+
+        | 'D'   | 3     | 9.4   |
+        +-------+-------+-------+
+        | 'B'   | None  | 7.8   |
+        +-------+-------+-------+
+        | 'E'   | None  |       |
+        +-------+-------+-------+
+        | 'D'   | 3     | 12.3  |
+        +-------+-------+-------+
+        | 'A'   | 2     | None  |
+        +-------+-------+-------+
+        
         >>> table2 = mergereduce(table1, 'foo')
         >>> look(table2)
         +-------+--------+-------------+
@@ -3545,7 +3737,7 @@ def mergereduce(table, key, missing=None, presorted=False, buffersize=None):
         +-------+--------+-------------+
         | 'E'   | None   |             |
         +-------+--------+-------------+
-
+        
     Missing values are overridden by non-missing values. Conflicting values are
     reported as a tuple.
     
@@ -3582,14 +3774,28 @@ def merge(*tables, **kwargs):
     reduce rows by merging under the given key (via :func:`mergereduce`). E.g.::
     
         >>> from petl import look, merge
-        >>> table1 = [['foo', 'bar', 'baz'],
-        ...           [1, 'A', True],
-        ...           [2, 'B', None],
-        ...           [4, 'C', True]]
-        >>> table2 = [['bar', 'baz', 'quux'],
-        ...           ['A', True, 42.0],
-        ...           ['B', False, 79.3],
-        ...           ['C', False, 12.4]]
+        >>> look(table1)
+        +-------+-------+-------+
+        | 'foo' | 'bar' | 'baz' |
+        +=======+=======+=======+
+        | 1     | 'A'   | True  |
+        +-------+-------+-------+
+        | 2     | 'B'   | None  |
+        +-------+-------+-------+
+        | 4     | 'C'   | True  |
+        +-------+-------+-------+
+        
+        >>> look(table2)
+        +-------+-------+--------+
+        | 'bar' | 'baz' | 'quux' |
+        +=======+=======+========+
+        | 'A'   | True  | 42.0   |
+        +-------+-------+--------+
+        | 'B'   | False | 79.3   |
+        +-------+-------+--------+
+        | 'C'   | False | 12.4   |
+        +-------+-------+--------+
+        
         >>> table3 = merge(table1, table2, key='bar')
         >>> look(table3)
         +-------+-------+---------------+--------+
@@ -3599,23 +3805,20 @@ def merge(*tables, **kwargs):
         +-------+-------+---------------+--------+
         | 2     | 'B'   | False         | 79.3   |
         +-------+-------+---------------+--------+
-        | 4     | 'C'   | (False, True) | 12.4   |
+        | 4     | 'C'   | (True, False) | 12.4   |
         +-------+-------+---------------+--------+
+        
+    See also the discussion of the `buffersize` argument under the :func:`sort` 
+    function.
 
-    If `presorted` is True, it is assumed that the data are already sorted by
-    the given key, and the `buffersize` argument is ignored. Otherwise, the data 
-    are sorted, see also the discussion of the `buffersize` argument under the 
-    :func:`sort` function.
-    
     """
     
     assert 'key' in kwargs, 'keyword argument "key" is required'
     key = kwargs['key']
     missing = kwargs['missing'] if 'missing' in kwargs else None
-    presorted = kwargs['presorted'] if 'presorted' in kwargs else False
     buffersize = kwargs['buffersize'] if 'buffersize' in kwargs else None
     t1 = cat(*tables, missing=missing)
-    t2 = mergereduce(t1, key=key, presorted=presorted, buffersize=buffersize)
+    t2 = mergereduce(t1, key=key, presorted=False, buffersize=buffersize)
     return t2
 
 
@@ -3625,17 +3828,30 @@ def aggregate(table, key, aggregators=None, failonerror=False, errorvalue=None,
     Group rows under the given key then apply aggregation functions. E.g.::
 
         >>> from petl import aggregate, look
+        >>> look(table1)
+        +-------+-------+
+        | 'foo' | 'bar' |
+        +=======+=======+
+        | 'a'   | 3     |
+        +-------+-------+
+        | 'a'   | 7     |
+        +-------+-------+
+        | 'b'   | 2     |
+        +-------+-------+
+        | 'b'   | 1     |
+        +-------+-------+
+        | 'b'   | 9     |
+        +-------+-------+
+        | 'c'   | 4     |
+        +-------+-------+
+        | 'd'   | 3     |
+        +-------+-------+
+        | 'd'   |       |
+        +-------+-------+
+        | 'e'   |       |
+        +-------+-------+
+        
         >>> from collections import OrderedDict
-        >>> table1 = [['foo', 'bar'],
-        ...           ['a', 3],
-        ...           ['a', 7],
-        ...           ['b', 2],
-        ...           ['b', 1],
-        ...           ['b', 9],
-        ...           ['c', 4],
-        ...           ['d', 3],
-        ...           ['d'],
-        ...           ['e']]
         >>> aggregators = OrderedDict()
         >>> aggregators['minbar'] = 'bar', min
         >>> aggregators['maxbar'] = 'bar', max
@@ -3656,11 +3872,10 @@ def aggregate(table, key, aggregators=None, failonerror=False, errorvalue=None,
         +-------+----------+----------+----------+-----------+
         | 'e'   | None     | None     | 0        | []        |
         +-------+----------+----------+----------+-----------+
-
-    Aggregation functions can also be added and/or updated using the suffix
-    notation on the returned table object, e.g.::
-    
-        >>> table3 = aggregate(table1, 'foo')
+        
+        >>> # aggregation functions can also be added and/or updated using the suffix
+        ... # notation on the returned table object, e.g.::
+        ... table3 = aggregate(table1, 'foo')
         >>> table3['minbar'] = 'bar', min
         >>> table3['maxbar'] = 'bar', max
         >>> table3['sumbar'] = 'bar', sum
@@ -3679,7 +3894,7 @@ def aggregate(table, key, aggregators=None, failonerror=False, errorvalue=None,
         +-------+----------+----------+----------+-----------+
         | 'e'   | None     | None     | 0        | []        |
         +-------+----------+----------+----------+-----------+
-
+        
     If `presorted` is True, it is assumed that the data are already sorted by
     the given key, and the `buffersize` argument is ignored. Otherwise, the data 
     are sorted, see also the discussion of the `buffersize` argument under the 
