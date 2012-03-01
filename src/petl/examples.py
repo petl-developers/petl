@@ -721,3 +721,492 @@ table3['sumbar'] = 'bar', sum
 table3['listbar'] = 'bar' # default aggregation is list
 look(table3)
 
+
+# rangerowreduce
+
+table1 = [['foo', 'bar'],
+          ['a', 3],
+          ['a', 7],
+          ['b', 2],
+          ['b', 1],
+          ['b', 9],
+          ['c', 4]]
+
+from petl import rangerowreduce, look
+look(table1)
+def redu(minv, maxunpack, rows):
+    return [minv, maxunpack, ''.join([row[0] for row in rows])]
+
+table2 = rangerowreduce(table1, 'bar', 2, reducer=redu, fields=['frombar', 'tobar', 'foos'])
+look(table2)
+
+
+# rangerecordreduce
+
+table1 = [['foo', 'bar'],
+          ['a', 3],
+          ['a', 7],
+          ['b', 2],
+          ['b', 1],
+          ['b', 9],
+          ['c', 4]]
+
+from petl import rangerecordreduce, look    
+look(table1)
+def redu(minv, maxunpack, recs):
+    return [minv, maxunpack, ''.join([rec['foo'] for rec in recs])]
+
+table2 = rangerecordreduce(table1, 'bar', 2, reducer=redu, fields=['frombar', 'tobar', 'foos'])
+look(table2)
+
+
+# rangecounts
+
+table1 = [['foo', 'bar'],
+          ['a', 3],
+          ['a', 7],
+          ['b', 2],
+          ['b', 1],
+          ['b', 9],
+          ['c', 4],
+          ['d', 3]]
+
+from petl import rangecounts, look
+look(table1)
+table2 = rangecounts(table1, 'bar', width=2)
+look(table2)
+
+
+# rangeaggregate
+
+table1 = [['foo', 'bar'],
+          ['a', 3],
+          ['a', 7],
+          ['b', 2],
+          ['b', 1],
+          ['b', 9],
+          ['c', 4],
+          ['d', 3]]
+
+from petl import rangeaggregate, look
+look(table1)
+table2 = rangeaggregate(table1, 'bar', width=2)
+table2['foocount'] = 'foo', len
+table2['foolist'] = 'foo' # default is list
+look(table2)
+
+
+# rowmap
+
+table1 = [['id', 'sex', 'age', 'height', 'weight'],
+          [1, 'male', 16, 1.45, 62.0],
+          [2, 'female', 19, 1.34, 55.4],
+          [3, 'female', 17, 1.78, 74.4],
+          [4, 'male', 21, 1.33, 45.2],
+          [5, '-', 25, 1.65, 51.9]]
+
+from petl import rowmap, look
+look(table1)
+def rowmapper(row):
+    transmf = {'male': 'M', 'female': 'F'}
+    return [row[0],
+            transmf[row[1]] if row[1] in transmf else row[1],
+            row[2] * 12,
+            row[4] / row[3] ** 2]
+
+table2 = rowmap(table1, rowmapper, fields=['subject_id', 'gender', 'age_months', 'bmi'])  
+look(table2)    
+
+
+# recordmap
+
+table1 = [['id', 'sex', 'age', 'height', 'weight'],
+          [1, 'male', 16, 1.45, 62.0],
+          [2, 'female', 19, 1.34, 55.4],
+          [3, 'female', 17, 1.78, 74.4],
+          [4, 'male', 21, 1.33, 45.2],
+          [5, '-', 25, 1.65, 51.9]]
+
+from petl import recordmap, look
+look(table1)
+def recmapper(rec):
+    transmf = {'male': 'M', 'female': 'F'}
+    return [rec['id'],
+            transmf[rec['sex']] if rec['sex'] in transmf else rec['sex'],
+            rec['age'] * 12,
+            rec['weight'] / rec['height'] ** 2]
+
+table2 = recordmap(table1, recmapper, fields=['subject_id', 'gender', 'age_months', 'bmi'])  
+look(table2)
+
+
+# rowmapmany
+
+table1 = [['id', 'sex', 'age', 'height', 'weight'],
+          [1, 'male', 16, 1.45, 62.0],
+          [2, 'female', 19, 1.34, 55.4],
+          [3, '-', 17, 1.78, 74.4],
+          [4, 'male', 21, 1.33]]
+
+from petl import rowmapmany, look    
+look(table1)
+def rowgenerator(row):
+    transmf = {'male': 'M', 'female': 'F'}
+    yield [row[0], 'gender', transmf[row[1]] if row[1] in transmf else row[1]]
+    yield [row[0], 'age_months', row[2] * 12]
+    yield [row[0], 'bmi', row[4] / row[3] ** 2]
+
+table2 = rowmapmany(table1, rowgenerator, fields=['subject_id', 'variable', 'value'])  
+look(table2)
+
+
+# recordmapmany
+
+table1 = [['id', 'sex', 'age', 'height', 'weight'],
+          [1, 'male', 16, 1.45, 62.0],
+          [2, 'female', 19, 1.34, 55.4],
+          [3, '-', 17, 1.78, 74.4],
+          [4, 'male', 21, 1.33]]
+
+from petl import recordmapmany, look    
+look(table1)
+def rowgenerator(rec):
+    transmf = {'male': 'M', 'female': 'F'}
+    yield [rec['id'], 'gender', transmf[rec['sex']] if rec['sex'] in transmf else rec['sex']]
+    yield [rec['id'], 'age_months', rec['age'] * 12]
+    yield [rec['id'], 'bmi', rec['weight'] / rec['height'] ** 2]
+
+table2 = recordmapmany(table1, rowgenerator, fields=['subject_id', 'variable', 'value'])  
+look(table2)
+
+
+# setheader
+
+table1 = [['foo', 'bar'],
+          ['a', 1],
+          ['b', 2]]
+
+from petl import setheader, look
+look(table1)
+table2 = setheader(table1, ['foofoo', 'barbar'])
+look(table2)
+
+
+# extendheader
+
+table1 = [['foo'],
+          ['a', 1, True],
+          ['b', 2, False]]
+
+from petl import extendheader, look
+look(table1)
+table2 = extendheader(table1, ['bar', 'baz'])
+look(table2)
+
+
+# pushheader
+
+table1 = [['a', 1],
+          ['b', 2]]
+
+from petl import pushheader, look    
+look(table1)
+table2 = pushheader(table1, ['foo', 'bar'])
+look(table2)
+
+
+# skip
+
+table1 = [['#aaa', 'bbb', 'ccc'],
+          ['#mmm'],
+          ['foo', 'bar'],
+          ['a', 1],
+          ['b', 2]]
+
+from petl import skip, look
+look(table1)
+table2 = skip(table1, 2)
+look(table2)
+
+
+# skipcomments
+
+table1 = [['##aaa', 'bbb', 'ccc'],
+          ['##mmm',],
+          ['#foo', 'bar'],
+          ['##nnn', 1],
+          ['a', 1],
+          ['b', 2]]
+
+from petl import skipcomments, look
+look(table1)
+table2 = skipcomments(table1, '##')
+look(table2)
+
+
+# unpack
+
+table1 = [['foo', 'bar'],
+          [1, ['a', 'b']],
+          [2, ['c', 'd']],
+          [3, ['e', 'f']]]
+
+from petl import unpack, look    
+look(table1)
+table2 = unpack(table1, 'bar', ['baz', 'quux'])
+look(table2)
+
+
+# join
+
+table1 = [['id', 'colour'],
+          [1, 'blue'],
+          [2, 'red'],
+          [3, 'purple']]
+table2 = [['id', 'shape'],
+          [1, 'circle'],
+          [3, 'square'],
+          [4, 'ellipse']]
+table5 = [['id', 'colour'],
+          [1, 'blue'],
+          [1, 'red'],
+          [2, 'purple']]
+table6 = [['id', 'shape'],
+          [1, 'circle'],
+          [1, 'square'],
+          [2, 'ellipse']]
+table8 = [['id', 'time', 'height'],
+          [1, 1, 12.3],
+          [1, 2, 34.5],
+          [2, 1, 56.7]]
+table9 = [['id', 'time', 'weight'],
+          [1, 2, 4.5],
+          [2, 1, 6.7],
+          [2, 2, 8.9]]
+
+from petl import join, look    
+look(table1)
+look(table2)
+table3 = join(table1, table2, key='id')
+look(table3)
+# if no key is given, a natural join is tried
+table4 = join(table1, table2)
+look(table4)
+# note behaviour if the key is not unique in either or both tables
+look(table5)
+look(table6)
+table7 = join(table5, table6, key='id')
+look(table7)
+# compound keys are supported
+look(table8)
+look(table9)
+table10 = join(table8, table9, key=['id', 'time'])
+look(table10)
+
+
+# leftjoin
+
+table1 = [['id', 'colour'],
+          [1, 'blue'],
+          [2, 'red'],
+          [3, 'purple']]
+table2 = [['id', 'shape'],
+          [1, 'circle'],
+          [3, 'square'],
+          [4, 'ellipse']]
+
+from petl import leftjoin, look
+look(table1)
+look(table2)
+table3 = leftjoin(table1, table2, key='id')
+look(table3)
+
+
+# rightjoin
+
+table1 = [['id', 'colour'],
+          [1, 'blue'],
+          [2, 'red'],
+          [3, 'purple']]
+table2 = [['id', 'shape'],
+          [1, 'circle'],
+          [3, 'square'],
+          [4, 'ellipse']]
+
+from petl import rightjoin, look
+look(table1)
+look(table2)
+table3 = rightjoin(table1, table2, key='id')
+look(table3)
+
+
+# outerjoin
+
+table1 = [['id', 'colour'],
+          [1, 'blue'],
+          [2, 'red'],
+          [3, 'purple']]
+table2 = [['id', 'shape'],
+          [1, 'circle'],
+          [3, 'square'],
+          [4, 'ellipse']]
+
+from petl import outerjoin, look
+look(table1)
+look(table2)
+table3 = outerjoin(table1, table2, key='id')
+look(table3)
+
+
+# crossjoin
+
+table1 = [['id', 'colour'],
+          [1, 'blue'],
+          [2, 'red']]
+table2 = [['id', 'shape'],
+          [1, 'circle'],
+          [3, 'square']]
+
+from petl import crossjoin, look
+look(table1)
+look(table2)
+table3 = crossjoin(table1, table2)
+look(table3)
+
+
+# antijoin
+
+table1 = [['id', 'colour'],
+          [0, 'black'],
+          [1, 'blue'],
+          [2, 'red'],
+          [4, 'yellow'],
+          [5, 'white']]
+table2 = [['id', 'shape'],
+          [1, 'circle'],
+          [3, 'square']]
+
+from petl import antijoin, look
+look(table1)
+look(table2)
+table3 = antijoin(table1, table2, key='id')
+look(table3)
+
+
+# rangefacet
+
+table1 = [['foo', 'bar'],
+          ['a', 3],
+          ['a', 7],
+          ['b', 2],
+          ['b', 1],
+          ['b', 9],
+          ['c', 4],
+          ['d', 3]]
+
+from petl import rangefacet, look
+look(table1)
+rf = rangefacet(table1, 'bar', 2)
+rf.keys()
+look(rf[(1, 3)])
+look(rf[(7, 9)])
+
+
+# transpose
+
+table1 = (('id', 'colour'),
+          (1, 'blue'),
+          (2, 'red'),
+          (3, 'purple'),
+          (5, 'yellow'),
+          (7, 'orange'))
+
+from petl import transpose, look    
+look(table1)
+table2 = transpose(table1)
+look(table2)
+
+
+# intersection
+
+table1 = (('foo', 'bar', 'baz'),
+          ('A', 1, True),
+          ('C', 7, False),
+          ('B', 2, False),
+          ('C', 9, True))
+table2 = (('x', 'y', 'z'),
+          ('B', 2, False),
+          ('A', 9, False),
+          ('B', 3, True),
+          ('C', 9, True))
+
+from petl import intersection, look
+look(table1)
+look(table2)
+table3 = intersection(table1, table2)
+look(table3)
+
+
+# pivot
+
+table1 = (('region', 'gender', 'style', 'units'),
+          ('east', 'boy', 'tee', 12),
+          ('east', 'boy', 'golf', 14),
+          ('east', 'boy', 'fancy', 7),
+          ('east', 'girl', 'tee', 3),
+          ('east', 'girl', 'golf', 8),
+          ('east', 'girl', 'fancy', 18),
+          ('west', 'boy', 'tee', 12),
+          ('west', 'boy', 'golf', 15),
+          ('west', 'boy', 'fancy', 8),
+          ('west', 'girl', 'tee', 6),
+          ('west', 'girl', 'golf', 16),
+          ('west', 'girl', 'fancy', 1))
+
+from petl import pivot, look
+look(table1)
+table2 = pivot(table1, 'region', 'gender', 'units', sum)
+look(table2)
+table3 = pivot(table1, 'region', 'style', 'units', sum)
+look(table3)
+table4 = pivot(table1, 'gender', 'style', 'units', sum)
+look(table4)
+
+
+# flatten
+
+table1 = [['foo', 'bar', 'baz'],
+          ['A', 1, True],
+          ['C', 7, False],
+          ['B', 2, False],
+          ['C', 9, True]]
+
+from petl import flatten, look
+look(table1)
+list(flatten(table1))
+
+
+# unflatten
+
+table1 = [['lines',],
+          ['A',], 
+          [1,], 
+          [True,], 
+          ['C',], 
+          [7,], 
+          [False,],
+          ['B',], 
+          [2,], 
+          [False,],
+          ['C'], 
+          [9,]]
+
+from petl import unflatten, look
+input = ['A', 1, True, 'C', 7, False, 'B', 2, False, 'C', 9]
+table = unflatten(input, 3)
+look(table)
+# a table and field name can also be provided as arguments
+look(table1)
+table2 = unflatten(table1, 'lines', 3)
+look(table2)
+

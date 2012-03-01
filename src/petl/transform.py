@@ -4008,13 +4008,23 @@ def rangerowreduce(table, key, width, reducer, fields=None, minv=None, maxv=None
     E.g.::
 
         >>> from petl import rangerowreduce, look
-        >>> table1 = [['foo', 'bar'],
-        ...           ['a', 3],
-        ...           ['a', 7],
-        ...           ['b', 2],
-        ...           ['b', 1],
-        ...           ['b', 9],
-        ...           ['c', 4]]
+        >>> look(table1)
+        +-------+-------+
+        | 'foo' | 'bar' |
+        +=======+=======+
+        | 'a'   | 3     |
+        +-------+-------+
+        | 'a'   | 7     |
+        +-------+-------+
+        | 'b'   | 2     |
+        +-------+-------+
+        | 'b'   | 1     |
+        +-------+-------+
+        | 'b'   | 9     |
+        +-------+-------+
+        | 'c'   | 4     |
+        +-------+-------+
+        
         >>> def redu(minv, maxunpack, rows):
         ...     return [minv, maxunpack, ''.join([row[0] for row in rows])]
         ... 
@@ -4136,13 +4146,23 @@ def rangerecordreduce(table, key, width, reducer, fields=None, minv=None, maxv=N
     E.g.::
 
         >>> from petl import rangerecordreduce, look    
-        >>> table1 = [['foo', 'bar'],
-        ...           ['a', 3],
-        ...           ['a', 7],
-        ...           ['b', 2],
-        ...           ['b', 1],
-        ...           ['b', 9],
-        ...           ['c', 4]]
+        >>> look(table1)
+        +-------+-------+
+        | 'foo' | 'bar' |
+        +=======+=======+
+        | 'a'   | 3     |
+        +-------+-------+
+        | 'a'   | 7     |
+        +-------+-------+
+        | 'b'   | 2     |
+        +-------+-------+
+        | 'b'   | 1     |
+        +-------+-------+
+        | 'b'   | 9     |
+        +-------+-------+
+        | 'c'   | 4     |
+        +-------+-------+
+        
         >>> def redu(minv, maxunpack, recs):
         ...     return [minv, maxunpack, ''.join([rec['foo'] for rec in recs])]
         ... 
@@ -4265,14 +4285,25 @@ def rangecounts(table, key, width, minv=None, maxv=None, presorted=False,
     Group rows into bins then count the number of rows in each bin. E.g.::
 
         >>> from petl import rangecounts, look
-        >>> table1 = [['foo', 'bar'],
-        ...           ['a', 3],
-        ...           ['a', 7],
-        ...           ['b', 2],
-        ...           ['b', 1],
-        ...           ['b', 9],
-        ...           ['c', 4],
-        ...           ['d', 3]]
+        >>> look(table1)
+        +-------+-------+
+        | 'foo' | 'bar' |
+        +=======+=======+
+        | 'a'   | 3     |
+        +-------+-------+
+        | 'a'   | 7     |
+        +-------+-------+
+        | 'b'   | 2     |
+        +-------+-------+
+        | 'b'   | 1     |
+        +-------+-------+
+        | 'b'   | 9     |
+        +-------+-------+
+        | 'c'   | 4     |
+        +-------+-------+
+        | 'd'   | 3     |
+        +-------+-------+
+        
         >>> table2 = rangecounts(table1, 'bar', width=2)
         >>> look(table2)
         +---------+---------+
@@ -4376,14 +4407,25 @@ def rangeaggregate(table, key, width, aggregators=None, minv=None, maxv=None,
     Group rows into bins then apply aggregation functions. E.g.::
     
         >>> from petl import rangeaggregate, look
-        >>> table1 = [['foo', 'bar'],
-        ...           ['a', 3],
-        ...           ['a', 7],
-        ...           ['b', 2],
-        ...           ['b', 1],
-        ...           ['b', 9],
-        ...           ['c', 4],
-        ...           ['d', 3]]
+        >>> look(table1)
+        +-------+-------+
+        | 'foo' | 'bar' |
+        +=======+=======+
+        | 'a'   | 3     |
+        +-------+-------+
+        | 'a'   | 7     |
+        +-------+-------+
+        | 'b'   | 2     |
+        +-------+-------+
+        | 'b'   | 1     |
+        +-------+-------+
+        | 'b'   | 9     |
+        +-------+-------+
+        | 'c'   | 4     |
+        +-------+-------+
+        | 'd'   | 3     |
+        +-------+-------+
+        
         >>> table2 = rangeaggregate(table1, 'bar', width=2)
         >>> table2['foocount'] = 'foo', len
         >>> table2['foolist'] = 'foo' # default is list
@@ -4541,12 +4583,21 @@ def rowmap(table, rowmapper, fields, failonerror=False):
     Transform rows via an arbitrary function. E.g.::
 
         >>> from petl import rowmap, look
-        >>> table1 = [['id', 'sex', 'age', 'height', 'weight'],
-        ...           [1, 'male', 16, 1.45, 62.0],
-        ...           [2, 'female', 19, 1.34, 55.4],
-        ...           [3, 'female', 17, 1.78, 74.4],
-        ...           [4, 'male', 21, 1.33, 45.2],
-        ...           [5, '-', 25, 1.65, 51.9]]
+        >>> look(table1)
+        +------+----------+-------+----------+----------+
+        | 'id' | 'sex'    | 'age' | 'height' | 'weight' |
+        +======+==========+=======+==========+==========+
+        | 1    | 'male'   | 16    | 1.45     | 62.0     |
+        +------+----------+-------+----------+----------+
+        | 2    | 'female' | 19    | 1.34     | 55.4     |
+        +------+----------+-------+----------+----------+
+        | 3    | 'female' | 17    | 1.78     | 74.4     |
+        +------+----------+-------+----------+----------+
+        | 4    | 'male'   | 21    | 1.33     | 45.2     |
+        +------+----------+-------+----------+----------+
+        | 5    | '-'      | 25    | 1.65     | 51.9     |
+        +------+----------+-------+----------+----------+
+        
         >>> def rowmapper(row):
         ...     transmf = {'male': 'M', 'female': 'F'}
         ...     return [row[0],
@@ -4615,12 +4666,21 @@ def recordmap(table, recmapper, fields, failonerror=False):
     Transform records via an arbitrary function. E.g.::
 
         >>> from petl import recordmap, look
-        >>> table1 = [['id', 'sex', 'age', 'height', 'weight'],
-        ...           [1, 'male', 16, 1.45, 62.0],
-        ...           [2, 'female', 19, 1.34, 55.4],
-        ...           [3, 'female', 17, 1.78, 74.4],
-        ...           [4, 'male', 21, 1.33, 45.2],
-        ...           [5, '-', 25, 1.65, 51.9]]
+        >>> look(table1)
+        +------+----------+-------+----------+----------+
+        | 'id' | 'sex'    | 'age' | 'height' | 'weight' |
+        +======+==========+=======+==========+==========+
+        | 1    | 'male'   | 16    | 1.45     | 62.0     |
+        +------+----------+-------+----------+----------+
+        | 2    | 'female' | 19    | 1.34     | 55.4     |
+        +------+----------+-------+----------+----------+
+        | 3    | 'female' | 17    | 1.78     | 74.4     |
+        +------+----------+-------+----------+----------+
+        | 4    | 'male'   | 21    | 1.33     | 45.2     |
+        +------+----------+-------+----------+----------+
+        | 5    | '-'      | 25    | 1.65     | 51.9     |
+        +------+----------+-------+----------+----------+
+        
         >>> def recmapper(rec):
         ...     transmf = {'male': 'M', 'female': 'F'}
         ...     return [rec['id'],
@@ -4692,11 +4752,19 @@ def rowmapmany(table, rowgenerator, fields, failonerror=False):
     E.g.::
 
         >>> from petl import rowmapmany, look    
-        >>> table1 = [['id', 'sex', 'age', 'height', 'weight'],
-        ...           [1, 'male', 16, 1.45, 62.0],
-        ...           [2, 'female', 19, 1.34, 55.4],
-        ...           [3, '-', 17, 1.78, 74.4],
-        ...           [4, 'male', 21, 1.33]]
+        >>> look(table1)
+        +------+----------+-------+----------+----------+
+        | 'id' | 'sex'    | 'age' | 'height' | 'weight' |
+        +======+==========+=======+==========+==========+
+        | 1    | 'male'   | 16    | 1.45     | 62.0     |
+        +------+----------+-------+----------+----------+
+        | 2    | 'female' | 19    | 1.34     | 55.4     |
+        +------+----------+-------+----------+----------+
+        | 3    | '-'      | 17    | 1.78     | 74.4     |
+        +------+----------+-------+----------+----------+
+        | 4    | 'male'   | 21    | 1.33     |          |
+        +------+----------+-------+----------+----------+
+        
         >>> def rowgenerator(row):
         ...     transmf = {'male': 'M', 'female': 'F'}
         ...     yield [row[0], 'gender', transmf[row[1]] if row[1] in transmf else row[1]]
@@ -4777,11 +4845,19 @@ def recordmapmany(table, rowgenerator, fields, failonerror=False):
     arbitrary function. E.g.::
 
         >>> from petl import recordmapmany, look    
-        >>> table1 = [['id', 'sex', 'age', 'height', 'weight'],
-        ...           [1, 'male', 16, 1.45, 62.0],
-        ...           [2, 'female', 19, 1.34, 55.4],
-        ...           [3, '-', 17, 1.78, 74.4],
-        ...           [4, 'male', 21, 1.33]]
+        >>> look(table1)
+        +------+----------+-------+----------+----------+
+        | 'id' | 'sex'    | 'age' | 'height' | 'weight' |
+        +======+==========+=======+==========+==========+
+        | 1    | 'male'   | 16    | 1.45     | 62.0     |
+        +------+----------+-------+----------+----------+
+        | 2    | 'female' | 19    | 1.34     | 55.4     |
+        +------+----------+-------+----------+----------+
+        | 3    | '-'      | 17    | 1.78     | 74.4     |
+        +------+----------+-------+----------+----------+
+        | 4    | 'male'   | 21    | 1.33     |          |
+        +------+----------+-------+----------+----------+
+        
         >>> def rowgenerator(rec):
         ...     transmf = {'male': 'M', 'female': 'F'}
         ...     yield [rec['id'], 'gender', transmf[rec['sex']] if rec['sex'] in transmf else rec['sex']]
@@ -4862,9 +4938,15 @@ def setheader(table, fields):
     Override fields in the given table. E.g.::
     
         >>> from petl import setheader, look
-        >>> table1 = [['foo', 'bar'],
-        ...           ['a', 1],
-        ...           ['b', 2]]
+        >>> look(table1)
+        +-------+-------+
+        | 'foo' | 'bar' |
+        +=======+=======+
+        | 'a'   | 1     |
+        +-------+-------+
+        | 'b'   | 2     |
+        +-------+-------+
+        
         >>> table2 = setheader(table1, ['foofoo', 'barbar'])
         >>> look(table2)
         +----------+----------+
@@ -4909,9 +4991,15 @@ def extendheader(table, fields):
     Extend fields in the given table. E.g.::
     
         >>> from petl import extendheader, look
-        >>> table1 = [['foo'],
-        ...           ['a', 1, True],
-        ...           ['b', 2, False]]
+        >>> look(table1)
+        +-------+---+-------+
+        | 'foo' |   |       |
+        +=======+===+=======+
+        | 'a'   | 1 | True  |
+        +-------+---+-------+
+        | 'b'   | 2 | False |
+        +-------+---+-------+
+        
         >>> table2 = extendheader(table1, ['bar', 'baz'])
         >>> look(table2)
         +-------+-------+-------+
@@ -4958,8 +5046,13 @@ def pushheader(table, fields):
     Push rows down and prepend a header row. E.g.::
 
         >>> from petl import pushheader, look    
-        >>> table1 = [['a', 1],
-        ...           ['b', 2]]
+        >>> look(table1)
+        +-----+---+
+        | 'a' | 1 |
+        +=====+===+
+        | 'b' | 2 |
+        +-----+---+
+        
         >>> table2 = pushheader(table1, ['foo', 'bar'])
         >>> look(table2)
         +-------+-------+
@@ -5006,11 +5099,19 @@ def skip(table, n):
     Skip `n` rows (including the header row). E.g.::
     
         >>> from petl import skip, look
-        >>> table1 = [['#aaa', 'bbb', 'ccc'],
-        ...           ['#mmm'],
-        ...           ['foo', 'bar'],
-        ...           ['a', 1],
-        ...           ['b', 2]]
+        >>> look(table1)
+        +--------+-------+-------+
+        | '#aaa' | 'bbb' | 'ccc' |
+        +========+=======+=======+
+        | '#mmm' |       |       |
+        +--------+-------+-------+
+        | 'foo'  | 'bar' |       |
+        +--------+-------+-------+
+        | 'a'    | 1     |       |
+        +--------+-------+-------+
+        | 'b'    | 2     |       |
+        +--------+-------+-------+
+        
         >>> table2 = skip(table1, 2)
         >>> look(table2)
         +-------+-------+
@@ -5052,12 +5153,21 @@ def skipcomments(table, prefix):
     `prefix`. E.g.::
     
         >>> from petl import skipcomments, look
-        >>> table1 = [['##aaa', 'bbb', 'ccc'],
-        ...           ['##mmm',],
-        ...           ['#foo', 'bar'],
-        ...           ['##nnn', 1],
-        ...           ['a', 1],
-        ...           ['b', 2]]
+        >>> look(table1)
+        +---------+-------+-------+
+        | '##aaa' | 'bbb' | 'ccc' |
+        +=========+=======+=======+
+        | '##mmm' |       |       |
+        +---------+-------+-------+
+        | '#foo'  | 'bar' |       |
+        +---------+-------+-------+
+        | '##nnn' | 1     |       |
+        +---------+-------+-------+
+        | 'a'     | 1     |       |
+        +---------+-------+-------+
+        | 'b'     | 2     |       |
+        +---------+-------+-------+
+        
         >>> table2 = skipcomments(table1, '##')
         >>> look(table2)
         +--------+-------+
@@ -5100,10 +5210,17 @@ def unpack(table, field, newfields=None, maxunpack=None, include_original=False)
     Unpack data values that are lists or tuples. E.g.::
     
         >>> from petl import unpack, look    
-        >>> table1 = [['foo', 'bar'],
-        ...           [1, ['a', 'b']],
-        ...           [2, ['c', 'd']],
-        ...           [3, ['e', 'f']]]
+        >>> look(table1)
+        +-------+------------+
+        | 'foo' | 'bar'      |
+        +=======+============+
+        | 1     | ['a', 'b'] |
+        +-------+------------+
+        | 2     | ['c', 'd'] |
+        +-------+------------+
+        | 3     | ['e', 'f'] |
+        +-------+------------+
+        
         >>> table2 = unpack(table1, 'bar', ['baz', 'quux'])
         >>> look(table2)
         +-------+-------+--------+
@@ -5179,14 +5296,28 @@ def join(left, right, key=None, presorted=False, buffersize=None):
     Perform an equi-join on the given tables. E.g.::
         
         >>> from petl import join, look    
-        >>> table1 = [['id', 'colour'],
-        ...           [1, 'blue'],
-        ...           [2, 'red'],
-        ...           [3, 'purple']]
-        >>> table2 = [['id', 'shape'],
-        ...           [1, 'circle'],
-        ...           [3, 'square'],
-        ...           [4, 'ellipse']]
+        >>> look(table1)
+        +------+----------+
+        | 'id' | 'colour' |
+        +======+==========+
+        | 1    | 'blue'   |
+        +------+----------+
+        | 2    | 'red'    |
+        +------+----------+
+        | 3    | 'purple' |
+        +------+----------+
+        
+        >>> look(table2)
+        +------+-----------+
+        | 'id' | 'shape'   |
+        +======+===========+
+        | 1    | 'circle'  |
+        +------+-----------+
+        | 3    | 'square'  |
+        +------+-----------+
+        | 4    | 'ellipse' |
+        +------+-----------+
+        
         >>> table3 = join(table1, table2, key='id')
         >>> look(table3)
         +------+----------+----------+
@@ -5196,10 +5327,9 @@ def join(left, right, key=None, presorted=False, buffersize=None):
         +------+----------+----------+
         | 3    | 'purple' | 'square' |
         +------+----------+----------+
-
-    If no `key` is given, a natural join is tried, e.g.::
-    
-        >>> table4 = join(table1, table2)
+        
+        >>> # if no key is given, a natural join is tried
+        ... table4 = join(table1, table2)
         >>> look(table4)
         +------+----------+----------+
         | 'id' | 'colour' | 'shape'  |
@@ -5208,17 +5338,30 @@ def join(left, right, key=None, presorted=False, buffersize=None):
         +------+----------+----------+
         | 3    | 'purple' | 'square' |
         +------+----------+----------+
-
-    Note behaviour if the key is not unique in either or both tables::
-
-        >>> table5 = [['id', 'colour'],
-        ...           [1, 'blue'],
-        ...           [1, 'red'],
-        ...           [2, 'purple']]
-        >>> table6 = [['id', 'shape'],
-        ...           [1, 'circle'],
-        ...           [1, 'square'],
-        ...           [2, 'ellipse']]
+        
+        >>> # note behaviour if the key is not unique in either or both tables
+        ... look(table5)
+        +------+----------+
+        | 'id' | 'colour' |
+        +======+==========+
+        | 1    | 'blue'   |
+        +------+----------+
+        | 1    | 'red'    |
+        +------+----------+
+        | 2    | 'purple' |
+        +------+----------+
+        
+        >>> look(table6)
+        +------+-----------+
+        | 'id' | 'shape'   |
+        +======+===========+
+        | 1    | 'circle'  |
+        +------+-----------+
+        | 1    | 'square'  |
+        +------+-----------+
+        | 2    | 'ellipse' |
+        +------+-----------+
+        
         >>> table7 = join(table5, table6, key='id')
         >>> look(table7)
         +------+----------+-----------+
@@ -5234,17 +5377,30 @@ def join(left, right, key=None, presorted=False, buffersize=None):
         +------+----------+-----------+
         | 2    | 'purple' | 'ellipse' |
         +------+----------+-----------+
-
-    Compound keys are supported, e.g.::
-    
-        >>> table8 = [['id', 'time', 'height'],
-        ...           [1, 1, 12.3],
-        ...           [1, 2, 34.5],
-        ...           [2, 1, 56.7]]
-        >>> table9 = [['id', 'time', 'weight'],
-        ...           [1, 2, 4.5],
-        ...           [2, 1, 6.7],
-        ...           [2, 2, 8.9]]
+        
+        >>> # compound keys are supported
+        ... look(table8)
+        +------+--------+----------+
+        | 'id' | 'time' | 'height' |
+        +======+========+==========+
+        | 1    | 1      | 12.3     |
+        +------+--------+----------+
+        | 1    | 2      | 34.5     |
+        +------+--------+----------+
+        | 2    | 1      | 56.7     |
+        +------+--------+----------+
+        
+        >>> look(table9)
+        +------+--------+----------+
+        | 'id' | 'time' | 'weight' |
+        +======+========+==========+
+        | 1    | 2      | 4.5      |
+        +------+--------+----------+
+        | 2    | 1      | 6.7      |
+        +------+--------+----------+
+        | 2    | 2      | 8.9      |
+        +------+--------+----------+
+        
         >>> table10 = join(table8, table9, key=['id', 'time'])
         >>> look(table10)
         +------+--------+----------+----------+
@@ -5331,14 +5487,28 @@ def leftjoin(left, right, key=None, missing=None, presorted=False, buffersize=No
     Perform a left outer join on the given tables. E.g.::
     
         >>> from petl import leftjoin, look
-        >>> table1 = [['id', 'colour'],
-        ...           [1, 'blue'],
-        ...           [2, 'red'],
-        ...           [3, 'purple']]
-        >>> table2 = [['id', 'shape'],
-        ...           [1, 'circle'],
-        ...           [3, 'square'],
-        ...           [4, 'ellipse']]
+        >>> look(table1)
+        +------+----------+
+        | 'id' | 'colour' |
+        +======+==========+
+        | 1    | 'blue'   |
+        +------+----------+
+        | 2    | 'red'    |
+        +------+----------+
+        | 3    | 'purple' |
+        +------+----------+
+        
+        >>> look(table2)
+        +------+-----------+
+        | 'id' | 'shape'   |
+        +======+===========+
+        | 1    | 'circle'  |
+        +------+-----------+
+        | 3    | 'square'  |
+        +------+-----------+
+        | 4    | 'ellipse' |
+        +------+-----------+
+        
         >>> table3 = leftjoin(table1, table2, key='id')
         >>> look(table3)
         +------+----------+----------+
@@ -5371,14 +5541,28 @@ def rightjoin(left, right, key=None, missing=None, presorted=False, buffersize=N
     Perform a right outer join on the given tables. E.g.::
 
         >>> from petl import rightjoin, look
-        >>> table1 = [['id', 'colour'],
-        ...           [1, 'blue'],
-        ...           [2, 'red'],
-        ...           [3, 'purple']]
-        >>> table2 = [['id', 'shape'],
-        ...           [1, 'circle'],
-        ...           [3, 'square'],
-        ...           [4, 'ellipse']]
+        >>> look(table1)
+        +------+----------+
+        | 'id' | 'colour' |
+        +======+==========+
+        | 1    | 'blue'   |
+        +------+----------+
+        | 2    | 'red'    |
+        +------+----------+
+        | 3    | 'purple' |
+        +------+----------+
+        
+        >>> look(table2)
+        +------+-----------+
+        | 'id' | 'shape'   |
+        +======+===========+
+        | 1    | 'circle'  |
+        +------+-----------+
+        | 3    | 'square'  |
+        +------+-----------+
+        | 4    | 'ellipse' |
+        +------+-----------+
+        
         >>> table3 = rightjoin(table1, table2, key='id')
         >>> look(table3)
         +------+----------+-----------+
@@ -5411,14 +5595,28 @@ def outerjoin(left, right, key=None, missing=None, presorted=False, buffersize=N
     Perform a full outer join on the given tables. E.g.::
 
         >>> from petl import outerjoin, look
-        >>> table1 = [['id', 'colour'],
-        ...           [1, 'blue'],
-        ...           [2, 'red'],
-        ...           [3, 'purple']]
-        >>> table2 = [['id', 'shape'],
-        ...           [1, 'circle'],
-        ...           [3, 'square'],
-        ...           [4, 'ellipse']]
+        >>> look(table1)
+        +------+----------+
+        | 'id' | 'colour' |
+        +======+==========+
+        | 1    | 'blue'   |
+        +------+----------+
+        | 2    | 'red'    |
+        +------+----------+
+        | 3    | 'purple' |
+        +------+----------+
+        
+        >>> look(table2)
+        +------+-----------+
+        | 'id' | 'shape'   |
+        +======+===========+
+        | 1    | 'circle'  |
+        +------+-----------+
+        | 3    | 'square'  |
+        +------+-----------+
+        | 4    | 'ellipse' |
+        +------+-----------+
+        
         >>> table3 = outerjoin(table1, table2, key='id')
         >>> look(table3)
         +------+----------+-----------+
@@ -5586,12 +5784,24 @@ def crossjoin(*tables):
     Form the cartesian product of the given tables. E.g.::
 
         >>> from petl import crossjoin, look
-        >>> table1 = [['id', 'colour'],
-        ...           [1, 'blue'],
-        ...           [2, 'red']]
-        >>> table2 = [['id', 'shape'],
-        ...           [1, 'circle'],
-        ...           [3, 'square']]
+        >>> look(table1)
+        +------+----------+
+        | 'id' | 'colour' |
+        +======+==========+
+        | 1    | 'blue'   |
+        +------+----------+
+        | 2    | 'red'    |
+        +------+----------+
+        
+        >>> look(table2)
+        +------+----------+
+        | 'id' | 'shape'  |
+        +======+==========+
+        | 1    | 'circle' |
+        +------+----------+
+        | 3    | 'square' |
+        +------+----------+
+        
         >>> table3 = crossjoin(table1, table2)
         >>> look(table3)
         +------+----------+------+----------+
@@ -5648,15 +5858,30 @@ def antijoin(left, right, key=None, presorted=False, buffersize=None):
     `right` table. E.g.::
 
         >>> from petl import antijoin, look
-        >>> table1 = [['id', 'colour'],
-        ...           [0, 'black'],
-        ...           [1, 'blue'],
-        ...           [2, 'red'],
-        ...           [4, 'yellow'],
-        ...           [5, 'white']]
-        >>> table2 = [['id', 'shape'],
-        ...           [1, 'circle'],
-        ...           [3, 'square']]
+        >>> look(table1)
+        +------+----------+
+        | 'id' | 'colour' |
+        +======+==========+
+        | 0    | 'black'  |
+        +------+----------+
+        | 1    | 'blue'   |
+        +------+----------+
+        | 2    | 'red'    |
+        +------+----------+
+        | 4    | 'yellow' |
+        +------+----------+
+        | 5    | 'white'  |
+        +------+----------+
+        
+        >>> look(table2)
+        +------+----------+
+        | 'id' | 'shape'  |
+        +======+==========+
+        | 1    | 'circle' |
+        +------+----------+
+        | 3    | 'square' |
+        +------+----------+
+        
         >>> table3 = antijoin(table1, table2, key='id')
         >>> look(table3)
         +------+----------+
@@ -5808,14 +6033,25 @@ def rangefacet(table, field, width, minv=None, maxv=None,
     Return a dictionary mapping ranges to tables. E.g.::
     
         >>> from petl import rangefacet, look
-        >>> table1 = [['foo', 'bar'],
-        ...           ['a', 3],
-        ...           ['a', 7],
-        ...           ['b', 2],
-        ...           ['b', 1],
-        ...           ['b', 9],
-        ...           ['c', 4],
-        ...           ['d', 3]]
+        >>> look(table1)
+        +-------+-------+
+        | 'foo' | 'bar' |
+        +=======+=======+
+        | 'a'   | 3     |
+        +-------+-------+
+        | 'a'   | 7     |
+        +-------+-------+
+        | 'b'   | 2     |
+        +-------+-------+
+        | 'b'   | 1     |
+        +-------+-------+
+        | 'b'   | 9     |
+        +-------+-------+
+        | 'c'   | 4     |
+        +-------+-------+
+        | 'd'   | 3     |
+        +-------+-------+
+        
         >>> rf = rangefacet(table1, 'bar', 2)
         >>> rf.keys()
         [(1, 3), (3, 5), (5, 7), (7, 9)]
@@ -5867,12 +6103,21 @@ def transpose(table):
     Transpose rows into columns. E.g.::
 
         >>> from petl import transpose, look    
-        >>> table1 = (('id', 'colour'),
-        ...           (1, 'blue'),
-        ...           (2, 'red'),
-        ...           (3, 'purple'),
-        ...           (5, 'yellow'),
-        ...           (7, 'orange'))
+        >>> look(table1)
+        +------+----------+
+        | 'id' | 'colour' |
+        +======+==========+
+        | 1    | 'blue'   |
+        +------+----------+
+        | 2    | 'red'    |
+        +------+----------+
+        | 3    | 'purple' |
+        +------+----------+
+        | 5    | 'yellow' |
+        +------+----------+
+        | 7    | 'orange' |
+        +------+----------+
+        
         >>> table2 = transpose(table1)
         >>> look(table2)
         +----------+--------+-------+----------+----------+----------+
@@ -5907,16 +6152,32 @@ def intersection(a, b, presorted=False, buffersize=None):
     Return rows in `a` that are also in `b`. E.g.::
     
         >>> from petl import intersection, look
-        >>> table1 = (('foo', 'bar', 'baz'),
-        ...           ('A', 1, True),
-        ...           ('C', 7, False),
-        ...           ('B', 2, False),
-        ...           ('C', 9, True))
-        >>> table2 = (('x', 'y', 'z'),
-        ...           ('B', 2, False),
-        ...           ('A', 9, False),
-        ...           ('B', 3, True),
-        ...           ('C', 9, True))
+        >>> look(table1)
+        +-------+-------+-------+
+        | 'foo' | 'bar' | 'baz' |
+        +=======+=======+=======+
+        | 'A'   | 1     | True  |
+        +-------+-------+-------+
+        | 'C'   | 7     | False |
+        +-------+-------+-------+
+        | 'B'   | 2     | False |
+        +-------+-------+-------+
+        | 'C'   | 9     | True  |
+        +-------+-------+-------+
+        
+        >>> look(table2)
+        +-----+-----+-------+
+        | 'x' | 'y' | 'z'   |
+        +=====+=====+=======+
+        | 'B' | 2   | False |
+        +-----+-----+-------+
+        | 'A' | 9   | False |
+        +-----+-----+-------+
+        | 'B' | 3   | True  |
+        +-----+-----+-------+
+        | 'C' | 9   | True  |
+        +-----+-----+-------+
+        
         >>> table3 = intersection(table1, table2)
         >>> look(table3)
         +-------+-------+-------+
@@ -5984,19 +6245,31 @@ def pivot(table, f1, f2, f3, aggfun, presorted=False, buffersize=None, missing=N
     Construct a pivot table. E.g.::
 
         >>> from petl import pivot, look
-        >>> table1 = (('region', 'gender', 'style', 'units'),
-        ...           ('east', 'boy', 'tee', 12),
-        ...           ('east', 'boy', 'golf', 14),
-        ...           ('east', 'boy', 'fancy', 7),
-        ...           ('east', 'girl', 'tee', 3),
-        ...           ('east', 'girl', 'golf', 8),
-        ...           ('east', 'girl', 'fancy', 18),
-        ...           ('west', 'boy', 'tee', 12),
-        ...           ('west', 'boy', 'golf', 15),
-        ...           ('west', 'boy', 'fancy', 8),
-        ...           ('west', 'girl', 'tee', 6),
-        ...           ('west', 'girl', 'golf', 16),
-        ...           ('west', 'girl', 'fancy', 1))
+        >>> look(table1)
+        +----------+----------+---------+---------+
+        | 'region' | 'gender' | 'style' | 'units' |
+        +==========+==========+=========+=========+
+        | 'east'   | 'boy'    | 'tee'   | 12      |
+        +----------+----------+---------+---------+
+        | 'east'   | 'boy'    | 'golf'  | 14      |
+        +----------+----------+---------+---------+
+        | 'east'   | 'boy'    | 'fancy' | 7       |
+        +----------+----------+---------+---------+
+        | 'east'   | 'girl'   | 'tee'   | 3       |
+        +----------+----------+---------+---------+
+        | 'east'   | 'girl'   | 'golf'  | 8       |
+        +----------+----------+---------+---------+
+        | 'east'   | 'girl'   | 'fancy' | 18      |
+        +----------+----------+---------+---------+
+        | 'west'   | 'boy'    | 'tee'   | 12      |
+        +----------+----------+---------+---------+
+        | 'west'   | 'boy'    | 'golf'  | 15      |
+        +----------+----------+---------+---------+
+        | 'west'   | 'boy'    | 'fancy' | 8       |
+        +----------+----------+---------+---------+
+        | 'west'   | 'girl'   | 'tee'   | 6       |
+        +----------+----------+---------+---------+
+        
         >>> table2 = pivot(table1, 'region', 'gender', 'units', sum)
         >>> look(table2)
         +----------+-------+--------+
@@ -6026,7 +6299,7 @@ def pivot(table, f1, f2, f3, aggfun, presorted=False, buffersize=None, missing=N
         +----------+---------+--------+-------+
         | 'girl'   | 19      | 24     | 9     |
         +----------+---------+--------+-------+
-
+        
     See also :func:`recast`.
 
     """
@@ -6627,12 +6900,20 @@ def flatten(table):
     """
     Convert a table to a sequence of values in row-major order. E.g.::
 
-        >>> from petl import flatten    
-        >>> table1 = [['foo', 'bar', 'baz'],
-        ...           ['A', 1, True],
-        ...           ['C', 7, False],
-        ...           ['B', 2, False],
-        ...           ['C', 9, True]]
+        >>> from petl import flatten, look
+        >>> look(table1)
+        +-------+-------+-------+
+        | 'foo' | 'bar' | 'baz' |
+        +=======+=======+=======+
+        | 'A'   | 1     | True  |
+        +-------+-------+-------+
+        | 'C'   | 7     | False |
+        +-------+-------+-------+
+        | 'B'   | 2     | False |
+        +-------+-------+-------+
+        | 'C'   | 9     | True  |
+        +-------+-------+-------+
+        
         >>> list(flatten(table1))
         ['A', 1, True, 'C', 7, False, 'B', 2, False, 'C', 9, True]
     
@@ -6675,21 +6956,33 @@ def unflatten(*args, **kwargs):
         +------+------+-------+
         | 'C'  | 9    | None  |
         +------+------+-------+
-
-    A table and field name can also be provided as arguments, e.g.::
-
-        >>> table1 = [['lines',],
-        ...           ['A',], 
-        ...           [1,], 
-        ...           [True,], 
-        ...           ['C',], 
-        ...           [7,], 
-        ...           [False,],
-        ...           ['B',], 
-        ...           [2,], 
-        ...           [False,],
-        ...           ['C'], 
-        ...           [9,]]
+        
+        >>> # a table and field name can also be provided as arguments
+        ... look(table1)
+        +---------+
+        | 'lines' |
+        +=========+
+        | 'A'     |
+        +---------+
+        | 1       |
+        +---------+
+        | True    |
+        +---------+
+        | 'C'     |
+        +---------+
+        | 7       |
+        +---------+
+        | False   |
+        +---------+
+        | 'B'     |
+        +---------+
+        | 2       |
+        +---------+
+        | False   |
+        +---------+
+        | 'C'     |
+        +---------+
+        
         >>> table2 = unflatten(table1, 'lines', 3)
         >>> look(table2)
         +------+------+-------+
@@ -6703,7 +6996,7 @@ def unflatten(*args, **kwargs):
         +------+------+-------+
         | 'C'  | 9    | None  |
         +------+------+-------+
-
+        
     See also :func:`flatten`.
     
     .. versionadded:: 0.7
