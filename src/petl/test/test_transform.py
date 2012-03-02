@@ -85,6 +85,15 @@ def test_cut():
                    ('xyz', 'D'),
                    (None, 'E'))
     iassertequal(expectation, cut4)
+
+    cut5 = cut(table, ('foo', 'baz'))
+    expectation = (('foo', 'baz'),
+                   ('A', 2),
+                   ('B', '3.4'),
+                   (u'B', u'7.8'),
+                   ('D', 9.0),
+                   ('E', None))
+    iassertequal(expectation, cut5)
     
 
 def test_cutout():
@@ -856,18 +865,34 @@ def test_conflicts():
     iassertequal(expectation, result)
     iassertequal(expectation, result)
     
-    result = conflicts(table, 'foo', missing=None, ignore='baz')
+    result = conflicts(table, 'foo', missing=None, exclude='baz')
     expectation = (('foo', 'bar', 'baz'),
                    ('A', 1, 2),
                    ('A', 2, None))
     iassertequal(expectation, result)
     iassertequal(expectation, result)
     
-    result = conflicts(table, 'foo', missing=None, ignore=('bar', 'baz'))
+    result = conflicts(table, 'foo', missing=None, exclude=('bar', 'baz'))
     expectation = (('foo', 'bar', 'baz'),)
     iassertequal(expectation, result)
     iassertequal(expectation, result)
+
+    result = conflicts(table, 'foo', missing=None, include='bar')
+    expectation = (('foo', 'bar', 'baz'),
+                   ('A', 1, 2),
+                   ('A', 2, None))
+    iassertequal(expectation, result)
+    iassertequal(expectation, result)
     
+    result = conflicts(table, 'foo', missing=None, include=('bar', 'baz'))
+    expectation = (('foo', 'bar', 'baz'),
+                   ('A', 1, 2),
+                   ('A', 2, None),
+                   ('D', 'xyz', 9.4),
+                   ('D', 'xyz', 12.3))
+    iassertequal(expectation, result)
+    iassertequal(expectation, result)
+
     
 def test_mergereduce():
 

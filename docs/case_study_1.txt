@@ -76,8 +76,8 @@ Use :func:`cut` to extract only the fields we're interested in
 from both tables::
 
 	>>> common_fields = ['Chr', 'Pos', 'Ref', 'Nref', 'Der', 'Mut', 'GeneId', 'GeneAlias', 'GeneDescr']
-	>>> a_common = cut(a, *common_fields)
-	>>> b_common = cut(b_renamed, *common_fields)
+	>>> a_common = cut(a, common_fields)
+	>>> b_common = cut(b_renamed, common_fields)
 
 Inspect the data::
 
@@ -387,11 +387,11 @@ We'd like also to find conflicts in the 'GeneId', 'GeneAlias' and
 'GeneDescr' fields. Here, while we're focusing on finding conflicts in
 one field at a time, we'll include information from the other fields
 in the output, to provide extra diagnostic information when
-investigating the cause of any conflicts, making use of the `ignore`
+investigating the cause of any conflicts, making use of the `include`
 keyword argument to the :func:`conflicts` function::
 
 	>>> ab_gene = cut(ab, 'Chr', 'Pos', 'GeneId', 'GeneAlias', 'GeneDescr')
-	>>> ab_geneid_conflicts = conflicts(ab_gene, key=('Chr', 'Pos'), ignore=('GeneAlias', 'GeneDescr'))
+	>>> ab_geneid_conflicts = conflicts(ab_gene, key=('Chr', 'Pos'), include='GeneId')
 	>>> rowcount(ab_geneid_conflicts)
 	5434
 	>>> look(ab_geneid_conflicts)
@@ -420,7 +420,7 @@ keyword argument to the :func:`conflicts` function::
 	+--------+--------+------------+-----------------------+---------------------------------------------------+
 	
 	>>> tocsv(ab_geneid_conflicts, 'geneid_conflicts.csv', delimiter='\t')
-	>>> ab_genealias_conflicts = conflicts(ab_gene, key=('Chr', 'Pos'), ignore=('GeneId', 'GeneDescr'))
+	>>> ab_genealias_conflicts = conflicts(ab_gene, key=('Chr', 'Pos'), include='GeneAlias')
 	>>> rowcount(ab_genealias_conflicts)
 	39144
 	>>> look(ab_genealias_conflicts)
@@ -449,7 +449,7 @@ keyword argument to the :func:`conflicts` function::
 	+--------+--------+------------+------------------------------------------+---------------------------------------------+
 	
 	>>> tocsv(ab_genealias_conflicts, 'genealias_conflicts.csv', delimiter='\t')
-	>>> ab_genedescr_conflicts = conflicts(ab_gene, key=('Chr', 'Pos'), ignore=('GeneId', 'GeneAlias'))
+	>>> ab_genedescr_conflicts = conflicts(ab_gene, key=('Chr', 'Pos'), include='GeneDescr')
 	>>> rowcount(ab_genedescr_conflicts)
 	177730
 	>>> look(ab_genedescr_conflicts)
@@ -482,5 +482,70 @@ keyword argument to the :func:`conflicts` function::
 So each of these three fields has a different set of conflicts, and
 we've saved the output to CSV files for later reference.
 
+Summary
+-------
 
+Below is a summary of this case study::
 
+	from petl import *
+	
+	# preparing the data
+	
+	a = fromcsv('snpdata.csv', delimiter='\t')
+	b = fromcsv('popdata.csv', delimiter='\t')
+	print header(a)
+	print header(b)
+	b_renamed = rename(b, {'Chromosome': 'Chr', 'Coordinates': 'Pos', 'Ref. Allele': 'Ref', 'Non-Ref. Allele': 'Nref', 'Derived Allele': 'Der', 'Mutation type': 'Mut', 'Gene': 'GeneId', 'Gene Aliases': 'GeneAlias', 'Gene Description': 'GeneDescr'})
+	header(b_renamed)
+	common_fields = ['Chr', 'Pos', 'Ref', 'Nref', 'Der', 'Mut', 'GeneId', 'GeneAlias', 'GeneDescr']
+	a_common = cut(a, common_fields)
+	b_common = cut(b_renamed, common_fields)
+	a_conv = convert(a_common, 'Pos', int)
+	b_conv1 = convert(b_common, 'Pos', int)
+	b_conv2 = convert(b_conv1, 'Mut', {'SYN': 'S', 'NON': 'N'})
+	b_conv = b_conv2
+	
+	# looking for missing or unexpected rows
+	
+	print rowcount(a_conv)
+	print rowcount(b_conv)
+	a_locs = cut(a_conv, 'Chr', 'Pos')
+	b_locs = cut(b_conv, 'Chr', 'Pos')
+	locs_only_in_a = complement(a_locs, b_locs)
+	print rowcount(locs_only_in_a)
+	locs_only_in_b = complement(b_locs, a_locs)
+	print rowcount(locs_only_in_b)
+	tocsv(locs_only_in_a, 'missing_locations.csv', delimiter='\t')
+	locs_only_in_b, locs_only_in_a = diff(a_locs, b_locs)
+	locs_only_in_a = antijoin(a_conv, b_conv, key=('Chr', 'Pos'))
+	print rowcount(locs_only_in_a)
+	
+	# finding conflicts
+	
+	ab = cat(a_conv, b_conv)
+	ab_conflicts = conflicts(ab, key=('Chr', 'Pos'))
+	print rowcount(ab_conflicts)
+	ab_ref = cut(ab, 'Chr', 'Pos', 'Ref')
+	ab_ref_conflicts = conflicts(ab_ref, key=('Chr', 'Pos'))
+	print rowcount(ab_ref_conflicts)
+	ab_nref = cut(ab, 'Chr', 'Pos', 'Nref')
+	ab_nref_conflicts = conflicts(ab_nref, key=('Chr', 'Pos'))
+	print rowcount(ab_nref_conflicts)
+	ab_der = cut(ab, 'Chr', 'Pos', 'Der')
+	ab_der_conflicts = conflicts(ab_der, key=('Chr', 'Pos'))
+	print rowcount(ab_der_conflicts)
+	ab_mut = cut(ab, 'Chr', 'Pos', 'Mut')
+	ab_mut_conflicts = conflicts(ab_mut, key=('Chr', 'Pos'))
+	print rowcount(ab_mut_conflicts)
+	tocsv(ab_mut_conflicts, 'mut_conflicts.csv', delimiter='\t')
+	ab_gene = cut(ab, 'Chr', 'Pos', 'GeneId', 'GeneAlias', 'GeneDescr')
+	ab_geneid_conflicts = conflicts(ab_gene, key=('Chr', 'Pos'), include='GeneId')
+	print rowcount(ab_geneid_conflicts)
+	tocsv(ab_geneid_conflicts, 'geneid_conflicts.csv', delimiter='\t')
+	ab_genealias_conflicts = conflicts(ab_gene, key=('Chr', 'Pos'), include='GeneAlias')
+	print rowcount(ab_genealias_conflicts)
+	tocsv(ab_genealias_conflicts, 'genealias_conflicts.csv', delimiter='\t')
+	ab_genedescr_conflicts = conflicts(ab_gene, key=('Chr', 'Pos'), include='GeneDescr')
+	print rowcount(ab_genedescr_conflicts)
+	tocsv(ab_genedescr_conflicts, 'genedescr_conflicts.csv', delimiter='\t')
+	

@@ -37,10 +37,10 @@ Version 0.8
 
 - [done] compare tables case study
 - [done] change docs to use look on input table; hide input data as list; also somehow keep raw commands around in a separate string, so their not lost?
-- cut, if one positional arg and it's a list or tuple, unpack it
-- in conflicts function, have include and exclude args, rather than ignore, so can ask for conflicts in a single field without having to cut
-- update case study 1 to use new conflicts keyword args
-- add complete script to end of case study 1
+- [done] cut, if one positional arg and it's a list or tuple, unpack it
+- [done] in conflicts function, have include and exclude args, rather than ignore, so can ask for conflicts in a single field without having to cut
+- [done] update case study 1 to use new conflicts keyword args and cut signature
+- [done] add complete script to end of case study 1
 - compare tables screen cast
 - facetcolumns - like facet but return a dict of lists for each facet value, a.k.a. stratify?
 - look.n and look.p to page through

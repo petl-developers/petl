@@ -217,7 +217,11 @@ def cut(table, *args, **kwargs):
     See also :func:`cutout`.
     
     """
-    
+
+    # support passing a single list or tuple of fields
+    if len(args) == 1 and isinstance(args[0], (list, tuple)):
+        args = args[0]
+            
     return CutView(table, args, **kwargs)
 
 
@@ -2098,7 +2102,8 @@ def iterduplicates(source, key):
             previous = row
     
     
-def conflicts(table, key, missing=None, ignore=None, presorted=False, buffersize=None):
+def conflicts(table, key, missing=None, include=None, exclude=None, 
+              presorted=False, buffersize=None):
     """
     Select rows with the same key value but differing in some other field. E.g.::
 
@@ -2140,47 +2145,62 @@ def conflicts(table, key, missing=None, ignore=None, presorted=False, buffersize
     as the missing value, this can be changed via the `missing` keyword 
     argument.
 
+    One or more fields can be ignored when determining conflicts by providing
+    the `exclude` keyword argument. Alternatively, fields to use when determining
+    conflicts can be specified explicitly with the `include` keyword argument. 
+
     If `presorted` is True, it is assumed that the data are already sorted by
     the given key, and the `buffersize` argument is ignored. Otherwise, the data 
     are sorted, see also the discussion of the `buffersize` argument under the 
     :func:`sort` function.
     
-    .. versionchanged:: 0.5
+    .. versionchanged:: 0.8
     
-    One or more fields can be ignored when determining conflicts by providing
-    the `ignore` keyword argument. 
-
+    Added the `include` and `exclude` keyword arguments. The `exclude` keyword 
+    argument replaces the `ignore` keyword argument in previous versions.
+    
     """
     
-    return ConflictsView(table, key, missing=missing, ignore=ignore,
+    return ConflictsView(table, key, missing=missing, exclude=exclude, include=include,
                          presorted=presorted, buffersize=buffersize)
 
 
 class ConflictsView(RowContainer):
     
-    def __init__(self, source, key, missing=None, ignore=None, presorted=False, buffersize=None):
+    def __init__(self, source, key, missing=None, exclude=None, include=None, 
+                 presorted=False, buffersize=None):
         if presorted:
             self.source = source
         else:
             self.source = sort(source, key, buffersize=buffersize)
         self.key = key
         self.missing = missing
-        self.ignore = ignore
+        self.exclude = exclude
+        self.include = include
         
     def __iter__(self):
-        return iterconflicts(self.source, self.key, self.missing, self.ignore)
+        return iterconflicts(self.source, self.key, self.missing, self.exclude, 
+                             self.include)
     
     def cachetag(self):
         try:
-            return hash((self.source.cachetag(), self.key, self.missing, self.ignore))
+            return hash((self.source.cachetag(), self.key, self.missing, 
+                         self.exclude, self.include))
         except Exception as e:
             raise Uncacheable(e)
 
     
-def iterconflicts(source, key, missing, ignore):
-    # normalise ignore
-    if isinstance(ignore, basestring):
-        ignore = (ignore,)
+def iterconflicts(source, key, missing, exclude, include):
+
+    # normalise arguments
+    if isinstance(exclude, basestring):
+        exclude = (exclude,)
+    if isinstance(include, basestring):
+        include = (include,)
+
+    # exclude overrides include
+    if include and exclude:
+        include = None
         
     it = iter(source)
     flds = it.next()
@@ -2207,7 +2227,7 @@ def iterconflicts(source, key, missing, ignore):
                 # is there a conflict?
                 conflict = False
                 for x, y, f in zip(previous, row, flds):
-                    if ignore is None or f not in ignore:
+                    if (exclude and f not in exclude) or (include and f in include) or (not exclude and not include):
                         if missing not in (x, y) and x != y:
                             conflict = True
                             break
