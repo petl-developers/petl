@@ -1210,3 +1210,101 @@ look(table1)
 table2 = unflatten(table1, 'lines', 3)
 look(table2)
 
+
+# tocsv
+
+table = [['foo', 'bar'],
+         ['a', 1],
+         ['b', 2],
+         ['c', 2]]
+
+from petl import tocsv, look
+look(table)
+tocsv(table, 'test.csv', delimiter='\t')
+# look what it did
+from petl import fromcsv
+look(fromcsv('test.csv', delimiter='\t'))
+
+
+# appendcsv
+
+table = [['foo', 'bar'],
+         ['d', 7],
+         ['e', 42],
+         ['f', 12]]
+
+# look at an existing CSV file
+from petl import look, fromcsv
+testcsv = fromcsv('test.csv', delimiter='\t')
+look(testcsv)
+# append some data
+look(table)
+from petl import appendcsv 
+appendcsv(table, 'test.csv', delimiter='\t')
+# look what it did
+look(testcsv)
+
+
+# topickle
+
+table = [['foo', 'bar'],
+         ['a', 1],
+         ['b', 2],
+         ['c', 2]]
+
+from petl import topickle, look
+look(table)
+topickle(table, 'test.dat')
+# look what it did
+from petl import frompickle
+look(frompickle('test.dat'))
+
+
+# appendpickle
+
+table = [['foo', 'bar'],
+         ['d', 7],
+         ['e', 42],
+         ['f', 12]]
+
+from petl import look, frompickle
+# inspect an existing pickle file
+testdat = frompickle('test.dat')
+look(testdat)
+# append some data
+from petl import appendpickle
+look(table)
+appendpickle(table, 'test.dat')
+# look what it did
+look(testdat)
+
+
+# tosqlite3
+
+table = [['foo', 'bar'],
+         ['a', 1],
+         ['b', 2],
+         ['c', 2]]
+
+from petl import tosqlite3, look
+look(table)
+# by default, if the table does not already exist, it will be created
+tosqlite3(table, 'test.db', 'foobar')
+# look what it did
+from petl import fromsqlite3
+look(fromsqlite3('test.db', 'select * from foobar'))
+
+
+# appendsqlite3
+
+moredata = [['foo', 'bar'],
+            ['d', 7],
+            ['e', 9],
+            ['f', 1]]
+
+from petl import appendsqlite3, look
+look(moredata)
+appendsqlite3(moredata, 'test.db', 'foobar') 
+# look what it did
+from petl import look, fromsqlite3
+look(fromsqlite3('test.db', 'select * from foobar'))

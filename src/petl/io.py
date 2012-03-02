@@ -734,14 +734,21 @@ def tocsv(table, filename, **kwargs):
     """
     Write the table to a CSV file. E.g.::
 
-        >>> from petl import tocsv
-        >>> table = [['foo', 'bar'],
-        ...          ['a', 1],
-        ...          ['b', 2],
-        ...          ['c', 2]]
+        >>> from petl import tocsv, look
+        >>> look(table)
+        +-------+-------+
+        | 'foo' | 'bar' |
+        +=======+=======+
+        | 'a'   | 1     |
+        +-------+-------+
+        | 'b'   | 2     |
+        +-------+-------+
+        | 'c'   | 2     |
+        +-------+-------+
+        
         >>> tocsv(table, 'test.csv', delimiter='\\t')
         >>> # look what it did
-        ... from petl import look, fromcsv
+        ... from petl import fromcsv
         >>> look(fromcsv('test.csv', delimiter='\\t'))
         +-------+-------+
         | 'foo' | 'bar' |
@@ -782,11 +789,18 @@ def appendcsv(table, filename, **kwargs):
         +-------+-------+
         
         >>> # append some data
-        ... from petl import appendcsv 
-        >>> table = [['foo', 'bar'],
-        ...          ['d', 7],
-        ...          ['e', 42],
-        ...          ['f', 12]]
+        ... look(table)
+        +-------+-------+
+        | 'foo' | 'bar' |
+        +=======+=======+
+        | 'd'   | 7     |
+        +-------+-------+
+        | 'e'   | 42    |
+        +-------+-------+
+        | 'f'   | 12    |
+        +-------+-------+
+        
+        >>> from petl import appendcsv 
         >>> appendcsv(table, 'test.csv', delimiter='\\t')
         >>> # look what it did
         ... look(testcsv)
@@ -822,14 +836,21 @@ def topickle(table, filename, protocol=-1):
     """
     Write the table to a pickle file. E.g.::
 
-        >>> from petl import topickle
-        >>> table = [['foo', 'bar'],
-        ...          ['a', 1],
-        ...          ['b', 2],
-        ...          ['c', 2]]
+        >>> from petl import topickle, look
+        >>> look(table)
+        +-------+-------+
+        | 'foo' | 'bar' |
+        +=======+=======+
+        | 'a'   | 1     |
+        +-------+-------+
+        | 'b'   | 2     |
+        +-------+-------+
+        | 'c'   | 2     |
+        +-------+-------+
+        
         >>> topickle(table, 'test.dat')
         >>> # look what it did
-        ... from petl import look, frompickle
+        ... from petl import frompickle
         >>> look(frompickle('test.dat'))
         +-------+-------+
         | 'foo' | 'bar' |
@@ -857,9 +878,9 @@ def appendpickle(table, filename, protocol=-1):
     """
     Append data to an existing pickle file. E.g.::
 
+        >>> from petl import look, frompickle
         >>> # inspect an existing pickle file
-        ... from petl import look, frompickle
-        >>> testdat = frompickle('test.dat')
+        ... testdat = frompickle('test.dat')
         >>> look(testdat)
         +-------+-------+
         | 'foo' | 'bar' |
@@ -873,10 +894,17 @@ def appendpickle(table, filename, protocol=-1):
         
         >>> # append some data
         ... from petl import appendpickle
-        >>> table = [['foo', 'bar'],
-        ...          ['d', 7],
-        ...          ['e', 42],
-        ...          ['f', 12]]
+        >>> look(table)
+        +-------+-------+
+        | 'foo' | 'bar' |
+        +=======+=======+
+        | 'd'   | 7     |
+        +-------+-------+
+        | 'e'   | 42    |
+        +-------+-------+
+        | 'f'   | 12    |
+        +-------+-------+
+        
         >>> appendpickle(table, 'test.dat')
         >>> # look what it did
         ... look(testdat)
@@ -914,15 +942,22 @@ def tosqlite3(table, filename, tablename, create=True):
     existing rows will be deleted prior to inserting the new
     data. E.g.::
 
-        >>> table = [['foo', 'bar'],
-        ...          ['a', 1],
-        ...          ['b', 2],
-        ...          ['c', 2]]
-        >>> from petl import tosqlite3
+        >>> from petl import tosqlite3, look
+        >>> look(table)
+        +-------+-------+
+        | 'foo' | 'bar' |
+        +=======+=======+
+        | 'a'   | 1     |
+        +-------+-------+
+        | 'b'   | 2     |
+        +-------+-------+
+        | 'c'   | 2     |
+        +-------+-------+
+        
         >>> # by default, if the table does not already exist, it will be created
         ... tosqlite3(table, 'test.db', 'foobar')
         >>> # look what it did
-        ... from petl import look, fromsqlite3
+        ... from petl import fromsqlite3
         >>> look(fromsqlite3('test.db', 'select * from foobar'))
         +-------+-------+
         | 'foo' | 'bar' |
@@ -955,11 +990,18 @@ def appendsqlite3(table, filename, tablename):
     new data will be inserted into the table, and any existing rows
     will remain. E.g.::
     
-        >>> moredata = [['foo', 'bar'],
-        ...             ['d', 7],
-        ...             ['e', 9],
-        ...             ['f', 1]]
-        >>> from petl import appendsqlite3
+        >>> from petl import appendsqlite3, look
+        >>> look(moredata)
+        +-------+-------+
+        | 'foo' | 'bar' |
+        +=======+=======+
+        | 'd'   | 7     |
+        +-------+-------+
+        | 'e'   | 9     |
+        +-------+-------+
+        | 'f'   | 1     |
+        +-------+-------+
+        
         >>> appendsqlite3(moredata, 'test.db', 'foobar') 
         >>> # look what it did
         ... from petl import look, fromsqlite3
@@ -999,39 +1041,38 @@ def todb(table, connection, tablename, commit=True):
     connection. Note that the database table will be truncated, i.e.,
     all existing rows will be deleted prior to inserting the new data.
     
-    E.g., using :mod:`sqlite3`::
+    E.g.::
+
+        >>> from petl import look, todb
+        >>> look(table)
+        +-------+-------+
+        | 'foo' | 'bar' |
+        +=======+=======+
+        | 'a'   | 1     |
+        +-------+-------+
+        | 'b'   | 2     |
+        +-------+-------+
+        | 'c'   | 2     |
+        +-------+-------+
+        
+    ... using :mod:`sqlite3`::
     
         >>> import sqlite3
         >>> connection = sqlite3.connect('test.db')
-        >>> table = [['foo', 'bar'],
-        ...          ['a', 1],
-        ...          ['b', 2],
-        ...          ['c', 2]]
-        >>> from petl import todb
         >>> # assuming table "foobar" already exists in the database
         ... todb(table, connection, 'foobar')    
         
-    E.g., using :mod:`psycopg2`::
+    ... using :mod:`psycopg2`::
 
         >>> import psycopg2 
         >>> connection = psycopg2.connect("dbname=test user=postgres")
-        >>> table = [['foo', 'bar'],
-        ...          ['a', 1],
-        ...          ['b', 2],
-        ...          ['c', 2]]
-        >>> from petl import todb
         >>> # assuming table "foobar" already exists in the database
         ... todb(table, connection, 'foobar')    
         
-    E.g., using :mod:`MySQLdb`::
+    ... using :mod:`MySQLdb`::
 
         >>> import MySQLdb
         >>> connection = MySQLdb.connect(passwd="moonpie", db="thangs")
-        >>> table = [['foo', 'bar'],
-        ...          ['a', 1],
-        ...          ['b', 2],
-        ...          ['c', 2]]
-        >>> from petl import todb
         >>> # assuming table "foobar" already exists in the database
         ... todb(table, connection, 'foobar')    
         
@@ -1062,39 +1103,38 @@ def appenddb(table, connection, tablename, commit=True):
     the new data will be inserted into the table, and any existing
     rows will remain.
     
-    E.g., using :mod:`sqlite3`::
+    E.g.::
+    
+        >>> from petl import look, appenddb
+        >>> look(table)
+        +-------+-------+
+        | 'foo' | 'bar' |
+        +=======+=======+
+        | 'a'   | 1     |
+        +-------+-------+
+        | 'b'   | 2     |
+        +-------+-------+
+        | 'c'   | 2     |
+        +-------+-------+
+
+    ... using :mod:`sqlite3`::
     
         >>> import sqlite3
         >>> connection = sqlite3.connect('test.db')
-        >>> table = [['foo', 'bar'],
-        ...          ['a', 1],
-        ...          ['b', 2],
-        ...          ['c', 2]]
-        >>> from petl import appenddb
         >>> # assuming table "foobar" already exists in the database
         ... appenddb(table, connection, 'foobar')    
         
-    E.g., using :mod:`psycopg2`::
+    ... using :mod:`psycopg2`::
 
         >>> import psycopg2 
         >>> connection = psycopg2.connect("dbname=test user=postgres")
-        >>> table = [['foo', 'bar'],
-        ...          ['a', 1],
-        ...          ['b', 2],
-        ...          ['c', 2]]
-        >>> from petl import appenddb
         >>> # assuming table "foobar" already exists in the database
         ... appenddb(table, connection, 'foobar')    
         
-    E.g., using :mod:`MySQLdb`::
+    ... using :mod:`MySQLdb`::
 
         >>> import MySQLdb
         >>> connection = MySQLdb.connect(passwd="moonpie", db="thangs")
-        >>> table = [['foo', 'bar'],
-        ...          ['a', 1],
-        ...          ['b', 2],
-        ...          ['c', 2]]
-        >>> from petl import appenddb
         >>> # assuming table "foobar" already exists in the database
         ... appenddb(table, connection, 'foobar')    
         
@@ -1146,11 +1186,18 @@ def totext(table, filename, template, prologue=None, epilogue=None):
     """
     Write the table to a text file. E.g.::
 
-        >>> from petl import totext    
-        >>> table = [['foo', 'bar'],
-        ...          ['a', 1],
-        ...          ['b', 2],
-        ...          ['c', 2]]
+        >>> from petl import totext, look    
+        >>> look(table)
+        +-------+-------+
+        | 'foo' | 'bar' |
+        +=======+=======+
+        | 'a'   | 1     |
+        +-------+-------+
+        | 'b'   | 2     |
+        +-------+-------+
+        | 'c'   | 2     |
+        +-------+-------+
+        
         >>> prologue = \"\"\"{| class="wikitable"
         ... |-
         ... ! foo
@@ -1221,11 +1268,18 @@ def tojson(table, filename, *args, **kwargs):
     """
     Write a table in JSON format. E.g.::
 
-        >>> from petl import tojson    
-        >>> table = [['foo', 'bar'],
-        ...          ['a', 1],
-        ...          ['b', 2],
-        ...          ['c', 2]]
+        >>> from petl import tojson, look    
+        >>> look(table)
+        +-------+-------+
+        | 'foo' | 'bar' |
+        +=======+=======+
+        | 'a'   | 1     |
+        +-------+-------+
+        | 'b'   | 2     |
+        +-------+-------+
+        | 'c'   | 2     |
+        +-------+-------+
+        
         >>> tojson(table, 'example.json')
         >>> # check what it did
         ... import json
