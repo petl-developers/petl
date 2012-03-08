@@ -3,6 +3,25 @@ Examples used in docstrings.
 
 """
 
+# facetcolumns
+
+from petl import facetcolumns
+table = [['foo', 'bar', 'baz'], 
+         ['a', 1, True], 
+         ['b', 2, True], 
+         ['b', 3]]
+fc = facetcolumns(table, 'foo')
+fc['a']
+fc['a']['foo']
+fc['a']['bar']
+fc['a']['baz']
+fc['b']
+fc['b']['foo']
+fc['b']['bar']
+fc['b']['baz']
+fc['c']
+
+
 # rename
 
 table1 = [['sex', 'age'],

@@ -7,7 +7,7 @@ from petl import header, fieldnames, data, records, rowcount, look, see, iterval
                 unique, lookup, lookupone, recordlookup, recordlookupone, \
                 DuplicateKeyError, rowlengths, stats, typecounts, parsecounts, typeset, \
                 valuecount, parsenumber, stringpatterns, diffheaders, diffvalues, \
-                datetimeparser, values
+                datetimeparser, values, columns, facetcolumns
 
 from petl.testutils import assertequal, iassertequal
 import sys
@@ -565,4 +565,25 @@ def test_laxparsers():
         assertequal('2002-12-25 00:00:00', v)
     
     
+def test_columns():
     
+    table = [['foo', 'bar'], ['a', 1], ['b', 2], ['b', 3]]
+    cols = columns(table)
+    assertequal(['a', 'b', 'b'], cols['foo'])
+    assertequal([1, 2, 3], cols['bar'])
+
+
+def test_facetcolumns():
+    
+    table = [['foo', 'bar', 'baz'], 
+             ['a', 1, True], 
+             ['b', 2, True], 
+             ['b', 3]]
+    
+    fc = facetcolumns(table, 'foo')
+    assertequal(['a'], fc['a']['foo'])
+    assertequal([1], fc['a']['bar'])
+    assertequal([True], fc['a']['baz'])
+    assertequal(['b', 'b'], fc['b']['foo'])
+    assertequal([2, 3], fc['b']['bar'])
+    assertequal([True, None], fc['b']['baz'])

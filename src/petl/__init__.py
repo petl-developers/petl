@@ -10,7 +10,7 @@ from petl.util import header, fieldnames, data, records, rowcount, look, see, \
            stats, rowlengths, DuplicateKeyError, datetimeparser, dateparser, timeparser, boolparser, \
            expr, limits, strjoin, valuecount, lookall, dataslice, parsenumber, \
            stringpatterns, stringpatterncounter, randomtable, dummytable, \
-           diffheaders, diffvalues, columns
+           diffheaders, diffvalues, columns, facetcolumns
 
 from petl.io import fromcsv, frompickle, fromsqlite3, tocsv, topickle, \
            tosqlite3, crc32sum, adler32sum, statsum, fromdb, \

@@ -630,6 +630,52 @@ def columns(table, missing=None):
             if f in cols:
                 cols[f].append(v)
     return cols
+
+
+def facetcolumns(table, key, missing=None):
+    """
+    Like :func:`columns` but stratified by values of the given key field. E.g.::
+    
+        >>> from petl import facetcolumns
+        >>> table = [['foo', 'bar', 'baz'], 
+        ...          ['a', 1, True], 
+        ...          ['b', 2, True], 
+        ...          ['b', 3]]
+        >>> fc = facetcolumns(table, 'foo')
+        >>> fc['a']
+        {'baz': [True], 'foo': ['a'], 'bar': [1]}
+        >>> fc['b']
+        {'baz': [True, None], 'foo': ['b', 'b'], 'bar': [2, 3]}
+        >>> fc['c']
+        Traceback (most recent call last):
+          File "<stdin>", line 1, in <module>
+        KeyError: 'c'
+
+    .. versionadded:: 0.8
+    
+    """
+    
+    fct = dict()
+    it = iter(table)
+    fields = [str(f) for f in it.next()]
+    indices = asindices(fields, key)
+    assert len(indices) > 0, 'no key field selected'
+    getkey = itemgetter(*indices)
+    
+    for row in it:
+        kv = getkey(row)
+        if kv not in fct:
+            cols = dict()
+            for f in fields:
+                cols[f] = list()
+            fct[kv] = cols
+        else:
+            cols = fct[kv]
+        for f, v in izip_longest(fields, row, fillvalue=missing):
+            if f in cols:
+                cols[f].append(v)
+        
+    return fct
     
     
 def unique(table, field):

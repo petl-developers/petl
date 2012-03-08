@@ -1,6 +1,7 @@
 Future
 ------
 
+- functions should use field names (str) not fields for field indexing
 - stringpatterns should have view class
 - rowlengths should have View class
 - unpackdict deal with dict as data value and unpack into fields
@@ -14,6 +15,7 @@ Future
 - unicode support in to/fromcsv and to/fromtext
 - from compressed files
 - to compressed files
+
 - validator module based on csvvalidator
 - show rows/values causing conversion or translation errors
 - filldown
@@ -46,9 +48,9 @@ Version 0.8
 - [done] issue 2 - diff / complement behaviour with duplicate rows
 - [done] handle duplicate rows in intersection and hashintersection
 - [done] refactor tests for hash... to remove code smells
-- facetcolumns - like facet but return a dict of lists for each facet value, a.k.a. stratify?
+- [done] facetcolumns - like facet but return a dict of lists for each facet value, a.k.a. stratify?
 - look.n and look.p to page through
-- functions should use field names (str) not fields for field indexing
+
 
 Version 0.7
 -----------

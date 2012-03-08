@@ -356,6 +356,7 @@ Utility functions
 .. autofunction:: petl.valuecounts
 .. autofunction:: petl.valuecounter
 .. autofunction:: petl.columns
+.. autofunction:: petl.facetcolumns
 .. autofunction:: petl.unique
 .. autofunction:: petl.limits
 .. autofunction:: petl.stats
