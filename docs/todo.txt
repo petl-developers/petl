@@ -41,10 +41,14 @@ Version 0.8
 - [done] in conflicts function, have include and exclude args, rather than ignore, so can ask for conflicts in a single field without having to cut
 - [done] update case study 1 to use new conflicts keyword args and cut signature
 - [done] add complete script to end of case study 1
-- compare tables screen cast
+- [done] compare tables screen cast
+- [done] issue 1 - diff / complement with empty rows
+- [done] issue 2 - diff / complement behaviour with duplicate rows
+- [done] handle duplicate rows in intersection and hashintersection
+- [done] refactor tests for hash... to remove code smells
 - facetcolumns - like facet but return a dict of lists for each facet value, a.k.a. stratify?
 - look.n and look.p to page through
-
+- functions should use field names (str) not fields for field indexing
 
 Version 0.7
 -----------

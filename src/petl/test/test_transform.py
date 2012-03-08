@@ -915,7 +915,7 @@ def test_mergereduce():
     iassertequal(expectation, result)
     
     
-def test_complement_1():
+def _test_complement_1(f):
 
     table1 = (('foo', 'bar'),
               ('A', 1),
@@ -931,11 +931,11 @@ def test_complement_1():
                    ('A', 1),
                    ('C', 7))
     
-    result = complement(table1, table2)
+    result = f(table1, table2)
     iassertequal(expectation, result)
     
     
-def test_complement_2():
+def _test_complement_2(f):
 
     tablea = (('foo', 'bar', 'baz'),
               ('A', 1, True),
@@ -953,16 +953,69 @@ def test_complement_2():
                ('A', 1, True),
                ('C', 7, False))
     
-    result = complement(tablea, tableb)
+    result = f(tablea, tableb)
     iassertequal(aminusb, result)
     
     bminusa = (('x', 'y', 'z'),
                ('A', 9, False),
                ('B', 3, True))
     
-    result = complement(tableb, tablea)
+    result = f(tableb, tablea)
     iassertequal(bminusa, result)
     
+
+def _test_complement_3(f):
+
+    table1 = (('foo', 'bar'),
+              ('A', 1),
+              ('B', 2))
+    
+    table2 = (('foo', 'bar'),)
+    
+    expectation = (('foo', 'bar'),
+                   ('A', 1),
+                   ('B', 2))
+    result = f(table1, table2)
+    iassertequal(expectation, result)
+    iassertequal(expectation, result)
+    
+    expectation = (('foo', 'bar'),)
+    result = f(table2, table1)
+    iassertequal(expectation, result)
+    iassertequal(expectation, result)
+    
+    
+def _test_complement_4(f):
+
+    table1 = (('foo', 'bar'),
+              ('A', 1),
+              ('B', 2),
+              ('B', 2),
+              ('C', 7))
+    
+    table2 = (('foo', 'bar'),
+              ('B', 2))
+    
+    expectation = (('foo', 'bar'),
+                   ('A', 1),
+                   ('B', 2),
+                   ('C', 7))
+    
+    result = f(table1, table2)
+    iassertequal(expectation, result)
+    iassertequal(expectation, result)
+    
+    
+def _test_complement(f):
+    _test_complement_1(f)
+    _test_complement_2(f)
+    _test_complement_3(f)
+    _test_complement_4(f)
+
+
+def test_complement():
+    _test_complement(complement)
+
 
 def test_diff():
 
@@ -2019,7 +2072,7 @@ def test_unpack():
     iassertequal(expect5, table5)
     
     
-def test_join():
+def _test_join_basic(join):
     
     table1 = (('id', 'colour'),
               (1, 'blue'),
@@ -2063,7 +2116,7 @@ def test_join():
     iassertequal(expect7, table7)
     
     
-def test_join_compound_keys():
+def _test_join_compound_keys(join):
     
     # compound keys
     table8 = (('id', 'time', 'height'),
@@ -2086,7 +2139,7 @@ def test_join_compound_keys():
     iassertequal(expect11, table11)
     
     
-def test_join_string_key():
+def _test_join_string_key(join):
     
     table1 = (('id', 'colour'),
               ('aa', 'blue'),
@@ -2106,7 +2159,17 @@ def test_join_string_key():
     iassertequal(expect3, table3) # check twice
 
 
-def test_leftjoin():
+def _test_join(join):
+    _test_join_basic(join)
+    _test_join_compound_keys(join)
+    _test_join_string_key(join)
+
+
+def test_join():
+    _test_join(join)
+    
+    
+def _test_leftjoin_1(leftjoin):
     
     table1 = (('id', 'colour'),
               (1, 'blue'),
@@ -2134,7 +2197,7 @@ def test_leftjoin():
     iassertequal(expect4, table4)
     
     
-def test_leftjoin_2():
+def _test_leftjoin_2(leftjoin):
     
     table1 = (('id', 'colour'),
               (1, 'blue'),
@@ -2161,7 +2224,7 @@ def test_leftjoin_2():
     iassertequal(expect4, table4)
     
     
-def test_leftjoin_3():
+def _test_leftjoin_3(leftjoin):
     
     table1 = (('id', 'colour'),
               (1, 'blue'),
@@ -2186,7 +2249,7 @@ def test_leftjoin_3():
     iassertequal(expect4, table4)
     
     
-def test_leftjoin_compound_keys():
+def _test_leftjoin_compound_keys(leftjoin):
     
     # compound keys
     table5 = (('id', 'time', 'height'),
@@ -2205,7 +2268,18 @@ def test_leftjoin_compound_keys():
     iassertequal(expect7, table7)
 
 
-def test_rightjoin():
+def _test_leftjoin(leftjoin):
+    _test_leftjoin_1(leftjoin)
+    _test_leftjoin_2(leftjoin)
+    _test_leftjoin_3(leftjoin)
+    _test_leftjoin_compound_keys(leftjoin)
+
+
+def test_leftjoin():
+    _test_leftjoin(leftjoin)
+    
+    
+def _test_rightjoin_1(rightjoin):
     
     table1 = (('id', 'colour'),
               (1, 'blue'),
@@ -2233,7 +2307,7 @@ def test_rightjoin():
     iassertequal(expect4, table4)
     
     
-def test_rightjoin_2():
+def _test_rightjoin_2(rightjoin):
     
     table1 = (('id', 'colour'),
               (0, 'black'),
@@ -2260,7 +2334,7 @@ def test_rightjoin_2():
     iassertequal(expect4, table4)
     
     
-def test_rightjoin_3():
+def _test_rightjoin_3(rightjoin):
     
     table1 = (('id', 'colour'),
               (1, 'blue'),
@@ -2289,6 +2363,16 @@ def test_rightjoin_3():
     iassertequal(expect4, table4)
     
     
+def _test_rightjoin(rightjoin):
+    _test_rightjoin_1(rightjoin)
+    _test_rightjoin_2(rightjoin)
+    _test_rightjoin_3(rightjoin)
+
+
+def test_rightjoin():
+    _test_rightjoin(rightjoin)
+
+
 def test_outerjoin():
     
     table1 = (('id', 'colour'),
@@ -2386,7 +2470,7 @@ def test_crossjoin():
     iassertequal(expect3, table3)
     
     
-def test_antijoin():
+def _test_antijoin(antijoin):
     
     table1 = (('id', 'colour'),
               (0, 'black'),
@@ -2408,6 +2492,10 @@ def test_antijoin():
     table4 = antijoin(table1, table2) 
     expect4 = expect3
     iassertequal(expect4, table4)
+
+
+def test_antijoin():
+    _test_antijoin(antijoin)    
     
     
 def test_transpose():
@@ -2424,7 +2512,7 @@ def test_transpose():
     iassertequal(expect2, table2)
     
     
-def test_intersection_1():
+def _test_intersection_1(intersection):
 
     table1 = (('foo', 'bar'),
               ('A', 1),
@@ -2443,7 +2531,7 @@ def test_intersection_1():
     iassertequal(expectation, result)
     
     
-def test_intersection_2():
+def _test_intersection_2(intersection):
 
     table1 = (('foo', 'bar', 'baz'),
               ('A', 1, True),
@@ -2464,7 +2552,60 @@ def test_intersection_2():
     table3 = intersection(table1, table2)
     iassertequal(expect, table3)
     
+    
+def _test_intersection_3(intersection):
 
+    # empty table
+    table1 = (('foo', 'bar'),
+              ('A', 1),
+              ('B', 2),
+              ('C', 7))
+    
+    table2 = (('foo', 'bar'),)
+    
+    expectation = (('foo', 'bar'),)
+    result = intersection(table1, table2)
+    iassertequal(expectation, result)
+    iassertequal(expectation, result)
+    
+    
+def _test_intersection_4(intersection):
+
+    # duplicate rows
+    
+    table1 = (('foo', 'bar'),
+              ('A', 1),
+              ('B', 2),
+              ('B', 2),
+              ('B', 2),
+              ('C', 7))
+    
+    table2 = (('foo', 'bar'),
+              ('A', 9),
+              ('B', 2),
+              ('B', 2),
+              ('B', 3))
+    
+    expectation = (('foo', 'bar'),
+                   ('B', 2),
+                   ('B', 2))
+    
+    result = intersection(table1, table2)
+    iassertequal(expectation, result)
+    iassertequal(expectation, result)
+    
+    
+def _test_intersection(intersection):
+    _test_intersection_1(intersection)
+    _test_intersection_2(intersection)
+    _test_intersection_3(intersection)
+    _test_intersection_4(intersection)
+
+
+def test_intersection():
+    _test_intersection(intersection)
+    
+    
 def test_pivot():
     
     table1 = (('region', 'gender', 'style', 'units'),
@@ -2490,387 +2631,27 @@ def test_pivot():
     
     
 def test_hashjoin():
-    
-    table1 = (('id', 'colour'),
-              (1, 'blue'),
-              (2, 'red'),
-              (3, 'purple'))
-    table2 = (('id', 'shape'),
-              (3, 'square'),
-              (1, 'circle'),
-              (4, 'ellipse'))
-    
-    # normal inner join
-    table3 = hashjoin(table1, table2, key='id')
-    expect3 = (('id', 'colour', 'shape'),
-               (1, 'blue', 'circle'),
-               (3, 'purple', 'square'))
-    iassertequal(expect3, table3)
-    iassertequal(expect3, table3) # check twice
-    
-    # natural join
-    table4 = hashjoin(table1, table2)
-    expect4 = expect3
-    iassertequal(expect4, table4)
-    iassertequal(expect4, table4) # check twice
-    
-    # multiple rows for each key
-    table5 = (('id', 'colour'),
-              (1, 'blue'),
-              (1, 'red'),
-              (2, 'purple'))
-    table6 = (('id', 'shape'),
-              (1, 'circle'),
-              (1, 'square'),
-              (2, 'ellipse'))
-    table7 = hashjoin(table5, table6, key='id')
-    expect7 = (('id', 'colour', 'shape'),
-               (1, 'blue', 'circle'),
-               (1, 'blue', 'square'),
-               (1, 'red', 'circle'),
-               (1, 'red', 'square'),
-               (2, 'purple', 'ellipse'))
-    iassertequal(expect7, table7)
-    
-    
-def test_hashjoin_compound_keys():
-    
-    # compound keys
-    table8 = (('id', 'time', 'height'),
-              (1, 1, 12.3),
-              (1, 2, 34.5),
-              (2, 1, 56.7))
-    table9 = (('id', 'time', 'weight'),
-              (1, 2, 4.5),
-              (2, 1, 6.7),
-              (2, 2, 8.9))
-    table10 = hashjoin(table8, table9, key=['id', 'time'])
-    expect10 = (('id', 'time', 'height', 'weight'),
-                (1, 2, 34.5, 4.5),
-                (2, 1, 56.7, 6.7))
-    iassertequal(expect10, table10)
-
-    # natural join on compound key
-    table11 = hashjoin(table8, table9)
-    expect11 = expect10
-    iassertequal(expect11, table11)
-    
-    
-def test_hashjoin_string_key():
-    
-    table1 = (('id', 'colour'),
-              ('aa', 'blue'),
-              ('bb', 'red'),
-              ('cc', 'purple'))
-    table2 = (('id', 'shape'),
-              ('aa', 'circle'),
-              ('cc', 'square'),
-              ('dd', 'ellipse'))
-    
-    # normal inner join
-    table3 = hashjoin(table1, table2, key='id')
-    expect3 = (('id', 'colour', 'shape'),
-               ('aa', 'blue', 'circle'),
-               ('cc', 'purple', 'square'))
-    iassertequal(expect3, table3)
-    iassertequal(expect3, table3) # check twice
+    _test_join(hashjoin)
 
 
 def test_hashleftjoin():
-    
-    table1 = (('id', 'colour'),
-              (1, 'blue'),
-              (2, 'red'),
-              (3, 'purple'),
-              (5, 'yellow'),
-              (7, 'orange'))
-    table2 = (('id', 'shape'),
-              (3, 'square'),
-              (1, 'circle'),
-              (4, 'ellipse'))
-    table3 = hashleftjoin(table1, table2, key='id')
-    expect3 = (('id', 'colour', 'shape'),
-               (1, 'blue', 'circle'),
-               (2, 'red', None),
-               (3, 'purple', 'square'),
-               (5, 'yellow', None,),
-               (7, 'orange', None))
-    iassertequal(expect3, table3)
-    iassertequal(expect3, table3) # check twice
-    
-    # natural join
-    table4 = hashleftjoin(table1, table2)
-    expect4 = expect3
-    iassertequal(expect4, table4)
-    
-    
-def test_hashleftjoin_2():
-    
-    table1 = (('id', 'colour'),
-              (1, 'blue'),
-              (2, 'red'),
-              (3, 'purple'),
-              (5, 'yellow'),
-              (7, 'orange'))
-    table2 = (('id', 'shape'),
-              (1, 'circle'),
-              (3, 'square'))
-    table3 = hashleftjoin(table1, table2, key='id')
-    expect3 = (('id', 'colour', 'shape'),
-               (1, 'blue', 'circle'),
-               (2, 'red', None),
-               (3, 'purple', 'square'),
-               (5, 'yellow', None,),
-               (7, 'orange', None))
-    iassertequal(expect3, table3)
-    iassertequal(expect3, table3) # check twice
-    
-    # natural join
-    table4 = hashleftjoin(table1, table2)
-    expect4 = expect3
-    iassertequal(expect4, table4)
-    
-    
-def test_hashleftjoin_3():
-    
-    table1 = (('id', 'colour'),
-              (1, 'blue'),
-              (2, 'red'),
-              (3, 'purple'))
-    table2 = (('id', 'shape'),
-              (1, 'circle'),
-              (3, 'square'),
-              (4, 'ellipse'),
-              (5, 'triangle'))
-    table3 = hashleftjoin(table1, table2, key='id')
-    expect3 = (('id', 'colour', 'shape'),
-               (1, 'blue', 'circle'),
-               (2, 'red', None),
-               (3, 'purple', 'square'))
-    iassertequal(expect3, table3)
-    iassertequal(expect3, table3) # check twice
-    
-    # natural join
-    table4 = hashleftjoin(table1, table2)
-    expect4 = expect3
-    iassertequal(expect4, table4)
-    
-    
-def test_hashleftjoin_compound_keys():
-    
-    # compound keys
-    table5 = (('id', 'time', 'height'),
-              (1, 1, 12.3),
-              (1, 2, 34.5),
-              (2, 1, 56.7))
-    table6 = (('id', 'time', 'weight', 'bp'),
-              (1, 2, 4.5, 120),
-              (2, 1, 6.7, 110),
-              (2, 2, 8.9, 100))
-    table7 = hashleftjoin(table5, table6, key=['id', 'time'])
-    expect7 = (('id', 'time', 'height', 'weight', 'bp'),
-                (1, 1, 12.3, None, None),
-                (1, 2, 34.5, 4.5, 120),
-                (2, 1, 56.7, 6.7, 110))
-    iassertequal(expect7, table7)
+    _test_leftjoin(hashleftjoin)
 
 
 def test_hashrightjoin():
+    _test_rightjoin(hashrightjoin)
     
-    table1 = (('id', 'colour'),
-              (1, 'blue'),
-              (2, 'red'),
-              (3, 'purple'))
-    table2 = (('id', 'shape'),
-              (0, 'triangle'),
-              (1, 'circle'),
-              (3, 'square'),
-              (4, 'ellipse'),
-              (5, 'pentagon'))
-    table3 = hashrightjoin(table1, table2, key='id')
-    expect3 = (('id', 'colour', 'shape'),
-               (0, None, 'triangle'),
-               (1, 'blue', 'circle'),
-               (3, 'purple', 'square'),
-               (4, None, 'ellipse'),
-               (5, None, 'pentagon'))
-    iassertequal(expect3, table3)
-    iassertequal(expect3, table3) # check twice
-    
-    # natural join
-    table4 = hashrightjoin(table1, table2)
-    expect4 = expect3
-    iassertequal(expect4, table4)
-    
-    
-def test_hashrightjoin_2():
-    
-    table1 = (('id', 'colour'),
-              (0, 'black'),
-              (1, 'blue'),
-              (2, 'red'),
-              (3, 'purple'),
-              (5, 'yellow'),
-              (7, 'white'))
-    table2 = (('id', 'shape'),
-              (1, 'circle'),
-              (3, 'square'),
-              (4, 'ellipse'))
-    table3 = hashrightjoin(table1, table2, key='id')
-    expect3 = (('id', 'colour', 'shape'),
-               (1, 'blue', 'circle'),
-               (3, 'purple', 'square'),
-               (4, None, 'ellipse'))
-    iassertequal(expect3, table3)
-    iassertequal(expect3, table3) # check twice
-    
-    # natural join
-    table4 = hashrightjoin(table1, table2)
-    expect4 = expect3
-    iassertequal(expect4, table4)
-    
-    
-def test_hashrightjoin_3():
-    
-    table1 = (('id', 'colour'),
-              (1, 'blue'),
-              (2, 'red'),
-              (3, 'purple'),
-              (4, 'orange'))
-    table2 = (('id', 'shape'),
-              (0, 'triangle'),
-              (1, 'circle'),
-              (3, 'square'),
-              (5, 'ellipse'),
-              (7, 'pentagon'))
-    table3 = hashrightjoin(table1, table2, key='id')
-    expect3 = (('id', 'colour', 'shape'),
-               (0, None, 'triangle'),
-               (1, 'blue', 'circle'),
-               (3, 'purple', 'square'),
-               (5, None, 'ellipse'),
-               (7, None, 'pentagon'))
-    iassertequal(expect3, table3)
-    iassertequal(expect3, table3) # check twice
-    
-    # natural join
-    table4 = hashrightjoin(table1, table2)
-    expect4 = expect3
-    iassertequal(expect4, table4)
-    
-    
+
 def test_hashantijoin():
-    
-    table1 = (('id', 'colour'),
-              (0, 'black'),
-              (4, 'yellow'),
-              (1, 'blue'),
-              (2, 'red'),
-              (5, 'white'))
-    table2 = (('id', 'shape'),
-              (1, 'circle'),
-              (3, 'square'))
-    table3 = hashantijoin(table1, table2, key='id')
-    expect3 = (('id', 'colour'),
-               (0, 'black'),
-               (4, 'yellow'),
-               (2, 'red'),
-               (5, 'white'))
-    iassertequal(expect3, table3)
+    _test_antijoin(hashantijoin)    
 
-    table4 = hashantijoin(table1, table2) 
-    expect4 = expect3
-    iassertequal(expect4, table4)
     
-    
-def test_hashcomplement_1():
+def test_hashcomplement():
+    _test_complement(hashcomplement)
 
-    table1 = (('foo', 'bar'),
-              ('A', 1),
-              ('B', 2),
-              ('C', 7))
-    
-    table2 = (('foo', 'bar'),
-              ('A', 9),
-              ('B', 2),
-              ('B', 3))
-    
-    expectation = (('foo', 'bar'),
-                   ('A', 1),
-                   ('C', 7))
-    
-    result = hashcomplement(table1, table2)
-    iassertequal(expectation, result)
-    
-    
-def test_hashcomplement_2():
 
-    tablea = (('foo', 'bar', 'baz'),
-              ('B', 2, False),
-              ('C', 7, False),
-              ('A', 1, True),
-              ('C', 9, True))
-    
-    tableb = (('x', 'y', 'z'),
-              ('B', 2, False),
-              ('A', 9, False),
-              ('B', 3, True),
-              ('C', 9, True))
-    
-    aminusb = (('foo', 'bar', 'baz'),
-               ('C', 7, False),
-               ('A', 1, True))
-    
-    result = hashcomplement(tablea, tableb)
-    iassertequal(aminusb, result)
-    
-    bminusa = (('x', 'y', 'z'),
-               ('A', 9, False),
-               ('B', 3, True))
-    
-    result = hashcomplement(tableb, tablea)
-    iassertequal(bminusa, result)
-    
-
-def test_hashintersection_1():
-
-    table1 = (('foo', 'bar'),
-              ('A', 1),
-              ('B', 2),
-              ('C', 7))
-    
-    table2 = (('foo', 'bar'),
-              ('A', 9),
-              ('B', 2),
-              ('B', 3))
-    
-    expectation = (('foo', 'bar'),
-                   ('B', 2))
-    
-    result = hashintersection(table1, table2)
-    iassertequal(expectation, result)
-    
-    
-def test_hashintersection_2():
-
-    table1 = (('foo', 'bar', 'baz'),
-              ('A', 1, True),
-              ('C', 7, False),
-              ('B', 2, False),
-              ('C', 9, True))
-    
-    table2 = (('x', 'y', 'z'),
-              ('B', 2, False),
-              ('A', 9, False),
-              ('B', 3, True),
-              ('C', 9, True))
-    
-    expect = (('foo', 'bar', 'baz'),
-              ('B', 2, False),
-              ('C', 9, True))
-    
-    table3 = hashintersection(table1, table2)
-    iassertequal(expect, table3)
+def test_hashintersection():
+    _test_intersection(hashintersection)
     
 
 def test_flatten():

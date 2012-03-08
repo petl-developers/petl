@@ -4,7 +4,7 @@ Functions for transforming tables.
 """
 
 from itertools import islice, groupby, product, count
-from collections import deque, defaultdict, OrderedDict, namedtuple
+from collections import deque, defaultdict, OrderedDict, namedtuple, Counter
 from operator import itemgetter
 import cPickle as pickle
 
@@ -2326,33 +2326,51 @@ class ComplementView(RowContainer):
             raise Uncacheable(e)
 
 
-def itercomplement(a, b):
-    ita = iter(a) 
-    itb = iter(b)
-    aflds = ita.next()
+def itercomplement(ta, tb):
+    ita = iter(ta) 
+    itb = iter(tb)
+    aflds = [str(f) for f in ita.next()]
     itb.next() # ignore b fields
     yield tuple(aflds)
     
-    a = tuple(ita.next())
-    b = tuple(itb.next())
-    # we want the elements in a that are not in b
-    while True:
-        if b is None or a < b:
+    try:
+        a = tuple(ita.next())
+    except StopIteration:
+        pass # a is empty, we're done
+    else:
+        try:
+            b = tuple(itb.next())
+        except StopIteration:
+            # b is empty, just iterate through a
             yield a
-            try:
-                a = tuple(ita.next())
-            except StopIteration:
-                break
-        elif a == b:
-            try:
-                a = tuple(ita.next())
-            except StopIteration:
-                break
+            for row in ita:
+                yield row
         else:
-            try:
-                b = tuple(itb.next())
-            except StopIteration:
-                b = None
+            # we want the elements in a that are not in b
+            while True:
+                if b is None or a < b:
+                    yield a
+                    # advance a
+                    try:
+                        a = tuple(ita.next())
+                    except StopIteration:
+                        break
+                elif a == b:
+                    # advance both
+                    try:
+                        a = tuple(ita.next())
+                    except StopIteration:
+                        break
+                    try:
+                        b = tuple(itb.next())
+                    except StopIteration:
+                        b = None
+                else:
+                    # advance b
+                    try:
+                        b = tuple(itb.next())
+                    except StopIteration:
+                        b = None
         
     
 def recordcomplement(a, b, buffersize=None):
@@ -6863,10 +6881,13 @@ def iterhashcomplement(a, b):
     itb = iter(b)
     itb.next() # discard b fields, assume they are the same
 
-    blkp = set(tuple(br) for br in itb)
+    # n.b., need to account for possibility of duplicate rows
+    bcnt = Counter(tuple(row) for row in itb)
     for ar in ita:
         t = tuple(ar)
-        if t not in blkp:
+        if bcnt[t] > 0:
+            bcnt[t] -= 1
+        else:
             yield t 
         
     
@@ -6909,11 +6930,13 @@ def iterhashintersection(a, b):
     itb = iter(b)
     itb.next() # discard b fields, assume they are the same
 
-    blkp = set(tuple(br) for br in itb)
+    # n.b., need to account for possibility of duplicate rows
+    bcnt = Counter(tuple(row) for row in itb)
     for ar in ita:
         t = tuple(ar)
-        if t in blkp:
+        if bcnt[t] > 0:
             yield t 
+            bcnt[t] -= 1
         
         
 def flatten(table):
