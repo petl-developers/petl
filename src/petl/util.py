@@ -210,6 +210,11 @@ def look(table, *sliceargs):
     
     Positional arguments can be used to slice the data rows. The `sliceargs` are 
     passed to :func:`itertools.islice`.
+    
+    .. versionchanged:: 0.8
+    
+    The properties `n` and `p` can be used to look at the next and previous rows
+    respectively. I.e., try ``>>> look(table)`` then ``>>> _.n``` then ``>>> _.p``. 
 
     """
     
@@ -235,6 +240,52 @@ class Look(object):
         else:
             self.sliceargs = sliceargs
         
+    @property
+    def n(self):
+        if not self.sliceargs:
+            sliceargs = (10,)
+        elif len(self.sliceargs) == 1:
+            stop = self.sliceargs[0]
+            sliceargs = (stop, 2*stop)
+        elif len(self.sliceargs) == 2:
+            start = self.sliceargs[0]
+            stop = self.sliceargs[1]
+            page = stop - start
+            sliceargs = (stop, stop + page)
+        else:
+            start = self.sliceargs[0]
+            stop = self.sliceargs[1]
+            page = stop - start
+            step = self.sliceargs[2]
+            sliceargs = (stop, stop + page, step)
+        return Look(self.table, *sliceargs)
+    
+    @property
+    def p(self):
+        if not self.sliceargs:
+            sliceargs = (10,)
+        elif len(self.sliceargs) == 1:
+            # already at the start, do nothing
+            sliceargs = self.sliceargs
+        elif len(self.sliceargs) == 2:
+            start = self.sliceargs[0]
+            stop = self.sliceargs[1]
+            page = stop - start
+            if start - page < 0:
+                sliceargs = (0, page)
+            else:
+                sliceargs = (start - page, start)
+        else:
+            start = self.sliceargs[0]
+            stop = self.sliceargs[1]
+            page = stop - start
+            step = self.sliceargs[2]
+            if start - page < 0:
+                sliceargs = (0, page, step)
+            else:
+                sliceargs = (start - page, start, step)
+        return Look(self.table, *sliceargs)
+    
     def __repr__(self):
         it = iter(self.table)
             

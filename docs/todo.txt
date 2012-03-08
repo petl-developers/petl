@@ -49,7 +49,7 @@ Version 0.8
 - [done] handle duplicate rows in intersection and hashintersection
 - [done] refactor tests for hash... to remove code smells
 - [done] facetcolumns - like facet but return a dict of lists for each facet value, a.k.a. stratify?
-- look.n and look.p to page through
+- [done] look.n and look.p to page through
 
 
 Version 0.7
