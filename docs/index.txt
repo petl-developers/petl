@@ -387,6 +387,8 @@ Utility functions
 .. autofunction:: petl.dummytable
 .. autofunction:: petl.diffheaders
 .. autofunction:: petl.diffvalues
+.. autofunction:: petl.heapqmergesorted
+.. autofunction:: petl.shortlistmergesorted
 
 Extracting (reading) tables from files, databases and other sources
 -------------------------------------------------------------------
@@ -477,6 +479,7 @@ Transforming tables
 .. autofunction:: petl.rangerowreduce
 .. autofunction:: petl.rangerecordreduce
 .. autofunction:: petl.mergereduce
+.. autofunction:: petl.mergesort
 .. autofunction:: petl.merge
 .. autofunction:: petl.melt
 .. autofunction:: petl.recast

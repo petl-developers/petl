@@ -3769,60 +3769,6 @@ def mergereduce(table, key, missing=None, presorted=False, buffersize=None):
     return rowreduce(table, key, reducer=_mergereducer, presorted=presorted, buffersize=buffersize)
 
 
-def merge(*tables, **kwargs):
-    """
-    Convenience function to concatenate multiple tables (via :func:`cat`) then 
-    reduce rows by merging under the given key (via :func:`mergereduce`). E.g.::
-    
-        >>> from petl import look, merge
-        >>> look(table1)
-        +-------+-------+-------+
-        | 'foo' | 'bar' | 'baz' |
-        +=======+=======+=======+
-        | 1     | 'A'   | True  |
-        +-------+-------+-------+
-        | 2     | 'B'   | None  |
-        +-------+-------+-------+
-        | 4     | 'C'   | True  |
-        +-------+-------+-------+
-        
-        >>> look(table2)
-        +-------+-------+--------+
-        | 'bar' | 'baz' | 'quux' |
-        +=======+=======+========+
-        | 'A'   | True  | 42.0   |
-        +-------+-------+--------+
-        | 'B'   | False | 79.3   |
-        +-------+-------+--------+
-        | 'C'   | False | 12.4   |
-        +-------+-------+--------+
-        
-        >>> table3 = merge(table1, table2, key='bar')
-        >>> look(table3)
-        +-------+-------+---------------+--------+
-        | 'foo' | 'bar' | 'baz'         | 'quux' |
-        +=======+=======+===============+========+
-        | 1     | 'A'   | True          | 42.0   |
-        +-------+-------+---------------+--------+
-        | 2     | 'B'   | False         | 79.3   |
-        +-------+-------+---------------+--------+
-        | 4     | 'C'   | (True, False) | 12.4   |
-        +-------+-------+---------------+--------+
-        
-    See also the discussion of the `buffersize` argument under the :func:`sort` 
-    function.
-
-    """
-    
-    assert 'key' in kwargs, 'keyword argument "key" is required'
-    key = kwargs['key']
-    missing = kwargs['missing'] if 'missing' in kwargs else None
-    buffersize = kwargs['buffersize'] if 'buffersize' in kwargs else None
-    t1 = cat(*tables, missing=missing)
-    t2 = mergereduce(t1, key=key, presorted=False, buffersize=buffersize)
-    return t2
-
-
 def aggregate(table, key, aggregators=None, failonerror=False, errorvalue=None,
               presorted=False, buffersize=None):
     """
@@ -7054,8 +7000,77 @@ class UnflattenView(RowContainer):
 
 def mergesort(*tables, **kwargs):
     """
-    TODO doc me
+    Combine multiple input tables into one sorted output table. E.g.::
     
+        >>> from petl import mergesort, look
+        >>> look(table1)
+        +-------+-------+
+        | 'foo' | 'bar' |
+        +=======+=======+
+        | 'A'   | 9     |
+        +-------+-------+
+        | 'C'   | 2     |
+        +-------+-------+
+        | 'D'   | 10    |
+        +-------+-------+
+        | 'A'   | 6     |
+        +-------+-------+
+        | 'F'   | 1     |
+        +-------+-------+
+        
+        >>> look(table2)
+        +-------+-------+
+        | 'foo' | 'bar' |
+        +=======+=======+
+        | 'B'   | 3     |
+        +-------+-------+
+        | 'D'   | 10    |
+        +-------+-------+
+        | 'A'   | 10    |
+        +-------+-------+
+        | 'F'   | 4     |
+        +-------+-------+
+        
+        >>> table3 = mergesort(table1, table2, key='foo')
+        >>> look(table3)
+        +-------+-------+
+        | 'foo' | 'bar' |
+        +=======+=======+
+        | 'A'   | 9     |
+        +-------+-------+
+        | 'A'   | 6     |
+        +-------+-------+
+        | 'A'   | 10    |
+        +-------+-------+
+        | 'B'   | 3     |
+        +-------+-------+
+        | 'C'   | 2     |
+        +-------+-------+
+        | 'D'   | 10    |
+        +-------+-------+
+        | 'D'   | 10    |
+        +-------+-------+
+        | 'F'   | 1     |
+        +-------+-------+
+        | 'F'   | 4     |
+        +-------+-------+
+        
+    If the input tables are already sorted by the given key, give ``presorted=True``
+    as a keyword argument.
+    
+    This function is equivalent to concatenating the input tables using :func:`cat` 
+    then sorting, however this function will typically be more efficient, 
+    especially if the input tables are presorted.
+    
+    Keyword arguments:
+    
+        - `key` - field name or tuple of fields to sort by (defaults to `None` - lexical sort)
+        - `reverse` - `True` if sort in reverse (descending) order (defaults to `False`)
+        - `presorted` - `True` if inputs are already sorted by the given key (defaults to `False`)
+        - `missing` - value to fill with when input tables have different fields (defaults to `None`)
+        - `header` - specify a fixed header for the output table
+        - `buffersize` - limit the number of rows in memory per input table when inputs are not presorted
+        
     """
     
     return MergeSortView(tables, **kwargs)
@@ -7132,7 +7147,59 @@ def itermergesort(sources, key, header, missing, reverse):
         getkey = itemgetter(*indices)
     
     # OK, do the merge sort
-    for row in _mergesorted(getkey, reverse, *sits):
+    for row in shortlistmergesorted(getkey, reverse, *sits):
         yield row
     
+
+def merge(*tables, **kwargs):
+    """
+    Convenience function to combine multiple tables (via :func:`mergesort`) then 
+    reduce rows by merging under the given key (via :func:`mergereduce`). E.g.::
+    
+        >>> from petl import look, merge
+        >>> look(table1)
+        +-------+-------+-------+
+        | 'foo' | 'bar' | 'baz' |
+        +=======+=======+=======+
+        | 1     | 'A'   | True  |
+        +-------+-------+-------+
+        | 2     | 'B'   | None  |
+        +-------+-------+-------+
+        | 4     | 'C'   | True  |
+        +-------+-------+-------+
+        
+        >>> look(table2)
+        +-------+-------+--------+
+        | 'bar' | 'baz' | 'quux' |
+        +=======+=======+========+
+        | 'A'   | True  | 42.0   |
+        +-------+-------+--------+
+        | 'B'   | False | 79.3   |
+        +-------+-------+--------+
+        | 'C'   | False | 12.4   |
+        +-------+-------+--------+
+        
+        >>> table3 = merge(table1, table2, key='bar')
+        >>> look(table3)
+        +-------+-------+---------------+--------+
+        | 'foo' | 'bar' | 'baz'         | 'quux' |
+        +=======+=======+===============+========+
+        | 1     | 'A'   | True          | 42.0   |
+        +-------+-------+---------------+--------+
+        | 2     | 'B'   | False         | 79.3   |
+        +-------+-------+---------------+--------+
+        | 4     | 'C'   | (True, False) | 12.4   |
+        +-------+-------+---------------+--------+
+        
+    Keyword arguments are the same as for :func:`mergesort`, except `key` is
+    required.
+
+    """
+    
+    assert 'key' in kwargs, 'keyword argument "key" is required'
+    key = kwargs['key']
+    t1 = mergesort(*tables, **kwargs)
+    t2 = mergereduce(t1, key=key, presorted=True)
+    return t2
+
 

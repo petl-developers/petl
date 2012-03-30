@@ -2169,7 +2169,10 @@ Keyed = namedtuple('Keyed', ['key', 'obj'])
     
 def heapqmergesorted(key=None, *iterables):            
     """
-    TODO doc me
+    Return a single iterator over the given iterables, sorted by the given `key`
+    function, assuming the input iterables are already sorted by the same function. 
+    (I.e., the merge part of a general merge sort.) Uses :func:`heapq.merge` for
+    the underlying implementation. See also :func:`shortlistmergesorted`.
     
     """
     
@@ -2185,8 +2188,12 @@ def heapqmergesorted(key=None, *iterables):
 
 def shortlistmergesorted(key=None, reverse=False, *iterables):
     """
-    TODO doc me
-    
+    Return a single iterator over the given iterables, sorted by the given `key`
+    function, assuming the input iterables are already sorted by the same function. 
+    (I.e., the merge part of a general merge sort.) Uses :func:`min` (or :func:`max` 
+    if ``reverse=True``) for the underlying implementation. See also 
+    :func:`heapqmergesorted`.
+        
     """
     
     if reverse:

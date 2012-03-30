@@ -1332,10 +1332,10 @@ look(fromsqlite3('test.db', 'select * from foobar'))
 # mergesort
 
 table1 = (('foo', 'bar'),
-          ('A', 6),
+          ('A', 9),
           ('C', 2),
           ('D', 10),
-          ('A', 9),
+          ('A', 6),
           ('F', 1))
 table2 = (('foo', 'bar'),
           ('B', 3),
@@ -1348,3 +1348,47 @@ look(table1)
 look(table2)
 table3 = mergesort(table1, table2, key='foo')
 look(table3)
+
+
+# mergesort - heterogeneous tables
+
+table4 = (('foo', 'bar'),
+          ('A', 9),
+          ('C', 2),
+          ('D', 10),
+          ('A', 6),
+          ('F', 1))
+
+table5 = (('foo', 'baz'),
+          ('B', 3),
+          ('D', 10),
+          ('A', 10),
+          ('F', 4))
+
+from petl import mergesort, look
+table6 = mergesort(table4, table5, key='foo')
+look(table6)
+
+
+# mergesort - heterogeneous tables, reverse sorting
+
+table1 = (('foo', 'bar'),
+          ('A', 9),
+          ('C', 2),
+          ('D', 10),
+          ('A', 6),
+          ('F', 1))
+
+table2 = (('foo', 'baz'),
+          ('B', 3),
+          ('D', 10),
+          ('A', 10),
+          ('F', 4))
+
+from petl import mergesort, sort, cat, look
+expect = sort(cat(table1, table2), key='foo', reverse=True) 
+look(expect)
+actual = mergesort(table1, table2, key='foo', reverse=True)
+look(actual)
+actual = mergesort(sort(table1, key='foo'), reverse=True, sort(table2, key='foo', reverse=True), key='foo', reverse=True, presorted=True)
+look(actual)

@@ -2743,10 +2743,10 @@ def test_mergesort_1():
 def test_mergesort_2():
     
     table1 = (('foo', 'bar'),
-              ('A', 6),
+              ('A', 9),
               ('C', 2),
               ('D', 10),
-              ('A', 9),
+              ('A', 6),
               ('F', 1))
     
     table2 = (('foo', 'baz'),
@@ -2757,13 +2757,43 @@ def test_mergesort_2():
     
     # should be same as concatenate then sort (but more efficient, esp. when 
     # presorted)
-    expect = sort(cat(table1, table2)) 
+    expect = sort(cat(table1, table2), key='foo') 
     
-    actual = mergesort(table1, table2)
+    actual = mergesort(table1, table2, key='foo')
     iassertequal(expect, actual)
     iassertequal(expect, actual)
     
-    actual = mergesort(sort(table1), sort(table2), presorted=True)
+    actual = mergesort(sort(table1, key='foo'), sort(table2, key='foo'), key='foo', presorted=True)
+    iassertequal(expect, actual)
+    iassertequal(expect, actual)
+    
+    
+def test_mergesort_3():
+    
+    table1 = (('foo', 'bar'),
+              ('A', 9),
+              ('C', 2),
+              ('D', 10),
+              ('A', 6),
+              ('F', 1))
+    
+    table2 = (('foo', 'baz'),
+              ('B', 3),
+              ('D', 10),
+              ('A', 10),
+              ('F', 4))
+    
+    # should be same as concatenate then sort (but more efficient, esp. when 
+    # presorted)
+    expect = sort(cat(table1, table2), key='foo', reverse=True) 
+    
+    actual = mergesort(table1, table2, key='foo', reverse=True)
+    iassertequal(expect, actual)
+    iassertequal(expect, actual)
+    
+    actual = mergesort(sort(table1, key='foo', reverse=True), 
+                       sort(table2, key='foo', reverse=True), 
+                       key='foo', reverse=True, presorted=True)
     iassertequal(expect, actual)
     iassertequal(expect, actual)
     
