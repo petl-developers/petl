@@ -18,7 +18,7 @@ from petl import rename, fieldnames, cut, cat, convert, fieldconvert, extend, \
                 rowlenselect, strjoin, transpose, intersection, pivot, recorddiff, \
                 recordcomplement, cutout, skipcomments, convertall, convertnumbers, \
                 hashjoin, hashleftjoin, hashrightjoin, hashantijoin, hashcomplement, \
-                hashintersection, flatten, unflatten
+                hashintersection, flatten, unflatten, mergesort
 
 
 def test_rename():
@@ -596,7 +596,7 @@ def test_sort_6():
     iassertequal(expectation, result)
     
 
-def test_sort_merge():
+def test_sort_mergesort():
     
     table = (('foo', 'bar'),
              ('C', 2),
@@ -2698,7 +2698,7 @@ def test_unflatten():
     
 def test_unflatten_2():
     
-    input = ('A', 1, True, 'C', 7, False, 'B', 2, False, 'C', 9)
+    inpt = ('A', 1, True, 'C', 7, False, 'B', 2, False, 'C', 9)
     
     expect1 = (('f0', 'f1', 'f2'),
                ('A', 1, True),
@@ -2706,10 +2706,67 @@ def test_unflatten_2():
                ('B', 2, False),
                ('C', 9, None))
     
-    actual1 = unflatten(input, 3)
+    actual1 = unflatten(inpt, 3)
 
     iassertequal(expect1, actual1)
     iassertequal(expect1, actual1)
+    
+    
+def test_mergesort_1():
+    
+    table1 = (('foo', 'bar'),
+              ('A', 6),
+              ('C', 2),
+              ('D', 10),
+              ('A', 9),
+              ('F', 1))
+    
+    table2 = (('foo', 'bar'),
+              ('B', 3),
+              ('D', 10),
+              ('A', 10),
+              ('F', 4))
+    
+    # should be same as concatenate then sort (but more efficient, esp. when 
+    # presorted)
+    expect = sort(cat(table1, table2)) 
+    
+    actual = mergesort(table1, table2)
+    iassertequal(expect, actual)
+    iassertequal(expect, actual)
+    
+    actual = mergesort(sort(table1), sort(table2), presorted=True)
+    iassertequal(expect, actual)
+    iassertequal(expect, actual)
+    
+    
+def test_mergesort_2():
+    
+    table1 = (('foo', 'bar'),
+              ('A', 6),
+              ('C', 2),
+              ('D', 10),
+              ('A', 9),
+              ('F', 1))
+    
+    table2 = (('foo', 'baz'),
+              ('B', 3),
+              ('D', 10),
+              ('A', 10),
+              ('F', 4))
+    
+    # should be same as concatenate then sort (but more efficient, esp. when 
+    # presorted)
+    expect = sort(cat(table1, table2)) 
+    
+    actual = mergesort(table1, table2)
+    iassertequal(expect, actual)
+    iassertequal(expect, actual)
+    
+    actual = mergesort(sort(table1), sort(table2), presorted=True)
+    iassertequal(expect, actual)
+    iassertequal(expect, actual)
+    
     
     
     

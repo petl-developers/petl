@@ -7051,3 +7051,88 @@ class UnflattenView(RowContainer):
             row.extend([missing] * (period - len(row)))
         yield tuple(row)
             
+
+def mergesort(*tables, **kwargs):
+    """
+    TODO doc me
+    
+    """
+    
+    return MergeSortView(tables, **kwargs)
+
+
+class MergeSortView(RowContainer):
+    
+    def __init__(self, tables, key=None, reverse=False, presorted=False, 
+                 missing=None, header=None, buffersize=None):
+        self.key = key
+        if presorted:
+            self.tables = tables
+        else:
+            self.tables = [sort(t, key=key, reverse=reverse, buffersize=buffersize) for t in tables]
+        self.missing = missing
+        self.header = header
+        self.reverse = reverse
+
+    def __iter__(self):
+        return itermergesort(self.tables, self.key, self.header, self.missing, self.reverse)
+
+    def cachetag(self):
+        # TODO
+        raise Uncacheable
+    
+    
+def itermergesort(sources, key, header, missing, reverse):
+    
+    # first need to standardise headers of all input tables
+    # borrow this from itercat - TODO remove code smells
+    
+    its = [iter(t) for t in sources]
+    source_flds_lists = [it.next() for it in its]
+
+    if header is None:
+        # determine output fields by gathering all fields found in the sources
+        outflds = list()
+        for flds in source_flds_lists:
+            for f in flds:
+                if f not in outflds:
+                    # add any new fields as we find them
+                    outflds.append(f)
+    else:
+        # predetermined output fields
+        outflds = header
+    yield tuple(outflds)
+
+    def _standardisedata(it, flds, outflds):
+        # now construct and yield the data rows
+        for row in it:
+            try:
+                # should be quickest to do this way
+                yield tuple(row[flds.index(f)] if f in flds else missing for f in outflds)
+            except IndexError:
+                # handle short rows
+                outrow = [missing] * len(outflds)
+                for i, f in enumerate(flds):
+                    try:
+                        outrow[outflds.index(f)] = row[i]
+                    except IndexError:
+                        pass # be relaxed about short rows
+                yield tuple(outrow)
+        
+    # wrap all iterators to standardise fields
+    sits = [_standardisedata(it, flds, outflds) for flds, it in zip(source_flds_lists, its)]
+
+    # now determine key function
+    getkey = None
+    if key is not None:
+        # convert field selection into field indices
+        indices = asindices(flds, key)
+        # now use field indices to construct a _getkey function
+        # N.B., this will probably raise an exception on short rows
+        getkey = itemgetter(*indices)
+    
+    # OK, do the merge sort
+    for row in _mergesorted(getkey, reverse, *sits):
+        yield row
+    
+

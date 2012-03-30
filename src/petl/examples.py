@@ -1327,3 +1327,24 @@ appendsqlite3(moredata, 'test.db', 'foobar')
 # look what it did
 from petl import look, fromsqlite3
 look(fromsqlite3('test.db', 'select * from foobar'))
+
+
+# mergesort
+
+table1 = (('foo', 'bar'),
+          ('A', 6),
+          ('C', 2),
+          ('D', 10),
+          ('A', 9),
+          ('F', 1))
+table2 = (('foo', 'bar'),
+          ('B', 3),
+          ('D', 10),
+          ('A', 10),
+          ('F', 4))
+
+from petl import mergesort, look
+look(table1)
+look(table2)
+table3 = mergesort(table1, table2, key='foo')
+look(table3)
