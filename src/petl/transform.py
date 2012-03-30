@@ -4,19 +4,18 @@ Functions for transforming tables.
 """
 
 from itertools import islice, groupby, product, count
-from collections import deque, defaultdict, OrderedDict, namedtuple, Counter
+from collections import deque, defaultdict, OrderedDict, Counter
 from operator import itemgetter
 import cPickle as pickle
+from tempfile import NamedTemporaryFile
+import operator
+import re
 
 
 from petl.util import asindices, rowgetter, asdict,\
     expr, valueset, records, header, data, limits, itervalues, parsenumber, lookup,\
-    values
-import re
+    values, shortlistmergesorted, heapqmergesorted
 from petl.io import Uncacheable
-from tempfile import NamedTemporaryFile
-import heapq
-import operator
 from petl.base import RowContainer
 
 
@@ -1385,10 +1384,7 @@ def iterchunk(filename):
             pass
 
 
-Keyed = namedtuple('Keyed', ['key', 'obj'])
-    
-    
-def mergesort(key=None, reverse=False, *iterables):
+def _mergesorted(key=None, reverse=False, *iterables):
 
     # N.B., I've used heapq for normal merge sort and shortlist merge sort for reverse
     # merge sort because I've assumed that heapq.merge is faster and so is preferable
@@ -1397,44 +1393,11 @@ def mergesort(key=None, reverse=False, *iterables):
     # between the two in terms of speed, but might be worth profiling more carefully
     
     if reverse:
-        return shortlistmergesort(key, True, *iterables)
+        return shortlistmergesorted(key, True, *iterables)
     else:
-        return heapqmergesort(key, *iterables)
+        return heapqmergesorted(key, *iterables)
 
 
-def heapqmergesort(key=None, *iterables):            
-    if key is None:
-        keyed_iterables = iterables
-        for element in heapq.merge(*keyed_iterables):
-            yield element
-    else:
-        keyed_iterables = [(Keyed(key(obj), obj) for obj in iterable) for iterable in iterables]
-        for element in heapq.merge(*keyed_iterables):
-            yield element.obj
-
-
-def shortlistmergesort(key=None, reverse=False, *iterables):
-    if reverse:
-        op = max
-    else:
-        op = min
-    if key is not None:
-        opkwargs = {'key': key}
-    else:
-        opkwargs = dict()
-    iterators = [iter(iterable) for iterable in iterables]
-    shortlist = [it.next() for it in iterators]
-    while iterators:
-        next = op(shortlist, **opkwargs)
-        yield next
-        nextidx = shortlist.index(next)
-        try:
-            shortlist[nextidx] = iterators[nextidx].next()
-        except StopIteration:
-            del shortlist[nextidx]
-            del iterators[nextidx]
-        
-    
 defaultbuffersize = 100000
     
     
@@ -1484,7 +1447,7 @@ class SortView(RowContainer):
     def _iterfromfilecache(self):
         yield tuple(self._fldcache)
         chunkiters = [iterchunk(f.name) for f in self._filecache]
-        for row in mergesort(self._getkey, self.reverse, *chunkiters):
+        for row in _mergesorted(self._getkey, self.reverse, *chunkiters):
             yield tuple(row)
         
     def _iternocache(self, source, key, reverse):
@@ -1550,10 +1513,10 @@ class SortView(RowContainer):
                 pass
 
             chunkiters = [iterchunk(f.name) for f in chunkfiles]
-            for row in mergesort(getkey, reverse, *chunkiters):
+            for row in _mergesorted(getkey, reverse, *chunkiters):
                 yield tuple(row)
 
-        
+    
     def cachetag(self):
         try:
             return hash((self.key, self.reverse, self.source.cachetag()))
@@ -4149,20 +4112,20 @@ def iterrangerowreduce(source, key, width, reducer, fields, minv, maxv, failoner
             binmaxv = binminv + width
             if maxv is not None and binmaxv >= maxv: # final bin
                 binmaxv = maxv
-            bin = []
+            bn = []
             while keyv < binminv:
                 row = it.next()
                 keyv = getkey(row)
             while binminv <= keyv < binmaxv:
-                bin.append(row)
+                bn.append(row)
                 row = it.next()
                 keyv = getkey(row)
             while maxv is not None and keyv == binmaxv == maxv:
-                bin.append(row) # last bin is open
+                bn.append(row) # last bin is open
                 row = it.next()
                 keyv = getkey(row)
             try:
-                yield tuple(reducer(binminv, binmaxv, bin))
+                yield tuple(reducer(binminv, binmaxv, bn))
             except:
                 if failonerror:
                     raise
@@ -4171,7 +4134,7 @@ def iterrangerowreduce(source, key, width, reducer, fields, minv, maxv, failoner
     except StopIteration:
         # don't forget the last one
         try:
-            yield tuple(reducer(binminv, binmaxv, bin))
+            yield tuple(reducer(binminv, binmaxv, bn))
         except:
             if failonerror:
                 raise
@@ -4287,22 +4250,22 @@ def iterrangerecordreduce(source, key, width, reducer, fields, minv, maxv, failo
             binmaxv = binminv + width
             if maxv is not None and binmaxv >= maxv: # final bin
                 binmaxv = maxv
-            bin = []
+            bn = []
             while keyv < binminv:
                 row = it.next()
                 keyv = getkey(row)
             while binminv <= keyv < binmaxv:
                 rec = asdict(srcflds, row)
-                bin.append(rec)
+                bn.append(rec)
                 row = it.next()
                 keyv = getkey(row)
             while maxv is not None and keyv == binmaxv == maxv:
                 rec = asdict(srcflds, row)
-                bin.append(rec) # last bin is open
+                bn.append(rec) # last bin is open
                 row = it.next()
                 keyv = getkey(row)
             try:
-                yield tuple(reducer(binminv, binmaxv, bin))
+                yield tuple(reducer(binminv, binmaxv, bn))
             except:
                 if failonerror:
                     raise
@@ -4311,7 +4274,7 @@ def iterrangerecordreduce(source, key, width, reducer, fields, minv, maxv, failo
     except StopIteration:
         # don't forget the last one
         try:
-            yield tuple(reducer(binminv, binmaxv, bin))
+            yield tuple(reducer(binminv, binmaxv, bn))
         except:
             if failonerror:
                 raise
@@ -4419,24 +4382,24 @@ def iterrangecounts(source, key, width, minv, maxv):
             binmaxv = binminv + width
             if maxv is not None and binmaxv >= maxv: # final bin
                 binmaxv = maxv
-            bin = []
+            bn = []
             while keyv < binminv:
                 row = it.next()
                 keyv = getkey(row)
             while binminv <= keyv < binmaxv:
-                bin.append(row)
+                bn.append(row)
                 row = it.next()
                 keyv = getkey(row)
             while maxv is not None and keyv == binmaxv == maxv:
-                bin.append(row) # last bin is open
+                bn.append(row) # last bin is open
                 row = it.next()
                 keyv = getkey(row)
-            yield ((binminv, binmaxv), len(bin))
+            yield ((binminv, binmaxv), len(bn))
             if maxv is not None and binmaxv == maxv:
                 break
     except StopIteration:
         # don't forget the last one
-        yield ((binminv, binmaxv), len(bin))
+        yield ((binminv, binmaxv), len(bn))
     
     
 def rangeaggregate(table, key, width, aggregators=None, minv=None, maxv=None,
@@ -4555,18 +4518,18 @@ def iterrangeaggregate(source, key, width, aggregators, minv, maxv, failonerror,
     outflds.extend(aggregators.keys())
     yield tuple(outflds)
     
-    def buildoutrow(binminv, binmaxv, bin):
+    def buildoutrow(binminv, binmaxv, bn):
         outrow = [(binminv, binmaxv)]
         for outfld in aggregators:
             srcfld, aggfun = aggregators[outfld]
             idx = srcflds.index(srcfld)
             try:
                 # try using list comprehension
-                vals = [row[idx] for row in bin]
+                vals = [row[idx] for row in bn]
             except IndexError:
                 # fall back to slower for loop
                 vals = list()
-                for row in bin:
+                for row in bn:
                     try:
                         vals.append(row[idx])
                     except IndexError:
@@ -4596,24 +4559,24 @@ def iterrangeaggregate(source, key, width, aggregators, minv, maxv, failonerror,
             binmaxv = binminv + width
             if maxv is not None and binmaxv >= maxv: # final bin
                 binmaxv = maxv
-            bin = []
+            bn = []
             while keyv < binminv:
                 row = it.next()
                 keyv = getkey(row)
             while binminv <= keyv < binmaxv:
-                bin.append(row)
+                bn.append(row)
                 row = it.next()
                 keyv = getkey(row)
             while maxv is not None and keyv == binmaxv == maxv:
-                bin.append(row) # last bin is open
+                bn.append(row) # last bin is open
                 row = it.next()
                 keyv = getkey(row)
-            yield buildoutrow(binminv, binmaxv, bin)
+            yield buildoutrow(binminv, binmaxv, bn)
             if maxv is not None and binmaxv == maxv:
                 break
     except StopIteration:
         # don't forget the last one
-        yield buildoutrow(binminv, binmaxv, bin)
+        yield buildoutrow(binminv, binmaxv, bn)
 
         
 def rowmap(table, rowmapper, fields, failonerror=False):
@@ -7066,7 +7029,7 @@ class UnflattenView(RowContainer):
             self.missing = None
         
     def __iter__(self):
-        input = self.input
+        inpt = self.input
         period = self.period
         missing = self.missing
         
@@ -7076,7 +7039,7 @@ class UnflattenView(RowContainer):
         
         # generate data rows
         row = list()
-        for v in input:
+        for v in inpt:
             if len(row) < period:
                 row.append(v)
             else:

@@ -5,7 +5,7 @@ Utility functions.
 
 
 from itertools import islice
-from collections import defaultdict, Counter
+from collections import defaultdict, Counter, namedtuple
 from operator import itemgetter
 import re
 from string import maketrans
@@ -15,6 +15,7 @@ import datetime
 from collections import OrderedDict
 from functools import partial
 from itertools import izip_longest
+import heapq
 
 
 def header(table):
@@ -2162,3 +2163,50 @@ def diffvalues(t1, t2, f):
     t2v = set(itervalues(t2, f))
     return t2v - t1v, t1v - t2v
 
+
+Keyed = namedtuple('Keyed', ['key', 'obj'])
+    
+    
+def heapqmergesorted(key=None, *iterables):            
+    """
+    TODO doc me
+    
+    """
+    
+    if key is None:
+        keyed_iterables = iterables
+        for element in heapq.merge(*keyed_iterables):
+            yield element
+    else:
+        keyed_iterables = [(Keyed(key(obj), obj) for obj in iterable) for iterable in iterables]
+        for element in heapq.merge(*keyed_iterables):
+            yield element.obj
+
+
+def shortlistmergesorted(key=None, reverse=False, *iterables):
+    """
+    TODO doc me
+    
+    """
+    
+    if reverse:
+        op = max
+    else:
+        op = min
+    if key is not None:
+        opkwargs = {'key': key}
+    else:
+        opkwargs = dict()
+    iterators = [iter(iterable) for iterable in iterables]
+    shortlist = [it.next() for it in iterators]
+    while iterators:
+        nxt = op(shortlist, **opkwargs)
+        yield nxt
+        nextidx = shortlist.index(nxt)
+        try:
+            shortlist[nextidx] = iterators[nextidx].next()
+        except StopIteration:
+            del shortlist[nextidx]
+            del iterators[nextidx]
+        
+    
