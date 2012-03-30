@@ -35,6 +35,9 @@ from petl.transform import rename, cut, cat, convert, fieldconvert, extend, rows
            resub, flatten, unflatten, mergesort
            
            
+VERSION = '0.9-SNAPSHOT'
+           
+           
 def lenstats(table, field):
     """
     Convenience function to report statistics on value lengths under the given
