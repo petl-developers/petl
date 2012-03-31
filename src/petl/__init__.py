@@ -36,7 +36,7 @@ from petl.transform import rename, cut, cat, convert, fieldconvert, extend, rows
            resub, flatten, unflatten, mergesort
            
            
-VERSION = '0.9-SNAPSHOT'
+VERSION = '0.9'
            
            
 def lenstats(table, field):
