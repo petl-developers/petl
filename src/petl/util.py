@@ -2174,6 +2174,8 @@ def heapqmergesorted(key=None, *iterables):
     (I.e., the merge part of a general merge sort.) Uses :func:`heapq.merge` for
     the underlying implementation. See also :func:`shortlistmergesorted`.
     
+    .. versionadded:: 0.9
+        
     """
     
     if key is None:
@@ -2193,6 +2195,8 @@ def shortlistmergesorted(key=None, reverse=False, *iterables):
     (I.e., the merge part of a general merge sort.) Uses :func:`min` (or :func:`max` 
     if ``reverse=True``) for the underlying implementation. See also 
     :func:`heapqmergesorted`.
+    
+    .. versionadded:: 0.9
         
     """
     

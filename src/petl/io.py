@@ -132,6 +132,11 @@ def fromcsv(filename, checksumfun=None, dialect=csv.excel, **kwargs):
     `petl.io.defaultsumfun` is currently set to) will be used to calculate 
     cachetag values.
     
+    .. versionchanged:: 0.9
+    
+    Now supports transparent handling of gzipped files (any file name ending in 
+    '.gz').
+     
     """
 
     return CSVView(filename, checksumfun=checksumfun, dialect=dialect, **kwargs)
@@ -390,6 +395,11 @@ def fromtext(filename, header=['lines'], strip=None, checksumfun=None):
     leading and trailing whitespace, including the end-of-line character - use 
     the `strip` keyword argument to specify alternative characters to strip.    
     
+    .. versionchanged:: 0.9
+    
+    Now supports transparent handling of gzipped files (any file name ending in 
+    '.gz').
+     
     """
 
     return TextView(filename, header, strip=strip, checksumfun=checksumfun)
@@ -778,6 +788,11 @@ def tocsv(table, filename, dialect=csv.excel, **kwargs):
      
     Note that if a file already exists at the given location, it will be overwritten.
     
+    .. versionchanged:: 0.9
+    
+    Now supports transparent handling of gzipped files (any file name ending in 
+    '.gz').
+     
     """
     
     if filename.endswith('.gz'):
@@ -848,6 +863,11 @@ def appendcsv(table, filename, dialect=csv.excel, **kwargs):
     consistent with the existing data, the data rows from the table are simply
     appended to the file. See also the :func:`cat` function.
     
+    .. versionchanged:: 0.9
+    
+    Now supports transparent handling of gzipped files (any file name ending in 
+    '.gz').
+     
     """
     
     if filename.endswith('.gz'):
@@ -1258,6 +1278,12 @@ def totext(table, filename, template, prologue=None, epilogue=None):
         |}
         
     The `template` will be used to format each row via `str.format <http://docs.python.org/library/stdtypes.html#str.format>`_.
+
+    .. versionchanged:: 0.9
+    
+    Now supports transparent handling of gzipped files (any file name ending in 
+    '.gz').
+     
     """
     
     if filename.endswith('.gz'): 
@@ -1281,6 +1307,11 @@ def appendtext(table, filename, template, prologue=None, epilogue=None):
     """
     As :func:`totext` but the file is opened in append mode.
     
+    .. versionchanged:: 0.9
+    
+    Now supports transparent handling of gzipped files (any file name ending in 
+    '.gz').
+     
     """
 
     if filename.endswith('.gz'): 
@@ -1342,6 +1373,8 @@ def fromtsv(filename, checksumfun=None, dialect=csv.excel_tab, **kwargs):
     Convenience function, as :func:`fromcsv` but with different default dialect
     (tab delimited).
     
+    .. versionadded:: 0.9
+        
     """
     
     return fromcsv(filename, checksumfun=checksumfun, dialect=dialect, **kwargs)
@@ -1352,6 +1385,8 @@ def totsv(table, filename, dialect=csv.excel_tab, **kwargs):
     Convenience function, as :func:`tocsv` but with different default dialect
     (tab delimited).
     
+    .. versionadded:: 0.9
+        
     """    
 
     return tocsv(table, filename, dialect=dialect, **kwargs)
@@ -1362,6 +1397,8 @@ def appendtsv(table, filename, dialect=csv.excel_tab, **kwargs):
     Convenience function, as :func:`appendcsv` but with different default dialect
     (tab delimited).
     
+    .. versionadded:: 0.9
+        
     """    
 
     return appendcsv(table, filename, dialect=dialect, **kwargs)

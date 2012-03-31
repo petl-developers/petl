@@ -7071,6 +7071,8 @@ def mergesort(*tables, **kwargs):
         - `header` - specify a fixed header for the output table
         - `buffersize` - limit the number of rows in memory per input table when inputs are not presorted
         
+    .. versionadded:: 0.9
+    
     """
     
     return MergeSortView(tables, **kwargs)
@@ -7193,6 +7195,10 @@ def merge(*tables, **kwargs):
         
     Keyword arguments are the same as for :func:`mergesort`, except `key` is
     required.
+    
+    .. versionchanged:: 0.9
+    
+    Now uses :func:`mergesort`, should be more efficient for presorted inputs.
 
     """
     
