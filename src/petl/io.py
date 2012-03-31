@@ -17,6 +17,7 @@ from operator import attrgetter
 import json
 from json.encoder import JSONEncoder
 from petl.base import RowContainer
+import gzip
 
 class Uncacheable(Exception):
     
@@ -145,7 +146,11 @@ class CSVView(RowContainer):
         self.kwargs = kwargs
         
     def __iter__(self):
-        with open(self.filename, 'rb') as f:
+        if self.filename.endswith('.gz'): 
+            op = gzip.open
+        else:
+            op = open
+        with op(self.filename, 'rb') as f:
             reader = csv.reader(f, dialect=self.dialect, **self.kwargs)
             for row in reader:
                 yield tuple(row)
@@ -399,7 +404,11 @@ class TextView(RowContainer):
         self.checksumfun = checksumfun
         
     def __iter__(self):
-        with open(self.filename, 'rU') as f:
+        if self.filename.endswith('.gz'): 
+            op = gzip.open
+        else:
+            op = open
+        with op(self.filename, 'rU') as f:
             if self.header is not None:
                 yield tuple(self.header)
             s = self.strip
@@ -771,7 +780,11 @@ def tocsv(table, filename, dialect=csv.excel, **kwargs):
     
     """
     
-    with open(filename, 'wb') as f:
+    if filename.endswith('.gz'):
+        op = gzip.open
+    else:
+        op = open
+    with op(filename, 'wb') as f:
         writer = csv.writer(f, dialect=dialect, **kwargs)
         for row in table:
             writer.writerow(row)
@@ -837,7 +850,11 @@ def appendcsv(table, filename, dialect=csv.excel, **kwargs):
     
     """
     
-    with open(filename, 'ab') as f:
+    if filename.endswith('.gz'):
+        op = gzip.open
+    else:
+        op = open
+    with op(filename, 'ab') as f:
         writer = csv.writer(f, dialect=dialect, **kwargs)
         for row in data(table):
             writer.writerow(row)
@@ -1243,7 +1260,11 @@ def totext(table, filename, template, prologue=None, epilogue=None):
     The `template` will be used to format each row via `str.format <http://docs.python.org/library/stdtypes.html#str.format>`_.
     """
     
-    with open(filename, 'w') as f:
+    if filename.endswith('.gz'): 
+        op = gzip.open
+    else:
+        op = open
+    with op(filename, 'wb') as f:
         if prologue is not None:
             f.write(prologue)
         it = iter(table)
@@ -1262,7 +1283,11 @@ def appendtext(table, filename, template, prologue=None, epilogue=None):
     
     """
 
-    with open(filename, 'a') as f:
+    if filename.endswith('.gz'): 
+        op = gzip.open
+    else:
+        op = open
+    with op(filename, 'ab') as f:
         if prologue is not None:
             f.write(prologue)
         it = iter(table)

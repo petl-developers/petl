@@ -17,6 +17,8 @@ from petl import fromcsv, frompickle, fromsqlite3, adler32sum, crc32sum, fromdb,
 
 from petl.testutils import iassertequal, assertequal
 import json
+import gzip
+import os
 
 
 def test_fromcsv():
@@ -846,4 +848,140 @@ def test_tojson():
     assert result[1]['bar'] == 2
     assert result[2]['foo'] == 'c'
     assert result[2]['bar'] == 2
+    
+
+def test_fromcsv_gz():
+    """Test the fromcsv function on a gzipped file."""
+    
+    f = NamedTemporaryFile(delete=False)
+    f.close()
+    fn = f.name + '.gz'
+    os.rename(f.name, fn)
+
+    fz = gzip.open(fn, 'wb')
+    writer = csv.writer(fz, delimiter='\t')
+    table = (('foo', 'bar'),
+             ('a', 1),
+             ('b', 2),
+             ('c', 2))
+    for row in table:
+        writer.writerow(row)
+    fz.close()
+    
+    actual = fromcsv(fn, delimiter='\t')
+    expect = (('foo', 'bar'),
+              ('a', '1'),
+              ('b', '2'),
+              ('c', '2'))
+    iassertequal(expect, actual)
+    iassertequal(expect, actual) # verify can iterate twice
+    
+    
+def test_tocsv_appendcsv_gz():
+    """Test the tocsv and appendcsv function."""
+    
+    # exercise function
+    table = (('foo', 'bar'),
+             ('a', 1),
+             ('b', 2),
+             ('c', 2))
+    f = NamedTemporaryFile(delete=False)
+    fn = f.name + '.gz'
+    f.close()
+    tocsv(table, fn, delimiter='\t')
+    
+    # check what it did
+    with gzip.open(fn, 'rb') as o:
+        actual = csv.reader(o, delimiter='\t')
+        expect = [['foo', 'bar'],
+                  ['a', '1'],
+                  ['b', '2'],
+                  ['c', '2']]
+        iassertequal(expect, actual)
+    
+    # check appending
+    table2 = (('foo', 'bar'),
+              ('d', 7),
+              ('e', 9),
+              ('f', 1))
+    appendcsv(table2, fn, delimiter='\t') 
+
+    # check what it did
+    with gzip.open(fn, 'rb') as o:
+        actual = csv.reader(o, delimiter='\t')
+        expect = [['foo', 'bar'],
+                  ['a', '1'],
+                  ['b', '2'],
+                  ['c', '2'],
+                  ['d', '7'],
+                  ['e', '9'],
+                  ['f', '1']]
+        iassertequal(expect, actual)
+    
+        
+def test_fromtext_gz():
+    
+    # initial data
+    f = NamedTemporaryFile(delete=False)
+    f.close()
+    fn = f.name + '.gz'
+    os.rename(f.name, fn)
+    with gzip.open(fn, 'wb') as f:
+        f.write('foo\tbar\n')
+        f.write('a\t1\n')
+        f.write('b\t2\n')
+        f.write('c\t3\n')
+    
+    actual = fromtext(f.name)
+    expect = (('lines',),
+              ('foo\tbar',),
+              ('a\t1',),
+              ('b\t2',),
+              ('c\t3',))
+    iassertequal(expect, actual)
+    iassertequal(expect, actual) # verify can iterate twice
+
+
+def test_totext_gz():
+    
+    # exercise function
+    table = (('foo', 'bar'),
+             ('a', 1),
+             ('b', 2),
+             ('c', 2))
+    f = NamedTemporaryFile(delete=False)
+    fn = f.name + '.gz'
+    f.close()
+    os.rename(f.name, fn)
+    prologue = """{| class="wikitable"
+|-
+! foo
+! bar
+"""
+    template = """|-
+| {foo}
+| {bar}
+"""
+    epilogue = "|}"
+    totext(table, fn, template, prologue, epilogue)
+    
+    # check what it did
+    with gzip.open(fn, 'rb') as o:
+        actual = o.read()
+        expect = """{| class="wikitable"
+|-
+! foo
+! bar
+|-
+| a
+| 1
+|-
+| b
+| 2
+|-
+| c
+| 2
+|}"""
+        assertequal(expect, actual)
+    
     
