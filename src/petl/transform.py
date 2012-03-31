@@ -17,6 +17,7 @@ from petl.util import asindices, rowgetter, asdict,\
     values, shortlistmergesorted, heapqmergesorted
 from petl.io import Uncacheable
 from petl.base import RowContainer
+import sqlite3
 
 
 def rename(table, *args):
@@ -2787,8 +2788,7 @@ def select(table, *args, **kwargs):
         | 'c'   | 2     |       |
         +-------+-------+-------+
         
-        >>> # the second positional argument can be a function accepting a record (i.e., a 
-        ... # dictionary representation of a row).
+        >>> # the second positional argument can be a function accepting a row
         ... table2 = select(table1, lambda rec: rec['foo'] == 'a' and rec['baz'] > 88.1)
         >>> look(table2)
         +-------+-------+-------+
@@ -2843,7 +2843,7 @@ def select(table, *args, **kwargs):
             where = expr(where)
         else:
             assert callable(where), 'second argument must be string or callable'
-        return RecordSelectView(table, where, missing=missing, complement=complement)
+        return RowSelectView(table, where, missing=missing, complement=complement)
     else:
         field = args[0]
         where = args[1]
@@ -2856,18 +2856,38 @@ def recordselect(table, where, missing=None, complement=False):
     Select rows matching a condition. The `where` argument should be a function
     accepting a record (row as dictionary of values indexed by field name) as 
     argument and returning True or False.
+    
+    .. deprecated:: 0.9 
+    
+    Use :func:`rowselect` instead.
+
+    """
+    
+    return rowselect(table, where, missing=missing, complement=complement)
+        
+        
+def rowselect(table, where, complement=False):
+    """
+    Select rows matching a condition. The `where` argument should be a function
+    accepting a hybrid row object (supports accessing values either by 
+    position or by field name) as argument and returning True or False.
 
     .. versionchanged:: 0.4
     
     The complement of the selection can be returned (i.e., the query can be 
     inverted) by providing `complement=True` as a keyword argument.
 
+    .. versionchanged:: 0.9
+    
+    Hybrid row objects supporting data value access by either position or by 
+    field name are now passed to the `where` function.
+    
     """
     
-    return RecordSelectView(table, where, missing=missing, complement=complement)
+    return RowSelectView(table, where, complement=complement)
         
         
-class RecordSelectView(RowContainer):
+class RowSelectView(RowContainer):
     
     def __init__(self, source, where, missing=None, complement=False):
         self.source = source
@@ -2876,7 +2896,7 @@ class RecordSelectView(RowContainer):
         self.complement = complement
         
     def __iter__(self):
-        return iterselect(self.source, self.where, self.missing, self.complement)
+        return iterrowselect(self.source, self.where, self.missing, self.complement)
     
     def cachetag(self):
         try:
@@ -2884,56 +2904,40 @@ class RecordSelectView(RowContainer):
         except Exception as e:
             raise Uncacheable(e)
 
+
+class _HybridRow(tuple):
     
-def iterselect(source, where, missing, complement):
+    def __new__(cls, row, flds, missing):
+        t = super(_HybridRow, cls).__new__(cls, row)
+        return t
+    
+    def __init__(self, row, flds, missing):
+        self.flds = flds
+        self.missing = missing
+        
+    def __getitem__(self, f):
+        if isinstance(f, int):
+            return super(_HybridRow, self).__getitem__(f)
+        elif f in self.flds:
+            try:
+                return super(_HybridRow, self).__getitem__(self.flds.index(f))
+            except IndexError: # handle short rows
+                return self.missing
+        else:
+            raise Exception('item ' + str(f) + ' not in fields ' + str(self.flds))
+
+    
+def _hybridrows(flds, it, missing):
+    return (_HybridRow(row, flds, missing) for row in it)
+    
+    
+def iterrowselect(source, where, missing, complement):
     it = iter(source)
     flds = it.next()
     yield tuple(flds)
-    for row in it:
-        rec = asdict(flds, row, missing)
-        if where(rec) != complement: # XOR
-            yield tuple(row)
-        
-        
-def rowselect(table, where, complement=False):
-    """
-    Select rows matching a condition. The `where` argument should be a function
-    accepting a row (list or tuple) as argument and returning True or False.
-
-    .. versionchanged:: 0.4
-    
-    The complement of the selection can be returned (i.e., the query can be 
-    inverted) by providing `complement=True` as a keyword argument.
-
-    """
-    
-    return RowSelectView(table, where, complement=complement)
-        
-        
-class RowSelectView(RowContainer):
-    
-    def __init__(self, source, where, complement=False):
-        self.source = source
-        self.where = where
-        self.complement = complement
-        
-    def __iter__(self):
-        return iterrowselect(self.source, self.where, self.complement)
-    
-    def cachetag(self):
-        try:
-            return hash((self.source.cachetag(), self.where, self.complement))
-        except Exception as e:
-            raise Uncacheable(e)
-
-    
-def iterrowselect(source, where, complement):
-    it = iter(source)
-    flds = it.next()
-    yield tuple(flds)
-    for row in it:
+    for row in _hybridrows(flds, it, missing): # convert to hybrid row/record
         if where(row) != complement: # XOR
-            yield tuple(row)
+            yield tuple(row) # need to convert back to tuple?
      
      
 def rowlenselect(table, n, complement=False):
@@ -3510,7 +3514,7 @@ def selectre(table, field, pattern, flags=0, complement=False):
     return fieldselect(table, field, test, complement=complement)
 
 
-def rowreduce(table, key, reducer, fields=None, presorted=False, buffersize=None):
+def rowreduce(table, key, reducer, fields=None, missing=None, presorted=False, buffersize=None):
     """
     Reduce rows grouped under the given key via an arbitrary function. E.g.::
 
@@ -3555,14 +3559,22 @@ def rowreduce(table, key, reducer, fields=None, presorted=False, buffersize=None
     are sorted, see also the discussion of the `buffersize` argument under the 
     :func:`sort` function.
     
+    .. versionchanged:: 0.9
+    
+    Hybrid row objects supporting data value access by either position or by 
+    field name are now passed to the `reducer` function.
+    
     """
 
-    return RowReduceView(table, key, reducer, fields, presorted, buffersize)
+    return RowReduceView(table, key, reducer, fields=fields,
+                         missing=missing, presorted=presorted, 
+                         buffersize=buffersize)
 
 
 class RowReduceView(RowContainer):
     
-    def __init__(self, source, key, reducer, fields=None, presorted=False, buffersize=None):
+    def __init__(self, source, key, reducer, fields=None, 
+                 missing=None, presorted=False, buffersize=None):
         if presorted:
             self.source = source
         else:
@@ -3570,20 +3582,21 @@ class RowReduceView(RowContainer):
         self.key = key
         self.fields = fields
         self.reducer = reducer
+        self.missing = missing
 
     def __iter__(self):
-        return iterrowreduce(self.source, self.key, self.reducer, self.fields)
+        return iterrowreduce(self.source, self.key, self.reducer, self.fields, self.missing)
 
     def cachetag(self):
         try:
             return hash((self.source.cachetag(), self.key, 
                          tuple(self.fields) if self.fields else self.fields, 
-                         self.reducer))
+                         self.reducer, self.missing))
         except Exception as e:
             raise Uncacheable(e)
 
     
-def iterrowreduce(source, key, reducer, fields):
+def iterrowreduce(source, key, reducer, fields, missing):
     it = iter(source)
 
     srcflds = it.next()
@@ -3601,105 +3614,22 @@ def iterrowreduce(source, key, reducer, fields):
     getkey = itemgetter(*indices)
     
     for key, rows in groupby(it, key=getkey):
-        yield tuple(reducer(key, rows))
+        yield tuple(reducer(key, _hybridrows(srcflds, rows, missing)))
         
 
 def recordreduce(table, key, reducer, fields=None, presorted=False, buffersize=None):
     """
-    Reduce records grouped under the given key via an arbitrary function. E.g.::
-
-        >>> from petl import recordreduce, look    
-        >>> look(table1)
-        +-------+-------+
-        | 'foo' | 'bar' |
-        +=======+=======+
-        | 'a'   | 3     |
-        +-------+-------+
-        | 'a'   | 7     |
-        +-------+-------+
-        | 'b'   | 2     |
-        +-------+-------+
-        | 'b'   | 1     |
-        +-------+-------+
-        | 'b'   | 9     |
-        +-------+-------+
-        | 'c'   | 4     |
-        +-------+-------+
-        
-        >>> def sumbar(key, records):
-        ...     return [key, sum([rec['bar'] for rec in records])]
-        ... 
-        >>> table2 = recordreduce(table1, key='foo', reducer=sumbar, fields=['foo', 'barsum'])
-        >>> look(table2)
-        +-------+----------+
-        | 'foo' | 'barsum' |
-        +=======+==========+
-        | 'a'   | 10       |
-        +-------+----------+
-        | 'b'   | 12       |
-        +-------+----------+
-        | 'c'   | 4        |
-        +-------+----------+
-        
-    The `reducer` function should accept two arguments, a key and a sequence
-    of records (i.e., dictionaries of values indexed by field) and return a single
-    row.
+    Reduce records grouped under the given key via an arbitrary function. 
     
-    If `presorted` is True, it is assumed that the data are already sorted by
-    the given key, and the `buffersize` argument is ignored. Otherwise, the data 
-    are sorted, see also the discussion of the `buffersize` argument under the 
-    :func:`sort` function.
+    .. deprecated:: 0.9
+    
+    Use :func:`rowreduce` instead.
     
     """
 
-    return RecordReduceView(table, key, reducer, fields, presorted, buffersize)
+    return rowreduce(table, key, reducer, fields=fields, presorted=presorted, 
+                     buffersize=buffersize)
 
-
-class RecordReduceView(RowContainer):
-    
-    def __init__(self, source, key, reducer, fields=None, presorted=False,
-                 buffersize=None):
-        if presorted:
-            self.source = source
-        else:
-            self.source = sort(source, key, buffersize=buffersize)
-        self.key = key
-        self.fields = fields
-        self.reducer = reducer
-
-    def __iter__(self):
-        return iterrecordreduce(self.source, self.key, self.reducer, self.fields)
-    
-    def cachetag(self):
-        try:
-            return hash((self.source.cachetag(), self.key, 
-                         tuple(self.fields) if self.fields else self.fields, 
-                         self.reducer))
-        except Exception as e:
-            raise Uncacheable(e)
-
-    
-def iterrecordreduce(source, key, reducer, fields):
-    it = iter(source)
-
-    srcflds = it.next()
-    if fields is None:
-        yield tuple(srcflds)
-    else:
-        yield tuple(fields)
-
-    # convert field selection into field indices
-    indices = asindices(srcflds, key)
-    
-    # now use field indices to construct a _getkey function
-    # N.B., this may raise an exception on short rows, depending on
-    # the field selection
-    getkey = itemgetter(*indices)
-    
-    for key, rows in groupby(it, key=getkey):
-        records = [asdict(srcflds, row) for row in rows]
-        yield tuple(reducer(key, records))
-    
 
 def mergereduce(table, key, missing=None, presorted=False, buffersize=None):
     """
@@ -3949,7 +3879,7 @@ def iteraggregate(source, key, aggregators, failonerror, errorvalue):
             
 
 def rangerowreduce(table, key, width, reducer, fields=None, minv=None, maxv=None, 
-                   failonerror=False, presorted=False, buffersize=None):
+                   missing=None, failonerror=False, presorted=False, buffersize=None):
     """
     Reduce rows grouped into bins under the given key via an arbitrary function. 
     E.g.::
@@ -3991,17 +3921,22 @@ def rangerowreduce(table, key, width, reducer, fields=None, minv=None, maxv=None
         | 9         | 11      | 'b'    |
         +-----------+---------+--------+
 
+    .. versionchanged:: 0.9
+    
+    Hybrid row objects supporting data value access by either position or by 
+    field name are now passed to the `reducer` function.
+    
     """
     
     return RangeRowReduceView(table, key, width, reducer, fields=fields, minv=minv, 
-                              maxv=maxv, failonerror=failonerror,  
+                              maxv=maxv, missing=missing, failonerror=failonerror,  
                               presorted=presorted, buffersize=buffersize)
         
 
 class RangeRowReduceView(RowContainer):
     
     def __init__(self, source, key, width, reducer, fields=None, minv=None, maxv=None, 
-                 failonerror=False, presorted=False, buffersize=None):
+                 missing=None, failonerror=False, presorted=False, buffersize=None):
         if presorted:
             self.source = source
         else:
@@ -4010,23 +3945,27 @@ class RangeRowReduceView(RowContainer):
         self.width = width
         self.reducer = reducer
         self.fields = fields
-        self.minv, self.maxunpack = minv, maxv
+        self.minv, self.maxv = minv, maxv
         self.failonerror = failonerror
+        self.missing = missing
 
     def __iter__(self):
         return iterrangerowreduce(self.source, self.key, self.width, self.reducer,
-                                  self.fields, self.minv, self.maxunpack, self.failonerror)
+                                  self.fields, self.minv, self.maxv, 
+                                  self.failonerror, self.missing)
 
     def cachetag(self):
         try:
             return hash((self.source.cachetag(), self.key, self.width,
                          tuple(self.fields) if self.fields else self.fields, 
-                         self.reducer, self.minv, self.maxunpack, self.failonerror))
+                         self.reducer, self.minv, self.maxv, self.failonerror,
+                         self.missing))
         except Exception as e:
             raise Uncacheable(e)
 
 
-def iterrangerowreduce(source, key, width, reducer, fields, minv, maxv, failonerror):
+def iterrangerowreduce(source, key, width, reducer, fields, minv, maxv, failonerror,
+                       missing):
 
     it = iter(source)
     srcflds = it.next()
@@ -4071,7 +4010,7 @@ def iterrangerowreduce(source, key, width, reducer, fields, minv, maxv, failoner
                 row = it.next()
                 keyv = getkey(row)
             try:
-                yield tuple(reducer(binminv, binmaxv, bn))
+                yield tuple(reducer(binminv, binmaxv, _hybridrows(srcflds, bn, missing)))
             except:
                 if failonerror:
                     raise
@@ -4080,7 +4019,7 @@ def iterrangerowreduce(source, key, width, reducer, fields, minv, maxv, failoner
     except StopIteration:
         # don't forget the last one
         try:
-            yield tuple(reducer(binminv, binmaxv, bn))
+            yield tuple(reducer(binminv, binmaxv, _hybridrows(srcflds, bn, missing)))
         except:
             if failonerror:
                 raise
@@ -4090,142 +4029,18 @@ def rangerecordreduce(table, key, width, reducer, fields=None, minv=None, maxv=N
                       failonerror=False, presorted=False, buffersize=None):
     """
     Reduce records grouped into bins under the given key via an arbitrary function. 
-    E.g.::
 
-        >>> from petl import rangerecordreduce, look    
-        >>> look(table1)
-        +-------+-------+
-        | 'foo' | 'bar' |
-        +=======+=======+
-        | 'a'   | 3     |
-        +-------+-------+
-        | 'a'   | 7     |
-        +-------+-------+
-        | 'b'   | 2     |
-        +-------+-------+
-        | 'b'   | 1     |
-        +-------+-------+
-        | 'b'   | 9     |
-        +-------+-------+
-        | 'c'   | 4     |
-        +-------+-------+
-        
-        >>> def redu(minv, maxunpack, recs):
-        ...     return [minv, maxunpack, ''.join([rec['foo'] for rec in recs])]
-        ... 
-        >>> table2 = rangerecordreduce(table1, 'bar', 2, reducer=redu, fields=['frombar', 'tobar', 'foos'])
-        >>> look(table2)
-        +-----------+---------+--------+
-        | 'frombar' | 'tobar' | 'foos' |
-        +===========+=========+========+
-        | 1         | 3       | 'bb'   |
-        +-----------+---------+--------+
-        | 3         | 5       | 'ac'   |
-        +-----------+---------+--------+
-        | 5         | 7       | ''     |
-        +-----------+---------+--------+
-        | 7         | 9       | 'a'    |
-        +-----------+---------+--------+
-        | 9         | 11      | 'b'    |
-        +-----------+---------+--------+
-
+    .. deprecated:: 0.9
+    
+    Use :func:`rangerowreduce` instead.
+    
     """
     
-    return RangeRecordReduceView(table, key, width, reducer, fields=fields, minv=minv, 
+    return rangerowreduce(table, key, width, reducer, fields=fields, minv=minv, 
                                  maxv=maxv, failonerror=failonerror, 
                                  presorted=presorted, buffersize=buffersize)
         
 
-class RangeRecordReduceView(RowContainer):
-    
-    def __init__(self, source, key, width, reducer, fields=None, minv=None, maxv=None, 
-                 failonerror=False, presorted=False, buffersize=None):
-        if presorted:
-            self.source = source
-        else:
-            self.source = sort(source, key, buffersize=buffersize)
-        self.key = key
-        self.width = width
-        self.reducer = reducer
-        self.fields = fields
-        self.minv, self.maxunpack = minv, maxv
-        self.failonerror = failonerror
-
-    def __iter__(self):
-        return iterrangerecordreduce(self.source, self.key, self.width, self.reducer,
-                                     self.fields, self.minv, self.maxunpack, self.failonerror)
-
-    def cachetag(self):
-        try:
-            return hash((self.source.cachetag(), self.key, self.width,
-                         tuple(self.fields) if self.fields else self.fields, 
-                         self.reducer, self.minv, self.maxunpack, self.failonerror))
-        except Exception as e:
-            raise Uncacheable(e)
-
-
-def iterrangerecordreduce(source, key, width, reducer, fields, minv, maxv, failonerror):
-
-    it = iter(source)
-    srcflds = it.next()
-    if fields is None:
-        yield tuple(srcflds)
-    else:
-        yield tuple(fields)
-
-    # convert field selection into field indices
-    indices = asindices(srcflds, key)
-
-    # now use field indices to construct a getkey function
-    # N.B., this may raise an exception on short rows, depending on
-    # the field selection
-    getkey = itemgetter(*indices)
-    
-    # initialise minimum
-    row = it.next()
-    keyv = getkey(row)
-    if minv is None:
-        minv = keyv
-
-    # iterate over bins
-    # N.B., we need to account for two possible scenarios
-    # (1) maxunpack is not specified, so keep making bins until we run out of rows
-    # (2) maxunpack is specified, so iterate over bins 
-    try:
-        for binminv in count(minv, width):
-            binmaxv = binminv + width
-            if maxv is not None and binmaxv >= maxv: # final bin
-                binmaxv = maxv
-            bn = []
-            while keyv < binminv:
-                row = it.next()
-                keyv = getkey(row)
-            while binminv <= keyv < binmaxv:
-                rec = asdict(srcflds, row)
-                bn.append(rec)
-                row = it.next()
-                keyv = getkey(row)
-            while maxv is not None and keyv == binmaxv == maxv:
-                rec = asdict(srcflds, row)
-                bn.append(rec) # last bin is open
-                row = it.next()
-                keyv = getkey(row)
-            try:
-                yield tuple(reducer(binminv, binmaxv, bn))
-            except:
-                if failonerror:
-                    raise
-            if maxv is not None and binmaxv == maxv:
-                break
-    except StopIteration:
-        # don't forget the last one
-        try:
-            yield tuple(reducer(binminv, binmaxv, bn))
-        except:
-            if failonerror:
-                raise
-    
-        
 def rangecounts(table, key, width, minv=None, maxv=None, presorted=False,
                 buffersize=None):
     """
@@ -4525,7 +4340,7 @@ def iterrangeaggregate(source, key, width, aggregators, minv, maxv, failonerror,
         yield buildoutrow(binminv, binmaxv, bn)
 
         
-def rowmap(table, rowmapper, fields, failonerror=False):
+def rowmap(table, rowmapper, fields, failonerror=False, missing=None):
     """
     Transform rows via an arbitrary function. E.g.::
 
@@ -4568,38 +4383,45 @@ def rowmap(table, rowmapper, fields, failonerror=False):
         | 5            | '-'      | 300          | 19.0633608815427   |
         +--------------+----------+--------------+--------------------+
 
-    The `rowmapper` function should accept a row (list or tuple) and return a
-    single row (list or tuple).
+    The `rowmapper` function should return a single row (list or tuple).
+    
+    .. versionchanged:: 0.9
+    
+    Hybrid row objects supporting data value access by either position or by 
+    field name are now passed to the `rowmapper` function.
     
     """
     
-    return RowMapView(table, rowmapper, fields, failonerror)
+    return RowMapView(table, rowmapper, fields, failonerror=failonerror,
+                      missing=missing)
     
     
 class RowMapView(RowContainer):
     
-    def __init__(self, source, rowmapper, fields, failonerror=False):
+    def __init__(self, source, rowmapper, fields, failonerror=False, missing=None):
         self.source = source
         self.rowmapper = rowmapper
         self.fields = fields
         self.failonerror = failonerror
+        self.missing = missing
         
     def __iter__(self):
-        return iterrowmap(self.source, self.rowmapper, self.fields, self.failonerror)
+        return iterrowmap(self.source, self.rowmapper, self.fields, self.failonerror,
+                          self.missing)
 
     def cachetag(self):
         try:
             return hash((self.source.cachetag(), self.rowmapper, tuple(self.fields),
-                         self.failonerror))
+                         self.failonerror, self.missing))
         except Exception as e:
             raise Uncacheable(e)
 
     
-def iterrowmap(source, rowmapper, fields, failonerror):
+def iterrowmap(source, rowmapper, fields, failonerror, missing):
     it = iter(source)
-    it.next() # discard source fields
+    srcflds = it.next() 
     yield tuple(fields)
-    for row in it:
+    for row in _hybridrows(srcflds, it, missing):
         try:
             outrow = rowmapper(row)
             yield tuple(outrow)
@@ -4610,90 +4432,18 @@ def iterrowmap(source, rowmapper, fields, failonerror):
         
 def recordmap(table, recmapper, fields, failonerror=False):
     """
-    Transform records via an arbitrary function. E.g.::
-
-        >>> from petl import recordmap, look
-        >>> look(table1)
-        +------+----------+-------+----------+----------+
-        | 'id' | 'sex'    | 'age' | 'height' | 'weight' |
-        +======+==========+=======+==========+==========+
-        | 1    | 'male'   | 16    | 1.45     | 62.0     |
-        +------+----------+-------+----------+----------+
-        | 2    | 'female' | 19    | 1.34     | 55.4     |
-        +------+----------+-------+----------+----------+
-        | 3    | 'female' | 17    | 1.78     | 74.4     |
-        +------+----------+-------+----------+----------+
-        | 4    | 'male'   | 21    | 1.33     | 45.2     |
-        +------+----------+-------+----------+----------+
-        | 5    | '-'      | 25    | 1.65     | 51.9     |
-        +------+----------+-------+----------+----------+
-        
-        >>> def recmapper(rec):
-        ...     transmf = {'male': 'M', 'female': 'F'}
-        ...     return [rec['id'],
-        ...             transmf[rec['sex']] if rec['sex'] in transmf else rec['sex'],
-        ...             rec['age'] * 12,
-        ...             rec['weight'] / rec['height'] ** 2]
-        ... 
-        >>> table2 = recordmap(table1, recmapper, fields=['subject_id', 'gender', 'age_months', 'bmi'])  
-        >>> look(table2)
-        +--------------+----------+--------------+--------------------+
-        | 'subject_id' | 'gender' | 'age_months' | 'bmi'              |
-        +==============+==========+==============+====================+
-        | 1            | 'M'      | 192          | 29.48870392390012  |
-        +--------------+----------+--------------+--------------------+
-        | 2            | 'F'      | 228          | 30.8531967030519   |
-        +--------------+----------+--------------+--------------------+
-        | 3            | 'F'      | 204          | 23.481883600555488 |
-        +--------------+----------+--------------+--------------------+
-        | 4            | 'M'      | 252          | 25.55260331279326  |
-        +--------------+----------+--------------+--------------------+
-        | 5            | '-'      | 300          | 19.0633608815427   |
-        +--------------+----------+--------------+--------------------+
-
-    The `recmapper` function should accept a record (dictionary of data values
-    indexed by field) and return a single row (list or tuple).
+    Transform records via an arbitrary function. 
+    
+    .. deprecated:: 0.9
+    
+    Use :func:`rowmap` insteand.
     
     """
     
-    return RecordMapView(table, recmapper, fields, failonerror)
+    return rowmap(table, recmapper, fields, failonerror=failonerror)
     
     
-class RecordMapView(RowContainer):
-    
-    def __init__(self, source, recmapper, fields, failonerror=False):
-        self.source = source
-        self.recmapper = recmapper
-        self.fields = fields
-        self.failonerror = failonerror
-        
-    def __iter__(self):
-        return iterrecordmap(self.source, self.recmapper, self.fields, self.failonerror)
-    
-    def cachetag(self):
-        try:
-            return hash((self.source.cachetag(), self.recmapper, tuple(self.fields),
-                         self.failonerror))
-        except Exception as e:
-            raise Uncacheable(e)
-
-    
-   
-def iterrecordmap(source, recmapper, fields, failonerror):
-    it = iter(source)
-    flds = it.next() # discard source fields
-    yield tuple(fields)
-    for row in it:
-        rec = asdict(flds, row)
-        try:
-            outrow = recmapper(rec)
-            yield tuple(outrow)
-        except:
-            if failonerror:
-                raise
-        
-        
-def rowmapmany(table, rowgenerator, fields, failonerror=False):
+def rowmapmany(table, rowgenerator, fields, failonerror=False, missing=None):
     """
     Map each input row to any number of output rows via an arbitrary function.
     E.g.::
@@ -4744,40 +4494,47 @@ def rowmapmany(table, rowgenerator, fields, failonerror=False):
         | 4            | 'gender'     | 'M'                |
         +--------------+--------------+--------------------+
 
-    The `rowgenerator` function should accept a row (list or tuple) and yield
-    zero or more rows (lists or tuples).
+    The `rowgenerator` function should yield zero or more rows (lists or tuples).
     
     See also the :func:`melt` function.
     
+    .. versionchanged:: 0.9
+    
+    Hybrid row objects supporting data value access by either position or by 
+    field name are now passed to the `rowgenerator` function.
+    
     """
     
-    return RowMapManyView(table, rowgenerator, fields, failonerror)
+    return RowMapManyView(table, rowgenerator, fields, failonerror=failonerror,
+                          missing=missing)
     
     
 class RowMapManyView(RowContainer):
     
-    def __init__(self, source, rowgenerator, fields, failonerror=False):
+    def __init__(self, source, rowgenerator, fields, failonerror=False, missing=None):
         self.source = source
         self.rowgenerator = rowgenerator
         self.fields = fields
         self.failonerror = failonerror
+        self.missing = missing
         
     def __iter__(self):
-        return iterrowmapmany(self.source, self.rowgenerator, self.fields, self.failonerror)
+        return iterrowmapmany(self.source, self.rowgenerator, self.fields, 
+                              self.failonerror, self.missing)
     
     def cachetag(self):
         try:
             return hash((self.source.cachetag(), self.rowgenerator, tuple(self.fields),
-                         self.failonerror))
+                         self.failonerror, self.missing))
         except Exception as e:
             raise Uncacheable(e)
 
     
-def iterrowmapmany(source, rowgenerator, fields, failonerror):
+def iterrowmapmany(source, rowgenerator, fields, failonerror, missing):
     it = iter(source)
-    it.next() # discard source fields
+    srcflds = it.next() 
     yield tuple(fields)
-    for row in it:
+    for row in _hybridrows(srcflds, it, missing):
         try:
             for outrow in rowgenerator(row):
                 yield tuple(outrow)
@@ -4789,97 +4546,17 @@ def iterrowmapmany(source, rowgenerator, fields, failonerror):
 def recordmapmany(table, rowgenerator, fields, failonerror=False):
     """
     Map each input row (as a record) to any number of output rows via an 
-    arbitrary function. E.g.::
-
-        >>> from petl import recordmapmany, look    
-        >>> look(table1)
-        +------+----------+-------+----------+----------+
-        | 'id' | 'sex'    | 'age' | 'height' | 'weight' |
-        +======+==========+=======+==========+==========+
-        | 1    | 'male'   | 16    | 1.45     | 62.0     |
-        +------+----------+-------+----------+----------+
-        | 2    | 'female' | 19    | 1.34     | 55.4     |
-        +------+----------+-------+----------+----------+
-        | 3    | '-'      | 17    | 1.78     | 74.4     |
-        +------+----------+-------+----------+----------+
-        | 4    | 'male'   | 21    | 1.33     |          |
-        +------+----------+-------+----------+----------+
-        
-        >>> def rowgenerator(rec):
-        ...     transmf = {'male': 'M', 'female': 'F'}
-        ...     yield [rec['id'], 'gender', transmf[rec['sex']] if rec['sex'] in transmf else rec['sex']]
-        ...     yield [rec['id'], 'age_months', rec['age'] * 12]
-        ...     yield [rec['id'], 'bmi', rec['weight'] / rec['height'] ** 2]
-        ... 
-        >>> table2 = recordmapmany(table1, rowgenerator, fields=['subject_id', 'variable', 'value'])  
-        >>> look(table2)
-        +--------------+--------------+--------------------+
-        | 'subject_id' | 'variable'   | 'value'            |
-        +==============+==============+====================+
-        | 1            | 'gender'     | 'M'                |
-        +--------------+--------------+--------------------+
-        | 1            | 'age_months' | 192                |
-        +--------------+--------------+--------------------+
-        | 1            | 'bmi'        | 29.48870392390012  |
-        +--------------+--------------+--------------------+
-        | 2            | 'gender'     | 'F'                |
-        +--------------+--------------+--------------------+
-        | 2            | 'age_months' | 228                |
-        +--------------+--------------+--------------------+
-        | 2            | 'bmi'        | 30.8531967030519   |
-        +--------------+--------------+--------------------+
-        | 3            | 'gender'     | '-'                |
-        +--------------+--------------+--------------------+
-        | 3            | 'age_months' | 204                |
-        +--------------+--------------+--------------------+
-        | 3            | 'bmi'        | 23.481883600555488 |
-        +--------------+--------------+--------------------+
-        | 4            | 'gender'     | 'M'                |
-        +--------------+--------------+--------------------+
-
-    The `rowgenerator` function should accept a record (dictionary of data values
-    indexed by field) and yield zero or more rows (lists or tuples).
+    arbitrary function. 
     
-    See also the :func:`melt` function.
+    .. deprecated:: 0.9
     
+    Use :func:`rowmapmany` instead.
+
     """
     
-    return RecordMapManyView(table, rowgenerator, fields, failonerror)
+    return rowmapmany(table, rowgenerator, fields, failonerror=failonerror)
     
     
-class RecordMapManyView(RowContainer):
-    
-    def __init__(self, source, rowgenerator, fields, failonerror=False):
-        self.source = source
-        self.rowgenerator = rowgenerator
-        self.fields = fields
-        self.failonerror = failonerror
-        
-    def __iter__(self):
-        return iterrecordmapmany(self.source, self.rowgenerator, self.fields, self.failonerror)
-    
-    def cachetag(self):
-        try:
-            return hash((self.source.cachetag(), self.rowgenerator, tuple(self.fields),
-                         self.failonerror))
-        except Exception as e:
-            raise Uncacheable(e)
-
-    
-def iterrecordmapmany(source, rowgenerator, fields, failonerror):
-    it = iter(source)
-    flds = it.next() # discard source fields
-    yield tuple(fields)
-    for row in it:
-        rec = asdict(flds, row)
-        try:
-            for outrow in rowgenerator(rec):
-                yield tuple(outrow)
-        except:
-            if failonerror:
-                raise
-        
-        
 def setheader(table, fields):
     """
     Override fields in the given table. E.g.::

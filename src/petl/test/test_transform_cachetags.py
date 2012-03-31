@@ -7,9 +7,9 @@ from petl.util import randomtable
 from petl.transform import RenameView, CutView, CatView, FieldConvertView,\
     ExtendView, RowSliceView, TailView, SortView, MeltView, RecastView,\
     DuplicatesView, ConflictsView, ComplementView, CaptureView, SplitView,\
-    RecordSelectView, FieldSelectView, FieldMapView, RowReduceView, RecordReduceView,\
-    AggregateView, RangeRowReduceView, RangeRecordReduceView, RangeAggregateView,\
-    RowMapView, RecordMapView, RowMapManyView, RecordMapManyView, SetHeaderView,\
+    RowSelectView, FieldSelectView, FieldMapView, RowReduceView, \
+    AggregateView, RangeRowReduceView, RangeAggregateView,\
+    RowMapView, RowMapManyView, SetHeaderView,\
     ExtendHeaderView, PushHeaderView, SkipView, UnpackView, JoinView,\
     ImplicitJoinView, CrossJoinView, AntiJoinView, ImplicitAntiJoinView
 
@@ -137,7 +137,7 @@ def test_split():
 
 def test_select():
     src = randomtable(4, 10)
-    tbl = RecordSelectView(src, lambda rec: rec['f0'] > rec['f1'])
+    tbl = RowSelectView(src, lambda rec: rec['f0'] > rec['f1'])
     before = tbl.cachetag()
     src.reseed()
     after = tbl.cachetag()
@@ -172,15 +172,6 @@ def test_rowreduce():
     after = tbl.cachetag()
     assert before != after
     
-def test_recordreduce():
-    src = randomtable(4, 10)
-    redu = lambda key, recs: [key, sum([r['f1'] for r in recs])]
-    tbl = RecordReduceView(src, key='f0', reducer=redu, fields=['key', 'sum'])
-    before = tbl.cachetag()
-    src.reseed()
-    after = tbl.cachetag()
-    assert before != after
-    
 def test_aggregate():
     src = randomtable(4, 10)
     tbl = AggregateView(src, 'f0')
@@ -196,15 +187,6 @@ def test_rangerowreduce():
     src = randomtable(4, 10)
     redu = lambda minv, maxv, rows: [minv, maxv, sum([r[1] for r in rows])]
     tbl = RangeRowReduceView(src, 'f0', 0.2, reducer=redu, fields=['min', 'max', 'sum'])
-    before = tbl.cachetag()
-    src.reseed()
-    after = tbl.cachetag()
-    assert before != after
-    
-def test_rangerecordreduce():
-    src = randomtable(4, 10)
-    redu = lambda minv, maxv, recs: [minv, maxv, sum([r['f1'] for r in recs])]
-    tbl = RangeRecordReduceView(src, 'f0', 0.2, reducer=redu, fields=['min', 'max', 'sum'])
     before = tbl.cachetag()
     src.reseed()
     after = tbl.cachetag()
@@ -229,29 +211,11 @@ def test_rowmap():
     after = tbl.cachetag()
     assert before != after
     
-def test_recordmap():
-    src = randomtable(4, 10)
-    tbl = RecordMapView(src, lambda rec: [rec['f0'] + rec['f1'], rec['f2']], fields=['foo', 'bar'])
-    before = tbl.cachetag()
-    src.reseed()
-    after = tbl.cachetag()
-    assert before != after
-
 def test_rowmapmany():
     src = randomtable(4, 10)
     def mapf(row):
         yield [row[0] + row[1], row[2]]
     tbl = RowMapManyView(src, mapf, fields=['foo', 'bar'])
-    before = tbl.cachetag()
-    src.reseed()
-    after = tbl.cachetag()
-    assert before != after
-    
-def test_recordmapmany():
-    src = randomtable(4, 10)
-    def mapf(rec):
-        yield [rec['f0'] + rec['f1'], rec['f2']]
-    tbl = RecordMapManyView(src, mapf, fields=['foo', 'bar'])
     before = tbl.cachetag()
     src.reseed()
     after = tbl.cachetag()

@@ -1364,7 +1364,7 @@ def test_recordselect():
              ('d', 7, 100.9),
              ('c', 2))
 
-    actual = recordselect(table, lambda rec: rec['foo'] == 'a')
+    actual = rowselect(table, lambda rec: rec['foo'] == 'a')
     expect = (('foo', 'bar', 'baz'),
               ('a', 4, 9.3),
               ('a', 2, 88.2))
@@ -1542,7 +1542,7 @@ def test_recordreduce():
     def sumbar(key, records):
         return [key, sum([rec['bar'] for rec in records])]
         
-    table2 = recordreduce(table1, key='foo', reducer=sumbar, fields=['foo', 'barsum'])
+    table2 = rowreduce(table1, key='foo', reducer=sumbar, fields=['foo', 'barsum'])
     expect2 = (('foo', 'barsum'),
                ('a', 10),
                ('b', 12),
@@ -1563,7 +1563,7 @@ def test_recordreduce_2():
     def sumbar(key, records):
         return [key, sum([rec['bar'] for rec in records])]
         
-    table2 = recordreduce(table1, key='foo', reducer=sumbar, fields=['foo', 'barsum'])
+    table2 = rowreduce(table1, key='foo', reducer=sumbar, fields=['foo', 'barsum'])
     expect2 = (('foo', 'barsum'),
                ('aa', 10),
                ('bb', 12),
@@ -1609,7 +1609,7 @@ def test_rangerecordreduce():
     def redu(minv, maxv, recs):
         return [minv, maxv, ''.join([rec['foo'] for rec in recs])]
         
-    table2 = rangerecordreduce(table1, 'bar', 2, reducer=redu, 
+    table2 = rangerowreduce(table1, 'bar', 2, reducer=redu, 
                                fields=['minbar', 'maxbar', 'foos'])
     expect2 = (('minbar', 'maxbar', 'foos'),
                (1, 3, 'bb'),
@@ -1876,7 +1876,7 @@ def test_recordmap():
                 transmf[rec['sex']] if rec['sex'] in transmf else rec['sex'],
                 rec['age'] * 12,
                 rec['weight'] / rec['height'] ** 2]
-    actual = recordmap(table, recmapper, fields=['subject_id', 'gender', 'age_months', 'bmi'])  
+    actual = rowmap(table, recmapper, fields=['subject_id', 'gender', 'age_months', 'bmi'])  
     expect = (('subject_id', 'gender', 'age_months', 'bmi'),
               (1, 'M', 16*12, 62.0/1.45**2),
               (2, 'F', 19*12, 55.4/1.34**2),
@@ -1947,7 +1947,7 @@ def test_recordmapmany():
         yield [rec['id'], 'age_months', rec['age'] * 12]
         yield [rec['id'], 'bmi', rec['weight'] / rec['height'] ** 2]
 
-    actual = recordmapmany(table, rowgenerator, fields=['subject_id', 'variable', 'value'])  
+    actual = rowmapmany(table, rowgenerator, fields=['subject_id', 'variable', 'value'])  
     expect = (('subject_id', 'variable', 'value'),
               (1, 'gender', 'M'),
               (1, 'age_months', 16*12),
