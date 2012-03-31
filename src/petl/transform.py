@@ -13,11 +13,10 @@ import re
 
 
 from petl.util import asindices, rowgetter, asdict,\
-    expr, valueset, records, header, data, limits, itervalues, parsenumber, lookup,\
-    values, shortlistmergesorted, heapqmergesorted
+    expr, valueset, header, data, limits, itervalues, parsenumber, lookup,\
+    values, shortlistmergesorted, heapqmergesorted, hybridrows
 from petl.io import Uncacheable
 from petl.base import RowContainer
-import sqlite3
 
 
 def rename(table, *args):
@@ -2905,37 +2904,11 @@ class RowSelectView(RowContainer):
             raise Uncacheable(e)
 
 
-class _HybridRow(tuple):
-    
-    def __new__(cls, row, flds, missing):
-        t = super(_HybridRow, cls).__new__(cls, row)
-        return t
-    
-    def __init__(self, row, flds, missing):
-        self.flds = flds
-        self.missing = missing
-        
-    def __getitem__(self, f):
-        if isinstance(f, int):
-            return super(_HybridRow, self).__getitem__(f)
-        elif f in self.flds:
-            try:
-                return super(_HybridRow, self).__getitem__(self.flds.index(f))
-            except IndexError: # handle short rows
-                return self.missing
-        else:
-            raise Exception('item ' + str(f) + ' not in fields ' + str(self.flds))
-
-    
-def _hybridrows(flds, it, missing):
-    return (_HybridRow(row, flds, missing) for row in it)
-    
-    
 def iterrowselect(source, where, missing, complement):
     it = iter(source)
     flds = it.next()
     yield tuple(flds)
-    for row in _hybridrows(flds, it, missing): # convert to hybrid row/record
+    for row in hybridrows(flds, it, missing): # convert to hybrid row/record
         if where(row) != complement: # XOR
             yield tuple(row) # need to convert back to tuple?
      
@@ -3614,7 +3587,7 @@ def iterrowreduce(source, key, reducer, fields, missing):
     getkey = itemgetter(*indices)
     
     for key, rows in groupby(it, key=getkey):
-        yield tuple(reducer(key, _hybridrows(srcflds, rows, missing)))
+        yield tuple(reducer(key, hybridrows(srcflds, rows, missing)))
         
 
 def recordreduce(table, key, reducer, fields=None, presorted=False, buffersize=None):
@@ -4010,7 +3983,7 @@ def iterrangerowreduce(source, key, width, reducer, fields, minv, maxv, failoner
                 row = it.next()
                 keyv = getkey(row)
             try:
-                yield tuple(reducer(binminv, binmaxv, _hybridrows(srcflds, bn, missing)))
+                yield tuple(reducer(binminv, binmaxv, hybridrows(srcflds, bn, missing)))
             except:
                 if failonerror:
                     raise
@@ -4019,7 +3992,7 @@ def iterrangerowreduce(source, key, width, reducer, fields, minv, maxv, failoner
     except StopIteration:
         # don't forget the last one
         try:
-            yield tuple(reducer(binminv, binmaxv, _hybridrows(srcflds, bn, missing)))
+            yield tuple(reducer(binminv, binmaxv, hybridrows(srcflds, bn, missing)))
         except:
             if failonerror:
                 raise
@@ -4421,7 +4394,7 @@ def iterrowmap(source, rowmapper, fields, failonerror, missing):
     it = iter(source)
     srcflds = it.next() 
     yield tuple(fields)
-    for row in _hybridrows(srcflds, it, missing):
+    for row in hybridrows(srcflds, it, missing):
         try:
             outrow = rowmapper(row)
             yield tuple(outrow)
@@ -4534,7 +4507,7 @@ def iterrowmapmany(source, rowgenerator, fields, failonerror, missing):
     it = iter(source)
     srcflds = it.next() 
     yield tuple(fields)
-    for row in _hybridrows(srcflds, it, missing):
+    for row in hybridrows(srcflds, it, missing):
         try:
             for outrow in rowgenerator(row):
                 yield tuple(outrow)
