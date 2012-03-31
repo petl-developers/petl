@@ -91,17 +91,15 @@ To change the default globally, e.g.::
 """
         
 
-def fromcsv(filename, checksumfun=None, **kwargs):
+def fromcsv(filename, checksumfun=None, dialect=csv.excel, **kwargs):
     """
     Wrapper for the standard :func:`csv.reader` function. Returns a table providing
-    access to the data in the given delimited file. The `filename` argument is the
-    path of the delimited file, all other keyword arguments are passed to 
-    :func:`csv.reader`. E.g.::
+    access to the data in the given delimited file. E.g.::
 
         >>> import csv
         >>> # set up a CSV file to demonstrate with
         ... with open('test.csv', 'wb') as f:
-        ...     writer = csv.writer(f, delimiter='\\t')
+        ...     writer = csv.writer(f)
         ...     writer.writerow(['foo', 'bar'])
         ...     writer.writerow(['a', 1])
         ...     writer.writerow(['b', 2])
@@ -109,7 +107,7 @@ def fromcsv(filename, checksumfun=None, **kwargs):
         ...
         >>> # now demonstrate the use of petl.fromcsv
         ... from petl import fromcsv, look
-        >>> testcsv = fromcsv('test.csv', delimiter='\\t')
+        >>> testcsv = fromcsv('test.csv')
         >>> look(testcsv)
         +-------+-------+
         | 'foo' | 'bar' |
@@ -121,6 +119,10 @@ def fromcsv(filename, checksumfun=None, **kwargs):
         | 'c'   | '2'   |
         +-------+-------+
 
+    The `filename` argument is the path of the delimited file, all other keyword
+    arguments are passed to :func:`csv.reader`. So, e.g., to override the delimiter
+    from the default CSV dialect, provide the `delimiter` keyword argument.
+     
     Note that all data values are strings, and any intended numeric values will
     need to be converted, see also :func:`convert`.
     
@@ -131,19 +133,20 @@ def fromcsv(filename, checksumfun=None, **kwargs):
     
     """
 
-    return CSVView(filename, checksumfun=checksumfun, **kwargs)
+    return CSVView(filename, checksumfun=checksumfun, dialect=dialect, **kwargs)
 
 
 class CSVView(RowContainer):
     
-    def __init__(self, filename, checksumfun=None, **kwargs):
+    def __init__(self, filename, checksumfun=None, dialect=csv.excel, **kwargs):
         self.filename = filename
         self.checksumfun = checksumfun
+        self.dialect = dialect
         self.kwargs = kwargs
         
     def __iter__(self):
-        with open(self.filename, 'rb') as file:
-            reader = csv.reader(file, **self.kwargs)
+        with open(self.filename, 'rb') as f:
+            reader = csv.reader(f, dialect=self.dialect, **self.kwargs)
             for row in reader:
                 yield tuple(row)
                 
@@ -152,7 +155,7 @@ class CSVView(RowContainer):
         if os.path.isfile(p):
             sumfun = self.checksumfun if self.checksumfun is not None else defaultsumfun
             checksum = sumfun(p)
-            return hash((checksum, tuple(self.kwargs.items()))) 
+            return hash((checksum, self.dialect, tuple(self.kwargs.items()))) 
         else:
             raise Uncacheable
                 
@@ -201,10 +204,10 @@ class PickleView(RowContainer):
         self.checksumfun = checksumfun
         
     def __iter__(self):
-        with open(self.filename, 'rb') as file:
+        with open(self.filename, 'rb') as f:
             try:
                 while True:
-                    yield tuple(pickle.load(file))
+                    yield tuple(pickle.load(f))
             except EOFError:
                 pass
                 
@@ -396,11 +399,11 @@ class TextView(RowContainer):
         self.checksumfun = checksumfun
         
     def __iter__(self):
-        with open(self.filename, 'rU') as file:
+        with open(self.filename, 'rU') as f:
             if self.header is not None:
                 yield tuple(self.header)
             s = self.strip
-            for line in file:
+            for line in f:
                 yield (line.strip(s),)
                 
     def cachetag(self):
@@ -730,7 +733,7 @@ class DictsView(RowContainer):
         raise Uncacheable
 
 
-def tocsv(table, filename, **kwargs):
+def tocsv(table, filename, dialect=csv.excel, **kwargs):
     """
     Write the table to a CSV file. E.g.::
 
@@ -746,10 +749,10 @@ def tocsv(table, filename, **kwargs):
         | 'c'   | 2     |
         +-------+-------+
         
-        >>> tocsv(table, 'test.csv', delimiter='\\t')
+        >>> tocsv(table, 'test.csv')
         >>> # look what it did
         ... from petl import fromcsv
-        >>> look(fromcsv('test.csv', delimiter='\\t'))
+        >>> look(fromcsv('test.csv'))
         +-------+-------+
         | 'foo' | 'bar' |
         +=======+=======+
@@ -760,23 +763,27 @@ def tocsv(table, filename, **kwargs):
         | 'c'   | '2'   |
         +-------+-------+
 
+    The `filename` argument is the path of the delimited file, all other keyword
+    arguments are passed to :func:`csv.writer`. So, e.g., to override the delimiter
+    from the default CSV dialect, provide the `delimiter` keyword argument.
+     
     Note that if a file already exists at the given location, it will be overwritten.
     
     """
     
     with open(filename, 'wb') as f:
-        writer = csv.writer(f, **kwargs)
+        writer = csv.writer(f, dialect=dialect, **kwargs)
         for row in table:
             writer.writerow(row)
 
 
-def appendcsv(table, filename, **kwargs):
+def appendcsv(table, filename, dialect=csv.excel, **kwargs):
     """
     Append data rows to an existing CSV file. E.g.::
 
         >>> # look at an existing CSV file
         ... from petl import look, fromcsv
-        >>> testcsv = fromcsv('test.csv', delimiter='\\t')
+        >>> testcsv = fromcsv('test.csv')
         >>> look(testcsv)
         +-------+-------+
         | 'foo' | 'bar' |
@@ -801,7 +808,7 @@ def appendcsv(table, filename, **kwargs):
         +-------+-------+
         
         >>> from petl import appendcsv 
-        >>> appendcsv(table, 'test.csv', delimiter='\\t')
+        >>> appendcsv(table, 'test.csv')
         >>> # look what it did
         ... look(testcsv)
         +-------+-------+
@@ -820,6 +827,10 @@ def appendcsv(table, filename, **kwargs):
         | 'f'   | '12'  |
         +-------+-------+
 
+    The `filename` argument is the path of the delimited file, all other keyword
+    arguments are passed to :func:`csv.writer`. So, e.g., to override the delimiter
+    from the default CSV dialect, provide the `delimiter` keyword argument.
+     
     Note that no attempt is made to check that the fields or row lengths are 
     consistent with the existing data, the data rows from the table are simply
     appended to the file. See also the :func:`cat` function.
@@ -827,7 +838,7 @@ def appendcsv(table, filename, **kwargs):
     """
     
     with open(filename, 'ab') as f:
-        writer = csv.writer(f, **kwargs)
+        writer = csv.writer(f, dialect=dialect, **kwargs)
         for row in data(table):
             writer.writerow(row)
 
@@ -869,9 +880,9 @@ def topickle(table, filename, protocol=-1):
     
     """
     
-    with open(filename, 'wb') as file:
+    with open(filename, 'wb') as f:
         for row in table:
-            pickle.dump(row, file, protocol)
+            pickle.dump(row, f, protocol)
     
 
 def appendpickle(table, filename, protocol=-1):
@@ -930,9 +941,9 @@ def appendpickle(table, filename, protocol=-1):
     
     """
     
-    with open(filename, 'ab') as file:
+    with open(filename, 'ab') as f:
         for row in data(table):
-            pickle.dump(row, file, protocol)
+            pickle.dump(row, f, protocol)
     
 
 def tosqlite3(table, filename, tablename, create=True):
@@ -1300,4 +1311,34 @@ def tojson(table, filename, *args, **kwargs):
         for chunk in encoder.iterencode(list(records(table))):
             f.write(chunk)
             
+
+def fromtsv(filename, checksumfun=None, dialect=csv.excel_tab, **kwargs):
+    """
+    Convenience function, as :func:`fromcsv` but with different default dialect
+    (tab delimited).
+    
+    """
+    
+    return fromcsv(filename, checksumfun=checksumfun, dialect=dialect, **kwargs)
+
+
+def totsv(table, filename, dialect=csv.excel_tab, **kwargs):
+    """
+    Convenience function, as :func:`tocsv` but with different default dialect
+    (tab delimited).
+    
+    """    
+
+    return tocsv(table, filename, dialect=dialect, **kwargs)
+
+
+def appendtsv(table, filename, dialect=csv.excel_tab, **kwargs):
+    """
+    Convenience function, as :func:`appendcsv` but with different default dialect
+    (tab delimited).
+    
+    """    
+
+    return appendcsv(table, filename, dialect=dialect, **kwargs)
+
 

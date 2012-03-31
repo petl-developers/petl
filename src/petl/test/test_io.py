@@ -11,7 +11,7 @@ import sqlite3
 from petl import fromcsv, frompickle, fromsqlite3, adler32sum, crc32sum, fromdb, \
                 tocsv, topickle, appendcsv, appendpickle, tosqlite3, appendsqlite3, \
                 todb, appenddb, fromtext, totext, fromxml, fromjson, fromdicts, \
-                tojson
+                tojson, fromtsv, totsv, appendtsv
                 
 
 
@@ -60,8 +60,8 @@ def test_fromcsv_cachetag():
     tag1 = tbl.cachetag()
     
     # make a change
-    with open(f.name, 'wb') as f:
-        writer = csv.writer(f)
+    with open(f.name, 'wb') as o:
+        writer = csv.writer(o)
         rows = (('foo', 'bar'),
                 ('d', 3),
 #                ('e', 5),
@@ -93,8 +93,8 @@ def test_fromcsv_cachetag_strict():
     tag1 = tbl.cachetag()
     
     # make a change, preserving file size
-    with open(f.name, 'wb') as f:
-        writer = csv.writer(f)
+    with open(f.name, 'wb') as o:
+        writer = csv.writer(o)
         rows = (('foo', 'bar'),
                 ('d', 3),
                 ('e', 5),
@@ -107,6 +107,27 @@ def test_fromcsv_cachetag_strict():
     assert tag2 != tag1, (tag2, tag1)
     
 
+def test_fromtsv():
+    
+    f = NamedTemporaryFile(delete=False)
+    writer = csv.writer(f, delimiter='\t')
+    table = (('foo', 'bar'),
+             ('a', 1),
+             ('b', 2),
+             ('c', 2))
+    for row in table:
+        writer.writerow(row)
+    f.close()
+    
+    actual = fromtsv(f.name)
+    expect = (('foo', 'bar'),
+              ('a', '1'),
+              ('b', '2'),
+              ('c', '2'))
+    iassertequal(expect, actual)
+    iassertequal(expect, actual) # verify can iterate twice
+    
+    
 def test_frompickle():
     """Test the frompickle function."""
     
@@ -142,13 +163,13 @@ def test_frompickle_cachetag():
     tag1 = tbl.cachetag()
     
     # make a change
-    with open(f.name, 'wb') as f:
+    with open(f.name, 'wb') as o:
         rows = (('foo', 'bar'),
                 ('d', 3),
 #                ('e', 5),
                 ('f', 4))
         for row in rows:
-            pickle.dump(row, f)
+            pickle.dump(row, o)
 
     # check cachetag has changed
     tag2 = tbl.cachetag()
@@ -173,13 +194,13 @@ def test_frompickle_cachetag_strict():
     tag1 = tbl.cachetag()
     
     # make a change, preserving file size
-    with open(f.name, 'wb') as f:
+    with open(f.name, 'wb') as o:
         rows = (('foo', 'bar'),
                 ('d', 3),
                 ('e', 5),
                 ('f', 4))
         for row in rows:
-            pickle.dump(row, f)
+            pickle.dump(row, o)
 
     # check cachetag has changed
     tag2 = tbl.cachetag()
@@ -557,8 +578,8 @@ def test_tocsv_appendcsv():
     tocsv(table, f.name, delimiter='\t')
     
     # check what it did
-    with open(f.name, 'rb') as file:
-        actual = csv.reader(file, delimiter='\t')
+    with open(f.name, 'rb') as o:
+        actual = csv.reader(o, delimiter='\t')
         expect = [['foo', 'bar'],
                   ['a', '1'],
                   ['b', '2'],
@@ -573,8 +594,8 @@ def test_tocsv_appendcsv():
     appendcsv(table2, f.name, delimiter='\t') 
 
     # check what it did
-    with open(f.name, 'rb') as file:
-        actual = csv.reader(file, delimiter='\t')
+    with open(f.name, 'rb') as o:
+        actual = csv.reader(o, delimiter='\t')
         expect = [['foo', 'bar'],
                   ['a', '1'],
                   ['b', '2'],
@@ -585,6 +606,44 @@ def test_tocsv_appendcsv():
         iassertequal(expect, actual)
     
         
+def test_totsv_appendtsv():
+    
+    # exercise function
+    table = (('foo', 'bar'),
+             ('a', 1),
+             ('b', 2),
+             ('c', 2))
+    f = NamedTemporaryFile(delete=False)
+    totsv(table, f.name)
+    
+    # check what it did
+    with open(f.name, 'rb') as o:
+        actual = csv.reader(o, delimiter='\t')
+        expect = [['foo', 'bar'],
+                  ['a', '1'],
+                  ['b', '2'],
+                  ['c', '2']]
+        iassertequal(expect, actual)
+    
+    # check appending
+    table2 = (('foo', 'bar'),
+              ('d', 7),
+              ('e', 9),
+              ('f', 1))
+    appendtsv(table2, f.name) 
+
+    # check what it did
+    with open(f.name, 'rb') as o:
+        actual = csv.reader(o, delimiter='\t')
+        expect = [['foo', 'bar'],
+                  ['a', '1'],
+                  ['b', '2'],
+                  ['c', '2'],
+                  ['d', '7'],
+                  ['e', '9'],
+                  ['f', '1']]
+        iassertequal(expect, actual)
+    
     
 def test_topickle_appendpickle():
     """Test the topickle and appendpickle functions."""
@@ -605,8 +664,8 @@ def test_topickle_appendpickle():
             pass
 
     # check what it did
-    with open(f.name, 'rb') as file:
-        actual = picklereader(file)
+    with open(f.name, 'rb') as o:
+        actual = picklereader(o)
         iassertequal(table, actual)
     
     # check appending
@@ -617,8 +676,8 @@ def test_topickle_appendpickle():
     appendpickle(table2, f.name) 
 
     # check what it did
-    with open(f.name, 'rb') as file:
-        actual = picklereader(file)
+    with open(f.name, 'rb') as o:
+        actual = picklereader(o)
         expect = (('foo', 'bar'),
                   ('a', 1),
                   ('b', 2),
@@ -751,8 +810,8 @@ def test_totext():
     totext(table, f.name, template, prologue, epilogue)
     
     # check what it did
-    with open(f.name, 'rb') as file:
-        actual = file.read()
+    with open(f.name, 'rb') as o:
+        actual = o.read()
         expect = """{| class="wikitable"
 |-
 ! foo

@@ -394,6 +394,7 @@ Extracting (reading) tables from files, databases and other sources
 -------------------------------------------------------------------
 
 .. autofunction:: petl.fromcsv
+.. autofunction:: petl.fromtsv
 .. autofunction:: petl.frompickle
 .. autofunction:: petl.fromsqlite3
 .. autofunction:: petl.fromdb
@@ -500,6 +501,8 @@ Loading (writing) tables to files and databases
 
 .. autofunction:: petl.tocsv
 .. autofunction:: petl.appendcsv
+.. autofunction:: petl.totsv
+.. autofunction:: petl.appendtsv
 .. autofunction:: petl.topickle
 .. autofunction:: petl.appendpickle
 .. autofunction:: petl.tosqlite3

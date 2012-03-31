@@ -16,7 +16,8 @@ from petl.util import header, fieldnames, data, records, rowcount, look, see, \
 from petl.io import fromcsv, frompickle, fromsqlite3, tocsv, topickle, \
            tosqlite3, crc32sum, adler32sum, statsum, fromdb, \
            appendcsv, appendpickle, appendsqlite3, todb, appenddb, fromtext, \
-           totext, appendtext, fromxml, Uncacheable, fromjson, fromdicts, tojson
+           totext, appendtext, fromxml, Uncacheable, fromjson, fromdicts, tojson, \
+           fromtsv, totsv, appendtsv
 
 from petl.transform import rename, cut, cat, convert, fieldconvert, extend, rowslice, \
            head, tail, sort, melt, recast, duplicates, conflicts, \
