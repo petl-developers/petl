@@ -1,5 +1,5 @@
 """
-TODO doc me
+Tests for the petl.io module.
 
 """
 
@@ -109,6 +109,25 @@ def test_fromcsv_cachetag_strict():
     assert tag2 != tag1, (tag2, tag1)
     
 
+def test_fromcsv_manyfiles():
+    """Test the fromcsv function opening many files."""
+
+    files = [NamedTemporaryFile(delete=False) for i in range(106)]
+    for f in files:
+        writer = csv.writer(f, delimiter='\t')
+        table = (('foo', 'bar'),
+                 ('a', 1),
+                 ('b', 2),
+                 ('c', 2))
+        for row in table:
+            writer.writerow(row)
+        f.close()
+    
+    tables = [fromcsv(f.name) for f in files] 
+    iters = [iter(t) for t in tables]
+    print [it.next() for it in iters]
+    
+    
 def test_fromtsv():
     
     f = NamedTemporaryFile(delete=False)
