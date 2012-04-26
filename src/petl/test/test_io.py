@@ -109,32 +109,6 @@ def test_fromcsv_cachetag_strict():
     assert tag2 != tag1, (tag2, tag1)
     
 
-def test_fromcsv_manyfiles():
-    """Test the fromcsv function opening many files."""
-
-    files = [NamedTemporaryFile(delete=False) for i in range(106)]
-    names = [f.name for f in files]
-
-    for f in files:
-        f.close()
-        fn = f.name + '.gz'
-        os.rename(f.name, fn)
-
-        fz = gzip.open(fn, 'wb')
-        writer = csv.writer(fz, delimiter='\t')
-        table = (('foo', 'bar'),
-                 ('a', 1),
-                 ('b', 2),
-                 ('c', 2))
-        for row in table:
-            writer.writerow(row)
-        fz.close()
-    
-    tables = [fromcsv(fn + '.gz') for fn in names] 
-    iters = [iter(t) for t in tables]
-    print [it.next() for it in iters]
-    
-    
 def test_fromtsv():
     
     f = NamedTemporaryFile(delete=False)
