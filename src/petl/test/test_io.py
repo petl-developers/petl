@@ -113,17 +113,24 @@ def test_fromcsv_manyfiles():
     """Test the fromcsv function opening many files."""
 
     files = [NamedTemporaryFile(delete=False) for i in range(106)]
+    names = [f.name for f in files]
+
     for f in files:
-        writer = csv.writer(f, delimiter='\t')
+        f.close()
+        fn = f.name + '.gz'
+        os.rename(f.name, fn)
+
+        fz = gzip.open(fn, 'wb')
+        writer = csv.writer(fz, delimiter='\t')
         table = (('foo', 'bar'),
                  ('a', 1),
                  ('b', 2),
                  ('c', 2))
         for row in table:
             writer.writerow(row)
-        f.close()
+        fz.close()
     
-    tables = [fromcsv(f.name) for f in files] 
+    tables = [fromcsv(fn + '.gz') for fn in names] 
     iters = [iter(t) for t in tables]
     print [it.next() for it in iters]
     
