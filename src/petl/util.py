@@ -2223,11 +2223,11 @@ def shortlistmergesorted(key=None, reverse=False, *iterables):
     
 class HybridRow(tuple):
     
-    def __new__(cls, row, flds, missing):
+    def __new__(cls, row, flds, missing=None):
         t = super(HybridRow, cls).__new__(cls, row)
         return t
     
-    def __init__(self, row, flds, missing):
+    def __init__(self, row, flds, missing=None):
         self.flds = flds
         self.missing = missing
         
@@ -2243,7 +2243,7 @@ class HybridRow(tuple):
             raise Exception('item ' + str(f) + ' not in fields ' + str(self.flds))
 
     
-def hybridrows(flds, it, missing):
+def hybridrows(flds, it, missing=None):
     return (HybridRow(row, flds, missing) for row in it)
     
     
