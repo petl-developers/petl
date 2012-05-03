@@ -3,20 +3,109 @@ Tests for the push module.
 
 """
 
+from tempfile import NamedTemporaryFile
 
-from petl.io import fromcsv
+from petl.io import fromcsv, fromtsv, frompickle
 from petl.testutils import iassertequal
-from petl.push import partition, tocsv
+
+from petl.push import tocsv, totsv, topickle, partition, sort, duplicates, \
+    unique, diff
+
+
+def test_topickle():
+
+    t = [('fruit', 'city', 'sales'),
+         ('orange', 'London', 12),
+         ('banana', 'London', 42),
+         ('orange', 'Paris', 31),
+         ('banana', 'Amsterdam', 74),
+         ('kiwi', 'Berlin', 55)]
+
+    f = NamedTemporaryFile(delete=False)
+    p = topickle(f.name)
+    p.push(t)
+
+    iassertequal(t, frompickle(f.name))
+
+
+def test_topickle_pipe():
+
+    t = [('fruit', 'city', 'sales'),
+         ('orange', 'London', 12),
+         ('banana', 'London', 42),
+         ('orange', 'Paris', 31),
+         ('banana', 'Amsterdam', 74),
+         ('kiwi', 'Berlin', 55)]
+
+    f1 = NamedTemporaryFile(delete=False)
+    f2 = NamedTemporaryFile(delete=False)
+    p = topickle(f1.name)
+    p.pipe(topickle(f2.name))
+    p.push(t)
+
+    iassertequal(t, frompickle(f1.name))
+    iassertequal(t, frompickle(f2.name))
+
+
+def test_tocsv():
+
+    t = [('fruit', 'city', 'sales'),
+         ('orange', 'London', '12'),
+         ('banana', 'London', '42'),
+         ('orange', 'Paris', '31'),
+         ('banana', 'Amsterdam', '74'),
+         ('kiwi', 'Berlin', '55')]
+
+    f = NamedTemporaryFile(delete=False)
+    p = tocsv(f.name)
+    p.push(t)
+
+    iassertequal(t, fromcsv(f.name))
+
+
+def test_tocsv_pipe():
+
+    t = [('fruit', 'city', 'sales'),
+         ('orange', 'London', '12'),
+         ('banana', 'London', '42'),
+         ('orange', 'Paris', '31'),
+         ('banana', 'Amsterdam', '74'),
+         ('kiwi', 'Berlin', '55')]
+
+    f1 = NamedTemporaryFile(delete=False)
+    f2 = NamedTemporaryFile(delete=False)
+    p = tocsv(f1.name)
+    p.pipe(tocsv(f2.name))
+    p.push(t)
+
+    iassertequal(t, fromcsv(f1.name))
+    iassertequal(t, fromcsv(f2.name))
+
+
+def test_totsv():
+
+    t = [('fruit', 'city', 'sales'),
+         ('orange', 'London', '12'),
+         ('banana', 'London', '42'),
+         ('orange', 'Paris', '31'),
+         ('banana', 'Amsterdam', '74'),
+         ('kiwi', 'Berlin', '55')]
+
+    f = NamedTemporaryFile(delete=False)
+    p = totsv(f.name)
+    p.push(t)
+
+    iassertequal(t, fromtsv(f.name))
 
 
 def test_partition():
 
-    t = [['fruit', 'city', 'sales'],
-         ['orange', 'London', 12],
-         ['banana', 'London', 42],
-         ['orange', 'Paris', 31],
-         ['banana', 'Amsterdam', 74],
-         ['kiwi', 'Berlin', 55]]
+    t = [('fruit', 'city', 'sales'),
+         ('orange', 'London', 12),
+         ('banana', 'London', 42),
+         ('orange', 'Paris', 31),
+         ('banana', 'Amsterdam', 74),
+         ('kiwi', 'Berlin', 55)]
 
     p = partition('fruit')
     p.pipe('orange', tocsv('oranges.csv'))
@@ -65,3 +154,203 @@ def test_partition():
     low_actual = fromcsv('low.csv')
     iassertequal(high_expected, high_actual)
     iassertequal(low_expected, low_actual)
+
+
+def test_sort():
+
+    table = (('foo', 'bar'),
+            ('C', '2'),
+            ('A', '9'),
+            ('A', '6'),
+            ('F', '1'),
+            ('D', '10'))
+    
+    f = NamedTemporaryFile(delete=False)
+    p = sort('foo')
+    p.pipe(topickle(f.name))
+    p.push(table)
+
+    expectation = (('foo', 'bar'),
+                   ('A', '9'),
+                   ('A', '6'),
+                   ('C', '2'),
+                   ('D', '10'),
+                   ('F', '1'))
+    iassertequal(expectation, frompickle(f.name))
+
+
+def test_sort_buffered():
+
+    table = (('foo', 'bar'),
+            ('C', '2'),
+            ('A', '9'),
+            ('A', '6'),
+            ('F', '1'),
+            ('D', '10'))
+    
+    f = NamedTemporaryFile(delete=False)
+    p = sort('foo', buffersize=2)
+    p.pipe(topickle(f.name))
+    p.push(table)
+
+    expectation = (('foo', 'bar'),
+                   ('A', '9'),
+                   ('A', '6'),
+                   ('C', '2'),
+                   ('D', '10'),
+                   ('F', '1'))
+    actual = frompickle(f.name)
+    print list(actual)
+    iassertequal(expectation, actual)
+
+
+def test_duplicates():
+
+    table = (('foo', 'bar', 'baz'),
+             ('A', 1, 2),
+             ('B', '2', '3.4'),
+             ('D', 'xyz', 9.0),
+             ('B', u'3', u'7.8', True),
+             ('B', '2', 42),
+             ('E', None),
+             ('D', 4, 12.3))
+
+    f1 = NamedTemporaryFile(delete=False)
+    f2 = NamedTemporaryFile(delete=False)
+    p = sort('foo')
+    q = p.pipe(duplicates('foo'))
+    q.pipe(topickle(f1.name))
+    q.pipe('remainder', topickle(f2.name))
+    p.push(table)
+
+    expectation = (('foo', 'bar', 'baz'),
+                   ('B', '2', '3.4'),
+                   ('B', u'3', u'7.8', True),
+                   ('B', '2', 42),
+                   ('D', 'xyz', 9.0),
+                   ('D', 4, 12.3))
+    iassertequal(expectation, frompickle(f1.name))
+
+    exremainder = (('foo', 'bar', 'baz'),
+                   ('A', 1, 2), 
+                   ('E', None))
+    iassertequal(exremainder, frompickle(f2.name))
+    
+    # test with compound key
+    p = sort(key=('foo', 'bar'))
+    q = p.pipe(duplicates(key=('foo', 'bar')))
+    q.pipe(topickle(f1.name))
+    q.pipe('remainder', topickle(f2.name))
+    p.push(table)
+    
+    expectation = (('foo', 'bar', 'baz'),
+                   ('B', '2', '3.4'),
+                   ('B', '2', 42))
+    iassertequal(expectation, frompickle(f1.name))
+
+    exremainder = (('foo', 'bar', 'baz'),
+                   ('A', 1, 2), 
+                   ('B', u'3', u'7.8', True),
+                   ('D', 4, 12.3),
+                   ('D', 'xyz', 9.0),
+                   ('E', None))
+    iassertequal(exremainder, frompickle(f2.name))
+
+
+def test_unique():
+
+    table = (('foo', 'bar', 'baz'),
+             ('A', 1, 2),
+             ('B', '2', '3.4'),
+             ('D', 'xyz', 9.0),
+             ('B', u'3', u'7.8', True),
+             ('B', '2', 42),
+             ('E', None),
+             ('D', 4, 12.3))
+
+    f1 = NamedTemporaryFile(delete=False)
+    f2 = NamedTemporaryFile(delete=False)
+    p = sort('foo')
+    q = p.pipe(unique('foo'))
+    q.pipe(topickle(f1.name))
+    q.pipe('remainder', topickle(f2.name))
+    p.push(table)
+
+    expectation = (('foo', 'bar', 'baz'),
+                   ('A', 1, 2), 
+                   ('E', None))
+    iassertequal(expectation, frompickle(f1.name))
+
+    exremainder = (('foo', 'bar', 'baz'),
+                   ('B', '2', '3.4'),
+                   ('B', u'3', u'7.8', True),
+                   ('B', '2', 42),
+                   ('D', 'xyz', 9.0),
+                   ('D', 4, 12.3))
+    iassertequal(exremainder, frompickle(f2.name))
+    
+
+def test_operator_overload():
+
+    table = (('foo', 'bar', 'baz'),
+             ('A', 1, 2),
+             ('B', '2', '3.4'),
+             ('D', 'xyz', 9.0),
+             ('B', u'3', u'7.8', True),
+             ('B', '2', 42),
+             ('E', None),
+             ('D', 4, 12.3))
+
+    f1 = NamedTemporaryFile(delete=False)
+    p = sort('foo')
+    p | duplicates('foo') | topickle(f1.name)
+    p.push(table)
+
+    expectation = (('foo', 'bar', 'baz'),
+                   ('B', '2', '3.4'),
+                   ('B', u'3', u'7.8', True),
+                   ('B', '2', 42),
+                   ('D', 'xyz', 9.0),
+                   ('D', 4, 12.3))
+    iassertequal(expectation, frompickle(f1.name))
+
+
+def test_diff():
+
+    tablea = (('foo', 'bar', 'baz'),
+              ('A', 1, True),
+              ('B', 2, False),
+              ('C', 7, False),
+              ('C', 9, True))
+    
+    tableb = (('x', 'y', 'z'),
+              ('A', 9, False),
+              ('B', 2, False),
+              ('B', 3, True),
+              ('C', 9, True))
+    
+    aminusb = (('foo', 'bar', 'baz'),
+               ('A', 1, True),
+               ('C', 7, False))
+    
+    bminusa = (('foo', 'bar', 'baz'),
+               ('A', 9, False),
+               ('B', 3, True))
+
+    both = (('foo', 'bar', 'baz'),
+           ('B', 2, False),
+           ('C', 9, True))
+
+    f1 = NamedTemporaryFile(delete=False)
+    f2 = NamedTemporaryFile(delete=False)
+    f3 = NamedTemporaryFile(delete=False)
+    p = diff()
+    p.pipe('+', topickle(f1.name))
+    p.pipe('-', topickle(f2.name))
+    p.pipe(topickle(f3.name))
+    p.push(tablea, tableb)
+
+    added, subtracted, common = frompickle(f1.name), frompickle(f2.name), frompickle(f3.name)
+    iassertequal(bminusa, added)
+    iassertequal(aminusb, subtracted)
+    iassertequal(both, common)
