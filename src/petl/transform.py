@@ -5302,6 +5302,7 @@ def iterjoin(left, right, key, leftouter=False, rightouter=False, missing=None):
     rgit = groupby(rit, key=rgetk)
     
     # loop until *either* of the iterators is exhausted
+    lkval, rkval = None, None # initialise here to handle empty tables
     try:
 
         # pick off initial row groups
@@ -5551,6 +5552,7 @@ def iterantijoin(left, right, key):
     rgit = groupby(rit, key=rgetk)
     
     # loop until *either* of the iterators is exhausted
+    lkval, rkval = None, None # initialise here to handle empty tables
     try:
 
         # pick off initial row groups
@@ -6643,9 +6645,10 @@ class UnflattenView(RowContainer):
                 row = [v]
         
         # deal with last row
-        if len(row) < period:
-            row.extend([missing] * (period - len(row)))
-        yield tuple(row)
+        if len(row) > 0:
+            if len(row) < period:
+                row.extend([missing] * (period - len(row)))
+            yield tuple(row)
             
 
 def mergesort(*tables, **kwargs):

@@ -23,7 +23,6 @@ from petl import rename, fieldnames, cut, cat, convert, fieldconvert, extend, \
 
 
 def test_rename():
-    """Test the rename function."""
 
     table = (('foo', 'bar'),
              ('M', 12),
@@ -41,8 +40,14 @@ def test_rename():
     assert fieldnames(result) == ['spong', 'bar']
     
 
+def test_rename_empty():
+    table = (('foo', 'bar'),)
+    expect = (('foofoo', 'bar'),)
+    actual = rename(table, 'foo', 'foofoo')
+    iassertequal(expect, actual)
+    
+    
 def test_cut():
-    """Test the cut function."""
     
     table = (('foo', 'bar', 'baz'),
              ('A', 1, 2),
@@ -95,10 +100,16 @@ def test_cut():
                    ('D', 9.0),
                    ('E', None))
     iassertequal(expectation, cut5)
-    
+
+
+def test_cut_empty():
+    table = (('foo', 'bar'),)
+    expect = (('bar',),)
+    actual = cut(table, 'bar')
+    iassertequal(expect, actual)
+        
 
 def test_cutout():
-    """Test the cutout function."""
     
     table = (('foo', 'bar', 'baz'),
              ('A', 1, 2),
@@ -136,7 +147,6 @@ def test_cutout():
     
 
 def test_cat():
-    """Test the cat function."""
     
     table1 = (('foo', 'bar'),
               (1, 'A'),
@@ -214,6 +224,18 @@ def test_cat_with_header():
     iassertequal(expect, actual)
 
 
+def test_cat_empty():
+    table1 = (('foo', 'bar'),
+              (1, 'A'),
+              (2, 'B'))
+    table2 = (('bar', 'baz'),)
+    expect = (('foo', 'bar', 'baz'),
+              (1, 'A', None),
+              (2, 'B', None))
+    actual = cat(table1, table2)
+    iassertequal(expect, actual)
+
+
 def test_convert():
     
     table1 = (('foo', 'bar', 'baz'),
@@ -269,6 +291,13 @@ def test_convert():
                ('E', None))
     iassertequal(expect6, table6)
 
+
+def test_convert_empty():
+    table = (('foo', 'bar'),)
+    expect = (('foo', 'bar'),)
+    actual = convert(table, 'foo', int)
+    iassertequal(expect, actual)
+        
 
 def test_fieldconvert():
 
@@ -341,8 +370,7 @@ def test_convertnumbers():
     iassertequal(expect2, table2)
     
     
-def test_translate():
-    """Test the translate function."""
+def test_convert_translate():
     
     table = (('foo', 'bar'),
              ('M', 12),
@@ -388,6 +416,13 @@ def test_extend():
     iassertequal(expectation, result)
 
 
+def test_extend_empty():
+    table = (('foo', 'bar'),)
+    expect = (('foo', 'bar', 'baz'),)
+    actual = extend(table, 'baz', 42)
+    iassertequal(expect, actual)
+
+
 def test_rowslice():
     """Test the rowslice function."""
     
@@ -416,6 +451,12 @@ def test_rowslice():
     iassertequal(expectation, result)
 
 
+def test_rowslice_empty():
+    table = (('foo', 'bar'),)
+    expect = (('foo', 'bar'),)
+    actual = rowslice(table, 1, 2)
+    iassertequal(expect, actual)
+        
 
 def test_head():
     """Test the head function."""
@@ -464,6 +505,13 @@ def test_tail():
               ('q', 2))
     iassertequal(expect, table2)
     
+
+def test_tail_empty():
+    table = (('foo', 'bar'),)
+    expect = (('foo', 'bar'),)
+    actual = tail(table)
+    iassertequal(expect, actual)
+        
     
 def test_sort_1():
     
@@ -645,6 +693,13 @@ def test_sort_mergesort():
     iassertequal(expectation, result)
     
     
+def test_sort_empty():
+    table = (('foo', 'bar'),)
+    expect = (('foo', 'bar'),)
+    actual = sort(table)
+    iassertequal(expect, actual)
+
+
 def test_melt_1():
     
     table = (('id', 'gender', 'age'),
@@ -691,6 +746,13 @@ def test_melt_2():
     result = melt(table, key=('id', 'time'), variables='height')
     iassertequal(expectation, result)
     
+
+def test_melt_empty():
+    table = (('foo', 'bar', 'baz'),)
+    expect = (('foo', 'variable', 'value'),)
+    actual = melt(table, key='foo')
+    iassertequal(expect, actual)
+
 
 def test_recast_1():
     
@@ -818,6 +880,13 @@ def test_recast4():
     iassertequal(expect, result)
 
 
+def test_recast_empty():
+    table = (('foo', 'variable', 'value'),)
+    expect = (('foo',),)
+    actual = recast(table)
+    iassertequal(expect, actual)
+
+
 def test_duplicates():
     
     table = (('foo', 'bar', 'baz'),
@@ -845,6 +914,13 @@ def test_duplicates():
                    ('B', '2', 42))
     iassertequal(expectation, result)
     
+
+def test_duplicates_empty():
+    table = (('foo', 'bar'),)
+    expect = (('foo', 'bar'),)
+    actual = duplicates(table, key='foo')
+    iassertequal(expect, actual)
+
 
 def test_conflicts():
     
@@ -895,6 +971,13 @@ def test_conflicts():
     iassertequal(expectation, result)
 
     
+def test_conflicts_empty():
+    table = (('foo', 'bar'),)
+    expect = (('foo', 'bar'),)
+    actual = conflicts(table, key='foo')
+    iassertequal(expect, actual)
+
+
 def test_mergereduce():
 
     table = (('foo', 'bar', 'baz'),
@@ -906,7 +989,7 @@ def test_mergereduce():
              ('D', 'xyz', 12.3),
              ('A', 2, None))
 
-    # value overrides missing; last value wins
+    # value overrides missing
     result = mergereduce(table, 'foo', missing=None)
     expectation = (('foo', 'bar', 'baz'),
                    ('A', (1, 2), 2),
@@ -914,6 +997,13 @@ def test_mergereduce():
                    ('D', 'xyz', (9.4, 12.3)),
                    ('E', None))
     iassertequal(expectation, result)
+    
+    
+def test_mergereduce_empty():
+    table = (('foo', 'bar'),)
+    expect = (('foo', 'bar'),)
+    actual = mergereduce(table, key='foo')
+    iassertequal(expect, actual)
     
     
 def _test_complement_1(f):
@@ -967,6 +1057,8 @@ def _test_complement_2(f):
 
 def _test_complement_3(f):
 
+    # make sure we deal with empty tables
+    
     table1 = (('foo', 'bar'),
               ('A', 1),
               ('B', 2))
@@ -988,6 +1080,8 @@ def _test_complement_3(f):
     
 def _test_complement_4(f):
 
+    # test behaviour with duplicate rows
+    
     table1 = (('foo', 'bar'),
               ('A', 1),
               ('B', 2),
@@ -1094,6 +1188,52 @@ def test_recordcomplement_2():
     iassertequal(bminusa, result)
     
 
+def test_recordcomplement_3():
+
+    # make sure we deal with empty tables
+    
+    table1 = (('foo', 'bar'),
+              ('A', 1),
+              ('B', 2))
+    
+    table2 = (('bar', 'foo'),)
+    
+    expectation = (('foo', 'bar'),
+                   ('A', 1),
+                   ('B', 2))
+    result = recordcomplement(table1, table2)
+    iassertequal(expectation, result)
+    iassertequal(expectation, result)
+    
+    expectation = (('bar', 'foo'),)
+    result = recordcomplement(table2, table1)
+    iassertequal(expectation, result)
+    iassertequal(expectation, result)
+    
+    
+def test_recordcomplement_4():
+
+    # test behaviour with duplicate rows
+    
+    table1 = (('foo', 'bar'),
+              ('A', 1),
+              ('B', 2),
+              ('B', 2),
+              ('C', 7))
+    
+    table2 = (('bar', 'foo'),
+              (2, 'B'))
+    
+    expectation = (('foo', 'bar'),
+                   ('A', 1),
+                   ('B', 2),
+                   ('C', 7))
+    
+    result = recordcomplement(table1, table2)
+    iassertequal(expectation, result)
+    iassertequal(expectation, result)
+    
+    
 def test_recorddiff():
 
     tablea = (('foo', 'bar', 'baz'),
@@ -1161,7 +1301,13 @@ def test_capture():
     iassertequal(expectation, result)
     
     
-    
+def test_capture_empty():
+    table = (('foo', 'bar'),)
+    expect = (('foo', 'baz', 'qux'),)
+    actual = capture(table, 'bar', r'(\w)(\d)', ('baz', 'qux'))
+    iassertequal(expect, actual)
+
+
 def test_split():
     
     table = (('id', 'variable', 'value'),
@@ -1201,7 +1347,13 @@ def test_split():
     result = split(table, 'variable', 'd')
     iassertequal(expectation, result)
 
-    
+
+def test_split_empty():
+    table = (('foo', 'bar'),)
+    expect = (('foo', 'baz', 'qux'),)
+    actual = split(table, 'bar', 'd', ('baz', 'qux'))
+    iassertequal(expect, actual)
+
 
 def test_melt_and_capture():
     
@@ -1314,6 +1466,13 @@ def test_select():
               ('c', 2))
     iassertequal(expect, actual)
     iassertequal(expect, actual) # check can iterate twice
+
+
+def test_select_empty():
+    table = (('foo', 'bar'),)
+    expect = (('foo', 'bar'),)
+    actual = select(table, lambda r: r['foo'] == r['bar'])
+    iassertequal(expect, actual)
 
 
 def test_rowselect():
@@ -1440,6 +1599,17 @@ def test_fieldmap():
     iassertequal(expect, actual)
 
 
+def test_fieldmap_empty():
+    
+    table = (('foo', 'bar'),)
+    expect = (('foo', 'baz'),)
+    mappings = OrderedDict()
+    mappings['foo'] = 'foo'
+    mappings['baz'] = 'bar', lambda v: v*2 
+    actual = fieldmap(table, mappings)
+    iassertequal(expect, actual)
+
+
 def test_facet():
 
     table = (('foo', 'bar', 'baz'),
@@ -1485,6 +1655,12 @@ def test_facet_2():
     iassertequal(fct['cc'], expect_fctc)
     iassertequal(fct['cc'], expect_fctc) # check can iterate twice
     
+
+def test_facet_empty():
+    table = (('foo', 'bar'),)
+    actual = facet(table, 'foo')
+    assertequal(list(), actual.keys())
+
 
 def test_rangefacet():
     
@@ -1571,6 +1747,14 @@ def test_recordreduce_2():
                ('cc', 4))
     iassertequal(expect2, table2)
     
+
+def test_rowreduce_empty():
+    table = (('foo', 'bar'),)
+    expect = (('foo', 'bar'),)
+    reducer = lambda key, rows: (key, [r[0] for r in rows])
+    actual = rowreduce(table, key='foo', reducer=reducer, fields=('foo', 'bar'))
+    iassertequal(expect, actual)
+
 
 def test_rangerowreduce():
     
@@ -1698,6 +1882,20 @@ def test_aggregate_2():
     table3['listbar'] = 'bar' # default aggregation is list
     table3['bars'] = 'bar', strjoin(', ')
     iassertequal(expect2, table3)
+    
+    
+def test_aggregate_empty():
+    
+    table = (('foo', 'bar'),)
+    
+    aggregators = OrderedDict()
+    aggregators['minbar'] = 'bar', min
+    aggregators['maxbar'] = 'bar', max
+    aggregators['sumbar'] = 'bar', sum
+
+    actual = aggregate(table, 'foo', aggregators)
+    expect = (('foo', 'minbar', 'maxbar', 'sumbar'),)
+    iassertequal(expect, actual)
     
     
 def test_rangeaggregate():
@@ -1862,6 +2060,20 @@ def test_rowmap():
     iassertequal(expect, actual)
 
 
+def test_rowmap_empty():
+    
+    table = (('id', 'sex', 'age', 'height', 'weight'),)
+    def rowmapper(row):
+        transmf = {'male': 'M', 'female': 'F'}
+        return [row[0],
+                transmf[row[1]] if row[1] in transmf else row[1],
+                row[2] * 12,
+                row[4] / row[3] ** 2]
+    actual = rowmap(table, rowmapper, fields=['subject_id', 'gender', 'age_months', 'bmi'])  
+    expect = (('subject_id', 'gender', 'age_months', 'bmi'),)
+    iassertequal(expect, actual)
+
+
 def test_recordmap():
     
     table = (('id', 'sex', 'age', 'height', 'weight'),
@@ -1965,7 +2177,7 @@ def test_recordmapmany():
     iassertequal(expect, actual) # can iteratate twice?
         
 
-def test_setfields():
+def test_setheader():
     
     table1 = (('foo', 'bar'),
               ('a', 1),
@@ -1978,7 +2190,15 @@ def test_setfields():
     iassertequal(expect2, table2) # can iterate twice?
     
     
-def test_extendfields():
+def test_setheader_empty():
+    
+    table1 = (('foo', 'bar'),)
+    table2 = setheader(table1, ['foofoo', 'barbar'])
+    expect2 = (('foofoo', 'barbar'),)
+    iassertequal(expect2, table2)
+    
+    
+def test_extendheader():
     
     table1 = (('foo',),
               ('a', 1, True),
@@ -1991,7 +2211,15 @@ def test_extendfields():
     iassertequal(expect2, table2) # can iterate twice?
     
     
-def test_pushfields():
+def test_extendheader_empty():
+    
+    table1 = (('foo',),)
+    table2 = extendheader(table1, ['bar', 'baz'])
+    expect2 = (('foo', 'bar', 'baz'),)
+    iassertequal(expect2, table2)
+    
+    
+def test_pushheader():
     
     table1 = (('a', 1),
               ('b', 2))
@@ -2001,6 +2229,20 @@ def test_pushfields():
                ('b', 2))
     iassertequal(expect2, table2)
     iassertequal(expect2, table2) # can iterate twice?
+    
+
+def test_pushheader_empty():
+    
+    table1 = (('a', 1),)
+    table2 = pushheader(table1, ['foo', 'bar'])
+    expect2 = (('foo', 'bar'),
+               ('a', 1))
+    iassertequal(expect2, table2)
+    
+    table1 = tuple()
+    table2 = pushheader(table1, ['foo', 'bar'])
+    expect2 = (('foo', 'bar'),)
+    iassertequal(expect2, table2)
     
 
 def test_skip():
@@ -2018,6 +2260,16 @@ def test_skip():
     iassertequal(expect2, table2) # can iterate twice?
     
     
+def test_skip_empty():
+    
+    table1 = (('#aaa', 'bbb', 'ccc'),
+              ('#mmm'),
+              ('foo', 'bar'))
+    table2 = skip(table1, 2)
+    expect2 = (('foo', 'bar'),)
+    iassertequal(expect2, table2)
+    
+    
 def test_skipcomments():
 
     table1 = (('##aaa', 'bbb', 'ccc'),
@@ -2032,6 +2284,17 @@ def test_skipcomments():
                ('b', 2))
     iassertequal(expect2, table2)
     iassertequal(expect2, table2) # can iterate twice?
+    
+    
+def test_skipcomments_empty():
+
+    table1 = (('##aaa', 'bbb', 'ccc'),
+              ('##mmm',),
+              ('#foo', 'bar'),
+              ('##nnn', 1))
+    table2 = skipcomments(table1, '##')
+    expect2 = (('#foo', 'bar'),)
+    iassertequal(expect2, table2)
     
     
 def test_unpack():
@@ -2073,6 +2336,14 @@ def test_unpack():
     iassertequal(expect5, table5)
     
     
+def test_unpack_empty():
+    
+    table1 = (('foo', 'bar'),)
+    table2 = unpack(table1, 'bar', ['baz', 'quux'])
+    expect2 = (('foo', 'baz', 'quux'),)
+    iassertequal(expect2, table2)
+    
+
 def _test_join_basic(join):
     
     table1 = (('id', 'colour'),
@@ -2160,10 +2431,32 @@ def _test_join_string_key(join):
     iassertequal(expect3, table3) # check twice
 
 
+def _test_join_empty(join):
+    
+    table1 = (('id', 'colour'),
+              (1, 'blue'),
+              (2, 'red'),
+              (3, 'purple'))
+    table2 = (('id', 'shape'),)
+    table3 = join(table1, table2, key='id')
+    expect3 = (('id', 'colour', 'shape'),)
+    iassertequal(expect3, table3)
+    
+    table1 = (('id', 'colour'),)
+    table2 = (('id', 'shape'),
+              (1, 'circle'),
+              (3, 'square'),
+              (4, 'ellipse'))
+    table3 = join(table1, table2, key='id')
+    expect3 = (('id', 'colour', 'shape'),)
+    iassertequal(expect3, table3)
+    
+
 def _test_join(join):
     _test_join_basic(join)
     _test_join_compound_keys(join)
     _test_join_string_key(join)
+    _test_join_empty(join)
 
 
 def test_join():
@@ -2269,11 +2562,31 @@ def _test_leftjoin_compound_keys(leftjoin):
     iassertequal(expect7, table7)
 
 
+def _test_leftjoin_empty(leftjoin):
+    
+    table1 = (('id', 'colour'),
+              (1, 'blue'),
+              (2, 'red'),
+              (3, 'purple'),
+              (5, 'yellow'),
+              (7, 'orange'))
+    table2 = (('id', 'shape'),)
+    table3 = leftjoin(table1, table2, key='id')
+    expect3 = (('id', 'colour', 'shape'),
+               (1, 'blue', None),
+               (2, 'red', None),
+               (3, 'purple', None),
+               (5, 'yellow', None,),
+               (7, 'orange', None))
+    iassertequal(expect3, table3)
+    
+
 def _test_leftjoin(leftjoin):
     _test_leftjoin_1(leftjoin)
     _test_leftjoin_2(leftjoin)
     _test_leftjoin_3(leftjoin)
     _test_leftjoin_compound_keys(leftjoin)
+    _test_leftjoin_empty(leftjoin)
 
 
 def test_leftjoin():
@@ -2364,10 +2677,30 @@ def _test_rightjoin_3(rightjoin):
     iassertequal(expect4, table4)
     
     
+def _test_rightjoin_empty(rightjoin):
+    
+    table1 = (('id', 'colour'),)
+    table2 = (('id', 'shape'),
+              (0, 'triangle'),
+              (1, 'circle'),
+              (3, 'square'),
+              (4, 'ellipse'),
+              (5, 'pentagon'))
+    table3 = rightjoin(table1, table2, key='id')
+    expect3 = (('id', 'colour', 'shape'),
+               (0, None, 'triangle'),
+               (1, None, 'circle'),
+               (3, None, 'square'),
+               (4, None, 'ellipse'),
+               (5, None, 'pentagon'))
+    iassertequal(expect3, table3)
+    
+
 def _test_rightjoin(rightjoin):
     _test_rightjoin_1(rightjoin)
     _test_rightjoin_2(rightjoin)
     _test_rightjoin_3(rightjoin)
+    _test_rightjoin_empty(rightjoin)
 
 
 def test_rightjoin():
@@ -2454,6 +2787,27 @@ def test_outerjoin_fieldorder():
     iassertequal(expect3, table3) # check twice
     
     
+def test_outerjoin_empty():
+    
+    table1 = (('id', 'colour'),
+              (0, 'black'),
+              (1, 'blue'),
+              (2, 'red'),
+              (3, 'purple'),
+              (5, 'yellow'),
+              (7, 'white'))
+    table2 = (('id', 'shape'),)
+    table3 = outerjoin(table1, table2, key='id')
+    expect3 = (('id', 'colour', 'shape'),
+               (0, 'black', None),
+               (1, 'blue', None),
+               (2, 'red', None),
+               (3, 'purple', None),
+               (5, 'yellow', None),
+               (7, 'white', None))
+    iassertequal(expect3, table3)
+
+    
 def test_crossjoin():
     
     table1 = (('id', 'colour'),
@@ -2468,6 +2822,17 @@ def test_crossjoin():
                (1, 'blue', 3, 'square'),
                (2, 'red', 1, 'circle'),
                (2, 'red', 3, 'square'))
+    iassertequal(expect3, table3)
+    
+    
+def test_crossjoin_empty():
+    
+    table1 = (('id', 'colour'),
+              (1, 'blue'),
+              (2, 'red'))
+    table2 = (('id', 'shape'),)
+    table3 = crossjoin(table1, table2)
+    expect3 = (('id', 'colour', 'id', 'shape'),)
     iassertequal(expect3, table3)
     
     
@@ -2495,8 +2860,23 @@ def _test_antijoin(antijoin):
     iassertequal(expect4, table4)
 
 
+def _test_antijoin_empty(antijoin):
+    
+    table1 = (('id', 'colour'),
+              (0, 'black'),
+              (1, 'blue'),
+              (2, 'red'),
+              (4, 'yellow'),
+              (5, 'white'))
+    table2 = (('id', 'shape'),)
+    actual = antijoin(table1, table2, key='id')
+    expect = table1
+    iassertequal(expect, actual)
+
+
 def test_antijoin():
     _test_antijoin(antijoin)    
+    _test_antijoin_empty(antijoin)    
     
     
 def test_transpose():
@@ -2510,6 +2890,14 @@ def test_transpose():
     expect2 = (('id', 1, 2, 3, 5, 7),
                ('colour', 'blue', 'red', 'purple', 'yellow', 'orange'))
     iassertequal(expect2, table2)
+    iassertequal(expect2, table2)
+    
+    
+def test_transpose_empty():
+    table1 = (('id', 'colour'),)
+    table2 = transpose(table1)
+    expect2 = (('id',),
+               ('colour',))
     iassertequal(expect2, table2)
     
     
@@ -2596,11 +2984,24 @@ def _test_intersection_4(intersection):
     iassertequal(expectation, result)
     
     
+def _test_intersection_empty(intersection):
+
+    table1 = (('foo', 'bar'),
+              ('A', 1),
+              ('B', 2),
+              ('C', 7))
+    table2 = (('foo', 'bar'),)
+    expectation = (('foo', 'bar'),)
+    result = intersection(table1, table2)
+    iassertequal(expectation, result)
+    
+    
 def _test_intersection(intersection):
     _test_intersection_1(intersection)
     _test_intersection_2(intersection)
     _test_intersection_3(intersection)
     _test_intersection_4(intersection)
+    _test_intersection_empty(intersection)
 
 
 def test_intersection():
@@ -2631,6 +3032,14 @@ def test_pivot():
     iassertequal(expect2, table2)
     
     
+def test_pivot_empty():
+    
+    table1 = (('region', 'gender', 'style', 'units'),)
+    table2 = pivot(table1, 'region', 'gender', 'units', sum)
+    expect2 = (('region',),)
+    iassertequal(expect2, table2)
+    
+    
 def test_hashjoin():
     _test_join(hashjoin)
 
@@ -2645,6 +3054,7 @@ def test_hashrightjoin():
 
 def test_hashantijoin():
     _test_antijoin(hashantijoin)    
+    _test_antijoin_empty(hashantijoin)    
 
     
 def test_hashcomplement():
@@ -2667,6 +3077,14 @@ def test_flatten():
 
     actual1 = flatten(table1)
     iassertequal(expect1, actual1)
+    iassertequal(expect1, actual1)
+    
+    
+def test_flatten_empty():
+
+    table1 = (('foo', 'bar', 'baz'),)
+    expect1 = []
+    actual1 = flatten(table1)
     iassertequal(expect1, actual1)
     
     
@@ -2713,6 +3131,15 @@ def test_unflatten_2():
     iassertequal(expect1, actual1)
     
     
+def test_unflatten_empty():
+    
+    table1 = (('lines',),)
+    expect1 = (('f0', 'f1', 'f2'),)
+    actual1 = unflatten(table1, 'lines', 3)
+    print list(actual1)
+    iassertequal(expect1, actual1)
+
+
 def test_mergesort_1():
     
     table1 = (('foo', 'bar'),
