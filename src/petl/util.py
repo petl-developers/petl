@@ -2208,8 +2208,19 @@ def shortlistmergesorted(key=None, reverse=False, *iterables):
         opkwargs = {'key': key}
     else:
         opkwargs = dict()
-    iterators = [iter(iterable) for iterable in iterables]
-    shortlist = [it.next() for it in iterators]
+    # populate initial shortlist
+    # (remember some iterables might be empty)
+    iterators = list()
+    shortlist = list()
+    for iterable in iterables:
+        it = iter(iterable)
+        try:
+            first = it.next()
+            iterators.append(it)
+            shortlist.append(first)
+        except StopIteration:
+            pass
+    # do the mergesort
     while iterators:
         nxt = op(shortlist, **opkwargs)
         yield nxt

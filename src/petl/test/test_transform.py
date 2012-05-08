@@ -8,17 +8,18 @@ from collections import OrderedDict
 
 from petl.testutils import iassertequal, assertequal
 from petl import rename, fieldnames, cut, cat, convert, fieldconvert, extend, \
-                rowslice, head, tail, sort, melt, recast, duplicates, conflicts, \
-                mergereduce, select, complement, diff, capture, \
-                split, expr, fieldmap, facet, rowreduce, aggregate, recordreduce, \
-                rowmap, recordmap, rowmapmany, recordmapmany, setheader, pushheader, \
-                skip, extendheader, unpack, join, leftjoin, rightjoin, outerjoin, \
-                crossjoin, antijoin, rangeaggregate, rangecounts, rangefacet, \
-                rangerowreduce, rangerecordreduce, selectre, rowselect, recordselect, \
-                rowlenselect, strjoin, transpose, intersection, pivot, recorddiff, \
-                recordcomplement, cutout, skipcomments, convertall, convertnumbers, \
-                hashjoin, hashleftjoin, hashrightjoin, hashantijoin, hashcomplement, \
-                hashintersection, flatten, unflatten, mergesort
+                rowslice, head, tail, sort, melt, recast, duplicates, \
+                conflicts, mergereduce, select, complement, diff, capture, \
+                split, expr, fieldmap, facet, rowreduce, aggregate, \
+                rowmap, recordmap, rowmapmany, setheader, pushheader, \
+                skip, extendheader, unpack, join, leftjoin, rightjoin, \
+                outerjoin, crossjoin, antijoin, rangeaggregate, rangecounts, \
+                rangefacet, rangerowreduce, selectre, rowselect, \
+                rowlenselect, strjoin, transpose, intersection, pivot, \
+                recorddiff, recordcomplement, cutout, skipcomments, \
+                convertall, convertnumbers, hashjoin, hashleftjoin, \
+                hashrightjoin, hashantijoin, hashcomplement, hashintersection, \
+                flatten, unflatten, mergesort
 
 
 def test_rename():
@@ -2797,6 +2798,20 @@ def test_mergesort_3():
     iassertequal(expect, actual)
     iassertequal(expect, actual)
     
+
+def test_mergesort_empty():
     
+    table1 = (('foo', 'bar'),
+              ('A', 9),
+              ('C', 2),
+              ('D', 10),
+              ('F', 1))
+    
+    table2 = (('foo', 'bar'),)
+    
+    expect = table1
+    actual = mergesort(table1, table2, key='foo')
+    iassertequal(expect, actual)
+    iassertequal(expect, actual)
     
     
