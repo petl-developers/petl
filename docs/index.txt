@@ -494,6 +494,7 @@ Transforming tables
 .. autofunction:: petl.hashintersection
 .. autofunction:: petl.flatten
 .. autofunction:: petl.unflatten
+.. autofunction:: petl.annex
 
 
 Loading (writing) tables to files and databases
