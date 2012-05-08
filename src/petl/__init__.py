@@ -33,10 +33,10 @@ from petl.transform import rename, cut, cat, convert, fieldconvert, extend, rows
            intersection, pivot, recordcomplement, recorddiff, cutout, skipcomments, \
            convertall, convertnumbers, hashjoin, hashleftjoin, hashrightjoin, \
            hashantijoin, hashcomplement, hashintersection, replace, replaceall, \
-           resub, flatten, unflatten, mergesort
+           resub, flatten, unflatten, mergesort, annex
            
            
-VERSION = '0.9'
+VERSION = '0.10'
            
            
 def lenstats(table, field):

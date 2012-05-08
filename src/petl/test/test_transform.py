@@ -19,7 +19,7 @@ from petl import rename, fieldnames, cut, cat, convert, fieldconvert, extend, \
                 recorddiff, recordcomplement, cutout, skipcomments, \
                 convertall, convertnumbers, hashjoin, hashleftjoin, \
                 hashrightjoin, hashantijoin, hashcomplement, hashintersection, \
-                flatten, unflatten, mergesort
+                flatten, unflatten, mergesort, annex
 
 
 def test_rename():
@@ -3242,3 +3242,46 @@ def test_mergesort_empty():
     iassertequal(expect, actual)
     
     
+def test_annex():
+
+    table1 = (('foo', 'bar'),
+              ('A', 9),
+              ('C', 2),
+              ('F', 1))
+    table2 = (('foo', 'baz'),
+              ('B', 3),
+              ('D', 10))
+    expect = (('foo', 'bar', 'foo', 'baz'),
+              ('A', 9, 'B', 3),
+              ('C', 2, 'D', 10),
+              ('F', 1, None, None))
+    actual = annex(table1, table2)
+    iassertequal(expect, actual)
+    iassertequal(expect, actual)
+
+    expect21 = (('foo', 'baz', 'foo', 'bar'),
+                ('B', 3, 'A', 9),
+                ('D', 10, 'C', 2),
+                (None, None, 'F', 1))
+    actual21 = annex(table2, table1)
+    iassertequal(expect21, actual21)
+    iassertequal(expect21, actual21)
+
+
+def test_annex_uneven_rows():
+
+    table1 = (('foo', 'bar'),
+              ('A', 9, True),
+              ('C', 2),
+              ('F',))
+    table2 = (('foo', 'baz'),
+              ('B', 3),
+              ('D', 10))
+    expect = (('foo', 'bar', 'foo', 'baz'),
+              ('A', 9, 'B', 3),
+              ('C', 2, 'D', 10),
+              ('F', None, None, None))
+    actual = annex(table1, table2)
+    iassertequal(expect, actual)
+    iassertequal(expect, actual)
+

@@ -3,7 +3,7 @@ Functions for transforming tables.
 
 """
 
-from itertools import islice, groupby, product, count
+from itertools import islice, groupby, product, count, chain, izip_longest
 from collections import deque, defaultdict, OrderedDict, Counter
 from operator import itemgetter
 import cPickle as pickle
@@ -6862,3 +6862,83 @@ def merge(*tables, **kwargs):
     return t2
 
 
+def annex(*tables, **kwargs):
+    """
+    Join two or more tables by row order. E.g.::
+
+        >>> from petl import annex, look
+        >>> look(table1)
+        +-------+-------+
+        | 'foo' | 'bar' |
+        +=======+=======+
+        | 'A'   | 9     |
+        +-------+-------+
+        | 'C'   | 2     |
+        +-------+-------+
+        | 'F'   | 1     |
+        +-------+-------+
+        
+        >>> look(table2)
+        +-------+-------+
+        | 'foo' | 'baz' |
+        +=======+=======+
+        | 'B'   | 3     |
+        +-------+-------+
+        | 'D'   | 10    |
+        +-------+-------+
+        
+        >>> table3 = annex(table1, table2)
+        >>> look(table3)    
+        +-------+-------+-------+-------+
+        | 'foo' | 'bar' | 'foo' | 'baz' |
+        +=======+=======+=======+=======+
+        | 'A'   | 9     | 'B'   | 3     |
+        +-------+-------+-------+-------+
+        | 'C'   | 2     | 'D'   | 10    |
+        +-------+-------+-------+-------+
+        | 'F'   | 1     | None  | None  |
+        +-------+-------+-------+-------+
+
+    .. versionadded:: 0.10
+    
+    """
+    
+    return AnnexView(tables, **kwargs)
+
+
+class AnnexView(RowContainer):
+    
+    def __init__(self, tables, missing=None):
+        self.tables = tables
+        self.missing = missing
+        
+    def __iter__(self):
+        return iterannex(self.tables, self.missing)
+    
+    def cachetag(self):
+        # TODO
+        raise Uncacheable
+    
+
+def iterannex(tables, missing):
+    iters = [iter(t) for t in tables]
+    headers = [it.next() for it in iters]
+    outfields = tuple(chain(*headers))  
+    yield outfields
+    for rows in izip_longest(*iters):
+        outrow = list()
+        for i, row in enumerate(rows):
+            lh = len(headers[i])
+            if row is None: # handle uneven length tables
+                row = [missing] * len(headers[i])
+            else:
+                lr = len(row)
+                if lr < lh: # handle short rows
+                    row = list(row)
+                    row.extend([missing] * (lh-lr))
+                elif lr > lh: # handle long rows
+                    row = row[:lh]
+            outrow.extend(row)
+        yield tuple(outrow)
+          
+    

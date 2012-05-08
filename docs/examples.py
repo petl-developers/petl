@@ -1392,3 +1392,20 @@ actual = mergesort(table1, table2, key='foo', reverse=True)
 look(actual)
 actual = mergesort(sort(table1, key='foo'), reverse=True, sort(table2, key='foo', reverse=True), key='foo', reverse=True, presorted=True)
 look(actual)
+
+
+# annex
+
+table1 = (('foo', 'bar'),
+          ('A', 9),
+          ('C', 2),
+          ('F', 1))
+table2 = (('foo', 'baz'),
+          ('B', 3),
+          ('D', 10))
+
+from petl import annex, look
+look(table1)
+look(table2)
+table3 = annex(table1, table2)
+look(table3)    
