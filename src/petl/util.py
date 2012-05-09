@@ -16,6 +16,8 @@ from collections import OrderedDict
 from functools import partial
 from itertools import izip_longest
 import heapq
+import sys
+from petl.base import RowContainer
 
 
 def header(table):
@@ -2258,3 +2260,63 @@ def hybridrows(flds, it, missing=None):
     return (HybridRow(row, flds, missing) for row in it)
     
     
+def progress(table, batchsize=1000, prefix="", out=sys.stderr):
+    """
+    Report progress on rows passing through. E.g.::
+    
+        >>> from petl import dummytable, progress, tocsv
+        >>> d = dummytable(100500)
+        >>> p = progress(d, 10000)
+        >>> tocsv(p, 'output.csv')
+        10000 rows in 0.57s (17574 rows/second); batch in 0.57s (17574 rows/second)
+        20000 rows in 1.13s (17723 rows/second); batch in 0.56s (17876 rows/second)
+        30000 rows in 1.69s (17732 rows/second); batch in 0.56s (17749 rows/second)
+        40000 rows in 2.27s (17652 rows/second); batch in 0.57s (17418 rows/second)
+        50000 rows in 2.83s (17679 rows/second); batch in 0.56s (17784 rows/second)
+        60000 rows in 3.39s (17694 rows/second); batch in 0.56s (17769 rows/second)
+        70000 rows in 3.96s (17671 rows/second); batch in 0.57s (17534 rows/second)
+        80000 rows in 4.53s (17677 rows/second); batch in 0.56s (17720 rows/second)
+        90000 rows in 5.09s (17681 rows/second); batch in 0.56s (17715 rows/second)
+        100000 rows in 5.66s (17675 rows/second); batch in 0.57s (17625 rows/second)
+        100500 rows in 5.69s (17674 rows/second)
+    
+    .. versionadded:: 0.10
+    
+    """
+    
+    return ProgressView(table, batchsize, prefix, out)
+
+
+class ProgressView(RowContainer):
+    
+    def __init__(self, wrapped, batchsize, prefix, out):
+        self.wrapped = wrapped
+        self.batchsize = batchsize
+        self.prefix = prefix
+        self.out = out
+        
+    def cachetag(self):
+        return self.wrapped.cachetag()
+    
+    def __iter__(self):
+        start = time.time()
+        batchstart = start
+        for n, r in enumerate(self.wrapped):
+            if n % self.batchsize == 0 and n > 0:
+                batchend = time.time()
+                batchtime = batchend - batchstart
+                elapsedtime = batchend - start
+                rate = int(n / elapsedtime)
+                batchrate = int(self.batchsize / batchtime)
+                v = (n, elapsedtime, rate, batchtime, batchrate)
+                message = self.prefix + '%s rows in %.2fs (%s rows/second); batch in %.2fs (%s rows/second)' % v
+                print >>self.out, message
+                batchstart = batchend
+            yield r
+        end = time.time()
+        elapsedtime = end - start
+        rate = int(n / elapsedtime)    
+        v = (n, elapsedtime, rate)
+        message = self.prefix + '%s rows in %.2fs (%s rows/second)' % v
+        print >>self.out, message
+            

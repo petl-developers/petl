@@ -1409,3 +1409,11 @@ look(table1)
 look(table2)
 table3 = annex(table1, table2)
 look(table3)    
+
+
+# progress
+
+from petl import dummytable, progress, tocsv
+d = dummytable(100500)
+p = progress(d, 10000)
+tocsv(p, 'output.csv')
