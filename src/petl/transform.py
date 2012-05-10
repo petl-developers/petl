@@ -6942,3 +6942,99 @@ def iterannex(tables, missing):
         yield tuple(outrow)
           
     
+def unpackdict(table, field, keys=None, includeoriginal=False,
+               samplesize=1000, missing=None):
+    """
+    Unpack dictionary values into separate fields. E.g.::
+    
+        >>> from petl import unpackdict, look
+        >>> look(table1)
+        +-------+---------------------------+
+        | 'foo' | 'bar'                     |
+        +=======+===========================+
+        | 1     | {'quux': 'b', 'baz': 'a'} |
+        +-------+---------------------------+
+        | 2     | {'quux': 'd', 'baz': 'c'} |
+        +-------+---------------------------+
+        | 3     | {'quux': 'f', 'baz': 'e'} |
+        +-------+---------------------------+
+        
+        >>> table2 = unpackdict(table1, 'bar')
+        >>> look(table2)
+        +-------+-------+--------+
+        | 'foo' | 'baz' | 'quux' |
+        +=======+=======+========+
+        | 1     | 'a'   | 'b'    |
+        +-------+-------+--------+
+        | 2     | 'c'   | 'd'    |
+        +-------+-------+--------+
+        | 3     | 'e'   | 'f'    |
+        +-------+-------+--------+
+
+    .. versionadded:: 0.10
+    
+    """
+    
+    return UnpackDictView(table, field, keys=keys, 
+                          includeoriginal=includeoriginal,
+                          samplesize=samplesize, missing=missing)
+
+
+class UnpackDictView(RowContainer):
+
+    def __init__(self, table, field, keys=None, includeoriginal=False,
+                 samplesize=1000, missing=None):
+        self.table = table
+        self.field = field
+        self.keys = keys
+        self.includeoriginal = includeoriginal
+        self.samplesize = samplesize
+        self.missing = missing
+
+    def cachetag(self):
+        # TODO
+        raise Uncacheable()
+    
+    def __iter__(self):
+        return iterunpackdict(self.table, self.field, self.keys, 
+                              self.includeoriginal, self.samplesize,
+                              self.missing)
+    
+
+def iterunpackdict(table, field, keys, includeoriginal, samplesize, missing):
+
+    # set up
+    it = iter(table)
+    fields = it.next()
+    fidx = fields.index(field)
+    outfields = list(fields)
+    if not includeoriginal:
+        del outfields[fidx]
+
+    # are keys specified?
+    if not keys:
+        # need to sample to find keys
+        sample = list(islice(it, samplesize))
+        keys = set()
+        for row in sample:
+            try:
+                keys |= set(row[fidx].keys())
+            except AttributeError:
+                pass
+        it = chain(sample, it)
+        keys = sorted(keys)
+    outfields.extend(keys)
+    yield tuple(outfields)    
+        
+    # generate the data rows
+    for row in it:
+        outrow = list(row)
+        if not includeoriginal:
+            del outrow[fidx]
+        for key in keys:
+            try:
+                outrow.append(row[fidx][key])
+            except:
+                outrow.append(missing)
+        yield tuple(outrow)
+        

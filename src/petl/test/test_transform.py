@@ -19,7 +19,7 @@ from petl import rename, fieldnames, cut, cat, convert, fieldconvert, extend, \
                 recorddiff, recordcomplement, cutout, skipcomments, \
                 convertall, convertnumbers, hashjoin, hashleftjoin, \
                 hashrightjoin, hashantijoin, hashcomplement, hashintersection, \
-                flatten, unflatten, mergesort, annex
+                flatten, unflatten, mergesort, annex, unpackdict
 
 
 def test_rename():
@@ -3285,3 +3285,58 @@ def test_annex_uneven_rows():
     iassertequal(expect, actual)
     iassertequal(expect, actual)
 
+
+def test_unpackdict():
+    
+    table1 = (('foo', 'bar'),
+              (1, {'baz': 'a', 'quux': 'b'}),
+              (2, {'baz': 'c', 'quux': 'd'}),
+              (3, {'baz': 'e', 'quux': 'f'}))
+    table2 = unpackdict(table1, 'bar')
+    expect2 = (('foo', 'baz', 'quux'),
+               (1, 'a', 'b'),
+               (2, 'c', 'd'),
+               (3, 'e', 'f'))
+    iassertequal(expect2, table2)
+    iassertequal(expect2, table2) # check twice
+    
+    # test include original
+    table1 = (('foo', 'bar'),
+              (1, {'baz': 'a', 'quux': 'b'}),
+              (2, {'baz': 'c', 'quux': 'd'}),
+              (3, {'baz': 'e', 'quux': 'f'}))
+    table2 = unpackdict(table1, 'bar', includeoriginal=True)
+    expect2 = (('foo', 'bar', 'baz', 'quux'),
+               (1, {'baz': 'a', 'quux': 'b'}, 'a', 'b'),
+               (2, {'baz': 'c', 'quux': 'd'}, 'c', 'd'),
+               (3, {'baz': 'e', 'quux': 'f'}, 'e', 'f'))
+    iassertequal(expect2, table2)
+    iassertequal(expect2, table2) # check twice
+
+    # test specify keys    
+    table1 = (('foo', 'bar'),
+              (1, {'baz': 'a', 'quux': 'b'}),
+              (2, {'baz': 'c', 'quux': 'd'}),
+              (3, {'baz': 'e', 'quux': 'f'}))
+    table2 = unpackdict(table1, 'bar', keys=['quux'])
+    expect2 = (('foo', 'quux'),
+               (1, 'b'),
+               (2, 'd'),
+               (3, 'f'))
+    iassertequal(expect2, table2)
+    iassertequal(expect2, table2) # check twice
+    
+    # test dodgy data    
+    table1 = (('foo', 'bar'),
+              (1, {'baz': 'a', 'quux': 'b'}),
+              (2, 'foobar'),
+              (3, {'baz': 'e', 'quux': 'f'}))
+    table2 = unpackdict(table1, 'bar')
+    expect2 = (('foo', 'baz', 'quux'),
+               (1, 'a', 'b'),
+               (2, None, None),
+               (3, 'e', 'f'))
+    iassertequal(expect2, table2)
+    iassertequal(expect2, table2) # check twice
+    
+    

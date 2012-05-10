@@ -1434,3 +1434,17 @@ c1.time
 c2.time
 # actual time consumed by the convert step
 c2.time - c1.time 
+
+
+# unpackdict
+
+table1 = (('foo', 'bar'),
+          (1, {'baz': 'a', 'quux': 'b'}),
+          (2, {'baz': 'c', 'quux': 'd'}),
+          (3, {'baz': 'e', 'quux': 'f'}))
+
+from petl import unpackdict, look
+look(table1)
+table2 = unpackdict(table1, 'bar')
+look(table2)
+

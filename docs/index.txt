@@ -99,7 +99,7 @@ Functions for transforming tables:
 +--------------------------------+-----------------------------+-------------------------------+
 |  :func:`hashcomplement`        |  :func:`hashintersection`   |  :func:`flatten`              |
 +--------------------------------+-----------------------------+-------------------------------+
-|  :func:`unflatten`             |  :func:`annex`              | ..                            |
+|  :func:`unflatten`             |  :func:`annex`              |  :func:`unpackdict`           |
 +--------------------------------+-----------------------------+-------------------------------+
 
 Functions for loading (writing) data to files and databases:
@@ -457,6 +457,7 @@ Transforming tables
 .. autofunction:: petl.capture
 .. autofunction:: petl.split
 .. autofunction:: petl.unpack
+.. autofunction:: petl.unpackdict
 .. autofunction:: petl.fieldmap
 .. autofunction:: petl.rowmap
 .. autofunction:: petl.recordmap
