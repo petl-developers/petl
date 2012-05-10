@@ -2280,6 +2280,8 @@ def progress(table, batchsize=1000, prefix="", out=sys.stderr):
         100000 rows in 5.66s (17675 rows/second); batch in 0.57s (17625 rows/second)
         100500 rows in 5.69s (17674 rows/second)
     
+    See also :func:`clock`.
+    
     .. versionadded:: 0.10
     
     """
@@ -2320,3 +2322,65 @@ class ProgressView(RowContainer):
         message = self.prefix + '%s rows in %.2fs (%s rows/second)' % v
         print >>self.out, message
             
+
+def clock(table):
+    """
+    Time how long is spent retrieving rows from the wrapped container. Enables
+    diagnosis of which steps in a pipeline are taking the most time. E.g.::
+
+        >>> from petl import dummytable, clock, convert, progress, tocsv
+        >>> t1 = dummytable(100000)
+        >>> c1 = clock(t1)
+        >>> t2 = convert(c1, 'foo', lambda v: v**2)
+        >>> c2 = clock(t2)
+        >>> p = progress(c2, 10000)
+        >>> tocsv(p, 'dummy.csv')
+        10000 rows in 1.17s (8559 rows/second); batch in 1.17s (8559 rows/second)
+        20000 rows in 2.34s (8548 rows/second); batch in 1.17s (8537 rows/second)
+        30000 rows in 3.51s (8547 rows/second); batch in 1.17s (8546 rows/second)
+        40000 rows in 4.68s (8541 rows/second); batch in 1.17s (8522 rows/second)
+        50000 rows in 5.89s (8483 rows/second); batch in 1.21s (8261 rows/second)
+        60000 rows in 7.30s (8221 rows/second); batch in 1.40s (7121 rows/second)
+        70000 rows in 8.59s (8144 rows/second); batch in 1.30s (7711 rows/second)
+        80000 rows in 9.78s (8182 rows/second); batch in 1.18s (8459 rows/second)
+        90000 rows in 10.98s (8193 rows/second); batch in 1.21s (8279 rows/second)
+        100000 rows in 12.30s (8132 rows/second); batch in 1.31s (7619 rows/second)
+        100000 rows in 12.30s (8132 rows/second)
+        >>> # time consumed retrieving rows from t1
+        ... c1.time
+        5.4099999999999895
+        >>> # time consumed retrieving rows from t2
+        ... c2.time
+        8.740000000000006
+        >>> # actual time consumed by the convert step
+        ... c2.time - c1.time 
+        3.330000000000016
+    
+    See also :func:`progress`.
+    
+    .. versionadded:: 0.10
+    
+    """
+    
+    return ClockView(table)
+
+
+class ClockView(RowContainer):
+    
+    def __init__(self, wrapped):
+        self.wrapped = wrapped
+        
+    def cachetag(self):
+        return self.wrapped.cachetag()
+    
+    def __iter__(self):
+        self.time = 0
+        it = iter(self.wrapped)
+        while True:
+            before = time.clock()
+            row = it.next()
+            after = time.clock()
+            self.time += (after - before)
+            yield row
+
+

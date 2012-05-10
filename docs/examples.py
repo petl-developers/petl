@@ -1417,3 +1417,20 @@ from petl import dummytable, progress, tocsv
 d = dummytable(100500)
 p = progress(d, 10000)
 tocsv(p, 'output.csv')
+
+
+# clock
+
+from petl import dummytable, clock, convert, progress, tocsv
+t1 = dummytable(100000)
+c1 = clock(t1)
+t2 = convert(c1, 'foo', lambda v: v**2)
+c2 = clock(t2)
+p = progress(c2, 10000)
+tocsv(p, 'dummy.csv')
+# time consumed retrieving rows from t1
+c1.time
+# time consumed retrieving rows from t2
+c2.time
+# actual time consumed by the convert step
+c2.time - c1.time 

@@ -390,6 +390,7 @@ Utility functions
 .. autofunction:: petl.heapqmergesorted
 .. autofunction:: petl.shortlistmergesorted
 .. autofunction:: petl.progress
+.. autofunction:: petl.clock
 
 Extracting (reading) tables from files, databases and other sources
 -------------------------------------------------------------------
