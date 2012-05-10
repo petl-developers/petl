@@ -1,37 +1,19 @@
 Future
 ------
 
-- functions should use field names (str) not fields for field indexing
 - stringpatterns should have view class
 - rowlengths should have View class
-- unpackdict deal with dict as data value and unpack into fields
-- tomediawiki, frommediawiki
-- flatten return container
-- unflatten implement cachetag
-- ...counts implement cachetag
-- fromcsv should guess dialect using sniffer?
-- diff could be more efficient, sort inputs then pass presorted to both complements
-- diff needs special handling in fluent and interactive packages
-- unicode support in to/fromcsv and to/fromtext
-- from compressed files
-- to compressed files
-
-- validator module based on csvvalidator
 - show rows/values causing conversion or translation errors
 - filldown
 - fillup
 - fillright? 
 - fillleft?
-- categorise/classify - convenient way to extend table with a classification field? or just use extend with function? example, convert continuous variable to categorical variable using custom ranges
 - sampling for pivot, avoid two complete passes
-- alpha facet?
-- partitioning of alpha fields?
 - code smells in reduce functions - refactor with generic grouper and reducer functions?
 - code smells in hash join functions
 - provenance trace
 - implement rowgroupby? generate sequence of key/row iterator pairs?
 - implement recordgroupby?
-- optimised implementation of merge() where input files are presorted? I.e., avoid need to concatenate then sort the concatenation, rather just do the merge sort then reduce
 - cache data structures in hash... functions?
 
 Version 0.8

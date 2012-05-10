@@ -5,8 +5,7 @@ petl - Extract, Transform and Load (Tables of Data)
 ===================================================
 
 :mod:`petl` is a tentative Python package for extracting, transforming
-and loading tables of data. For an overview of all functions in the
-package, see the :ref:`genindex`.
+and loading tables of data. 
 
 - Documentation: http://packages.python.org/petl
 - Source Code: https://github.com/alimanfoo/petl
@@ -17,6 +16,10 @@ For examples of :mod:`petl` in use, see the case studies below:
 
 * `Case Study 1 - Comparing Tables <case_study_1.html>`_
 
+For an overview of all functions in the package, see the
+:ref:`genindex`.
+
+
 Installation
 ------------
 
@@ -26,6 +29,7 @@ should be able to do ``easy_install petl`` or ``pip install petl``. On
 Windows or Mac you can download manually, extract and run ``python
 setup.py install``.
 
+
 Dependencies and extensions
 ---------------------------
 
@@ -33,9 +37,11 @@ This package has been written with no dependencies other than the
 Python core modules, for ease of installation and
 maintenance. However, there are many third party packages which could
 usefuly be used with :mod:`petl`, e.g., providing access to data from
-other file types. Some extensions with these additional dependencies
-are provided by the `petlx <http://pypi.python.org/pypi/petlx>`_ package, a
-companion package to :mod:`petl`.
+Excel or other file types. Some extensions with these additional
+dependencies are provided by the `petlx
+<http://pypi.python.org/pypi/petlx>`_ package, a companion package to
+:mod:`petl`.
+
 
 Conventions - row containers and row iterators
 ----------------------------------------------
@@ -57,7 +63,7 @@ A *row iterator* is an iterator which satisfies the following:
 
 4. each item returned by the iterator is either a list or a tuple
 
-5. the first item returned by the iterator is a header row comprising a list or tuple of *fields*
+5. the first item returned by the iterator is a *header row* comprising a list or tuple of *fields*
 
 6. each subsequent item returned by the iterator is a *data row* comprising a list or tuple of *data values*
 
@@ -99,14 +105,16 @@ CSV or other types of file or data source, see e.g. the
 
 The main reason for requiring that row containers support independent
 row iterators (point 3) is that data from a table may need to be
-iterated over several times. E.g., when using `petl` in interactive
-mode to build up a sequence of data transformation steps, the user
-might want to examine outputs from several intermediate steps, before
-the transformation is complete.
+iterated over several times within the same program or interactive
+session. E.g., when using `petl` in an interactive session to build up
+a sequence of data transformation steps, the user might want to
+examine outputs from several intermediate steps, before the
+transformation is complete.
 
 Note that this convention does not place any restrictions on the
 lengths of header and data rows. A table may return a header row
 and/or data rows of varying lengths. 
+
 
 Transformation pipelines
 ------------------------
@@ -173,6 +181,7 @@ efficient way to examine the output of a transformation pipeline,
 without having to execute the transformation over all of the input
 data.
 
+
 Caching / memoization
 ---------------------
 
@@ -204,12 +213,12 @@ where data are being retrieved via a network and there is
 latency. Again, there needs to be some way of finding out whether
 cached data are fresh or not.
 
-To support caching, it is recommended (but not required) that table
+To support caching, it is recommended (but not required) that row
 container objects also implement the `cachetag` method. This method
 should return an integer which changes whenever the table's fields or
 data changes (i.e., a row iterator would yield a different sequence of
-items). All :mod:`petl` table objects implement this method, where
-applicable.
+items). All :mod:`petl` row container objects implement this method,
+where applicable.
 
 Note in particular that the functions :func:`fromcsv`,
 :func:`frompickle` and :func:`fromsqlite3` return tables that
@@ -245,152 +254,6 @@ would enable data to be cached during an interactive session, which
 might improve usability for someone exploring the data or developing a 
 transformation script.
 
-Using petl in interactive mode (experimental)
----------------------------------------------
-
-.. versionadded:: 0.5 
-
-The module :mod:`petl.interactive` provides all of the functions
-present in the root :mod:`petl` module, but with a couple of
-optimisations for use within an interactive session.
-
-The main optimisation is that some caching is done behind the scenes,
-so that by default the first 100 rows of any table are cached in
-memory the first time they are requested. This usually provides a
-better experience when building up a transformation pipeline one step
-at a time, where you are examining the outputs of each intermediate
-step as its written via :func:`look` or :func:`see`. I.e., as each new
-step is added and the output examined, as long as less than 100 rows
-are requested, only that new step will actually be executed, and none
-of the upstream transformations will be repeated, because the outputs
-from previous steps will have been cached. The default cache size can
-be changed by setting ``petl.interactive.cachesize`` to an integer
-value.
-
-Note also that, by default, the :func:`look` function is used to generate a
-representation of tables. So you don't need to type, e.g., ``>>>
-look(mytable)``, you can just type ``>>> mytable``. The default
-representation function can be changed by setting
-``petl.interactive.representation``, e.g.,
-``petl.interactive.representation = petl.see``, or
-``petl.interactive.representation = None`` to disable this behaviour.
-
-Using petl in fluent mode (experimental)
-----------------------------------------
-
-.. versionadded:: 0.6
-
-The module :mod:`petl.fluent` provides all of the functions present in
-the root :mod:`petl` module, but with modifications to allow them to
-be used in a fluent style. E.g.::
-
-	>>> from petl.fluent import *
-	>>> t0 = dummytable()
-	>>> t0.look()
-	+-------+-----------+----------------------+
-	| 'foo' | 'bar'     | 'baz'                |
-	+=======+===========+======================+
-	| 61    | 'oranges' | 0.41684297441746143  |
-	+-------+-----------+----------------------+
-	| 42    | 'bananas' | 0.5424838757229734   |
-	+-------+-----------+----------------------+
-	| 55    | 'pears'   | 0.044730394239418825 |
-	+-------+-----------+----------------------+
-	| 63    | 'apples'  | 0.6553751878324998   |
-	+-------+-----------+----------------------+
-	| 57    | 'pears'   | 0.33151097448517963  |
-	+-------+-----------+----------------------+
-	| 57    | 'apples'  | 0.2152565282912028   |
-	+-------+-----------+----------------------+
-	| 45    | 'bananas' | 0.1478840303008977   |
-	+-------+-----------+----------------------+
-	| 79    | 'pears'   | 0.14301990499723238  |
-	+-------+-----------+----------------------+
-	| 11    | 'pears'   | 0.16801320344526383  |
-	+-------+-----------+----------------------+
-	| 96    | 'oranges' | 0.3004187573856759   |
-	+-------+-----------+----------------------+
-	
-	>>> t1 = t0.convert('bar', 'upper').extend('quux', 42).extend('spong', expr('{foo} * {quux}')).selecteq('bar', 'APPLES')
-	>>> t1.look()
-	+-------+----------+----------------------+--------+---------+
-	| 'foo' | 'bar'    | 'baz'                | 'quux' | 'spong' |
-	+=======+==========+======================+========+=========+
-	| 63    | 'APPLES' | 0.6553751878324998   | 42     | 2646    |
-	+-------+----------+----------------------+--------+---------+
-	| 57    | 'APPLES' | 0.2152565282912028   | 42     | 2394    |
-	+-------+----------+----------------------+--------+---------+
-	| 87    | 'APPLES' | 0.9045902500660937   | 42     | 3654    |
-	+-------+----------+----------------------+--------+---------+
-	| 5     | 'APPLES' | 0.6915135568859515   | 42     | 210     |
-	+-------+----------+----------------------+--------+---------+
-	| 28    | 'APPLES' | 0.8440288073976338   | 42     | 1176    |
-	+-------+----------+----------------------+--------+---------+
-	| 32    | 'APPLES' | 0.047452310539432774 | 42     | 1344    |
-	+-------+----------+----------------------+--------+---------+
-	| 93    | 'APPLES' | 0.8100969279893147   | 42     | 3906    |
-	+-------+----------+----------------------+--------+---------+
-	| 94    | 'APPLES' | 0.8216793407511486   | 42     | 3948    |
-	+-------+----------+----------------------+--------+---------+
-	| 94    | 'APPLES' | 0.7911584363109934   | 42     | 3948    |
-	+-------+----------+----------------------+--------+---------+
-	| 34    | 'APPLES' | 0.18846546302867728  | 42     | 1428    |
-	+-------+----------+----------------------+--------+---------+
-
-Utility functions
------------------
-
-.. autofunction:: petl.header
-.. autofunction:: petl.data
-.. autofunction:: petl.dataslice
-.. autofunction:: petl.records
-.. autofunction:: petl.fieldnames
-.. autofunction:: petl.rowcount
-.. autofunction:: petl.look
-.. autofunction:: petl.lookall
-.. autofunction:: petl.see
-.. autofunction:: petl.itervalues
-.. autofunction:: petl.values
-.. autofunction:: petl.valueset
-.. autofunction:: petl.valuecount
-.. autofunction:: petl.valuecounts
-.. autofunction:: petl.valuecounter
-.. autofunction:: petl.columns
-.. autofunction:: petl.facetcolumns
-.. autofunction:: petl.unique
-.. autofunction:: petl.limits
-.. autofunction:: petl.stats
-.. autofunction:: petl.lenstats
-.. autofunction:: petl.stringpatterns
-.. autofunction:: petl.stringpatterncounter
-.. autofunction:: petl.rowlengths
-.. autofunction:: petl.typecounts
-.. autofunction:: petl.typecounter
-.. autofunction:: petl.typeset
-.. autofunction:: petl.parsecounts
-.. autofunction:: petl.parsecounter
-.. autofunction:: petl.dateparser
-.. autofunction:: petl.timeparser
-.. autofunction:: petl.datetimeparser
-.. autofunction:: petl.boolparser
-.. autofunction:: petl.parsenumber
-.. autofunction:: petl.lookup
-.. autofunction:: petl.lookupone
-.. autofunction:: petl.recordlookup
-.. autofunction:: petl.recordlookupone
-.. autofunction:: petl.statsum
-.. autofunction:: petl.adler32sum
-.. autofunction:: petl.crc32sum
-.. autofunction:: petl.expr
-.. autofunction:: petl.strjoin
-.. autofunction:: petl.randomtable
-.. autofunction:: petl.dummytable
-.. autofunction:: petl.diffheaders
-.. autofunction:: petl.diffvalues
-.. autofunction:: petl.heapqmergesorted
-.. autofunction:: petl.shortlistmergesorted
-.. autofunction:: petl.progress
-.. autofunction:: petl.clock
 
 Extracting (reading) tables from files, databases and other sources
 -------------------------------------------------------------------
@@ -404,6 +267,7 @@ Extracting (reading) tables from files, databases and other sources
 .. autofunction:: petl.fromxml
 .. autofunction:: petl.fromjson
 .. autofunction:: petl.fromdicts
+
 
 Transforming tables
 -------------------
@@ -516,12 +380,71 @@ Loading (writing) tables to files and databases
 .. autofunction:: petl.appendtext
 .. autofunction:: petl.tojson
 
+
+Utility Functions
+-----------------
+
+.. autofunction:: petl.header
+.. autofunction:: petl.data
+.. autofunction:: petl.dataslice
+.. autofunction:: petl.records
+.. autofunction:: petl.fieldnames
+.. autofunction:: petl.rowcount
+.. autofunction:: petl.look
+.. autofunction:: petl.lookall
+.. autofunction:: petl.see
+.. autofunction:: petl.itervalues
+.. autofunction:: petl.values
+.. autofunction:: petl.valueset
+.. autofunction:: petl.valuecount
+.. autofunction:: petl.valuecounts
+.. autofunction:: petl.valuecounter
+.. autofunction:: petl.columns
+.. autofunction:: petl.facetcolumns
+.. autofunction:: petl.unique
+.. autofunction:: petl.limits
+.. autofunction:: petl.stats
+.. autofunction:: petl.lenstats
+.. autofunction:: petl.stringpatterns
+.. autofunction:: petl.stringpatterncounter
+.. autofunction:: petl.rowlengths
+.. autofunction:: petl.typecounts
+.. autofunction:: petl.typecounter
+.. autofunction:: petl.typeset
+.. autofunction:: petl.parsecounts
+.. autofunction:: petl.parsecounter
+.. autofunction:: petl.dateparser
+.. autofunction:: petl.timeparser
+.. autofunction:: petl.datetimeparser
+.. autofunction:: petl.boolparser
+.. autofunction:: petl.parsenumber
+.. autofunction:: petl.lookup
+.. autofunction:: petl.lookupone
+.. autofunction:: petl.recordlookup
+.. autofunction:: petl.recordlookupone
+.. autofunction:: petl.statsum
+.. autofunction:: petl.adler32sum
+.. autofunction:: petl.crc32sum
+.. autofunction:: petl.expr
+.. autofunction:: petl.strjoin
+.. autofunction:: petl.randomtable
+.. autofunction:: petl.dummytable
+.. autofunction:: petl.diffheaders
+.. autofunction:: petl.diffvalues
+.. autofunction:: petl.heapqmergesorted
+.. autofunction:: petl.shortlistmergesorted
+.. autofunction:: petl.progress
+.. autofunction:: petl.clock
+
+
 Further Reading
 ---------------
 
 .. toctree::
    :maxdepth: 2
 
+   fluent
+   interactive
    push
    case_study_1
    related_work

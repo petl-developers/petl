@@ -237,7 +237,7 @@ def fromsqlite3(filename, query, checksumfun=None):
 
         >>> import sqlite3
         >>> from petl import look, fromsqlite3    
-        >>> # initial data
+        >>> # set up a database to demonstrate with
         >>> data = [['a', 1],
         ...         ['b', 2],
         ...         ['c', 2.0]]
@@ -253,7 +253,8 @@ def fromsqlite3(filename, query, checksumfun=None):
         <sqlite3.Cursor object at 0x2240b90>
         >>> connection.commit()
         >>> c.close()
-        >>> # demonstrate the petl.fromsqlite3 function
+        >>>
+        >>> # now demonstrate the petl.fromsqlite3 function
         ... foobar = fromsqlite3('test.db', 'select * from foobar')
         >>> look(foobar)    
         +-------+-------+
@@ -366,11 +367,11 @@ def fromtext(filename, header=['lines'], strip=None, checksumfun=None):
         +--------------+
         | 'lines'      |
         +==============+
-        | 'a\\t1'     |
+        | 'a\\t1'      |
         +--------------+
-        | 'b\\t2'     |
+        | 'b\\t2'      |
         +--------------+
-        | 'c\\t3'     |
+        | 'c\\t3'      |
         +--------------+
 
     The :func:`fromtext` function provides a starting point for custom handling of 
