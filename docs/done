@@ -1,20 +1,4 @@
-Future
-------
 
-- stringpatterns should have view class
-- rowlengths should have View class
-- show rows/values causing conversion or translation errors
-- filldown
-- fillup
-- fillright? 
-- fillleft?
-- sampling for pivot, avoid two complete passes
-- code smells in reduce functions - refactor with generic grouper and reducer functions?
-- code smells in hash join functions
-- provenance trace
-- implement rowgroupby? generate sequence of key/row iterator pairs?
-- implement recordgroupby?
-- cache data structures in hash... functions?
 
 Version 0.8
 -----------

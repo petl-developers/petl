@@ -423,7 +423,7 @@ def unique(key):
         >>> p.push(sometable)
 
     N.B., assumes data are already sorted by the given key. See also
-    :func:duplicates.
+    :func:`duplicates`.
 
     """
 
