@@ -7,7 +7,7 @@ from petl import header, fieldnames, data, records, rowcount, look, see, iterval
                 isunique, lookup, lookupone, recordlookup, recordlookupone, \
                 DuplicateKeyError, rowlengths, stats, typecounts, parsecounts, typeset, \
                 valuecount, parsenumber, stringpatterns, diffheaders, diffvalues, \
-                datetimeparser, values, columns, facetcolumns
+                datetimeparser, values, columns, facetcolumns, isordered
 
 from petl.testutils import assertequal, iassertequal
 import sys
@@ -587,3 +587,43 @@ def test_facetcolumns():
     assertequal(['b', 'b'], fc['b']['foo'])
     assertequal([2, 3], fc['b']['bar'])
     assertequal([True, None], fc['b']['baz'])
+    
+    
+def test_isordered():
+    
+    table1 = (('foo', 'bar', 'baz'), 
+              ('a', 1, True), 
+              ('b', 3, True), 
+              ('b', 2))
+    assert isordered(table1, key='foo')
+    assert not isordered(table1, key='foo', reverse=True)
+    assert not isordered(table1, key='foo', strict=True)
+
+    table2 = (('foo', 'bar', 'baz'), 
+              ('b', 2, True), 
+              ('a', 1, True), 
+              ('b', 3))
+    assert not isordered(table2, key='foo')
+
+    table3 = (('foo', 'bar', 'baz'), 
+              ('a', 1, True), 
+              ('b', 2, True), 
+              ('b', 3))
+    assert isordered(table3, key=('foo', 'bar'))
+    assert isordered(table3)
+
+    table4 = (('foo', 'bar', 'baz'), 
+              ('a', 1, True), 
+              ('b', 3, True), 
+              ('b', 2))
+    assert not isordered(table4, key=('foo', 'bar'))
+    assert not isordered(table4)
+
+    table5 = (('foo', 'bar', 'baz'), 
+              ('b', 3, True), 
+              ('b', 2),
+              ('a', 1, True)) 
+    assert not isordered(table5, key='foo')
+    assert isordered(table5, key='foo', reverse=True)
+    assert not isordered(table5, key='foo', reverse=True, strict=True)
+

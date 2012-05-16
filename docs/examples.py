@@ -1464,3 +1464,16 @@ from petl import unique, look
 look(table1)
 table2 = unique(table1, 'foo')
 look(table2)
+
+
+# isordered
+table = (('foo', 'bar', 'baz'), 
+         ('a', 1, True), 
+         ('b', 3, True), 
+         ('b', 2))
+
+from petl import isordered, look
+look(table)
+isordered(table, key='foo')
+isordered(table, key='foo', strict=True)
+isordered(table, key='foo', reverse=True)

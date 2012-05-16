@@ -159,6 +159,8 @@ Other utility functions:
 +--------------------------------+--------------------------------+----------------------------+
 |  :func:`shortlistmergesorted`  |  :func:`progress`              |  :func:`clock`             |
 +--------------------------------+--------------------------------+----------------------------+
+|  :func:`isordered`             |                                |                            |
++--------------------------------+--------------------------------+----------------------------+
 
 
 Installation
@@ -545,6 +547,7 @@ Utility Functions
 .. autofunction:: petl.columns
 .. autofunction:: petl.facetcolumns
 .. autofunction:: petl.isunique
+.. autofunction:: petl.isordered
 .. autofunction:: petl.limits
 .. autofunction:: petl.stats
 .. autofunction:: petl.lenstats

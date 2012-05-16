@@ -18,6 +18,7 @@ from itertools import izip_longest
 import heapq
 import sys
 from petl.base import RowContainer
+import operator
 
 
 def header(table):
@@ -2387,4 +2388,61 @@ class ClockView(RowContainer):
             self.time += (after - before)
             yield row
 
+
+def isordered(table, key=None, reverse=False, strict=False):
+    """
+    Return True if the table is ordered (i.e., sorted) by the given key. E.g.::
+    
+        >>> from petl import isordered, look
+        >>> look(table)
+        +-------+-------+-------+
+        | 'foo' | 'bar' | 'baz' |
+        +=======+=======+=======+
+        | 'a'   | 1     | True  |
+        +-------+-------+-------+
+        | 'b'   | 3     | True  |
+        +-------+-------+-------+
+        | 'b'   | 2     |       |
+        +-------+-------+-------+
+        
+        >>> isordered(table, key='foo')
+        True
+        >>> isordered(table, key='foo', strict=True)
+        False
+        >>> isordered(table, key='foo', reverse=True)
+        False
+
+    .. versionadded:: 0.10
+    
+    """
+
+    # determine the operator to use when comparing rows
+    if reverse and strict:
+        op = operator.lt
+    elif reverse and not strict:
+        op = operator.le
+    elif strict:
+        op = operator.gt
+    else:
+        op = operator.ge
+        
+    it = iter(table)
+    fieldnames = [str(f) for f in it.next()]
+    if key is None:
+        prev = it.next()
+        for curr in it:
+            if not op(curr, prev):
+                return False
+            prev = curr
+    else:
+        getkey = itemgetter(*asindices(fieldnames, key))
+        prev = it.next()
+        prevkey = getkey(prev)
+        for curr in it:
+            currkey = getkey(curr)
+            if not op(currkey, prevkey):
+                return False
+            prevkey = currkey
+    return True
+    
 
