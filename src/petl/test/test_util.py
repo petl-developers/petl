@@ -4,7 +4,7 @@ TODO doc me
 """
 
 from petl import header, fieldnames, data, records, rowcount, look, see, itervalues, valuecounter, valuecounts, valueset,\
-                unique, lookup, lookupone, recordlookup, recordlookupone, \
+                isunique, lookup, lookupone, recordlookup, recordlookupone, \
                 DuplicateKeyError, rowlengths, stats, typecounts, parsecounts, typeset, \
                 valuecount, parsenumber, stringpatterns, diffheaders, diffvalues, \
                 datetimeparser, values, columns, facetcolumns
@@ -245,12 +245,12 @@ def test_valueset():
     assertequal(expect, actual)
 
 
-def test_unique():
-    """Test the unique function."""
+def test_isunique():
+    """Test the isunique function."""
     
     table = (('foo', 'bar'), ('a', 1), ('b'), ('b', 2), ('c', 3, True))
-    assert not unique(table, 'foo')
-    assert unique(table, 'bar')
+    assert not isunique(table, 'foo')
+    assert isunique(table, 'bar')
     
 
 def test_lookup():

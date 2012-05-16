@@ -732,21 +732,25 @@ def facetcolumns(table, key, missing=None):
     return fct
     
     
-def unique(table, field):
+def isunique(table, field):
     """
     Return True if there are no duplicate values for the given field(s), otherwise
     False. E.g.::
 
-        >>> from petl import unique
+        >>> from petl import isunique
         >>> table = [['foo', 'bar'], ['a', 1], ['b'], ['b', 2], ['c', 3, True]]
-        >>> unique(table, 'foo')
+        >>> isunique(table, 'foo')
         False
-        >>> unique(table, 'bar')
+        >>> isunique(table, 'bar')
         True
     
     The `field` argument can be a single field name or index (starting from zero)
     or a tuple of field names and/or indexes.    
 
+    .. versionchanged:: 0.10
+    
+    Renamed from "unique". See also :func:`petl.unique`.
+    
     """    
 
     vals = set()

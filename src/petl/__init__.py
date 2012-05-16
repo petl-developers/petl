@@ -5,7 +5,7 @@ The `petl` module.
 
 from petl.util import header, fieldnames, data, records, rowcount, look, see, \
            itervalues, values, valuecounter, valuecounts, \
-           valueset, unique, lookup, lookupone, recordlookup, recordlookupone, \
+           valueset, isunique, lookup, lookupone, recordlookup, recordlookupone, \
            typecounter, typecounts, typeset, parsecounter, parsecounts, \
            stats, rowlengths, DuplicateKeyError, datetimeparser, dateparser, timeparser, boolparser, \
            expr, limits, strjoin, valuecount, lookall, dataslice, parsenumber, \
@@ -33,7 +33,7 @@ from petl.transform import rename, cut, cat, convert, fieldconvert, extend, rows
            intersection, pivot, recordcomplement, recorddiff, cutout, skipcomments, \
            convertall, convertnumbers, hashjoin, hashleftjoin, hashrightjoin, \
            hashantijoin, hashcomplement, hashintersection, replace, replaceall, \
-           resub, flatten, unflatten, mergesort, annex, unpackdict
+           resub, flatten, unflatten, mergesort, annex, unpackdict, unique
            
            
 VERSION = '0.10'

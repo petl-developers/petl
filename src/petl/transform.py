@@ -2065,6 +2065,109 @@ def iterduplicates(source, key):
             previous = row
     
     
+def unique(table, key, presorted=False, buffersize=None):
+    """
+    Select rows with unique values under a given key. E.g.::
+
+        >>> from petl import unique, look
+        >>> look(table1)
+        +-------+-------+--------+
+        | 'foo' | 'bar' | 'baz'  |
+        +=======+=======+========+
+        | 'A'   | 1     | 2      |
+        +-------+-------+--------+
+        | 'B'   | '2'   | '3.4'  |
+        +-------+-------+--------+
+        | 'D'   | 'xyz' | 9.0    |
+        +-------+-------+--------+
+        | 'B'   | u'3'  | u'7.8' |
+        +-------+-------+--------+
+        | 'B'   | '2'   | 42     |
+        +-------+-------+--------+
+        | 'E'   | None  | None   |
+        +-------+-------+--------+
+        | 'D'   | 4     | 12.3   |
+        +-------+-------+--------+
+        | 'F'   | 7     | 2.3    |
+        +-------+-------+--------+
+        
+        >>> table2 = unique(table1, 'foo')
+        >>> look(table2)
+        +-------+-------+-------+
+        | 'foo' | 'bar' | 'baz' |
+        +=======+=======+=======+
+        | 'A'   | 1     | 2     |
+        +-------+-------+-------+
+        | 'E'   | None  | None  |
+        +-------+-------+-------+
+        | 'F'   | 7     | 2.3   |
+        +-------+-------+-------+
+        
+    If `presorted` is True, it is assumed that the data are already sorted by
+    the given key, and the `buffersize` argument is ignored. Otherwise, the data 
+    are sorted, see also the discussion of the `buffersize` argument under the 
+    :func:`sort` function.
+
+    .. versionadded:: 0.10
+    
+    """
+
+    return UniqueView(table, key, presorted, buffersize)
+
+
+class UniqueView(RowContainer):
+    
+    def __init__(self, source, key, presorted=False, buffersize=None):
+        if presorted:
+            self.source = source
+        else:
+            self.source = sort(source, key, buffersize=buffersize)
+        self.key = key # TODO property
+        
+    def __iter__(self):
+        return iterunique(self.source, self.key)
+
+    def cachetag(self):
+        try:
+            return hash((self.source.cachetag(), self.key))
+        except Exception as e:
+            raise Uncacheable(e)
+
+
+def iterunique(source, key):
+    # assume source is sorted
+    # first need to sort the data
+    it = iter(source)
+
+    flds = it.next()
+    yield tuple(flds)
+
+    # convert field selection into field indices
+    indices = asindices(flds, key)
+        
+    # now use field indices to construct a _getkey function
+    # N.B., this may raise an exception on short rows, depending on
+    # the field selection
+    getkey = itemgetter(*indices)
+    
+    prev = it.next()
+    prev_key = getkey(prev)
+    prev_comp_ne = True
+    
+    for curr in it:
+        curr_key = getkey(curr)
+        curr_comp_ne = (curr_key != prev_key)
+        if prev_comp_ne and curr_comp_ne:
+            yield tuple(prev)
+        prev = curr
+        prev_key = curr_key
+        prev_comp_ne = curr_comp_ne
+        
+    # last one?
+    if prev_comp_ne:
+        yield prev
+    
+    
 def conflicts(table, key, missing=None, include=None, exclude=None, 
               presorted=False, buffersize=None):
     """

@@ -1448,3 +1448,19 @@ look(table1)
 table2 = unpackdict(table1, 'bar')
 look(table2)
 
+
+# unique
+table1 = (('foo', 'bar', 'baz'),
+          ('A', 1, 2),
+          ('B', '2', '3.4'),
+          ('D', 'xyz', 9.0),
+          ('B', u'3', u'7.8'),
+          ('B', '2', 42),
+          ('E', None, None),
+          ('D', 4, 12.3),
+          ('F', 7, 2.3))
+
+from petl import unique, look
+look(table1)
+table2 = unique(table1, 'foo')
+look(table2)

@@ -19,7 +19,7 @@ from petl import rename, fieldnames, cut, cat, convert, fieldconvert, extend, \
                 recorddiff, recordcomplement, cutout, skipcomments, \
                 convertall, convertnumbers, hashjoin, hashleftjoin, \
                 hashrightjoin, hashantijoin, hashcomplement, hashintersection, \
-                flatten, unflatten, mergesort, annex, unpackdict
+                flatten, unflatten, mergesort, annex, unpackdict, unique
 
 
 def test_rename():
@@ -919,6 +919,46 @@ def test_duplicates_empty():
     table = (('foo', 'bar'),)
     expect = (('foo', 'bar'),)
     actual = duplicates(table, key='foo')
+    iassertequal(expect, actual)
+
+
+def test_unique():
+    
+    table = (('foo', 'bar', 'baz'),
+             ('A', 1, 2),
+             ('B', '2', '3.4'),
+             ('D', 'xyz', 9.0),
+             ('B', u'3', u'7.8', True),
+             ('B', '2', 42),
+             ('E', None),
+             ('D', 4, 12.3),
+             ('F', 7, 2.3))
+
+    result = unique(table, 'foo')
+    expectation = (('foo', 'bar', 'baz'),
+                   ('A', 1, 2),
+                   ('E', None),
+                   ('F', 7, 2.3))
+    iassertequal(expectation, result)
+    iassertequal(expectation, result)
+    
+    # test with compound key
+    result = unique(table, key=('foo', 'bar'))
+    expectation = (('foo', 'bar', 'baz'),
+                   ('A', 1, 2),
+                   ('B', u'3', u'7.8', True),
+                   ('D', 4, 12.3),
+                   ('D', 'xyz', 9.0),
+                   ('E', None),
+                   ('F', 7, 2.3))
+    iassertequal(expectation, result)
+    iassertequal(expectation, result)
+    
+
+def test_unique_empty():
+    table = (('foo', 'bar'),)
+    expect = (('foo', 'bar'),)
+    actual = unique(table, key='foo')
     iassertequal(expect, actual)
 
 

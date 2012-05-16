@@ -101,6 +101,8 @@ Functions for transforming tables:
 +--------------------------------+-----------------------------+-------------------------------+
 |  :func:`unflatten`             |  :func:`annex`              |  :func:`unpackdict`           |
 +--------------------------------+-----------------------------+-------------------------------+
+|  :func:`unique`                |                             |                               |
++--------------------------------+-----------------------------+-------------------------------+
 
 Functions for loading (writing) data to files and databases:
 
@@ -133,7 +135,7 @@ Other utility functions:
 +--------------------------------+--------------------------------+----------------------------+
 |  :func:`valuecount`            |  :func:`valuecounts`           |  :func:`valuecounter`      |
 +--------------------------------+--------------------------------+----------------------------+
-|  :func:`columns`               |  :func:`facetcolumns`          |  :func:`unique`            |
+|  :func:`columns`               |  :func:`facetcolumns`          |  :func:`isunique`          |
 +--------------------------------+--------------------------------+----------------------------+
 |  :func:`limits`                |  :func:`stats`                 |  :func:`lenstats`          |
 +--------------------------------+--------------------------------+----------------------------+
@@ -465,6 +467,7 @@ Transforming tables
 .. autofunction:: petl.recordmapmany
 .. autofunction:: petl.cat
 .. autofunction:: petl.duplicates
+.. autofunction:: petl.unique
 .. autofunction:: petl.conflicts
 .. autofunction:: petl.sort
 .. autofunction:: petl.join
@@ -541,7 +544,7 @@ Utility Functions
 .. autofunction:: petl.valuecounter
 .. autofunction:: petl.columns
 .. autofunction:: petl.facetcolumns
-.. autofunction:: petl.unique
+.. autofunction:: petl.isunique
 .. autofunction:: petl.limits
 .. autofunction:: petl.stats
 .. autofunction:: petl.lenstats
