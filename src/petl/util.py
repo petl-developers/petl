@@ -508,7 +508,7 @@ def values(table, field, *sliceargs, **kwargs):
     return ValuesContainer(table, field, *sliceargs, **kwargs)
     
     
-class ValuesContainer(object):
+class ValuesContainer(RowContainer):
 
     def __init__(self, table, field, *sliceargs, **kwargs):
         self.table = table
@@ -629,7 +629,7 @@ def valuecounts(table, field):
     return ValueCountsView(table, field)
 
 
-class ValueCountsView(object):
+class ValueCountsView(RowContainer):
     
     def __init__(self, table, field):
         self.table = table
@@ -1284,7 +1284,7 @@ def typecounts(table, field):
     return TypeCountsView(table, field)
 
 
-class TypeCountsView(object):
+class TypeCountsView(RowContainer):
     
     def __init__(self, table, field):
         self.table = table
@@ -1418,7 +1418,7 @@ def parsecounts(table, field, parsers={'int': int, 'float': float}):
     return ParseCountsView(table, field, parsers=parsers)
 
 
-class ParseCountsView(object):
+class ParseCountsView(RowContainer):
     
     def __init__(self, table, field, parsers={'int': int, 'float': float}):
         self.table = table
@@ -1946,7 +1946,7 @@ def randomtable(numflds=5, numrows=100, wait=0):
     return RandomTable(numflds, numrows, wait=wait)
     
     
-class RandomTable(object):
+class RandomTable(RowContainer):
     
     def __init__(self, numflds=5, numrows=100, wait=0):
         self.numflds = numflds
@@ -2064,7 +2064,7 @@ def dummytable(numrows=100,
     return DummyTable(numrows=numrows, fields=fields, wait=wait)
 
 
-class DummyTable(object):
+class DummyTable(RowContainer):
     
     def __init__(self, numrows=100, fields=None, wait=0):
         self.numrows = numrows
