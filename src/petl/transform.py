@@ -2961,7 +2961,7 @@ def recordselect(table, where, missing=None, complement=False):
     
     .. deprecated:: 0.9 
     
-    Use :func:`rowselect` instead.
+    Use :func:`select` instead.
 
     """
     
@@ -2974,15 +2974,9 @@ def rowselect(table, where, complement=False):
     accepting a hybrid row object (supports accessing values either by 
     position or by field name) as argument and returning True or False.
 
-    .. versionchanged:: 0.4
+    .. deprecated:: 0.10
     
-    The complement of the selection can be returned (i.e., the query can be 
-    inverted) by providing `complement=True` as a keyword argument.
-
-    .. versionchanged:: 0.9
-    
-    Hybrid row objects supporting data value access by either position or by 
-    field name are now passed to the `where` function.
+    Use :func:`select` instead, it supports the same signature.
     
     """
     
@@ -3036,11 +3030,10 @@ def fieldselect(table, field, where, complement=False):
     Select rows matching a condition. The `where` argument should be a function
     accepting a single data value as argument and returning True or False.
 
-    .. versionchanged:: 0.4
+    .. deprecated:: 0.10
     
-    The complement of the selection can be returned (i.e., the query can be 
-    inverted) by providing `complement=True` as a keyword argument.
-
+    Use :func:`select` instead, it supports the same signature.
+    
     """
     
     return FieldSelectView(table, field, where, complement=complement)
@@ -3422,7 +3415,7 @@ def selectin(table, field, value, complement=False):
 
     """
     
-    return selectop(table, field, value, operator.contains, complement=complement)
+    return fieldselect(table, field, lambda v: v in value, complement=complement)
 
 
 def selectnotin(table, field, value, complement=False):

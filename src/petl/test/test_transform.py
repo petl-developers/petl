@@ -19,7 +19,8 @@ from petl import rename, fieldnames, cut, cat, convert, fieldconvert, extend, \
                 recorddiff, recordcomplement, cutout, skipcomments, \
                 convertall, convertnumbers, hashjoin, hashleftjoin, \
                 hashrightjoin, hashantijoin, hashcomplement, hashintersection, \
-                flatten, unflatten, mergesort, annex, unpackdict, unique
+                flatten, unflatten, mergesort, annex, unpackdict, unique, \
+                selectin
 
 
 def test_rename():
@@ -1514,6 +1515,23 @@ def test_select_empty():
     actual = select(table, lambda r: r['foo'] == r['bar'])
     iassertequal(expect, actual)
 
+
+def test_selectin():
+    
+    table = (('foo', 'bar', 'baz'),
+             ('a', 4, 9.3),
+             ('a', 2, 88.2),
+             ('b', 1, 23.3),
+             ('c', 8, 42.0),
+             ('d', 7, 100.9),
+             ('c', 2))
+
+    actual = selectin(table, 'foo', ['a', 'x', 'y'])
+    expect = (('foo', 'bar', 'baz'),
+              ('a', 4, 9.3),
+              ('a', 2, 88.2))
+    iassertequal(expect, actual)
+    iassertequal(expect, actual) # check can iterate twice
 
 def test_rowselect():
     
