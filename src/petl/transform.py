@@ -16,7 +16,7 @@ from petl.util import asindices, rowgetter, asdict,\
     expr, valueset, header, data, limits, itervalues, parsenumber, lookup,\
     values, shortlistmergesorted, heapqmergesorted, hybridrows
 from petl.io import Uncacheable
-from petl.base import RowContainer
+from petl.util import RowContainer
 
 
 def rename(table, *args):
@@ -103,9 +103,6 @@ class RenameView(RowContainer):
     def __setitem__(self, key, value):
         self.spec[key] = value
         
-    def __getitem__(self, key):
-        return self.spec[key]
-    
     def cachetag(self):
         try:
             return hash((self.source.cachetag(), tuple(self.spec.items())))
@@ -853,9 +850,6 @@ class FieldConvertView(RowContainer):
     def __setitem__(self, key, value):
         self.converters[key] = value
         
-    def __getitem__(self, key):
-        return self.converters[key]
-
     def cachetag(self):
         try:
             # need to make converters hashable
@@ -3159,9 +3153,6 @@ class FieldMapView(RowContainer):
         self.failonerror = failonerror
         self.errorvalue = errorvalue
         
-    def __getitem__(self, key):
-        return self.mappings[key]
-    
     def __setitem__(self, key, value):
         self.mappings[key] = value
         
@@ -3876,9 +3867,6 @@ class AggregateView(RowContainer):
         return iteraggregate(self.source, self.key, self.aggregators, 
                              self.failonerror, self.errorvalue)
     
-    def __getitem__(self, key):
-        return self.aggregators[key]
-    
     def __setitem__(self, key, value):
         self.aggregators[key] = value
 
@@ -4306,9 +4294,6 @@ class RangeAggregateView(RowContainer):
                                   self.aggregators, self.minv, self.maxunpack, 
                                   self.failonerror, self.errorvalue)
 
-    def __getitem__(self, key):
-        return self.aggregators[key]
-    
     def __setitem__(self, key, value):
         self.aggregators[key] = value
 

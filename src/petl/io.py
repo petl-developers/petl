@@ -16,7 +16,7 @@ from xml.etree import ElementTree
 from operator import attrgetter
 import json
 from json.encoder import JSONEncoder
-from petl.base import RowContainer
+from petl.util import RowContainer
 import gzip
 
 class Uncacheable(Exception):

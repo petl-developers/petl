@@ -17,8 +17,17 @@ from functools import partial
 from itertools import izip_longest
 import heapq
 import sys
-from petl.base import RowContainer
+from petl.base import IterContainer
 import operator
+
+
+class RowContainer(IterContainer):
+    
+    def __getitem__(self, item):
+        if isinstance(item, basestring):
+            return ValuesContainer(self, item)
+        else:
+            return super(RowContainer, self).__getitem__(item)
 
 
 def header(table):
@@ -509,7 +518,7 @@ def values(table, field, *sliceargs, **kwargs):
     return ValuesContainer(table, field, *sliceargs, **kwargs)
     
     
-class ValuesContainer(RowContainer):
+class ValuesContainer(IterContainer):
 
     def __init__(self, table, field, *sliceargs, **kwargs):
         self.table = table
@@ -2077,11 +2086,8 @@ class DummyTable(RowContainer):
         self.seed = datetime.datetime.now()
 
     def __setitem__(self, item, value):
-        self.fields[item] = value
-        
-    def __getitem__(self, item):
-        return self.fields[item]
-    
+        self.fields[str(item)] = value
+            
     def __iter__(self):
         nr = self.numrows
         seed = self.seed
@@ -2445,4 +2451,4 @@ def isordered(table, key=None, reverse=False, strict=False):
             prevkey = currkey
     return True
     
-
+    
