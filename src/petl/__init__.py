@@ -4,7 +4,7 @@ The `petl` module.
 """
 
 from petl.util import header, fieldnames, data, records, rowcount, look, see, \
-           itervalues, values, valuecounter, valuecounts, \
+           itervalues, values, iterdata, valuecounter, valuecounts, \
            valueset, isunique, lookup, lookupone, recordlookup, recordlookupone, \
            typecounter, typecounts, typeset, parsecounter, parsecounts, \
            stats, rowlengths, DuplicateKeyError, datetimeparser, dateparser, timeparser, boolparser, \

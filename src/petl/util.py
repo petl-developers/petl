@@ -83,7 +83,7 @@ def fieldnames(table):
     return [str(f) for f in header(table)]
 
     
-def data(table, *sliceargs):
+def iterdata(table, *sliceargs):
     """
     Return an iterator over the data rows for the given table. E.g.::
     
@@ -100,14 +100,43 @@ def data(table, *sliceargs):
     Positional arguments can be used to slice the data rows. The `sliceargs` are 
     passed to :func:`itertools.islice`.
     
-    """
+    .. versionchanged:: 0.10
     
+    Renamed from "data".
+    
+    """
+
     it = islice(table, 1, None) # skip header row
     if sliceargs:
         it = islice(it, *sliceargs)
     return it
+    
+
+def data(table, *sliceargs):
+    """
+    Return a container supporting iteration over data rows in a given 
+    table. I.e., like :func:`iterdata` only a container is returned so you 
+    can iterate over it multiple times.
+    
+    .. versionchanged:: 0.10 
+
+    Now returns a container, previously returned an iterator. See also 
+    :func:`iterdata`.
+    """
+    
+    return DataContainer(table, *sliceargs)
 
 
+class DataContainer(IterContainer):
+    
+    def __init__(self, table, *sliceargs):
+        self.table = table
+        self.sliceargs = sliceargs
+        
+    def __iter__(self):
+        return iterdata(self.table, *self.sliceargs) 
+        
+           
 def dataslice(table, *args):
     """
     .. deprecated:: 0.3
