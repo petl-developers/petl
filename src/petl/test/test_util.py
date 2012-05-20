@@ -7,10 +7,12 @@ from petl import header, fieldnames, data, records, rowcount, look, see, iterval
                 isunique, lookup, lookupone, recordlookup, recordlookupone, \
                 DuplicateKeyError, rowlengths, stats, typecounts, parsecounts, typeset, \
                 valuecount, parsenumber, stringpatterns, diffheaders, diffvalues, \
-                datetimeparser, values, columns, facetcolumns, isordered
+                datetimeparser, values, columns, facetcolumns, isordered, \
+                rowgroupby
 
 from petl.testutils import assertequal, iassertequal
 import sys
+from nose.tools import eq_
 
 
 def test_header():
@@ -626,4 +628,44 @@ def test_isordered():
     assert not isordered(table5, key='foo')
     assert isordered(table5, key='foo', reverse=True)
     assert not isordered(table5, key='foo', reverse=True, strict=True)
+
+
+def test_rowgroupby():
+    
+    table = (('foo', 'bar', 'baz'), 
+             ('a', 1, True), 
+             ('b', 2, True), 
+             ('b', 3))
+    
+    # simplest form
+    g = rowgroupby(table, 'foo')
+
+    key, vals = g.next()
+    vals = list(vals)
+    eq_('a', key)
+    eq_(1, len(vals))
+    eq_(('a', 1, True), vals[0])
+
+    key, vals = g.next()
+    vals = list(vals)
+    eq_('b', key)
+    eq_(2, len(vals))
+    eq_(('b', 2, True), vals[0])
+    eq_(('b', 3), vals[1])
+
+    # specify value
+    g = rowgroupby(table, 'foo', 'bar')
+    
+    key, vals = g.next()
+    vals = list(vals)
+    eq_('a', key)
+    eq_(1, len(vals))
+    eq_(1, vals[0])
+
+    key, vals = g.next()
+    vals = list(vals)
+    eq_('b', key)
+    eq_(2, len(vals))
+    eq_(2, vals[0])
+    eq_(3, vals[1])
 

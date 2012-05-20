@@ -4,7 +4,7 @@ Utility functions.
 """
 
 
-from itertools import islice
+from itertools import islice, groupby
 from collections import defaultdict, Counter, namedtuple
 from operator import itemgetter
 import re
@@ -2481,3 +2481,34 @@ def isordered(table, key=None, reverse=False, strict=False):
     return True
     
     
+def rowgroupby(table, key, value=None):
+    """
+    TODO doc me
+    
+    """
+    
+    it = iter(table)
+    fields = it.next()
+    
+    # wrap rows if either key or value is callable
+    if callable(key) or callable(value):
+        it = hybridrows(fields, it)
+        
+    # determine key function
+    if callable(key):
+        getkey = key
+    else:
+        kindices = asindices(fields, key)
+        getkey = itemgetter(*kindices)
+    
+    # determine value function
+    if value is None:
+        return groupby(it, key=getkey)
+    else:
+        if callable(value):
+            getval = value
+        else:
+            vindices = asindices(fields, value)
+            getval = itemgetter(*vindices)
+        return ((k, (getval(v) for v in vals)) for k, vals in groupby(it, key=getkey))
+
