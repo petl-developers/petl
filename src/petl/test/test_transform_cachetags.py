@@ -8,7 +8,7 @@ from petl.transform import RenameView, CutView, CatView, FieldConvertView,\
     ExtendView, RowSliceView, TailView, SortView, MeltView, RecastView,\
     DuplicatesView, ConflictsView, ComplementView, CaptureView, SplitView,\
     RowSelectView, FieldSelectView, FieldMapView, RowReduceView, \
-    AggregateView, RangeRowReduceView, RangeAggregateView,\
+    MultiAggregateView, RangeRowReduceView, RangeAggregateView,\
     RowMapView, RowMapManyView, SetHeaderView,\
     ExtendHeaderView, PushHeaderView, SkipView, UnpackView, JoinView,\
     ImplicitJoinView, CrossJoinView, AntiJoinView, ImplicitAntiJoinView
@@ -174,7 +174,7 @@ def test_rowreduce():
     
 def test_aggregate():
     src = randomtable(4, 10)
-    tbl = AggregateView(src, 'f0')
+    tbl = MultiAggregateView(src, 'f0')
     tbl['a1'] = 'f1', sum
     tbl['a2'] = 'f2', max
     tbl['a3'] = 'f3'

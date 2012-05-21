@@ -1864,8 +1864,48 @@ def test_rangerecordreduce():
     iassertequal(expect2, table2)
     iassertequal(expect2, table2)
     
+    
+def test_aggregate_simple():
+    
+    table1 = (('foo', 'bar', 'baz'),
+              ('a', 3, True),
+              ('a', 7, False),
+              ('b', 2, True),
+              ('b', 2, False),
+              ('b', 9, False),
+              ('c', 4, True))
 
-def test_aggregate():
+    # simplest signature - aggregate whole rows
+    table2 = aggregate(table1, 'foo', len)
+    expect2 = (('key', 'value'),
+               ('a', 2),
+               ('b', 3),
+               ('c', 1))
+    iassertequal(expect2, table2)
+    iassertequal(expect2, table2)
+
+    # next simplest signature - aggregate single field
+    table3 = aggregate(table1, 'foo', sum, 'bar')
+    expect3 = (('key', 'value'),
+               ('a', 10),
+               ('b', 13),
+               ('c', 4))
+    iassertequal(expect3, table3)
+    iassertequal(expect3, table3)
+    
+    # alternative signature for simple aggregation
+    table4 = aggregate(table1, key=('foo', 'bar'), aggregation=list, value=('bar', 'baz'))
+    expect4 = (('key', 'value'),
+               (('a', 3), [(3, True)]),
+               (('a', 7), [(7, False)]),
+               (('b', 2), [(2, True), (2, False)]),
+               (('b', 9), [(9, False)]),
+               (('c', 4), [(4, True)]))
+    iassertequal(expect4, table4)
+    iassertequal(expect4, table4)
+    
+    
+def test_aggregate_multifield():
     
     table1 = (('foo', 'bar'),
               ('a', 3),
@@ -1873,12 +1913,12 @@ def test_aggregate():
               ('b', 2),
               ('b', 1),
               ('b', 9),
-              ('c', 4),
-              ('d', 3),
-              ('d',),
-              ('e',))
+              ('c', 4))
+    
+    # dict arg
     
     aggregators = OrderedDict()
+    aggregators['count'] = len
     aggregators['minbar'] = 'bar', min
     aggregators['maxbar'] = 'bar', max
     aggregators['sumbar'] = 'bar', sum
@@ -1886,16 +1926,17 @@ def test_aggregate():
     aggregators['bars'] = 'bar', strjoin(', ')
 
     table2 = aggregate(table1, 'foo', aggregators)
-    expect2 = (('foo', 'minbar', 'maxbar', 'sumbar', 'listbar', 'bars'),
-               ('a', 3, 7, 10, [3, 7], '3, 7'),
-               ('b', 1, 9, 12, [2, 1, 9], '2, 1, 9'),
-               ('c', 4, 4, 4, [4], '4'),
-               ('d', 3, 3, 3, [3], '3'),
-               ('e', None, None, 0, [], ''))
+    expect2 = (('key', 'count', 'minbar', 'maxbar', 'sumbar', 'listbar', 'bars'),
+               ('a', 2, 3, 7, 10, [3, 7], '3, 7'),
+               ('b', 3, 1, 9, 12, [2, 1, 9], '2, 1, 9'),
+               ('c', 1, 4, 4, 4, [4], '4'))
     iassertequal(expect2, table2)
     iassertequal(expect2, table2) # check can iterate twice
     
+    # use suffix notation
+    
     table3 = aggregate(table1, 'foo')
+    table3['count'] = len
     table3['minbar'] = 'bar', min
     table3['maxbar'] = 'bar', max
     table3['sumbar'] = 'bar', sum
@@ -1903,8 +1944,21 @@ def test_aggregate():
     table3['bars'] = 'bar', strjoin(', ')
     iassertequal(expect2, table3)
     
+    # list arg
+
+    aggregators = [('count', len),
+                   ('minbar', 'bar', min),
+                   ('maxbar', 'bar', max),
+                   ('sumbar', 'bar', sum),
+                   ('listbar', 'bar', list),
+                   ('bars', 'bar', strjoin(', '))]
+
+    table4 = aggregate(table1, 'foo', aggregators)
+    iassertequal(expect2, table4)
+    iassertequal(expect2, table4) # check can iterate twice
     
-def test_aggregate_2():
+    
+def test_aggregate_more():
     
     table1 = (('foo', 'bar'),
               ('aa', 3),
@@ -1913,24 +1967,21 @@ def test_aggregate_2():
               ('bb', 1),
               ('bb', 9),
               ('cc', 4),
-              ('dd', 3),
-              ('dd',),
-              ('ee',))
+              ('dd', 3))
     
     aggregators = OrderedDict()
     aggregators['minbar'] = 'bar', min
     aggregators['maxbar'] = 'bar', max
     aggregators['sumbar'] = 'bar', sum
-    aggregators['listbar'] = 'bar', list
+    aggregators['listbar'] = 'bar' # default aggregation is list
     aggregators['bars'] = 'bar', strjoin(', ')
 
     table2 = aggregate(table1, 'foo', aggregators)
-    expect2 = (('foo', 'minbar', 'maxbar', 'sumbar', 'listbar', 'bars'),
+    expect2 = (('key', 'minbar', 'maxbar', 'sumbar', 'listbar', 'bars'),
                ('aa', 3, 7, 10, [3, 7], '3, 7'),
                ('bb', 1, 9, 12, [2, 1, 9], '2, 1, 9'),
                ('cc', 4, 4, 4, [4], '4'),
-               ('dd', 3, 3, 3, [3], '3'),
-               ('ee', None, None, 0, [], ''))
+               ('dd', 3, 3, 3, [3], '3'))
     iassertequal(expect2, table2)
     iassertequal(expect2, table2) # check can iterate twice
     
@@ -1953,7 +2004,7 @@ def test_aggregate_empty():
     aggregators['sumbar'] = 'bar', sum
 
     actual = aggregate(table, 'foo', aggregators)
-    expect = (('foo', 'minbar', 'maxbar', 'sumbar'),)
+    expect = (('key', 'minbar', 'maxbar', 'sumbar'),)
     iassertequal(expect, actual)
     
     

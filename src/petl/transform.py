@@ -3759,78 +3759,12 @@ def mergereduce(table, key, missing=None, presorted=False, buffersize=None):
     return rowreduce(table, key, reducer=_mergereducer, presorted=presorted, buffersize=buffersize)
 
 
-def aggregate(table, key, aggregators=None, failonerror=False, errorvalue=None,
-              presorted=False, buffersize=None):
+def aggregate(table, key, aggregation=None, value=None, presorted=False,
+              buffersize=None):
     """
     Group rows under the given key then apply aggregation functions. E.g.::
 
-        >>> from petl import aggregate, look
-        >>> look(table1)
-        +-------+-------+
-        | 'foo' | 'bar' |
-        +=======+=======+
-        | 'a'   | 3     |
-        +-------+-------+
-        | 'a'   | 7     |
-        +-------+-------+
-        | 'b'   | 2     |
-        +-------+-------+
-        | 'b'   | 1     |
-        +-------+-------+
-        | 'b'   | 9     |
-        +-------+-------+
-        | 'c'   | 4     |
-        +-------+-------+
-        | 'd'   | 3     |
-        +-------+-------+
-        | 'd'   |       |
-        +-------+-------+
-        | 'e'   |       |
-        +-------+-------+
-        
-        >>> from collections import OrderedDict
-        >>> aggregators = OrderedDict()
-        >>> aggregators['minbar'] = 'bar', min
-        >>> aggregators['maxbar'] = 'bar', max
-        >>> aggregators['sumbar'] = 'bar', sum
-        >>> aggregators['listbar'] = 'bar', list
-        >>> table2 = aggregate(table1, 'foo', aggregators)
-        >>> look(table2)
-        +-------+----------+----------+----------+-----------+
-        | 'foo' | 'minbar' | 'maxbar' | 'sumbar' | 'listbar' |
-        +=======+==========+==========+==========+===========+
-        | 'a'   | 3        | 7        | 10       | [3, 7]    |
-        +-------+----------+----------+----------+-----------+
-        | 'b'   | 1        | 9        | 12       | [2, 1, 9] |
-        +-------+----------+----------+----------+-----------+
-        | 'c'   | 4        | 4        | 4        | [4]       |
-        +-------+----------+----------+----------+-----------+
-        | 'd'   | 3        | 3        | 3        | [3]       |
-        +-------+----------+----------+----------+-----------+
-        | 'e'   | None     | None     | 0        | []        |
-        +-------+----------+----------+----------+-----------+
-        
-        >>> # aggregation functions can also be added and/or updated using the suffix
-        ... # notation on the returned table object, e.g.::
-        ... table3 = aggregate(table1, 'foo')
-        >>> table3['minbar'] = 'bar', min
-        >>> table3['maxbar'] = 'bar', max
-        >>> table3['sumbar'] = 'bar', sum
-        >>> table3['listbar'] = 'bar' # default aggregation is list
-        >>> look(table3)
-        +-------+----------+----------+----------+-----------+
-        | 'foo' | 'minbar' | 'maxbar' | 'sumbar' | 'listbar' |
-        +=======+==========+==========+==========+===========+
-        | 'a'   | 3        | 7        | 10       | [3, 7]    |
-        +-------+----------+----------+----------+-----------+
-        | 'b'   | 1        | 9        | 12       | [2, 1, 9] |
-        +-------+----------+----------+----------+-----------+
-        | 'c'   | 4        | 4        | 4        | [4]       |
-        +-------+----------+----------+----------+-----------+
-        | 'd'   | 3        | 3        | 3        | [3]       |
-        +-------+----------+----------+----------+-----------+
-        | 'e'   | None     | None     | 0        | []        |
-        +-------+----------+----------+----------+-----------+
+        TODO
         
     If `presorted` is True, it is assumed that the data are already sorted by
     the given key, and the `buffersize` argument is ignored. Otherwise, the data 
@@ -3839,99 +3773,123 @@ def aggregate(table, key, aggregators=None, failonerror=False, errorvalue=None,
     
     """
 
-    return AggregateView(table, key, 
-                         aggregators=aggregators, 
-                         failonerror=failonerror,
-                         errorvalue=errorvalue, 
-                         presorted=presorted, 
-                         buffersize=buffersize)
+    if callable(aggregation):
+        return SimpleAggregateView(table, key, aggregation=aggregation, value=value, 
+                                   presorted=presorted, buffersize=buffersize)
+    elif aggregation is None or isinstance(aggregation, (list, tuple, dict)):
+        # ignore value arg
+        return MultiAggregateView(table, key, aggregation=aggregation,  
+                                  presorted=presorted, buffersize=buffersize)
+    else:
+        raise Exception('expected aggregation is callable, list, tuple, dict or None')
 
 
-class AggregateView(RowContainer):
+class SimpleAggregateView(RowContainer):
     
-    def __init__(self, source, key, aggregators=None, failonerror=False,
-                 errorvalue=None, presorted=False, buffersize=None):
+    def __init__(self, table, key, aggregation=list, value=None, presorted=False,
+                 buffersize=None):
+        if presorted:
+            self.table = table
+        else:
+            self.table = sort(table, key, buffersize=buffersize)    
+        self.key = key
+        self.aggregation = aggregation
+        self.value = value
+        
+    def __iter__(self):
+        return itersimpleaggregate(self.table, self.key, self.aggregation, self.value)
+
+    def cachetag(self):
+        raise Uncacheable() # TODO
+
+
+def itersimpleaggregate(table, key, aggregation, value):
+    if aggregation == len:
+        aggregation = lambda grp: sum(1 for _ in grp) # count length of iterable
+    yield ('key', 'value')
+    print key, value
+    for k, grp in rowgroupby(table, key, value):
+        yield k, aggregation(grp)
+
+
+class MultiAggregateView(RowContainer):
+    
+    def __init__(self, source, key, aggregation=None, presorted=False, 
+                 buffersize=None):
         if presorted:
             self.source = source
         else:
             self.source = sort(source, key, buffersize=buffersize)
         self.key = key
-        if aggregators is None:
-            self.aggregators = OrderedDict()
+        if aggregation is None:
+            self.aggregation = OrderedDict()
+        elif isinstance(aggregation, (list, tuple)):
+            self.aggregation = OrderedDict()
+            for t in aggregation:
+                self.aggregation[t[0]] = t[1:]
+        elif isinstance(aggregation, dict):
+            self.aggregation = aggregation
         else:
-            self.aggregators = aggregators
-        self.failonerror = failonerror
-        self.errorvalue = errorvalue
+            raise Exception('expected aggregation is None, list, tuple or dict')
 
     def __iter__(self):
-        return iteraggregate(self.source, self.key, self.aggregators, 
-                             self.failonerror, self.errorvalue)
+        return itermultiaggregate(self.source, self.key, self.aggregation)
     
     def __setitem__(self, key, value):
-        self.aggregators[key] = value
+        self.aggregation[key] = value
 
     def cachetag(self):
         try:
-            return hash((self.source.cachetag(), self.key, self.failonerror,
-                         self.errorvalue, tuple(self.aggregators.items())))
+            return hash((self.source.cachetag(), self.key, 
+                         tuple(self.aggregation.items())))
         except Exception as e:
             raise Uncacheable(e)
 
     
-def iteraggregate(source, key, aggregators, failonerror, errorvalue):
-    aggregators = OrderedDict(aggregators.items()) # take a copy
+def itermultiaggregate(source, key, aggregation):
+    aggregation = OrderedDict(aggregation.items()) # take a copy
     it = iter(source)
     srcflds = it.next()
+    it = chain([srcflds], it) # push back header to ensure we iterate only once
 
     # normalise aggregators
-    for outfld in aggregators:
-        agg = aggregators[outfld]
-        if not isinstance(agg, (list, tuple)):
-            aggregators[outfld] = agg, list # list is default aggregation function
+    for outfld in aggregation:
+        agg = aggregation[outfld]
+        print agg
+        if callable(agg):
+            aggregation[outfld] = None, agg
+        elif isinstance(agg, basestring):
+            aggregation[outfld] = agg, list # list is default
+        elif len(agg) == 1 and isinstance(agg[0], basestring):
+            aggregation[outfld] = agg[0], list # list is default 
+        elif len(agg) == 1 and callable(agg[0]):
+            aggregation[outfld] = None, agg[0] # aggregate whole rows
+        elif len(agg) == 2:
+            pass # no need to normalise
+        else:
+            raise Exception('invalid aggregation: %r, %r' % (outfld, agg))
         
-    # convert field selection into field indices
-    indices = asindices(srcflds, key)
-    
-    # now use field indices to construct a _getkey function
-    # N.B., this may raise an exception on short rows, depending on
-    # the field selection
-    getkey = itemgetter(*indices)
-    
-    if len(indices) == 1:
-        outflds = [getkey(srcflds)]
-    else:
-        outflds = list(getkey(srcflds))
-    outflds.extend(aggregators.keys())
+    outflds = ['key']
+    for outfld in aggregation:
+        outflds.append(outfld)
     yield tuple(outflds)
     
-    for key, rows in groupby(it, key=getkey):
+    for k, rows in rowgroupby(it, key):
         rows = list(rows) # may need to iterate over these more than once
-        if isinstance(key, basestring):
-            outrow = [key]
-        else:
-            outrow = list(key)
-        for outfld in aggregators:
-            srcfld, aggfun = aggregators[outfld]
-            idx = srcflds.index(srcfld)
-            try:
+        outrow = [k]
+        for outfld in aggregation:
+            srcfld, aggfun = aggregation[outfld]
+            if aggfun == len:
+                aggfun = lambda grp: sum(1 for _ in grp) # count length of iterable
+            if srcfld is None:
+                aggval = aggfun(rows)
+                outrow.append(aggval)
+            else:
+                idx = srcflds.index(srcfld)
                 # try using list comprehension
                 vals = [row[idx] for row in rows]
-            except IndexError:
-                # fall back to slower for loop
-                vals = list()
-                for row in rows:
-                    try:
-                        vals.append(row[idx])
-                    except IndexError:
-                        pass
-            try:
                 aggval = aggfun(vals)
-            except:
-                if failonerror:
-                    raise
-                else:
-                    aggval = errorvalue
-            outrow.append(aggval)
+                outrow.append(aggval)
         yield tuple(outrow)
             
 
