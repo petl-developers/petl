@@ -1477,3 +1477,22 @@ look(table)
 isordered(table, key='foo')
 isordered(table, key='foo', strict=True)
 isordered(table, key='foo', reverse=True)
+
+
+# rowgroupby
+table = (('foo', 'bar', 'baz'), 
+         ('a', 1, True), 
+         ('b', 3, True), 
+         ('b', 2))
+
+from petl import rowgroupby, look
+look(table)
+# group entire rows
+for key, group in rowgroupby(table, 'foo'):
+    print key, list(group)
+
+# group specific values
+for key, group in rowgroupby(table, 'foo', 'bar'):
+    print key, list(group)
+
+    

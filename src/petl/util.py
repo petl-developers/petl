@@ -2483,7 +2483,36 @@ def isordered(table, key=None, reverse=False, strict=False):
     
 def rowgroupby(table, key, value=None):
     """
-    TODO doc me
+    Convenient adapter for :func:`itertools.groupby`. E.g.::
+
+        >>> from petl import rowgroupby, look
+        >>> look(table)
+        +-------+-------+-------+
+        | 'foo' | 'bar' | 'baz' |
+        +=======+=======+=======+
+        | 'a'   | 1     | True  |
+        +-------+-------+-------+
+        | 'b'   | 3     | True  |
+        +-------+-------+-------+
+        | 'b'   | 2     |       |
+        +-------+-------+-------+
+        
+        >>> # group entire rows
+        ... for key, group in rowgroupby(table, 'foo'):
+        ...     print key, list(group)
+        ... 
+        a [('a', 1, True)]
+        b [('b', 3, True), ('b', 2)]
+        >>> # group specific values
+        ... for key, group in rowgroupby(table, 'foo', 'bar'):
+        ...     print key, list(group)
+        ... 
+        a [1]
+        b [3, 2]
+
+    N.B., assumes the input table is already sorted by the given key.
+    
+    .. versionadded:: 0.10
     
     """
     

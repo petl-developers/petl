@@ -638,6 +638,7 @@ def test_rowgroupby():
              ('b', 3))
     
     # simplest form
+
     g = rowgroupby(table, 'foo')
 
     key, vals = g.next()
@@ -654,6 +655,7 @@ def test_rowgroupby():
     eq_(('b', 3), vals[1])
 
     # specify value
+    
     g = rowgroupby(table, 'foo', 'bar')
     
     key, vals = g.next()
@@ -669,3 +671,20 @@ def test_rowgroupby():
     eq_(2, vals[0])
     eq_(3, vals[1])
 
+    # callable key
+    
+    g = rowgroupby(table, lambda r: r['foo'], lambda r: r['baz'])
+    
+    key, vals = g.next()
+    vals = list(vals)
+    eq_('a', key)
+    eq_(1, len(vals))
+    eq_(True, vals[0])
+
+    key, vals = g.next()
+    vals = list(vals)
+    eq_('b', key)
+    eq_(2, len(vals))
+    eq_(True, vals[0])
+    eq_(None, vals[1]) # gets padded
+    
