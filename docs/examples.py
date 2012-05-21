@@ -1495,4 +1495,13 @@ for key, group in rowgroupby(table, 'foo'):
 for key, group in rowgroupby(table, 'foo', 'bar'):
     print key, list(group)
 
+
+# fold
+table1 = (('id', 'count'), (1, 3), (1, 5), (2, 4), (2, 8))        
+
+from petl import fold, look
+look(table1)
+import operator
+table2 = fold(table1, 'id', operator.add, 'count', presorted=True)
+look(table2)
     

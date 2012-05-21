@@ -101,7 +101,7 @@ Functions for transforming tables:
 +--------------------------------+-----------------------------+-------------------------------+
 |  :func:`unflatten`             |  :func:`annex`              |  :func:`unpackdict`           |
 +--------------------------------+-----------------------------+-------------------------------+
-|  :func:`unique`                |                             |                               |
+|  :func:`unique`                |  :func:`fold`               |                               |
 +--------------------------------+-----------------------------+-------------------------------+
 
 Functions for loading (writing) data to files and databases:
@@ -506,6 +506,7 @@ Transforming tables
 .. autofunction:: petl.flatten
 .. autofunction:: petl.unflatten
 .. autofunction:: petl.annex
+.. autofunction:: petl.fold
 
 
 Loading (writing) tables to files and databases

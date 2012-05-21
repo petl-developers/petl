@@ -14,7 +14,7 @@ import re
 
 from petl.util import asindices, rowgetter, asdict,\
     expr, valueset, header, data, limits, itervalues, parsenumber, lookup,\
-    values, shortlistmergesorted, heapqmergesorted, hybridrows
+    values, shortlistmergesorted, heapqmergesorted, hybridrows, rowgroupby
 from petl.io import Uncacheable
 from petl.util import RowContainer
 
@@ -7119,3 +7119,67 @@ def iterunpackdict(table, field, keys, includeoriginal, samplesize, missing):
                 outrow.append(missing)
         yield tuple(outrow)
         
+
+def fold(table, key, f, value=None, presorted=False, buffersize=None):
+    """
+    Reduce rows. E.g.::
+
+        >>> from petl import fold, look
+        >>> look(table1)
+        +------+---------+
+        | 'id' | 'count' |
+        +======+=========+
+        | 1    | 3       |
+        +------+---------+
+        | 1    | 5       |
+        +------+---------+
+        | 2    | 4       |
+        +------+---------+
+        | 2    | 8       |
+        +------+---------+
+        
+        >>> import operator
+        >>> table2 = fold(table1, 'id', operator.add, 'count', presorted=True)
+        >>> look(table2)
+        +-------+---------+
+        | 'key' | 'value' |
+        +=======+=========+
+        | 1     | 8       |
+        +-------+---------+
+        | 2     | 12      |
+        +-------+---------+
+
+    See also the Python standard :func:`reduce` function.
+    
+    .. versionadded:: 0.10
+    
+    """
+    
+    return FoldView(table, key, f, value=value, presorted=presorted, 
+                    buffersize=buffersize)
+    
+
+class FoldView(RowContainer):
+    
+    def __init__(self, table, key, f, value=None, presorted=False, 
+                 buffersize=None):
+        if presorted:
+            self.table = table
+        else:
+            self.table = sort(table, key, buffersize=buffersize)
+        self.key = key
+        self.f = f
+        self.value = value
+        
+    def __iter__(self):
+        return iterfold(self.table, self.key, self.f, self.value)
+    
+    def cachetag(self):
+        raise Uncacheable() # TODO
+    
+
+def iterfold(table, key, f, value):
+    yield ('key', 'value')
+    for k, grp in rowgroupby(table, key, value):
+        yield k, reduce(f, grp)
+

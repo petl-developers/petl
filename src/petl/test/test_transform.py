@@ -20,7 +20,8 @@ from petl import rename, fieldnames, cut, cat, convert, fieldconvert, extend, \
                 convertall, convertnumbers, hashjoin, hashleftjoin, \
                 hashrightjoin, hashantijoin, hashcomplement, hashintersection, \
                 flatten, unflatten, mergesort, annex, unpackdict, unique, \
-                selectin
+                selectin, fold
+import operator
 
 
 def test_rename():
@@ -3397,4 +3398,11 @@ def test_unpackdict():
     iassertequal(expect2, table2)
     iassertequal(expect2, table2) # check twice
     
+
+def test_fold():
     
+    t1 = (('id', 'count'), (1, 3), (1, 5), (2, 4), (2, 8))        
+    t2 = fold(t1, 'id', operator.add, 'count', presorted=True)
+    expect = (('key', 'value'), (1, 8), (2, 12))
+    iassertequal(expect, t2)
+    iassertequal(expect, t2)

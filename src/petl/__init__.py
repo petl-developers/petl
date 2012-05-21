@@ -33,7 +33,8 @@ from petl.transform import rename, cut, cat, convert, fieldconvert, extend, rows
            intersection, pivot, recordcomplement, recorddiff, cutout, skipcomments, \
            convertall, convertnumbers, hashjoin, hashleftjoin, hashrightjoin, \
            hashantijoin, hashcomplement, hashintersection, replace, replaceall, \
-           resub, flatten, unflatten, mergesort, annex, unpackdict, unique
+           resub, flatten, unflatten, mergesort, annex, unpackdict, unique, \
+           fold
            
            
 VERSION = '0.10'
