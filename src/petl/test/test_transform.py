@@ -9,7 +9,7 @@ from collections import OrderedDict
 from petl.testutils import iassertequal, assertequal
 from petl import rename, fieldnames, cut, cat, convert, fieldconvert, extend, \
                 rowslice, head, tail, sort, melt, recast, duplicates, \
-                conflicts, mergereduce, select, complement, diff, capture, \
+                conflicts, mergeduplicates, select, complement, diff, capture, \
                 split, expr, fieldmap, facet, rowreduce, aggregate, \
                 rowmap, recordmap, rowmapmany, setheader, pushheader, \
                 skip, extendheader, unpack, join, leftjoin, rightjoin, \
@@ -1020,7 +1020,7 @@ def test_conflicts_empty():
     iassertequal(expect, actual)
 
 
-def test_mergereduce():
+def test_mergeduplicates():
 
     table = (('foo', 'bar', 'baz'),
              ('A', 1, 2),
@@ -1032,7 +1032,7 @@ def test_mergereduce():
              ('A', 2, None))
 
     # value overrides missing
-    result = mergereduce(table, 'foo', missing=None)
+    result = mergeduplicates(table, 'foo', missing=None)
     expectation = (('foo', 'bar', 'baz'),
                    ('A', (1, 2), 2),
                    ('B', '2', u'7.8', True),
@@ -1041,10 +1041,10 @@ def test_mergereduce():
     iassertequal(expectation, result)
     
     
-def test_mergereduce_empty():
+def test_mergeduplicates_empty():
     table = (('foo', 'bar'),)
     expect = (('foo', 'bar'),)
-    actual = mergereduce(table, key='foo')
+    actual = mergeduplicates(table, key='foo')
     iassertequal(expect, actual)
     
     

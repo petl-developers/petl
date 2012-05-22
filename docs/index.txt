@@ -89,7 +89,7 @@ Functions for transforming tables:
 +--------------------------------+-----------------------------+-------------------------------+
 |  :func:`rowreduce`             |  :func:`recordreduce`       |  :func:`rangerowreduce`       |
 +--------------------------------+-----------------------------+-------------------------------+
-|  :func:`rangerecordreduce`     |  :func:`mergereduce`        |  :func:`mergesort`            |
+|  :func:`rangerecordreduce`     |  :func:`mergeduplicates`    |  :func:`mergesort`            |
 +--------------------------------+-----------------------------+-------------------------------+
 |  :func:`merge`                 |  :func:`melt`               |  :func:`recast`               |
 +--------------------------------+-----------------------------+-------------------------------+
@@ -490,7 +490,7 @@ Transforming tables
 .. autofunction:: petl.recordreduce
 .. autofunction:: petl.rangerowreduce
 .. autofunction:: petl.rangerecordreduce
-.. autofunction:: petl.mergereduce
+.. autofunction:: petl.mergeduplicates
 .. autofunction:: petl.mergesort
 .. autofunction:: petl.merge
 .. autofunction:: petl.melt

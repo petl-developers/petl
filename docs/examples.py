@@ -1505,3 +1505,58 @@ import operator
 table2 = fold(table1, 'id', operator.add, 'count', presorted=True)
 look(table2)
     
+    
+# aggregate
+table1 = (('foo', 'bar', 'baz'),
+          ('a', 3, True),
+          ('a', 7, False),
+          ('b', 2, True),
+          ('b', 2, False),
+          ('b', 9, False),
+          ('c', 4, True))
+
+from petl import aggregate, look
+look(table1)
+# aggregate whole rows
+table2 = aggregate(table1, 'foo', len)
+look(table2)
+# aggregate single field
+table3 = aggregate(table1, 'foo', sum, 'bar')
+look(table3)
+# alternative signature for single field aggregation
+table4 = aggregate(table1, key=('foo', 'bar'), aggregation=list, value=('bar', 'baz'))
+look(table4)
+# aggregate multiple fields
+from collections import OrderedDict
+from petl import strjoin
+aggregation = OrderedDict()
+aggregation['count'] = len
+aggregation['minbar'] = 'bar', min
+aggregation['maxbar'] = 'bar', max
+aggregation['sumbar'] = 'bar', sum
+aggregation['listbar'] = 'bar' # default aggregation function is list
+aggregation['bars'] = 'bar', strjoin(', ')
+table5 = aggregate(table1, 'foo', aggregation)
+look(table5)
+# can also use list or tuple to specify multiple field aggregation
+aggregation = [('count', len),
+               ('minbar', 'bar', min),
+               ('maxbar', 'bar', max),
+               ('sumbar', 'bar', sum),
+               ('listbar', 'bar'), # default aggregation function is list
+               ('bars', 'bar', strjoin(', '))]
+table6 = aggregate(table1, 'foo', aggregation)
+look(table6)
+# can also use suffix notation
+table7 = aggregate(table1, 'foo')
+table7['count'] = len
+table7['minbar'] = 'bar', min
+table7['maxbar'] = 'bar', max
+table7['sumbar'] = 'bar', sum
+table7['listbar'] = 'bar' # default aggregation function is list
+table7['bars'] = 'bar', strjoin(', ')
+look(table7)
+
+
+
+
