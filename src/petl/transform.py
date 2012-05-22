@@ -4023,49 +4023,10 @@ def rangerowreduce(table, key, width, reducer, fields=None, minv=None, maxv=None
                    missing=None, failonerror=False, presorted=False, buffersize=None):
     """
     Reduce rows grouped into bins under the given key via an arbitrary function. 
-    E.g.::
-
-        >>> from petl import rangerowreduce, look
-        >>> look(table1)
-        +-------+-------+
-        | 'foo' | 'bar' |
-        +=======+=======+
-        | 'a'   | 3     |
-        +-------+-------+
-        | 'a'   | 7     |
-        +-------+-------+
-        | 'b'   | 2     |
-        +-------+-------+
-        | 'b'   | 1     |
-        +-------+-------+
-        | 'b'   | 9     |
-        +-------+-------+
-        | 'c'   | 4     |
-        +-------+-------+
-        
-        >>> def redu(minv, maxunpack, rows):
-        ...     return [minv, maxunpack, ''.join([row[0] for row in rows])]
-        ... 
-        >>> table2 = rangerowreduce(table1, 'bar', 2, reducer=redu, fields=['frombar', 'tobar', 'foos'])
-        >>> look(table2)
-        +-----------+---------+--------+
-        | 'frombar' | 'tobar' | 'foos' |
-        +===========+=========+========+
-        | 1         | 3       | 'bb'   |
-        +-----------+---------+--------+
-        | 3         | 5       | 'ac'   |
-        +-----------+---------+--------+
-        | 5         | 7       | ''     |
-        +-----------+---------+--------+
-        | 7         | 9       | 'a'    |
-        +-----------+---------+--------+
-        | 9         | 11      | 'b'    |
-        +-----------+---------+--------+
-
-    .. versionchanged:: 0.9
     
-    Hybrid row objects supporting data value access by either position or by 
-    field name are now passed to the `reducer` function.
+    .. deprecated:: 0.10
+    
+    Use :func:`rangeaggregate` instead.
     
     """
     
@@ -4173,7 +4134,7 @@ def rangerecordreduce(table, key, width, reducer, fields=None, minv=None, maxv=N
 
     .. deprecated:: 0.9
     
-    Use :func:`rangerowreduce` instead.
+    Use :func:`rangeaggregate` instead.
     
     """
     
