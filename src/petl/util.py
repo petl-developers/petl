@@ -2300,6 +2300,15 @@ class HybridRow(tuple):
         else:
             raise Exception('item ' + str(f) + ' not in fields ' + str(self.flds))
 
+    def __getattr__(self, f):
+        if f in self.flds:
+            try:
+                return super(HybridRow, self).__getitem__(self.flds.index(f))
+            except IndexError: # handle short rows
+                return self.missing
+        else:
+            raise Exception('item ' + str(f) + ' not in fields ' + str(self.flds))
+
     
 def hybridrows(flds, it, missing=None):
     return (HybridRow(row, flds, missing) for row in it)
