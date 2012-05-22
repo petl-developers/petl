@@ -203,7 +203,7 @@ def asdict(flds, row, missing=None):
     return dict(items)
     
     
-def rowcount(table):
+def nrows(table):
     """
     Count the number of data rows in a table. E.g.::
     
@@ -211,13 +211,18 @@ def rowcount(table):
         >>> table = [['foo', 'bar'], ['a', 1], ['b', 2]]
         >>> rowcount(table)
         2
+        
+    .. versionchanged:: 0.10
+    
+    Renamed from 'rowcount' to 'nrows'.
+    
     """
     
-    n = 0
-    for row in data(table):
-        n += 1
-    return n
+    return sum(1 for _ in iterdata(table))
     
+    
+rowcount = nrows # backwards compatibility
+
     
 def look(table, *sliceargs):
     """

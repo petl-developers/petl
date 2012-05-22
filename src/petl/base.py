@@ -16,10 +16,7 @@ class IterContainer(object):
         return False
         
     def __len__(self):
-        l = 0
-        for o in self:
-            l += 1
-        return l
+        return sum(1 for _ in self)
         
     def __getitem__(self, item):
         if isinstance(item, int):
