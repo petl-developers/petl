@@ -20,7 +20,7 @@ from petl import rename, fieldnames, cut, cat, convert, fieldconvert, extend, \
                 convertall, convertnumbers, hashjoin, hashleftjoin, \
                 hashrightjoin, hashantijoin, hashcomplement, hashintersection, \
                 flatten, unflatten, mergesort, annex, unpackdict, unique, \
-                selectin, fold
+                selectin, fold, addrownumbers
 import operator
 from petl.transform import Conflict
 
@@ -3458,3 +3458,20 @@ def test_fold():
     expect = (('key', 'value'), (1, 8), (2, 12))
     iassertequal(expect, t2)
     iassertequal(expect, t2)
+
+
+def test_addrownumbers():
+
+    table1 = (('foo', 'bar'),
+              ('A', 9),
+              ('C', 2),
+              ('F', 1))
+
+    expect = (('row', 'foo', 'bar'),
+              (1, 'A', 9),
+              (2, 'C', 2),
+              (3, 'F', 1))
+    actual = addrownumbers(table1)
+    iassertequal(expect, actual)
+    iassertequal(expect, actual)
+    

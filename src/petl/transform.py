@@ -3,7 +3,8 @@ Functions for transforming tables.
 
 """
 
-from itertools import islice, groupby, product, count, chain, izip_longest
+from itertools import islice, groupby, product, count, chain, izip_longest, \
+                    izip
 from collections import deque, defaultdict, OrderedDict, Counter
 from operator import itemgetter
 import cPickle as pickle
@@ -7228,3 +7229,66 @@ def iterfold(table, key, f, value):
     for k, grp in rowgroupby(table, key, value):
         yield k, reduce(f, grp)
 
+
+def addrownumbers(table, start=1, step=1):
+    """
+    Add a field of row numbers. E.g.::
+
+        >>> from petl import addrownumbers, look
+        >>> look(table1)
+        +-------+-------+
+        | 'foo' | 'bar' |
+        +=======+=======+
+        | 'A'   | 9     |
+        +-------+-------+
+        | 'C'   | 2     |
+        +-------+-------+
+        | 'F'   | 1     |
+        +-------+-------+
+        
+        >>> table2 = addrownumbers(table1)
+        >>> look(table2)
+        +-------+-------+-------+
+        | 'row' | 'foo' | 'bar' |
+        +=======+=======+=======+
+        | 1     | 'A'   | 9     |
+        +-------+-------+-------+
+        | 2     | 'C'   | 2     |
+        +-------+-------+-------+
+        | 3     | 'F'   | 1     |
+        +-------+-------+-------+
+
+    .. versionadded:: 0.10
+    
+    """
+    
+    return AddRowNumbersView(table, start, step)
+
+
+class AddRowNumbersView(RowContainer):
+    
+    def __init__(self, table, start=1, step=1):
+        self.table = table
+        self.start = start
+        self.step = step
+
+    def __iter__(self):
+        return iteraddrownumbers(self.table, self.start, self.step)
+    
+    def cachetag(self):
+        raise Uncacheable() # TODO
+    
+
+def iteraddrownumbers(table, start, step):
+    it = iter(table)
+    flds = it.next()
+    outflds = ['row']
+    outflds.extend(flds)
+    yield tuple(outflds)
+    for row, n in izip(it, count(start, step)):
+        outrow = [n]
+        outrow.extend(row)
+        yield tuple(outrow)
+        
+        
+        

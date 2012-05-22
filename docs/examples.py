@@ -1558,5 +1558,16 @@ table7['bars'] = 'bar', strjoin(', ')
 look(table7)
 
 
+# addrownumbers
+table1 = (('foo', 'bar'),
+          ('A', 9),
+          ('C', 2),
+          ('F', 1))
+
+from petl import addrownumbers, look
+look(table1)
+table2 = addrownumbers(table1)
+look(table2)
+
 
 
