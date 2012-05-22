@@ -18,6 +18,12 @@ import json
 from json.encoder import JSONEncoder
 from petl.util import RowContainer
 import gzip
+import sys
+import bz2
+import zipfile
+import urllib2
+from contextlib import contextmanager
+
 
 class Uncacheable(Exception):
     
@@ -90,9 +96,125 @@ To change the default globally, e.g.::
     >>> petl.io.defaultsumfun = petl.io.adler32sum
     
 """
-        
 
-def fromcsv(filename, checksumfun=None, dialect=csv.excel, **kwargs):
+
+class FileSource(object):
+    
+    def __init__(self, filename, checksumfun=None):
+        self.filename = filename
+        self.checksumfun = checksumfun
+        
+    def checksum(self):        
+        p = self.filename
+        if os.path.isfile(p):
+            sumfun = self.checksumfun if self.checksumfun is not None else defaultsumfun
+            checksum = sumfun(p)
+            return checksum 
+        else:
+            raise Uncacheable
+
+    def open_(self, *args):
+        return open(self.filename, *args)
+
+
+class GzipSource(FileSource):
+    
+    def __init__(self, filename, checksumfun=None):
+        super(GzipSource, self).__init__(filename, checksumfun)
+
+    def open_(self, *args):
+        return gzip.open(self.filename, *args)
+
+
+class BZ2Source(FileSource):
+
+    def __init__(self, filename, checksumfun=None):
+        super(BZ2Source, self).__init__(filename, checksumfun)
+
+    def open_(self, *args):
+        return bz2.BZ2File(self.filename, *args)
+
+
+class ZipSource(object):
+    
+    def __init__(self, filename, membername):
+        self.filename = filename
+        self.membername = membername
+        
+    def checksum(self):
+        try:
+            zf = zipfile.ZipFile(self.filename)
+            info = zf.getinfo(self.membername)
+            return info.CRC
+        except Exception as e:
+            raise Uncacheable(e)
+
+    def open_(self, *args):
+        zf = zipfile.ZipFile(self.filename, *args)
+        if args:
+            return zf.open(self.membername, args[0])
+        else:
+            return zf.open(self.membername)
+
+
+class StdinSource(object):
+
+    def open_(self, *args):
+        return sys.stdin
+    
+
+class StdoutSource(object):
+
+    def open_(self, *args):
+        return sys.stdout
+    
+
+class URLSource(object):
+    
+    def __init__(self, *args, **kwargs):
+        self.args = args
+        self.kwargs = kwargs
+        
+    @contextmanager
+    def open_(self, *args):
+        try:
+            f = urllib2.urlopen(*self.args, **self.kwargs) 
+            yield f
+        finally:
+            f.close()
+    
+    
+def _read_source_from_arg(source):
+    if source is None:
+        return StdinSource()
+    elif isinstance(source, basestring):
+        if source.startswith('http://') or source.startswith('ftp://'):
+            return URLSource(source)
+        elif source.endswith('.gz'):
+            return GzipSource(source)
+        elif source.endswith('.bz2'):
+            return BZ2Source(source)
+        else:
+            return FileSource(source)
+    else:
+        return source
+    
+    
+def _write_source_from_arg(source):
+    if source is None:
+        return StdoutSource()
+    elif isinstance(source, basestring):
+        if source.endswith('.gz'):
+            return GzipSource(source)
+        elif source.endswith('.bz2'):
+            return BZ2Source(source)
+        else:
+            return FileSource(source)
+    else:
+        return source
+    
+    
+def fromcsv(source=None, dialect=csv.excel, **kwargs):
     """
     Wrapper for the standard :func:`csv.reader` function. Returns a table providing
     access to the data in the given delimited file. E.g.::
@@ -139,38 +261,33 @@ def fromcsv(filename, checksumfun=None, dialect=csv.excel, **kwargs):
      
     """
 
-    return CSVView(filename, checksumfun=checksumfun, dialect=dialect, **kwargs)
+    source = _read_source_from_arg(source)
+    return CSVView(source=source, dialect=dialect, **kwargs)
 
 
 class CSVView(RowContainer):
     
-    def __init__(self, filename, checksumfun=None, dialect=csv.excel, **kwargs):
-        self.filename = filename
-        self.checksumfun = checksumfun
+    def __init__(self, source=None, checksumfun=None, dialect=csv.excel, **kwargs):
+        self.source = source
         self.dialect = dialect
         self.kwargs = kwargs
         
     def __iter__(self):
-        if self.filename.endswith('.gz'): 
-            op = gzip.open
-        else:
-            op = open
-        with op(self.filename, 'rb') as f:
+        with self.source.open_() as f:
             reader = csv.reader(f, dialect=self.dialect, **self.kwargs)
             for row in reader:
                 yield tuple(row)
                 
     def cachetag(self):
-        p = self.filename
-        if os.path.isfile(p):
-            sumfun = self.checksumfun if self.checksumfun is not None else defaultsumfun
-            checksum = sumfun(p)
-            return hash((checksum, self.dialect, tuple(self.kwargs.items()))) 
-        else:
-            raise Uncacheable
+        try:
+            return hash((self.source.checksum(), 
+                         self.dialect, 
+                         tuple(self.kwargs.items()))) 
+        except Exception as e:
+            raise Uncacheable(e)    
                 
     
-def frompickle(filename, checksumfun=None):
+def frompickle(source=None):
     """
     Returns a table providing access to the data pickled in the given file. The 
     rows in the table should have been pickled to the file one at a time. E.g.::
@@ -204,17 +321,17 @@ def frompickle(filename, checksumfun=None):
     
     """
     
-    return PickleView(filename, checksumfun=checksumfun)
+    source = _read_source_from_arg(source)
+    return PickleView(source)
     
     
 class PickleView(RowContainer):
 
-    def __init__(self, filename, checksumfun=None):
-        self.filename = filename
-        self.checksumfun = checksumfun
+    def __init__(self, source):
+        self.source = source
         
     def __iter__(self):
-        with open(self.filename, 'rb') as f:
+        with self.source.open_() as f:
             try:
                 while True:
                     yield tuple(pickle.load(f))
@@ -222,14 +339,11 @@ class PickleView(RowContainer):
                 pass
                 
     def cachetag(self):
-        p = self.filename
-        if os.path.isfile(p):
-            sumfun = self.checksumfun if self.checksumfun is not None else defaultsumfun
-            checksum = sumfun(p)
-            return checksum
-        else:
-            raise Uncacheable
-    
+        try:
+            return self.source.checksum()
+        except Exception as e:
+            raise Uncacheable(e)    
+                
 
 def fromsqlite3(filename, query, checksumfun=None):
     """
@@ -351,7 +465,7 @@ class DbView(RowContainer):
             yield tuple(result)
             
             
-def fromtext(filename, header=['lines'], strip=None, checksumfun=None):
+def fromtext(source=None, header=['lines'], strip=None):
     """
     Construct a table from lines in the given text file. E.g.::
 
@@ -403,23 +517,19 @@ def fromtext(filename, header=['lines'], strip=None, checksumfun=None):
      
     """
 
-    return TextView(filename, header, strip=strip, checksumfun=checksumfun)
+    source = _read_source_from_arg(source)
+    return TextView(source, header, strip=strip)
 
 
 class TextView(RowContainer):
     
-    def __init__(self, filename, header=['lines'], strip=None, checksumfun=None):
-        self.filename = filename
+    def __init__(self, source, header=['lines'], strip=None):
+        self.source = source
         self.header = header
         self.strip = strip
-        self.checksumfun = checksumfun
         
     def __iter__(self):
-        if self.filename.endswith('.gz'): 
-            op = gzip.open
-        else:
-            op = open
-        with op(self.filename, 'rU') as f:
+        with self.source.open_('rU') as f:
             if self.header is not None:
                 yield tuple(self.header)
             s = self.strip
@@ -427,16 +537,15 @@ class TextView(RowContainer):
                 yield (line.strip(s),)
                 
     def cachetag(self):
-        p = self.filename
-        if os.path.isfile(p):
-            sumfun = self.checksumfun if self.checksumfun is not None else defaultsumfun
-            checksum = sumfun(p)
-            return checksum
-        else:
-            raise Uncacheable
+        try:
+            return hash((self.source.checksum(), 
+                         tuple(self.header), 
+                         self.strip)) 
+        except Exception as e:
+            raise Uncacheable(e)    
 
 
-def fromxml(filename, *args, **kwargs):
+def fromxml(source, *args, **kwargs):
     """
     Access data in an XML file. E.g.::
 
@@ -543,13 +652,14 @@ def fromxml(filename, *args, **kwargs):
     
     """
 
-    return XmlView(filename, *args, **kwargs)
+    source = _read_source_from_arg(source)
+    return XmlView(source, *args, **kwargs)
 
 
 class XmlView(RowContainer):
     
-    def __init__(self, filename, *args, **kwargs):
-        self.filename = filename
+    def __init__(self, source, *args, **kwargs):
+        self.source = source
         self.args = args
         if len(args) == 2 and isinstance(args[1], basestring):
             self.rmatch = args[0]
@@ -568,17 +678,13 @@ class XmlView(RowContainer):
             self.attr = args[2]
         else:
             assert False, 'bad parameters'
-        if 'checksumfun' in kwargs:
-            self.checksumfun = kwargs['checksumfun']
-        else:
-            self.checksumfun = None
         if 'missing' in kwargs:
             self.missing = kwargs['missing']
         else:
             self.missing = None
         
     def __iter__(self):
-        tree = ElementTree.parse(self.filename)
+        tree = ElementTree.parse(self.source.open_())
         
         if self.vmatch is not None:
             # simple case, all value paths are the same
@@ -611,16 +717,13 @@ class XmlView(RowContainer):
             
                     
     def cachetag(self):
-        p = self.filename
-        if os.path.isfile(p):
-            sumfun = self.checksumfun if self.checksumfun is not None else defaultsumfun
-            checksum = sumfun(p)
-            return hash((checksum, self.args))
-        else:
-            raise Uncacheable
+        try:
+            return hash((self.source.checksum(), self.args, self.missing))
+        except Exception as e:
+            raise Uncacheable(e)
+        
 
-
-def fromjson(filename, *args, **kwargs):
+def fromjson(source, *args, **kwargs):
     """
     Extract data from a JSON file. The file must contain a JSON array as the top
     level object, and each member of the array will be treated as a row of data.
@@ -651,21 +754,18 @@ def fromjson(filename, *args, **kwargs):
     
     """
 
-    return JsonView(filename, *args, **kwargs)
+    source = _read_source_from_arg(source)
+    return JsonView(source, *args, **kwargs)
 
 
 class JsonView(RowContainer):
     
-    def __init__(self, filename, *args, **kwargs):
-        self.filename = filename
+    def __init__(self, source, *args, **kwargs):
+        self.source = source
         self.args = args
         self.kwargs = kwargs
-        self.checksumfun = None
         self.missing = None
         self.header = None
-        if 'checksumfun' in kwargs:
-            self.checksumfun = kwargs['checksumfun']
-            del self.kwargs['checksumfun']
         if 'missing' in kwargs:
             self.missing = kwargs['missing']
             del self.kwargs['missing']
@@ -674,7 +774,7 @@ class JsonView(RowContainer):
             del self.kwargs['header']
         
     def __iter__(self):
-        with open(self.filename) as f:
+        with self.source.open_() as f:
             result = json.load(f, *self.args, **self.kwargs)
             if self.header is None:
                 # determine fields
@@ -691,13 +791,10 @@ class JsonView(RowContainer):
                 yield row
                     
     def cachetag(self):
-        p = self.filename
-        if os.path.isfile(p):
-            sumfun = self.checksumfun if self.checksumfun is not None else defaultsumfun
-            checksum = sumfun(p)
-            return hash((checksum, self.args, tuple(self.kwargs.items())))
-        else:
-            raise Uncacheable
+        try:
+            return hash((self.source.checksum(), self.args, tuple(self.kwargs.items())))
+        except Exception as e:
+            raise Uncacheable(e)
 
 
 def fromdicts(dicts, header=None):
@@ -753,7 +850,7 @@ class DictsView(RowContainer):
         raise Uncacheable
 
 
-def tocsv(table, filename, dialect=csv.excel, **kwargs):
+def tocsv(table, source=None, dialect=csv.excel, **kwargs):
     """
     Write the table to a CSV file. E.g.::
 
@@ -796,17 +893,14 @@ def tocsv(table, filename, dialect=csv.excel, **kwargs):
      
     """
     
-    if filename.endswith('.gz'):
-        op = gzip.open
-    else:
-        op = open
-    with op(filename, 'wb') as f:
+    source = _write_source_from_arg(source)
+    with source.open_('wb') as f:
         writer = csv.writer(f, dialect=dialect, **kwargs)
         for row in table:
             writer.writerow(row)
 
 
-def appendcsv(table, filename, dialect=csv.excel, **kwargs):
+def appendcsv(table, source=None, dialect=csv.excel, **kwargs):
     """
     Append data rows to an existing CSV file. E.g.::
 
@@ -871,17 +965,14 @@ def appendcsv(table, filename, dialect=csv.excel, **kwargs):
      
     """
     
-    if filename.endswith('.gz'):
-        op = gzip.open
-    else:
-        op = open
-    with op(filename, 'ab') as f:
+    source = _write_source_from_arg(source)
+    with source.open_('ab') as f:
         writer = csv.writer(f, dialect=dialect, **kwargs)
         for row in data(table):
             writer.writerow(row)
 
 
-def topickle(table, filename, protocol=-1):
+def topickle(table, source=None, protocol=-1):
     """
     Write the table to a pickle file. E.g.::
 
@@ -918,12 +1009,13 @@ def topickle(table, filename, protocol=-1):
     
     """
     
-    with open(filename, 'wb') as f:
+    source = _write_source_from_arg(source)
+    with source.open_('wb') as f:
         for row in table:
             pickle.dump(row, f, protocol)
     
 
-def appendpickle(table, filename, protocol=-1):
+def appendpickle(table, source=None, protocol=-1):
     """
     Append data to an existing pickle file. E.g.::
 
@@ -979,7 +1071,8 @@ def appendpickle(table, filename, protocol=-1):
     
     """
     
-    with open(filename, 'ab') as f:
+    source = _write_source_from_arg(source)
+    with source.open_('ab') as f:
         for row in data(table):
             pickle.dump(row, f, protocol)
     
@@ -1231,7 +1324,7 @@ def _placeholders(connection, names):
     return placeholders
 
 
-def totext(table, filename, template, prologue=None, epilogue=None):
+def totext(table, source=None, template=None, prologue=None, epilogue=None):
     """
     Write the table to a text file. E.g.::
 
@@ -1287,11 +1380,8 @@ def totext(table, filename, template, prologue=None, epilogue=None):
      
     """
     
-    if filename.endswith('.gz'): 
-        op = gzip.open
-    else:
-        op = open
-    with op(filename, 'wb') as f:
+    source = _write_source_from_arg(source)
+    with source.open_('wb') as f:
         if prologue is not None:
             f.write(prologue)
         it = iter(table)
@@ -1304,7 +1394,7 @@ def totext(table, filename, template, prologue=None, epilogue=None):
             f.write(epilogue)
             
     
-def appendtext(table, filename, template, prologue=None, epilogue=None):
+def appendtext(table, source=None, template=None, prologue=None, epilogue=None):
     """
     As :func:`totext` but the file is opened in append mode.
     
@@ -1315,11 +1405,8 @@ def appendtext(table, filename, template, prologue=None, epilogue=None):
      
     """
 
-    if filename.endswith('.gz'): 
-        op = gzip.open
-    else:
-        op = open
-    with op(filename, 'ab') as f:
+    source = _write_source_from_arg(source)
+    with source.open_('ab') as f:
         if prologue is not None:
             f.write(prologue)
         it = iter(table)
@@ -1332,7 +1419,7 @@ def appendtext(table, filename, template, prologue=None, epilogue=None):
             f.write(epilogue)
             
             
-def tojson(table, filename, *args, **kwargs):
+def tojson(table, source=None, *args, **kwargs):
     """
     Write a table in JSON format. E.g.::
 
@@ -1364,12 +1451,13 @@ def tojson(table, filename, *args, **kwargs):
     """
     
     encoder = JSONEncoder(*args, **kwargs)
-    with open(filename, 'w') as f:
+    source = _write_source_from_arg(source)
+    with source.open_('wb') as f:
         for chunk in encoder.iterencode(list(records(table))):
             f.write(chunk)
             
 
-def fromtsv(filename, checksumfun=None, dialect=csv.excel_tab, **kwargs):
+def fromtsv(source=None, dialect=csv.excel_tab, **kwargs):
     """
     Convenience function, as :func:`fromcsv` but with different default dialect
     (tab delimited).
@@ -1378,10 +1466,10 @@ def fromtsv(filename, checksumfun=None, dialect=csv.excel_tab, **kwargs):
         
     """
     
-    return fromcsv(filename, checksumfun=checksumfun, dialect=dialect, **kwargs)
+    return fromcsv(source, dialect=dialect, **kwargs)
 
 
-def totsv(table, filename, dialect=csv.excel_tab, **kwargs):
+def totsv(table, source=None, dialect=csv.excel_tab, **kwargs):
     """
     Convenience function, as :func:`tocsv` but with different default dialect
     (tab delimited).
@@ -1390,10 +1478,10 @@ def totsv(table, filename, dialect=csv.excel_tab, **kwargs):
         
     """    
 
-    return tocsv(table, filename, dialect=dialect, **kwargs)
+    return tocsv(table, source=source, dialect=dialect, **kwargs)
 
 
-def appendtsv(table, filename, dialect=csv.excel_tab, **kwargs):
+def appendtsv(table, source=None, dialect=csv.excel_tab, **kwargs):
     """
     Convenience function, as :func:`appendcsv` but with different default dialect
     (tab delimited).
@@ -1402,6 +1490,6 @@ def appendtsv(table, filename, dialect=csv.excel_tab, **kwargs):
         
     """    
 
-    return appendcsv(table, filename, dialect=dialect, **kwargs)
+    return appendcsv(table, source=source, dialect=dialect, **kwargs)
 
 

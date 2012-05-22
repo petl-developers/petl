@@ -680,6 +680,8 @@ def convertall(table, *args, **kwargs):
     
     """
     
+    # TODO don't read the data twice!
+    
     return convert(table, header(table), *args, **kwargs)
 
 
@@ -872,7 +874,7 @@ class FieldConvertView(RowContainer):
     
     
 def iterfieldconvert(source, converters, failonerror, errorvalue):
-    it = iter(source)
+
     converters = converters.copy()
     # normalise converters
     for f, c in converters.items():
@@ -892,6 +894,7 @@ def iterfieldconvert(source, converters, failonerror, errorvalue):
             raise Exception('unexpected converter specification on field %r: %r' % (f, c))
     
     # grab the fields in the source table
+    it = iter(source)
     flds = it.next()
     yield tuple(flds) # these are not modified
     

@@ -19,6 +19,7 @@ from petl.testutils import iassertequal, assertequal
 import json
 import gzip
 import os
+from petl.io import FileSource
 
 
 def test_fromcsv():
@@ -91,7 +92,7 @@ def test_fromcsv_cachetag_strict():
     f.close()
 
     # cachetag with initial data
-    tbl = fromcsv(f.name, checksumfun=adler32sum)
+    tbl = fromcsv(FileSource(f.name, checksumfun=adler32sum))
     tag1 = tbl.cachetag()
     
     # make a change, preserving file size
@@ -192,7 +193,7 @@ def test_frompickle_cachetag_strict():
     f.close()
 
     # cachetag with initial data
-    tbl = frompickle(f.name, checksumfun=crc32sum)
+    tbl = frompickle(FileSource(f.name, checksumfun=crc32sum))
     tag1 = tbl.cachetag()
     
     # make a change, preserving file size
