@@ -673,20 +673,20 @@ table2 = recordreduce(table1, key='foo', reducer=sumbar, fields=['foo', 'barsum'
 look(table2)
 
 
-# mergereduce
+# mergeduplicates
 
 table1 = [['foo', 'bar', 'baz'],
           ['A', 1, 2.7],
           ['B', 2, None],
           ['D', 3, 9.4],
           ['B', None, 7.8],
-          ['E', None],
+          ['E', None, 42.],
           ['D', 3, 12.3],
           ['A', 2, None]]
 
-from petl import mergereduce, look    
+from petl import mergeduplicates, look    
 look(table1)
-table2 = mergereduce(table1, 'foo')
+table2 = mergeduplicates(table1, 'foo')
 look(table2)
 
 

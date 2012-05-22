@@ -22,6 +22,7 @@ from petl import rename, fieldnames, cut, cat, convert, fieldconvert, extend, \
                 flatten, unflatten, mergesort, annex, unpackdict, unique, \
                 selectin, fold
 import operator
+from petl.transform import Conflict
 
 
 def test_rename():
@@ -1027,17 +1028,17 @@ def test_mergeduplicates():
              ('B', '2', None),
              ('D', 'xyz', 9.4),
              ('B', None, u'7.8', True),
-             ('E', None),
+             ('E', None, 42.),
              ('D', 'xyz', 12.3),
              ('A', 2, None))
 
     # value overrides missing
     result = mergeduplicates(table, 'foo', missing=None)
     expectation = (('foo', 'bar', 'baz'),
-                   ('A', (1, 2), 2),
-                   ('B', '2', u'7.8', True),
-                   ('D', 'xyz', (9.4, 12.3)),
-                   ('E', None))
+                   ('A', Conflict([1, 2]), 2),
+                   ('B', '2', u'7.8'),
+                   ('D', 'xyz', Conflict([9.4, 12.3])),
+                   ('E', None, 42.))
     iassertequal(expectation, result)
     
     

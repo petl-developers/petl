@@ -4,7 +4,7 @@ Utility functions.
 """
 
 
-from itertools import islice, groupby
+from itertools import islice, groupby, chain
 from collections import defaultdict, Counter, namedtuple
 from operator import itemgetter
 import re
@@ -2541,3 +2541,14 @@ def rowgroupby(table, key, value=None):
             getval = itemgetter(*vindices)
         return ((k, (getval(v) for v in vals)) for k, vals in groupby(it, key=getkey))
 
+
+def iterpeek(it, n=1):
+    if n == 1:
+        peek = it.next()
+        return peek, chain([peek], it)
+    else:
+        peek = list(islice(it, n))
+        return peek, chain(peek, it)
+    
+    
+    

@@ -14,7 +14,8 @@ import re
 
 from petl.util import asindices, rowgetter, asdict,\
     expr, valueset, header, data, limits, itervalues, parsenumber, lookup,\
-    values, shortlistmergesorted, heapqmergesorted, hybridrows, rowgroupby
+    values, shortlistmergesorted, heapqmergesorted, hybridrows, rowgroupby,\
+    iterpeek
 from petl.io import Uncacheable
 from petl.util import RowContainer
 
@@ -3666,29 +3667,29 @@ def mergeduplicates(table, key, missing=None, presorted=False, buffersize=None):
         +-------+-------+-------+
         | 'B'   | None  | 7.8   |
         +-------+-------+-------+
-        | 'E'   | None  |       |
+        | 'E'   | None  | 42.0  |
         +-------+-------+-------+
         | 'D'   | 3     | 12.3  |
         +-------+-------+-------+
         | 'A'   | 2     | None  |
         +-------+-------+-------+
         
-        >>> table2 = mergereduce(table1, 'foo')
+        >>> table2 = mergeduplicates(table1, 'foo')
         >>> look(table2)
-        +-------+--------+-------------+
-        | 'foo' | 'bar'  | 'baz'       |
-        +=======+========+=============+
-        | 'A'   | (1, 2) | 2.7         |
-        +-------+--------+-------------+
-        | 'B'   | 2      | 7.8         |
-        +-------+--------+-------------+
-        | 'D'   | 3      | (9.4, 12.3) |
-        +-------+--------+-------------+
-        | 'E'   | None   |             |
-        +-------+--------+-------------+
+        +-------+------------------+-----------------------+
+        | 'foo' | 'bar'            | 'baz'                 |
+        +=======+==================+=======================+
+        | 'A'   | Conflict([1, 2]) | 2.7                   |
+        +-------+------------------+-----------------------+
+        | 'B'   | 2                | 7.8                   |
+        +-------+------------------+-----------------------+
+        | 'D'   | 3                | Conflict([9.4, 12.3]) |
+        +-------+------------------+-----------------------+
+        | 'E'   | None             | 42.0                  |
+        +-------+------------------+-----------------------+
         
     Missing values are overridden by non-missing values. Conflicting values are
-    reported as a tuple.
+    reported as an instance of the Conflict class (sub-class of frozenset).
     
     If `presorted` is True, it is assumed that the data are already sorted by
     the given key, and the `buffersize` argument is ignored. Otherwise, the data 
@@ -3702,27 +3703,66 @@ def mergeduplicates(table, key, missing=None, presorted=False, buffersize=None):
     
     .. versionchanged:: 0.10
     
-    Renamed from 'mergereduce' to 'mergeduplicates'.
+    Renamed from 'mergereduce' to 'mergeduplicates'. Conflicts now reported as
+    instance of Conflict.
     
     """
 
-    def _mergedups(key, rows):
-        merged = list()
-        for row in rows:
-            for i, v in enumerate(row):
-                if i == len(merged):
-                    merged.append(list())
-                if v != missing and v not in merged[i]:
-                    merged[i].append(v)    
-        # replace singletons and empty lists
-        merged = [vals[0] if len(vals) == 1 else missing if len(vals) == 0 else tuple(vals) for vals in merged]
-        return merged
+    return MergeDuplicatesView(table, key, missing=missing, presorted=presorted,
+                               buffersize=buffersize)
+
+
+class MergeDuplicatesView(RowContainer):
     
-    return RowReduceView(table, key, reducer=_mergedups, presorted=presorted, buffersize=buffersize)
+    def __init__(self, table, key, missing=None, presorted=False, buffersize=None):
+        if presorted:
+            self.table = table
+        else:
+            self.table = sort(table, key, buffersize=buffersize)
+        self.key = key
+        self.missing = missing
+        
+    def __iter__(self):
+        return itermergeduplicates(self.table, self.key, self.missing)
+    
+    def cachetag(self):
+        raise Uncacheable() # TODO
+    
+    
+def itermergeduplicates(table, key, missing):
+    it = iter(table)
+    fields, it = iterpeek(it)
+    
+    # determine output fields
+    if isinstance(key, basestring):
+        outflds = [key]
+        keyflds = set([key])
+    else:
+        outflds = ['key']
+        keyflds = set(key)
+    valflds = [f for f in fields if f not in keyflds]
+    outflds.extend(valflds)
+    yield tuple(outflds)
+
+    # do the work
+    for k, grp in rowgroupby(it, key):
+        grp = list(grp)
+        outrow = [k]
+        mergedvals = [set(row[fields.index(f)] for row in grp if row[fields.index(f)] != missing) for f in valflds]
+        normedvals = [vals.pop() if len(vals) == 1 else missing if len(vals) == 0 else Conflict(vals) for vals in mergedvals]
+        outrow.extend(normedvals)
+        yield tuple(outrow)
 
 
 mergereduce = mergeduplicates # for backwards compatibility
 
+
+class Conflict(frozenset):
+    
+    def __new__(cls, items):
+        s = super(Conflict, cls).__new__(cls, items)
+        return s
+    
 
 def aggregate(table, key, aggregation=None, value=None, presorted=False,
               buffersize=None):
