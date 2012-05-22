@@ -1570,4 +1570,10 @@ table2 = addrownumbers(table1)
 look(table2)
 
 
-
+# nthword
+from petl import nthword
+s = 'foo bar'
+f = nthword(0)
+f(s)
+g = nthword(1)
+g(s)

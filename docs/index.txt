@@ -159,7 +159,7 @@ Other utility functions:
 +--------------------------------+--------------------------------+----------------------------+
 |  :func:`shortlistmergesorted`  |  :func:`progress`              |  :func:`clock`             |
 +--------------------------------+--------------------------------+----------------------------+
-|  :func:`isordered`             |  :func:`rowgroupby`            |                            |
+|  :func:`isordered`             |  :func:`rowgroupby`            |  :func:`nthword`           |
 +--------------------------------+--------------------------------+----------------------------+
 
 
@@ -584,6 +584,7 @@ Utility Functions
 .. autofunction:: petl.progress
 .. autofunction:: petl.clock
 .. autofunction:: petl.rowgroupby
+.. autofunction:: petl.nthword
 
 
 Further Reading

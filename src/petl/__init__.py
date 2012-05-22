@@ -11,7 +11,8 @@ from petl.util import header, fieldnames, data, records, rowcount, look, see, \
            expr, limits, strjoin, valuecount, lookall, dataslice, parsenumber, \
            stringpatterns, stringpatterncounter, randomtable, dummytable, \
            diffheaders, diffvalues, columns, facetcolumns, heapqmergesorted, \
-           shortlistmergesorted, progress, clock, isordered, rowgroupby, nrows
+           shortlistmergesorted, progress, clock, isordered, rowgroupby, nrows, \
+           nthword
 
 from petl.io import fromcsv, frompickle, fromsqlite3, tocsv, topickle, \
            tosqlite3, crc32sum, adler32sum, statsum, fromdb, \

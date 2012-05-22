@@ -2012,7 +2012,7 @@ class RandomTable(RowContainer):
         yield tuple(flds)
 
         # construct data rows
-        for i in xrange(nr):
+        for _ in xrange(nr):
             # artificial delay
             if self.wait:
                 time.sleep(self.wait)
@@ -2135,7 +2135,7 @@ class DummyTable(RowContainer):
         yield header
 
         # construct data rows
-        for i in xrange(nr):
+        for _ in xrange(nr):
             # artificial delay
             if self.wait:
                 time.sleep(self.wait)
@@ -2565,4 +2565,23 @@ def iterpeek(it, n=1):
         return peek, chain(peek, it)
     
     
+def nthword(n, sep=None):
+    """
+    Construct a function to return the nth word in a string. E.g.::
+
+        >>> from petl import nthword
+        >>> s = 'foo bar'
+        >>> f = nthword(0)
+        >>> f(s)
+        'foo'
+        >>> g = nthword(1)
+        >>> g(s)
+        'bar'
     
+    .. versionadded:: 0.10
+    
+    """
+
+    return lambda s: s.split(sep)[n] 
+
+
