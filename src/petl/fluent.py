@@ -8,8 +8,7 @@ usage.
 
 
 import sys
-from functools import partial
-from petl.util import valueset
+from petl.util import valueset, RowContainer
 
 
 petl = sys.modules['petl']
@@ -19,28 +18,22 @@ thismodule = sys.modules[__name__]
 class FluentWrapper(object):
     
     def __init__(self, inner):
-        self._inner = inner
+        object.__setattr__(self, '_inner', inner)
         
     def __getattr__(self, attr):
-        if hasattr(self._inner, attr):
-            return getattr(self._inner, attr)
-        elif hasattr(thismodule, attr) and callable(getattr(thismodule, attr)):
-            f = getattr(thismodule, attr)
-            return partial(f, self._inner)
-        else:
-            return getattr(self._inner, attr) # should raise appropriate attribute error
+        # pass through
+        return getattr(self._inner, attr) 
     
     def __setattr__(self, attr, value):
-        if attr in {'_inner'}:
-            object.__setattr__(self, attr, value)
-        else:
-            setattr(self._inner, attr, value)
+        # pass through
         setattr(self._inner, attr, value)
         
     def __getitem__(self, item):
+        # pass through
         return self._inner[item]
     
     def __setitem__(self, item, value):
+        # pass through
         self._inner[item] = value
 
     def __str__(self):
@@ -50,21 +43,30 @@ class FluentWrapper(object):
         return repr(self._inner)
 
 
+# define a wrapper function
 def wrap(f):
     def wrapper(*args, **kwargs):
         _innerresult = f(*args, **kwargs)
-        if not callable(_innerresult): # make an exception for functions
+        if isinstance(_innerresult, RowContainer): 
             return FluentWrapper(_innerresult)
         else:
             return _innerresult
     return wrapper
 
         
+# import and wrap all functions from root petl module
 for n, c in petl.__dict__.items():
     if callable(c):
         setattr(thismodule, n, wrap(c))
     else:
         setattr(thismodule, n, c)
+
+
+# add module functions as methods on the wrapper class
+# TODO add only those methods that expect to have row container as first argument
+for n, c in thismodule.__dict__.items():
+    if callable(c):
+        setattr(FluentWrapper, n, c) 
         
         
 # need to manually override for facet, because it returns a dict 
