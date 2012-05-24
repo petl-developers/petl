@@ -69,12 +69,15 @@ for n, c in thismodule.__dict__.items():
         setattr(FluentWrapper, n, c) 
         
         
-# need to manually override for facet, because it returns a dict 
+# need to manually override for facet(), because it returns a dict 
 def facet(table, field):
     fct = dict()
     for v in valueset(table, field):
         fct[v] = getattr(thismodule, 'selecteq')(table, field, v)
     return fct
+
+
+# TODO manual override for diff() because it returns a tuple
 
 
 
