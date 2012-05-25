@@ -1,6 +1,17 @@
 #!/usr/bin/env python
 
 import sys
+import argparse
+
+from petl.util import Look, See
 from petl.fluent import *
 
-eval(sys.argv[1])
+parser = argparse.ArgumentParser(description="Evaluate a Python command (with petl.fluent functions imported).")
+parser.add_argument("expression",
+                    help="any valid Python expression - will be evaluated using eval()")
+args = parser.parse_args()
+
+r = eval(args.expression)
+
+if isinstance(r, (Look, See)):
+    print r

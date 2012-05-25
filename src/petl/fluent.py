@@ -19,7 +19,10 @@ class FluentWrapper(object):
     
     def __init__(self, inner):
         object.__setattr__(self, '_inner', inner)
-        
+
+    def __iter__(self):
+        return iter(self._inner)
+
     def __getattr__(self, attr):
         # pass through
         return getattr(self._inner, attr) 
