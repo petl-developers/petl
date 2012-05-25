@@ -188,7 +188,7 @@ def _read_source_from_arg(source):
     if source is None:
         return StdinSource()
     elif isinstance(source, basestring):
-        if source.startswith('http://') or source.startswith('ftp://'):
+        if any(map(source.startswith, ['http://', 'https://', 'ftp://'])):
             return URLSource(source)
         elif source.endswith('.gz'):
             return GzipSource(source)
