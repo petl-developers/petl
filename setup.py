@@ -7,6 +7,7 @@ setup(
     author_email='alimanfoo@googlemail.com',
     package_dir={'': 'src'},
     packages=['petl'],
+    scripts=['bin/petl'],
     url='https://github.com/alimanfoo/petl',
     license='MIT License',
     description='A tentative Python module for extracting, transforming and loading tables of data.',
