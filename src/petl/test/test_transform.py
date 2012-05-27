@@ -20,7 +20,8 @@ from petl import rename, fieldnames, cut, cat, convert, fieldconvert, extend, \
                 convertall, convertnumbers, hashjoin, hashleftjoin, \
                 hashrightjoin, hashantijoin, hashcomplement, hashintersection, \
                 flatten, unflatten, mergesort, annex, unpackdict, unique, \
-                selectin, fold, addrownumbers, selectcontains, search
+                selectin, fold, addrownumbers, selectcontains, search, \
+                addcolumn
 import operator
 from petl.transform import Conflict
 
@@ -3522,3 +3523,39 @@ def test_search():
     iassertequal(expect3, table3)
     
     
+def test_addcolumn():
+    
+    table1 = (('foo', 'bar'),
+              ('A', 1),
+              ('B', 2))
+    
+    col = [True, False]
+    
+    expect2 = (('foo', 'bar', 'baz'),
+               ('A', 1, True),
+               ('B', 2, False))
+    table2 = addcolumn(table1, col, 'baz')
+    iassertequal(expect2, table2)
+    iassertequal(expect2, table2)
+
+    # test short column
+    table3 = (('foo', 'bar'),
+              ('A', 1),
+              ('B', 2),
+              ('C', 2))
+    expect4 = (('foo', 'bar', 'baz'),
+               ('A', 1, True),
+               ('B', 2, False),
+               ('C', 2, None))
+    table4 = addcolumn(table3, col, 'baz')
+    iassertequal(expect4, table4)
+    
+    # test short table
+    col = [True, False, False]
+    expect5 = (('foo', 'bar', 'baz'),
+               ('A', 1, True),
+               ('B', 2, False),
+               (None, None, False))
+    table5 = addcolumn(table1, col, 'baz')
+    iassertequal(expect5, table5)
+

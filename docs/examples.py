@@ -1594,3 +1594,18 @@ look(table2)
 # search a specific field
 table3 = search(table1, 'foo', '.g.')
 look(table3)
+
+
+# addcolumn
+
+table1 = (('foo', 'bar'),
+          ('A', 1),
+          ('B', 2))
+
+from petl import addcolumn, look
+look(table1)
+col = [True, False]
+table2 = addcolumn(table1, col, 'baz')
+look(table2)
+
+

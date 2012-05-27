@@ -103,7 +103,7 @@ Functions for transforming tables:
 +--------------------------------+-----------------------------+-------------------------------+
 |  :func:`unique`                |  :func:`fold`               |  :func:`addrownumbers`        |
 +--------------------------------+-----------------------------+-------------------------------+
-|  :func:`selectcontains`        |  :func:`search`             |                               |
+|  :func:`selectcontains`        |  :func:`search`             |  :func:`addcolumn`            |
 +--------------------------------+-----------------------------+-------------------------------+
 
 Functions for loading (writing) data to files and databases:
@@ -515,6 +515,7 @@ Transform - transforming tables
 .. autofunction:: petl.annex
 .. autofunction:: petl.fold
 .. autofunction:: petl.addrownumbers
+.. autofunction:: petl.addcolumn
 
 
 Load - writing tables to files and databases

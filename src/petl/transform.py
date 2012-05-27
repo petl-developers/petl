@@ -7410,3 +7410,76 @@ def itersearch(table, pattern, field, flags):
             yield tuple(row)
         
             
+def addcolumn(table, col, field=None, index=None, missing=None):
+    """
+    Add a column of data to the table. E.g.::
+    
+        >>> from petl import addcolumn, look
+        >>> look(table1)
+        +-------+-------+
+        | 'foo' | 'bar' |
+        +=======+=======+
+        | 'A'   | 1     |
+        +-------+-------+
+        | 'B'   | 2     |
+        +-------+-------+
+        
+        >>> col = [True, False]
+        >>> table2 = addcolumn(table1, col, 'baz')
+        >>> look(table2)
+        +-------+-------+-------+
+        | 'foo' | 'bar' | 'baz' |
+        +=======+=======+=======+
+        | 'A'   | 1     | True  |
+        +-------+-------+-------+
+        | 'B'   | 2     | False |
+        +-------+-------+-------+
+    
+    .. versionadded:: 0.10
+    
+    """
+    
+    return AddColumnView(table, col, field=field, index=index, missing=missing)
+
+
+class AddColumnView(RowContainer):
+    
+    def __init__(self, table, col, field=None, index=None, missing=None):
+        self._table = table
+        self._col = col
+        self._field = field
+        self._index = index
+        self._missing = missing
+        
+    def __iter__(self):
+        return iteraddcolumn(self._table, self._col, self._field, 
+                             self._index, self._missing)
+    
+    
+def iteraddcolumn(table, col, field, index, missing):
+    it = iter(table)
+    fields = [str(f) for f in it.next()]
+    
+    # determine position of new column
+    if index is None:
+        index = len(fields)
+    
+    # determine name of new field
+    if field is None:
+        field = 'f%s' % (index + 1) 
+            
+    # construct output header
+    outflds = list(fields)
+    outflds.insert(index, field)
+    yield tuple(outflds)
+    
+    # construct output data
+    for row, val in izip_longest(it, col, fillvalue=missing):
+        # run out of rows?
+        if row == missing:
+            row = [missing] * len(fields)
+        outrow = list(row)
+        outrow.insert(index, val)
+        yield tuple(outrow)
+        
+        
