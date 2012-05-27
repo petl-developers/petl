@@ -127,7 +127,7 @@ def data(table, *sliceargs):
     return DataContainer(table, *sliceargs)
 
 
-class DataContainer(IterContainer):
+class DataContainer(RowContainer):
     
     def __init__(self, table, *sliceargs):
         self.table = table
