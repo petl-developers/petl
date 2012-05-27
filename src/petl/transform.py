@@ -949,18 +949,25 @@ def replace(table, field, a, b):
     return convert(table, field, {a: b})
 
 
-def resub(table, field, pattern, repl, count=0, flags=0):
+def sub(table, field, pattern, repl, count=0, flags=0):
     """
     Convenience function to convert values under the given field using a 
     regular expression substitution. See also :func:`re.sub`.
     
     .. versionadded:: 0.5
+    
+    .. versionchanged:: 0.10
+    
+    Renamed 'resub' to 'sub'.
 
     """
     
     prog = re.compile(pattern, flags)
     conv = lambda v: prog.sub(repl, v, count=count)
     return convert(table, field, conv)
+
+
+resub = sub # backwards compatibility
 
     
 def extend(table, field, value, failonerror=False, errorvalue=None):
@@ -7304,5 +7311,96 @@ def iteraddrownumbers(table, start, step):
         outrow.extend(row)
         yield tuple(outrow)
         
+
+def search(table, *args, **kwargs):
+    """
+    Perform a regular expression search, returning rows that match a given
+    pattern, either anywhere in the row or within a specific field. E.g.::
+
+        >>> from petl import search, look
+        >>> look(table1)
+        +------------+-------+--------------------------+
+        | 'foo'      | 'bar' | 'baz'                    |
+        +============+=======+==========================+
+        | 'orange'   | 12    | 'oranges are nice fruit' |
+        +------------+-------+--------------------------+
+        | 'mango'    | 42    | 'I like them'            |
+        +------------+-------+--------------------------+
+        | 'banana'   | 74    | 'lovely too'             |
+        +------------+-------+--------------------------+
+        | 'cucumber' | 41    | 'better than mango'      |
+        +------------+-------+--------------------------+
         
+        >>> # search any field
+        ... table2 = search(table1, '.g.')
+        >>> look(table2)
+        +------------+-------+--------------------------+
+        | 'foo'      | 'bar' | 'baz'                    |
+        +============+=======+==========================+
+        | 'orange'   | 12    | 'oranges are nice fruit' |
+        +------------+-------+--------------------------+
+        | 'mango'    | 42    | 'I like them'            |
+        +------------+-------+--------------------------+
+        | 'cucumber' | 41    | 'better than mango'      |
+        +------------+-------+--------------------------+
         
+        >>> # search a specific field
+        ... table3 = search(table1, 'foo', '.g.')
+        >>> look(table3)
+        +----------+-------+--------------------------+
+        | 'foo'    | 'bar' | 'baz'                    |
+        +==========+=======+==========================+
+        | 'orange' | 12    | 'oranges are nice fruit' |
+        +----------+-------+--------------------------+
+        | 'mango'  | 42    | 'I like them'            |
+        +----------+-------+--------------------------+
+        
+    
+    .. versionadded:: 0.10
+    
+    """
+    
+    if len(args) == 1:
+        field = None
+        pattern = args[0]
+    elif len(args) == 2:
+        field = args[0]
+        pattern = args[1]
+    else:
+        raise Exception('expected 1 or 2 arguments')
+    return SearchView(table, pattern, field=field, **kwargs)
+
+
+class SearchView(RowContainer):
+    
+    def __init__(self, table, pattern, field=None, flags=0):
+        self.table = table
+        self.pattern = pattern
+        self.field = field
+        self.flags = flags
+        
+    def __iter__(self):
+        return itersearch(self.table, self.pattern, self.field, self.flags)
+    
+    def cachetag(self):
+        raise Uncacheable() # TODO
+    
+    
+def itersearch(table, pattern, field, flags):
+    prog = re.compile(pattern, flags)
+    it = iter(table)
+    fields = it.next()
+    yield tuple(fields)
+    if field is not None:
+        indices = asindices(fields, field)
+        getval = itemgetter(*indices)
+        getstr = lambda row: str(getval(row))
+    else:
+        getstr = lambda row: str(tuple(row)) # stringify whole row
+    for row in it:
+        s = getstr(row)
+        match = prog.search(s)
+        if match is not None:
+            yield tuple(row)
+        
+            

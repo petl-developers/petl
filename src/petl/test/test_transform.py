@@ -20,7 +20,7 @@ from petl import rename, fieldnames, cut, cat, convert, fieldconvert, extend, \
                 convertall, convertnumbers, hashjoin, hashleftjoin, \
                 hashrightjoin, hashantijoin, hashcomplement, hashintersection, \
                 flatten, unflatten, mergesort, annex, unpackdict, unique, \
-                selectin, fold, addrownumbers, selectcontains
+                selectin, fold, addrownumbers, selectcontains, search
 import operator
 from petl.transform import Conflict
 
@@ -3494,4 +3494,31 @@ def test_addrownumbers():
     actual = addrownumbers(table1)
     iassertequal(expect, actual)
     iassertequal(expect, actual)
+    
+    
+def test_search():
+    
+    table1 = (('foo', 'bar', 'baz'),
+              ('orange', 12, 'oranges are nice fruit'),
+              ('mango', 42, 'I like them'),
+              ('banana', 74, 'lovely too'),
+              ('cucumber', 41, 'better than mango'))
+    
+    # search any field
+    table2 = search(table1, '.g.')
+    expect2 = (('foo', 'bar', 'baz'),
+               ('orange', 12, 'oranges are nice fruit'),
+               ('mango', 42, 'I like them'),
+               ('cucumber', 41, 'better than mango'))
+    iassertequal(expect2, table2)
+    iassertequal(expect2, table2)
+    
+    # search a specific field
+    table3 = search(table1, 'foo', '.g.')
+    expect3 = (('foo', 'bar', 'baz'),
+               ('orange', 12, 'oranges are nice fruit'),
+               ('mango', 42, 'I like them'))
+    iassertequal(expect3, table3)
+    iassertequal(expect3, table3)
+    
     

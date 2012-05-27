@@ -1577,3 +1577,20 @@ f = nthword(0)
 f(s)
 g = nthword(1)
 g(s)
+
+
+# search
+table1 = (('foo', 'bar', 'baz'),
+          ('orange', 12, 'oranges are nice fruit'),
+          ('mango', 42, 'I like them'),
+          ('banana', 74, 'lovely too'),
+          ('cucumber', 41, 'better than mango'))
+
+from petl import search, look
+look(table1)
+# search any field
+table2 = search(table1, '.g.')
+look(table2)
+# search a specific field
+table3 = search(table1, 'foo', '.g.')
+look(table3)
