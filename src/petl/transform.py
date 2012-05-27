@@ -7389,18 +7389,24 @@ class SearchView(RowContainer):
 def itersearch(table, pattern, field, flags):
     prog = re.compile(pattern, flags)
     it = iter(table)
-    fields = it.next()
+    fields = [str(f) for f in it.next()]
     yield tuple(fields)
-    if field is not None:
+    
+    if field is None:
+        # search whole row
+        test = lambda row: any(prog.search(str(v)) for v in row)
+    elif isinstance(field, basestring):
+        # search single field
+        index = fields.index(field)
+        test = lambda row: prog.search(str(row[index]))
+    else: # list or tuple or ...
+        # search selection of fields
         indices = asindices(fields, field)
-        getval = itemgetter(*indices)
-        getstr = lambda row: str(getval(row))
-    else:
-        getstr = lambda row: str(tuple(row)) # stringify whole row
+        getvals = itemgetter(*indices)
+        test = lambda row: any(prog.search(str(v)) for v in getvals(row))
+
     for row in it:
-        s = getstr(row)
-        match = prog.search(s)
-        if match is not None:
+        if test(row):
             yield tuple(row)
         
             
