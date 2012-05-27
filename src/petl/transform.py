@@ -3400,6 +3400,17 @@ def selectge(table, field, value, complement=False):
     return selectop(table, field, value, operator.ge, complement=complement)
 
 
+def selectcontains(table, field, value, complement=False):
+    """
+    Select rows where the given field contains the given value.
+
+    .. versionadded:: 0.10
+    
+    """
+    
+    return selectop(table, field, value, operator.contains, complement=complement)
+
+
 def selectin(table, field, value, complement=False):
     """
     Select rows where the given field is a member of the given value.

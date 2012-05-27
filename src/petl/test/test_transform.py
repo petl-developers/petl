@@ -20,7 +20,7 @@ from petl import rename, fieldnames, cut, cat, convert, fieldconvert, extend, \
                 convertall, convertnumbers, hashjoin, hashleftjoin, \
                 hashrightjoin, hashantijoin, hashcomplement, hashintersection, \
                 flatten, unflatten, mergesort, annex, unpackdict, unique, \
-                selectin, fold, addrownumbers
+                selectin, fold, addrownumbers, selectcontains
 import operator
 from petl.transform import Conflict
 
@@ -1534,6 +1534,26 @@ def test_selectin():
               ('a', 2, 88.2))
     iassertequal(expect, actual)
     iassertequal(expect, actual) # check can iterate twice
+
+
+def test_selectcontains():
+    
+    table = (('foo', 'bar', 'baz'),
+             ('aaa', 4, 9.3),
+             ('aa', 2, 88.2),
+             ('bab', 1, 23.3),
+             ('c', 8, 42.0),
+             ('d', 7, 100.9),
+             ('c', 2))
+
+    actual = selectcontains(table, 'foo', 'a')
+    expect = (('foo', 'bar', 'baz'),
+              ('aaa', 4, 9.3),
+              ('aa', 2, 88.2),
+              ('bab', 1, 23.3))
+    iassertequal(expect, actual)
+    iassertequal(expect, actual) # check can iterate twice
+
 
 def test_rowselect():
     
