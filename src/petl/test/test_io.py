@@ -933,7 +933,7 @@ def test_fromtext_gz():
         f.write('b\t2\n')
         f.write('c\t3\n')
     
-    actual = fromtext(f.name)
+    actual = fromtext(fn)
     expect = (('lines',),
               ('foo\tbar',),
               ('a\t1',),

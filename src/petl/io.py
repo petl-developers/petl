@@ -529,7 +529,7 @@ class TextView(RowContainer):
         self.strip = strip
         
     def __iter__(self):
-        with self.source.open_('rU') as f:
+        with self.source.open_() as f:
             if self.header is not None:
                 yield tuple(self.header)
             s = self.strip
