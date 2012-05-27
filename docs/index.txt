@@ -163,8 +163,11 @@ Other utility functions:
 +--------------------------------+--------------------------------+----------------------------+
 
 
-Installation
+Introduction
 ------------
+
+Installation
+~~~~~~~~~~~~
 
 This module is available from the `Python Package Index
 <http://pypi.python.org/pypi/petl>`_. On Linux distributions you
@@ -174,7 +177,7 @@ setup.py install``.
 
 
 Dependencies and extensions
----------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This package has been written with no dependencies other than the
 Python core modules, for ease of installation and
@@ -187,7 +190,7 @@ dependencies are provided by the `petlx
 
 
 Conventions - row containers and row iterators
-----------------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This package defines the following convention for objects acting as
 containers of tabular data and supporting row-oriented iteration over
@@ -260,7 +263,7 @@ and/or data rows of varying lengths.
 
 
 Transformation pipelines
-------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 Note that this package makes extensive use of lazy evaluation and
 iterators. This means, generally, that a transformation will not
@@ -326,7 +329,7 @@ data.
 
 
 Caching / memoization
----------------------
+~~~~~~~~~~~~~~~~~~~~~
 
 This package tries to make efficient use of memory by using iterators
 and lazy evaluation where possible. However, some transformations
@@ -398,8 +401,8 @@ might improve usability for someone exploring the data or developing a
 transformation script.
 
 
-Extracting (reading) tables from files, databases and other sources
--------------------------------------------------------------------
+Extract - reading tables from files, databases and other sources
+----------------------------------------------------------------
 
 .. autofunction:: petl.fromcsv
 .. autofunction:: petl.fromtsv
@@ -412,8 +415,8 @@ Extracting (reading) tables from files, databases and other sources
 .. autofunction:: petl.fromdicts
 
 
-Transforming tables
--------------------
+Transform - transforming tables
+-------------------------------
 
 .. autofunction:: petl.rename
 .. autofunction:: petl.setheader
@@ -510,8 +513,8 @@ Transforming tables
 .. autofunction:: petl.addrownumbers
 
 
-Loading (writing) tables to files and databases
------------------------------------------------
+Load - writing tables to files and databases
+--------------------------------------------
 
 .. autofunction:: petl.tocsv
 .. autofunction:: petl.appendcsv
@@ -528,7 +531,7 @@ Loading (writing) tables to files and databases
 .. autofunction:: petl.tojson
 
 
-Utility Functions
+Utility functions
 -----------------
 
 .. autofunction:: petl.header

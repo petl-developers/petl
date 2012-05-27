@@ -1,7 +1,7 @@
 .. module:: petl.fluent
 .. moduleauthor:: Alistair Miles <alimanfoo@googlemail.com>
 
-petl.fluent - Alternative Notation for Combining Transformations
+petl.fluent - Alternative notation for combining transformations
 ================================================================
 
 .. versionadded:: 0.6
@@ -62,5 +62,24 @@ be used in a fluent style. E.g.::
    +-------+----------+----------------------+--------+---------+
    | 34    | 'APPLES' | 0.18846546302867728  | 42     | 1428    |
    +-------+----------+----------------------+--------+---------+
+
+``petl`` executable
+-------------------
+
+.. versionadded:: 0.10
+
+Also included in the ``petl`` distribution is a script to execute
+simple transformation pipelines directly from the operating system
+shell. E.g.::
+
+    $ virtualenv petl
+    $ . petl/bin/activate
+    $ pip install petl
+    $ petl "dummytable().tocsv()" > dummy.csv
+    $ cat dummy.csv | petl "fromcsv().cut('foo', 'baz').selectgt('baz', 0.5).head().data().totsv()"
+
+The ``petl`` script is extremely simple, it expects a single
+positional argument, which is evaluated as Python code but with all of
+the petl.fluent functions imported.
 
 
