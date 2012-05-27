@@ -80,8 +80,11 @@ def facet(table, field):
     return fct
 
 
-# TODO manual override for diff() because it returns a tuple
+def diff(*args, **kwargs):
+    a, b = petl.diff(*args, **kwargs)
+    return FluentWrapper(a), FluentWrapper(b)
 
+    
 
 
 
