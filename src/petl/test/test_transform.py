@@ -7,7 +7,7 @@ Tests for the petl.transform module.
 from collections import OrderedDict
 
 from petl.testutils import iassertequal, assertequal
-from petl import rename, fieldnames, cut, cat, convert, fieldconvert, extend, \
+from petl import rename, fieldnames, cut, cat, convert, fieldconvert, addfield, \
                 rowslice, head, tail, sort, melt, recast, duplicates, \
                 conflicts, mergeduplicates, select, complement, diff, capture, \
                 split, expr, fieldmap, facet, rowreduce, aggregate, \
@@ -390,40 +390,52 @@ def test_convert_translate():
     iassertequal(expectation, result)
 
 
-def test_extend():
-    """Test the extend function."""
+def test_addfield():
+    """Test the addfield function."""
 
     table = (('foo', 'bar'),
              ('M', 12),
              ('F', 34),
              ('-', 56))
     
-    result = extend(table, 'baz', 42)
+    result = addfield(table, 'baz', 42)
     expectation = (('foo', 'bar', 'baz'),
                    ('M', 12, 42),
                    ('F', 34, 42),
                    ('-', 56, 42))
     iassertequal(expectation, result)
+    iassertequal(expectation, result)
 
-    result = extend(table, 'baz', lambda rec: rec['bar'] * 2)
+    result = addfield(table, 'baz', lambda rec: rec['bar'] * 2)
     expectation = (('foo', 'bar', 'baz'),
                    ('M', 12, 24),
                    ('F', 34, 68),
                    ('-', 56, 112))
     iassertequal(expectation, result)
+    iassertequal(expectation, result)
 
-    result = extend(table, 'baz', expr('{bar} * 2'))
+    result = addfield(table, 'baz', expr('{bar} * 2'))
     expectation = (('foo', 'bar', 'baz'),
                    ('M', 12, 24),
                    ('F', 34, 68),
                    ('-', 56, 112))
     iassertequal(expectation, result)
+    iassertequal(expectation, result)
 
+    result = addfield(table, 'baz', 42, index=0)
+    expectation = (('baz', 'foo', 'bar'),
+                   (42, 'M', 12),
+                   (42, 'F', 34),
+                   (42, '-', 56))
+    iassertequal(expectation, result)
+    iassertequal(expectation, result)
+    
 
-def test_extend_empty():
+def test_addfield_empty():
     table = (('foo', 'bar'),)
     expect = (('foo', 'bar', 'baz'),)
-    actual = extend(table, 'baz', 42)
+    actual = addfield(table, 'baz', 42)
+    iassertequal(expect, actual)
     iassertequal(expect, actual)
 
 
@@ -3534,7 +3546,7 @@ def test_addcolumn():
     expect2 = (('foo', 'bar', 'baz'),
                ('A', 1, True),
                ('B', 2, False))
-    table2 = addcolumn(table1, col, 'baz')
+    table2 = addcolumn(table1, 'baz', col)
     iassertequal(expect2, table2)
     iassertequal(expect2, table2)
 
@@ -3547,7 +3559,7 @@ def test_addcolumn():
                ('A', 1, True),
                ('B', 2, False),
                ('C', 2, None))
-    table4 = addcolumn(table3, col, 'baz')
+    table4 = addcolumn(table3, 'baz', col)
     iassertequal(expect4, table4)
     
     # test short table
@@ -3556,6 +3568,6 @@ def test_addcolumn():
                ('A', 1, True),
                ('B', 2, False),
                (None, None, False))
-    table5 = addcolumn(table1, col, 'baz')
+    table5 = addcolumn(table1, 'baz', col)
     iassertequal(expect5, table5)
 

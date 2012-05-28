@@ -5,7 +5,7 @@ Test cachetag methods on transform views.
 
 from petl.util import randomtable
 from petl.transform import RenameView, CutView, CatView, FieldConvertView,\
-    ExtendView, RowSliceView, TailView, SortView, MeltView, RecastView,\
+    AddFieldView, RowSliceView, TailView, SortView, MeltView, RecastView,\
     DuplicatesView, ConflictsView, ComplementView, CaptureView, SplitView,\
     RowSelectView, FieldSelectView, FieldMapView, RowReduceView, \
     MultiAggregateView, RangeRowReduceView, RangeAggregateView,\
@@ -46,9 +46,9 @@ def test_fieldconvert():
     after = tbl.cachetag()
     assert before != after
     
-def test_extend():
+def test_addfield():
     src = randomtable(2, 10)
-    tbl = ExtendView(src, 'ext', lambda rec: rec['f0'] + rec['f1'])
+    tbl = AddFieldView(src, 'ext', lambda rec: rec['f0'] + rec['f1'])
     before = tbl.cachetag()
     src.reseed()
     after = tbl.cachetag()

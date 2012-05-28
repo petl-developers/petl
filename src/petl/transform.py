@@ -970,11 +970,11 @@ def sub(table, field, pattern, repl, count=0, flags=0):
 resub = sub # backwards compatibility
 
     
-def extend(table, field, value, failonerror=False, errorvalue=None):
+def addfield(table, field, value=None, index=None):
     """
-    Extend a table with a fixed value or calculated field. E.g.::
+    Add a field with a fixed or calculated value. E.g.::
     
-        >>> from petl import extend, look
+        >>> from petl import addfield, look
         >>> look(table1)
         +-------+-------+
         | 'foo' | 'bar' |
@@ -987,7 +987,7 @@ def extend(table, field, value, failonerror=False, errorvalue=None):
         +-------+-------+
         
         >>> # using a fixed value
-        ... table2 = extend(table1, 'baz', 42)
+        ... table2 = addfield(table1, 'baz', 42)
         >>> look(table2)
         +-------+-------+-------+
         | 'foo' | 'bar' | 'baz' |
@@ -1000,7 +1000,7 @@ def extend(table, field, value, failonerror=False, errorvalue=None):
         +-------+-------+-------+
         
         >>> # calculating the value
-        ... table2 = extend(table1, 'baz', lambda rec: rec['bar'] * 2)
+        ... table2 = addfield(table1, 'baz', lambda rec: rec['bar'] * 2)
         >>> look(table2)
         +-------+-------+-------+
         | 'foo' | 'bar' | 'baz' |
@@ -1014,7 +1014,7 @@ def extend(table, field, value, failonerror=False, errorvalue=None):
         
         >>> # an expression string can also be used via expr
         ... from petl import expr
-        >>> table3 = extend(table1, 'baz', expr('{bar} * 2'))
+        >>> table3 = addfield(table1, 'baz', expr('{bar} * 2'))
         >>> look(table3)
         +-------+-------+-------+
         | 'foo' | 'bar' | 'baz' |
@@ -1026,55 +1026,59 @@ def extend(table, field, value, failonerror=False, errorvalue=None):
         | '-'   | 56    | 112   |
         +-------+-------+-------+
         
-    When using a calculated value, the function should accept a record, i.e., a
-    dictionary representation of the row, with values indexed by field name.
+    .. versionchanged:: 0.10
+    
+    Renamed 'extend' to 'addfield'.
     
     """
 
-    return ExtendView(table, field, value, failonerror=failonerror, errorvalue=errorvalue)
+    return AddFieldView(table, field, value=value, index=index)
 
 
-class ExtendView(RowContainer):
+class AddFieldView(RowContainer):
     
-    def __init__(self, source, field, value, failonerror=False, errorvalue=None):
+    def __init__(self, source, field, value=None, index=None):
         self.source = source
         self.field = field
         self.value = value
-        self.failonerror = failonerror
-        self.errorvalue = errorvalue
+        self.index = index
         
     def __iter__(self):
-        return iterextend(self.source, self.field, self.value, self.failonerror,
-                          self.errorvalue)
+        return iteraddfield(self.source, self.field, self.value, self.index)
     
     def cachetag(self):
         try:
-            return hash((self.source.cachetag(), self.field, self.value))
+            return hash((self.source.cachetag(), self.field, self.value,
+                         self.index))
         except Exception as e:
             raise Uncacheable(e)
 
 
-def iterextend(source, field, value, failonerror, errorvalue):
+def iteraddfield(source, field, value, index):
     it = iter(source)
     flds = it.next()
-    outflds = list(flds)
-    outflds.append(field)
+    
+    # determine index of new field
+    if index is None:
+        index = len(flds)
+        
+    # construct output fields
+    outflds = list(flds)    
+    outflds.insert(index, field)
     yield tuple(outflds)
 
-    for row in it:
-        outrow = list(row) 
-        if callable(value):
-            rec = asdict(flds, row)
-            try:
-                outrow.append(value(rec))
-            except:
-                if failonerror:
-                    raise
-                else:
-                    outrow.append(errorvalue)
-        else:
-            outrow.append(value)
-        yield tuple(outrow)
+    # hybridise rows if using calculated value
+    if callable(value):
+        for row in hybridrows(flds, it):
+            outrow = list(row)
+            v = value(row)
+            outrow.insert(index, v)
+            yield tuple(outrow)
+    else:
+        for row in it:
+            outrow = list(row)
+            outrow.insert(index, value)
+            yield tuple(outrow)
         
     
 def rowslice(table, *sliceargs):
@@ -7410,7 +7414,7 @@ def itersearch(table, pattern, field, flags):
             yield tuple(row)
         
             
-def addcolumn(table, col, field=None, index=None, missing=None):
+def addcolumn(table, field, col, index=None, missing=None):
     """
     Add a column of data to the table. E.g.::
     
@@ -7425,7 +7429,7 @@ def addcolumn(table, col, field=None, index=None, missing=None):
         +-------+-------+
         
         >>> col = [True, False]
-        >>> table2 = addcolumn(table1, col, 'baz')
+        >>> table2 = addcolumn(table1, 'baz', col)
         >>> look(table2)
         +-------+-------+-------+
         | 'foo' | 'bar' | 'baz' |
@@ -7439,24 +7443,24 @@ def addcolumn(table, col, field=None, index=None, missing=None):
     
     """
     
-    return AddColumnView(table, col, field=field, index=index, missing=missing)
+    return AddColumnView(table, field, col, index=index, missing=missing)
 
 
 class AddColumnView(RowContainer):
     
-    def __init__(self, table, col, field=None, index=None, missing=None):
+    def __init__(self, table, field, col, index=None, missing=None):
         self._table = table
-        self._col = col
         self._field = field
+        self._col = col
         self._index = index
         self._missing = missing
         
     def __iter__(self):
-        return iteraddcolumn(self._table, self._col, self._field, 
+        return iteraddcolumn(self._table, self._field, self._col, 
                              self._index, self._missing)
     
     
-def iteraddcolumn(table, col, field, index, missing):
+def iteraddcolumn(table, field, col, index, missing):
     it = iter(table)
     fields = [str(f) for f in it.next()]
     
@@ -7464,10 +7468,6 @@ def iteraddcolumn(table, col, field, index, missing):
     if index is None:
         index = len(fields)
     
-    # determine name of new field
-    if field is None:
-        field = 'f%s' % (index + 1) 
-            
     # construct output header
     outflds = list(fields)
     outflds.insert(index, field)

@@ -20,7 +20,7 @@ from petl.io import fromcsv, frompickle, fromsqlite3, tocsv, topickle, \
            totext, appendtext, fromxml, Uncacheable, fromjson, fromdicts, tojson, \
            fromtsv, totsv, appendtsv
 
-from petl.transform import rename, cut, cat, convert, fieldconvert, extend, rowslice, \
+from petl.transform import rename, cut, cat, convert, fieldconvert, addfield, rowslice, \
            head, tail, sort, melt, recast, duplicates, conflicts, \
            mergereduce, select, complement, diff, capture, \
            split, fieldmap, facet, selecteq, rowreduce, merge, aggregate, recordreduce, \
