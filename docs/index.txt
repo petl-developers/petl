@@ -69,7 +69,7 @@ Functions for transforming tables:
 +--------------------------------+-----------------------------+-------------------------------+
 |  :func:`fieldconvert`          |  :func:`convertnumbers`     |  :func:`resub`                |
 +--------------------------------+-----------------------------+-------------------------------+
-|  :func:`extend`                |  :func:`capture`            |  :func:`split`                |
+|  :func:`addfield`              |  :func:`capture`            |  :func:`split`                |
 +--------------------------------+-----------------------------+-------------------------------+
 |  :func:`unpack`                |  :func:`fieldmap`           |  :func:`rowmap`               |
 +--------------------------------+-----------------------------+-------------------------------+
@@ -462,7 +462,6 @@ Transform - transforming tables
 .. autofunction:: petl.convertall
 .. autofunction:: petl.fieldconvert
 .. autofunction:: petl.convertnumbers
-.. autofunction:: petl.extend
 .. autofunction:: petl.search
 .. autofunction:: petl.sub
 .. autofunction:: petl.split
@@ -516,6 +515,7 @@ Transform - transforming tables
 .. autofunction:: petl.fold
 .. autofunction:: petl.addrownumbers
 .. autofunction:: petl.addcolumn
+.. autofunction:: petl.addfield
 
 
 Load - writing tables to files and databases
