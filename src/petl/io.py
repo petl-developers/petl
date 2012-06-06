@@ -1231,7 +1231,7 @@ def todb(table, connection, tablename, commit=True):
 
     # truncate the table
     c = connection.cursor()
-    c.execute('delete from %s' % tablename)
+    c.execute('TRUNCATE %s' % tablename)
     
     # insert some data
     _insert(c, tablename, placeholders, table)
