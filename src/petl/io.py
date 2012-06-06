@@ -417,7 +417,7 @@ class Sqlite3View(RowContainer):
             raise Uncacheable
                 
     
-def fromdb(cursor, query):
+def fromdb(connection, query):
     """
     Provides access to data from any DB-API 2.0 connection via a given query. 
     E.g., using `sqlite3`::
@@ -425,8 +425,7 @@ def fromdb(cursor, query):
         >>> import sqlite3
         >>> from petl import look, fromdb
         >>> connection = sqlite3.connect('test.db')
-        >>> cursor = connection.cursor()
-        >>> table = fromdb(cursor, 'select * from foobar')
+        >>> table = fromdb(connection, 'select * from foobar')
         >>> look(table)
         
     E.g., using `psycopg2` (assuming you've installed it first)::
@@ -434,8 +433,7 @@ def fromdb(cursor, query):
         >>> import psycopg2
         >>> from petl import look, fromdb
         >>> connection = psycopg2.connect("dbname=test user=postgres")
-        >>> cursor = connection.cursor()
-        >>> table = fromdb(cursor, 'select * from test')
+        >>> table = fromdb(connection, 'select * from test')
         >>> look(table)
         
     E.g., using `MySQLdb` (assuming you've installed it first)::
@@ -443,31 +441,36 @@ def fromdb(cursor, query):
         >>> import MySQLdb
         >>> from petl import look, fromdb
         >>> connection = MySQLdb.connect(passwd="moonpie", db="thangs")
-        >>> cursor = connection.cursor()
-        >>> table = fromdb(cursor, 'select * from test')
+        >>> table = fromdb(connection, 'select * from test')
         >>> look(table)
         
     The returned table object does not implement the `cachetag()` method.
         
     """
     
-    return DbView(cursor, query)
+    return DbView(connection, query)
 
 
 class DbView(RowContainer):
 
-    def __init__(self, cursor, query):
-        self.connection = cursor.connection
-        self.cursor = cursor
+    def __init__(self, connection, query):
+        self.connection = connection
         self.query = query
         
     def __iter__(self):
-        self.cursor.execute(self.query)
-        fields = [d[0] for d in self.cursor.description]
-        yield tuple(fields)
-        for result in self.cursor:
-            yield tuple(result)
-            
+        # give each iterator its own cursor so iterators are independent
+        cursor = self.connection.cursor()
+        try:
+            cursor.execute(self.query)
+            fields = [d[0] for d in cursor.description]
+            yield tuple(fields)
+            for result in cursor:
+                yield tuple(result)
+        except:
+            raise
+        finally:
+            cursor.close()
+    
             
 def fromtext(source=None, header=['lines'], strip=None):
     """
@@ -1122,8 +1125,8 @@ def tosqlite3(table, filename, tablename, create=True):
 
     conn = sqlite3.connect(filename)
     if create:
-        conn.execute('create table if not exists %s (%s)' % (tablename, ', '.join(names)))
-    conn.execute('delete from %s' % tablename)
+        conn.execute('CREATE TABLE IF NOT EXISTS %s (%s)' % (tablename, ', '.join(names)))
+    conn.execute('DELETE FROM %s' % tablename)
     placeholders = ', '.join(['?'] * len(names))
     _insert(conn, tablename, placeholders, table)
     conn.commit()
@@ -1181,7 +1184,7 @@ def appendsqlite3(table, filename, tablename):
     
     
     
-def todb(table, connection, tablename, commit=True):
+def todb(table, connection, tablename, commit=True, truncate=True):
     """
     Load data into an existing database table via a DB-API 2.0
     connection. Note that the database table will be truncated, i.e.,
@@ -1231,7 +1234,11 @@ def todb(table, connection, tablename, commit=True):
 
     # truncate the table
     c = connection.cursor()
-    c.execute('TRUNCATE %s' % tablename)
+    if truncate:
+        c.execute('TRUNCATE %s' % tablename)
+    else:
+        # TRUNCATE is not supported in sqlite
+        c.execute('DELETE FROM %s' % tablename)
     
     # insert some data
     _insert(c, tablename, placeholders, table)
@@ -1307,7 +1314,7 @@ def _quote(s):
 
 
 def _insert(cursor, tablename, placeholders, table):    
-    insertquery = 'insert into %s values (%s)' % (tablename, placeholders)
+    insertquery = 'INSERT INTO %s VALUES (%s)' % (tablename, placeholders)
     for row in data(table):
         cursor.execute(insertquery, row)
 

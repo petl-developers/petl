@@ -7,13 +7,13 @@ from tempfile import NamedTemporaryFile
 import csv
 import cPickle as pickle
 import sqlite3
+from nose.tools import eq_
 
 from petl import fromcsv, frompickle, fromsqlite3, adler32sum, crc32sum, fromdb, \
                 tocsv, topickle, appendcsv, appendpickle, tosqlite3, appendsqlite3, \
                 todb, appenddb, fromtext, totext, fromxml, fromjson, fromdicts, \
                 tojson, fromtsv, totsv, appendtsv
                 
-
 
 from petl.testutils import iassertequal, assertequal
 import json
@@ -315,14 +315,21 @@ def test_fromdb():
     c.close()
     
     # test the function
-    c = connection.cursor()
-    actual = fromdb(c, 'select * from foobar')
+    actual = fromdb(connection, 'select * from foobar')
     expect = (('foo', 'bar'),
               ('a', 1),
               ('b', 2),
               ('c', 2.0))
     iassertequal(expect, actual)
     iassertequal(expect, actual) # verify can iterate twice
+
+    # test iterators are isolated
+    i1 = iter(actual)
+    i2 = iter(actual)
+    eq_(('foo', 'bar'), i1.next())
+    eq_(('a', 1), i1.next())
+    eq_(('foo', 'bar'), i2.next())
+    eq_(('b', 2), i1.next())
 
 
 def test_fromtext():
@@ -766,7 +773,7 @@ def test_todb_appenddb():
              ('a', 1),
              ('b', 2),
              ('c', 2))
-    todb(table, conn, 'foobar')
+    todb(table, conn, 'foobar', truncate=False) # sqlite doesn't support TRUNCATE
     
     # check what it did
     actual = conn.execute('select * from foobar')
