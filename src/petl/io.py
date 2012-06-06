@@ -417,7 +417,7 @@ class Sqlite3View(RowContainer):
             raise Uncacheable
                 
     
-def fromdb(connection, query):
+def fromdb(cursor, query):
     """
     Provides access to data from any DB-API 2.0 connection via a given query. 
     E.g., using `sqlite3`::
@@ -425,7 +425,8 @@ def fromdb(connection, query):
         >>> import sqlite3
         >>> from petl import look, fromdb
         >>> connection = sqlite3.connect('test.db')
-        >>> table = fromdb(connection, 'select * from foobar')
+        >>> cursor = connection.cursor()
+        >>> table = fromdb(cursor, 'select * from foobar')
         >>> look(table)
         
     E.g., using `psycopg2` (assuming you've installed it first)::
@@ -433,7 +434,8 @@ def fromdb(connection, query):
         >>> import psycopg2
         >>> from petl import look, fromdb
         >>> connection = psycopg2.connect("dbname=test user=postgres")
-        >>> table = fromdb(connection, 'select * from test')
+        >>> cursor = connection.cursor()
+        >>> table = fromdb(cursor, 'select * from test')
         >>> look(table)
         
     E.g., using `MySQLdb` (assuming you've installed it first)::
@@ -441,27 +443,29 @@ def fromdb(connection, query):
         >>> import MySQLdb
         >>> from petl import look, fromdb
         >>> connection = MySQLdb.connect(passwd="moonpie", db="thangs")
-        >>> table = fromdb(connection, 'select * from test')
+        >>> cursor = connection.cursor()
+        >>> table = fromdb(cursor, 'select * from test')
         >>> look(table)
         
     The returned table object does not implement the `cachetag()` method.
         
     """
     
-    return DbView(connection, query)
+    return DbView(cursor, query)
 
 
 class DbView(RowContainer):
 
-    def __init__(self, connection, query):
-        self.connection = connection
+    def __init__(self, cursor, query):
+        self.connection = cursor.connection
+        self.cursor = cursor
         self.query = query
         
     def __iter__(self):
-        cursor = self.connection.execute(self.query)
-        fields = [d[0] for d in cursor.description]
+        self.cursor.execute(self.query)
+        fields = [d[0] for d in self.cursor.description]
         yield tuple(fields)
-        for result in cursor:
+        for result in self.cursor:
             yield tuple(result)
             
             
