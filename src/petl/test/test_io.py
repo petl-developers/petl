@@ -315,7 +315,8 @@ def test_fromdb():
     c.close()
     
     # test the function
-    actual = fromdb(connection, 'select * from foobar')
+    c = connection.cursor()
+    actual = fromdb(c, 'select * from foobar')
     expect = (('foo', 'bar'),
               ('a', 1),
               ('b', 2),
