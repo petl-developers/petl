@@ -473,7 +473,7 @@ class DbView(RowContainer):
         # give each iterator its own cursor so iterators are independent
         cursor = self.connection.cursor()
         try:
-            self.cursor.execute(self.query, self.args)
+            cursor.execute(self.query, self.args)
             fields = [d[0] for d in cursor.description]
             yield tuple(fields)
             for result in cursor:
