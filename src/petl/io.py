@@ -345,7 +345,7 @@ class PickleView(RowContainer):
             raise Uncacheable(e)    
                 
 
-def fromsqlite3(filename, query, checksumfun=None):
+def fromsqlite3(source, query, checksumfun=None):
     """
     Provides access to data from an :mod:`sqlite3` database file via a given query. E.g.::
 
@@ -388,27 +388,39 @@ def fromsqlite3(filename, query, checksumfun=None):
     
     """
     
-    return Sqlite3View(filename, query, checksumfun)
+    return Sqlite3View(source, query, checksumfun)
 
 
 class Sqlite3View(RowContainer):
 
-    def __init__(self, filename, query, checksumfun=None):
-        self.filename = filename
+    def __init__(self, source, query, checksumfun=None):
+        self.source = source
         self.query = query
         self.checksumfun = checksumfun
+        # setup the connection
+        if isinstance(self.source, basestring):
+            self.connection = sqlite3.connect(self.source)
+            self.connection.row_factory = sqlite3.Row
+        elif isinstance(self.source, sqlite3.Connection):
+            self.connection = self.source
+        else:
+            raise Exception('source argument must be filename or connection; found %r' % self.source)
         
     def __iter__(self):
-        connection = sqlite3.connect(self.filename)
-        cursor = connection.execute(self.query)
+
+        cursor = self.connection.cursor()
+        cursor.execute(self.query)
         fields = [d[0] for d in cursor.description]
         yield tuple(fields)
         for result in cursor:
-            yield tuple(result)
-        connection.close()
+            yield result
+            
+        # tidy up
+        cursor.close()
 
     def cachetag(self):
-        p = self.filename
+        # will only work if we've been given a reference to the file, not the connection
+        p = self.source
         if os.path.isfile(p):
             sumfun = self.checksumfun if self.checksumfun is not None else defaultsumfun
             checksum = sumfun(p)
@@ -1084,7 +1096,7 @@ def appendpickle(table, source=None, protocol=-1):
             pickle.dump(row, f, protocol)
     
 
-def tosqlite3(table, filename, tablename, create=True):
+def tosqlite3(table, source, tablename, create=True, commit=True):
     """
     Load data into a table in an :mod:`sqlite3` database. Note that if
     the database table exists, it will be truncated, i.e., all
@@ -1123,16 +1135,34 @@ def tosqlite3(table, filename, tablename, create=True):
     tablename = _quote(tablename)
     names = [_quote(n) for n in fieldnames(table)]
 
-    conn = sqlite3.connect(filename)
-    if create:
-        conn.execute('CREATE TABLE IF NOT EXISTS %s (%s)' % (tablename, ', '.join(names)))
-    conn.execute('DELETE FROM %s' % tablename)
+    if isinstance(source, basestring):
+        conn = sqlite3.connect(source)
+    elif isinstance(source, sqlite3.Connection):
+        conn = source
+    else:
+        raise Exception('source argument must be filename or connection; found %r' % source)
+    
+    cursor = conn.cursor()
+    
+    if create: # force table creation
+        cursor.execute('DROP TABLE IF EXISTS %s' % tablename)
+        cursor.execute('CREATE TABLE %s (%s)' % (tablename, ', '.join(names)))
+    
+    # truncate table
+    cursor.execute('DELETE FROM %s' % tablename)
+    
     placeholders = ', '.join(['?'] * len(names))
-    _insert(conn, tablename, placeholders, table)
-    conn.commit()
+    _insert(cursor, tablename, placeholders, table)
+
+    # tidy up
+    cursor.close()
+    if commit:
+        conn.commit()
+
+    return conn # in case people want to close it
     
     
-def appendsqlite3(table, filename, tablename):
+def appendsqlite3(table, source, tablename, commit=True):
     """
     Load data into an existing table in an :mod:`sqlite3`
     database. Note that the database table will be appended, i.e., the
@@ -1176,12 +1206,25 @@ def appendsqlite3(table, filename, tablename):
     # sanitise table name
     tablename = _quote(tablename)
 
-    conn = sqlite3.connect(filename)
+    if isinstance(source, basestring):
+        conn = sqlite3.connect(source)
+    elif isinstance(source, sqlite3.Connection):
+        conn = source
+    else:
+        raise Exception('source argument must be filename or connection; found %r' % source)
+
+    cursor = conn.cursor()
+    
     flds = header(table) # just need to know how many fields there are
     placeholders = ', '.join(['?'] * len(flds))
-    _insert(conn, tablename, placeholders, table)
-    conn.commit()
-    
+    _insert(cursor, tablename, placeholders, table)
+
+    # tidy up
+    cursor.close()
+    if commit:
+        conn.commit()
+
+    return conn # in case people want to close it
     
     
 def todb(table, connection, tablename, commit=True, truncate=True):
@@ -1237,7 +1280,7 @@ def todb(table, connection, tablename, commit=True, truncate=True):
     if truncate:
         c.execute('TRUNCATE %s' % tablename)
     else:
-        # TRUNCATE is not supported in sqlite
+        # TRUNCATE is not supported in some databases
         c.execute('DELETE FROM %s' % tablename)
     
     # insert some data

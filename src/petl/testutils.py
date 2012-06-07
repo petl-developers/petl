@@ -5,13 +5,13 @@ Common test functions.
 
 
 from itertools import izip_longest
+from nose.tools import eq_
 
 
-def assertequal(expect, actual):
-    assert expect == actual, (expect, actual)
+assertequal = eq_ # backwards compatibility
 
 
-def iassertequal(expect, actual):
+def ieq(expect, actual, cast=None):
     ie = iter(expect)
     ia = iter(actual)
     for e, a in izip_longest(ie, ia, fillvalue=None):
@@ -19,7 +19,12 @@ def iassertequal(expect, actual):
 #            e = tuple(e)
 #        if isinstance(a, list):
 #            a = tuple(a)
-        assert e == a, (e, a)
+        if cast:
+            a = cast(a)
+        eq_(e, a)
+        
+    
+iassertequal = ieq # backwards compatibility
 
 
 def test_iassertequal():

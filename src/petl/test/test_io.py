@@ -15,7 +15,7 @@ from petl import fromcsv, frompickle, fromsqlite3, adler32sum, crc32sum, fromdb,
                 tojson, fromtsv, totsv, appendtsv
                 
 
-from petl.testutils import iassertequal, assertequal
+from petl.testutils import ieq, assertequal
 import json
 import gzip
 import os
@@ -40,8 +40,8 @@ def test_fromcsv():
               ('a', '1'),
               ('b', '2'),
               ('c', '2'))
-    iassertequal(expect, actual)
-    iassertequal(expect, actual) # verify can iterate twice
+    ieq(expect, actual)
+    ieq(expect, actual) # verify can iterate twice
     
     
 def test_fromcsv_cachetag():
@@ -127,8 +127,8 @@ def test_fromtsv():
               ('a', '1'),
               ('b', '2'),
               ('c', '2'))
-    iassertequal(expect, actual)
-    iassertequal(expect, actual) # verify can iterate twice
+    ieq(expect, actual)
+    ieq(expect, actual) # verify can iterate twice
     
     
 def test_frompickle():
@@ -144,8 +144,8 @@ def test_frompickle():
     f.close()
     
     actual = frompickle(f.name)
-    iassertequal(table, actual)
-    iassertequal(table, actual) # verify can iterate twice
+    ieq(table, actual)
+    ieq(table, actual) # verify can iterate twice
     
     
 def test_frompickle_cachetag():
@@ -225,6 +225,7 @@ def test_fromsqlite3():
         c.execute('insert into foobar values (?, ?)', row)
     connection.commit()
     c.close()
+    connection.close()
     
     # test the function
     actual = fromsqlite3(f.name, 'select * from foobar')
@@ -232,8 +233,9 @@ def test_fromsqlite3():
               ('a', 1),
               ('b', 2),
               ('c', 2.0))
-    iassertequal(expect, actual)
-    iassertequal(expect, actual) # verify can iterate twice
+    print list(actual)
+    ieq(expect, actual, cast=tuple)
+    ieq(expect, actual, cast=tuple) # verify can iterate twice
 
 
 def test_fromsqlite3_cachetag():
@@ -320,8 +322,8 @@ def test_fromdb():
               ('a', 1),
               ('b', 2),
               ('c', 2.0))
-    iassertequal(expect, actual)
-    iassertequal(expect, actual) # verify can iterate twice
+    ieq(expect, actual)
+    ieq(expect, actual) # verify can iterate twice
 
     # test iterators are isolated
     i1 = iter(actual)
@@ -348,8 +350,8 @@ def test_fromtext():
               ('a\t1',),
               ('b\t2',),
               ('c\t3',))
-    iassertequal(expect, actual)
-    iassertequal(expect, actual) # verify can iterate twice
+    ieq(expect, actual)
+    ieq(expect, actual) # verify can iterate twice
 
 
 def test_fromxml():
@@ -378,8 +380,8 @@ def test_fromxml():
               ('a', '1'),
               ('b', '2'),
               ('c', '2'))
-    iassertequal(expect, actual)
-    iassertequal(expect, actual) # verify can iterate twice
+    ieq(expect, actual)
+    ieq(expect, actual) # verify can iterate twice
 
 
 def test_fromxml_2():
@@ -408,8 +410,8 @@ def test_fromxml_2():
               ('a', '1'),
               ('b', '2'),
               ('c', '2'))
-    iassertequal(expect, actual)
-    iassertequal(expect, actual) # verify can iterate twice
+    ieq(expect, actual)
+    ieq(expect, actual) # verify can iterate twice
 
 
 def test_fromxml_3():
@@ -435,8 +437,8 @@ def test_fromxml_3():
               ('a', '1'),
               ('b', '2'),
               ('c', '2'))
-    iassertequal(expect, actual)
-    iassertequal(expect, actual) # verify can iterate twice
+    ieq(expect, actual)
+    ieq(expect, actual) # verify can iterate twice
 
 
 def test_fromxml_4():
@@ -462,8 +464,8 @@ def test_fromxml_4():
               ('a', ('1', '3')),
               ('b', '2'),
               ('c', '2'))
-    iassertequal(expect, actual)
-    iassertequal(expect, actual) # verify can iterate twice
+    ieq(expect, actual)
+    ieq(expect, actual) # verify can iterate twice
 
 
 def test_fromxml_5():
@@ -489,8 +491,8 @@ def test_fromxml_5():
               ('a', ('1', '3')),
               ('b', '2'),
               ('c', '2'))
-    iassertequal(expect, actual)
-    iassertequal(expect, actual) # verify can iterate twice
+    ieq(expect, actual)
+    ieq(expect, actual) # verify can iterate twice
 
 
 def test_fromjson_1():
@@ -505,8 +507,8 @@ def test_fromjson_1():
               ('a', 1),
               ('b', 2),
               ('c', 2))
-    iassertequal(expect, actual)
-    iassertequal(expect, actual) # verify can iterate twice
+    ieq(expect, actual)
+    ieq(expect, actual) # verify can iterate twice
     
 
 def test_fromjson_2():
@@ -521,8 +523,8 @@ def test_fromjson_2():
               ('a', 1, None),
               ('b', None, None),
               ('c', 2, True))
-    iassertequal(expect, actual)
-    iassertequal(expect, actual) # verify can iterate twice
+    ieq(expect, actual)
+    ieq(expect, actual) # verify can iterate twice
     
 
 def test_fromjson_3():
@@ -537,8 +539,8 @@ def test_fromjson_3():
               ('a', 1),
               ('b', None),
               ('c', 2))
-    iassertequal(expect, actual)
-    iassertequal(expect, actual) # verify can iterate twice
+    ieq(expect, actual)
+    ieq(expect, actual) # verify can iterate twice
     
 
 def test_fromdicts_1():
@@ -549,8 +551,8 @@ def test_fromdicts_1():
               ('a', 1),
               ('b', 2),
               ('c', 2))
-    iassertequal(expect, actual)
-    iassertequal(expect, actual) # verify can iterate twice
+    ieq(expect, actual)
+    ieq(expect, actual) # verify can iterate twice
     
 
 def test_fromdicts_2():
@@ -561,8 +563,8 @@ def test_fromdicts_2():
               ('a', 1, None),
               ('b', None, None),
               ('c', 2, True))
-    iassertequal(expect, actual)
-    iassertequal(expect, actual) # verify can iterate twice
+    ieq(expect, actual)
+    ieq(expect, actual) # verify can iterate twice
     
 
 def test_fromdicts_3():
@@ -573,8 +575,8 @@ def test_fromdicts_3():
               ('a', 1),
               ('b', None),
               ('c', 2))
-    iassertequal(expect, actual)
-    iassertequal(expect, actual) # verify can iterate twice
+    ieq(expect, actual)
+    ieq(expect, actual) # verify can iterate twice
     
 
 def test_tocsv_appendcsv():
@@ -595,7 +597,7 @@ def test_tocsv_appendcsv():
                   ['a', '1'],
                   ['b', '2'],
                   ['c', '2']]
-        iassertequal(expect, actual)
+        ieq(expect, actual)
     
     # check appending
     table2 = (('foo', 'bar'),
@@ -614,7 +616,7 @@ def test_tocsv_appendcsv():
                   ['d', '7'],
                   ['e', '9'],
                   ['f', '1']]
-        iassertequal(expect, actual)
+        ieq(expect, actual)
     
         
 def test_totsv_appendtsv():
@@ -634,7 +636,7 @@ def test_totsv_appendtsv():
                   ['a', '1'],
                   ['b', '2'],
                   ['c', '2']]
-        iassertequal(expect, actual)
+        ieq(expect, actual)
     
     # check appending
     table2 = (('foo', 'bar'),
@@ -653,7 +655,7 @@ def test_totsv_appendtsv():
                   ['d', '7'],
                   ['e', '9'],
                   ['f', '1']]
-        iassertequal(expect, actual)
+        ieq(expect, actual)
     
     
 def test_topickle_appendpickle():
@@ -677,7 +679,7 @@ def test_topickle_appendpickle():
     # check what it did
     with open(f.name, 'rb') as o:
         actual = picklereader(o)
-        iassertequal(table, actual)
+        ieq(table, actual)
     
     # check appending
     table2 = (('foo', 'bar'),
@@ -696,7 +698,7 @@ def test_topickle_appendpickle():
                   ('d', 7),
                   ('e', 9),
                   ('f', 1))
-        iassertequal(expect, actual)
+        ieq(expect, actual)
     
         
 def test_tosqlite3_appendsqlite3():
@@ -716,7 +718,7 @@ def test_tosqlite3_appendsqlite3():
     expect = (('a', 1),
               ('b', 2),
               ('c', 2))
-    iassertequal(expect, actual)
+    ieq(expect, actual)
     
     # check appending
     table2 = (('foo', 'bar'),
@@ -734,7 +736,7 @@ def test_tosqlite3_appendsqlite3():
               ('d', 7),
               ('e', 9),
               ('f', 1))
-    iassertequal(expect, actual)
+    ieq(expect, actual)
     
         
 def test_tosqlite3_identifiers():
@@ -754,7 +756,7 @@ def test_tosqlite3_identifiers():
     expect = (('a', 1),
               ('b', 2),
               ('c', 2))
-    iassertequal(expect, actual)
+    ieq(expect, actual)
 
 
 # TODO test uneven rows
@@ -780,7 +782,7 @@ def test_todb_appenddb():
     expect = (('a', 1),
               ('b', 2),
               ('c', 2))
-    iassertequal(expect, actual)
+    ieq(expect, actual)
     
     # try appending
     table2 = (('foo', 'bar'),
@@ -797,7 +799,7 @@ def test_todb_appenddb():
               ('d', 7),
               ('e', 9),
               ('f', 1))
-    iassertequal(expect, actual)
+    ieq(expect, actual)
     
         
 def test_totext():
@@ -882,8 +884,8 @@ def test_fromcsv_gz():
               ('a', '1'),
               ('b', '2'),
               ('c', '2'))
-    iassertequal(expect, actual)
-    iassertequal(expect, actual) # verify can iterate twice
+    ieq(expect, actual)
+    ieq(expect, actual) # verify can iterate twice
     
     
 def test_tocsv_appendcsv_gz():
@@ -906,7 +908,7 @@ def test_tocsv_appendcsv_gz():
                   ['a', '1'],
                   ['b', '2'],
                   ['c', '2']]
-        iassertequal(expect, actual)
+        ieq(expect, actual)
     
     # check appending
     table2 = (('foo', 'bar'),
@@ -925,7 +927,7 @@ def test_tocsv_appendcsv_gz():
                   ['d', '7'],
                   ['e', '9'],
                   ['f', '1']]
-        iassertequal(expect, actual)
+        ieq(expect, actual)
     
         
 def test_fromtext_gz():
@@ -947,8 +949,8 @@ def test_fromtext_gz():
               ('a\t1',),
               ('b\t2',),
               ('c\t3',))
-    iassertequal(expect, actual)
-    iassertequal(expect, actual) # verify can iterate twice
+    ieq(expect, actual)
+    ieq(expect, actual) # verify can iterate twice
 
 
 def test_totext_gz():
