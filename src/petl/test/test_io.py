@@ -238,6 +238,32 @@ def test_fromsqlite3():
     ieq(expect, actual, cast=tuple) # verify can iterate twice
 
 
+def test_fromsqlite3_connection():
+    """Test the fromsqlite3 function."""
+    
+    # initial data
+    data = (('a', 1),
+            ('b', 2),
+            ('c', 2.0))
+    connection = sqlite3.connect(':memory:')
+    c = connection.cursor()
+    c.execute('create table foobar (foo, bar)')
+    for row in data:
+        c.execute('insert into foobar values (?, ?)', row)
+    connection.commit()
+    c.close()
+    
+    # test the function
+    actual = fromsqlite3(connection, 'select * from foobar')
+    expect = (('foo', 'bar'),
+              ('a', 1),
+              ('b', 2),
+              ('c', 2.0))
+    print list(actual)
+    ieq(expect, actual, cast=tuple)
+    ieq(expect, actual, cast=tuple) # verify can iterate twice
+
+
 def test_fromsqlite3_cachetag():
     """Test the fromsqlite3 cachetag function."""
     
@@ -729,6 +755,42 @@ def test_tosqlite3_appendsqlite3():
 
     # check what it did
     conn = sqlite3.connect(f.name)
+    actual = conn.execute('select * from foobar')
+    expect = (('a', 1),
+              ('b', 2),
+              ('c', 2),
+              ('d', 7),
+              ('e', 9),
+              ('f', 1))
+    ieq(expect, actual)
+    
+        
+def test_tosqlite3_appendsqlite3_connection():
+
+    conn = sqlite3.connect(':memory:')    
+
+    # exercise function
+    table = (('foo', 'bar'),
+             ('a', 1),
+             ('b', 2),
+             ('c', 2))
+    tosqlite3(table, conn, 'foobar', create=True)
+    
+    # check what it did
+    actual = conn.execute('select * from foobar')
+    expect = (('a', 1),
+              ('b', 2),
+              ('c', 2))
+    ieq(expect, actual)
+    
+    # check appending
+    table2 = (('foo', 'bar'),
+              ('d', 7),
+              ('e', 9),
+              ('f', 1))
+    appendsqlite3(table2, conn, 'foobar') 
+
+    # check what it did
     actual = conn.execute('select * from foobar')
     expect = (('a', 1),
               ('b', 2),
