@@ -458,6 +458,19 @@ def fromdb(connection, query):
         
     The returned table object does not implement the `cachetag()` method.
         
+    .. versionchanged:: 0.10.2
+    
+    The first argument may also be a function that creates a cursor. E.g.::
+    
+        >>> import psycopg2
+        >>> from petl import look, fromdb
+        >>> connection = psycopg2.connect("dbname=test user=postgres")
+        >>> mkcursor = lambda: connection.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        >>> table = fromdb(mkcursor, 'select * from test')
+        >>> look(table)
+    
+    N.B., each call to the function should return a new cursor.
+    
     """
     
     return DbView(connection, query)
@@ -470,8 +483,17 @@ class DbView(RowContainer):
         self.query = query
         
     def __iter__(self):
-        # give each iterator its own cursor so iterators are independent
-        cursor = self.connection.cursor()
+        # N.B., each iterator needs its own cursor so iterators are independent
+
+        # support either connection object or cursor factory function
+        if hasattr(self.connection, 'cursor') and callable(self.connection.cursor):
+            cursor = self.connection.cursor()
+        elif callable(self.connection):
+            cursor = self.connection()
+            assert hasattr(cursor, 'execute'), 'not a cursor: %r' % cursor
+        else:
+            raise Exception('connection arg must have cursor method or be callable')
+        
         try:
             cursor.execute(self.query)
             fields = [d[0] for d in cursor.description]
@@ -1227,11 +1249,11 @@ def appendsqlite3(table, source, tablename, commit=True):
     return conn # in case people want to close it
     
     
-def todb(table, connection, tablename, commit=True, truncate=True):
+def todb(table, connection_or_cursor, tablename, commit=True):
     """
     Load data into an existing database table via a DB-API 2.0
-    connection. Note that the database table will be truncated, i.e.,
-    all existing rows will be deleted prior to inserting the new data.
+    connection or cursor. Note that the database table will be truncated, 
+    i.e., all existing rows will be deleted prior to inserting the new data.
     
     E.g.::
 
@@ -1267,36 +1289,61 @@ def todb(table, connection, tablename, commit=True, truncate=True):
         >>> connection = MySQLdb.connect(passwd="moonpie", db="thangs")
         >>> # assuming table "foobar" already exists in the database
         ... todb(table, connection, 'foobar')    
-        
+
+    .. versionchanged:: 0.10.2
+    
+    A cursor can also be provided instead of a connection, e.g.::
+
+        >>> import psycopg2 
+        >>> connection = psycopg2.connect("dbname=test user=postgres")
+        >>> cursor = connection.cursor()
+        >>> todb(table, cursor, 'foobar')    
+    
     """
 
+    # deal with polymorphic arg
+    if hasattr(connection_or_cursor, 'cursor'):
+        connection = connection_or_cursor
+        cursor = connection.cursor()
+    elif hasattr(connection_or_cursor, 'execute'):
+        cursor = connection_or_cursor
+        if hasattr(cursor, 'connection'):
+            connection = cursor.connection
+        else:
+            connection = None
+    else:
+        raise Exception('expected connection or cursor, found: %r' % connection_or_cursor)
+            
     # sanitise table and field names
     tablename = _quote(tablename)
     names = [_quote(n) for n in fieldnames(table)]
     placeholders = _placeholders(connection, names)
 
-    # truncate the table
-    c = connection.cursor()
-    if truncate:
-        c.execute('TRUNCATE %s' % tablename)
-    else:
+    try:
+        # truncate the table
+        query = 'TRUNCATE %s' % tablename
+        cursor.execute(query)
+    except:
         # TRUNCATE is not supported in some databases
-        c.execute('DELETE FROM %s' % tablename)
+        query = 'DELETE FROM %s' % tablename
+        cursor.execute(query)
     
     # insert some data
-    _insert(c, tablename, placeholders, table)
+    _insert(cursor, tablename, placeholders, table)
 
     # finish up
-    if commit:
+    if hasattr(connection_or_cursor, 'cursor'):
+        # close the cursor we created
+        cursor.close()
+    if commit and connection is not None:
         connection.commit()
-    c.close()
     
     
-def appenddb(table, connection, tablename, commit=True):
+def appenddb(table, connection_or_cursor, tablename, commit=True):
     """
     Load data into an existing database table via a DB-API 2.0
-    connection. Note that the database table will be appended, i.e.,
-    the new data will be inserted into the table, and any existing
+    connection or cursor. Note that the database table will be appended, 
+    i.e., the new data will be inserted into the table, and any existing
     rows will remain.
     
     E.g.::
@@ -1334,26 +1381,49 @@ def appenddb(table, connection, tablename, commit=True):
         >>> # assuming table "foobar" already exists in the database
         ... appenddb(table, connection, 'foobar')    
         
+    .. versionchanged:: 0.10.2
+    
+    A cursor can also be provided instead of a connection, e.g.::
+
+        >>> import psycopg2 
+        >>> connection = psycopg2.connect("dbname=test user=postgres")
+        >>> cursor = connection.cursor()
+        >>> appenddb(table, cursor, 'foobar')    
+    
     """
 
+    # deal with polymorphic arg
+    if hasattr(connection_or_cursor, 'cursor'):
+        connection = connection_or_cursor
+        cursor = connection.cursor()
+    elif hasattr(connection_or_cursor, 'execute'):
+        cursor = connection_or_cursor
+        if hasattr(cursor, 'connection'):
+            connection = cursor.connection
+        else:
+            connection = None
+    else:
+        raise Exception('expected connection or cursor, found: %r' % connection_or_cursor)
+            
     # sanitise table and field names
     tablename = _quote(tablename)
     names = [_quote(n) for n in fieldnames(table)]
     placeholders = _placeholders(connection, names)
     
     # insert some data
-    c = connection.cursor()
-    _insert(c, tablename, placeholders, table)
+    _insert(cursor, tablename, placeholders, table)
 
     # finish up
-    if commit:
+    if hasattr(connection_or_cursor, 'cursor'):
+        # close the cursor we created
+        cursor.close()
+    if commit and connection is not None:
         connection.commit()
-    c.close()
 
 
 def _quote(s):
     # crude way to sanitise table and field names
-    return '"%s"' % s.replace('"', '')
+    return '`%s`' % s.replace('`', '')
 
 
 def _insert(cursor, tablename, placeholders, table):    
