@@ -6,7 +6,7 @@ Tests for the petl.transform module.
 
 from collections import OrderedDict
 
-from petl.testutils import iassertequal, assertequal
+from petl.testutils import ieq, assertequal
 from petl import rename, fieldnames, cut, cat, convert, fieldconvert, addfield, \
                 rowslice, head, tail, sort, melt, recast, duplicates, \
                 conflicts, mergeduplicates, select, complement, diff, capture, \
@@ -48,7 +48,7 @@ def test_rename_empty():
     table = (('foo', 'bar'),)
     expect = (('foofoo', 'bar'),)
     actual = rename(table, 'foo', 'foofoo')
-    iassertequal(expect, actual)
+    ieq(expect, actual)
     
     
 def test_cut():
@@ -67,7 +67,7 @@ def test_cut():
                    (u'B',),
                    ('D',),
                    ('E',))
-    iassertequal(expectation, cut1)
+    ieq(expectation, cut1)
     
     cut2 = cut(table, 'foo', 'baz')
     expectation = (('foo', 'baz'),
@@ -76,7 +76,7 @@ def test_cut():
                    (u'B', u'7.8'),
                    ('D', 9.0),
                    ('E', None))
-    iassertequal(expectation, cut2)
+    ieq(expectation, cut2)
     
     cut3 = cut(table, 0, 2)
     expectation = (('foo', 'baz'),
@@ -85,7 +85,7 @@ def test_cut():
                    (u'B', u'7.8'),
                    ('D', 9.0),
                    ('E', None))
-    iassertequal(expectation, cut3)
+    ieq(expectation, cut3)
     
     cut4 = cut(table, 'bar', 0)
     expectation = (('bar', 'foo'),
@@ -94,7 +94,7 @@ def test_cut():
                    (u'3', u'B'),
                    ('xyz', 'D'),
                    (None, 'E'))
-    iassertequal(expectation, cut4)
+    ieq(expectation, cut4)
 
     cut5 = cut(table, ('foo', 'baz'))
     expectation = (('foo', 'baz'),
@@ -103,14 +103,14 @@ def test_cut():
                    (u'B', u'7.8'),
                    ('D', 9.0),
                    ('E', None))
-    iassertequal(expectation, cut5)
+    ieq(expectation, cut5)
 
 
 def test_cut_empty():
     table = (('foo', 'bar'),)
     expect = (('bar',),)
     actual = cut(table, 'bar')
-    iassertequal(expect, actual)
+    ieq(expect, actual)
         
 
 def test_cutout():
@@ -129,7 +129,7 @@ def test_cutout():
                    (u'B',),
                    ('D',),
                    ('E',))
-    iassertequal(expectation, cut1)
+    ieq(expectation, cut1)
     
     cut2 = cutout(table, 'bar')
     expectation = (('foo', 'baz'),
@@ -138,7 +138,7 @@ def test_cutout():
                    (u'B', u'7.8'),
                    ('D', 9.0),
                    ('E', None))
-    iassertequal(expectation, cut2)
+    ieq(expectation, cut2)
     
     cut3 = cutout(table, 1)
     expectation = (('foo', 'baz'),
@@ -147,7 +147,7 @@ def test_cutout():
                    (u'B', u'7.8'),
                    ('D', 9.0),
                    ('E', None))
-    iassertequal(expectation, cut3)
+    ieq(expectation, cut3)
     
 
 def test_cat():
@@ -166,7 +166,7 @@ def test_cat():
                    (2, 'B', None),
                    (None, 'C', True),
                    (None, 'D', False))
-    iassertequal(expectation, cat1)
+    ieq(expectation, cat1)
 
     # how does cat cope with uneven rows?
     
@@ -184,7 +184,7 @@ def test_cat():
                    (u'B', u'3', u'7.8'),
                    ('D', 'xyz', 9.0),
                    ('E', None, None))
-    iassertequal(expectation, cat3)
+    ieq(expectation, cat3)
     
     # cat more than two tables?
     cat4 = cat(table1, table2, table3)
@@ -198,7 +198,7 @@ def test_cat():
                    (u'B', u'3', u'7.8'),
                    ('D', 'xyz', 9.0),
                    ('E', None, None))
-    iassertequal(expectation, cat4)
+    ieq(expectation, cat4)
     
 
 def test_cat_with_header():
@@ -215,8 +215,8 @@ def test_cat_with_header():
     expect = (('A', 'foo', 'B', 'bar', 'C'),
               (None, 1, None, 'A', None),
               (None, 2, None, 'B', None))
-    iassertequal(expect, actual)
-    iassertequal(expect, actual)
+    ieq(expect, actual)
+    ieq(expect, actual)
 
     actual = cat(table1, table2, header=['A', 'foo', 'B', 'bar', 'C'])
     expect = (('A', 'foo', 'B', 'bar', 'C'),
@@ -224,8 +224,8 @@ def test_cat_with_header():
               (None, 2, None, 'B', None),
               (None, None, None, 'C', None),
               (None, None, None, 'D', None))
-    iassertequal(expect, actual)
-    iassertequal(expect, actual)
+    ieq(expect, actual)
+    ieq(expect, actual)
 
 
 def test_cat_empty():
@@ -237,7 +237,7 @@ def test_cat_empty():
               (1, 'A', None),
               (2, 'B', None))
     actual = cat(table1, table2)
-    iassertequal(expect, actual)
+    ieq(expect, actual)
 
 
 def test_convert():
@@ -257,13 +257,13 @@ def test_convert():
                (u'b', u'3', u'7.8', True),
                ('d', 'xyz', 9.0),
                ('e', None))
-    iassertequal(expect2, table2)
-    iassertequal(expect2, table2)
+    ieq(expect2, table2)
+    ieq(expect2, table2)
     
     # test single field with method call
     table3 = convert(table1, 'foo', 'lower')
     expect3 = expect2
-    iassertequal(expect3, table3)
+    ieq(expect3, table3)
 
     # test single field with method call with arguments
     table4 = convert(table1, 'foo', 'replace', 'B', 'BB')
@@ -273,7 +273,7 @@ def test_convert():
                (u'BB', u'3', u'7.8', True),
                ('D', 'xyz', 9.0),
                ('E', None))
-    iassertequal(expect4, table4)
+    ieq(expect4, table4)
     
     # test multiple fields with the same conversion
     table5 = convert(table1, ('bar', 'baz'), str)
@@ -283,7 +283,7 @@ def test_convert():
                (u'B', u'3', u'7.8', True),
                ('D', 'xyz', '9.0'),
                ('E', 'None'))
-    iassertequal(expect5, table5)
+    ieq(expect5, table5)
     
     # test convert with dictionary
     table6 = convert(table1, 'foo', {'A': 'Z', 'B': 'Y'})
@@ -293,14 +293,14 @@ def test_convert():
                (u'Y', u'3', u'7.8', True),
                ('D', 'xyz', 9.0),
                ('E', None))
-    iassertequal(expect6, table6)
+    ieq(expect6, table6)
 
 
 def test_convert_empty():
     table = (('foo', 'bar'),)
     expect = (('foo', 'bar'),)
     actual = convert(table, 'foo', int)
-    iassertequal(expect, actual)
+    ieq(expect, actual)
         
 
 def test_fieldconvert():
@@ -321,7 +321,7 @@ def test_fieldconvert():
                ('B', 3, 7.8, True), # N.B., long rows are preserved
                ('D', 'error', 9.0),
                ('E', 'error')) # N.B., short rows are preserved
-    iassertequal(expect5, table5) 
+    ieq(expect5, table5) 
     
     # test the style where the converters functions are added one at a time
     table6 = fieldconvert(table1, errorvalue='err')
@@ -334,7 +334,7 @@ def test_fieldconvert():
                ('B', 3, 7.8, True),
                ('D', 'err', 9.0),
                ('E', 'err'))
-    iassertequal(expect6, table6) 
+    ieq(expect6, table6) 
     
     # test some different converters
     table7 = fieldconvert(table1)
@@ -345,7 +345,7 @@ def test_fieldconvert():
                (u'BB', u'3', u'7.8', True),
                ('D', 'xyz', 9.0),
                ('E', None))
-    iassertequal(expect7, table7)
+    ieq(expect7, table7)
     
     
 def test_convertall():
@@ -357,8 +357,8 @@ def test_convertall():
     expect2 = (('foo', 'bar', 'baz'),
                (1, 3, 9),
                (2, 1, 7))
-    iassertequal(expect2, table2)
-    iassertequal(expect2, table2)
+    ieq(expect2, table2)
+    ieq(expect2, table2)
     
     
 def test_convertnumbers():
@@ -370,8 +370,8 @@ def test_convertnumbers():
     expect2 = (('foo', 'bar', 'baz', 'quux'),
                (1, 3.0, 9+3j, 'aaa'),
                (2, 1.3, 7+2j, None))
-    iassertequal(expect2, table2)
-    iassertequal(expect2, table2)
+    ieq(expect2, table2)
+    ieq(expect2, table2)
     
     
 def test_convert_translate():
@@ -387,7 +387,7 @@ def test_convert_translate():
                    ('male', 12),
                    ('female', 34),
                    ('-', 56))
-    iassertequal(expectation, result)
+    ieq(expectation, result)
 
 
 def test_addfield():
@@ -403,40 +403,40 @@ def test_addfield():
                    ('M', 12, 42),
                    ('F', 34, 42),
                    ('-', 56, 42))
-    iassertequal(expectation, result)
-    iassertequal(expectation, result)
+    ieq(expectation, result)
+    ieq(expectation, result)
 
     result = addfield(table, 'baz', lambda rec: rec['bar'] * 2)
     expectation = (('foo', 'bar', 'baz'),
                    ('M', 12, 24),
                    ('F', 34, 68),
                    ('-', 56, 112))
-    iassertequal(expectation, result)
-    iassertequal(expectation, result)
+    ieq(expectation, result)
+    ieq(expectation, result)
 
     result = addfield(table, 'baz', expr('{bar} * 2'))
     expectation = (('foo', 'bar', 'baz'),
                    ('M', 12, 24),
                    ('F', 34, 68),
                    ('-', 56, 112))
-    iassertequal(expectation, result)
-    iassertequal(expectation, result)
+    ieq(expectation, result)
+    ieq(expectation, result)
 
     result = addfield(table, 'baz', 42, index=0)
     expectation = (('baz', 'foo', 'bar'),
                    (42, 'M', 12),
                    (42, 'F', 34),
                    (42, '-', 56))
-    iassertequal(expectation, result)
-    iassertequal(expectation, result)
+    ieq(expectation, result)
+    ieq(expectation, result)
     
 
 def test_addfield_empty():
     table = (('foo', 'bar'),)
     expect = (('foo', 'bar', 'baz'),)
     actual = addfield(table, 'baz', 42)
-    iassertequal(expect, actual)
-    iassertequal(expect, actual)
+    ieq(expect, actual)
+    ieq(expect, actual)
 
 
 def test_rowslice():
@@ -453,25 +453,25 @@ def test_rowslice():
     expectation = (('foo', 'bar', 'baz'),
                    ('A', 1, 2),
                    ('B', '2', '3.4'))
-    iassertequal(expectation, result)
+    ieq(expectation, result)
 
     result = rowslice(table, 1, 2)
     expectation = (('foo', 'bar', 'baz'),
                    ('B', '2', '3.4'))
-    iassertequal(expectation, result)
+    ieq(expectation, result)
 
     result = rowslice(table, 1, 5, 2)
     expectation = (('foo', 'bar', 'baz'),
                    ('B', '2', '3.4'),
                    ('D', 'xyz', 9.0))
-    iassertequal(expectation, result)
+    ieq(expectation, result)
 
 
 def test_rowslice_empty():
     table = (('foo', 'bar'),)
     expect = (('foo', 'bar'),)
     actual = rowslice(table, 1, 2)
-    iassertequal(expect, actual)
+    ieq(expect, actual)
         
 
 def test_head():
@@ -495,7 +495,7 @@ def test_head():
               ('b', 2),
               ('c', 5),
               ('d', 7))
-    iassertequal(expect, table2)
+    ieq(expect, table2)
 
 
 def test_tail():
@@ -519,14 +519,14 @@ def test_tail():
               ('k', 12),
               ('l', 77),
               ('q', 2))
-    iassertequal(expect, table2)
+    ieq(expect, table2)
     
 
 def test_tail_empty():
     table = (('foo', 'bar'),)
     expect = (('foo', 'bar'),)
     actual = tail(table)
-    iassertequal(expect, actual)
+    ieq(expect, actual)
         
     
 def test_sort_1():
@@ -545,7 +545,7 @@ def test_sort_1():
                    ('C', '2'),
                    ('D', '10'),
                    ('F', '1'))
-    iassertequal(expectation, result)
+    ieq(expectation, result)
     
     
 def test_sort_2():
@@ -564,7 +564,7 @@ def test_sort_2():
                    ('C', '2'),
                    ('D', '10'),
                    ('F', '1'))
-    iassertequal(expectation, result)
+    ieq(expectation, result)
     
     result = sort(table) # default is lexical sort
     expectation = (('foo', 'bar'),
@@ -573,7 +573,7 @@ def test_sort_2():
                    ('C', '2'),
                    ('D', '10'),
                    ('F', '1'))
-    iassertequal(expectation, result)
+    ieq(expectation, result)
     
     
 def test_sort_3():
@@ -592,7 +592,7 @@ def test_sort_3():
                    ('C', '2'),
                    ('A', '6'),
                    ('A', '9'))
-    iassertequal(expectation, result)
+    ieq(expectation, result)
     
     
 def test_sort_4():
@@ -611,7 +611,7 @@ def test_sort_4():
                    ('A', 6),
                    ('A', 9),
                    ('D', 10))
-    iassertequal(expectation, result)
+    ieq(expectation, result)
     
     
 def test_sort_5():
@@ -632,13 +632,13 @@ def test_sort_5():
 
     # can use either field names or indices (from 1) to specify sort key
     result = sort(table, key=('foo', 'bar'))
-    iassertequal(expectation, result)
+    ieq(expectation, result)
     result = sort(table, key=(0, 1))
-    iassertequal(expectation, result)
+    ieq(expectation, result)
     result = sort(table, key=('foo', 1))
-    iassertequal(expectation, result)
+    ieq(expectation, result)
     result = sort(table, key=(0, 'bar'))
-    iassertequal(expectation, result)
+    ieq(expectation, result)
     
     
 def test_sort_6():
@@ -658,7 +658,7 @@ def test_sort_6():
                    (1.2, 9))
 
     result = sort(table, key=('foo', 'bar'), reverse=True)
-    iassertequal(expectation, result)
+    ieq(expectation, result)
     
 
 def test_sort_mergesort():
@@ -678,10 +678,10 @@ def test_sort_mergesort():
                    ('A', 9),
                    ('D', 10))
     result = sort(table, 'bar')
-    iassertequal(expectation, result)
+    ieq(expectation, result)
     result = sort(table, 'bar', buffersize=2)
 #    print list(result)
-    iassertequal(expectation, result)
+    ieq(expectation, result)
         
     # sort in reverse
     expectation = (('foo', 'bar'),
@@ -692,9 +692,9 @@ def test_sort_mergesort():
                    ('F', 1))
     
     result = sort(table, 'bar', reverse=True)
-    iassertequal(expectation, result)
+    ieq(expectation, result)
     result = sort(table, 'bar', reverse=True, buffersize=2)
-    iassertequal(expectation, result)
+    ieq(expectation, result)
 
     # no key
     expectation = (('foo', 'bar'),
@@ -704,16 +704,16 @@ def test_sort_mergesort():
                    ('A', 9),
                    ('A', 6))
     result = sort(table, reverse=True)
-    iassertequal(expectation, result)
+    ieq(expectation, result)
     result = sort(table, reverse=True, buffersize=2)
-    iassertequal(expectation, result)
+    ieq(expectation, result)
     
     
 def test_sort_empty():
     table = (('foo', 'bar'),)
     expect = (('foo', 'bar'),)
     actual = sort(table)
-    iassertequal(expect, actual)
+    ieq(expect, actual)
 
 
 def test_melt_1():
@@ -732,10 +732,10 @@ def test_melt_1():
                    (3, 'age', 16))
     
     result = melt(table, key='id')
-    iassertequal(expectation, result)
+    ieq(expectation, result)
 
     result = melt(table, key='id', variablefield='variable', valuefield='value')
-    iassertequal(expectation, result)
+    ieq(expectation, result)
 
 
 def test_melt_2():
@@ -753,21 +753,21 @@ def test_melt_2():
                    (3, 12, 'height', 34.5),
                    (3, 12, 'weight', 9.4))
     result = melt(table, key=('id', 'time'))
-    iassertequal(expectation, result)
+    ieq(expectation, result)
 
     expectation = (('id', 'time', 'variable', 'value'),
                    (1, 11, 'height', 66.4),
                    (2, 16, 'height', 53.2),
                    (3, 12, 'height', 34.5))
     result = melt(table, key=('id', 'time'), variables='height')
-    iassertequal(expectation, result)
+    ieq(expectation, result)
     
 
 def test_melt_empty():
     table = (('foo', 'bar', 'baz'),)
     expect = (('foo', 'variable', 'value'),)
     actual = melt(table, key='foo')
-    iassertequal(expect, actual)
+    ieq(expect, actual)
 
 
 def test_recast_1():
@@ -786,16 +786,16 @@ def test_recast_1():
                    (3, 16, 'M'))
     
     result = recast(table) # by default lift 'variable' field, hold everything else
-    iassertequal(expectation, result)
+    ieq(expectation, result)
 
     result = recast(table, variablefield='variable')
-    iassertequal(expectation, result)
+    ieq(expectation, result)
 
     result = recast(table, key='id', variablefield='variable')
-    iassertequal(expectation, result)
+    ieq(expectation, result)
 
     result = recast(table, key='id', variablefield='variable', valuefield='value')
-    iassertequal(expectation, result)
+    ieq(expectation, result)
 
 
 def test_recast_2():
@@ -816,7 +816,7 @@ def test_recast_2():
     # can manually pick which variables you want to recast as fields
     # TODO this is awkward
     result = recast(table, key='id', variablefield={'variable':['gender']})
-    iassertequal(expectation, result)
+    ieq(expectation, result)
 
 
 def test_recast_3():
@@ -837,7 +837,7 @@ def test_recast_3():
                    (3, 12, 34.5),
                    (3, 17, 49.4))
     result = recast(table)
-    iassertequal(expectation, result)
+    ieq(expectation, result)
 
     # in the absence of an aggregation function, list all values
     expectation = (('id', 'weight'),
@@ -845,7 +845,7 @@ def test_recast_3():
                    (2, [53.2, 43.3]),
                    (3, [34.5, 49.4]))
     result = recast(table, key='id')
-    iassertequal(expectation, result)
+    ieq(expectation, result)
 
     # max aggregation
     expectation = (('id', 'weight'),
@@ -853,7 +853,7 @@ def test_recast_3():
                    (2, 53.2),
                    (3, 49.4))
     result = recast(table, key='id', reducers={'weight': max})
-    iassertequal(expectation, result)
+    ieq(expectation, result)
 
     # min aggregation
     expectation = (('id', 'weight'),
@@ -861,7 +861,7 @@ def test_recast_3():
                    (2, 43.3),
                    (3, 34.5))
     result = recast(table, key='id', reducers={'weight': min})
-    iassertequal(expectation, result)
+    ieq(expectation, result)
 
     # mean aggregation
     expectation = (('id', 'weight'),
@@ -877,7 +877,7 @@ def test_recast_3():
             return v
         return f
     result = recast(table, key='id', reducers={'weight': meanf(precision=2)})
-    iassertequal(expectation, result)
+    ieq(expectation, result)
 
     
 def test_recast4():
@@ -893,14 +893,14 @@ def test_recast4():
               (1, 12, 'F'),
               (2, 17, None),
               (3, None, 'M'))
-    iassertequal(expect, result)
+    ieq(expect, result)
 
 
 def test_recast_empty():
     table = (('foo', 'variable', 'value'),)
     expect = (('foo',),)
     actual = recast(table)
-    iassertequal(expect, actual)
+    ieq(expect, actual)
 
 
 def test_duplicates():
@@ -921,21 +921,21 @@ def test_duplicates():
                    ('B', '2', 42),
                    ('D', 'xyz', 9.0),
                    ('D', 4, 12.3))
-    iassertequal(expectation, result)
+    ieq(expectation, result)
     
     # test with compound key
     result = duplicates(table, key=('foo', 'bar'))
     expectation = (('foo', 'bar', 'baz'),
                    ('B', '2', '3.4'),
                    ('B', '2', 42))
-    iassertequal(expectation, result)
+    ieq(expectation, result)
     
 
 def test_duplicates_empty():
     table = (('foo', 'bar'),)
     expect = (('foo', 'bar'),)
     actual = duplicates(table, key='foo')
-    iassertequal(expect, actual)
+    ieq(expect, actual)
 
 
 def test_unique():
@@ -955,8 +955,8 @@ def test_unique():
                    ('A', 1, 2),
                    ('E', None),
                    ('F', 7, 2.3))
-    iassertequal(expectation, result)
-    iassertequal(expectation, result)
+    ieq(expectation, result)
+    ieq(expectation, result)
     
     # test with compound key
     result = unique(table, key=('foo', 'bar'))
@@ -967,15 +967,15 @@ def test_unique():
                    ('D', 'xyz', 9.0),
                    ('E', None),
                    ('F', 7, 2.3))
-    iassertequal(expectation, result)
-    iassertequal(expectation, result)
+    ieq(expectation, result)
+    ieq(expectation, result)
     
 
 def test_unique_empty():
     table = (('foo', 'bar'),)
     expect = (('foo', 'bar'),)
     actual = unique(table, key='foo')
-    iassertequal(expect, actual)
+    ieq(expect, actual)
 
 
 def test_conflicts():
@@ -995,27 +995,27 @@ def test_conflicts():
                    ('A', 2, None),
                    ('D', 'xyz', 9.4),
                    ('D', 'xyz', 12.3))
-    iassertequal(expectation, result)
-    iassertequal(expectation, result)
+    ieq(expectation, result)
+    ieq(expectation, result)
     
     result = conflicts(table, 'foo', missing=None, exclude='baz')
     expectation = (('foo', 'bar', 'baz'),
                    ('A', 1, 2),
                    ('A', 2, None))
-    iassertequal(expectation, result)
-    iassertequal(expectation, result)
+    ieq(expectation, result)
+    ieq(expectation, result)
     
     result = conflicts(table, 'foo', missing=None, exclude=('bar', 'baz'))
     expectation = (('foo', 'bar', 'baz'),)
-    iassertequal(expectation, result)
-    iassertequal(expectation, result)
+    ieq(expectation, result)
+    ieq(expectation, result)
 
     result = conflicts(table, 'foo', missing=None, include='bar')
     expectation = (('foo', 'bar', 'baz'),
                    ('A', 1, 2),
                    ('A', 2, None))
-    iassertequal(expectation, result)
-    iassertequal(expectation, result)
+    ieq(expectation, result)
+    ieq(expectation, result)
     
     result = conflicts(table, 'foo', missing=None, include=('bar', 'baz'))
     expectation = (('foo', 'bar', 'baz'),
@@ -1023,15 +1023,15 @@ def test_conflicts():
                    ('A', 2, None),
                    ('D', 'xyz', 9.4),
                    ('D', 'xyz', 12.3))
-    iassertequal(expectation, result)
-    iassertequal(expectation, result)
+    ieq(expectation, result)
+    ieq(expectation, result)
 
     
 def test_conflicts_empty():
     table = (('foo', 'bar'),)
     expect = (('foo', 'bar'),)
     actual = conflicts(table, key='foo')
-    iassertequal(expect, actual)
+    ieq(expect, actual)
 
 
 def test_mergeduplicates():
@@ -1052,14 +1052,14 @@ def test_mergeduplicates():
                    ('B', '2', u'7.8'),
                    ('D', 'xyz', Conflict([9.4, 12.3])),
                    ('E', None, 42.))
-    iassertequal(expectation, result)
+    ieq(expectation, result)
     
     
 def test_mergeduplicates_empty():
     table = (('foo', 'bar'),)
     expect = (('foo', 'bar'),)
     actual = mergeduplicates(table, key='foo')
-    iassertequal(expect, actual)
+    ieq(expect, actual)
     
     
 def _test_complement_1(f):
@@ -1079,7 +1079,7 @@ def _test_complement_1(f):
                    ('C', 7))
     
     result = f(table1, table2)
-    iassertequal(expectation, result)
+    ieq(expectation, result)
     
     
 def _test_complement_2(f):
@@ -1101,14 +1101,14 @@ def _test_complement_2(f):
                ('C', 7, False))
     
     result = f(tablea, tableb)
-    iassertequal(aminusb, result)
+    ieq(aminusb, result)
     
     bminusa = (('x', 'y', 'z'),
                ('A', 9, False),
                ('B', 3, True))
     
     result = f(tableb, tablea)
-    iassertequal(bminusa, result)
+    ieq(bminusa, result)
     
 
 def _test_complement_3(f):
@@ -1125,13 +1125,13 @@ def _test_complement_3(f):
                    ('A', 1),
                    ('B', 2))
     result = f(table1, table2)
-    iassertequal(expectation, result)
-    iassertequal(expectation, result)
+    ieq(expectation, result)
+    ieq(expectation, result)
     
     expectation = (('foo', 'bar'),)
     result = f(table2, table1)
-    iassertequal(expectation, result)
-    iassertequal(expectation, result)
+    ieq(expectation, result)
+    ieq(expectation, result)
     
     
 def _test_complement_4(f):
@@ -1153,8 +1153,8 @@ def _test_complement_4(f):
                    ('C', 7))
     
     result = f(table1, table2)
-    iassertequal(expectation, result)
-    iassertequal(expectation, result)
+    ieq(expectation, result)
+    ieq(expectation, result)
     
     
 def _test_complement(f):
@@ -1191,8 +1191,8 @@ def test_diff():
                ('B', 3, True))
     
     added, subtracted = diff(tablea, tableb)
-    iassertequal(bminusa, added)
-    iassertequal(aminusb, subtracted)
+    ieq(bminusa, added)
+    ieq(aminusb, subtracted)
     
 
 def test_recordcomplement_1():
@@ -1212,7 +1212,7 @@ def test_recordcomplement_1():
                    ('C', 7))
     
     result = recordcomplement(table1, table2)
-    iassertequal(expectation, result)
+    ieq(expectation, result)
     
     
 def test_recordcomplement_2():
@@ -1234,14 +1234,14 @@ def test_recordcomplement_2():
                ('C', 7, False))
     
     result = recordcomplement(tablea, tableb)
-    iassertequal(aminusb, result)
+    ieq(aminusb, result)
     
     bminusa = (('bar', 'foo', 'baz'),
                (3, 'B', True),
                (9, 'A', False))
     
     result = recordcomplement(tableb, tablea)
-    iassertequal(bminusa, result)
+    ieq(bminusa, result)
     
 
 def test_recordcomplement_3():
@@ -1258,13 +1258,13 @@ def test_recordcomplement_3():
                    ('A', 1),
                    ('B', 2))
     result = recordcomplement(table1, table2)
-    iassertequal(expectation, result)
-    iassertequal(expectation, result)
+    ieq(expectation, result)
+    ieq(expectation, result)
     
     expectation = (('bar', 'foo'),)
     result = recordcomplement(table2, table1)
-    iassertequal(expectation, result)
-    iassertequal(expectation, result)
+    ieq(expectation, result)
+    ieq(expectation, result)
     
     
 def test_recordcomplement_4():
@@ -1286,8 +1286,8 @@ def test_recordcomplement_4():
                    ('C', 7))
     
     result = recordcomplement(table1, table2)
-    iassertequal(expectation, result)
-    iassertequal(expectation, result)
+    ieq(expectation, result)
+    ieq(expectation, result)
     
     
 def test_recorddiff():
@@ -1313,8 +1313,8 @@ def test_recorddiff():
                (9, 'A', False))
     
     added, subtracted = recorddiff(tablea, tableb)
-    iassertequal(aminusb, subtracted)
-    iassertequal(bminusa, added)
+    ieq(aminusb, subtracted)
+    ieq(bminusa, added)
     
 
 def test_capture():
@@ -1332,10 +1332,10 @@ def test_capture():
                    ('4', '19', 'C', '12'))
     
     result = capture(table, 'variable', '(\\w)(\\d+)', ('treat', 'time'))
-    iassertequal(expectation, result)
+    ieq(expectation, result)
     result = capture(table, 'variable', '(\\w)(\\d+)', ('treat', 'time'),
                            include_original=False)
-    iassertequal(expectation, result)
+    ieq(expectation, result)
 
     # what about including the original field?
     expectation = (('id', 'variable', 'value', 'treat', 'time'),
@@ -1345,7 +1345,7 @@ def test_capture():
                    ('4', 'C12', '19', 'C', '12'))
     result = capture(table, 'variable', '(\\w)(\\d+)', ('treat', 'time'),
                            include_original=True)
-    iassertequal(expectation, result)
+    ieq(expectation, result)
     
     # what about if number of captured groups is different from new fields?
     expectation = (('id', 'value'),
@@ -1354,14 +1354,14 @@ def test_capture():
                    ('3', '18', 'B', '1'),
                    ('4', '19', 'C', '12'))
     result = capture(table, 'variable', '(\\w)(\\d+)')
-    iassertequal(expectation, result)
+    ieq(expectation, result)
     
     
 def test_capture_empty():
     table = (('foo', 'bar'),)
     expect = (('foo', 'baz', 'qux'),)
     actual = capture(table, 'bar', r'(\w)(\d)', ('baz', 'qux'))
-    iassertequal(expect, actual)
+    ieq(expect, actual)
 
 
 def test_split():
@@ -1379,11 +1379,11 @@ def test_split():
                    ('4', '19', 'temp', '2'))
     
     result = split(table, 'variable', 'd', ('variable', 'day'))
-    iassertequal(expectation, result)
-    iassertequal(expectation, result)
+    ieq(expectation, result)
+    ieq(expectation, result)
     # proper regex
     result = split(table, 'variable', '[Dd]', ('variable', 'day'))
-    iassertequal(expectation, result)
+    ieq(expectation, result)
 
     expectation = (('id', 'variable', 'value', 'variable', 'day'),
                    ('1', 'parad1', '12', 'para', '1'),  
@@ -1392,7 +1392,7 @@ def test_split():
                    ('4', 'tempd2', '19', 'temp', '2'))
     
     result = split(table, 'variable', 'd', ('variable', 'day'), include_original=True)
-    iassertequal(expectation, result)
+    ieq(expectation, result)
     
     # what about if no new fields?
     expectation = (('id', 'value'),
@@ -1401,14 +1401,14 @@ def test_split():
                    ('3', '18', 'temp', '1'),
                    ('4', '19', 'temp', '2'))
     result = split(table, 'variable', 'd')
-    iassertequal(expectation, result)
+    ieq(expectation, result)
 
 
 def test_split_empty():
     table = (('foo', 'bar'),)
     expect = (('foo', 'baz', 'qux'),)
     actual = split(table, 'bar', 'd', ('baz', 'qux'))
-    iassertequal(expect, actual)
+    ieq(expect, actual)
 
 
 def test_melt_and_capture():
@@ -1427,7 +1427,7 @@ def test_melt_and_capture():
     
     step1 = melt(table, key='id', valuefield='parasitaemia')
     step2 = capture(step1, 'variable', 'parad(\\d+)', ('day',))
-    iassertequal(expectation, step2)
+    ieq(expectation, step2)
 
 
 def test_melt_and_split():
@@ -1452,7 +1452,7 @@ def test_melt_and_split():
     
     step1 = melt(table, key='id')
     step2 = split(step1, 'variable', 'd', ('variable', 'day'))
-    iassertequal(expectation, step2)
+    ieq(expectation, step2)
 
 
 def test_select():
@@ -1469,8 +1469,8 @@ def test_select():
     expect = (('foo', 'bar', 'baz'),
               ('a', 4, 9.3),
               ('a', 2, 88.2))
-    iassertequal(expect, actual)
-    iassertequal(expect, actual) # check can iterate twice
+    ieq(expect, actual)
+    ieq(expect, actual) # check can iterate twice
  
     # check select complement
     actual = select(table, lambda rec: rec['foo'] == 'a', complement=True)
@@ -1479,39 +1479,39 @@ def test_select():
               ('c', 8, 42.0),
               ('d', 7, 100.9),
               ('c', 2))
-    iassertequal(expect, actual)
-    iassertequal(expect, actual) # check can iterate twice
+    ieq(expect, actual)
+    ieq(expect, actual) # check can iterate twice
 
     actual = select(table, lambda rec: rec['foo'] == 'a' and rec['bar'] > 3)
     expect = (('foo', 'bar', 'baz'),
               ('a', 4, 9.3))
-    iassertequal(expect, actual)
+    ieq(expect, actual)
 
     actual = select(table, "{foo} == 'a'")
     expect = (('foo', 'bar', 'baz'),
               ('a', 4, 9.3),
               ('a', 2, 88.2))
-    iassertequal(expect, actual)
+    ieq(expect, actual)
 
     actual = select(table, "{foo} == 'a' and {bar} > 3")
     expect = (('foo', 'bar', 'baz'),
               ('a', 4, 9.3))
-    iassertequal(expect, actual)
+    ieq(expect, actual)
 
     # check error handling on short rows
     actual = select(table, lambda rec: rec['baz'] > 88.1)
     expect = (('foo', 'bar', 'baz'),
               ('a', 2, 88.2),
               ('d', 7, 100.9))
-    iassertequal(expect, actual)
+    ieq(expect, actual)
     
     # check single field tests
     actual = select(table, 'foo', lambda v: v == 'a')
     expect = (('foo', 'bar', 'baz'),
               ('a', 4, 9.3),
               ('a', 2, 88.2))
-    iassertequal(expect, actual)
-    iassertequal(expect, actual) # check can iterate twice
+    ieq(expect, actual)
+    ieq(expect, actual) # check can iterate twice
     
     # check select complement
     actual = select(table, 'foo', lambda v: v == 'a', complement=True)
@@ -1520,15 +1520,15 @@ def test_select():
               ('c', 8, 42.0),
               ('d', 7, 100.9),
               ('c', 2))
-    iassertequal(expect, actual)
-    iassertequal(expect, actual) # check can iterate twice
+    ieq(expect, actual)
+    ieq(expect, actual) # check can iterate twice
 
 
 def test_select_empty():
     table = (('foo', 'bar'),)
     expect = (('foo', 'bar'),)
     actual = select(table, lambda r: r['foo'] == r['bar'])
-    iassertequal(expect, actual)
+    ieq(expect, actual)
 
 
 def test_selectin():
@@ -1545,8 +1545,8 @@ def test_selectin():
     expect = (('foo', 'bar', 'baz'),
               ('a', 4, 9.3),
               ('a', 2, 88.2))
-    iassertequal(expect, actual)
-    iassertequal(expect, actual) # check can iterate twice
+    ieq(expect, actual)
+    ieq(expect, actual) # check can iterate twice
 
 
 def test_selectcontains():
@@ -1564,8 +1564,8 @@ def test_selectcontains():
               ('aaa', 4, 9.3),
               ('aa', 2, 88.2),
               ('bab', 1, 23.3))
-    iassertequal(expect, actual)
-    iassertequal(expect, actual) # check can iterate twice
+    ieq(expect, actual)
+    ieq(expect, actual) # check can iterate twice
 
 
 def test_rowselect():
@@ -1582,8 +1582,8 @@ def test_rowselect():
     expect = (('foo', 'bar', 'baz'),
               ('a', 4, 9.3),
               ('a', 2, 88.2))
-    iassertequal(expect, actual)
-    iassertequal(expect, actual) # check can iterate twice
+    ieq(expect, actual)
+    ieq(expect, actual) # check can iterate twice
 
 
 def test_rowlenselect():
@@ -1603,8 +1603,8 @@ def test_rowlenselect():
               ('b', 1, 23.3),
               ('c', 8, 42.0),
               ('d', 7, 100.9))
-    iassertequal(expect, actual)
-    iassertequal(expect, actual) # check can iterate twice
+    ieq(expect, actual)
+    ieq(expect, actual) # check can iterate twice
 
 
 def test_recordselect():
@@ -1621,8 +1621,8 @@ def test_recordselect():
     expect = (('foo', 'bar', 'baz'),
               ('a', 4, 9.3),
               ('a', 2, 88.2))
-    iassertequal(expect, actual)
-    iassertequal(expect, actual) # check can iterate twice
+    ieq(expect, actual)
+    ieq(expect, actual) # check can iterate twice
 
 
 def test_selectre():
@@ -1639,8 +1639,8 @@ def test_selectre():
              ('aa', 4, 9.3),
              ('aaa', 2, 88.2),
              ('bb', 7, 100.9))
-    iassertequal(expect, actual)
-    iassertequal(expect, actual)
+    ieq(expect, actual)
+    ieq(expect, actual)
 
     
 def test_fieldmap():
@@ -1664,8 +1664,8 @@ def test_fieldmap():
               (3, 'F', 17*12, 74.4/1.78**2),
               (4, 'M', 21*12, 45.2/1.33**2),
               (5, '-', 25*12, 51.9/1.65**2))
-    iassertequal(expect, actual)
-    iassertequal(expect, actual) # can iteratate twice?
+    ieq(expect, actual)
+    ieq(expect, actual) # can iteratate twice?
     
     # do it with suffix
     actual = fieldmap(table)
@@ -1673,7 +1673,7 @@ def test_fieldmap():
     actual['gender'] = 'sex', {'male': 'M', 'female': 'F'}
     actual['age_months'] = 'age', lambda v: v * 12
     actual['bmi'] = '{weight} / {height}**2'
-    iassertequal(expect, actual)
+    ieq(expect, actual)
     
     # test short rows
     table2 = (('id', 'sex', 'age', 'height', 'weight'),
@@ -1689,7 +1689,7 @@ def test_fieldmap():
               (4, 'M', 21*12, 45.2/1.33**2),
               (5, '-', 25*12, None))
     actual = fieldmap(table2, mappings)
-    iassertequal(expect, actual)
+    ieq(expect, actual)
 
 
 def test_fieldmap_empty():
@@ -1700,7 +1700,7 @@ def test_fieldmap_empty():
     mappings['foo'] = 'foo'
     mappings['baz'] = 'bar', lambda v: v*2 
     actual = fieldmap(table, mappings)
-    iassertequal(expect, actual)
+    ieq(expect, actual)
 
 
 def test_facet():
@@ -1717,13 +1717,13 @@ def test_facet():
     expect_fcta = (('foo', 'bar', 'baz'),
                    ('a', 4, 9.3),
                    ('a', 2, 88.2))
-    iassertequal(fct['a'], expect_fcta)
-    iassertequal(fct['a'], expect_fcta) # check can iterate twice
+    ieq(fct['a'], expect_fcta)
+    ieq(fct['a'], expect_fcta) # check can iterate twice
     expect_fctc = (('foo', 'bar', 'baz'),
                    ('c', 8, 42.0),
                    ('c', 2))
-    iassertequal(fct['c'], expect_fctc)
-    iassertequal(fct['c'], expect_fctc) # check can iterate twice
+    ieq(fct['c'], expect_fctc)
+    ieq(fct['c'], expect_fctc) # check can iterate twice
     
 
 def test_facet_2():
@@ -1740,13 +1740,13 @@ def test_facet_2():
     expect_fcta = (('foo', 'bar', 'baz'),
                    ('aa', 4, 9.3),
                    ('aa', 2, 88.2))
-    iassertequal(fct['aa'], expect_fcta)
-    iassertequal(fct['aa'], expect_fcta) # check can iterate twice
+    ieq(fct['aa'], expect_fcta)
+    ieq(fct['aa'], expect_fcta) # check can iterate twice
     expect_fctc = (('foo', 'bar', 'baz'),
                    ('cc', 8, 42.0),
                    ('cc', 2))
-    iassertequal(fct['cc'], expect_fctc)
-    iassertequal(fct['cc'], expect_fctc) # check can iterate twice
+    ieq(fct['cc'], expect_fctc)
+    ieq(fct['cc'], expect_fctc) # check can iterate twice
     
 
 def test_facet_empty():
@@ -1770,12 +1770,12 @@ def test_rangefacet():
     expect_13 = (('foo', 'bar'),
                  ('b', 2),
                  ('b', 1)) # N.B., it get's sorted
-    iassertequal(expect_13, rf[(1, 3)])
-    iassertequal(expect_13, rf[(1, 3)])
+    ieq(expect_13, rf[(1, 3)])
+    ieq(expect_13, rf[(1, 3)])
     expect_79 = (('foo', 'bar'),
                  ('a', 7),
                  ('b', 9))
-    iassertequal(expect_79, rf[(7, 9)])
+    ieq(expect_79, rf[(7, 9)])
 
 
 def test_rowreduce():
@@ -1796,7 +1796,7 @@ def test_rowreduce():
                ('a', 10),
                ('b', 12),
                ('c', 4))
-    iassertequal(expect2, table2)
+    ieq(expect2, table2)
     
 
 def test_recordreduce():
@@ -1817,7 +1817,7 @@ def test_recordreduce():
                ('a', 10),
                ('b', 12),
                ('c', 4))
-    iassertequal(expect2, table2)
+    ieq(expect2, table2)
     
 
 def test_recordreduce_2():
@@ -1838,7 +1838,7 @@ def test_recordreduce_2():
                ('aa', 10),
                ('bb', 12),
                ('cc', 4))
-    iassertequal(expect2, table2)
+    ieq(expect2, table2)
     
 
 def test_rowreduce_empty():
@@ -1846,7 +1846,7 @@ def test_rowreduce_empty():
     expect = (('foo', 'bar'),)
     reducer = lambda key, rows: (key, [r[0] for r in rows])
     actual = rowreduce(table, key='foo', reducer=reducer, fields=('foo', 'bar'))
-    iassertequal(expect, actual)
+    ieq(expect, actual)
 
 
 def test_rangerowreduce():
@@ -1870,8 +1870,8 @@ def test_rangerowreduce():
                (5, 7, ''),
                (7, 9, 'a'),
                (9, 11, 'b'))
-    iassertequal(expect2, table2)
-    iassertequal(expect2, table2)
+    ieq(expect2, table2)
+    ieq(expect2, table2)
     
 
 def test_rangerecordreduce():
@@ -1895,8 +1895,8 @@ def test_rangerecordreduce():
                (5, 7, ''),
                (7, 9, 'a'),
                (9, 11, 'b'))
-    iassertequal(expect2, table2)
-    iassertequal(expect2, table2)
+    ieq(expect2, table2)
+    ieq(expect2, table2)
     
     
 def test_aggregate_simple():
@@ -1915,8 +1915,8 @@ def test_aggregate_simple():
                ('a', 2),
                ('b', 3),
                ('c', 1))
-    iassertequal(expect2, table2)
-    iassertequal(expect2, table2)
+    ieq(expect2, table2)
+    ieq(expect2, table2)
 
     # next simplest signature - aggregate single field
     table3 = aggregate(table1, 'foo', sum, 'bar')
@@ -1924,8 +1924,8 @@ def test_aggregate_simple():
                ('a', 10),
                ('b', 13),
                ('c', 4))
-    iassertequal(expect3, table3)
-    iassertequal(expect3, table3)
+    ieq(expect3, table3)
+    ieq(expect3, table3)
     
     # alternative signature for simple aggregation
     table4 = aggregate(table1, key=('foo', 'bar'), aggregation=list, value=('bar', 'baz'))
@@ -1935,8 +1935,8 @@ def test_aggregate_simple():
                (('b', 2), [(2, True), (2, False)]),
                (('b', 9), [(9, False)]),
                (('c', 4), [(4, True)]))
-    iassertequal(expect4, table4)
-    iassertequal(expect4, table4)
+    ieq(expect4, table4)
+    ieq(expect4, table4)
     
     
 def test_aggregate_multifield():
@@ -1964,8 +1964,8 @@ def test_aggregate_multifield():
                ('a', 2, 3, 7, 10, [3, 7], '3, 7'),
                ('b', 3, 1, 9, 12, [2, 1, 9], '2, 1, 9'),
                ('c', 1, 4, 4, 4, [4], '4'))
-    iassertequal(expect2, table2)
-    iassertequal(expect2, table2) # check can iterate twice
+    ieq(expect2, table2)
+    ieq(expect2, table2) # check can iterate twice
     
     # use suffix notation
     
@@ -1976,7 +1976,7 @@ def test_aggregate_multifield():
     table3['sumbar'] = 'bar', sum
     table3['listbar'] = 'bar' # default aggregation is list
     table3['bars'] = 'bar', strjoin(', ')
-    iassertequal(expect2, table3)
+    ieq(expect2, table3)
     
     # list arg
 
@@ -1988,8 +1988,8 @@ def test_aggregate_multifield():
                    ('bars', 'bar', strjoin(', '))]
 
     table4 = aggregate(table1, 'foo', aggregators)
-    iassertequal(expect2, table4)
-    iassertequal(expect2, table4) # check can iterate twice
+    ieq(expect2, table4)
+    ieq(expect2, table4) # check can iterate twice
     
     
 def test_aggregate_more():
@@ -2016,8 +2016,8 @@ def test_aggregate_more():
                ('bb', 1, 9, 12, [2, 1, 9], '2, 1, 9'),
                ('cc', 4, 4, 4, [4], '4'),
                ('dd', 3, 3, 3, [3], '3'))
-    iassertequal(expect2, table2)
-    iassertequal(expect2, table2) # check can iterate twice
+    ieq(expect2, table2)
+    ieq(expect2, table2) # check can iterate twice
     
     table3 = aggregate(table1, 'foo')
     table3['minbar'] = 'bar', min
@@ -2025,7 +2025,7 @@ def test_aggregate_more():
     table3['sumbar'] = 'bar', sum
     table3['listbar'] = 'bar' # default aggregation is list
     table3['bars'] = 'bar', strjoin(', ')
-    iassertequal(expect2, table3)
+    ieq(expect2, table3)
     
     
 def test_aggregate_empty():
@@ -2039,7 +2039,7 @@ def test_aggregate_empty():
 
     actual = aggregate(table, 'foo', aggregators)
     expect = (('key', 'minbar', 'maxbar', 'sumbar'),)
-    iassertequal(expect, actual)
+    ieq(expect, actual)
     
     
 def test_rangeaggregate():
@@ -2062,8 +2062,8 @@ def test_rangeaggregate():
                ((5, 7), 0, []),
                ((7, 9), 1, ['a']),
                ((9, 11), 1, ['b']))
-    iassertequal(expect2, table2)
-    iassertequal(expect2, table2)
+    ieq(expect2, table2)
+    ieq(expect2, table2)
 
     table3 = rangeaggregate(table1, 'bar', width=2, minv=0)
     table3['foocount'] = 'foo', len
@@ -2073,14 +2073,14 @@ def test_rangeaggregate():
                ((4, 6), 1),
                ((6, 8), 1),
                ((8, 10), 1))
-    iassertequal(expect3, table3)
+    ieq(expect3, table3)
 
     table4 = rangeaggregate(table1, 'bar', width=2, minv=2, maxv=6)
     table4['foocount'] = 'foo', len
     expect4 = (('bar', 'foocount'),
                ((2, 4), 3),
                ((4, 6), 1))
-    iassertequal(expect4, table4)
+    ieq(expect4, table4)
 
     # last bin is open if maxv is specified
     table5 = rangeaggregate(table1, 'bar', width=2, maxv=9)
@@ -2090,7 +2090,7 @@ def test_rangeaggregate():
                ((3, 5), 3),
                ((5, 7), 0),
                ((7, 9), 2))
-    iassertequal(expect5, table5)
+    ieq(expect5, table5)
 
 
 def test_rangeaggregate_2():
@@ -2113,8 +2113,8 @@ def test_rangeaggregate_2():
                ((5, 7), 0, []),
                ((7, 9), 1, ['aa']),
                ((9, 11), 1, ['bb']))
-    iassertequal(expect2, table2)
-    iassertequal(expect2, table2)
+    ieq(expect2, table2)
+    ieq(expect2, table2)
 
 
 def test_rangecounts():
@@ -2135,8 +2135,8 @@ def test_rangecounts():
                ((5, 7), 0),
                ((7, 9), 1),
                ((9, 11), 1))
-    iassertequal(expect2, table2)
-    iassertequal(expect2, table2)
+    ieq(expect2, table2)
+    ieq(expect2, table2)
 
     table3 = rangecounts(table1, 'bar', width=2, minv=0)
     expect3 = (('range', 'count'),
@@ -2145,13 +2145,13 @@ def test_rangecounts():
                ((4, 6), 1),
                ((6, 8), 1),
                ((8, 10), 1))
-    iassertequal(expect3, table3)
+    ieq(expect3, table3)
 
     table4 = rangecounts(table1, 'bar', width=2, minv=2, maxv=6)
     expect4 = (('range', 'count'),
                ((2, 4), 3),
                ((4, 6), 1))
-    iassertequal(expect4, table4)
+    ieq(expect4, table4)
 
     # N.B., last bin is open if maxv is specified
     table5 = rangecounts(table1, 'bar', width=2, maxv=9)
@@ -2160,7 +2160,7 @@ def test_rangecounts():
                ((3, 5), 3),
                ((5, 7), 0),
                ((7, 9), 2))
-    iassertequal(expect5, table5)
+    ieq(expect5, table5)
 
 
 def test_rowmap():
@@ -2185,8 +2185,8 @@ def test_rowmap():
               (3, 'F', 17*12, 74.4/1.78**2),
               (4, 'M', 21*12, 45.2/1.33**2),
               (5, '-', 25*12, 51.9/1.65**2))
-    iassertequal(expect, actual)
-    iassertequal(expect, actual) # can iteratate twice?
+    ieq(expect, actual)
+    ieq(expect, actual) # can iteratate twice?
         
     # test short rows
     table2 = (('id', 'sex', 'age', 'height', 'weight'),
@@ -2201,7 +2201,7 @@ def test_rowmap():
               (3, 'F', 17*12, 74.4/1.78**2),
               (4, 'M', 21*12, 45.2/1.33**2))
     actual = rowmap(table2, rowmapper, fields=['subject_id', 'gender', 'age_months', 'bmi'])  
-    iassertequal(expect, actual)
+    ieq(expect, actual)
 
 
 def test_rowmap_empty():
@@ -2215,7 +2215,7 @@ def test_rowmap_empty():
                 row[4] / row[3] ** 2]
     actual = rowmap(table, rowmapper, fields=['subject_id', 'gender', 'age_months', 'bmi'])  
     expect = (('subject_id', 'gender', 'age_months', 'bmi'),)
-    iassertequal(expect, actual)
+    ieq(expect, actual)
 
 
 def test_recordmap():
@@ -2240,8 +2240,8 @@ def test_recordmap():
               (3, 'F', 17*12, 74.4/1.78**2),
               (4, 'M', 21*12, 45.2/1.33**2),
               (5, '-', 25*12, 51.9/1.65**2))
-    iassertequal(expect, actual)
-    iassertequal(expect, actual) # can iteratate twice?
+    ieq(expect, actual)
+    ieq(expect, actual) # can iteratate twice?
         
     # test short rows
     table2 = (('id', 'sex', 'age', 'height', 'weight'),
@@ -2256,7 +2256,7 @@ def test_recordmap():
               (3, 'F', 17*12, 74.4/1.78**2),
               (4, 'M', 21*12, 45.2/1.33**2))
     actual = recordmap(table2, recmapper, fields=['subject_id', 'gender', 'age_months', 'bmi'])  
-    iassertequal(expect, actual)
+    ieq(expect, actual)
 
 
 def test_rowmapmany():
@@ -2286,8 +2286,8 @@ def test_rowmapmany():
               (3, 'bmi', 74.4/1.78**2),
               (4, 'gender', 'M'),
               (4, 'age_months', 21*12))
-    iassertequal(expect, actual)
-    iassertequal(expect, actual) # can iteratate twice?
+    ieq(expect, actual)
+    ieq(expect, actual) # can iteratate twice?
         
 
 def test_recordmapmany():
@@ -2317,8 +2317,8 @@ def test_recordmapmany():
               (3, 'bmi', 74.4/1.78**2),
               (4, 'gender', 'M'),
               (4, 'age_months', 21*12))
-    iassertequal(expect, actual)
-    iassertequal(expect, actual) # can iteratate twice?
+    ieq(expect, actual)
+    ieq(expect, actual) # can iteratate twice?
         
 
 def test_setheader():
@@ -2330,8 +2330,8 @@ def test_setheader():
     expect2 = (('foofoo', 'barbar'),
                ('a', 1),
                ('b', 2))
-    iassertequal(expect2, table2)
-    iassertequal(expect2, table2) # can iterate twice?
+    ieq(expect2, table2)
+    ieq(expect2, table2) # can iterate twice?
     
     
 def test_setheader_empty():
@@ -2339,7 +2339,7 @@ def test_setheader_empty():
     table1 = (('foo', 'bar'),)
     table2 = setheader(table1, ['foofoo', 'barbar'])
     expect2 = (('foofoo', 'barbar'),)
-    iassertequal(expect2, table2)
+    ieq(expect2, table2)
     
     
 def test_extendheader():
@@ -2351,8 +2351,8 @@ def test_extendheader():
     expect2 = (('foo', 'bar', 'baz'),
                ('a', 1, True),
                ('b', 2, False))
-    iassertequal(expect2, table2)
-    iassertequal(expect2, table2) # can iterate twice?
+    ieq(expect2, table2)
+    ieq(expect2, table2) # can iterate twice?
     
     
 def test_extendheader_empty():
@@ -2360,7 +2360,7 @@ def test_extendheader_empty():
     table1 = (('foo',),)
     table2 = extendheader(table1, ['bar', 'baz'])
     expect2 = (('foo', 'bar', 'baz'),)
-    iassertequal(expect2, table2)
+    ieq(expect2, table2)
     
     
 def test_pushheader():
@@ -2371,8 +2371,8 @@ def test_pushheader():
     expect2 = (('foo', 'bar'),
                ('a', 1),
                ('b', 2))
-    iassertequal(expect2, table2)
-    iassertequal(expect2, table2) # can iterate twice?
+    ieq(expect2, table2)
+    ieq(expect2, table2) # can iterate twice?
     
 
 def test_pushheader_empty():
@@ -2381,12 +2381,12 @@ def test_pushheader_empty():
     table2 = pushheader(table1, ['foo', 'bar'])
     expect2 = (('foo', 'bar'),
                ('a', 1))
-    iassertequal(expect2, table2)
+    ieq(expect2, table2)
     
     table1 = tuple()
     table2 = pushheader(table1, ['foo', 'bar'])
     expect2 = (('foo', 'bar'),)
-    iassertequal(expect2, table2)
+    ieq(expect2, table2)
     
 
 def test_skip():
@@ -2400,8 +2400,8 @@ def test_skip():
     expect2 = (('foo', 'bar'),
                ('a', 1),
                ('b', 2))
-    iassertequal(expect2, table2)
-    iassertequal(expect2, table2) # can iterate twice?
+    ieq(expect2, table2)
+    ieq(expect2, table2) # can iterate twice?
     
     
 def test_skip_empty():
@@ -2411,7 +2411,7 @@ def test_skip_empty():
               ('foo', 'bar'))
     table2 = skip(table1, 2)
     expect2 = (('foo', 'bar'),)
-    iassertequal(expect2, table2)
+    ieq(expect2, table2)
     
     
 def test_skipcomments():
@@ -2426,8 +2426,8 @@ def test_skipcomments():
     expect2 = (('#foo', 'bar'),
                ('a', 1),
                ('b', 2))
-    iassertequal(expect2, table2)
-    iassertequal(expect2, table2) # can iterate twice?
+    ieq(expect2, table2)
+    ieq(expect2, table2) # can iterate twice?
     
     
 def test_skipcomments_empty():
@@ -2438,7 +2438,7 @@ def test_skipcomments_empty():
               ('##nnn', 1))
     table2 = skipcomments(table1, '##')
     expect2 = (('#foo', 'bar'),)
-    iassertequal(expect2, table2)
+    ieq(expect2, table2)
     
     
 def test_unpack():
@@ -2452,8 +2452,8 @@ def test_unpack():
                (1, 'a', 'b'),
                (2, 'c', 'd'),
                (3, 'e', 'f'))
-    iassertequal(expect2, table2)
-    iassertequal(expect2, table2) # check twice
+    ieq(expect2, table2)
+    ieq(expect2, table2) # check twice
     
     # check no new fields
     table3 = unpack(table1, 'bar')
@@ -2461,7 +2461,7 @@ def test_unpack():
                (1, 'a', 'b'),
                (2, 'c', 'd'),
                (3, 'e', 'f'))
-    iassertequal(expect3, table3)
+    ieq(expect3, table3)
     
     # check maxv
     table4 = unpack(table1, 'bar', ['baz'], maxunpack=1)
@@ -2469,7 +2469,7 @@ def test_unpack():
                (1, 'a'),
                (2, 'c'),
                (3, 'e'))
-    iassertequal(expect4, table4)
+    ieq(expect4, table4)
     
     # check include original
     table5 = unpack(table1, 'bar', ['baz'], maxunpack=1, include_original=True)
@@ -2477,7 +2477,7 @@ def test_unpack():
               (1, ['a', 'b'], 'a'),
               (2, ['c', 'd'], 'c'),
               (3, ['e', 'f'], 'e'))
-    iassertequal(expect5, table5)
+    ieq(expect5, table5)
     
     
 def test_unpack_empty():
@@ -2485,7 +2485,7 @@ def test_unpack_empty():
     table1 = (('foo', 'bar'),)
     table2 = unpack(table1, 'bar', ['baz', 'quux'])
     expect2 = (('foo', 'baz', 'quux'),)
-    iassertequal(expect2, table2)
+    ieq(expect2, table2)
     
 
 def _test_join_basic(join):
@@ -2504,14 +2504,14 @@ def _test_join_basic(join):
     expect3 = (('id', 'colour', 'shape'),
                (1, 'blue', 'circle'),
                (3, 'purple', 'square'))
-    iassertequal(expect3, table3)
-    iassertequal(expect3, table3) # check twice
+    ieq(expect3, table3)
+    ieq(expect3, table3) # check twice
     
     # natural join
     table4 = join(table1, table2)
     expect4 = expect3
-    iassertequal(expect4, table4)
-    iassertequal(expect4, table4) # check twice
+    ieq(expect4, table4)
+    ieq(expect4, table4) # check twice
     
     # multiple rows for each key
     table5 = (('id', 'colour'),
@@ -2529,7 +2529,7 @@ def _test_join_basic(join):
                (1, 'red', 'circle'),
                (1, 'red', 'square'),
                (2, 'purple', 'ellipse'))
-    iassertequal(expect7, table7)
+    ieq(expect7, table7)
     
     
 def _test_join_compound_keys(join):
@@ -2547,12 +2547,12 @@ def _test_join_compound_keys(join):
     expect10 = (('id', 'time', 'height', 'weight'),
                 (1, 2, 34.5, 4.5),
                 (2, 1, 56.7, 6.7))
-    iassertequal(expect10, table10)
+    ieq(expect10, table10)
 
     # natural join on compound key
     table11 = join(table8, table9)
     expect11 = expect10
-    iassertequal(expect11, table11)
+    ieq(expect11, table11)
     
     
 def _test_join_string_key(join):
@@ -2571,8 +2571,8 @@ def _test_join_string_key(join):
     expect3 = (('id', 'colour', 'shape'),
                ('aa', 'blue', 'circle'),
                ('cc', 'purple', 'square'))
-    iassertequal(expect3, table3)
-    iassertequal(expect3, table3) # check twice
+    ieq(expect3, table3)
+    ieq(expect3, table3) # check twice
 
 
 def _test_join_empty(join):
@@ -2584,7 +2584,7 @@ def _test_join_empty(join):
     table2 = (('id', 'shape'),)
     table3 = join(table1, table2, key='id')
     expect3 = (('id', 'colour', 'shape'),)
-    iassertequal(expect3, table3)
+    ieq(expect3, table3)
     
     table1 = (('id', 'colour'),)
     table2 = (('id', 'shape'),
@@ -2593,7 +2593,7 @@ def _test_join_empty(join):
               (4, 'ellipse'))
     table3 = join(table1, table2, key='id')
     expect3 = (('id', 'colour', 'shape'),)
-    iassertequal(expect3, table3)
+    ieq(expect3, table3)
     
 
 def _test_join(join):
@@ -2626,13 +2626,13 @@ def _test_leftjoin_1(leftjoin):
                (3, 'purple', 'square'),
                (5, 'yellow', None,),
                (7, 'orange', None))
-    iassertequal(expect3, table3)
-    iassertequal(expect3, table3) # check twice
+    ieq(expect3, table3)
+    ieq(expect3, table3) # check twice
     
     # natural join
     table4 = leftjoin(table1, table2)
     expect4 = expect3
-    iassertequal(expect4, table4)
+    ieq(expect4, table4)
     
     
 def _test_leftjoin_2(leftjoin):
@@ -2653,13 +2653,13 @@ def _test_leftjoin_2(leftjoin):
                (3, 'purple', 'square'),
                (5, 'yellow', None,),
                (7, 'orange', None))
-    iassertequal(expect3, table3)
-    iassertequal(expect3, table3) # check twice
+    ieq(expect3, table3)
+    ieq(expect3, table3) # check twice
     
     # natural join
     table4 = leftjoin(table1, table2)
     expect4 = expect3
-    iassertequal(expect4, table4)
+    ieq(expect4, table4)
     
     
 def _test_leftjoin_3(leftjoin):
@@ -2678,13 +2678,13 @@ def _test_leftjoin_3(leftjoin):
                (1, 'blue', 'circle'),
                (2, 'red', None),
                (3, 'purple', 'square'))
-    iassertequal(expect3, table3)
-    iassertequal(expect3, table3) # check twice
+    ieq(expect3, table3)
+    ieq(expect3, table3) # check twice
     
     # natural join
     table4 = leftjoin(table1, table2)
     expect4 = expect3
-    iassertequal(expect4, table4)
+    ieq(expect4, table4)
     
     
 def _test_leftjoin_compound_keys(leftjoin):
@@ -2703,7 +2703,7 @@ def _test_leftjoin_compound_keys(leftjoin):
                 (1, 1, 12.3, None, None),
                 (1, 2, 34.5, 4.5, 120),
                 (2, 1, 56.7, 6.7, 110))
-    iassertequal(expect7, table7)
+    ieq(expect7, table7)
 
 
 def _test_leftjoin_empty(leftjoin):
@@ -2722,7 +2722,7 @@ def _test_leftjoin_empty(leftjoin):
                (3, 'purple', None),
                (5, 'yellow', None,),
                (7, 'orange', None))
-    iassertequal(expect3, table3)
+    ieq(expect3, table3)
     
 
 def _test_leftjoin(leftjoin):
@@ -2756,13 +2756,13 @@ def _test_rightjoin_1(rightjoin):
                (3, 'purple', 'square'),
                (4, None, 'ellipse'),
                (5, None, 'pentagon'))
-    iassertequal(expect3, table3)
-    iassertequal(expect3, table3) # check twice
+    ieq(expect3, table3)
+    ieq(expect3, table3) # check twice
     
     # natural join
     table4 = rightjoin(table1, table2)
     expect4 = expect3
-    iassertequal(expect4, table4)
+    ieq(expect4, table4)
     
     
 def _test_rightjoin_2(rightjoin):
@@ -2783,13 +2783,13 @@ def _test_rightjoin_2(rightjoin):
                (1, 'blue', 'circle'),
                (3, 'purple', 'square'),
                (4, None, 'ellipse'))
-    iassertequal(expect3, table3)
-    iassertequal(expect3, table3) # check twice
+    ieq(expect3, table3)
+    ieq(expect3, table3) # check twice
     
     # natural join
     table4 = rightjoin(table1, table2)
     expect4 = expect3
-    iassertequal(expect4, table4)
+    ieq(expect4, table4)
     
     
 def _test_rightjoin_3(rightjoin):
@@ -2812,13 +2812,13 @@ def _test_rightjoin_3(rightjoin):
                (3, 'purple', 'square'),
                (5, None, 'ellipse'),
                (7, None, 'pentagon'))
-    iassertequal(expect3, table3)
-    iassertequal(expect3, table3) # check twice
+    ieq(expect3, table3)
+    ieq(expect3, table3) # check twice
     
     # natural join
     table4 = rightjoin(table1, table2)
     expect4 = expect3
-    iassertequal(expect4, table4)
+    ieq(expect4, table4)
     
     
 def _test_rightjoin_empty(rightjoin):
@@ -2837,7 +2837,7 @@ def _test_rightjoin_empty(rightjoin):
                (3, None, 'square'),
                (4, None, 'ellipse'),
                (5, None, 'pentagon'))
-    iassertequal(expect3, table3)
+    ieq(expect3, table3)
     
 
 def _test_rightjoin(rightjoin):
@@ -2873,13 +2873,13 @@ def test_outerjoin():
                (4, None, 'ellipse'),
                (5, 'yellow', None),
                (7, 'white', None))
-    iassertequal(expect3, table3)
-    iassertequal(expect3, table3) # check twice
+    ieq(expect3, table3)
+    ieq(expect3, table3) # check twice
 
     # natural join
     table4 = outerjoin(table1, table2)
     expect4 = expect3
-    iassertequal(expect4, table4)
+    ieq(expect4, table4)
     
     
 def test_outerjoin_2():
@@ -2902,13 +2902,13 @@ def test_outerjoin_2():
                (3, 'purple', 'square'),
                (4, None, 'ellipse'),
                (5, None, 'triangle'))
-    iassertequal(expect3, table3)
-    iassertequal(expect3, table3) # check twice
+    ieq(expect3, table3)
+    ieq(expect3, table3) # check twice
 
     # natural join
     table4 = outerjoin(table1, table2)
     expect4 = expect3
-    iassertequal(expect4, table4)
+    ieq(expect4, table4)
     
     
 def test_outerjoin_fieldorder():
@@ -2927,8 +2927,8 @@ def test_outerjoin_fieldorder():
                ('red', 2, None),
                ('purple', 3, 'square'),
                (None, 4, 'ellipse'))
-    iassertequal(expect3, table3)
-    iassertequal(expect3, table3) # check twice
+    ieq(expect3, table3)
+    ieq(expect3, table3) # check twice
     
     
 def test_outerjoin_empty():
@@ -2949,7 +2949,7 @@ def test_outerjoin_empty():
                (3, 'purple', None),
                (5, 'yellow', None),
                (7, 'white', None))
-    iassertequal(expect3, table3)
+    ieq(expect3, table3)
 
     
 def test_crossjoin():
@@ -2966,7 +2966,7 @@ def test_crossjoin():
                (1, 'blue', 3, 'square'),
                (2, 'red', 1, 'circle'),
                (2, 'red', 3, 'square'))
-    iassertequal(expect3, table3)
+    ieq(expect3, table3)
     
     
 def test_crossjoin_empty():
@@ -2977,7 +2977,7 @@ def test_crossjoin_empty():
     table2 = (('id', 'shape'),)
     table3 = crossjoin(table1, table2)
     expect3 = (('id', 'colour', 'id', 'shape'),)
-    iassertequal(expect3, table3)
+    ieq(expect3, table3)
     
     
 def _test_antijoin(antijoin):
@@ -2997,11 +2997,11 @@ def _test_antijoin(antijoin):
                (2, 'red'),
                (4, 'yellow'),
                (5, 'white'))
-    iassertequal(expect3, table3)
+    ieq(expect3, table3)
 
     table4 = antijoin(table1, table2) 
     expect4 = expect3
-    iassertequal(expect4, table4)
+    ieq(expect4, table4)
 
 
 def _test_antijoin_empty(antijoin):
@@ -3015,7 +3015,7 @@ def _test_antijoin_empty(antijoin):
     table2 = (('id', 'shape'),)
     actual = antijoin(table1, table2, key='id')
     expect = table1
-    iassertequal(expect, actual)
+    ieq(expect, actual)
 
 
 def test_antijoin():
@@ -3033,8 +3033,8 @@ def test_transpose():
     table2 = transpose(table1)
     expect2 = (('id', 1, 2, 3, 5, 7),
                ('colour', 'blue', 'red', 'purple', 'yellow', 'orange'))
-    iassertequal(expect2, table2)
-    iassertequal(expect2, table2)
+    ieq(expect2, table2)
+    ieq(expect2, table2)
     
     
 def test_transpose_empty():
@@ -3042,7 +3042,7 @@ def test_transpose_empty():
     table2 = transpose(table1)
     expect2 = (('id',),
                ('colour',))
-    iassertequal(expect2, table2)
+    ieq(expect2, table2)
     
     
 def _test_intersection_1(intersection):
@@ -3061,7 +3061,7 @@ def _test_intersection_1(intersection):
                    ('B', 2))
     
     result = intersection(table1, table2)
-    iassertequal(expectation, result)
+    ieq(expectation, result)
     
     
 def _test_intersection_2(intersection):
@@ -3083,7 +3083,7 @@ def _test_intersection_2(intersection):
               ('C', 9, True))
     
     table3 = intersection(table1, table2)
-    iassertequal(expect, table3)
+    ieq(expect, table3)
     
     
 def _test_intersection_3(intersection):
@@ -3098,8 +3098,8 @@ def _test_intersection_3(intersection):
     
     expectation = (('foo', 'bar'),)
     result = intersection(table1, table2)
-    iassertequal(expectation, result)
-    iassertequal(expectation, result)
+    ieq(expectation, result)
+    ieq(expectation, result)
     
     
 def _test_intersection_4(intersection):
@@ -3124,8 +3124,8 @@ def _test_intersection_4(intersection):
                    ('B', 2))
     
     result = intersection(table1, table2)
-    iassertequal(expectation, result)
-    iassertequal(expectation, result)
+    ieq(expectation, result)
+    ieq(expectation, result)
     
     
 def _test_intersection_empty(intersection):
@@ -3137,7 +3137,7 @@ def _test_intersection_empty(intersection):
     table2 = (('foo', 'bar'),)
     expectation = (('foo', 'bar'),)
     result = intersection(table1, table2)
-    iassertequal(expectation, result)
+    ieq(expectation, result)
     
     
 def _test_intersection(intersection):
@@ -3172,8 +3172,8 @@ def test_pivot():
     expect2 = (('region', 'boy', 'girl'),
                ('east', 33, 29),
                ('west', 35, 23))
-    iassertequal(expect2, table2)
-    iassertequal(expect2, table2)
+    ieq(expect2, table2)
+    ieq(expect2, table2)
     
     
 def test_pivot_empty():
@@ -3181,7 +3181,7 @@ def test_pivot_empty():
     table1 = (('region', 'gender', 'style', 'units'),)
     table2 = pivot(table1, 'region', 'gender', 'units', sum)
     expect2 = (('region',),)
-    iassertequal(expect2, table2)
+    ieq(expect2, table2)
     
     
 def test_hashjoin():
@@ -3220,8 +3220,8 @@ def test_flatten():
     expect1 = ('A', 1, True, 'C', 7, False, 'B', 2, False, 'C', 9, True)
 
     actual1 = flatten(table1)
-    iassertequal(expect1, actual1)
-    iassertequal(expect1, actual1)
+    ieq(expect1, actual1)
+    ieq(expect1, actual1)
     
     
 def test_flatten_empty():
@@ -3229,7 +3229,7 @@ def test_flatten_empty():
     table1 = (('foo', 'bar', 'baz'),)
     expect1 = []
     actual1 = flatten(table1)
-    iassertequal(expect1, actual1)
+    ieq(expect1, actual1)
     
     
 def test_unflatten():
@@ -3255,8 +3255,8 @@ def test_unflatten():
     
     actual1 = unflatten(table1, 'lines', 3)
 
-    iassertequal(expect1, actual1)
-    iassertequal(expect1, actual1)
+    ieq(expect1, actual1)
+    ieq(expect1, actual1)
     
     
 def test_unflatten_2():
@@ -3271,8 +3271,8 @@ def test_unflatten_2():
     
     actual1 = unflatten(inpt, 3)
 
-    iassertequal(expect1, actual1)
-    iassertequal(expect1, actual1)
+    ieq(expect1, actual1)
+    ieq(expect1, actual1)
     
     
 def test_unflatten_empty():
@@ -3281,7 +3281,7 @@ def test_unflatten_empty():
     expect1 = (('f0', 'f1', 'f2'),)
     actual1 = unflatten(table1, 'lines', 3)
     print list(actual1)
-    iassertequal(expect1, actual1)
+    ieq(expect1, actual1)
 
 
 def test_mergesort_1():
@@ -3304,12 +3304,12 @@ def test_mergesort_1():
     expect = sort(cat(table1, table2)) 
     
     actual = mergesort(table1, table2)
-    iassertequal(expect, actual)
-    iassertequal(expect, actual)
+    ieq(expect, actual)
+    ieq(expect, actual)
     
     actual = mergesort(sort(table1), sort(table2), presorted=True)
-    iassertequal(expect, actual)
-    iassertequal(expect, actual)
+    ieq(expect, actual)
+    ieq(expect, actual)
     
     
 def test_mergesort_2():
@@ -3332,12 +3332,12 @@ def test_mergesort_2():
     expect = sort(cat(table1, table2), key='foo') 
     
     actual = mergesort(table1, table2, key='foo')
-    iassertequal(expect, actual)
-    iassertequal(expect, actual)
+    ieq(expect, actual)
+    ieq(expect, actual)
     
     actual = mergesort(sort(table1, key='foo'), sort(table2, key='foo'), key='foo', presorted=True)
-    iassertequal(expect, actual)
-    iassertequal(expect, actual)
+    ieq(expect, actual)
+    ieq(expect, actual)
     
     
 def test_mergesort_3():
@@ -3360,15 +3360,33 @@ def test_mergesort_3():
     expect = sort(cat(table1, table2), key='foo', reverse=True) 
     
     actual = mergesort(table1, table2, key='foo', reverse=True)
-    iassertequal(expect, actual)
-    iassertequal(expect, actual)
+    ieq(expect, actual)
+    ieq(expect, actual)
     
     actual = mergesort(sort(table1, key='foo', reverse=True), 
                        sort(table2, key='foo', reverse=True), 
                        key='foo', reverse=True, presorted=True)
-    iassertequal(expect, actual)
-    iassertequal(expect, actual)
+    ieq(expect, actual)
+    ieq(expect, actual)
+
+
+def test_mergesort_4():
     
+    table1 = (('foo', 'bar', 'baz'),
+              (1, 'A', True),
+              (2, 'B', None),
+              (4, 'C', True))
+    table2 = (('bar', 'baz', 'quux'),
+              ('A', True, 42.0),
+              ('B', False, 79.3),
+              ('C', False, 12.4))
+
+    expect = sort(cat(table1, table2), key='bar') 
+    
+    actual = mergesort(table1, table2, key='bar')
+    ieq(expect, actual)
+    ieq(expect, actual)
+
 
 def test_mergesort_empty():
     
@@ -3382,8 +3400,8 @@ def test_mergesort_empty():
     
     expect = table1
     actual = mergesort(table1, table2, key='foo')
-    iassertequal(expect, actual)
-    iassertequal(expect, actual)
+    ieq(expect, actual)
+    ieq(expect, actual)
     
     
 def test_annex():
@@ -3400,16 +3418,16 @@ def test_annex():
               ('C', 2, 'D', 10),
               ('F', 1, None, None))
     actual = annex(table1, table2)
-    iassertequal(expect, actual)
-    iassertequal(expect, actual)
+    ieq(expect, actual)
+    ieq(expect, actual)
 
     expect21 = (('foo', 'baz', 'foo', 'bar'),
                 ('B', 3, 'A', 9),
                 ('D', 10, 'C', 2),
                 (None, None, 'F', 1))
     actual21 = annex(table2, table1)
-    iassertequal(expect21, actual21)
-    iassertequal(expect21, actual21)
+    ieq(expect21, actual21)
+    ieq(expect21, actual21)
 
 
 def test_annex_uneven_rows():
@@ -3426,8 +3444,8 @@ def test_annex_uneven_rows():
               ('C', 2, 'D', 10),
               ('F', None, None, None))
     actual = annex(table1, table2)
-    iassertequal(expect, actual)
-    iassertequal(expect, actual)
+    ieq(expect, actual)
+    ieq(expect, actual)
 
 
 def test_unpackdict():
@@ -3441,8 +3459,8 @@ def test_unpackdict():
                (1, 'a', 'b'),
                (2, 'c', 'd'),
                (3, 'e', 'f'))
-    iassertequal(expect2, table2)
-    iassertequal(expect2, table2) # check twice
+    ieq(expect2, table2)
+    ieq(expect2, table2) # check twice
     
     # test include original
     table1 = (('foo', 'bar'),
@@ -3454,8 +3472,8 @@ def test_unpackdict():
                (1, {'baz': 'a', 'quux': 'b'}, 'a', 'b'),
                (2, {'baz': 'c', 'quux': 'd'}, 'c', 'd'),
                (3, {'baz': 'e', 'quux': 'f'}, 'e', 'f'))
-    iassertequal(expect2, table2)
-    iassertequal(expect2, table2) # check twice
+    ieq(expect2, table2)
+    ieq(expect2, table2) # check twice
 
     # test specify keys    
     table1 = (('foo', 'bar'),
@@ -3467,8 +3485,8 @@ def test_unpackdict():
                (1, 'b'),
                (2, 'd'),
                (3, 'f'))
-    iassertequal(expect2, table2)
-    iassertequal(expect2, table2) # check twice
+    ieq(expect2, table2)
+    ieq(expect2, table2) # check twice
     
     # test dodgy data    
     table1 = (('foo', 'bar'),
@@ -3480,8 +3498,8 @@ def test_unpackdict():
                (1, 'a', 'b'),
                (2, None, None),
                (3, 'e', 'f'))
-    iassertequal(expect2, table2)
-    iassertequal(expect2, table2) # check twice
+    ieq(expect2, table2)
+    ieq(expect2, table2) # check twice
     
 
 def test_fold():
@@ -3489,8 +3507,8 @@ def test_fold():
     t1 = (('id', 'count'), (1, 3), (1, 5), (2, 4), (2, 8))        
     t2 = fold(t1, 'id', operator.add, 'count', presorted=True)
     expect = (('key', 'value'), (1, 8), (2, 12))
-    iassertequal(expect, t2)
-    iassertequal(expect, t2)
+    ieq(expect, t2)
+    ieq(expect, t2)
 
 
 def test_addrownumbers():
@@ -3505,8 +3523,8 @@ def test_addrownumbers():
               (2, 'C', 2),
               (3, 'F', 1))
     actual = addrownumbers(table1)
-    iassertequal(expect, actual)
-    iassertequal(expect, actual)
+    ieq(expect, actual)
+    ieq(expect, actual)
     
     
 def test_search():
@@ -3523,16 +3541,16 @@ def test_search():
                ('orange', 12, 'oranges are nice fruit'),
                ('mango', 42, 'I like them'),
                ('cucumber', 41, 'better than mango'))
-    iassertequal(expect2, table2)
-    iassertequal(expect2, table2)
+    ieq(expect2, table2)
+    ieq(expect2, table2)
     
     # search a specific field
     table3 = search(table1, 'foo', '.g.')
     expect3 = (('foo', 'bar', 'baz'),
                ('orange', 12, 'oranges are nice fruit'),
                ('mango', 42, 'I like them'))
-    iassertequal(expect3, table3)
-    iassertequal(expect3, table3)
+    ieq(expect3, table3)
+    ieq(expect3, table3)
     
     
 def test_addcolumn():
@@ -3547,8 +3565,8 @@ def test_addcolumn():
                ('A', 1, True),
                ('B', 2, False))
     table2 = addcolumn(table1, 'baz', col)
-    iassertequal(expect2, table2)
-    iassertequal(expect2, table2)
+    ieq(expect2, table2)
+    ieq(expect2, table2)
 
     # test short column
     table3 = (('foo', 'bar'),
@@ -3560,7 +3578,7 @@ def test_addcolumn():
                ('B', 2, False),
                ('C', 2, None))
     table4 = addcolumn(table3, 'baz', col)
-    iassertequal(expect4, table4)
+    ieq(expect4, table4)
     
     # test short table
     col = [True, False, False]
@@ -3569,5 +3587,5 @@ def test_addcolumn():
                ('B', 2, False),
                (None, None, False))
     table5 = addcolumn(table1, 'baz', col)
-    iassertequal(expect5, table5)
+    ieq(expect5, table5)
 

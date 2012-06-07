@@ -129,7 +129,7 @@ Other utility functions:
 +================================+================================+============================+
 |  :func:`header`                |  :func:`data`                  |  :func:`dataslice`         |
 +--------------------------------+--------------------------------+----------------------------+
-|  :func:`records`               |  :func:`fieldnames`            |  :func:`rowcount`          |
+|  :func:`records`               |  :func:`fieldnames`            |  :func:`nrows`             |
 +--------------------------------+--------------------------------+----------------------------+
 |  :func:`look`                  |  :func:`lookall`               |  :func:`see`               |
 +--------------------------------+--------------------------------+----------------------------+
@@ -256,8 +256,8 @@ row iterators (point 3) is that data from a table may need to be
 iterated over several times within the same program or interactive
 session. E.g., when using `petl` in an interactive session to build up
 a sequence of data transformation steps, the user might want to
-examine outputs from several intermediate steps, before the
-transformation is complete.
+examine outputs from several intermediate steps, before all of the
+steps are defined and the transformation is executed in full.
 
 Note that this convention does not place any restrictions on the
 lengths of header and data rows. A table may return a header row
@@ -293,7 +293,7 @@ Similarly, if one or more transformation functions are applied, e.g.:::
 	>>> table2 = convert(table1, 'foo', 'upper')
 	>>> table3 = convert(table2, 'bar', int)
 	>>> table4 = convert(table3, 'baz', float)
-	>>> table5 = extend(table4, 'quux', expr('{bar} * {baz}'))
+	>>> table5 = addfield(table4, 'quux', expr('{bar} * {baz}'))
 
 ...no actual transformation work will be done, until data are
 requested from `table5` or any of the other row containers returned by
@@ -541,15 +541,16 @@ Utility functions
 
 .. autofunction:: petl.header
 .. autofunction:: petl.data
+.. autofunction:: petl.iterdata
 .. autofunction:: petl.dataslice
 .. autofunction:: petl.records
 .. autofunction:: petl.fieldnames
-.. autofunction:: petl.rowcount
+.. autofunction:: petl.nrows
 .. autofunction:: petl.look
 .. autofunction:: petl.lookall
 .. autofunction:: petl.see
-.. autofunction:: petl.itervalues
 .. autofunction:: petl.values
+.. autofunction:: petl.itervalues
 .. autofunction:: petl.valueset
 .. autofunction:: petl.valuecount
 .. autofunction:: petl.valuecounts

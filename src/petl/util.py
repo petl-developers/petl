@@ -207,9 +207,9 @@ def nrows(table):
     """
     Count the number of data rows in a table. E.g.::
     
-        >>> from petl import rowcount
+        >>> from petl import nrows
         >>> table = [['foo', 'bar'], ['a', 1], ['b', 2]]
-        >>> rowcount(table)
+        >>> nrows(table)
         2
         
     .. versionchanged:: 0.10

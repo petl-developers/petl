@@ -254,11 +254,6 @@ def fromcsv(source=None, dialect=csv.excel, **kwargs):
     `petl.io.defaultsumfun` is currently set to) will be used to calculate 
     cachetag values.
     
-    .. versionchanged:: 0.9
-    
-    Now supports transparent handling of gzipped files (any file name ending in 
-    '.gz').
-     
     """
 
     source = _read_source_from_arg(source)
@@ -385,6 +380,12 @@ def fromsqlite3(source, query, checksumfun=None):
     `checksumfun` argument is not given, the default checksum function (whatever
     `petl.io.defaultsumfun` is currently set to) will be used to calculate 
     cachetag values.
+    
+    .. versionchanged:: 0.10.2
+    
+    Either a database file name or a connection object can be given as the
+    first argument. (Note that `cachetag()` is only implemented if a file name
+    is given.)
     
     """
     
@@ -551,11 +552,6 @@ def fromtext(source=None, header=['lines'], strip=None):
     leading and trailing whitespace, including the end-of-line character - use 
     the `strip` keyword argument to specify alternative characters to strip.    
     
-    .. versionchanged:: 0.9
-    
-    Now supports transparent handling of gzipped files (any file name ending in 
-    '.gz').
-     
     """
 
     source = _read_source_from_arg(source)
@@ -927,11 +923,6 @@ def tocsv(table, source=None, dialect=csv.excel, **kwargs):
      
     Note that if a file already exists at the given location, it will be overwritten.
     
-    .. versionchanged:: 0.9
-    
-    Now supports transparent handling of gzipped files (any file name ending in 
-    '.gz').
-     
     """
     
     source = _write_source_from_arg(source)
@@ -999,11 +990,6 @@ def appendcsv(table, source=None, dialect=csv.excel, **kwargs):
     consistent with the existing data, the data rows from the table are simply
     appended to the file. See also the :func:`cat` function.
     
-    .. versionchanged:: 0.9
-    
-    Now supports transparent handling of gzipped files (any file name ending in 
-    '.gz').
-     
     """
     
     source = _write_source_from_arg(source)
@@ -1118,7 +1104,7 @@ def appendpickle(table, source=None, protocol=-1):
             pickle.dump(row, f, protocol)
     
 
-def tosqlite3(table, source, tablename, create=True, commit=True):
+def tosqlite3(table, filename_or_connection, tablename, create=True, commit=True):
     """
     Load data into a table in an :mod:`sqlite3` database. Note that if
     the database table exists, it will be truncated, i.e., all
@@ -1152,17 +1138,23 @@ def tosqlite3(table, source, tablename, create=True, commit=True):
         | u'c'  | 2     |
         +-------+-------+
 
+    .. versionchanged:: 0.10.2
+    
+    Either a database file name or a connection object can be given as the
+    second argument. (Note that `cachetag()` is only implemented if a file name
+    is given.)
+
     """
     
     tablename = _quote(tablename)
     names = [_quote(n) for n in fieldnames(table)]
 
-    if isinstance(source, basestring):
-        conn = sqlite3.connect(source)
-    elif isinstance(source, sqlite3.Connection):
-        conn = source
+    if isinstance(filename_or_connection, basestring):
+        conn = sqlite3.connect(filename_or_connection)
+    elif isinstance(filename_or_connection, sqlite3.Connection):
+        conn = filename_or_connection
     else:
-        raise Exception('source argument must be filename or connection; found %r' % source)
+        raise Exception('filename_or_connection argument must be filename or connection; found %r' % filename_or_connection)
     
     cursor = conn.cursor()
     
@@ -1184,7 +1176,7 @@ def tosqlite3(table, source, tablename, create=True, commit=True):
     return conn # in case people want to close it
     
     
-def appendsqlite3(table, source, tablename, commit=True):
+def appendsqlite3(table, filename_or_connection, tablename, commit=True):
     """
     Load data into an existing table in an :mod:`sqlite3`
     database. Note that the database table will be appended, i.e., the
@@ -1223,17 +1215,23 @@ def appendsqlite3(table, source, tablename, commit=True):
         | u'f'  | 1     |
         +-------+-------+
 
+    .. versionchanged:: 0.10.2
+    
+    Either a database file name or a connection object can be given as the
+    second argument. (Note that `cachetag()` is only implemented if a file name
+    is given.)
+
     """
 
     # sanitise table name
     tablename = _quote(tablename)
 
-    if isinstance(source, basestring):
-        conn = sqlite3.connect(source)
-    elif isinstance(source, sqlite3.Connection):
-        conn = source
+    if isinstance(filename_or_connection, basestring):
+        conn = sqlite3.connect(filename_or_connection)
+    elif isinstance(filename_or_connection, sqlite3.Connection):
+        conn = filename_or_connection
     else:
-        raise Exception('source argument must be filename or connection; found %r' % source)
+        raise Exception('filename_or_connection argument must be filename or connection; found %r' % filename_or_connection)
 
     cursor = conn.cursor()
     
@@ -1497,11 +1495,6 @@ def totext(table, source=None, template=None, prologue=None, epilogue=None):
         
     The `template` will be used to format each row via `str.format <http://docs.python.org/library/stdtypes.html#str.format>`_.
 
-    .. versionchanged:: 0.9
-    
-    Now supports transparent handling of gzipped files (any file name ending in 
-    '.gz').
-     
     """
     
     source = _write_source_from_arg(source)
@@ -1522,11 +1515,6 @@ def appendtext(table, source=None, template=None, prologue=None, epilogue=None):
     """
     As :func:`totext` but the file is opened in append mode.
     
-    .. versionchanged:: 0.9
-    
-    Now supports transparent handling of gzipped files (any file name ending in 
-    '.gz').
-     
     """
 
     source = _write_source_from_arg(source)
