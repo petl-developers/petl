@@ -20,6 +20,7 @@ import json
 import gzip
 import os
 from petl.io import FileSource
+import petl.io
 
 
 def test_fromcsv():
@@ -289,7 +290,7 @@ def test_fromsqlite3_cachetag():
               ('e', 2),
               ('f', 2.0))
     c = connection.cursor()
-    for i in range(100):
+    for _ in range(100):
         for row in modata:
             c.execute('insert into foobar values (?, ?)', row)
     connection.commit()
@@ -298,7 +299,30 @@ def test_fromsqlite3_cachetag():
     tag2 = tbl.cachetag()
     assert tag2 != tag1, (tag2, tag1)
 
+
+def test_fromsqlite3_withargs():
     
+    # initial data
+    data = (('a', 1),
+            ('b', 2),
+            ('c', 2.0))
+    connection = sqlite3.connect(':memory:')
+    c = connection.cursor()
+    c.execute('create table foobar (foo, bar)')
+    for row in data:
+        c.execute('insert into foobar values (?, ?)', row)
+    connection.commit()
+    c.close()
+    
+    # test the function
+    actual = fromsqlite3(connection, 'select * from foobar where bar > ? and bar < ?', (1, 3))
+    expect = (('foo', 'bar'),
+              ('b', 2),
+              ('c', 2.0))
+    ieq(expect, actual)
+    ieq(expect, actual) # verify can iterate twice
+
+
 def test_fromsqlite3_cachetag_strict():
     """Test the fromsqlite3 cachetag function under strict conditions."""
     
@@ -316,6 +340,8 @@ def test_fromsqlite3_cachetag_strict():
     c.close()
     
     # test the function
+    prevdef = petl.io.defaultsumfun
+    petl.io.defaultsumfun = adler32sum
     tbl = fromsqlite3(f.name, 'select * from foobar', checksumfun=adler32sum)
     tag1 = tbl.cachetag()
     
@@ -325,6 +351,9 @@ def test_fromsqlite3_cachetag_strict():
     
     tag2 = tbl.cachetag()
     assert tag2 != tag1, (tag2, tag1)
+    
+    # reset default 
+    petl.io.defaultsumfun = prevdef
     
     
 def test_fromdb():
@@ -391,6 +420,29 @@ def test_fromdb_mkcursor():
     eq_(('a', 1), i1.next())
     eq_(('foo', 'bar'), i2.next())
     eq_(('b', 2), i1.next())
+
+
+def test_fromdb_withargs():
+    
+    # initial data
+    data = (('a', 1),
+            ('b', 2),
+            ('c', 2.0))
+    connection = sqlite3.connect(':memory:')
+    c = connection.cursor()
+    c.execute('create table foobar (foo, bar)')
+    for row in data:
+        c.execute('insert into foobar values (?, ?)', row)
+    connection.commit()
+    c.close()
+    
+    # test the function
+    actual = fromdb(connection, 'select * from foobar where bar > ? and bar < ?', (1, 3))
+    expect = (('foo', 'bar'),
+              ('b', 2),
+              ('c', 2.0))
+    ieq(expect, actual)
+    ieq(expect, actual) # verify can iterate twice
 
 
 def test_fromtext():

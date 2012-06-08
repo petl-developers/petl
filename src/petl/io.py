@@ -249,11 +249,10 @@ def fromcsv(source=None, dialect=csv.excel, **kwargs):
     Note that all data values are strings, and any intended numeric values will
     need to be converted, see also :func:`convert`.
     
-    The returned table object implements the `cachetag()` method. If the 
-    `checksumfun` argument is not given, the default checksum function (whatever
-    `petl.io.defaultsumfun` is currently set to) will be used to calculate 
-    cachetag values.
-    
+    The returned table object implements the `cachetag()` method using the 
+    default checksum function (whatever `petl.io.defaultsumfun` is currently set
+    to).
+        
     """
 
     source = _read_source_from_arg(source)
@@ -262,7 +261,7 @@ def fromcsv(source=None, dialect=csv.excel, **kwargs):
 
 class CSVView(RowContainer):
     
-    def __init__(self, source=None, checksumfun=None, dialect=csv.excel, **kwargs):
+    def __init__(self, source=None, dialect=csv.excel, **kwargs):
         self.source = source
         self.dialect = dialect
         self.kwargs = kwargs
@@ -309,11 +308,10 @@ def frompickle(source=None):
         | 'c'   | 2.5   |
         +-------+-------+
 
-    The returned table object implements the `cachetag()` method. If the 
-    `checksumfun` argument is not given, the default checksum function (whatever
-    `petl.io.defaultsumfun` is currently set to) will be used to calculate 
-    cachetag values.
-    
+    The returned table object implements the `cachetag()` method using the 
+    default checksum function (whatever `petl.io.defaultsumfun` is currently set
+    to).
+        
     """
     
     source = _read_source_from_arg(source)
@@ -340,7 +338,7 @@ class PickleView(RowContainer):
             raise Uncacheable(e)    
                 
 
-def fromsqlite3(source, query, checksumfun=None):
+def fromsqlite3(source, query, *args, **kwargs):
     """
     Provides access to data from an :mod:`sqlite3` database file via a given query. E.g.::
 
@@ -376,10 +374,9 @@ def fromsqlite3(source, query, checksumfun=None):
         | u'c'  | 2.0   |
         +-------+-------+
 
-    The returned table object implements the `cachetag()` method. If the 
-    `checksumfun` argument is not given, the default checksum function (whatever
-    `petl.io.defaultsumfun` is currently set to) will be used to calculate 
-    cachetag values.
+    The returned table object implements the `cachetag()` method using the 
+    default checksum function (whatever `petl.io.defaultsumfun` is currently set
+    to).
     
     .. versionchanged:: 0.10.2
     
@@ -389,15 +386,16 @@ def fromsqlite3(source, query, checksumfun=None):
     
     """
     
-    return Sqlite3View(source, query, checksumfun)
+    return Sqlite3View(source, query, *args, **kwargs)
 
 
 class Sqlite3View(RowContainer):
 
-    def __init__(self, source, query, checksumfun=None):
+    def __init__(self, source, query, *args, **kwargs):
         self.source = source
         self.query = query
-        self.checksumfun = checksumfun
+        self.args = args
+        self.kwargs = kwargs
         # setup the connection
         if isinstance(self.source, basestring):
             self.connection = sqlite3.connect(self.source)
@@ -410,11 +408,11 @@ class Sqlite3View(RowContainer):
     def __iter__(self):
 
         cursor = self.connection.cursor()
-        cursor.execute(self.query)
+        cursor.execute(self.query, *self.args, **self.kwargs)
         fields = [d[0] for d in cursor.description]
         yield tuple(fields)
-        for result in cursor:
-            yield result
+        for row in cursor:
+            yield row # don't wrap
             
         # tidy up
         cursor.close()
@@ -423,14 +421,13 @@ class Sqlite3View(RowContainer):
         # will only work if we've been given a reference to the file, not the connection
         p = self.source
         if os.path.isfile(p):
-            sumfun = self.checksumfun if self.checksumfun is not None else defaultsumfun
-            checksum = sumfun(p)
+            checksum = defaultsumfun(p)
             return hash((checksum, self.query))
         else:
             raise Uncacheable
                 
     
-def fromdb(connection, query):
+def fromdb(connection, query, *args, **kwargs):
     """
     Provides access to data from any DB-API 2.0 connection via a given query. 
     E.g., using `sqlite3`::
@@ -474,36 +471,47 @@ def fromdb(connection, query):
     
     """
     
-    return DbView(connection, query)
+    return DbView(connection, query, *args, **kwargs)
 
 
 class DbView(RowContainer):
 
-    def __init__(self, connection, query):
+    def __init__(self, connection, query, *args, **kwargs):
         self.connection = connection
         self.query = query
+        self.args = args
+        self.kwargs = kwargs
         
     def __iter__(self):
         # N.B., each iterator needs its own cursor so iterators are independent
 
-        # support either connection object or cursor factory function
-        if hasattr(self.connection, 'cursor') and callable(self.connection.cursor):
+        # support anything with an execute method (e.g., sqlalchemy engine or connection?)
+        if hasattr(self.connection, 'execute') and callable(self.connection.execute):
+            cursor = self.connection.execute(self.query, *self.args, **self.kwargs)
+        # support DB-API connection object
+        elif hasattr(self.connection, 'cursor') and callable(self.connection.cursor):
             cursor = self.connection.cursor()
+            cursor.execute(self.query, *self.args, **self.kwargs)
+        # support cursor factory function
         elif callable(self.connection):
             cursor = self.connection()
-            assert hasattr(cursor, 'execute'), 'not a cursor: %r' % cursor
+            cursor.execute(self.query, *self.args, **self.kwargs)
         else:
-            raise Exception('connection arg must have cursor method or be callable')
+            raise Exception('connection arg must have execute method or cursor method or be callable and return something with an execute method')
         
-        try:
-            cursor.execute(self.query)
+        # determine output header
+        if hasattr(cursor, 'description'): # DB-API cursor
             fields = [d[0] for d in cursor.description]
-            yield tuple(fields)
-            for result in cursor:
-                yield tuple(result)
-        except:
-            raise
-        finally:
+        elif hasattr(cursor, 'keys') and callable(cursor.keys): # sqlalchemy result proxy?
+            fields = cursor.keys()
+        else:
+            raise Exception('could not determine field names from cursor: %r' % cursor)
+        yield tuple(fields)
+        
+        for row in cursor:
+            yield row # don't wrap, return whatever the database engine returns
+            
+        if hasattr(cursor, 'close') and callable(cursor.close):
             cursor.close()
     
             
