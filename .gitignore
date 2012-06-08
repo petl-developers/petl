@@ -6,4 +6,5 @@ docs/_build
 build
 MANIFEST
 dist
+*.swp
 

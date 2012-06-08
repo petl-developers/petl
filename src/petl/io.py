@@ -481,7 +481,7 @@ class DbView(RowContainer):
 
     def __init__(self, connection, query):
         self.connection = connection
-        self.query = query
+        self.query, self.args = query if isinstance(query, (list, tuple)) else (query, None)
         
     def __iter__(self):
         # N.B., each iterator needs its own cursor so iterators are independent
@@ -496,7 +496,7 @@ class DbView(RowContainer):
             raise Exception('connection arg must have cursor method or be callable')
         
         try:
-            cursor.execute(self.query)
+            cursor.execute(self.query, self.args)
             fields = [d[0] for d in cursor.description]
             yield tuple(fields)
             for result in cursor:
@@ -505,7 +505,7 @@ class DbView(RowContainer):
             raise
         finally:
             cursor.close()
-    
+
             
 def fromtext(source=None, header=['lines'], strip=None):
     """
