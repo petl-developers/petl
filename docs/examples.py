@@ -1609,3 +1609,21 @@ table2 = addcolumn(table1, col, 'baz')
 look(table2)
 
 
+# lookupjoin
+table1 = (('id', 'color', 'cost'), 
+          (1, 'blue', 12), 
+          (2, 'red', 8), 
+          (3, 'purple', 4))
+table2 = (('id', 'shape', 'size'), 
+          (1, 'circle', 'big'), 
+          (1, 'circle', 'small'), 
+          (2, 'square', 'tiny'), 
+          (2, 'square', 'big'), 
+          (3, 'ellipse', 'small'), 
+          (3, 'ellipse', 'tiny'))
+
+from petl import lookupjoin, look
+look(table1)
+look(table2)
+table3 = lookupjoin(table1, table2, key='id')
+look(table3)

@@ -6231,9 +6231,9 @@ def hashleftjoin(left, right, key=None, missing=None):
     """
 
     if key is None:
-        return ImplicitHashLeftJoinView(left, right)
+        return ImplicitHashLeftJoinView(left, right, missing=missing)
     else:
-        return HashLeftJoinView(left, right, key)
+        return HashLeftJoinView(left, right, key, missing=missing)
 
 
 class ImplicitHashLeftJoinView(RowContainer):
@@ -6334,7 +6334,6 @@ def iterimplicithashleftjoin(left, right, missing):
         key = key[0] # deal with singletons
     # from here on it's the same as a normal join
     return iterhashleftjoin(left, right, key, missing)
-
 
 
 def hashrightjoin(left, right, key=None, missing=None):
@@ -7483,3 +7482,335 @@ def iteraddcolumn(table, field, col, index, missing):
         yield tuple(outrow)
         
         
+def lookupjoin(left, right, key=None, missing=None, presorted=False, 
+               buffersize=None):
+    """
+    Perform a left join, but where the key is not unique in the right-hand
+    table, arbitrarily choose the first row and ignore others. E.g.::
+
+        >>> from petl import lookupjoin, look
+        >>> look(table1)
+        +------+----------+--------+
+        | 'id' | 'color'  | 'cost' |
+        +======+==========+========+
+        | 1    | 'blue'   | 12     |
+        +------+----------+--------+
+        | 2    | 'red'    | 8      |
+        +------+----------+--------+
+        | 3    | 'purple' | 4      |
+        +------+----------+--------+
+        
+        >>> look(table2)
+        +------+-----------+---------+
+        | 'id' | 'shape'   | 'size'  |
+        +======+===========+=========+
+        | 1    | 'circle'  | 'big'   |
+        +------+-----------+---------+
+        | 1    | 'circle'  | 'small' |
+        +------+-----------+---------+
+        | 2    | 'square'  | 'tiny'  |
+        +------+-----------+---------+
+        | 2    | 'square'  | 'big'   |
+        +------+-----------+---------+
+        | 3    | 'ellipse' | 'small' |
+        +------+-----------+---------+
+        | 3    | 'ellipse' | 'tiny'  |
+        +------+-----------+---------+
+        
+        >>> table3 = lookupjoin(table1, table2, key='id')
+        >>> look(table3)
+        +------+----------+--------+-----------+---------+
+        | 'id' | 'color'  | 'cost' | 'shape'   | 'size'  |
+        +======+==========+========+===========+=========+
+        | 1    | 'blue'   | 12     | 'circle'  | 'big'   |
+        +------+----------+--------+-----------+---------+
+        | 2    | 'red'    | 8      | 'square'  | 'tiny'  |
+        +------+----------+--------+-----------+---------+
+        | 3    | 'purple' | 4      | 'ellipse' | 'small' |
+        +------+----------+--------+-----------+---------+
+
+    See also :func:`leftjoin`.
+    
+    .. versionadded:: 0.11
+    
+    """
+
+    if key is None:
+        return ImplicitLookupJoinView(left, right, presorted=presorted, 
+                                      missing=missing, buffersize=buffersize)
+    else:
+        return LookupJoinView(left, right, key, presorted=presorted, 
+                              missing=missing, buffersize=buffersize)
+
+    
+class ImplicitLookupJoinView(RowContainer):
+    
+    def __init__(self, left, right, presorted=False, missing=None, 
+                 buffersize=None):
+        self.left = left
+        self.right = right
+        self.presorted = presorted
+        self.missing = missing
+        self.buffersize = buffersize
+        
+    def __iter__(self):
+        return iterimplicitlookupjoin(self.left, self.right, 
+                                      self.presorted, 
+                                      missing=self.missing,
+                                      buffersize=self.buffersize)
+
+    def cachetag(self):
+        try:
+            return hash((self.left.cachetag(), self.right.cachetag(),
+                         self.presorted, self.missing))
+        except Exception as e:
+            raise Uncacheable(e)
+
+
+class LookupJoinView(RowContainer):
+    
+    def __init__(self, left, right, key, presorted=False, missing=None, 
+                 buffersize=None):
+        if presorted:
+            self.left = left
+            self.right = right
+        else:
+            self.left = sort(left, key, buffersize=buffersize)
+            self.right = sort(right, key, buffersize=buffersize)
+            # TODO what if someone sets self.key to something else after __init__?
+            # (sort will be incorrect - maybe need to protect key with property setter?)
+        self.key = key
+        self.missing = missing
+        
+    def __iter__(self):
+        return iterlookupjoin(self.left, self.right, self.key, 
+                              missing=self.missing)
+    
+    def cachetag(self):
+        try:
+            return hash((self.left.cachetag(), self.right.cachetag(), 
+                         tuple(self.key) if isinstance(self.key, list) else self.key,
+                         self.missing))
+        except Exception as e:
+            raise Uncacheable(e)
+
+    
+def iterlookupjoin(left, right, key, missing=None):
+    lit = iter(left)
+    rit = iter(right)
+
+    lflds = lit.next()
+    rflds = rit.next()
+    
+    # determine indices of the key fields in left and right tables
+    lkind = asindices(lflds, key)
+    rkind = asindices(rflds, key)
+    
+    # construct functions to extract key values from both tables
+    lgetk = itemgetter(*lkind)
+    rgetk = itemgetter(*rkind)
+    
+    # determine indices of non-key fields in the right table
+    # (in the output, we only include key fields from the left table - we
+    # don't want to duplicate fields)
+    rvind = [i for i in range(len(rflds)) if i not in rkind]
+    rgetv = rowgetter(*rvind)
+    
+    # determine the output fields
+    outflds = list(lflds)
+    outflds.extend(rgetv(rflds))
+    yield tuple(outflds)
+    
+    # define a function to join two groups of rows
+    def joinrows(lrowgrp, rrowgrp):
+        if rrowgrp is None:
+            for lrow in lrowgrp:
+                outrow = list(lrow) # start with the left row
+                # extend with missing values in place of the right row
+                outrow.extend([missing] * len(rvind))
+                yield tuple(outrow)
+        else:
+            rrow = iter(rrowgrp).next() # pick first arbitrarily
+            for lrow in lrowgrp:
+                # start with the left row
+                outrow = list(lrow)
+                # extend with non-key values from the right row
+                outrow.extend(rgetv(rrow))
+                yield tuple(outrow)
+
+    # construct group iterators for both tables
+    lgit = groupby(lit, key=lgetk)
+    rgit = groupby(rit, key=rgetk)
+    
+    # loop until *either* of the iterators is exhausted
+    lkval, rkval = None, None # initialise here to handle empty tables
+    try:
+
+        # pick off initial row groups
+        lkval, lrowgrp = lgit.next() 
+        rkval, rrowgrp = rgit.next()
+    
+        while True:
+            if lkval < rkval:
+                for row in joinrows(lrowgrp, None):
+                    yield tuple(row)
+                # advance left
+                lkval, lrowgrp = lgit.next()
+            elif lkval > rkval:
+                # advance right
+                rkval, rrowgrp = rgit.next()
+            else:
+                for row in joinrows(lrowgrp, rrowgrp):
+                    yield tuple(row)
+                # advance both
+                lkval, lrowgrp = lgit.next()
+                rkval, rrowgrp = rgit.next()
+        
+    except StopIteration:
+        pass
+    
+    # make sure any left rows remaining are yielded
+    if lkval > rkval:
+        # yield anything that got left hanging
+        for row in joinrows(lrowgrp, None):
+            yield tuple(row)
+    # yield the rest
+    for lkval, lrowgrp in lgit:
+        for row in joinrows(lrowgrp, None):
+            yield tuple(row)
+            
+        
+def iterimplicitlookupjoin(left, right, presorted=False, missing=None, 
+                           buffersize=None):
+    # determine key field or fields
+    lflds = header(left)
+    rflds = header(right)
+    key = [f for f in lflds if f in rflds]
+    assert len(key) > 0, 'no fields in common'
+    if len(key) == 1:
+        key = key[0] # deal with singletons
+    if not presorted:
+        # this is not optimal, have to sort each time, because key is determined
+        # dynamically from the data
+        left = sort(left, key, buffersize=buffersize)
+        right = sort(right, key, buffersize=buffersize)
+    # from here on it's the same as a normal join
+    return iterlookupjoin(left, right, key, missing=missing)
+
+
+
+
+def hashlookupjoin(left, right, key=None, missing=None):
+    """
+    Alternative implementation of :func:`lookupjoin`, where the join is executed
+    by constructing an in-memory lookup for the right hand table, then iterating 
+    over rows from the left hand table.
+    
+    May be faster and/or more resource efficient where the right table is small
+    and the left table is large.
+    
+    .. versionadded:: 0.11
+    
+    """
+
+    if key is None:
+        return ImplicitHashLookupJoinView(left, right, missing=missing)
+    else:
+        return HashLookupJoinView(left, right, key, missing=missing)
+
+
+class ImplicitHashLookupJoinView(RowContainer):
+    
+    def __init__(self, left, right, missing=None):
+        self.left = left
+        self.right = right
+        self.missing = missing
+        
+    def __iter__(self):
+        return iterimplicithashlookupjoin(self.left, self.right, self.missing)
+
+    def cachetag(self):
+        try:
+            return hash((self.left.cachetag(), self.right.cachetag(), self.missing))
+        except Exception as e:
+            raise Uncacheable(e)
+
+
+class HashLookupJoinView(RowContainer):
+    
+    def __init__(self, left, right, key, missing=None):
+        self.left = left
+        self.right = right
+        self.key = key
+        self.missing = missing
+        
+    def __iter__(self):
+        return iterhashlookupjoin(self.left, self.right, self.key, self.missing)
+    
+    def cachetag(self):
+        try:
+            return hash((self.left.cachetag(), self.right.cachetag(), 
+                         tuple(self.key) if isinstance(self.key, list) else self.key,
+                         self.missing))
+        except Exception as e:
+            raise Uncacheable(e)
+
+
+def iterhashlookupjoin(left, right, key, missing):
+    lit = iter(left)
+    lflds = lit.next()
+
+    rflds, rit = iterpeek(right) # need the whole lot to pass to lookup
+    from petl.util import lookupone
+    rlookup = lookupone(rit, key, strict=False)
+    
+    # determine indices of the key fields in left and right tables
+    lkind = asindices(lflds, key)
+    rkind = asindices(rflds, key)
+    
+    # construct functions to extract key values from left table
+    lgetk = itemgetter(*lkind)
+    
+    # determine indices of non-key fields in the right table
+    # (in the output, we only include key fields from the left table - we
+    # don't want to duplicate fields)
+    rvind = [i for i in range(len(rflds)) if i not in rkind]
+    rgetv = rowgetter(*rvind)
+    
+    # determine the output fields
+    outflds = list(lflds)
+    outflds.extend(rgetv(rflds))
+    yield tuple(outflds)
+    
+    # define a function to join rows
+    def joinrows(lrow, rrow):
+        # start with the left row
+        outrow = list(lrow)
+        # extend with non-key values from the right row
+        outrow.extend(rgetv(rrow))
+        return tuple(outrow)
+
+    for lrow in lit:
+        k = lgetk(lrow)
+        if k in rlookup:
+            rrow = rlookup[k]
+            yield joinrows(lrow, rrow)
+        else:
+            outrow = list(lrow) # start with the left row
+            # extend with missing values in place of the right row
+            outrow.extend([missing] * len(rvind))
+            yield tuple(outrow)
+        
+        
+def iterimplicithashlookupjoin(left, right, missing):
+    # determine key field or fields
+    lflds, lit = iterpeek(left)
+    rflds, rit = iterpeek(right)
+    key = [f for f in lflds if f in rflds]
+    assert len(key) > 0, 'no fields in common'
+    if len(key) == 1:
+        key = key[0] # deal with singletons
+    # from here on it's the same as a normal join
+    return iterhashlookupjoin(lit, rit, key, missing)
+
+

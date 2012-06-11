@@ -1052,7 +1052,7 @@ def lookup(table, keyspec, valuespec=None, dictionary=None):
     return dictionary
     
     
-def lookupone(table, keyspec, valuespec=None, dictionary=None, strict=True):
+def lookupone(table, keyspec, valuespec=None, dictionary=None, strict=False):
     """
     Load a dictionary with data from the given table, assuming there is
     at most one value for each key. E.g.::
@@ -1067,24 +1067,25 @@ def lookupone(table, keyspec, valuespec=None, dictionary=None, strict=True):
         >>> lkp['c']
         2
         
-    If the specified key is not unique, will raise DuplicateKeyError, e.g.::
-
-        >>> table = [['foo', 'bar'], ['a', 1], ['b', 2], ['b', 3]]
-        >>> lkp = lookupone(table, 'foo')
-        Traceback (most recent call last):
-          File "<stdin>", line 1, in <module>
-          File "petl/util.py", line 451, in lookupone
-        petl.util.DuplicateKeyError
-        
-    Unique checks can be overridden by providing `strict=False`, in which case
-    the last value wins, e.g.::
+    If the specified key is not unique and strict=False (default),
+    the first value wins, e.g.::
 
         >>> table = [['foo', 'bar'], ['a', 1], ['b', 2], ['b', 3]]
         >>> lkp = lookupone(table, 'foo', 'bar', strict=False)
         >>> lkp['a']
         1
         >>> lkp['b']
-        3
+        2
+        
+    If the specified key is not unique and strict=True, will raise 
+    DuplicateKeyError, e.g.::
+
+        >>> table = [['foo', 'bar'], ['a', 1], ['b', 2], ['b', 3]]
+        >>> lkp = lookupone(table, 'foo', strict=True)
+        Traceback (most recent call last):
+          File "<stdin>", line 1, in <module>
+          File "petl/util.py", line 451, in lookupone
+        petl.util.DuplicateKeyError
         
     Compound keys are supported, e.g.::
     
@@ -1123,6 +1124,10 @@ def lookupone(table, keyspec, valuespec=None, dictionary=None, strict=True):
         >>> lkp['c']
         2
 
+    .. versionchanged:: 0.11
+    
+    Changed so that strict=False is default and first value wins.
+    
     """
 
     if dictionary is None:
@@ -1142,8 +1147,9 @@ def lookupone(table, keyspec, valuespec=None, dictionary=None, strict=True):
         k = getkey(row)
         if strict and k in dictionary:
             raise DuplicateKeyError
-        v = getvalue(row)
-        dictionary[k] = v
+        elif k not in dictionary:
+            v = getvalue(row)
+            dictionary[k] = v
     return dictionary
     
     
@@ -1217,7 +1223,7 @@ def recordlookup(table, keyspec, dictionary=None):
     return dictionary
     
         
-def recordlookupone(table, keyspec, dictionary=None, strict=True):
+def recordlookupone(table, keyspec, dictionary=None, strict=False):
     """
     Load a dictionary with data from the given table, mapping to records,
     assuming there is at most one record for each key. E.g.::
@@ -1232,24 +1238,25 @@ def recordlookupone(table, keyspec, dictionary=None, strict=True):
         >>> lkp['c']
         {'foo': 'c', 'bar': 2}
         
-    If the specified key is not unique, will raise DuplicateKeyError, e.g.::
+    If the specified key is not unique and strict=False (default), 
+    the first record wins, e.g.::
 
         >>> table = [['foo', 'bar'], ['a', 1], ['b', 2], ['b', 3]]
         >>> lkp = recordlookupone(table, 'foo')
+        >>> lkp['a']
+        {'foo': 'a', 'bar': 1}
+        >>> lkp['b']
+        {'foo': 'b', 'bar': 2}
+        
+    If the specified key is not unique and strict=True, will raise 
+    DuplicateKeyError, e.g.::
+
+        >>> table = [['foo', 'bar'], ['a', 1], ['b', 2], ['b', 3]]
+        >>> lkp = recordlookupone(table, 'foo', strict=True)
         Traceback (most recent call last):
           File "<stdin>", line 1, in <module>
           File "petl/util.py", line 451, in lookupone
         petl.util.DuplicateKeyError
-        
-    Unique checks can be overridden by providing `strict=False`, in which case
-    the last record wins, e.g.::
-
-        >>> table = [['foo', 'bar'], ['a', 1], ['b', 2], ['b', 3]]
-        >>> lkp = recordlookupone(table, 'foo', strict=False)
-        >>> lkp['a']
-        {'foo': 'a', 'bar': 1}
-        >>> lkp['b']
-        {'foo': 'b', 'bar': 3}
         
     Compound keys are supported, e.g.::
     
@@ -1287,6 +1294,10 @@ def recordlookupone(table, keyspec, dictionary=None, strict=True):
         >>> lkp['c']
         {'foo': 'c', 'bar': 2}
 
+    .. versionchanged:: 0.11
+    
+    Changed so that strict=False is default and first value wins.
+    
     """    
 
     if dictionary is None:
@@ -1301,8 +1312,9 @@ def recordlookupone(table, keyspec, dictionary=None, strict=True):
         k = getkey(row)
         if strict and k in dictionary:
             raise DuplicateKeyError
-        d = asdict(flds, row)
-        dictionary[k] = d
+        elif k not in dictionary:
+            d = asdict(flds, row)
+            dictionary[k] = d
     return dictionary
     
             
@@ -2715,6 +2727,7 @@ def rowgroupby(table, key, value=None):
 
 
 def iterpeek(it, n=1):
+    it = iter(it) # make sure it's an iterator
     if n == 1:
         peek = it.next()
         return peek, chain([peek], it)

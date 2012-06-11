@@ -21,7 +21,7 @@ from petl import rename, fieldnames, cut, cat, convert, fieldconvert, addfield, 
                 hashrightjoin, hashantijoin, hashcomplement, hashintersection, \
                 flatten, unflatten, mergesort, annex, unpackdict, unique, \
                 selectin, fold, addrownumbers, selectcontains, search, \
-                addcolumn
+                addcolumn, lookupjoin, hashlookupjoin
 import operator
 from petl.transform import Conflict
 
@@ -2723,7 +2723,33 @@ def _test_leftjoin_empty(leftjoin):
                (5, 'yellow', None,),
                (7, 'orange', None))
     ieq(expect3, table3)
+   
+   
+def _test_leftjoin_multiple(leftjoin):
+
+    table1 = (('id', 'color', 'cost'), 
+              (1, 'blue', 12), 
+              (2, 'red', 8), 
+              (3, 'purple', 4))
     
+    table2 = (('id', 'shape', 'size'), 
+              (1, 'circle', 'big'), 
+              (1, 'circle', 'small'), 
+              (2, 'square', 'tiny'), 
+              (2, 'square', 'big'), 
+              (3, 'ellipse', 'small'), 
+              (3, 'ellipse', 'tiny'))
+
+    actual = leftjoin(table1, table2, key='id')
+    expect = (('id', 'color', 'cost', 'shape', 'size'),
+              (1, 'blue', 12, 'circle', 'big'), 
+              (1, 'blue', 12, 'circle', 'small'), 
+              (2, 'red', 8, 'square', 'tiny'), 
+              (2, 'red', 8, 'square', 'big'), 
+              (3, 'purple', 4, 'ellipse', 'small'),
+              (3, 'purple', 4, 'ellipse', 'tiny'))
+    ieq(expect, actual)
+
 
 def _test_leftjoin(leftjoin):
     _test_leftjoin_1(leftjoin)
@@ -2731,6 +2757,7 @@ def _test_leftjoin(leftjoin):
     _test_leftjoin_3(leftjoin)
     _test_leftjoin_compound_keys(leftjoin)
     _test_leftjoin_empty(leftjoin)
+    _test_leftjoin_multiple(leftjoin)
 
 
 def test_leftjoin():
@@ -3023,6 +3050,69 @@ def test_antijoin():
     _test_antijoin_empty(antijoin)    
     
     
+def _test_lookupjoin_1(lookupjoin):
+
+    table1 = (('id', 'color', 'cost'), 
+              (1, 'blue', 12), 
+              (2, 'red', 8), 
+              (3, 'purple', 4))
+    
+    table2 = (('id', 'shape', 'size'), 
+              (1, 'circle', 'big'), 
+              (2, 'square', 'tiny'), 
+              (3, 'ellipse', 'small'))
+
+    actual = lookupjoin(table1, table2, key='id')
+    expect = (('id', 'color', 'cost', 'shape', 'size'),
+              (1, 'blue', 12, 'circle', 'big'), 
+              (2, 'red', 8, 'square', 'tiny'), 
+              (3, 'purple', 4, 'ellipse', 'small'))
+    ieq(expect, actual)
+    ieq(expect, actual)
+
+    # natural join
+    actual = lookupjoin(table1, table2)
+    expect = (('id', 'color', 'cost', 'shape', 'size'),
+              (1, 'blue', 12, 'circle', 'big'), 
+              (2, 'red', 8, 'square', 'tiny'), 
+              (3, 'purple', 4, 'ellipse', 'small'))
+    ieq(expect, actual)
+    ieq(expect, actual)
+
+
+def _test_lookupjoin_2(lookupjoin):
+
+    table1 = (('id', 'color', 'cost'), 
+              (1, 'blue', 12), 
+              (2, 'red', 8), 
+              (3, 'purple', 4))
+    
+    table2 = (('id', 'shape', 'size'), 
+              (1, 'circle', 'big'), 
+              (1, 'circle', 'small'), 
+              (2, 'square', 'tiny'), 
+              (2, 'square', 'big'), 
+              (3, 'ellipse', 'small'), 
+              (3, 'ellipse', 'tiny'))
+
+    actual = lookupjoin(table1, table2, key='id')
+    expect = (('id', 'color', 'cost', 'shape', 'size'),
+              (1, 'blue', 12, 'circle', 'big'), 
+              (2, 'red', 8, 'square', 'tiny'), 
+              (3, 'purple', 4, 'ellipse', 'small'))
+    ieq(expect, actual)
+    ieq(expect, actual)
+
+
+def _test_lookupjoin(lookupjoin):
+    _test_lookupjoin_1(lookupjoin)
+    _test_lookupjoin_2(lookupjoin)
+
+
+def test_lookupjoin():
+    _test_lookupjoin(lookupjoin)
+
+
 def test_transpose():
     table1 = (('id', 'colour'),
               (1, 'blue'),
@@ -3208,6 +3298,10 @@ def test_hashcomplement():
 def test_hashintersection():
     _test_intersection(hashintersection)
     
+
+def test_hashlookupjoin():
+    _test_lookupjoin(hashlookupjoin)
+
 
 def test_flatten():
 

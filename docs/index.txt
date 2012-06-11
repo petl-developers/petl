@@ -105,6 +105,8 @@ Functions for transforming tables:
 +--------------------------------+-----------------------------+-------------------------------+
 |  :func:`selectcontains`        |  :func:`search`             |  :func:`addcolumn`            |
 +--------------------------------+-----------------------------+-------------------------------+
+|  :func:`lookupjoin`            |  :func:`hashlookupjoin`     |                               |
++--------------------------------+-----------------------------+-------------------------------+
 
 Functions for loading (writing) data to files and databases:
 
@@ -480,6 +482,7 @@ Transform - transforming tables
 .. autofunction:: petl.sort
 .. autofunction:: petl.join
 .. autofunction:: petl.leftjoin
+.. autofunction:: petl.lookupjoin
 .. autofunction:: petl.rightjoin
 .. autofunction:: petl.outerjoin
 .. autofunction:: petl.crossjoin
@@ -505,6 +508,7 @@ Transform - transforming tables
 .. autofunction:: petl.pivot
 .. autofunction:: petl.hashjoin
 .. autofunction:: petl.hashleftjoin
+.. autofunction:: petl.hashlookupjoin
 .. autofunction:: petl.hashrightjoin
 .. autofunction:: petl.hashantijoin
 .. autofunction:: petl.hashcomplement

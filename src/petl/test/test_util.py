@@ -294,7 +294,7 @@ def test_lookupone():
     
     # lookup one column on another under strict mode
     try:
-        lookupone(t1, 'foo', 'bar')
+        lookupone(t1, 'foo', 'bar', strict=True)
     except DuplicateKeyError:
         pass # expected
     else:
@@ -302,12 +302,12 @@ def test_lookupone():
         
     # lookup one column on another under, not strict 
     actual = lookupone(t1, 'foo', 'bar', strict=False)
-    expect = {'a': 1, 'b': 3} # last value wins
+    expect = {'a': 1, 'b': 2} # first value wins
     assertequal(expect, actual)
 
     # test default value - tuple of whole row
     actual = lookupone(t1, 'foo', strict=False) # no value selector
-    expect = {'a': ('a', 1), 'b': ('b', 3)} # last wins
+    expect = {'a': ('a', 1), 'b': ('b', 2)} # first wins
     assertequal(expect, actual)
     
     t2 = (('foo', 'bar', 'baz'),
@@ -318,12 +318,12 @@ def test_lookupone():
     
     # test value selection
     actual = lookupone(t2, 'foo', ('bar', 'baz'), strict=False)
-    expect = {'a': (1, True), 'b': (3, False)}
+    expect = {'a': (1, True), 'b': (2, False)}
     assertequal(expect, actual)
     
     # test compound key
     actual = lookupone(t2, ('foo', 'bar'), 'baz', strict=False)
-    expect = {('a', 1): True, ('b', 2): False, ('b', 3): False} # last wins
+    expect = {('a', 1): True, ('b', 2): False, ('b', 3): True} # first wins
     assertequal(expect, actual)
     
 
@@ -357,7 +357,7 @@ def test_recordlookupone():
     t1 = (('foo', 'bar'), ('a', 1), ('b', 2), ('b', 3))
     
     try:
-        recordlookupone(t1, 'foo')
+        recordlookupone(t1, 'foo', strict=True)
     except DuplicateKeyError:
         pass # expected
     else:
@@ -365,7 +365,7 @@ def test_recordlookupone():
         
     # relax 
     actual = recordlookupone(t1, 'foo', strict=False)
-    expect = {'a': {'foo': 'a', 'bar': 1}, 'b': {'foo': 'b', 'bar': 3}} # last wins
+    expect = {'a': {'foo': 'a', 'bar': 1}, 'b': {'foo': 'b', 'bar': 2}} # first wins
     assertequal(expect, actual)
 
     t2 = (('foo', 'bar', 'baz'),
@@ -378,7 +378,7 @@ def test_recordlookupone():
     actual = recordlookupone(t2, ('foo', 'bar'), strict=False)
     expect = {('a', 1): {'foo': 'a', 'bar': 1, 'baz': True}, 
               ('b', 2): {'foo': 'b', 'bar': 2, 'baz': False}, 
-              ('b', 3): {'foo': 'b', 'bar': 3, 'baz': False}} # last wins
+              ('b', 3): {'foo': 'b', 'bar': 3, 'baz': True}} # first wins
     assertequal(expect, actual)
     
 
