@@ -19,7 +19,7 @@ from petl.testutils import ieq, assertequal
 import json
 import gzip
 import os
-from petl.io import FileSource
+from petl.io import FileSource, StringSource
 import petl.io
 
 
@@ -1180,4 +1180,23 @@ def test_totext_gz():
 |}"""
         assertequal(expect, actual)
     
+    
+def test_StringSource():
+    
+    table1 = (('foo', 'bar'),
+             ('a', '1'),
+             ('b', '2'),
+             ('c', '2'))
+
+    # test writing to a string buffer
+    ss = StringSource()
+    tocsv(table1, ss)
+    expect = "foo,bar\r\na,1\r\nb,2\r\nc,2\r\n"
+    actual = ss.getvalue()
+    eq_(expect, actual)
+    
+    # test reading from a string buffer
+    table2 = fromcsv(StringSource(actual))
+    ieq(table1, table2)
+    ieq(table1, table2)
     

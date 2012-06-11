@@ -23,6 +23,7 @@ import bz2
 import zipfile
 import urllib2
 from contextlib import contextmanager
+import cStringIO
 
 
 class Uncacheable(Exception):
@@ -184,6 +185,30 @@ class URLSource(object):
             f.close()
     
     
+class StringSource(object):
+    
+    def __init__(self, s=None):
+        self.s = s
+        
+    def checksum(self):
+        return hash(self.s)
+
+    @contextmanager
+    def open_(self, *args):
+        try:
+            if self.s is not None:
+                self.buffer = cStringIO.StringIO(self.s)
+            else:
+                self.buffer = cStringIO.StringIO()
+            yield self.buffer
+        finally:
+            pass # don't close the buffer
+        
+    def getvalue(self):
+        if self.buffer:
+            return self.buffer.getvalue()
+
+
 def _read_source_from_arg(source):
     if source is None:
         return StdinSource()
