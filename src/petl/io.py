@@ -1484,17 +1484,20 @@ def _insert(cursor, tablename, placeholders, table):
     
 def _placeholders(connection, names):    
     # discover the paramstyle
-    mod = __import__(connection.__class__.__module__)
-    if mod.paramstyle == 'qmark':
+    if connection is None:
         placeholders = ', '.join(['?'] * len(names))
-    elif mod.paramstyle in ('format', 'pyformat'):
-        # TODO test this!
-        placeholders = ', '.join(['%s'] * len(names))
-    elif mod.paramstyle == 'numeric':
-        # TODO test this!
-        placeholders = ', '.join([':' + str(i + 1) for i in range(len(names))])
     else:
-        raise Exception('TODO')
+        mod = __import__(connection.__class__.__module__)
+        if mod.paramstyle == 'qmark':
+            placeholders = ', '.join(['?'] * len(names))
+        elif mod.paramstyle in ('format', 'pyformat'):
+            # TODO test this!
+            placeholders = ', '.join(['%s'] * len(names))
+        elif mod.paramstyle == 'numeric':
+            # TODO test this!
+            placeholders = ', '.join([':' + str(i + 1) for i in range(len(names))])
+        else:
+            placeholders = ', '.join(['?'] * len(names))
     return placeholders
 
 

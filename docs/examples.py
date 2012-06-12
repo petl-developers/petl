@@ -1627,3 +1627,5 @@ look(table1)
 look(table2)
 table3 = lookupjoin(table1, table2, key='id')
 look(table3)
+
+
