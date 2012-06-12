@@ -292,6 +292,8 @@ def fromcsv(source=None, dialect=csv.excel, **kwargs):
     default checksum function (whatever `petl.io.defaultsumfun` is currently set
     to).
         
+    Supports transparent reading from URLs, ``.gz`` and ``.bz2`` files.
+
     """
 
     source = _read_source_from_arg(source)
@@ -351,6 +353,8 @@ def frompickle(source=None):
     default checksum function (whatever `petl.io.defaultsumfun` is currently set
     to).
         
+    Supports transparent reading from URLs, ``.gz`` and ``.bz2`` files.
+
     """
     
     source = _read_source_from_arg(source)
@@ -593,6 +597,8 @@ def fromtext(source=None, header=['lines'], strip=None):
         | 'c'   | '3'   |
         +-------+-------+
 
+    Supports transparent reading from URLs, ``.gz`` and ``.bz2`` files.
+
     .. versionchanged:: 0.4
     
     The strip() function is called on each line, which by default will remove 
@@ -730,6 +736,8 @@ def fromxml(source, *args, **kwargs):
     Note that the implementation is currently *not*
     streaming, i.e., the whole document is loaded into memory.
     
+    Supports transparent reading from URLs, ``.gz`` and ``.bz2`` files.
+
     .. versionadded:: 0.4
     
     .. versionchanged:: 0.6 If multiple elements match a given field, all values are reported as a tuple.
@@ -833,6 +841,8 @@ def fromjson(source, *args, **kwargs):
     If your JSON file does not fit this structure, you will need to parse it
     via :func:`json.load` and select the array to treat as the data, see also 
     :func:`fromdicts`.
+
+    Supports transparent reading from URLs, ``.gz`` and ``.bz2`` files.
 
     .. versionadded:: 0.5
     
@@ -969,7 +979,9 @@ def tocsv(table, source=None, dialect=csv.excel, **kwargs):
     from the default CSV dialect, provide the `delimiter` keyword argument.
      
     Note that if a file already exists at the given location, it will be overwritten.
-    
+
+    Supports transparent writing to ``.gz`` and ``.bz2`` files.
+        
     """
     
     source = _write_source_from_arg(source)
@@ -1037,6 +1049,8 @@ def appendcsv(table, source=None, dialect=csv.excel, **kwargs):
     consistent with the existing data, the data rows from the table are simply
     appended to the file. See also the :func:`cat` function.
     
+    Supports transparent writing to ``.gz`` and ``.bz2`` files.
+    
     """
     
     source = _write_source_from_arg(source)
@@ -1080,6 +1094,8 @@ def topickle(table, source=None, protocol=-1):
 
     The pickle file format preserves type information, i.e., reading and writing 
     is round-trippable.
+    
+    Supports transparent writing to ``.gz`` and ``.bz2`` files.
     
     """
     
@@ -1142,6 +1158,8 @@ def appendpickle(table, source=None, protocol=-1):
     Note that no attempt is made to check that the fields or row lengths are 
     consistent with the existing data, the data rows from the table are simply
     appended to the file. See also the :func:`cat` function.
+    
+    Supports transparent writing to ``.gz`` and ``.bz2`` files.
     
     """
     
@@ -1550,6 +1568,8 @@ def totext(table, source=None, template=None, prologue=None, epilogue=None):
         
     The `template` will be used to format each row via `str.format <http://docs.python.org/library/stdtypes.html#str.format>`_.
 
+    Supports transparent writing to ``.gz`` and ``.bz2`` files.
+    
     """
     
     source = _write_source_from_arg(source)
@@ -1569,6 +1589,8 @@ def totext(table, source=None, template=None, prologue=None, epilogue=None):
 def appendtext(table, source=None, template=None, prologue=None, epilogue=None):
     """
     As :func:`totext` but the file is opened in append mode.
+    
+    Supports transparent writing to ``.gz`` and ``.bz2`` files.
     
     """
 
@@ -1613,6 +1635,8 @@ def tojson(table, source=None, *args, **kwargs):
     Note that this is currently not streaming, all data is loaded into memory
     before being written to the file.
     
+    Supports transparent writing to ``.gz`` and ``.bz2`` files.
+    
     .. versionadded:: 0.5
     
     """
@@ -1629,6 +1653,8 @@ def fromtsv(source=None, dialect=csv.excel_tab, **kwargs):
     Convenience function, as :func:`fromcsv` but with different default dialect
     (tab delimited).
     
+    Supports transparent reading from URLs, ``.gz`` and ``.bz2`` files.
+
     .. versionadded:: 0.9
         
     """
@@ -1641,6 +1667,8 @@ def totsv(table, source=None, dialect=csv.excel_tab, **kwargs):
     Convenience function, as :func:`tocsv` but with different default dialect
     (tab delimited).
     
+    Supports transparent writing to ``.gz`` and ``.bz2`` files.
+    
     .. versionadded:: 0.9
         
     """    
@@ -1652,6 +1680,8 @@ def appendtsv(table, source=None, dialect=csv.excel_tab, **kwargs):
     """
     Convenience function, as :func:`appendcsv` but with different default dialect
     (tab delimited).
+    
+    Supports transparent writing to ``.gz`` and ``.bz2`` files.
     
     .. versionadded:: 0.9
         
