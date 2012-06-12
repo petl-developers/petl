@@ -780,10 +780,10 @@ def test_topickle_appendpickle():
     f = NamedTemporaryFile(delete=False)
     topickle(table, f.name)
     
-    def picklereader(file):
+    def picklereader(fl):
         try:
             while True:
-                yield pickle.load(file)
+                yield pickle.load(fl)
         except EOFError:
             pass
 

@@ -722,7 +722,7 @@ class ValuesContainer(IterContainer):
         return itervalues(self.table, self.field, *self.sliceargs, **self.kwargs)
     
         
-def valueset(table, field):
+def valueset(table, field, missing=None):
     """
     .. deprecated:: 0.3
     
@@ -730,10 +730,10 @@ def valueset(table, field):
         
     """
 
-    return set(itervalues(table, field))
+    return set(itervalues(table, field, missing=missing))
 
 
-def valuecount(table, field, value):
+def valuecount(table, field, value, missing=None):
     """
     Count the number of occurrences of `value` under the given field. Returns
     the absolute count and relative frequency as a pair. E.g.::
@@ -752,9 +752,9 @@ def valuecount(table, field, value):
     """
     
     if isinstance(field, (list, tuple)):
-        it = itervalues(table, *field)
+        it = itervalues(table, *field, missing=missing)
     else:
-        it = itervalues(table, field)
+        it = itervalues(table, field, missing=missing)
     total = 0
     vs = 0
     for v in it:
@@ -764,7 +764,7 @@ def valuecount(table, field, value):
     return vs, float(vs)/total
     
     
-def valuecounter(table, field):
+def valuecounter(table, field, missing=None):
     """
     Find distinct values for the given field and count the number of 
     occurrences. Returns a :class:`dict` mapping values to counts. E.g.::
@@ -787,7 +787,7 @@ def valuecounter(table, field):
     """
 
     counter = Counter()
-    for v in itervalues(table, field):
+    for v in itervalues(table, field, missing=missing):
         try:
             counter[v] += 1
         except IndexError:
@@ -795,7 +795,7 @@ def valuecounter(table, field):
     return counter
             
 
-def valuecounts(table, field):    
+def valuecounts(table, *fields, **kwargs):    
     """
     Find distinct values for the given field and count the number and relative
     frequency of occurrences. Returns a table mapping values to counts, with most common 
@@ -828,30 +828,39 @@ def valuecounts(table, field):
 
     """
     
-    return ValueCountsView(table, field)
+    if 'missing' in kwargs:
+        missing = kwargs['missing']
+    else:
+        missing = None
+
+    if len(fields) == 1:
+        return ValueCountsView(table, fields[0], missing=missing)
+    else:
+        return MultiValueCountsView(table, fields, missing=missing)
 
 
 class ValueCountsView(RowContainer):
     
-    def __init__(self, table, field):
+    def __init__(self, table, field, missing=None):
         self.table = table
         self.field = field
+        self.missing = missing
         self.counter = None
         self.tag = None
         
     def cachetag(self):
-        return hash((self.table.cachetag(), self.field))
+        return hash((self.table.cachetag(), self.field, self.missing))
     
     def __iter__(self):
         
         try:
             tag = self.table.cachetag()
         except: # uncacheable
-            self.counter = valuecounter(self.table, self.field)
+            self.counter = valuecounter(self.table, self.field, missing=self.missing)
         else:
             if self.tag is None or tag != self.tag:
                 self.tag = tag
-                self.counter = valuecounter(self.table, self.field)
+                self.counter = valuecounter(self.table, self.field, missing=self.missing)
             else:
                 pass # don't need to update counter
 
@@ -860,6 +869,52 @@ class ValueCountsView(RowContainer):
         total = sum(c[1] for c in counts)
         for c in counts:
             yield (c[0], c[1], float(c[1])/total)
+
+        
+class MultiValueCountsView(RowContainer):
+    
+    def __init__(self, table, fields, missing=None):
+        self.table = table
+        self.fields = fields
+        self.missing = missing
+        self.counters = dict()
+        self.tag = None
+        
+    def cachetag(self):
+        return hash((self.table.cachetag(), self.fields, self.missing))
+    
+    def __iter__(self):
+        
+        refresh = True
+        try:
+            tag = self.table.cachetag()
+        except: # uncacheable
+            pass
+        else:
+            if self.tag is not None and self.tag == tag:
+                refresh = False
+
+        if refresh:
+            self.counters = dict()
+            it = iter(self.table)
+            fields = it.next()
+            if self.fields:
+                self.countfields = self.fields
+            else:
+                self.countfields = fields
+            for f in self.countfields:
+                self.counters[f] = Counter()
+            for row in it:
+                for f, v in izip_longest(fields, row, fillvalue=self.missing):
+                    if f != self.missing and f in self.countfields:
+                        self.counters[f][v] += 1
+                
+        yield ('field', 'value', 'count', 'frequency')
+        for f in self.countfields:
+            counts = self.counters[f].most_common()
+            total = sum(c[1] for c in counts)
+            for c in counts:
+                yield (f, c[0], c[1], float(c[1])/total)
 
         
 def columns(table, missing=None):

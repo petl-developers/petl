@@ -5709,7 +5709,7 @@ def iterantijoin(left, right, key):
 
         # pick off initial row groups
         lkval, lrowgrp = lgit.next() 
-        rkval, rrowgrp = rgit.next()
+        rkval, _ = rgit.next()
 
         while True:
             if lkval < rkval:
@@ -5719,11 +5719,11 @@ def iterantijoin(left, right, key):
                 lkval, lrowgrp = lgit.next()
             elif lkval > rkval:
                 # advance right
-                rkval, rrowgrp = rgit.next()
+                rkval, _ = rgit.next()
             else:
                 # advance both
                 lkval, lrowgrp = lgit.next()
-                rkval, rrowgrp = rgit.next()
+                rkval, _ = rgit.next()
         
     except StopIteration:
         pass
@@ -5893,7 +5893,7 @@ class TransposeView(RowContainer):
 
 def itertranspose(source):
     fields = header(source)
-    its = [iter(source) for f in fields]
+    its = [iter(source) for _ in fields]
     for i in range(len(fields)):
         yield tuple(row[i] for row in its[i])
         

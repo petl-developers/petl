@@ -10,7 +10,7 @@ from petl import header, fieldnames, data, records, rowcount, look, see, iterval
                 datetimeparser, values, columns, facetcolumns, isordered, \
                 rowgroupby
 
-from petl.testutils import assertequal, iassertequal
+from petl.testutils import assertequal, ieq
 import sys
 from nose.tools import eq_
 
@@ -33,13 +33,13 @@ def test_fieldnames():
     assertequal(expect, actual)
     
     class CustomField(object):
-        def __init__(self, id, description):
-            self.id = id
+        def __init__(self, key, description):
+            self.key = key
             self.description = description
         def __str__(self):
-            return self.id
+            return self.key
         def __repr__(self):
-            return 'CustomField(%r, %r)' % (self.id, self.description)
+            return 'CustomField(%r, %r)' % (self.key, self.description)
         
     table = ((CustomField('foo', 'Get some foo.'), CustomField('bar', 'A lot of bar.')), 
              ('a', 1), 
@@ -55,7 +55,7 @@ def test_data():
     table = (('foo', 'bar'), ('a', 1), ('b', 2))
     actual = data(table)
     expect = (('a', 1), ('b', 2))
-    iassertequal(expect, actual)
+    ieq(expect, actual)
 
 
 def test_records():
@@ -64,7 +64,7 @@ def test_records():
     table = (('foo', 'bar'), ('a', 1), ('b', 2))
     actual = records(table)
     expect = ({'foo': 'a', 'bar': 1}, {'foo': 'b', 'bar': 2})
-    iassertequal(expect, actual)
+    ieq(expect, actual)
     
         
 def test_records_shortrows():
@@ -73,7 +73,7 @@ def test_records_shortrows():
     table = (('foo', 'bar'), ('a', 1), ('b',))
     actual = records(table)
     expect = ({'foo': 'a', 'bar': 1}, {'foo': 'b', 'bar': None})
-    iassertequal(expect, actual)
+    ieq(expect, actual)
     
     
 def test_rowcount():
@@ -138,19 +138,19 @@ def test_itervalues():
 
     actual = itervalues(table, 'foo')
     expect = ('a', 'b', 'b')
-    iassertequal(expect, actual) 
+    ieq(expect, actual) 
 
     actual = itervalues(table, 'bar')
     expect = (1, 2, 7)
-    iassertequal(expect, actual) 
+    ieq(expect, actual) 
     
     actual = itervalues(table, ('foo', 'bar'))
     expect = (('a', 1), ('b', 2), ('b', 7))
-    iassertequal(expect, actual)
+    ieq(expect, actual)
     
     actual = itervalues(table, 'baz')
     expect = (True, None, False)
-    iassertequal(expect, actual)
+    ieq(expect, actual)
 
 
 def test_values():
@@ -163,23 +163,23 @@ def test_values():
 
     actual = values(table, 'foo')
     expect = ('a', 'b', 'b')
-    iassertequal(expect, actual) 
-    iassertequal(expect, actual) 
+    ieq(expect, actual) 
+    ieq(expect, actual) 
 
     actual = values(table, 'bar')
     expect = (1, 2, 7)
-    iassertequal(expect, actual) 
-    iassertequal(expect, actual) 
+    ieq(expect, actual) 
+    ieq(expect, actual) 
     
     actual = values(table, ('foo', 'bar'))
     expect = (('a', 1), ('b', 2), ('b', 7))
-    iassertequal(expect, actual) 
-    iassertequal(expect, actual) 
+    ieq(expect, actual) 
+    ieq(expect, actual) 
     
     actual = values(table, 'baz')
     expect = (True, None, False)
-    iassertequal(expect, actual)
-    iassertequal(expect, actual) 
+    ieq(expect, actual)
+    ieq(expect, actual) 
 
 
 def test_valuecount():
@@ -206,11 +206,11 @@ def test_valuecounts():
     table = (('foo', 'bar'), ('a', 1), ('b', 2), ('b', 7))
     actual = valuecounts(table, 'foo')
     expect = (('value', 'count', 'frequency'), ('b', 2, 2./3), ('a', 1, 1./3))
-    iassertequal(expect, actual) 
+    ieq(expect, actual) 
+    ieq(expect, actual) 
 
 
 def test_valuecounts_shortrows():
-    """Test the valuecounts function with short rows."""
     
     table = (('foo', 'bar'), 
              ('a', True), 
@@ -224,7 +224,50 @@ def test_valuecounts_shortrows():
               (True, 3, 3./6), 
               (False, 2, 2./6), 
               (None, 1, 1./6))
-    iassertequal(expect, actual) 
+    ieq(expect, actual) 
+    ieq(expect, actual) 
+
+
+def test_valuecounts_allfields():
+    
+    table = (('foo', 'bar'), 
+             ('a', True), 
+             ('b', True), 
+             ('b',), 
+             ('b', True), 
+             ('c', False), 
+             ('c', False))
+    actual = valuecounts(table)
+    expect = (('field', 'value', 'count', 'frequency'),
+              ('foo', 'b', 3, 3./6),
+              ('foo', 'c', 2, 2./6),
+              ('foo', 'a', 1, 1./6), 
+              ('bar', True, 3, 3./6), 
+              ('bar', False, 2, 2./6),
+              ('bar', None, 1, 1./6))
+    ieq(expect, actual) 
+    ieq(expect, actual) 
+
+    
+def test_valuecounts_somefields():
+    
+    table = (('foo', 'bar', 'baz'), 
+             ('a', True, .12), 
+             ('b', True, .34), 
+             ('b',), 
+             ('b', True, .56), 
+             ('c', False, .86), 
+             ('c', False, .92))
+    actual = valuecounts(table, 'foo', 'bar')
+    expect = (('field', 'value', 'count', 'frequency'),
+              ('foo', 'b', 3, 3./6),
+              ('foo', 'c', 2, 2./6),
+              ('foo', 'a', 1, 1./6), 
+              ('bar', True, 3, 3./6), 
+              ('bar', False, 2, 2./6),
+              ('bar', None, 1, 1./6))
+    ieq(expect, actual) 
+    ieq(expect, actual) 
 
     
 def test_valueset():
@@ -394,7 +437,7 @@ def test_rowlengths():
              ('F', 9))
     actual = rowlengths(table)
     expect = (('length', 'count'), (3, 3), (2, 2), (4, 1))
-    iassertequal(expect, actual) 
+    ieq(expect, actual) 
 
 
 def test_stats():
@@ -426,15 +469,15 @@ def test_typecounts():
 
     actual = typecounts(table, 'foo') 
     expect = (('type', 'count', 'frequency'), ('str', 4, 4./5), ('unicode', 1, 1./5))
-    iassertequal(expect, actual)
+    ieq(expect, actual)
 
     actual = typecounts(table, 'bar') 
     expect = (('type', 'count', 'frequency'), ('unicode', 3, 3./5), ('int', 2, 2./5))
-    iassertequal(expect, actual)
+    ieq(expect, actual)
 
     actual = typecounts(table, 'baz') 
     expect = (('type', 'count', 'frequency'), ('float', 4, 4./5), ('NoneType', 1, 1./5))
-    iassertequal(expect, actual)
+    ieq(expect, actual)
 
 
 def test_typeset():
@@ -462,7 +505,7 @@ def test_parsecounts():
 
     actual = parsecounts(table, 'bar') 
     expect = (('type', 'count', 'errors'), ('float', 3, 1), ('int', 2, 2))
-    iassertequal(expect, actual)
+    ieq(expect, actual)
     
     
 def test_parsenumber():
@@ -510,14 +553,14 @@ def test_stringpatterns():
               ('Aa. Aaa', 3, 3./6), 
               ('Aaa. Aaa', 2, 2./6), 
               ('Aa. Aaaa', 1, 1./6))
-    iassertequal(expect, actual) 
+    ieq(expect, actual) 
     
     actual = stringpatterns(table, 'bar')
     expect = (('pattern', 'count', 'frequency'), 
               ('999-9999', 3, 3./6), 
               ('999 9999', 2, 2./6),
               ('999-9999-AA', 1, 1./6))
-    iassertequal(expect, actual) 
+    ieq(expect, actual) 
     
 
 def test_diffheaders():
