@@ -1194,9 +1194,14 @@ def test_StringSource():
     expect = "foo,bar\r\na,1\r\nb,2\r\nc,2\r\n"
     actual = ss.getvalue()
     eq_(expect, actual)
-    
+
     # test reading from a string buffer
     table2 = fromcsv(StringSource(actual))
     ieq(table1, table2)
     ieq(table1, table2)
-    
+
+    # test appending
+    appendcsv(table1, ss)
+    actual = ss.getvalue()
+    expect = "foo,bar\r\na,1\r\nb,2\r\nc,2\r\na,1\r\nb,2\r\nc,2\r\n"
+    eq_(expect, actual)

@@ -189,6 +189,7 @@ class StringSource(object):
     
     def __init__(self, s=None):
         self.s = s
+        self.buffer = None
         
     def checksum(self):
         return hash(self.s)
@@ -196,11 +197,24 @@ class StringSource(object):
     @contextmanager
     def open_(self, *args):
         try:
-            if self.s is not None:
-                self.buffer = cStringIO.StringIO(self.s)
-            else:
+            if len(args) == 0 or args[0].startswith('r'): # read
+                if self.s is not None:
+                    self.buffer = cStringIO.StringIO(self.s)
+                else:
+                    raise Exception('no string data supplied')
+            elif args[0].startswith('w'): # write
+                # drop existing buffer
+                if self.buffer is not None:
+                    self.buffer.close()
+                # new buffer
                 self.buffer = cStringIO.StringIO()
+            elif args[0].startswith('a'): # append
+                # new buffer only if none already
+                if self.buffer is None:
+                    self.buffer = cStringIO.StringIO()
             yield self.buffer
+        except:
+            raise
         finally:
             pass # don't close the buffer
         
