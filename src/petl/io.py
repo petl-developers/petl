@@ -1346,18 +1346,7 @@ def todb(table, connection_or_cursor, tablename, commit=True):
     
     """
 
-    # deal with polymorphic arg
-    if hasattr(connection_or_cursor, 'cursor'):
-        connection = connection_or_cursor
-        cursor = connection.cursor()
-    elif hasattr(connection_or_cursor, 'execute'):
-        cursor = connection_or_cursor
-        if hasattr(cursor, 'connection'):
-            connection = cursor.connection
-        else:
-            connection = None
-    else:
-        raise Exception('expected connection or cursor, found: %r' % connection_or_cursor)
+    executor, connection = _handle_connection_or_cursor_arg(connection_or_cursor)
             
     # sanitise table and field names
     tablename = _quote(tablename)
@@ -1367,21 +1356,47 @@ def todb(table, connection_or_cursor, tablename, commit=True):
     try:
         # truncate the table
         query = 'TRUNCATE %s' % tablename
-        cursor.execute(query)
+        executor.execute(query)
     except:
         # TRUNCATE is not supported in some databases
         query = 'DELETE FROM %s' % tablename
-        cursor.execute(query)
+        executor.execute(query)
     
     # insert some data
-    _insert(cursor, tablename, placeholders, table)
+    _insert(executor, tablename, placeholders, table)
 
     # finish up
-    if hasattr(connection_or_cursor, 'cursor'):
+    if hasattr(connection_or_cursor, 'cursor') and callable(connection_or_cursor.cursor):
         # close the cursor we created
-        cursor.close()
-    if commit and connection is not None:
+        executor.close()
+
+    if commit and connection is not None and hasattr(connection, 'commit'):
         connection.commit()
+    
+    
+def _handle_connection_or_cursor_arg(connection_or_cursor):
+    # deal with polymorphic arg
+    if hasattr(connection_or_cursor, 'cursor') and callable(connection_or_cursor.cursor):
+        # assume standard db-api connection
+        connection = connection_or_cursor
+        executor = connection_or_cursor.cursor()
+    elif hasattr(connection_or_cursor, 'execute') and callable(connection_or_cursor.execute):
+        executor = connection_or_cursor
+        # need to get at the true connection object so we can figure out paramstyle
+        # try sqlalchemy engine
+        if hasattr(executor, 'raw_connection'):
+            connection = executor.raw_connection().connection
+        # try sqlalchemy connection
+        elif hasattr(executor, 'connection') and hasattr(executor.connection, 'connection'):
+            connection = executor.connection.connection
+        # try db-api cursor with connection access
+        elif hasattr(executor, 'connection'):
+            connection = executor.connection
+        else:
+            connection = None
+    else:
+        raise Exception('expected connection or cursor, found: %r' % connection_or_cursor)
+    return executor, connection
     
     
 def appenddb(table, connection_or_cursor, tablename, commit=True):
@@ -1436,33 +1451,23 @@ def appenddb(table, connection_or_cursor, tablename, commit=True):
         >>> appenddb(table, cursor, 'foobar')    
     
     """
-
-    # deal with polymorphic arg
-    if hasattr(connection_or_cursor, 'cursor'):
-        connection = connection_or_cursor
-        cursor = connection.cursor()
-    elif hasattr(connection_or_cursor, 'execute'):
-        cursor = connection_or_cursor
-        if hasattr(cursor, 'connection'):
-            connection = cursor.connection
-        else:
-            connection = None
-    else:
-        raise Exception('expected connection or cursor, found: %r' % connection_or_cursor)
-            
+    
+    executor, connection = _handle_connection_or_cursor_arg(connection_or_cursor)
+    
     # sanitise table and field names
     tablename = _quote(tablename)
     names = [_quote(n) for n in fieldnames(table)]
     placeholders = _placeholders(connection, names)
     
     # insert some data
-    _insert(cursor, tablename, placeholders, table)
+    _insert(executor, tablename, placeholders, table)
 
     # finish up
-    if hasattr(connection_or_cursor, 'cursor'):
+    if hasattr(connection_or_cursor, 'cursor') and callable(connection_or_cursor.cursor):
         # close the cursor we created
-        cursor.close()
-    if commit and connection is not None:
+        executor.close()
+
+    if commit and connection is not None and hasattr(connection, 'commit'):
         connection.commit()
 
 
