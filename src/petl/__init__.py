@@ -36,7 +36,7 @@ from petl.transform import rename, cut, cat, convert, fieldconvert, addfield, ro
            hashantijoin, hashcomplement, hashintersection, replace, replaceall, \
            resub, flatten, unflatten, mergesort, annex, unpackdict, unique, \
            fold, mergeduplicates, addrownumbers, selectcontains, search, sub, \
-           addcolumn, lookupjoin, hashlookupjoin
+           addcolumn, lookupjoin, hashlookupjoin, filldown, fillright, fillleft
            
            
 VERSION = '0.11-SNAPSHOT'

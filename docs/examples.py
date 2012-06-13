@@ -1629,3 +1629,51 @@ table3 = lookupjoin(table1, table2, key='id')
 look(table3)
 
 
+# filldown
+
+table1 = (('foo', 'bar', 'baz'),
+          (1, 'a', None),
+          (1, None, .23),
+          (1, 'b', None),
+          (2, None, None),
+          (2, None, .56),
+          (2, 'c', None),
+          (None, 'c', .72))
+from petl import filldown, look
+look(table1)
+table2 = filldown(table1)
+look(table2)
+table3 = filldown(table1, 'bar')
+look(table3)
+table4 = filldown(table1, 'bar', 'baz')
+look(table4)
+
+
+# fillright
+table1 = (('foo', 'bar', 'baz'),
+          (1, 'a', None),
+          (1, None, .23),
+          (1, 'b', None),
+          (2, None, None),
+          (2, None, .56),
+          (2, 'c', None),
+          (None, 'c', .72))
+from petl import fillright, look
+look(table1)
+table2 = fillright(table1)
+look(table2)
+
+# fillleft
+table1 = (('foo', 'bar', 'baz'),
+          (1, 'a', None),
+          (1, None, .23),
+          (1, 'b', None),
+          (2, None, None),
+          (None, None, .56),
+          (2, 'c', None),
+          (None, 'c', .72))
+from petl import fillleft, look
+look(table1)
+table2 = fillleft(table1)
+look(table2)
+    

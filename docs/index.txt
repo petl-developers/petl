@@ -105,7 +105,9 @@ Functions for transforming tables:
 +--------------------------------+-----------------------------+-------------------------------+
 |  :func:`selectcontains`        |  :func:`search`             |  :func:`addcolumn`            |
 +--------------------------------+-----------------------------+-------------------------------+
-|  :func:`lookupjoin`            |  :func:`hashlookupjoin`     |                               |
+|  :func:`lookupjoin`            |  :func:`hashlookupjoin`     |  :func:`filldown`             |
++--------------------------------+-----------------------------+-------------------------------+
+|  :func:`fillright`             |  :func:`fillleft`           |                               |
 +--------------------------------+-----------------------------+-------------------------------+
 
 Functions for loading (writing) data to files and databases:
@@ -520,6 +522,9 @@ Transform - transforming tables
 .. autofunction:: petl.addrownumbers
 .. autofunction:: petl.addcolumn
 .. autofunction:: petl.addfield
+.. autofunction:: petl.filldown
+.. autofunction:: petl.fillright
+.. autofunction:: petl.fillleft
 
 
 Load - writing tables to files and databases
