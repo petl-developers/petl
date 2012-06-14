@@ -1608,7 +1608,7 @@ def appendtext(table, source=None, template=None, prologue=None, epilogue=None):
             f.write(epilogue)
             
             
-def tojson(table, source=None, *args, **kwargs):
+def tojson(table, source=None, prefix=None, suffix=None, *args, **kwargs):
     """
     Write a table in JSON format, with rows output as JSON objects. E.g.::
 
@@ -1643,11 +1643,15 @@ def tojson(table, source=None, *args, **kwargs):
     encoder = JSONEncoder(*args, **kwargs)
     source = _write_source_from_arg(source)
     with source.open_('wb') as f:
+        if prefix is not None:
+            f.write(prefix)
         for chunk in encoder.iterencode(list(records(table))):
             f.write(chunk)
+        if suffix is not None:
+            f.write(suffix)
             
 
-def tojsonarrays(table, source=None, output_header=False, *args, **kwargs):
+def tojsonarrays(table, source=None, prefix=None, suffix=None, output_header=False, *args, **kwargs):
     """
     Write a table in JSON format, with rows output as JSON arrays. E.g.::
 
@@ -1681,13 +1685,17 @@ def tojsonarrays(table, source=None, output_header=False, *args, **kwargs):
     
     encoder = JSONEncoder(*args, **kwargs)
     source = _write_source_from_arg(source)
+    if output_header:
+        obj = list(table)
+    else:
+        obj = list(data(table))
     with source.open_('wb') as f:
-        if output_header:
-            obj = list(table)
-        else:
-            obj = list(data(table))
+        if prefix is not None:
+            f.write(prefix)
         for chunk in encoder.iterencode(obj):
             f.write(chunk)
+        if suffix is not None:
+            f.write(suffix)
             
 
 def fromtsv(source=None, dialect=csv.excel_tab, **kwargs):
