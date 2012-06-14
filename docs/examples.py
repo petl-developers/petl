@@ -1329,6 +1329,36 @@ from petl import look, fromsqlite3
 look(fromsqlite3('test.db', 'select * from foobar'))
 
 
+# tojson
+
+table = [['foo', 'bar'],
+         ['a', 1],
+         ['b', 2],
+         ['c', 2]]
+
+from petl import tojson, look
+look(table)
+tojson(table, 'example.json')
+# check what it did
+with open('example.json') as f:
+    print f.read()
+
+
+# tojsonarrays
+
+table = [['foo', 'bar'],
+         ['a', 1],
+         ['b', 2],
+         ['c', 2]]
+
+from petl import tojsonarrays, look
+look(table)
+tojsonarrays(table, 'example.json')
+# check what it did
+with open('example.json') as f:
+    print f.read()
+
+
 # mergesort
 
 table1 = (('foo', 'bar'),

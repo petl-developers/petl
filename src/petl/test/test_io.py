@@ -12,7 +12,7 @@ from nose.tools import eq_
 from petl import fromcsv, frompickle, fromsqlite3, adler32sum, crc32sum, fromdb, \
                 tocsv, topickle, appendcsv, appendpickle, tosqlite3, appendsqlite3, \
                 todb, appenddb, fromtext, totext, fromxml, fromjson, fromdicts, \
-                tojson, fromtsv, totsv, appendtsv
+                tojson, fromtsv, totsv, appendtsv, tojsonarrays
                 
 
 from petl.testutils import ieq, assertequal
@@ -1044,6 +1044,25 @@ def test_tojson():
     assert result[1]['bar'] == 2
     assert result[2]['foo'] == 'c'
     assert result[2]['bar'] == 2
+    
+
+def test_tojsonarrays():
+    
+    # exercise function
+    table = (('foo', 'bar'),
+             ('a', 1),
+             ('b', 2),
+             ('c', 2))
+    f = NamedTemporaryFile(delete=False)
+    tojsonarrays(table, f.name)
+    result = json.load(f)
+    assert len(result) == 3
+    assert result[0][0] == 'a'
+    assert result[0][1] == 1
+    assert result[1][0] == 'b'
+    assert result[1][1] == 2
+    assert result[2][0] == 'c'
+    assert result[2][1] == 2
     
 
 def test_fromcsv_gz():

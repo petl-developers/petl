@@ -1610,9 +1610,9 @@ def appendtext(table, source=None, template=None, prologue=None, epilogue=None):
             
 def tojson(table, source=None, *args, **kwargs):
     """
-    Write a table in JSON format. E.g.::
+    Write a table in JSON format, with rows output as JSON objects. E.g.::
 
-        >>> from petl import tojson, look    
+        >>> from petl import tojson, look
         >>> look(table)
         +-------+-------+
         | 'foo' | 'bar' |
@@ -1626,11 +1626,10 @@ def tojson(table, source=None, *args, **kwargs):
         
         >>> tojson(table, 'example.json')
         >>> # check what it did
-        ... import json
-        >>> with open('example.json') as f:
-        ...     json.load(f)
+        ... with open('example.json') as f:
+        ...     print f.read()
         ... 
-        [{u'foo': u'a', u'bar': 1}, {u'foo': u'b', u'bar': 2}, {u'foo': u'c', u'bar': 2}]
+        [{"foo": "a", "bar": 1}, {"foo": "b", "bar": 2}, {"foo": "c", "bar": 2}]
     
     Note that this is currently not streaming, all data is loaded into memory
     before being written to the file.
@@ -1645,6 +1644,49 @@ def tojson(table, source=None, *args, **kwargs):
     source = _write_source_from_arg(source)
     with source.open_('wb') as f:
         for chunk in encoder.iterencode(list(records(table))):
+            f.write(chunk)
+            
+
+def tojsonarrays(table, source=None, output_header=False, *args, **kwargs):
+    """
+    Write a table in JSON format, with rows output as JSON arrays. E.g.::
+
+        >>> from petl import tojsonarrays, look
+        >>> look(table)
+        +-------+-------+
+        | 'foo' | 'bar' |
+        +=======+=======+
+        | 'a'   | 1     |
+        +-------+-------+
+        | 'b'   | 2     |
+        +-------+-------+
+        | 'c'   | 2     |
+        +-------+-------+
+        
+        >>> tojsonarrays(table, 'example.json')
+        >>> # check what it did
+        ... with open('example.json') as f:
+        ...     print f.read()
+        ... 
+        [["a", 1], ["b", 2], ["c", 2]]
+    
+    Note that this is currently not streaming, all data is loaded into memory
+    before being written to the file.
+    
+    Supports transparent writing to ``.gz`` and ``.bz2`` files.
+    
+    .. versionadded:: 0.11
+    
+    """
+    
+    encoder = JSONEncoder(*args, **kwargs)
+    source = _write_source_from_arg(source)
+    with source.open_('wb') as f:
+        if output_header:
+            obj = list(table)
+        else:
+            obj = list(data(table))
+        for chunk in encoder.iterencode(obj):
             f.write(chunk)
             
 

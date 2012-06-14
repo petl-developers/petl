@@ -39,6 +39,8 @@ def header(table):
         >>> header(table)
         ['foo', 'bar']
     
+    See also :func:`fieldnames`.
+        
     """
     
     it = iter(table)
