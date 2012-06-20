@@ -900,7 +900,7 @@ def test_tosqlite3_identifiers():
     
     # check what it did
     conn = sqlite3.connect(f.name)
-    actual = conn.execute('select * from `foo bar`')
+    actual = conn.execute('select * from `foo bar```')
     expect = (('a', 1),
               ('b', 2),
               ('c', 2))

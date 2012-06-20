@@ -1507,7 +1507,8 @@ def appenddb(table, connection_or_cursor, tablename, commit=True):
 
 def _quote(s):
     # crude way to sanitise table and field names
-    return '`%s`' % s.replace('`', '')
+    # conform with the SQL-92 standard. See http://stackoverflow.com/a/214344
+    return '"%s"' % s.replace('"', '""')
 
 
 def _insert(cursor, tablename, placeholders, table):    
