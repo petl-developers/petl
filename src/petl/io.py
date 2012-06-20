@@ -119,12 +119,17 @@ class FileSource(object):
 
 
 class GzipSource(FileSource):
-    
+
     def __init__(self, filename, checksumfun=None):
         super(GzipSource, self).__init__(filename, checksumfun)
 
+    @contextmanager
     def open_(self, *args):
-        return gzip.open(self.filename, *args)
+        source = gzip.open(self.filename, *args)
+        try:
+            yield source
+        finally:
+            source.close()
 
 
 class BZ2Source(FileSource):
@@ -132,8 +137,13 @@ class BZ2Source(FileSource):
     def __init__(self, filename, checksumfun=None):
         super(BZ2Source, self).__init__(filename, checksumfun)
 
+    @contextmanager
     def open_(self, *args):
-        return bz2.BZ2File(self.filename, *args)
+        source = bz2.BZ2File(self.filename, *args)
+        try:
+            yield source
+        finally:
+            source.close()
 
 
 class ZipSource(object):
@@ -150,12 +160,16 @@ class ZipSource(object):
         except Exception as e:
             raise Uncacheable(e)
 
+    @contextmanager
     def open_(self, *args):
         zf = zipfile.ZipFile(self.filename, *args)
-        if args:
-            return zf.open(self.membername, args[0])
-        else:
-            return zf.open(self.membername)
+        try:
+            if args:
+                yield zf.open(self.membername, args[0])
+            else:
+                yield zf.open(self.membername)
+        finally:
+            zf.close()
 
 
 class StdinSource(object):
@@ -178,8 +192,8 @@ class URLSource(object):
         
     @contextmanager
     def open_(self, *args):
+        f = urllib2.urlopen(*self.args, **self.kwargs)
         try:
-            f = urllib2.urlopen(*self.args, **self.kwargs) 
             yield f
         finally:
             f.close()
@@ -777,6 +791,8 @@ class XmlView(RowContainer):
         
     def __iter__(self):
         tree = ElementTree.parse(self.source.open_())
+        if not hasattr(tree, 'iterfind'):
+            tree.iterfind = tree.getiterator
         
         if self.vmatch is not None:
             # simple case, all value paths are the same
@@ -1491,7 +1507,8 @@ def appenddb(table, connection_or_cursor, tablename, commit=True):
 
 def _quote(s):
     # crude way to sanitise table and field names
-    return '`%s`' % s.replace('`', '')
+    # conform with the SQL-92 standard. See http://stackoverflow.com/a/214344
+    return '"%s"' % s.replace('"', '""')
 
 
 def _insert(cursor, tablename, placeholders, table):    

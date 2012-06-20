@@ -516,7 +516,9 @@ def test_fromxml_2():
     f.write(data)
     f.close()
     
+    print open(f.name).read()
     actual = fromxml(f.name, 'tr', 'td', 'v')
+    print actual
     expect = (('foo', 'bar'),
               ('a', '1'),
               ('b', '2'),
@@ -894,11 +896,11 @@ def test_tosqlite3_identifiers():
              ('b', 2),
              ('c', 2))
     f = NamedTemporaryFile(delete=False)
-    tosqlite3(table, f.name, 'foo bar`', create=True)
+    tosqlite3(table, f.name, 'foo " bar`', create=True)
     
     # check what it did
     conn = sqlite3.connect(f.name)
-    actual = conn.execute('select * from `foo bar`')
+    actual = conn.execute('select * from `foo " bar```')
     expect = (('a', 1),
               ('b', 2),
               ('c', 2))
@@ -1106,14 +1108,17 @@ def test_tocsv_appendcsv_gz():
     tocsv(table, fn, delimiter='\t')
     
     # check what it did
-    with gzip.open(fn, 'rb') as o:
+    o = gzip.open(fn, 'rb')
+    try:
         actual = csv.reader(o, delimiter='\t')
         expect = [['foo', 'bar'],
                   ['a', '1'],
                   ['b', '2'],
                   ['c', '2']]
         ieq(expect, actual)
-    
+    finally:
+        o.close()
+
     # check appending
     table2 = (('foo', 'bar'),
               ('d', 7),
@@ -1122,7 +1127,8 @@ def test_tocsv_appendcsv_gz():
     appendcsv(table2, fn, delimiter='\t') 
 
     # check what it did
-    with gzip.open(fn, 'rb') as o:
+    o = gzip.open(fn, 'rb')
+    try:
         actual = csv.reader(o, delimiter='\t')
         expect = [['foo', 'bar'],
                   ['a', '1'],
@@ -1132,7 +1138,8 @@ def test_tocsv_appendcsv_gz():
                   ['e', '9'],
                   ['f', '1']]
         ieq(expect, actual)
-    
+    finally:
+        o.close()
         
 def test_fromtext_gz():
     
@@ -1141,12 +1148,15 @@ def test_fromtext_gz():
     f.close()
     fn = f.name + '.gz'
     os.rename(f.name, fn)
-    with gzip.open(fn, 'wb') as f:
+    f = gzip.open(fn, 'wb')
+    try:
         f.write('foo\tbar\n')
         f.write('a\t1\n')
         f.write('b\t2\n')
         f.write('c\t3\n')
-    
+    finally:
+        f.close()
+
     actual = fromtext(fn)
     expect = (('lines',),
               ('foo\tbar',),
@@ -1181,7 +1191,8 @@ def test_totext_gz():
     totext(table, fn, template, prologue, epilogue)
     
     # check what it did
-    with gzip.open(fn, 'rb') as o:
+    o = gzip.open(fn, 'rb')
+    try:
         actual = o.read()
         expect = """{| class="wikitable"
 |-
@@ -1198,6 +1209,8 @@ def test_totext_gz():
 | 2
 |}"""
         assertequal(expect, actual)
+    finally:
+        o.close()
     
     
 def test_StringSource():
