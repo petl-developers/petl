@@ -3,9 +3,8 @@ Functions for transforming tables.
 
 """
 
-from itertools import islice, groupby, product, count, chain, izip_longest, \
-                    izip
-from collections import deque, defaultdict, OrderedDict, Counter
+from itertools import islice, groupby, product, chain, izip_longest, izip
+from collections import deque, defaultdict
 from operator import itemgetter
 import cPickle as pickle
 from tempfile import NamedTemporaryFile
@@ -16,7 +15,7 @@ import re
 from petl.util import asindices, rowgetter, asdict,\
     expr, valueset, header, data, limits, itervalues, parsenumber, lookup,\
     values, shortlistmergesorted, heapqmergesorted, hybridrows, rowgroupby,\
-    iterpeek
+    iterpeek, count, Counter, OrderedDict
 from petl.io import Uncacheable
 from petl.util import RowContainer
 

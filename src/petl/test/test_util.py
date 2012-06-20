@@ -282,11 +282,11 @@ def test_valueset():
              ('z', False))
 
     actual = valueset(table, 'foo')
-    expect = {'a', 'b', 'c', 'x', 'z'}
+    expect = set(['a', 'b', 'c', 'x', 'z'])
     assertequal(expect, actual)
 
     actual = valueset(table, 'bar')
-    expect = {True, False, None}
+    expect = set([True, False, None])
     assertequal(expect, actual)
 
 
@@ -490,7 +490,7 @@ def test_typeset():
              ('E', 42))
 
     actual = typeset(table, 'foo') 
-    expect = {str, unicode}
+    expect = set([str, unicode])
     assertequal(expect, actual)
 
 
@@ -572,8 +572,8 @@ def test_diffheaders():
               ('a', 1, .3))
     
     add, sub = diffheaders(table1, table2)
-    assertequal({'quux'}, add)
-    assertequal({'foo'}, sub)
+    assertequal(set(['quux']), add)
+    assertequal(set(['foo']), sub)
     
     
 def test_diffvalues():
@@ -587,8 +587,8 @@ def test_diffvalues():
               (3, 'c'))
     
     add, sub = diffvalues(table1, table2, 'foo')
-    assertequal({'c'}, add)
-    assertequal({'b'}, sub)
+    assertequal(set(['c']), add)
+    assertequal(set(['b']), sub)
     
     
 def test_laxparsers():
