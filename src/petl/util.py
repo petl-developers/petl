@@ -4,21 +4,25 @@ Utility functions.
 """
 
 
-from itertools import islice, groupby, chain
-from collections import defaultdict, Counter, namedtuple
+from itertools import count, islice, groupby, chain
+from collections import defaultdict, namedtuple
 from operator import itemgetter
 import re
 from string import maketrans
 import random
 import time
 import datetime
-from collections import OrderedDict
 from functools import partial
 from itertools import izip_longest
 import heapq
 import sys
 from petl.base import IterContainer
 import operator
+
+try:
+    from collections import Counter, OrderedDict
+except ImportError:
+    from .compat import count, Counter, OrderedDict
 
 
 class RowContainer(IterContainer):

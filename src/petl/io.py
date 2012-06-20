@@ -9,6 +9,7 @@ import os
 import zlib
 import cPickle as pickle
 import sqlite3
+import contextlib
 
 
 from petl.util import data, header, fieldnames, asdict, records
@@ -119,12 +120,15 @@ class FileSource(object):
 
 
 class GzipSource(FileSource):
-    
+
     def __init__(self, filename, checksumfun=None):
         super(GzipSource, self).__init__(filename, checksumfun)
 
+    @contextlib.contextmanager
     def open_(self, *args):
-        return gzip.open(self.filename, *args)
+        source = gzip.open(self.filename, *args)
+        yield source
+        source.close()
 
 
 class BZ2Source(FileSource):
@@ -777,6 +781,8 @@ class XmlView(RowContainer):
         
     def __iter__(self):
         tree = ElementTree.parse(self.source.open_())
+        if not hasattr(tree, 'iterfind'):
+            tree.iterfind = tree.getiterator
         
         if self.vmatch is not None:
             # simple case, all value paths are the same
