@@ -896,11 +896,11 @@ def test_tosqlite3_identifiers():
              ('b', 2),
              ('c', 2))
     f = NamedTemporaryFile(delete=False)
-    tosqlite3(table, f.name, 'foo bar`', create=True)
+    tosqlite3(table, f.name, 'foo " bar`', create=True)
     
     # check what it did
     conn = sqlite3.connect(f.name)
-    actual = conn.execute('select * from `foo bar`')
+    actual = conn.execute('select * from `foo " bar```')
     expect = (('a', 1),
               ('b', 2),
               ('c', 2))
