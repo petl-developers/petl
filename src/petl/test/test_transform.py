@@ -4,7 +4,7 @@ Tests for the petl.transform module.
 """
 
 
-from collections import OrderedDict
+from petl.util import OrderedDict
 
 from petl.testutils import ieq, assertequal
 from petl import rename, fieldnames, cut, cat, convert, fieldconvert, addfield, \
@@ -1714,7 +1714,7 @@ def test_facet():
              ('d', 7, 100.9),
              ('c', 2))
     fct = facet(table, 'foo')
-    assert set(fct.keys()) == {'a', 'b', 'c', 'd'}
+    assert set(fct.keys()) == set(['a', 'b', 'c', 'd'])
     expect_fcta = (('foo', 'bar', 'baz'),
                    ('a', 4, 9.3),
                    ('a', 2, 88.2))
@@ -1737,7 +1737,7 @@ def test_facet_2():
              ('dd', 7, 100.9),
              ('cc', 2))
     fct = facet(table, 'foo')
-    assert set(fct.keys()) == {'aa', 'bb', 'cc', 'dd'}
+    assert set(fct.keys()) == set(['aa', 'bb', 'cc', 'dd'])
     expect_fcta = (('foo', 'bar', 'baz'),
                    ('aa', 4, 9.3),
                    ('aa', 2, 88.2))
