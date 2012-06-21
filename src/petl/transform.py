@@ -17,7 +17,7 @@ from petl.util import asindices, rowgetter, asdict,\
     values, shortlistmergesorted, heapqmergesorted, hybridrows, rowgroupby,\
     iterpeek, count, Counter, OrderedDict
 from petl.io import Uncacheable
-from petl.util import RowContainer
+from petl.util import RowContainer, sortable_itemgetter
 
 
 def rename(table, *args):
@@ -1470,9 +1470,11 @@ class SortView(RowContainer):
         if key is not None:
             # convert field selection into field indices
             indices = asindices(flds, key)
-            # now use field indices to construct a _getkey function
-            # N.B., this will probably raise an exception on short rows
-            getkey = itemgetter(*indices)
+        else:
+            indices = range(len(flds))
+        # now use field indices to construct a _getkey function
+        # N.B., this will probably raise an exception on short rows
+        getkey = sortable_itemgetter(*indices)
         
         # initialise the first chunk
         rows = list(islice(it, 0, self.buffersize))
@@ -1930,7 +1932,7 @@ def iterrecast(source, key, variablefield, valuefield,
     
     source = sort(source, key=keyfields)
     it = islice(source, 1, None) # skip header row
-    getkey = itemgetter(*keyindices)
+    getkey = sortable_itemgetter(*keyindices)
     
     # process sorted data in newfields
     groups = groupby(it, key=getkey)
