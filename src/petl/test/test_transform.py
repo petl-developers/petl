@@ -3,6 +3,7 @@ Tests for the petl.transform module.
 
 """
 
+from datetime import datetime
 
 from collections import OrderedDict
 
@@ -717,6 +718,43 @@ def test_sort_empty():
     ieq(expect, actual)
 
 
+def test_sort_none():
+    
+    table = (('foo', 'bar'),
+            ('C', 2),
+            ('A', 9),
+            ('A', None),
+            ('F', 1),
+            ('D', 10))
+    
+    result = sort(table, 'bar')
+    expectation = (('foo', 'bar'),
+                   ('A', None),
+                   ('F', 1),
+                   ('C', 2),
+                   ('A', 9),
+                   ('D', 10))
+    ieq(expectation, result)
+    
+    dt = datetime.now().replace
+
+    table = (('foo', 'bar'),
+            ('C', dt(hour=5)),
+            ('A', dt(hour=1)),
+            ('A', None),
+            ('F', dt(hour=9)),
+            ('D', dt(hour=17)))
+    
+    result = sort(table, 'bar')
+    expectation = (('foo', 'bar'),
+                   ('A', None),
+                   ('A', dt(hour=1)),
+                   ('C', dt(hour=5)),
+                   ('F', dt(hour=9)),
+                   ('D', dt(hour=17)))
+    ieq(expectation, result)
+    
+    
 def test_melt_1():
     
     table = (('id', 'gender', 'age'),

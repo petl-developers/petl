@@ -2813,3 +2813,53 @@ def nthword(n, sep=None):
     return lambda s: s.split(sep)[n] 
 
 
+class SortableItem(object):
+    """
+    Wrapper to allow comparison with :const:`None` for objects
+    which support only comparison with same-type objects.
+
+    For example, the date and time objects from the standard library
+    cannot be compared with `None`.
+
+    .. versionadded:: 0.11
+
+    """
+    __slots__ = ['obj']
+    def __init__(self, obj):
+        self.obj = obj
+    def __eq__(self, other):
+        if isinstance(other, SortableItem):
+            return self.obj == other.obj
+        return self.obj == other
+    def __lt__(self, other):
+        if isinstance(other, SortableItem):
+            other = other.obj
+        if other is None:
+            return False
+        if self.obj is None:
+            return True
+        return self.obj < other
+    def __le__(self, other):
+        return self < other or self == other
+    def __gt__(self, other):
+        return not (self < other or self == other)
+    def __ge__(self, other):
+        return not (self < other)
+
+
+def sortable_itemgetter(*items):
+    """
+    Derivate of :func:`itertools.itemgetter` which can be safely
+    used as key for sort functions.
+
+    .. versionadded:: 0.11
+
+    """
+    ig = itemgetter(*items)
+    if len(items) == 1:
+        def g(obj):
+            return SortableItem(ig(obj))
+    else:
+        def g(obj):
+            return tuple([SortableItem(item) for item in ig(obj)])
+    return g
