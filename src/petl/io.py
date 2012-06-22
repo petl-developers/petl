@@ -1365,9 +1365,14 @@ def todb(table, connection_or_cursor, tablename, commit=True):
 
         >>> import MySQLdb
         >>> connection = MySQLdb.connect(passwd="moonpie", db="thangs")
-        >>> # assuming table "foobar" already exists in the database
+        >>> # tell MySQL to use standard quote character
+        ... connection.cursor().execute('SET SQL_MODE=ANSI_QUOTES')
+        >>> # load data, assuming table "foobar" already exists in the database
         ... todb(table, connection, 'foobar')    
 
+    N.B., for MySQL the statement ``SET SQL_MODE=ANSI_QUOTES`` is required to 
+    ensure MySQL uses SQL-92 standard quote characters.
+    
     .. versionchanged:: 0.10.2
     
     A cursor can also be provided instead of a connection, e.g.::
@@ -1471,9 +1476,14 @@ def appenddb(table, connection_or_cursor, tablename, commit=True):
 
         >>> import MySQLdb
         >>> connection = MySQLdb.connect(passwd="moonpie", db="thangs")
-        >>> # assuming table "foobar" already exists in the database
+        >>> # tell MySQL to use standard quote character
+        ... connection.cursor().execute('SET SQL_MODE=ANSI_QUOTES')
+        >>> # load data, appending rows to table "foobar" 
         ... appenddb(table, connection, 'foobar')    
         
+    N.B., for MySQL the statement ``SET SQL_MODE=ANSI_QUOTES`` is required to 
+    ensure MySQL uses SQL-92 standard quote characters.
+    
     .. versionchanged:: 0.10.2
     
     A cursor can also be provided instead of a connection, e.g.::

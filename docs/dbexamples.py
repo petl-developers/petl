@@ -13,6 +13,8 @@ import MySQLdb
 connection = MySQLdb.connect(user=user, passwd=passwd, db='petl_test')
 print 'setup table'
 cursor = connection.cursor()
+# deal with quote compatibility
+cursor.execute('SET SQL_MODE=ANSI_QUOTES')
 cursor.execute('DROP TABLE IF EXISTS test')
 cursor.execute('CREATE TABLE test (foo TEXT, bar INT)')
 connection.commit()
@@ -49,6 +51,8 @@ ieq(t2, t1)
 print 'exercise using sqlalchemy engine'
 from sqlalchemy import create_engine
 engine = create_engine('mysql://%s:%s@localhost/petl_test' % (user, passwd))
+# deal with quote compatibility
+engine.execute('SET SQL_MODE=ANSI_QUOTES')
 t1 = fromdb(engine, 'SELECT * FROM test')
 print look(t1)
 ieq(t2, t1)
