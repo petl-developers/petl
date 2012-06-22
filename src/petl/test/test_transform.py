@@ -10,7 +10,7 @@ import operator
 
 from ..util import OrderedDict
 from ..testutils import ieq
-from petl import rename, fieldnames, cut, cat, convert, fieldconvert, addfield, \
+from petl import rename, fieldnames, cut, cat, convert, addfield, \
                 rowslice, head, tail, sort, melt, recast, duplicates, \
                 conflicts, mergeduplicates, select, complement, diff, capture, \
                 split, expr, fieldmap, facet, rowreduce, aggregate, \

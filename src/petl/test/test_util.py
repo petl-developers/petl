@@ -12,7 +12,7 @@ from petl import header, fieldnames, data, records, rowcount, look, see, iterval
                 DuplicateKeyError, rowlengths, stats, typecounts, parsecounts, typeset, \
                 valuecount, parsenumber, stringpatterns, diffheaders, diffvalues, \
                 datetimeparser, values, columns, facetcolumns, isordered, \
-                rowgroupby
+                rowgroupby, lookstr
 from ..testutils import ieq
 
 
@@ -103,7 +103,6 @@ def test_look():
 
         
 def test_look_irregular_rows():
-    """Test the look function with a table where row lengths are irregular."""
     
     table = (('foo', 'bar'), ('a',), ('b', 2, True))
     actual = repr(look(table))
@@ -119,7 +118,6 @@ def test_look_irregular_rows():
 
     
 def test_see():
-    """Test the see function."""
     
     table = (('foo', 'bar'), ('a', 1), ('b', 2))
     actual = repr(see(table))
@@ -129,6 +127,21 @@ def test_see():
     eq_(expect, actual)
 
 
+def test_lookstr():
+    
+    table = (('foo', 'bar'), ('a', 1), ('b', 2))
+    actual = repr(lookstr(table))
+    expect = """+-----+-----+
+| foo | bar |
++=====+=====+
+| a   | 1   |
++-----+-----+
+| b   | 2   |
++-----+-----+
+"""
+    eq_(expect, actual)
+
+        
 def test_itervalues():
     """Test the itervalues function."""
     

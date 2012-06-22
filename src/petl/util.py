@@ -290,12 +290,16 @@ def lookall(table):
     
 class Look(object):
     
-    def __init__(self, table, *sliceargs):
+    def __init__(self, table, *sliceargs, **kwargs):
         self.table = table
         if not sliceargs:
             self.sliceargs = (10,)
         else:
             self.sliceargs = sliceargs
+        if 'vrepr' in kwargs:
+            self.vrepr = kwargs['vrepr']
+        else:
+            self.vrepr = repr
         
     @property
     def n(self):
@@ -346,13 +350,15 @@ class Look(object):
     def __repr__(self):
         it = iter(self.table)
             
+        vrepr = self.vrepr
+        
         # fields representation
         flds = it.next()
-        fldsrepr = [repr(f) for f in flds]
+        fldsrepr = [vrepr(f) for f in flds]
         
         # rows representations
         rows = list(islice(it, *self.sliceargs))
-        rowsrepr = [[repr(v) for v in row] for row in rows]
+        rowsrepr = [[vrepr(v) for v in row] for row in rows]
         
         # find maximum row length - may be uneven
         rowlens = [len(flds)]
@@ -431,7 +437,7 @@ def lookstr(table, *sliceargs):
     
     """
     
-    return LookStr(table, *sliceargs)
+    return Look(table, *sliceargs, vrepr=str)
 
 
 def lookallstr(table):
@@ -444,140 +450,6 @@ def lookallstr(table):
     """
     
     return lookstr(table, 0, None)
-    
-    
-class LookStr(object):
-    
-    def __init__(self, table, *sliceargs):
-        self.table = table
-        if not sliceargs:
-            self.sliceargs = (10,)
-        else:
-            self.sliceargs = sliceargs
-        
-    @property
-    def n(self):
-        if not self.sliceargs:
-            sliceargs = (10,)
-        elif len(self.sliceargs) == 1:
-            stop = self.sliceargs[0]
-            sliceargs = (stop, 2*stop)
-        elif len(self.sliceargs) == 2:
-            start = self.sliceargs[0]
-            stop = self.sliceargs[1]
-            page = stop - start
-            sliceargs = (stop, stop + page)
-        else:
-            start = self.sliceargs[0]
-            stop = self.sliceargs[1]
-            page = stop - start
-            step = self.sliceargs[2]
-            sliceargs = (stop, stop + page, step)
-        return LookStr(self.table, *sliceargs)
-    
-    @property
-    def p(self):
-        if not self.sliceargs:
-            sliceargs = (10,)
-        elif len(self.sliceargs) == 1:
-            # already at the start, do nothing
-            sliceargs = self.sliceargs
-        elif len(self.sliceargs) == 2:
-            start = self.sliceargs[0]
-            stop = self.sliceargs[1]
-            page = stop - start
-            if start - page < 0:
-                sliceargs = (0, page)
-            else:
-                sliceargs = (start - page, start)
-        else:
-            start = self.sliceargs[0]
-            stop = self.sliceargs[1]
-            page = stop - start
-            step = self.sliceargs[2]
-            if start - page < 0:
-                sliceargs = (0, page, step)
-            else:
-                sliceargs = (start - page, start, step)
-        return LookStr(self.table, *sliceargs)
-    
-    def __repr__(self):
-        it = iter(self.table)
-            
-        # fields representation
-        flds = it.next()
-        fldsrepr = [str(f) for f in flds]
-        
-        # rows representations
-        rows = list(islice(it, *self.sliceargs))
-        rowsrepr = [[str(v) for v in row] for row in rows]
-        
-        # find maximum row length - may be uneven
-        rowlens = [len(flds)]
-        rowlens.extend([len(row) for row in rows])
-        maxrowlen = max(rowlens)
-        
-        # pad short fields and rows
-        if len(flds) < maxrowlen:
-            fldsrepr.extend([u''] * (maxrowlen - len(flds)))
-        for valsrepr in rowsrepr:
-            if len(valsrepr) < maxrowlen:
-                valsrepr.extend([u''] * (maxrowlen - len(valsrepr)))
-        
-        # find longest representations so we know how wide to make cells
-        colwidths = [0] * maxrowlen # initialise to 0
-        for i, fr in enumerate(fldsrepr):
-            colwidths[i] = len(fr)
-        for valsrepr in rowsrepr:
-            for i, vr in enumerate(valsrepr):
-                if len(vr) > colwidths[i]:
-                    colwidths[i] = len(vr)
-                    
-        # construct a line separator
-        sep = u'+'
-        for w in colwidths:
-            sep += u'-' * (w + 2)
-            sep += u'+'
-        sep += u'\n'
-        
-        # construct a header separator
-        hedsep = u'+'
-        for w in colwidths:
-            hedsep += u'=' * (w + 2)
-            hedsep += u'+'
-        hedsep += u'\n'
-        
-        # construct a line for the header row
-        fldsline = u'|'
-        for i, w in enumerate(colwidths):
-            f = fldsrepr[i]
-            fldsline += u' ' + f
-            fldsline += u' ' * (w - len(f)) # padding
-            fldsline += u' |'
-        fldsline += u'\n'
-        
-        # construct a line for each data row
-        rowlines = list()
-        for valsrepr in rowsrepr:
-            rowline = u'|'
-            for i, w in enumerate(colwidths):
-                v = valsrepr[i]
-                rowline += u' ' + v
-                rowline += u' ' * (w - len(v)) # padding
-                rowline += u' |'
-            rowline += u'\n'
-            rowlines.append(rowline)
-            
-        # put it all together
-        output = sep + fldsline + hedsep
-        for line in rowlines:
-            output += line + sep
-        
-        return output
-    
-    
-    def __str__(self):
-        return repr(self)
         
         
 def see(table, *sliceargs):
