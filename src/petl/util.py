@@ -22,7 +22,7 @@ import operator
 try:
     from collections import Counter, OrderedDict
 except ImportError:
-    from .compat import count, Counter, OrderedDict
+    from petl.compat import count, Counter, OrderedDict
 
 
 SINGLETONS = set([None, False, True])
@@ -2838,8 +2838,13 @@ class SortableItem(object):
         True
         >>> SortableItem(dateobj) is dateobj
         False
-        >>> dateobj > None
+        >>> SortableItem(dateobj) > None
         True
+        >>> dateobj > None
+        Traceback (most recent call last):
+        ...
+        TypeError: can't compare datetime.datetime to NoneType
+
 
     .. versionadded:: 0.11
 
