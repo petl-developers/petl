@@ -306,6 +306,68 @@ def test_convert_empty():
     ieq(expect, actual)
         
 
+def test_convert_indexes():
+    
+    table1 = (('foo', 'bar', 'baz'),
+              ('A', 1, 2),
+              ('B', '2', '3.4'),
+              (u'B', u'3', u'7.8', True),
+              ('D', 'xyz', 9.0),
+              ('E', None))
+    
+    # test the simplest style - single field, lambda function
+    table2 = convert(table1, 0, lambda s: s.lower())
+    expect2 = (('foo', 'bar', 'baz'),
+               ('a', 1, 2),
+               ('b', '2', '3.4'),
+               (u'b', u'3', u'7.8', True),
+               ('d', 'xyz', 9.0),
+               ('e', None))
+    ieq(expect2, table2)
+    ieq(expect2, table2)
+    
+    # test single field with method call
+    table3 = convert(table1, 0, 'lower')
+    expect3 = expect2
+    ieq(expect3, table3)
+
+    # test single field with method call with arguments
+    table4 = convert(table1, 0, 'replace', 'B', 'BB')
+    expect4 = (('foo', 'bar', 'baz'),
+               ('A', 1, 2),
+               ('BB', '2', '3.4'),
+               (u'BB', u'3', u'7.8', True),
+               ('D', 'xyz', 9.0),
+               ('E', None))
+    ieq(expect4, table4)
+    
+    # test multiple fields with the same conversion
+    table5a = convert(table1, (1, 2), str)
+    table5b = convert(table1, (1, 'baz'), str)
+    table5c = convert(table1, ('bar', 2), str)
+    table5d = convert(table1, range(1, 3), str)
+    expect5 = (('foo', 'bar', 'baz'),
+               ('A', '1', '2'),
+               ('B', '2', '3.4'),
+               (u'B', u'3', u'7.8', True),
+               ('D', 'xyz', '9.0'),
+               ('E', 'None'))
+    ieq(expect5, table5a)
+    ieq(expect5, table5b)
+    ieq(expect5, table5c)
+    ieq(expect5, table5d)
+    
+    # test convert with dictionary
+    table6 = convert(table1, 0, {'A': 'Z', 'B': 'Y'})
+    expect6 = (('foo', 'bar', 'baz'),
+               ('Z', 1, 2),
+               ('Y', '2', '3.4'),
+               (u'Y', u'3', u'7.8', True),
+               ('D', 'xyz', 9.0),
+               ('E', None))
+    ieq(expect6, table6)
+
+
 def test_fieldconvert():
 
     table1 = (('foo', 'bar', 'baz'),

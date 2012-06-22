@@ -18,6 +18,7 @@ from .util import asindices, rowgetter, asdict,\
     iterpeek, count, Counter, OrderedDict
 from .io import Uncacheable
 from .util import RowContainer, sortable_itemgetter
+from petl.util import FieldSelectionError
 
 
 def rename(table, *args):
@@ -874,49 +875,52 @@ class FieldConvertView(RowContainer):
     
 def iterfieldconvert(source, converters, failonerror, errorvalue):
 
-    converters = converters.copy()
-    # normalise converters
-    for f, c in converters.items():
-        if callable(c):
-            pass 
-        elif isinstance(c, basestring):
-            # assume method name
-            converters[f] = methodcaller(c)
-        elif isinstance(c, (tuple, list)):
-            # assume method name and args
-            methnm = c[0]
-            methargs = c[1:]
-            converters[f] = methodcaller(methnm, *methargs)
-        elif isinstance(c, dict):
-            converters[f] = dictconverter(c)
-        else:
-            raise Exception('unexpected converter specification on field %r: %r' % (f, c))
-    
     # grab the fields in the source table
     it = iter(source)
     flds = it.next()
     yield tuple(flds) # these are not modified
+
+    converters = converters.copy()
+    # normalise converters
+    for k, c in converters.items():
+        # turn field names into row indices
+        if isinstance(k, basestring):
+            try:
+                k = flds.index(k)
+            except ValueError: # not in list
+                raise FieldSelectionError(k)
+        assert isinstance(k, int), 'expected integer, found %r' % k
+        # is converter a function?
+        if callable(c):
+            converters[k] = c
+        # is converter a method name?
+        elif isinstance(c, basestring):
+            converters[k] = methodcaller(c)
+        # is converter a method name with arguments?
+        elif isinstance(c, (tuple, list)) and isinstance(c[0], basestring):
+            methnm = c[0]
+            methargs = c[1:]
+            converters[k] = methodcaller(methnm, *methargs)
+        # is converter a dictionary
+        elif isinstance(c, dict):
+            converters[k] = dictconverter(c)
+        else:
+            raise Exception('unexpected converter specification on field %r: %r' % (k, c))
+    
     
     # define a function to transform a value
     def transform_value(i, v):
-        try:
-            f = flds[i]
-        except IndexError:
-            # row is long, just return value as-is
+        if i not in converters:
+            # no converter defined on this field, return value as-is
             return v
         else:
-            if f not in converters:
-                # no converter defined on this field, return value as-is
-                return v
-            else:
-                c = converters[f]
-                try:
-                    return c(v)
-                except:
-                    if failonerror:
-                        raise
-                    else:
-                        return errorvalue
+            try:
+                return converters[i](v)
+            except:
+                if failonerror:
+                    raise
+                else:
+                    return errorvalue
 
     # construct the data rows
     for row in it:
