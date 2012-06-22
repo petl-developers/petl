@@ -22,7 +22,7 @@ import operator
 try:
     from collections import Counter, OrderedDict
 except ImportError:
-    from petl.compat import count, Counter, OrderedDict
+    from .compat import count, Counter, OrderedDict
 
 
 SINGLETONS = set([None, False, True])
