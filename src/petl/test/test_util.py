@@ -3,16 +3,17 @@ TODO doc me
 
 """
 
+import sys
+from nose.tools import eq_
+
+
 from petl import header, fieldnames, data, records, rowcount, look, see, itervalues, valuecounter, valuecounts, valueset,\
                 isunique, lookup, lookupone, recordlookup, recordlookupone, \
                 DuplicateKeyError, rowlengths, stats, typecounts, parsecounts, typeset, \
                 valuecount, parsenumber, stringpatterns, diffheaders, diffvalues, \
                 datetimeparser, values, columns, facetcolumns, isordered, \
                 rowgroupby
-
-from petl.testutils import assertequal, ieq
-import sys
-from nose.tools import eq_
+from ..testutils import ieq
 
 
 def test_header():
@@ -21,7 +22,7 @@ def test_header():
     table = (('foo', 'bar'), ('a', 1), ('b', 2))
     actual = header(table)
     expect = ('foo', 'bar')
-    assertequal(expect, actual)
+    eq_(expect, actual)
     
     
 def test_fieldnames():
@@ -30,7 +31,7 @@ def test_fieldnames():
     table = (('foo', 'bar'), ('a', 1), ('b', 2))
     actual = fieldnames(table)
     expect = ['foo', 'bar']
-    assertequal(expect, actual)
+    eq_(expect, actual)
     
     class CustomField(object):
         def __init__(self, key, description):
@@ -46,7 +47,7 @@ def test_fieldnames():
              ('b', 2))
     actual = fieldnames(table)
     expect = ['foo', 'bar']
-    assertequal(expect, actual)
+    eq_(expect, actual)
     
     
 def test_data():
@@ -82,7 +83,7 @@ def test_rowcount():
     table = (('foo', 'bar'), ('a', 1), ('b',))
     actual = rowcount(table)
     expect = 2
-    assertequal(expect, actual)
+    eq_(expect, actual)
     
     
 def test_look():
@@ -98,7 +99,7 @@ def test_look():
 | 'b'   | 2     |
 +-------+-------+
 """
-    assertequal(expect, actual)
+    eq_(expect, actual)
 
         
 def test_look_irregular_rows():
@@ -114,7 +115,7 @@ def test_look_irregular_rows():
 | 'b'   | 2     | True |
 +-------+-------+------+
 """
-    assertequal(expect, actual)
+    eq_(expect, actual)
 
     
 def test_see():
@@ -125,7 +126,7 @@ def test_see():
     expect = """'foo': 'a', 'b'
 'bar': 1, 2
 """
-    assertequal(expect, actual)
+    eq_(expect, actual)
 
 
 def test_itervalues():
@@ -187,8 +188,8 @@ def test_valuecount():
     
     table = (('foo', 'bar'), ('a', 1), ('b', 2), ('b', 7))
     n, f = valuecount(table, 'foo', 'b')
-    assertequal(2, n)
-    assertequal(2./3, f) 
+    eq_(2, n)
+    eq_(2./3, f) 
     
         
 def test_valuecounter():
@@ -197,7 +198,7 @@ def test_valuecounter():
     table = (('foo', 'bar'), ('a', 1), ('b', 2), ('b', 7))
     actual = valuecounter(table, 'foo')
     expect = {'b': 2, 'a': 1}
-    assertequal(expect, actual) 
+    eq_(expect, actual) 
     
         
 def test_valuecounts():
@@ -283,11 +284,11 @@ def test_valueset():
 
     actual = valueset(table, 'foo')
     expect = set(['a', 'b', 'c', 'x', 'z'])
-    assertequal(expect, actual)
+    eq_(expect, actual)
 
     actual = valueset(table, 'bar')
     expect = set([True, False, None])
-    assertequal(expect, actual)
+    eq_(expect, actual)
 
 
 def test_isunique():
@@ -306,12 +307,12 @@ def test_lookup():
     # lookup one column on another
     actual = lookup(t1, 'foo', 'bar')
     expect = {'a': [1], 'b': [2, 3]}
-    assertequal(expect, actual)
+    eq_(expect, actual)
 
     # test default value - tuple of whole row
     actual = lookup(t1, 'foo') # no value selector
     expect = {'a': [('a', 1)], 'b': [('b', 2), ('b', 3)]}
-    assertequal(expect, actual)
+    eq_(expect, actual)
     
     t2 = (('foo', 'bar', 'baz'),
           ('a', 1, True),
@@ -322,12 +323,12 @@ def test_lookup():
     # test value selection
     actual = lookup(t2, 'foo', ('bar', 'baz'))
     expect = {'a': [(1, True)], 'b': [(2, False), (3, True), (3, False)]}
-    assertequal(expect, actual)
+    eq_(expect, actual)
     
     # test compound key
     actual = lookup(t2, ('foo', 'bar'), 'baz')
     expect = {('a', 1): [True], ('b', 2): [False], ('b', 3): [True, False]}
-    assertequal(expect, actual)
+    eq_(expect, actual)
     
     
 def test_lookupone():
@@ -346,12 +347,12 @@ def test_lookupone():
     # lookup one column on another under, not strict 
     actual = lookupone(t1, 'foo', 'bar', strict=False)
     expect = {'a': 1, 'b': 2} # first value wins
-    assertequal(expect, actual)
+    eq_(expect, actual)
 
     # test default value - tuple of whole row
     actual = lookupone(t1, 'foo', strict=False) # no value selector
     expect = {'a': ('a', 1), 'b': ('b', 2)} # first wins
-    assertequal(expect, actual)
+    eq_(expect, actual)
     
     t2 = (('foo', 'bar', 'baz'),
           ('a', 1, True),
@@ -362,12 +363,12 @@ def test_lookupone():
     # test value selection
     actual = lookupone(t2, 'foo', ('bar', 'baz'), strict=False)
     expect = {'a': (1, True), 'b': (2, False)}
-    assertequal(expect, actual)
+    eq_(expect, actual)
     
     # test compound key
     actual = lookupone(t2, ('foo', 'bar'), 'baz', strict=False)
     expect = {('a', 1): True, ('b', 2): False, ('b', 3): True} # first wins
-    assertequal(expect, actual)
+    eq_(expect, actual)
     
 
 def test_recordlookup():
@@ -377,7 +378,7 @@ def test_recordlookup():
     
     actual = recordlookup(t1, 'foo') 
     expect = {'a': [{'foo': 'a', 'bar': 1}], 'b': [{'foo': 'b', 'bar': 2}, {'foo': 'b', 'bar': 3}]}
-    assertequal(expect, actual)
+    eq_(expect, actual)
     
     t2 = (('foo', 'bar', 'baz'),
           ('a', 1, True),
@@ -391,7 +392,7 @@ def test_recordlookup():
               ('b', 2): [{'foo': 'b', 'bar': 2, 'baz': False}], 
               ('b', 3): [{'foo': 'b', 'bar': 3, 'baz': True}, 
                          {'foo': 'b', 'bar': 3, 'baz': False}]}
-    assertequal(expect, actual)
+    eq_(expect, actual)
     
     
 def test_recordlookupone():
@@ -409,7 +410,7 @@ def test_recordlookupone():
     # relax 
     actual = recordlookupone(t1, 'foo', strict=False)
     expect = {'a': {'foo': 'a', 'bar': 1}, 'b': {'foo': 'b', 'bar': 2}} # first wins
-    assertequal(expect, actual)
+    eq_(expect, actual)
 
     t2 = (('foo', 'bar', 'baz'),
           ('a', 1, True),
@@ -422,7 +423,7 @@ def test_recordlookupone():
     expect = {('a', 1): {'foo': 'a', 'bar': 1, 'baz': True}, 
               ('b', 2): {'foo': 'b', 'bar': 2, 'baz': False}, 
               ('b', 3): {'foo': 'b', 'bar': 3, 'baz': True}} # first wins
-    assertequal(expect, actual)
+    eq_(expect, actual)
     
 
 def test_rowlengths():
@@ -491,7 +492,7 @@ def test_typeset():
 
     actual = typeset(table, 'foo') 
     expect = set([str, unicode])
-    assertequal(expect, actual)
+    eq_(expect, actual)
 
 
 def test_parsecounts():
@@ -572,8 +573,8 @@ def test_diffheaders():
               ('a', 1, .3))
     
     add, sub = diffheaders(table1, table2)
-    assertequal(set(['quux']), add)
-    assertequal(set(['foo']), sub)
+    eq_(set(['quux']), add)
+    eq_(set(['foo']), sub)
     
     
 def test_diffvalues():
@@ -587,8 +588,8 @@ def test_diffvalues():
               (3, 'c'))
     
     add, sub = diffvalues(table1, table2, 'foo')
-    assertequal(set(['c']), add)
-    assertequal(set(['b']), sub)
+    eq_(set(['c']), add)
+    eq_(set(['b']), sub)
     
     
 def test_laxparsers():
@@ -607,15 +608,15 @@ def test_laxparsers():
     except:
         assert False, 'did not expect exception'
     else:
-        assertequal('2002-12-25 00:00:00', v)
+        eq_('2002-12-25 00:00:00', v)
     
     
 def test_columns():
     
     table = [['foo', 'bar'], ['a', 1], ['b', 2], ['b', 3]]
     cols = columns(table)
-    assertequal(['a', 'b', 'b'], cols['foo'])
-    assertequal([1, 2, 3], cols['bar'])
+    eq_(['a', 'b', 'b'], cols['foo'])
+    eq_([1, 2, 3], cols['bar'])
 
 
 def test_facetcolumns():
@@ -626,12 +627,12 @@ def test_facetcolumns():
              ['b', 3]]
     
     fc = facetcolumns(table, 'foo')
-    assertequal(['a'], fc['a']['foo'])
-    assertequal([1], fc['a']['bar'])
-    assertequal([True], fc['a']['baz'])
-    assertequal(['b', 'b'], fc['b']['foo'])
-    assertequal([2, 3], fc['b']['bar'])
-    assertequal([True, None], fc['b']['baz'])
+    eq_(['a'], fc['a']['foo'])
+    eq_([1], fc['a']['bar'])
+    eq_([True], fc['a']['baz'])
+    eq_(['b', 'b'], fc['b']['foo'])
+    eq_([2, 3], fc['b']['bar'])
+    eq_([True, None], fc['b']['baz'])
     
     
 def test_isordered():

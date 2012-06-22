@@ -5,10 +5,10 @@ Tests for the push module.
 
 from tempfile import NamedTemporaryFile
 
-from petl.io import fromcsv, fromtsv, frompickle
-from petl.testutils import iassertequal
+from ..io import fromcsv, fromtsv, frompickle
+from ..testutils import ieq
 
-from petl.push import tocsv, totsv, topickle, partition, sort, duplicates, \
+from ..push import tocsv, totsv, topickle, partition, sort, duplicates, \
     unique, diff
 
 
@@ -25,7 +25,7 @@ def test_topickle():
     p = topickle(f.name)
     p.push(t)
 
-    iassertequal(t, frompickle(f.name))
+    ieq(t, frompickle(f.name))
 
 
 def test_topickle_pipe():
@@ -43,8 +43,8 @@ def test_topickle_pipe():
     p.pipe(topickle(f2.name))
     p.push(t)
 
-    iassertequal(t, frompickle(f1.name))
-    iassertequal(t, frompickle(f2.name))
+    ieq(t, frompickle(f1.name))
+    ieq(t, frompickle(f2.name))
 
 
 def test_tocsv():
@@ -60,7 +60,7 @@ def test_tocsv():
     p = tocsv(f.name)
     p.push(t)
 
-    iassertequal(t, fromcsv(f.name))
+    ieq(t, fromcsv(f.name))
 
 
 def test_tocsv_pipe():
@@ -78,8 +78,8 @@ def test_tocsv_pipe():
     p.pipe(tocsv(f2.name))
     p.push(t)
 
-    iassertequal(t, fromcsv(f1.name))
-    iassertequal(t, fromcsv(f2.name))
+    ieq(t, fromcsv(f1.name))
+    ieq(t, fromcsv(f2.name))
 
 
 def test_totsv():
@@ -95,7 +95,7 @@ def test_totsv():
     p = totsv(f.name)
     p.push(t)
 
-    iassertequal(t, fromtsv(f.name))
+    ieq(t, fromtsv(f.name))
 
 
 def test_partition():
@@ -122,8 +122,8 @@ def test_partition():
 
     oranges_actual = fromcsv('oranges.csv')
     bananas_actual = fromcsv('bananas.csv')
-    iassertequal(oranges_expected, oranges_actual)
-    iassertequal(bananas_expected, bananas_actual)
+    ieq(oranges_expected, oranges_actual)
+    ieq(bananas_expected, bananas_actual)
 
     # alternative syntax
 
@@ -131,8 +131,8 @@ def test_partition():
     p | ('orange', tocsv('oranges.csv'))
     p | ('banana', tocsv('bananas.csv'))
     p.push(t)
-    iassertequal(oranges_expected, oranges_actual)
-    iassertequal(bananas_expected, bananas_actual)
+    ieq(oranges_expected, oranges_actual)
+    ieq(bananas_expected, bananas_actual)
     
     # test with callable discriminator
 
@@ -152,8 +152,8 @@ def test_partition():
 
     high_actual = fromcsv('high.csv')
     low_actual = fromcsv('low.csv')
-    iassertequal(high_expected, high_actual)
-    iassertequal(low_expected, low_actual)
+    ieq(high_expected, high_actual)
+    ieq(low_expected, low_actual)
 
 
 def test_sort():
@@ -176,7 +176,7 @@ def test_sort():
                    ('C', '2'),
                    ('D', '10'),
                    ('F', '1'))
-    iassertequal(expectation, frompickle(f.name))
+    ieq(expectation, frompickle(f.name))
 
 
 def test_sort_buffered():
@@ -201,7 +201,7 @@ def test_sort_buffered():
                    ('F', '1'))
     actual = frompickle(f.name)
     print list(actual)
-    iassertequal(expectation, actual)
+    ieq(expectation, actual)
 
 
 def test_duplicates():
@@ -229,12 +229,12 @@ def test_duplicates():
                    ('B', '2', 42),
                    ('D', 'xyz', 9.0),
                    ('D', 4, 12.3))
-    iassertequal(expectation, frompickle(f1.name))
+    ieq(expectation, frompickle(f1.name))
 
     exremainder = (('foo', 'bar', 'baz'),
                    ('A', 1, 2), 
                    ('E', None))
-    iassertequal(exremainder, frompickle(f2.name))
+    ieq(exremainder, frompickle(f2.name))
     
     # test with compound key
     p = sort(key=('foo', 'bar'))
@@ -246,7 +246,7 @@ def test_duplicates():
     expectation = (('foo', 'bar', 'baz'),
                    ('B', '2', '3.4'),
                    ('B', '2', 42))
-    iassertequal(expectation, frompickle(f1.name))
+    ieq(expectation, frompickle(f1.name))
 
     exremainder = (('foo', 'bar', 'baz'),
                    ('A', 1, 2), 
@@ -254,7 +254,7 @@ def test_duplicates():
                    ('D', 4, 12.3),
                    ('D', 'xyz', 9.0),
                    ('E', None))
-    iassertequal(exremainder, frompickle(f2.name))
+    ieq(exremainder, frompickle(f2.name))
 
 
 def test_unique():
@@ -279,7 +279,7 @@ def test_unique():
     expectation = (('foo', 'bar', 'baz'),
                    ('A', 1, 2), 
                    ('E', None))
-    iassertequal(expectation, frompickle(f1.name))
+    ieq(expectation, frompickle(f1.name))
 
     exremainder = (('foo', 'bar', 'baz'),
                    ('B', '2', '3.4'),
@@ -287,7 +287,7 @@ def test_unique():
                    ('B', '2', 42),
                    ('D', 'xyz', 9.0),
                    ('D', 4, 12.3))
-    iassertequal(exremainder, frompickle(f2.name))
+    ieq(exremainder, frompickle(f2.name))
     
 
 def test_operator_overload():
@@ -312,7 +312,7 @@ def test_operator_overload():
                    ('B', '2', 42),
                    ('D', 'xyz', 9.0),
                    ('D', 4, 12.3))
-    iassertequal(expectation, frompickle(f1.name))
+    ieq(expectation, frompickle(f1.name))
 
 
 def test_diff():
@@ -351,6 +351,6 @@ def test_diff():
     p.push(tablea, tableb)
 
     added, subtracted, common = frompickle(f1.name), frompickle(f2.name), frompickle(f3.name)
-    iassertequal(bminusa, added)
-    iassertequal(aminusb, subtracted)
-    iassertequal(both, common)
+    ieq(bminusa, added)
+    ieq(aminusb, subtracted)
+    ieq(both, common)

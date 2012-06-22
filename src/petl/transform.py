@@ -12,12 +12,12 @@ import operator
 import re
 
 
-from petl.util import asindices, rowgetter, asdict,\
+from .util import asindices, rowgetter, asdict,\
     expr, valueset, header, data, limits, itervalues, parsenumber, lookup,\
     values, shortlistmergesorted, heapqmergesorted, hybridrows, rowgroupby,\
     iterpeek, count, Counter, OrderedDict
-from petl.io import Uncacheable
-from petl.util import RowContainer, sortable_itemgetter
+from .io import Uncacheable
+from .util import RowContainer, sortable_itemgetter
 
 
 def rename(table, *args):
@@ -1466,7 +1466,6 @@ class SortView(RowContainer):
         flds = it.next()
         yield tuple(flds)
         
-        getkey = None
         if key is not None:
             # convert field selection into field indices
             indices = asindices(flds, key)

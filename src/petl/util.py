@@ -4,7 +4,7 @@ Utility functions.
 """
 
 
-from itertools import count, islice, groupby, chain
+from itertools import islice, groupby, chain, count
 from collections import defaultdict, namedtuple
 from operator import itemgetter
 import re
@@ -16,9 +16,13 @@ from functools import partial
 from itertools import izip_longest
 import heapq
 import sys
-from petl.base import IterContainer
 import operator
 
+
+from .base import IterContainer
+
+
+# Python 2.6 compatibility
 try:
     from collections import Counter, OrderedDict
 except ImportError:
@@ -2865,5 +2869,5 @@ def sortable_itemgetter(*items):
             return SortableItem(ig(obj))
     else:
         def g(obj):
-            return tuple([SortableItem(item) for item in ig(obj)])
+            return tuple(SortableItem(item) for item in ig(obj))
     return g

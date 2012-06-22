@@ -9,14 +9,10 @@ import os
 import zlib
 import cPickle as pickle
 import sqlite3
-
-
-from petl.util import data, header, fieldnames, asdict, records
 from xml.etree import ElementTree
 from operator import attrgetter
 import json
 from json.encoder import JSONEncoder
-from petl.util import RowContainer
 import gzip
 import sys
 import bz2
@@ -24,6 +20,9 @@ import zipfile
 import urllib2
 from contextlib import contextmanager
 import cStringIO
+
+
+from .util import data, header, fieldnames, asdict, records, RowContainer
 
 
 class Uncacheable(Exception):

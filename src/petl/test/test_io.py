@@ -8,18 +8,17 @@ import csv
 import cPickle as pickle
 import sqlite3
 from nose.tools import eq_
+import json
+import gzip
+import os
+
 
 from petl import fromcsv, frompickle, fromsqlite3, adler32sum, crc32sum, fromdb, \
                 tocsv, topickle, appendcsv, appendpickle, tosqlite3, appendsqlite3, \
                 todb, appenddb, fromtext, totext, fromxml, fromjson, fromdicts, \
                 tojson, fromtsv, totsv, appendtsv, tojsonarrays
-                
-
-from petl.testutils import ieq, assertequal
-import json
-import gzip
-import os
-from petl.io import FileSource, StringSource
+from ..testutils import ieq
+from ..io import FileSource, StringSource
 import petl.io
 
 
@@ -1026,7 +1025,7 @@ def test_totext():
 | c
 | 2
 |}"""
-        assertequal(expect, actual)
+        eq_(expect, actual)
     
     
 def test_tojson():
@@ -1208,7 +1207,7 @@ def test_totext_gz():
 | c
 | 2
 |}"""
-        assertequal(expect, actual)
+        eq_(expect, actual)
     finally:
         o.close()
     

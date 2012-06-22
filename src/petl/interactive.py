@@ -7,7 +7,7 @@ session.
 
 from itertools import islice
 import sys
-from petl.util import valueset, RowContainer
+from .util import valueset, RowContainer
 import petl.fluent
 
 
@@ -104,6 +104,7 @@ def facet(table, field):
     return fct
 
 
+# need to manually override for diff(), because it returns a tuple 
 def diff(*args, **kwargs):
     a, b = petl.diff(*args, **kwargs)
     return InteractiveWrapper(a), InteractiveWrapper(b)

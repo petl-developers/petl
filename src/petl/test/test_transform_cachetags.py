@@ -3,8 +3,8 @@ Test cachetag methods on transform views.
 
 """
 
-from petl.util import randomtable
-from petl.transform import RenameView, CutView, CatView, FieldConvertView,\
+from ..util import randomtable
+from ..transform import RenameView, CutView, CatView, FieldConvertView,\
     AddFieldView, RowSliceView, TailView, SortView, MeltView, RecastView,\
     DuplicatesView, ConflictsView, ComplementView, CaptureView, SplitView,\
     RowSelectView, FieldSelectView, FieldMapView, RowReduceView, \

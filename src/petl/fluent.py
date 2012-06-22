@@ -8,7 +8,7 @@ usage.
 
 
 import sys
-from petl.util import valueset, RowContainer
+from .util import valueset, RowContainer
 
 
 petl = sys.modules['petl']
@@ -80,6 +80,7 @@ def facet(table, field):
     return fct
 
 
+# need to manually override for diff(), because it returns a tuple 
 def diff(*args, **kwargs):
     a, b = petl.diff(*args, **kwargs)
     return FluentWrapper(a), FluentWrapper(b)

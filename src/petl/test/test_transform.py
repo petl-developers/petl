@@ -4,10 +4,12 @@ Tests for the petl.transform module.
 """
 
 from datetime import datetime
+from nose.tools import eq_
+import operator
 
-from petl.util import OrderedDict
 
-from petl.testutils import ieq, assertequal
+from ..util import OrderedDict
+from ..testutils import ieq
 from petl import rename, fieldnames, cut, cat, convert, fieldconvert, addfield, \
                 rowslice, head, tail, sort, melt, recast, duplicates, \
                 conflicts, mergeduplicates, select, complement, diff, capture, \
@@ -24,8 +26,7 @@ from petl import rename, fieldnames, cut, cat, convert, fieldconvert, addfield, 
                 selectin, fold, addrownumbers, selectcontains, search, \
                 addcolumn, lookupjoin, hashlookupjoin, filldown, fillright, \
                 fillleft
-import operator
-from petl.transform import Conflict
+from ..transform import Conflict
 
 
 def test_rename():
@@ -1791,7 +1792,7 @@ def test_facet_2():
 def test_facet_empty():
     table = (('foo', 'bar'),)
     actual = facet(table, 'foo')
-    assertequal(list(), actual.keys())
+    eq_(list(), actual.keys())
 
 
 def test_rangefacet():
@@ -1805,7 +1806,7 @@ def test_rangefacet():
               ('c', 4),
               ('d', 3))
     rf = rangefacet(table1, 'bar', 2)
-    assertequal([(1, 3), (3, 5), (5, 7), (7, 9)], rf.keys())
+    eq_([(1, 3), (3, 5), (5, 7), (7, 9)], rf.keys())
     expect_13 = (('foo', 'bar'),
                  ('b', 2),
                  ('b', 1)) # N.B., it get's sorted
