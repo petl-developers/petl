@@ -4,20 +4,27 @@ import sys
 import os
 import os.path
 import glob
-import argparse
+from optparse import OptionParser
 
+from petl import VERSION
 from petl.fluent import *
 
-parser = argparse.ArgumentParser(description="Evaluate a Python command (with petl.fluent functions imported).")
-parser.add_argument("expression",
-                    help="any valid Python expression - will be evaluated using eval()")
-args = parser.parse_args()
+parser = OptionParser(
+    usage="%prog [options] expression",
+    description="Evaluate a Python expression.  The expression will be "
+                "evaluated using eval(), with petl.fluent functions imported.",
+    version=VERSION)
 
-r = eval(args.expression)
+options, args = parser.parse_args()
+
+try:
+    (expression,) = args
+except ValueError:
+    parser.error("invalid number of arguments (%s)" % len(args))
+r = eval(expression)
 
 if r is not None:
     if isinstance(r, FluentWrapper):
         print look(r)
     else:
         print str(r)
-
