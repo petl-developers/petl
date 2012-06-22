@@ -78,6 +78,8 @@ def wrap(f):
             return InteractiveWrapper(_innerresult)
         else:
             return _innerresult
+    wrapper.__name__ = f.__name__
+    wrapper.__doc__ = f.__doc__
     return wrapper
 
         
