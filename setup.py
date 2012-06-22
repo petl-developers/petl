@@ -1,8 +1,18 @@
+from ast import literal_eval
 from distutils.core import setup
+
+
+def get_version(source='src/petl/__init__.py'):
+    with open(source) as f:
+        for line in f:
+            if line.startswith('VERSION'):
+                return literal_eval(line.partition('=')[2])
+    raise ValueError("VERSION not found")
+
 
 setup(
     name='petl',
-    version='0.11',
+    version=get_version(),
     author='Alistair Miles',
     author_email='alimanfoo@googlemail.com',
     package_dir={'': 'src'},
