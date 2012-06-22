@@ -128,15 +128,10 @@ look(table9)
 
 # convert
 
-table1 = [['foo', 'bar'],
-          ['A', '2.4'],
-          ['B', '5.7'],
-          ['C', '1.2'],
-          ['D', '8.3']]
-table6 = [['gender', 'age'],
-          ['M', 12],
-          ['F', 34],
-          ['-', 56]]
+table1 = [['foo', 'bar', 'baz'],
+          ['A', '2.4', 12],
+          ['B', '5.7', 34],
+          ['C', '1.2', 56]]
 
 from petl import convert, look
 look(table1)
@@ -144,18 +139,32 @@ look(table1)
 table2 = convert(table1, 'bar', float)
 look(table2)
 # using a lambda function::
-table3 = convert(table2, 'bar', lambda v: v**2)
+table3 = convert(table1, 'baz', lambda v: v*2)
 look(table3)    
 # a method of the data value can also be invoked by passing the method name
 table4 = convert(table1, 'foo', 'lower')
 look(table4)
 # arguments to the method invocation can also be given
-table5 = convert(table4, 'foo', 'replace', 'a', 'aa')
+table5 = convert(table1, 'foo', 'replace', 'A', 'AA')
 look(table5)
 # values can also be translated via a dictionary
-look(table6)
-table7 = convert(table6, 'gender', {'M': 'male', 'F': 'female'})
+table7 = convert(table1, 'foo', {'A': 'Z', 'B': 'Y'})
 look(table7)
+# the same conversion can be applied to multiple fields
+table8 = convert(table1, ('foo', 'bar', 'baz'), unicode)
+look(table8)
+# multiple conversions can be specified at the same time
+table9 = convert(table1, {'foo': 'lower', 'bar': float, 'baz': lambda v: v*2})
+look(table9)
+# ...or alternatively via a list
+table10 = convert(table1, ['lower', float, lambda v: v*2])
+look(table10)
+# ...or alternatively via suffix notation on the returned table object
+table11 = convert(table1)
+table11['foo'] = 'lower'
+table11['bar'] = float
+table11['baz'] = lambda v: v*2
+look(table11)
 
 
 # convertnumbers
@@ -170,64 +179,24 @@ table2 = convertnumbers(table1)
 look(table2)
 
 
-# fieldconvert
-
-table1 = [['foo', 'bar'],
-          ['1', '2.4'],
-          ['3', '7.9'],
-          ['7', '2'],
-          ['8.3', '42.0'],
-          ['2', 'abc']]
-table3 = [['foo', 'bar', 'baz'],
-          ['1', '2.4', 14],
-          ['3', '7.9', 47],
-          ['7', '2', 11],
-          ['8.3', '42.0', 33],
-          ['2', 'abc', 'xyz']]
-table5 = [['foo', 'bar', 'baz'],
-          ['2', 'A', 'x'],
-          ['5', 'B', 'y'],
-          ['1', 'C', 'y'],
-          ['8.3', 'D', 'z']]
-
-from petl import fieldconvert, look    
-look(table1)
-table2 = fieldconvert(table1, {'foo': int, 'bar': float})
-look(table2)
-# converters can be added or updated using the suffix notation 
-look(table3)
-table4 = fieldconvert(table3)
-table4['foo'] = int
-table4['bar'] = float
-table4['baz'] = lambda v: v**2
-look(table4)
-# converters can be functions, method names, or method names with arguments
-look(table5)
-table6 = fieldconvert(table5)
-table6['foo'] = int
-table6['bar'] = 'lower'
-table6['baz'] = 'replace', 'y', 'yy'
-look(table6)
-
-
-# extend
+# addfield
 
 table1 = [['foo', 'bar'],
           ['M', 12],
           ['F', 34],
           ['-', 56]]
 
-from petl import extend, look
+from petl import addfield, look
 look(table1)
 # using a fixed value
-table2 = extend(table1, 'baz', 42)
+table2 = addfield(table1, 'baz', 42)
 look(table2)
 # calculating the value
-table2 = extend(table1, 'baz', lambda rec: rec['bar'] * 2)
+table2 = addfield(table1, 'baz', lambda rec: rec['bar'] * 2)
 look(table2)
 # an expression string can also be used via expr
 from petl import expr
-table3 = extend(table1, 'baz', expr('{bar} * 2'))
+table3 = addfield(table1, 'baz', expr('{bar} * 2'))
 look(table3)
     
 

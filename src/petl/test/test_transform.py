@@ -379,7 +379,7 @@ def test_fieldconvert():
     
     # test the style where the converters functions are passed in as a dictionary
     converters = {'foo': str, 'bar': int, 'baz': float}
-    table5 = fieldconvert(table1, converters, errorvalue='error')
+    table5 = convert(table1, converters, errorvalue='error')
     expect5 = (('foo', 'bar', 'baz'),
                ('A', 1, 2.0),
                ('B', 2, 3.4),
@@ -389,7 +389,7 @@ def test_fieldconvert():
     ieq(expect5, table5) 
     
     # test the style where the converters functions are added one at a time
-    table6 = fieldconvert(table1, errorvalue='err')
+    table6 = convert(table1, errorvalue='err')
     table6['foo'] = str
     table6['bar'] = int
     table6['baz'] = float 
@@ -402,7 +402,7 @@ def test_fieldconvert():
     ieq(expect6, table6) 
     
     # test some different converters
-    table7 = fieldconvert(table1)
+    table7 = convert(table1)
     table7['foo'] = 'replace', 'B', 'BB'
     expect7 = (('foo', 'bar', 'baz'),
                ('A', 1, 2),
@@ -411,6 +411,28 @@ def test_fieldconvert():
                ('D', 'xyz', 9.0),
                ('E', None))
     ieq(expect7, table7)
+
+    # test the style where the converters functions are passed in as a list
+    converters = [str, int, float]
+    table8 = convert(table1, converters, errorvalue='error')
+    expect8 = (('foo', 'bar', 'baz'),
+               ('A', 1, 2.0),
+               ('B', 2, 3.4),
+               ('B', 3, 7.8, True), # N.B., long rows are preserved
+               ('D', 'error', 9.0),
+               ('E', 'error')) # N.B., short rows are preserved
+    ieq(expect8, table8) 
+    
+    # test the style where the converters functions are passed in as a list
+    converters = [str, None, float]
+    table9 = convert(table1, converters, errorvalue='error')
+    expect9 = (('foo', 'bar', 'baz'),
+               ('A', 1, 2.0),
+               ('B', '2', 3.4),
+               ('B', u'3', 7.8, True), # N.B., long rows are preserved
+               ('D', 'xyz', 9.0),
+               ('E', None)) # N.B., short rows are preserved
+    ieq(expect9, table9) 
     
     
 def test_convertall():
