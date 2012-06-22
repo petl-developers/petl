@@ -29,6 +29,10 @@ except ImportError:
     from .compat import count, Counter, OrderedDict
 
 
+SINGLETONS = set([None, False, True])
+SAFE_TYPES = set([complex, float, int, long, str, unicode])
+
+
 class RowContainer(IterContainer):
     
     def __getitem__(self, item):
@@ -99,7 +103,7 @@ def iterdata(table, *sliceargs):
     
         >>> from petl import data
         >>> table = [['foo', 'bar'], ['a', 1], ['b', 2]]
-        >>> it = data(table)
+        >>> it = iterdata(table)
         >>> it.next()
         ['a', 1]
         >>> it.next()
@@ -2701,10 +2705,31 @@ class SortableItem(object):
     For example, the date and time objects from the standard library
     cannot be compared with `None`.
 
+        >>> from datetime import datetime
+        >>> from petl.util import SortableItem
+        >>> dateobj = datetime(2012, 11, 10)
+        >>> SortableItem(42) is 42
+        True
+        >>> SortableItem(None) is None
+        True
+        >>> SortableItem(dateobj) is dateobj
+        False
+        >>> SortableItem(dateobj) > None
+        True
+        >>> dateobj > None
+        Traceback (most recent call last):
+        ...
+        TypeError: can't compare datetime.datetime to NoneType
+
+
     .. versionadded:: 0.11
 
     """
     __slots__ = ['obj']
+    def __new__(cls, obj):
+        if obj in SINGLETONS or obj.__class__ in SAFE_TYPES:
+            return obj
+        return object.__new__(cls)
     def __init__(self, obj):
         self.obj = obj
     def __eq__(self, other):
