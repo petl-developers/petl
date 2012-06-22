@@ -6,7 +6,7 @@ def get_version(source='src/petl/__init__.py'):
     with open(source) as f:
         for line in f:
             if line.startswith('VERSION'):
-                return literal_eval(line.partition('=')[2])
+                return literal_eval(line.partition('=')[2].lstrip())
     raise ValueError("VERSION not found")
 
 
