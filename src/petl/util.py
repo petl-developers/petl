@@ -99,7 +99,7 @@ def iterdata(table, *sliceargs):
     
         >>> from petl import data
         >>> table = [['foo', 'bar'], ['a', 1], ['b', 2]]
-        >>> it = data(table)
+        >>> it = iterdata(table)
         >>> it.next()
         ['a', 1]
         >>> it.next()
