@@ -1,0 +1,18 @@
+Release Checklist
+=================
+
+* increment version number in the following locations: 
+** setup.py
+** docs/conf.py
+** src/petl/__init__.py
+* build docs
+* create new dir docstage/N
+* copy built docs to docstage/N 
+* edit docstage/index.html
+* run git commit and push
+* run git tag -a vN -m 'release N'
+* git push --tags
+* run python setup.py register sdist --formats=zip,gztar bdist_wininst upload
+* cd docstage and run zip -rv ~/Desktop/petl-docs-N.zip ./*
+* upload docs to pypi
+* announcement email

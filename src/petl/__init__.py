@@ -39,7 +39,7 @@ from petl.transform import rename, cut, cat, convert, fieldconvert, addfield, ro
            addcolumn, lookupjoin, hashlookupjoin, filldown, fillright, fillleft
            
            
-VERSION = '0.11-SNAPSHOT'
+VERSION = '0.11.1'
            
            
 def lenstats(table, field):
