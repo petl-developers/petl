@@ -1172,7 +1172,9 @@ def head(table, n=10):
         
 def tail(table, n=10):
     """
-    Choose the last n data rows. E.g.::
+    Choose the last n data rows. 
+    
+    E.g.::
 
         >>> from petl import tail, look
         >>> look(table1)
@@ -1213,6 +1215,8 @@ def tail(table, n=10):
         +-------+-------+
         | 'q'   | 2     |
         +-------+-------+
+        
+    See also :func:`head`, :func:`rowslice`.
 
     """
 
@@ -1566,6 +1570,8 @@ def melt(table, key=None, variables=None, variablefield='variable', valuefield='
         | 3    | 12     | 'height'   | 34.5    |
         +------+--------+------------+---------+
 
+    See also :func:`recast`.
+    
     """
     
     return MeltView(table, key=key, variables=variables, 
@@ -1777,6 +1783,8 @@ def recast(table, key=None, variablefield='variable', valuefield='value',
     Note that the table is scanned once to discover variables, then a second
     time to reshape the data and recast variables as fields. How many rows are
     scanned in the first pass is determined by the `samplesize` argument.
+    
+    See also :func:`melt`.
     
     """
     
@@ -2613,12 +2621,7 @@ def capture(table, field, pattern, newfields=None, include_original=False,
             flags=0):
     """
     Add one or more new fields with values captured from an
-    existing field searched via a regular expression. 
-    
-    By default the field on which the capture is performed is omitted. It can
-    be included using the `include_original` argument.
-    
-    E.g.::
+    existing field searched via a regular expression. E.g.::
 
         >>> from petl import capture, look
         >>> look(table1)
@@ -2663,7 +2666,10 @@ def capture(table, field, pattern, newfields=None, include_original=False,
         | '4'  | 'C12'      | '19'    | 'C'     | '12'   |
         +------+------------+---------+---------+--------+
         
-    See also :func:`re.search`.
+    By default the field on which the capture is performed is omitted. It can
+    be included using the `include_original` argument.
+    
+    See also :func:`split`, :func:`re.search`.
     
     """
     
@@ -3218,7 +3224,9 @@ def composedict(d, srcfld):
 
 def facet(table, field):
     """
-    Return a dictionary mapping field values to tables. E.g.::
+    Return a dictionary mapping field values to tables. 
+    
+    E.g.::
     
         >>> from petl import facet, look
         >>> look(table1)
@@ -3259,6 +3267,8 @@ def facet(table, field):
         | 'c'   | 2     |       |
         +-------+-------+-------+
         
+    See also :func:`facetcolumns`.
+    
     """
     
     fct = dict()
@@ -3558,23 +3568,65 @@ def selectre(table, field, pattern, flags=0, complement=False):
 
 def rowreduce(table, key, reducer, fields=None, missing=None, presorted=False, buffersize=None):
     """
-    Reduce rows grouped under the given key via an arbitrary function. 
+    Group rows under the given key then apply `reducer` to produce a single 
+    output row for each input group of rows. E.g.::
     
-    .. deprecated:: 0.10
+        >>> from petl import rowreduce, look    
+        >>> look(table1)
+        +-------+-------+
+        | 'foo' | 'bar' |
+        +=======+=======+
+        | 'a'   | 3     |
+        +-------+-------+
+        | 'a'   | 7     |
+        +-------+-------+
+        | 'b'   | 2     |
+        +-------+-------+
+        | 'b'   | 1     |
+        +-------+-------+
+        | 'b'   | 9     |
+        +-------+-------+
+        | 'c'   | 4     |
+        +-------+-------+
+        
+        >>> def reducer(key, rows):
+        ...     return [key, sum(row[1] for row in rows)]
+        ... 
+        >>> table2 = rowreduce(table1, key='foo', reducer=reducer, fields=['foo', 'barsum'])
+        >>> look(table2)
+        +-------+----------+
+        | 'foo' | 'barsum' |
+        +=======+==========+
+        | 'a'   | 10       |
+        +-------+----------+
+        | 'b'   | 12       |
+        +-------+----------+
+        | 'c'   | 4        |
+        +-------+----------+
     
-    Use :func:`aggregate` instead.
+    N.B., this is not strictly a "reduce" in the sense of the standard Python
+    :func:`reduce` function, i.e., the `reducer` function is *not* applied 
+    recursively to values within a group, rather it is applied once to each row 
+    group as a whole.
+    
+    See also :func:`aggregate` and :func:`fold`.
+    
+    ..versionchanged:: 0.12
+    
+    Was previously deprecated, now resurrected as it is a useful function in it's
+    own right.
     
     """
 
     return RowReduceView(table, key, reducer, fields=fields,
-                         missing=missing, presorted=presorted, 
+                         presorted=presorted, 
                          buffersize=buffersize)
 
 
 class RowReduceView(RowContainer):
     
     def __init__(self, source, key, reducer, fields=None, 
-                 missing=None, presorted=False, buffersize=None):
+                  presorted=False, buffersize=None):
         if presorted:
             self.source = source
         else:
@@ -3582,48 +3634,30 @@ class RowReduceView(RowContainer):
         self.key = key
         self.fields = fields
         self.reducer = reducer
-        self.missing = missing
 
     def __iter__(self):
-        return iterrowreduce(self.source, self.key, self.reducer, self.fields, self.missing)
+        return iterrowreduce(self.source, self.key, self.reducer, self.fields)
 
     def cachetag(self):
         try:
             return hash((self.source.cachetag(), self.key, 
                          tuple(self.fields) if self.fields else self.fields, 
-                         self.reducer, self.missing))
+                         self.reducer))
         except Exception as e:
             raise Uncacheable(e)
 
     
-def iterrowreduce(source, key, reducer, fields, missing):
-    it = iter(source)
-
-    srcflds = it.next()
-    if fields is None:
-        yield tuple(srcflds)
-    else:
-        yield tuple(fields)
-
-    # convert field selection into field indices
-    indices = asindices(srcflds, key)
-    
-    # now use field indices to construct a _getkey function
-    # N.B., this may raise an exception on short rows, depending on
-    # the field selection
-    getkey = itemgetter(*indices)
-    
-    for key, rows in groupby(it, key=getkey):
-        yield tuple(reducer(key, hybridrows(srcflds, rows, missing)))
+def iterrowreduce(source, key, reducer, fields):
+    yield tuple(fields)
+    for key, rows in rowgroupby(source, key):
+        yield tuple(reducer(key, rows))
         
 
 def recordreduce(table, key, reducer, fields=None, presorted=False, buffersize=None):
     """
-    Reduce records grouped under the given key via an arbitrary function. 
-    
     .. deprecated:: 0.9
     
-    Use :func:`aggregate` instead.
+    Use :func:`rowreduce` instead.
     
     """
 
@@ -4001,25 +4035,71 @@ def itermultiaggregate(source, key, aggregation):
             
 
 def rangerowreduce(table, key, width, reducer, fields=None, minv=None, maxv=None, 
-                   missing=None, failonerror=False, presorted=False, buffersize=None):
+                     presorted=False, buffersize=None):
     """
-    Reduce rows grouped into bins under the given key via an arbitrary function. 
+    Group rows into bins of a given `width` under the given numeric key then 
+    apply `reducer` to produce a single output row for each input group of rows. 
+    E.g.::
     
-    .. deprecated:: 0.10
+        >>> from petl import rangerowreduce, look
+        >>> look(table1)
+        +-------+-------+
+        | 'foo' | 'bar' |
+        +=======+=======+
+        | 'a'   | 3     |
+        +-------+-------+
+        | 'a'   | 7     |
+        +-------+-------+
+        | 'b'   | 2     |
+        +-------+-------+
+        | 'b'   | 1     |
+        +-------+-------+
+        | 'b'   | 9     |
+        +-------+-------+
+        | 'c'   | 4     |
+        +-------+-------+
+        
+        >>> def reducer(key, rows):
+        ...     return [key[0], key[1], ''.join(row[0] for row in rows)]
+        ... 
+        >>> table2 = rangerowreduce(table1, 'bar', 2, reducer=reducer, fields=['frombar', 'tobar', 'foos'])
+        >>> look(table2)
+        +-----------+---------+--------+
+        | 'frombar' | 'tobar' | 'foos' |
+        +===========+=========+========+
+        | 1         | 3       | 'bb'   |
+        +-----------+---------+--------+
+        | 3         | 5       | 'ac'   |
+        +-----------+---------+--------+
+        | 5         | 7       | ''     |
+        +-----------+---------+--------+
+        | 7         | 9       | 'a'    |
+        +-----------+---------+--------+
+        | 9         | 11      | 'b'    |
+        +-----------+---------+--------+
+
+    N.B., this is not strictly a "reduce" in the sense of the standard Python
+    :func:`reduce` function, i.e., the `reducer` function is *not* applied 
+    recursively to values within a group, rather it is applied once to each row 
+    group as a whole.
     
-    Use :func:`rangeaggregate` instead.
+    See also :func:`rangeaggregate` and :func:`rangecounts`.
+    
+    ..versionchanged:: 0.12
+    
+    Was previously deprecated, now resurrected as it is a useful function in it's
+    own right.
     
     """
     
     return RangeRowReduceView(table, key, width, reducer, fields=fields, minv=minv, 
-                              maxv=maxv, missing=missing, failonerror=failonerror,  
-                              presorted=presorted, buffersize=buffersize)
+                              maxv=maxv, presorted=presorted, buffersize=buffersize)
         
 
 class RangeRowReduceView(RowContainer):
     
     def __init__(self, source, key, width, reducer, fields=None, minv=None, maxv=None, 
-                 missing=None, failonerror=False, presorted=False, buffersize=None):
+                  presorted=False, buffersize=None):
         if presorted:
             self.source = source
         else:
@@ -4029,83 +4109,24 @@ class RangeRowReduceView(RowContainer):
         self.reducer = reducer
         self.fields = fields
         self.minv, self.maxv = minv, maxv
-        self.failonerror = failonerror
-        self.missing = missing
 
     def __iter__(self):
         return iterrangerowreduce(self.source, self.key, self.width, self.reducer,
-                                  self.fields, self.minv, self.maxv, 
-                                  self.failonerror, self.missing)
+                                  self.fields, self.minv, self.maxv)
 
     def cachetag(self):
         try:
             return hash((self.source.cachetag(), self.key, self.width,
                          tuple(self.fields) if self.fields else self.fields, 
-                         self.reducer, self.minv, self.maxv, self.failonerror,
-                         self.missing))
+                         self.reducer, self.minv, self.maxv))
         except Exception as e:
             raise Uncacheable(e)
 
 
-def iterrangerowreduce(source, key, width, reducer, fields, minv, maxv, failonerror,
-                       missing):
-
-    it = iter(source)
-    srcflds = it.next()
-    if fields is None:
-        yield tuple(srcflds)
-    else:
-        yield tuple(fields)
-
-    # convert field selection into field indices
-    indices = asindices(srcflds, key)
-
-    # now use field indices to construct a getkey function
-    # N.B., this may raise an exception on short rows, depending on
-    # the field selection
-    getkey = itemgetter(*indices)
-    
-    # initialise minimum
-    row = it.next()
-    keyv = getkey(row)
-    if minv is None:
-        minv = keyv
-
-    # iterate over bins
-    # N.B., we need to account for two possible scenarios
-    # (1) maxunpack is not specified, so keep making bins until we run out of rows
-    # (2) maxunpack is specified, so iterate over bins 
-    try:
-        for binminv in count(minv, width):
-            binmaxv = binminv + width
-            if maxv is not None and binmaxv >= maxv: # final bin
-                binmaxv = maxv
-            bn = []
-            while keyv < binminv:
-                row = it.next()
-                keyv = getkey(row)
-            while binminv <= keyv < binmaxv:
-                bn.append(row)
-                row = it.next()
-                keyv = getkey(row)
-            while maxv is not None and keyv == binmaxv == maxv:
-                bn.append(row) # last bin is open
-                row = it.next()
-                keyv = getkey(row)
-            try:
-                yield tuple(reducer(binminv, binmaxv, hybridrows(srcflds, bn, missing)))
-            except:
-                if failonerror:
-                    raise
-            if maxv is not None and binmaxv == maxv:
-                break
-    except StopIteration:
-        # don't forget the last one
-        try:
-            yield tuple(reducer(binminv, binmaxv, hybridrows(srcflds, bn, missing)))
-        except:
-            if failonerror:
-                raise
+def iterrangerowreduce(table, key, width, reducer, fields, minv, maxv):
+    yield tuple(fields)
+    for k, grp in rowgroupbybin(table, key, width, minv=minv, maxv=maxv):
+        yield tuple(reducer(k, grp))
     
         
 def rangerecordreduce(table, key, width, reducer, fields=None, minv=None, maxv=None, 
@@ -4183,7 +4204,7 @@ def rangeaggregate(table, key, width, aggregation=None, value=None, minv=None,
     """
     Group rows into bins then apply aggregation functions. E.g.::
     
-        >>> from petl import rangeaggregate, look
+        >>> from petl import rangeaggregate, look, strjoin
         >>> look(table1)
         +-------+-------+
         | 'foo' | 'bar' |
@@ -4259,25 +4280,22 @@ def rangeaggregate(table, key, width, aggregation=None, value=None, minv=None,
         >>> aggregation = OrderedDict()
         >>> aggregation['foocount'] = len 
         >>> aggregation['foojoin'] = 'foo', strjoin('')
-        Traceback (most recent call last):
-          File "<stdin>", line 1, in <module>
-        NameError: name 'strjoin' is not defined
         >>> aggregation['foolist'] = 'foo' # default is list
         >>> table5 = rangeaggregate(table1, 'bar', 2, aggregation)
         >>> look(table5)
-        +---------+------------+-----------------+
-        | 'key'   | 'foocount' | 'foolist'       |
-        +=========+============+=================+
-        | (1, 3)  | 2          | ['b', 'b']      |
-        +---------+------------+-----------------+
-        | (3, 5)  | 3          | ['a', 'd', 'c'] |
-        +---------+------------+-----------------+
-        | (5, 7)  | 0          | []              |
-        +---------+------------+-----------------+
-        | (7, 9)  | 1          | ['a']           |
-        +---------+------------+-----------------+
-        | (9, 11) | 1          | ['b']           |
-        +---------+------------+-----------------+
+        +---------+------------+-----------+-----------------+
+        | 'key'   | 'foocount' | 'foojoin' | 'foolist'       |
+        +=========+============+===========+=================+
+        | (1, 3)  | 2          | 'bb'      | ['b', 'b']      |
+        +---------+------------+-----------+-----------------+
+        | (3, 5)  | 3          | 'adc'     | ['a', 'd', 'c'] |
+        +---------+------------+-----------+-----------------+
+        | (5, 7)  | 0          | ''        | []              |
+        +---------+------------+-----------+-----------------+
+        | (7, 9)  | 1          | 'a'       | ['a']           |
+        +---------+------------+-----------+-----------------+
+        | (9, 11) | 1          | 'b'       | ['b']           |
+        +---------+------------+-----------+-----------------+
         
     .. versionchanged:: 0.12
     
@@ -4638,7 +4656,7 @@ def setheader(table, fields):
     """
     Override fields in the given table. E.g.::
     
-        >>> from petl import setheader, look
+        >>> from petl import setheader, look    
         >>> look(table1)
         +-------+-------+
         | 'foo' | 'bar' |
@@ -4658,6 +4676,8 @@ def setheader(table, fields):
         | 'b'      | 2        |
         +----------+----------+
 
+    See also :func:`extendheader`, :func:`pushheader`.
+    
     """
     
     return SetHeaderView(table, fields) 
@@ -4711,6 +4731,7 @@ def extendheader(table, fields):
         | 'b'   | 2     | False |
         +-------+-------+-------+
 
+    See also :func:`setheader`, :func:`pushheader`.
     """
     
     return ExtendHeaderView(table, fields) 
@@ -4797,7 +4818,9 @@ def iterpushheader(source, fields):
     
 def skip(table, n):
     """
-    Skip `n` rows (including the header row). E.g.::
+    Skip `n` rows (including the header row). 
+    
+    E.g.::
     
         >>> from petl import skip, look
         >>> look(table1)
@@ -4822,6 +4845,8 @@ def skip(table, n):
         +-------+-------+
         | 'b'   | 2     |
         +-------+-------+
+    
+    See also :func:`skipcomments`.
     
     """ 
 
@@ -4933,6 +4958,8 @@ def unpack(table, field, newfields=None, maxunpack=None, include_original=False)
         +-------+-------+--------+
         | 3     | 'e'   | 'f'    |
         +-------+-------+--------+
+    
+    See also :func:`unpackdict`.
     
     """
     
@@ -5518,6 +5545,8 @@ def crossjoin(*tables):
         | 2    | 'red'    | 3    | 'square' |
         +------+----------+------+----------+
 
+    See also :func:`join`, :func:`leftjoin`, :func:`rightjoint`, :func:`outerjoin`.
+    
     """
     
     return CrossJoinView(*tables)
@@ -5829,6 +5858,8 @@ def transpose(table):
         | 'colour' | 'blue' | 'red' | 'purple' | 'yellow' | 'orange' |
         +----------+--------+-------+----------+----------+----------+
 
+    See also :func:`recast`.
+    
     """
     
     return TransposeView(table)
@@ -7144,7 +7175,7 @@ def iterunpackdict(table, field, keys, includeoriginal, samplesize, missing):
 
 def fold(table, key, f, value=None, presorted=False, buffersize=None):
     """
-    Reduce rows. E.g.::
+    Reduce rows recursively via the Python standard :func:`reduce` function. E.g.::
 
         >>> from petl import fold, look
         >>> look(table1)
@@ -7171,7 +7202,7 @@ def fold(table, key, f, value=None, presorted=False, buffersize=None):
         | 2     | 12      |
         +-------+---------+
 
-    See also the Python standard :func:`reduce` function.
+    See also :func:`aggregate`, :func:`rowreduce`.
     
     .. versionadded:: 0.10
     

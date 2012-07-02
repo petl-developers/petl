@@ -1913,7 +1913,7 @@ def test_rowreduce():
               ('c', 4))
     
     def sumbar(key, rows):
-        return [key, sum([row[1] for row in rows])]
+        return [key, sum(row[1] for row in rows)]
         
     table2 = rowreduce(table1, key='foo', reducer=sumbar, fields=['foo', 'barsum'])
     expect2 = (('foo', 'barsum'),
@@ -1923,7 +1923,7 @@ def test_rowreduce():
     ieq(expect2, table2)
     
 
-def test_recordreduce():
+def test_rowreduce_fieldnameaccess():
     
     table1 = (('foo', 'bar'),
               ('a', 3),
@@ -1944,7 +1944,7 @@ def test_recordreduce():
     ieq(expect2, table2)
     
 
-def test_recordreduce_2():
+def test_rowreduce_more():
     
     table1 = (('foo', 'bar'),
               ('aa', 3),
@@ -1955,7 +1955,7 @@ def test_recordreduce_2():
               ('cc', 4))
     
     def sumbar(key, records):
-        return [key, sum([rec['bar'] for rec in records])]
+        return [key, sum(rec['bar'] for rec in records)]
         
     table2 = rowreduce(table1, key='foo', reducer=sumbar, fields=['foo', 'barsum'])
     expect2 = (('foo', 'barsum'),
@@ -1983,8 +1983,8 @@ def test_rangerowreduce():
               ('b', 9),
               ('c', 4))
     
-    def redu(minv, maxv, rows):
-        return [minv, maxv, ''.join([row[0] for row in rows])]
+    def redu(key, rows):
+        return [key[0], key[1], ''.join([row[0] for row in rows])]
         
     table2 = rangerowreduce(table1, 'bar', 2, reducer=redu, 
                             fields=['minbar', 'maxbar', 'foos'])
@@ -1998,7 +1998,7 @@ def test_rangerowreduce():
     ieq(expect2, table2)
     
 
-def test_rangerecordreduce():
+def test_rangerowreduce_fieldnameaccess():
     
     table1 = (('foo', 'bar'),
               ('a', 3),
@@ -2008,11 +2008,11 @@ def test_rangerecordreduce():
               ('b', 9),
               ('c', 4))
     
-    def redu(minv, maxv, recs):
-        return [minv, maxv, ''.join([rec['foo'] for rec in recs])]
+    def redu(key, recs):
+        return [key[0], key[1], ''.join([rec['foo'] for rec in recs])]
         
     table2 = rangerowreduce(table1, 'bar', 2, reducer=redu, 
-                               fields=['minbar', 'maxbar', 'foos'])
+                            fields=['minbar', 'maxbar', 'foos'])
     expect2 = (('minbar', 'maxbar', 'foos'),
                (1, 3, 'bb'),
                (3, 5, 'ac'),

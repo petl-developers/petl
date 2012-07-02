@@ -1331,8 +1331,7 @@ def todb(table, connection_or_cursor, tablename, commit=True):
     """
     Load data into an existing database table via a DB-API 2.0
     connection or cursor. Note that the database table will be truncated, 
-    i.e., all existing rows will be deleted prior to inserting the new data.
-    
+    i.e., all existing rows will be deleted prior to inserting the new data. 
     E.g.::
 
         >>> from petl import look, todb
@@ -1442,9 +1441,7 @@ def appenddb(table, connection_or_cursor, tablename, commit=True):
     Load data into an existing database table via a DB-API 2.0
     connection or cursor. Note that the database table will be appended, 
     i.e., the new data will be inserted into the table, and any existing
-    rows will remain.
-    
-    E.g.::
+    rows will remain. E.g.::
     
         >>> from petl import look, appenddb
         >>> look(table)

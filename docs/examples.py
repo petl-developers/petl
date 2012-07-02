@@ -617,7 +617,7 @@ table1 = [['foo', 'bar'],
 from petl import rowreduce, look    
 look(table1)
 def sumbar(key, rows):
-    return [key, sum([row[1] for row in rows])]
+    return [key, sum(row[1] for row in rows)]
 
 table2 = rowreduce(table1, key='foo', reducer=sumbar, fields=['foo', 'barsum'])
 look(table2)
@@ -722,10 +722,10 @@ table1 = [['foo', 'bar'],
 
 from petl import rangerowreduce, look
 look(table1)
-def redu(minv, maxunpack, rows):
-    return [minv, maxunpack, ''.join([row[0] for row in rows])]
+def reducer(key, rows):
+    return [key[0], key[1], ''.join(row[0] for row in rows)]
 
-table2 = rangerowreduce(table1, 'bar', 2, reducer=redu, fields=['frombar', 'tobar', 'foos'])
+table2 = rangerowreduce(table1, 'bar', 2, reducer=reducer, fields=['frombar', 'tobar', 'foos'])
 look(table2)
 
 
@@ -776,7 +776,7 @@ table1 = [['foo', 'bar'],
           ['c', 4],
           ['d', 3]]
 
-from petl import rangeaggregate, look
+from petl import rangeaggregate, look, strjoin
 look(table1)
 # aggregate whole rows
 table2 = rangeaggregate(table1, 'bar', 2, len)

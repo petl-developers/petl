@@ -815,6 +815,8 @@ def columns(table, missing=None):
         >>> cols['bar']    
         [1, 2, 3]
 
+    See also :func:`facetcolumns`.
+    
     """
     
     cols = dict()
@@ -1343,6 +1345,8 @@ def rowlengths(table):
         | 4        | 1       |
         +----------+---------+
 
+    Useful for finding potential problems in data files.
+    
     """
 
     it = data(table)
@@ -2644,9 +2648,8 @@ def rowgroupby(table, key, value=None):
     it = iter(table)
     fields = it.next()
     
-    # wrap rows if either key or value is callable
-    if callable(key) or callable(value):
-        it = hybridrows(fields, it)
+    # wrap rows 
+    it = hybridrows(fields, it)
         
     # determine key function
     if callable(key):
@@ -2679,16 +2682,15 @@ def iterpeek(it, n=1):
 
 def rowgroupbybin(table, key, width, value=None, minv=None, maxv=None):
     """
-    TODO doc me
+    Group rows into bins of a given width.
     
     """
 
     it = iter(table)
     fields = it.next()
     
-    # wrap rows if either key or value is callable
-    if callable(key) or callable(value):
-        it = hybridrows(fields, it)
+    # wrap rows 
+    it = hybridrows(fields, it)
 
     # determine key function
     if callable(key):
@@ -2699,7 +2701,7 @@ def rowgroupbybin(table, key, width, value=None, minv=None, maxv=None):
     
     # determine value function
     if value is None:
-        getval = tuple # whole row
+        getval = lambda v: v # identity function - i.e., whole row
     else:
         if callable(value):
             getval = value
