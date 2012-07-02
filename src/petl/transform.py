@@ -18,7 +18,7 @@ from .util import asindices, rowgetter, asdict,\
     iterpeek, count, Counter, OrderedDict
 from .io import Uncacheable
 from .util import RowContainer, sortable_itemgetter
-from petl.util import FieldSelectionError
+from petl.util import FieldSelectionError, rowgroupbybin
 
 
 def rename(table, *args):
@@ -4149,10 +4149,10 @@ def rangecounts(table, key, width, minv=None, maxv=None, presorted=False,
         | 'd'   | 3     |
         +-------+-------+
         
-        >>> table2 = rangecounts(table1, 'bar', width=2)
+        >>> table2 = rangecounts(table1, 'bar', 2)
         >>> look(table2)
         +---------+---------+
-        | 'range' | 'count' |
+        | 'key'   | 'value' |
         +=========+=========+
         | (1, 3)  | 2       |
         +---------+---------+
@@ -4165,89 +4165,21 @@ def rangecounts(table, key, width, minv=None, maxv=None, presorted=False,
         | (9, 11) | 1       |
         +---------+---------+
 
+    See also :func:`rangeaggregate`.
+    
     """
     
-    return RangeCountsView(table, key, width, minv=minv, maxv=maxv, 
-                           presorted=presorted, buffersize=buffersize)
+    return rangeaggregate(table, key, width, len, minv=minv, maxv=maxv,
+                          presorted=presorted, buffersize=buffersize)
     
     
-class RangeCountsView(RowContainer):
-    
-    def __init__(self, source, key, width, minv=None, maxv=None, 
-                 presorted=False, buffersize=None):
-        if presorted:
-            self.source = source
-        else:
-            self.source = sort(source, key, buffersize=buffersize)
-        self.key = key
-        self.width = width
-        self.minv, self.maxunpack = minv, maxv
-
-    def __iter__(self):
-        return iterrangecounts(self.source, self.key, self.width, self.minv, 
-                               self.maxunpack)
-
-    def cachetag(self):
-        try:
-            return hash((self.source.cachetag(), self.key, self.width,
-                         self.minv, self.maxunpack))
-        except Exception as e:
-            raise Uncacheable(e)
-
-
-def iterrangecounts(source, key, width, minv, maxv):
-
-    it = iter(source)
-    srcflds = it.next()
-
-    # convert field selection into field indices
-    indices = asindices(srcflds, key)
-
-    # now use field indices to construct a getkey function
-    # N.B., this may raise an exception on short rows, depending on
-    # the field selection
-    getkey = itemgetter(*indices)
-    
-    outflds = ('range', 'count')
-    yield outflds
-    
-    # initialise minimum
-    row = it.next()
-    keyv = getkey(row)
-    if minv is None:
-        minv = keyv
-
-    # iterate over bins
-    # N.B., we need to account for two possible scenarios
-    # (1) maxunpack is not specified, so keep making bins until we run out of rows
-    # (2) maxunpack is specified, so iterate over bins 
-    try:
-        for binminv in count(minv, width):
-            binmaxv = binminv + width
-            if maxv is not None and binmaxv >= maxv: # final bin
-                binmaxv = maxv
-            bn = []
-            while keyv < binminv:
-                row = it.next()
-                keyv = getkey(row)
-            while binminv <= keyv < binmaxv:
-                bn.append(row)
-                row = it.next()
-                keyv = getkey(row)
-            while maxv is not None and keyv == binmaxv == maxv:
-                bn.append(row) # last bin is open
-                row = it.next()
-                keyv = getkey(row)
-            yield ((binminv, binmaxv), len(bn))
-            if maxv is not None and binmaxv == maxv:
-                break
-    except StopIteration:
-        # don't forget the last one
-        yield ((binminv, binmaxv), len(bn))
-    
-    
-def rangeaggregate(table, key, width, aggregators=None, minv=None, maxv=None,
-                   failonerror=False, errorvalue=None, presorted=False, buffersize=None):
+###############################################################################
+###############################################################################
+## rangeaggregate
+###############################################################################
+###############################################################################    
+def rangeaggregate(table, key, width, aggregation=None, value=None, minv=None, 
+                   maxv=None, presorted=False, buffersize=None):
     """
     Group rows into bins then apply aggregation functions. E.g.::
     
@@ -4271,12 +4203,70 @@ def rangeaggregate(table, key, width, aggregators=None, minv=None, maxv=None,
         | 'd'   | 3     |
         +-------+-------+
         
-        >>> table2 = rangeaggregate(table1, 'bar', width=2)
-        >>> table2['foocount'] = 'foo', len
-        >>> table2['foolist'] = 'foo' # default is list
+        >>> # aggregate whole rows
+        ... table2 = rangeaggregate(table1, 'bar', 2, len)
         >>> look(table2)
+        +---------+---------+
+        | 'key'   | 'value' |
+        +=========+=========+
+        | (1, 3)  | 2       |
+        +---------+---------+
+        | (3, 5)  | 3       |
+        +---------+---------+
+        | (5, 7)  | 0       |
+        +---------+---------+
+        | (7, 9)  | 1       |
+        +---------+---------+
+        | (9, 11) | 1       |
+        +---------+---------+
+        
+        >>> # aggregate single field
+        ... table3 = rangeaggregate(table1, 'bar', 2, list, 'foo')
+        >>> look(table3)
+        +---------+-----------------+
+        | 'key'   | 'value'         |
+        +=========+=================+
+        | (1, 3)  | ['b', 'b']      |
+        +---------+-----------------+
+        | (3, 5)  | ['a', 'd', 'c'] |
+        +---------+-----------------+
+        | (5, 7)  | []              |
+        +---------+-----------------+
+        | (7, 9)  | ['a']           |
+        +---------+-----------------+
+        | (9, 11) | ['b']           |
+        +---------+-----------------+
+        
+        >>> # aggregate single field - alternative signature using keyword args
+        ... table4 = rangeaggregate(table1, key='bar', width=2, aggregation=list, value='foo')
+        >>> look(table4)
+        +---------+-----------------+
+        | 'key'   | 'value'         |
+        +=========+=================+
+        | (1, 3)  | ['b', 'b']      |
+        +---------+-----------------+
+        | (3, 5)  | ['a', 'd', 'c'] |
+        +---------+-----------------+
+        | (5, 7)  | []              |
+        +---------+-----------------+
+        | (7, 9)  | ['a']           |
+        +---------+-----------------+
+        | (9, 11) | ['b']           |
+        +---------+-----------------+
+        
+        >>> # aggregate multiple fields
+        ... from collections import OrderedDict
+        >>> aggregation = OrderedDict()
+        >>> aggregation['foocount'] = len 
+        >>> aggregation['foojoin'] = 'foo', strjoin('')
+        Traceback (most recent call last):
+          File "<stdin>", line 1, in <module>
+        NameError: name 'strjoin' is not defined
+        >>> aggregation['foolist'] = 'foo' # default is list
+        >>> table5 = rangeaggregate(table1, 'bar', 2, aggregation)
+        >>> look(table5)
         +---------+------------+-----------------+
-        | 'bar'   | 'foocount' | 'foolist'       |
+        | 'key'   | 'foocount' | 'foolist'       |
         +=========+============+=================+
         | (1, 3)  | 2          | ['b', 'b']      |
         +---------+------------+-----------------+
@@ -4288,138 +4278,145 @@ def rangeaggregate(table, key, width, aggregators=None, minv=None, maxv=None,
         +---------+------------+-----------------+
         | (9, 11) | 1          | ['b']           |
         +---------+------------+-----------------+
-
+        
+    .. versionchanged:: 0.12
+    
+    Changed signature to simplify and make consistent with :func:`aggregate`.
+    
     """
+
+    if callable(aggregation):
+        return SimpleRangeAggregateView(table, key, width, 
+                                        aggregation=aggregation, 
+                                        value=value, minv=minv, maxv=maxv,
+                                        presorted=presorted, buffersize=buffersize)
+    elif aggregation is None or isinstance(aggregation, (list, tuple, dict)):
+        # ignore value arg
+        return MultiRangeAggregateView(table, key, width, 
+                                       aggregation=aggregation, 
+                                       minv=minv, maxv=maxv, # ignore value
+                                       presorted=presorted, buffersize=buffersize)
+    else:
+        raise Exception('expected aggregation is callable, list, tuple, dict or None')
     
-    return RangeAggregateView(table, key, width, 
-                              aggregators=aggregators, minv=minv, maxv=maxv,
-                              failonerror=failonerror, errorvalue=errorvalue, 
-                              presorted=presorted, buffersize=buffersize)
     
+class SimpleRangeAggregateView(RowContainer):
     
-class RangeAggregateView(RowContainer):
+    def __init__(self, table, key, width, aggregation=list, value=None, 
+                 minv=None, maxv=None, presorted=False, buffersize=None):
+        if presorted:
+            self.table = table
+        else:
+            self.table = sort(table, key, buffersize=buffersize)    
+        self.key = key
+        self.width = width
+        self.aggregation = aggregation
+        self.value = value
+        self.minv, self.maxv = minv, maxv
+        
+    def __iter__(self):
+        return itersimplerangeaggregate(self.table, self.key, self.width, 
+                                        self.aggregation, self.value, self.minv, 
+                                        self.maxv)
+
+    def cachetag(self):
+        raise Uncacheable() # TODO
+
+
+def itersimplerangeaggregate(table, key, width, aggregation, value, minv, maxv):
+    if aggregation == len:
+        aggregation = lambda grp: sum(1 for _ in grp) # count length of iterable
+    yield ('key', 'value')
+    for k, grp in rowgroupbybin(table, key, width, value=value, minv=minv, maxv=maxv):
+        yield k, aggregation(grp)
+
+
+class MultiRangeAggregateView(RowContainer):
     
-    def __init__(self, source, key, width, aggregators=None, minv=None, maxv=None, 
-                 failonerror=False, errorvalue=None, presorted=False, buffersize=None):
+    def __init__(self, source, key, width, aggregation=None, 
+                  minv=None, maxv=None, presorted=False, buffersize=None):
         if presorted:
             self.source = source
         else:
             self.source = sort(source, key, buffersize=buffersize)
         self.key = key
         self.width = width
-        if aggregators is None:
-            self.aggregators = OrderedDict()
+        if aggregation is None:
+            self.aggregation = OrderedDict()
+        elif isinstance(aggregation, (list, tuple)):
+            self.aggregation = OrderedDict()
+            for t in aggregation:
+                self.aggregation[t[0]] = t[1:]
+        elif isinstance(aggregation, dict):
+            self.aggregation = aggregation
         else:
-            self.aggregators = aggregators
-        self.minv, self.maxunpack = minv, maxv
-        self.failonerror = failonerror
-        self.errorvalue = errorvalue
+            raise Exception('expected aggregation is None, list, tuple or dict')
+        self.minv, self.maxv = minv, maxv
 
     def __iter__(self):
-        return iterrangeaggregate(self.source, self.key, self.width, 
-                                  self.aggregators, self.minv, self.maxunpack, 
-                                  self.failonerror, self.errorvalue)
-
+        return itermultirangeaggregate(self.source, self.key, self.width, 
+                                       self.aggregation, self.minv, self.maxv)
+    
     def __setitem__(self, key, value):
-        self.aggregators[key] = value
+        self.aggregation[key] = value
 
     def cachetag(self):
         try:
-            return hash((self.source.cachetag(), self.key, self.width, 
-                         self.minv, self.maxunpack, self.failonerror,
-                         self.errorvalue, tuple(self.aggregators.items())))
+            return hash((self.source.cachetag(), self.key, self.width, self.minv,
+                         self.maxv, tuple(self.aggregation.items())))
         except Exception as e:
             raise Uncacheable(e)
 
     
-def iterrangeaggregate(source, key, width, aggregators, minv, maxv, failonerror, errorvalue):
-
-    aggregators = OrderedDict(aggregators.items()) # take a copy
-    # normalise aggregators
-    for outfld in aggregators:
-        agg = aggregators[outfld]
-        if not isinstance(agg, (list, tuple)):
-            aggregators[outfld] = agg, list # list is default aggregation function
-
+def itermultirangeaggregate(source, key, width, aggregation, minv, maxv):
+    aggregation = OrderedDict(aggregation.items()) # take a copy
     it = iter(source)
     srcflds = it.next()
+    it = chain([srcflds], it) # push back header to ensure we iterate only once
 
-    # convert field selection into field indices
-    indices = asindices(srcflds, key)
-
-    # now use field indices to construct a getkey function
-    # N.B., this may raise an exception on short rows, depending on
-    # the field selection
-    getkey = itemgetter(*indices)
-    
-    if len(indices) == 1:
-        outflds = [getkey(srcflds)]
-    else:
-        outflds = list(getkey(srcflds))
-    outflds.extend(aggregators.keys())
+    # normalise aggregators
+    for outfld in aggregation:
+        agg = aggregation[outfld]
+        if callable(agg):
+            aggregation[outfld] = None, agg
+        elif isinstance(agg, basestring):
+            aggregation[outfld] = agg, list # list is default
+        elif len(agg) == 1 and isinstance(agg[0], basestring):
+            aggregation[outfld] = agg[0], list # list is default 
+        elif len(agg) == 1 and callable(agg[0]):
+            aggregation[outfld] = None, agg[0] # aggregate whole rows
+        elif len(agg) == 2:
+            pass # no need to normalise
+        else:
+            raise Exception('invalid aggregation: %r, %r' % (outfld, agg))
+        
+    outflds = ['key']
+    for outfld in aggregation:
+        outflds.append(outfld)
     yield tuple(outflds)
     
-    def buildoutrow(binminv, binmaxv, bn):
-        outrow = [(binminv, binmaxv)]
-        for outfld in aggregators:
-            srcfld, aggfun = aggregators[outfld]
-            idx = srcflds.index(srcfld)
-            try:
-                # try using list comprehension
-                vals = [row[idx] for row in bn]
-            except IndexError:
-                # fall back to slower for loop
-                vals = list()
-                for row in bn:
-                    try:
-                        vals.append(row[idx])
-                    except IndexError:
-                        pass
-            try:
+    for k, rows in rowgroupbybin(it, key, width, minv=minv, maxv=maxv):
+#        rows = list(rows) # not strictly necessary as rowgroupbybin returns a list already
+        outrow = [k]
+        for outfld in aggregation:
+            srcfld, aggfun = aggregation[outfld]
+            if srcfld is None:
+                aggval = aggfun(rows)
+                outrow.append(aggval)
+            else:
+                idx = srcflds.index(srcfld)
+                # try using generator comprehension
+                vals = (row[idx] for row in rows)
                 aggval = aggfun(vals)
-            except:
-                if failonerror:
-                    raise
-                else:
-                    aggval = errorvalue
-            outrow.append(aggval)
-        return tuple(outrow)
-
-    # initialise minimum
-    row = it.next()
-    keyv = getkey(row)
-    if minv is None:
-        minv = keyv
-
-    # iterate over bins
-    # N.B., we need to account for two possible scenarios
-    # (1) maxunpack is not specified, so keep making bins until we run out of rows
-    # (2) maxunpack is specified, so iterate over bins 
-    try:
-        for binminv in count(minv, width):
-            binmaxv = binminv + width
-            if maxv is not None and binmaxv >= maxv: # final bin
-                binmaxv = maxv
-            bn = []
-            while keyv < binminv:
-                row = it.next()
-                keyv = getkey(row)
-            while binminv <= keyv < binmaxv:
-                bn.append(row)
-                row = it.next()
-                keyv = getkey(row)
-            while maxv is not None and keyv == binmaxv == maxv:
-                bn.append(row) # last bin is open
-                row = it.next()
-                keyv = getkey(row)
-            yield buildoutrow(binminv, binmaxv, bn)
-            if maxv is not None and binmaxv == maxv:
-                break
-    except StopIteration:
-        # don't forget the last one
-        yield buildoutrow(binminv, binmaxv, bn)
-
-        
+                outrow.append(aggval)
+        yield tuple(outrow)
+            
+    
+###############################################################################
+###############################################################################
+## rowmap
+###############################################################################
+###############################################################################    
 def rowmap(table, rowmapper, fields, failonerror=False, missing=None):
     """
     Transform rows via an arbitrary function. E.g.::

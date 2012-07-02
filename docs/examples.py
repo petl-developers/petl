@@ -778,10 +778,23 @@ table1 = [['foo', 'bar'],
 
 from petl import rangeaggregate, look
 look(table1)
-table2 = rangeaggregate(table1, 'bar', width=2)
-table2['foocount'] = 'foo', len
-table2['foolist'] = 'foo' # default is list
+# aggregate whole rows
+table2 = rangeaggregate(table1, 'bar', 2, len)
 look(table2)
+# aggregate single field
+table3 = rangeaggregate(table1, 'bar', 2, list, 'foo')
+look(table3)
+# aggregate single field - alternative signature using keyword args
+table4 = rangeaggregate(table1, key='bar', width=2, aggregation=list, value='foo')
+look(table4)
+# aggregate multiple fields
+from collections import OrderedDict
+aggregation = OrderedDict()
+aggregation['foocount'] = len 
+aggregation['foojoin'] = 'foo', strjoin('')
+aggregation['foolist'] = 'foo' # default is list
+table5 = rangeaggregate(table1, 'bar', 2, aggregation)
+look(table5)
 
 
 # rowmap

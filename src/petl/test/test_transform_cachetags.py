@@ -8,7 +8,7 @@ from ..transform import RenameView, CutView, CatView, FieldConvertView,\
     AddFieldView, RowSliceView, TailView, SortView, MeltView, RecastView,\
     DuplicatesView, ConflictsView, ComplementView, CaptureView, SplitView,\
     RowSelectView, FieldSelectView, FieldMapView, RowReduceView, \
-    MultiAggregateView, RangeRowReduceView, RangeAggregateView,\
+    MultiAggregateView, RangeRowReduceView, MultiRangeAggregateView,\
     RowMapView, RowMapManyView, SetHeaderView,\
     ExtendHeaderView, PushHeaderView, SkipView, UnpackView, JoinView,\
     ImplicitJoinView, CrossJoinView, AntiJoinView, ImplicitAntiJoinView
@@ -194,7 +194,7 @@ def test_rangerowreduce():
     
 def test_rangeaggregate():
     src = randomtable(4, 10)
-    tbl = RangeAggregateView(src, 'f0', 0.2)
+    tbl = MultiRangeAggregateView(src, 'f0', 0.2)
     tbl['a1'] = 'f1', sum
     tbl['a2'] = 'f2', max
     tbl['a3'] = 'f3'
