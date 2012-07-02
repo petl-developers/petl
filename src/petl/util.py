@@ -17,6 +17,7 @@ from itertools import izip_longest
 import heapq
 import sys
 import operator
+from math import ceil
 
 
 from .base import IterContainer
@@ -2714,40 +2715,75 @@ def rowgroupbybin(table, key, width, value=None, minv=None, maxv=None):
         else:
             vindices = asindices(fields, value)
             getval = itemgetter(*vindices)
-
-    # initialise minimum
-    row = it.next()
-    keyv = getkey(row)
-    if minv is None:
-        minv = keyv # initialise minimum to first key value found
-
-    # N.B., we need to account for two possible scenarios
-    # (1) maxv is not specified, so keep making bins until we run out of rows
-    # (2) maxv is specified, so iterate over bins up to maxv
-    try:
-        for binminv in count(minv, width):
+            
+    # use a different algorithm if minv and maxv are specified - fixed bins
+    if minv is not None and maxv is not None:
+        numbins = int(ceil((maxv - minv) / width))
+        print numbins
+        keyv = None
+        for n in xrange(0, numbins):
+            binminv = minv + n*width
             binmaxv = binminv + width
-            if maxv is not None and binmaxv >= maxv: # final bin
+            if binmaxv >= maxv: # final bin
                 binmaxv = maxv # truncate final bin to specified maximum
+            print binminv, binmaxv
             binnedvals = []
-            while keyv < binminv: # advance until we're within the bin's range
-                row = it.next()
-                keyv = getkey(row)
-            while binminv <= keyv < binmaxv: # within the bin
-                binnedvals.append(getval(row))
-                row = it.next()
-                keyv = getkey(row)
-            while maxv is not None and keyv == binmaxv == maxv: # possible floating point precision bug here?
-                binnedvals.append(getval(row)) # last bin is open if maxv is specified
-                row = it.next()
-                keyv = getkey(row)
+            try:
+                while keyv < binminv: # advance until we're within the bin's range
+                    print 'advancing', keyv
+                    row = it.next()
+                    keyv = getkey(row)
+                while binminv <= keyv < binmaxv: # within the bin
+                    print 'within', keyv
+                    binnedvals.append(getval(row))
+                    row = it.next()
+                    keyv = getkey(row)
+                while keyv == binmaxv == maxv: # possible floating point precision bug here?
+                    print 'within last', keyv
+                    binnedvals.append(getval(row)) # last bin is open if maxv is specified
+                    row = it.next()
+                    keyv = getkey(row)
+            except StopIteration:
+                pass
+            print binminv, binmaxv, binnedvals
             yield (binminv, binmaxv), binnedvals
-            if maxv is not None and binmaxv == maxv: # possible floating point precision bug here?
-                break
-    except StopIteration:
-        # don't forget to handle the last bin
-        yield (binminv, binmaxv), binnedvals
+
+    else:
+        
+        # initialise minimum
+        row = it.next()
+        keyv = getkey(row)
+        if minv is None:
+            minv = keyv # initialise minimum to first key value found
     
+        # N.B., we need to account for two possible scenarios
+        # (1) maxv is not specified, so keep making bins until we run out of rows
+        # (2) maxv is specified, so iterate over bins up to maxv
+        try:
+    
+            for binminv in count(minv, width):
+                binmaxv = binminv + width
+                if maxv is not None and binmaxv >= maxv: # final bin
+                    binmaxv = maxv # truncate final bin to specified maximum
+                binnedvals = []
+                while keyv < binminv: # advance until we're within the bin's range
+                    row = it.next()
+                    keyv = getkey(row)
+                while binminv <= keyv < binmaxv: # within the bin
+                    binnedvals.append(getval(row))
+                    row = it.next()
+                    keyv = getkey(row)
+                while maxv is not None and keyv == binmaxv == maxv: # possible floating point precision bug here?
+                    binnedvals.append(getval(row)) # last bin is open if maxv is specified
+                    row = it.next()
+                    keyv = getkey(row)
+                yield (binminv, binmaxv), binnedvals
+                if maxv is not None and binmaxv == maxv: # possible floating point precision bug here?
+                    break
+        except StopIteration:
+            # don't forget to handle the last bin
+            yield (binminv, binmaxv), binnedvals
+        
         
 def nthword(n, sep=None):
     """

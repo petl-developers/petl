@@ -10,6 +10,7 @@ import cPickle as pickle
 from tempfile import NamedTemporaryFile
 import operator
 import re
+from math import ceil
 
 
 from .util import asindices, rowgetter, asdict,\
@@ -1824,7 +1825,6 @@ class RecastView(RowContainer):
                          tuple(self.reducers.items()) if self.reducers is not None else self.reducers,
                          self.missing))
         except Exception as e:
-            print e
             raise Uncacheable(e)
 
 
@@ -8144,46 +8144,78 @@ def _recursive_group_and_aggregate(outerbin, level, bindef, fields, keys, widths
         tbl_sorted = sort(tbl, key) # sort at this level
         it = iter(tbl_sorted) # get an iterator
         it.next() # throw away header
-        # initialise minimum value
-        row = it.next()
-        keyv = getkey(row)
-        if minv is None:
-            minv = keyv
-            
-        # N.B., we need to account for two possible scenarios
-        # (1) maxv is not specified, so keep making bins until we run out of rows
-        # (2) maxv is specified, so iterate over bins up to maxv
-        try:
-            for binminv in count(minv, width):
+
+        # use a different algorithm if minv and maxv are specified - fixed bins
+        if minv is not None and maxv is not None:
+            numbins = int(ceil((maxv - minv) / width))
+            keyv = None
+            for n in xrange(0, numbins):
+                binminv = minv + n*width
                 binmaxv = binminv + width
-                if maxv is not None and binmaxv >= maxv: # final bin
+                if binmaxv >= maxv: # final bin
                     binmaxv = maxv # truncate final bin to specified maximum
                 thisbindef = list(bindef)
                 thisbindef.append((binminv, binmaxv))
                 binnedvals = []
-                while keyv < binminv: # advance until we're within the bin's range
-                    row = it.next()
-                    keyv = getkey(row)
-                while binminv <= keyv < binmaxv: # within the bin
-                    binnedvals.append(row)
-                    row = it.next()
-                    keyv = getkey(row)
-                while maxv is not None and keyv == binmaxv == maxv: # possible floating point precision bug here?
-                    binnedvals.append(row) # last bin is open if maxv is specified
-                    row = it.next()
-                    keyv = getkey(row)
-                    
+                try:
+                    while keyv < binminv: # advance until we're within the bin's range
+                        row = it.next()
+                        keyv = getkey(row)
+                    while binminv <= keyv < binmaxv: # within the bin
+                        binnedvals.append(getval(row))
+                        row = it.next()
+                        keyv = getkey(row)
+                    while keyv == binmaxv == maxv: # possible floating point precision bug here?
+                        binnedvals.append(getval(row)) # last bin is open if maxv is specified
+                        row = it.next()
+                        keyv = getkey(row)
+                except StopIteration:
+                    pass
                 for r in _recursive_group_and_aggregate(binnedvals, level+1, thisbindef, fields, keys, widths, aggregation, getval, mins, maxs):
                     yield r
+    
+        else:
                 
-                if maxv is not None and binmaxv == maxv: # possible floating point precision bug here?
-                    break
-        except StopIteration:
-            
-            # don't forget to handle the last bin
-            for r in _recursive_group_and_aggregate(binnedvals, level+1, thisbindef, fields, keys, widths, aggregation, getval, mins, maxs):
-                yield r
-
+            # initialise minimum value
+            row = it.next()
+            keyv = getkey(row)
+            if minv is None:
+                minv = keyv
+                
+            # N.B., we need to account for two possible scenarios
+            # (1) maxv is not specified, so keep making bins until we run out of rows
+            # (2) maxv is specified, so iterate over bins up to maxv
+            try:
+                for binminv in count(minv, width):
+                    binmaxv = binminv + width
+                    if maxv is not None and binmaxv >= maxv: # final bin
+                        binmaxv = maxv # truncate final bin to specified maximum
+                    thisbindef = list(bindef)
+                    thisbindef.append((binminv, binmaxv))
+                    binnedvals = []
+                    while keyv < binminv: # advance until we're within the bin's range
+                        row = it.next()
+                        keyv = getkey(row)
+                    while binminv <= keyv < binmaxv: # within the bin
+                        binnedvals.append(row)
+                        row = it.next()
+                        keyv = getkey(row)
+                    while maxv is not None and keyv == binmaxv == maxv: # possible floating point precision bug here?
+                        binnedvals.append(row) # last bin is open if maxv is specified
+                        row = it.next()
+                        keyv = getkey(row)
+                        
+                    for r in _recursive_group_and_aggregate(binnedvals, level+1, thisbindef, fields, keys, widths, aggregation, getval, mins, maxs):
+                        yield r
+                    
+                    if maxv is not None and binmaxv == maxv: # possible floating point precision bug here?
+                        break
+            except StopIteration:
+                
+                # don't forget to handle the last bin
+                for r in _recursive_group_and_aggregate(binnedvals, level+1, thisbindef, fields, keys, widths, aggregation, getval, mins, maxs):
+                    yield r
+    
 
 def itersimplemultirangeaggregate(table, keys, widths, aggregation, value,
                                       mins, maxs):

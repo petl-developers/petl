@@ -2239,6 +2239,13 @@ def test_rangeaggregate_minmax():
                ((5, 7), 0),
                ((7, 9), 2))
     ieq(expect4, table4)
+    
+    # check we get empty bins if maxv is large
+    table5 = rangeaggregate(table1, 'bar', 2, len, minv=10, maxv=14)
+    expect5 = (('key', 'value'),
+               ((10, 12), 0),
+               ((12, 14), 0))
+    ieq(expect5, table5)
 
 
 def test_rangeaggregate_multifield():
@@ -4023,5 +4030,20 @@ def test_multirangeaggregate():
           (((1, 3), (7, 9)), 3),
           (((3, 5), (2, 4)), 17))
     ieq(e5, t5)
+
+    # explicit mins and maxs
+    t6 = multirangeaggregate(t1, keys=('x', 'y'), widths=(2, 2), aggregation=len, mins=(-2, 0), maxs=(4, 6))
+    e6 = (('key', 'value'),
+          (((-2, 0), (0, 2)), 0),
+          (((-2, 0), (2, 4)), 0),
+          (((-2, 0), (4, 6)), 0),
+          (((0, 2), (0, 2)), 0),
+          (((0, 2), (2, 4)), 1),
+          (((0, 2), (4, 6)), 1),
+          (((2, 4), (0, 2)), 0),
+          (((2, 4), (2, 4)), 2),
+          (((2, 4), (4, 6)), 0))
+    ieq(e6, t6)
+    
 
     
