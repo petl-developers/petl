@@ -25,7 +25,7 @@ from petl import rename, fieldnames, cut, cat, convert, addfield, \
                 flatten, unflatten, mergesort, annex, unpackdict, unique, \
                 selectin, fold, addrownumbers, selectcontains, search, \
                 addcolumn, lookupjoin, hashlookupjoin, filldown, fillright, \
-                fillleft
+                fillleft, multirangeaggregate
 from ..transform import Conflict
 
 
@@ -3968,5 +3968,60 @@ def test_fillleft():
               (2, 'c', None),
               ('c', 'c', .72))
     ieq(expect, actual)
-    ieq(expect, actual)
+    ieq(expect, actual) 
+    
 
+def test_multirangeaggregate():
+    
+    t1 = (('x', 'y', 'z'),
+          (1, 3, 9),
+          (2, 3, 12),
+          (4, 2, 17),
+          (2, 7, 3),
+          (1, 6, 1))
+    
+    t2 = multirangeaggregate(t1, keys=('x', 'y'), widths=(2, 2), aggregation=len)
+    e2 = (('key', 'value'),
+          (((1, 3), (3, 5)), 2),
+          (((1, 3), (5, 7)), 1),
+          (((1, 3), (7, 9)), 1),
+          (((3, 5), (2, 4)), 1))
+    ieq(e2, t2)
+    ieq(e2, t2)
+
+    # explicit mins
+    t3 = multirangeaggregate(t1, keys=('x', 'y'), widths=(2, 2), aggregation=len, mins=(0, 0))
+    e3 = (('key', 'value'),
+          (((0, 2), (0, 2)), 0),
+          (((0, 2), (2, 4)), 1),
+          (((0, 2), (4, 6)), 0),
+          (((0, 2), (6, 8)), 1),
+          (((2, 4), (0, 2)), 0),
+          (((2, 4), (2, 4)), 1),
+          (((2, 4), (4, 6)), 0),
+          (((2, 4), (6, 8)), 1),
+          (((4, 6), (0, 2)), 0),
+          (((4, 6), (2, 4)), 1))
+    ieq(e3, t3)
+
+    # explicit mins and maxs
+    t4 = multirangeaggregate(t1, keys=('x', 'y'), widths=(2, 2), aggregation=len, mins=(0, 0), maxs=(4, 6))
+    e4 = (('key', 'value'),
+          (((0, 2), (0, 2)), 0),
+          (((0, 2), (2, 4)), 1),
+          (((0, 2), (4, 6)), 1),
+          (((2, 4), (0, 2)), 0),
+          (((2, 4), (2, 4)), 2),
+          (((2, 4), (4, 6)), 0))
+    ieq(e4, t4)
+    
+    # aggregation function
+    t5 = multirangeaggregate(t1, keys=('x', 'y'), widths=(2, 2), aggregation=sum, value='z')
+    e5 = (('key', 'value'),
+          (((1, 3), (3, 5)), 21),
+          (((1, 3), (5, 7)), 1),
+          (((1, 3), (7, 9)), 3),
+          (((3, 5), (2, 4)), 17))
+    ieq(e5, t5)
+
+    

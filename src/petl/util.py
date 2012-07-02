@@ -1302,6 +1302,12 @@ class FieldSelectionError(Exception):
         return 'selection is not a field or valid field index: %s' % self.value
     
     
+def rowitemgetter(fields, spec):
+    indices = asindices(fields, spec)
+    getter = itemgetter(*indices)
+    return getter
+
+    
 def rowgetter(*indices):
     """
     TODO doc me

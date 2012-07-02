@@ -18,7 +18,7 @@ from .util import asindices, rowgetter, asdict,\
     iterpeek, count, Counter, OrderedDict
 from .io import Uncacheable
 from .util import RowContainer, sortable_itemgetter
-from petl.util import FieldSelectionError, rowgroupbybin
+from petl.util import FieldSelectionError, rowgroupbybin, rowitemgetter
 
 
 def rename(table, *args):
@@ -8073,4 +8073,151 @@ def iterfillleft(table, missing):
                 outrow[i] = outrow[i-1]
         yield tuple(reversed(outrow))
         
+             
+def multirangeaggregate(table, keys, widths, aggregation, value=None, 
+                           mins=None, maxs=None, presorted=False, 
+                           buffersize=None):
+    """
+    TODO doc me
+    
+    """
+    
+    if callable(aggregation):
+        return SimpleMultiRangeAggregateView(table, keys, widths, aggregation, 
+                                             value=value,
+                                             mins=mins,
+                                             maxs=maxs,
+                                             presorted=presorted,
+                                             buffersize=buffersize)
+    else:
+        raise Exception('TODO currently only simple aggregation is supported')
+    
+    
+class SimpleMultiRangeAggregateView(RowContainer):
+    
+    def __init__(self, table, keys, widths, aggregation, 
+                  value=None, mins=None, maxs=None, presorted=False, 
+                  buffersize=None):
+        assert len(keys) == len(widths), 'one width must be specified for each key field'
+        assert mins is None or len(keys) == len(mins), 'bad value for mins'
+        assert maxs is None or len(keys) == len(maxs), 'bad value for maxs'
+        self.table = table
+        self.keys = keys
+        self.widths = widths
+        self.aggregation = aggregation
+        self.value = value
+        if mins is None:
+            self.mins = [None] * len(keys)
+        else:
+            self.mins = mins
+        if maxs is None:
+            self.maxs = [None] * len(keys)
+        else:
+            self.maxs = maxs
+        # TODO handle presorted
+        
+    def __iter__(self):
+        return itersimplemultirangeaggregate(self.table, self.keys, self.widths,
+                                             self.aggregation, self.value,
+                                             self.mins, self.maxs)
+        
+    def cachetag(self):
+        raise Uncacheable() # TODO    
+
+
+def _recursive_group_and_aggregate(outerbin, level, bindef, fields, keys, widths, aggregation, getval, mins, maxs):
+    bindef = list(bindef) # take a copy
+    
+    if level == len(keys):
+        vals = (getval(row) for row in outerbin)
+        yield tuple(bindef), aggregation(vals)
+    
+    else: # go deeper
+        key = keys[level]
+        getkey = rowitemgetter(fields, key)
+        width = widths[level]
+        minv = mins[level]
+        maxv = maxs[level]
+        
+        # initialise at this level
+        tbl = chain([fields], outerbin) # reconstitute table
+        tbl_sorted = sort(tbl, key) # sort at this level
+        it = iter(tbl_sorted) # get an iterator
+        it.next() # throw away header
+        # initialise minimum value
+        row = it.next()
+        keyv = getkey(row)
+        if minv is None:
+            minv = keyv
             
+        # N.B., we need to account for two possible scenarios
+        # (1) maxv is not specified, so keep making bins until we run out of rows
+        # (2) maxv is specified, so iterate over bins up to maxv
+        try:
+            for binminv in count(minv, width):
+                binmaxv = binminv + width
+                if maxv is not None and binmaxv >= maxv: # final bin
+                    binmaxv = maxv # truncate final bin to specified maximum
+                thisbindef = list(bindef)
+                thisbindef.append((binminv, binmaxv))
+                binnedvals = []
+                while keyv < binminv: # advance until we're within the bin's range
+                    row = it.next()
+                    keyv = getkey(row)
+                while binminv <= keyv < binmaxv: # within the bin
+                    binnedvals.append(row)
+                    row = it.next()
+                    keyv = getkey(row)
+                while maxv is not None and keyv == binmaxv == maxv: # possible floating point precision bug here?
+                    binnedvals.append(row) # last bin is open if maxv is specified
+                    row = it.next()
+                    keyv = getkey(row)
+                    
+                for r in _recursive_group_and_aggregate(binnedvals, level+1, thisbindef, fields, keys, widths, aggregation, getval, mins, maxs):
+                    yield r
+                
+                if maxv is not None and binmaxv == maxv: # possible floating point precision bug here?
+                    break
+        except StopIteration:
+            
+            # don't forget to handle the last bin
+            for r in _recursive_group_and_aggregate(binnedvals, level+1, thisbindef, fields, keys, widths, aggregation, getval, mins, maxs):
+                yield r
+
+
+def itersimplemultirangeaggregate(table, keys, widths, aggregation, value,
+                                      mins, maxs):
+    
+    if aggregation == len:
+        aggregation = lambda grp: sum(1 for _ in grp) # count length of iterable
+    yield ('key', 'value')
+
+    # we want a recursive grouping algorithm so we could cope with any number of 
+    # key fields
+    
+    keys = list(keys) # take a copy
+
+    it = iter(table)
+    fields = it.next()
+    
+    # wrap rows 
+    it = hybridrows(fields, it)
+
+    # determine value function
+    if value is None:
+        getval = lambda v: v # identity function - i.e., whole row
+    else:
+        if callable(value):
+            getval = value
+        else:
+            vindices = asindices(fields, value)
+            getval = itemgetter(*vindices)
+            
+        
+    for row in _recursive_group_and_aggregate(it, 0, [], fields, keys, widths, aggregation, getval, mins, maxs):
+        yield row
+
+    
+    
+    
+    
