@@ -8075,8 +8075,7 @@ def iterfillleft(table, missing):
         
              
 def multirangeaggregate(table, keys, widths, aggregation, value=None, 
-                           mins=None, maxs=None, presorted=False, 
-                           buffersize=None):
+                           mins=None, maxs=None):
     """
     TODO doc me
     
@@ -8086,9 +8085,7 @@ def multirangeaggregate(table, keys, widths, aggregation, value=None,
         return SimpleMultiRangeAggregateView(table, keys, widths, aggregation, 
                                              value=value,
                                              mins=mins,
-                                             maxs=maxs,
-                                             presorted=presorted,
-                                             buffersize=buffersize)
+                                             maxs=maxs)
     else:
         raise Exception('TODO currently only simple aggregation is supported')
     
@@ -8096,8 +8093,7 @@ def multirangeaggregate(table, keys, widths, aggregation, value=None,
 class SimpleMultiRangeAggregateView(RowContainer):
     
     def __init__(self, table, keys, widths, aggregation, 
-                  value=None, mins=None, maxs=None, presorted=False, 
-                  buffersize=None):
+                  value=None, mins=None, maxs=None):
         assert len(keys) == len(widths), 'one width must be specified for each key field'
         assert mins is None or len(keys) == len(mins), 'bad value for mins'
         assert maxs is None or len(keys) == len(maxs), 'bad value for maxs'
@@ -8125,14 +8121,18 @@ class SimpleMultiRangeAggregateView(RowContainer):
         raise Uncacheable() # TODO    
 
 
-def _recursive_group_and_aggregate(outerbin, level, bindef, fields, keys, widths, aggregation, getval, mins, maxs):
+def _recursive_bin(outerbin, level, bindef, fields, keys, widths, getval, mins, maxs):
+
+    # TODO this is almost impossible to comprehend, needs to be tidied up!
+    
     bindef = list(bindef) # take a copy
     
-    if level == len(keys):
+    if level == len(keys): # bottom out
         vals = (getval(row) for row in outerbin)
-        yield tuple(bindef), aggregation(vals)
+        yield tuple(bindef), vals
     
     else: # go deeper
+        
         key = keys[level]
         getkey = rowitemgetter(fields, key)
         width = widths[level]
@@ -8140,13 +8140,13 @@ def _recursive_group_and_aggregate(outerbin, level, bindef, fields, keys, widths
         maxv = maxs[level]
         
         # initialise at this level
-        tbl = chain([fields], outerbin) # reconstitute table
+        tbl = chain([fields], outerbin) # reconstitute table with header
         tbl_sorted = sort(tbl, key) # sort at this level
         it = iter(tbl_sorted) # get an iterator
         it.next() # throw away header
 
-        # use a different algorithm if minv and maxv are specified - fixed bins
         if minv is not None and maxv is not None:
+            # use a different algorithm if minv and maxv are specified - fixed bins
             numbins = int(ceil((maxv - minv) / width))
             keyv = None
             for n in xrange(0, numbins):
@@ -8156,65 +8156,68 @@ def _recursive_group_and_aggregate(outerbin, level, bindef, fields, keys, widths
                     binmaxv = maxv # truncate final bin to specified maximum
                 thisbindef = list(bindef)
                 thisbindef.append((binminv, binmaxv))
-                binnedvals = []
+                binnedrows = []
                 try:
                     while keyv < binminv: # advance until we're within the bin's range
                         row = it.next()
                         keyv = getkey(row)
                     while binminv <= keyv < binmaxv: # within the bin
-                        binnedvals.append(getval(row))
+                        binnedrows.append(getval(row))
                         row = it.next()
                         keyv = getkey(row)
                     while keyv == binmaxv == maxv: # possible floating point precision bug here?
-                        binnedvals.append(getval(row)) # last bin is open if maxv is specified
+                        binnedrows.append(getval(row)) # last bin is open if maxv is specified
                         row = it.next()
                         keyv = getkey(row)
                 except StopIteration:
                     pass
-                for r in _recursive_group_and_aggregate(binnedvals, level+1, thisbindef, fields, keys, widths, aggregation, getval, mins, maxs):
+                for r in _recursive_bin(binnedrows, level+1, thisbindef, fields, keys, widths, getval, mins, maxs):
                     yield r
     
         else:
                 
             # initialise minimum value
-            row = it.next()
-            keyv = getkey(row)
-            if minv is None:
-                minv = keyv
-                
-            # N.B., we need to account for two possible scenarios
-            # (1) maxv is not specified, so keep making bins until we run out of rows
-            # (2) maxv is specified, so iterate over bins up to maxv
             try:
-                for binminv in count(minv, width):
-                    binmaxv = binminv + width
-                    if maxv is not None and binmaxv >= maxv: # final bin
-                        binmaxv = maxv # truncate final bin to specified maximum
-                    thisbindef = list(bindef)
-                    thisbindef.append((binminv, binmaxv))
-                    binnedvals = []
-                    while keyv < binminv: # advance until we're within the bin's range
-                        row = it.next()
-                        keyv = getkey(row)
-                    while binminv <= keyv < binmaxv: # within the bin
-                        binnedvals.append(row)
-                        row = it.next()
-                        keyv = getkey(row)
-                    while maxv is not None and keyv == binmaxv == maxv: # possible floating point precision bug here?
-                        binnedvals.append(row) # last bin is open if maxv is specified
-                        row = it.next()
-                        keyv = getkey(row)
-                        
-                    for r in _recursive_group_and_aggregate(binnedvals, level+1, thisbindef, fields, keys, widths, aggregation, getval, mins, maxs):
-                        yield r
-                    
-                    if maxv is not None and binmaxv == maxv: # possible floating point precision bug here?
-                        break
+                row = it.next() # what happens if this raises StopIteration?
             except StopIteration:
-                
-                # don't forget to handle the last bin
-                for r in _recursive_group_and_aggregate(binnedvals, level+1, thisbindef, fields, keys, widths, aggregation, getval, mins, maxs):
-                    yield r
+                pass
+            else:
+                keyv = getkey(row)
+                if minv is None:
+                    minv = keyv
+                    
+                # N.B., we need to account for two possible scenarios
+                # (1) maxv is not specified, so keep making bins until we run out of rows
+                # (2) maxv is specified, so iterate over bins up to maxv
+                try:
+                    for binminv in count(minv, width):
+                        binmaxv = binminv + width
+                        if maxv is not None and binmaxv >= maxv: # final bin
+                            binmaxv = maxv # truncate final bin to specified maximum
+                        thisbindef = list(bindef)
+                        thisbindef.append((binminv, binmaxv))
+                        binnedrows = []
+                        while keyv < binminv: # advance until we're within the bin's range
+                            row = it.next()
+                            keyv = getkey(row)
+                        while binminv <= keyv < binmaxv: # within the bin
+                            binnedrows.append(row)
+                            row = it.next()
+                            keyv = getkey(row)
+                        while maxv is not None and keyv == binmaxv == maxv: # possible floating point precision bug here?
+                            binnedrows.append(row) # last bin is open if maxv is specified
+                            row = it.next()
+                            keyv = getkey(row)
+                            
+                        for r in _recursive_bin(binnedrows, level+1, thisbindef, fields, keys, widths, getval, mins, maxs):
+                            yield r
+                        
+                        if maxv is not None and binmaxv == maxv: # possible floating point precision bug here?
+                            break
+                except StopIteration:
+                    # don't forget to handle the last bin
+                    for r in _recursive_bin(binnedrows, level+1, thisbindef, fields, keys, widths, getval, mins, maxs):
+                        yield r
     
 
 def itersimplemultirangeaggregate(table, keys, widths, aggregation, value,
@@ -8227,8 +8230,6 @@ def itersimplemultirangeaggregate(table, keys, widths, aggregation, value,
     # we want a recursive grouping algorithm so we could cope with any number of 
     # key fields
     
-    keys = list(keys) # take a copy
-
     it = iter(table)
     fields = it.next()
     
@@ -8245,9 +8246,8 @@ def itersimplemultirangeaggregate(table, keys, widths, aggregation, value,
             vindices = asindices(fields, value)
             getval = itemgetter(*vindices)
             
-        
-    for row in _recursive_group_and_aggregate(it, 0, [], fields, keys, widths, aggregation, getval, mins, maxs):
-        yield row
+    for bindef, vals in _recursive_bin(it, 0, [], fields, keys, widths, getval, mins, maxs):
+        yield bindef, aggregation(vals)
 
     
     

@@ -2751,39 +2751,44 @@ def rowgroupbybin(table, key, width, value=None, minv=None, maxv=None):
     else:
         
         # initialise minimum
-        row = it.next()
-        keyv = getkey(row)
-        if minv is None:
-            minv = keyv # initialise minimum to first key value found
-    
-        # N.B., we need to account for two possible scenarios
-        # (1) maxv is not specified, so keep making bins until we run out of rows
-        # (2) maxv is specified, so iterate over bins up to maxv
         try:
-    
-            for binminv in count(minv, width):
-                binmaxv = binminv + width
-                if maxv is not None and binmaxv >= maxv: # final bin
-                    binmaxv = maxv # truncate final bin to specified maximum
-                binnedvals = []
-                while keyv < binminv: # advance until we're within the bin's range
-                    row = it.next()
-                    keyv = getkey(row)
-                while binminv <= keyv < binmaxv: # within the bin
-                    binnedvals.append(getval(row))
-                    row = it.next()
-                    keyv = getkey(row)
-                while maxv is not None and keyv == binmaxv == maxv: # possible floating point precision bug here?
-                    binnedvals.append(getval(row)) # last bin is open if maxv is specified
-                    row = it.next()
-                    keyv = getkey(row)
-                yield (binminv, binmaxv), binnedvals
-                if maxv is not None and binmaxv == maxv: # possible floating point precision bug here?
-                    break
+            row = it.next()
         except StopIteration:
-            # don't forget to handle the last bin
-            yield (binminv, binmaxv), binnedvals
+            pass
+        else:
+            keyv = getkey(row)
+            if minv is None:
+                minv = keyv # initialise minimum to first key value found
         
+            # N.B., we need to account for two possible scenarios
+            # (1) maxv is not specified, so keep making bins until we run out of rows
+            # (2) maxv is specified, so iterate over bins up to maxv
+            try:
+        
+                for binminv in count(minv, width):
+                    binmaxv = binminv + width
+                    if maxv is not None and binmaxv >= maxv: # final bin
+                        binmaxv = maxv # truncate final bin to specified maximum
+                    binnedvals = []
+                    while keyv < binminv: # advance until we're within the bin's range
+                        row = it.next()
+                        keyv = getkey(row)
+                    while binminv <= keyv < binmaxv: # within the bin
+                        binnedvals.append(getval(row))
+                        row = it.next()
+                        keyv = getkey(row)
+                    while maxv is not None and keyv == binmaxv == maxv: # possible floating point precision bug here?
+                        binnedvals.append(getval(row)) # last bin is open if maxv is specified
+                        row = it.next()
+                        keyv = getkey(row)
+                    yield (binminv, binmaxv), binnedvals
+                    if maxv is not None and binmaxv == maxv: # possible floating point precision bug here?
+                        break
+            except StopIteration:
+                # don't forget to handle the last bin
+                yield (binminv, binmaxv), binnedvals
+        
+
         
 def nthword(n, sep=None):
     """

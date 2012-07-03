@@ -2248,6 +2248,23 @@ def test_rangeaggregate_minmax():
     ieq(expect5, table5)
 
 
+def test_rangeaggregate_empty():
+    
+    table1 = (('foo', 'bar'),)
+    table2 = rangeaggregate(table1, 'bar', 2, len)
+    expect2 = (('key', 'value'),)
+    ieq(expect2, table2)
+
+    table3 = rangeaggregate(table1, 'bar', 2, len, minv=0)
+    ieq(expect2, table3)
+
+    table4 = rangeaggregate(table1, 'bar', 2, len, minv=0, maxv=4)
+    expect4 = (('key', 'value'),
+               ((0, 2), 0),
+               ((2, 4), 0))
+    ieq(expect4, table4)
+
+
 def test_rangeaggregate_multifield():
     
     table1 = (('foo', 'bar'),
@@ -4046,4 +4063,22 @@ def test_multirangeaggregate():
     ieq(e6, t6)
     
 
+def test_multirangeaggregate_empty():
+    
+    t1 = (('x', 'y', 'z'),)
+
+    t2 = multirangeaggregate(t1, keys=('x', 'y'), widths=(2, 2), aggregation=len)
+    e2 = (('key', 'value'),)
+    ieq(e2, t2)
+    
+    t3 = multirangeaggregate(t1, keys=('x', 'y'), widths=(2, 2), aggregation=len, mins=(0, 0))
+    ieq(e2, t3)
+    
+    t4 = multirangeaggregate(t1, keys=('x', 'y'), widths=(2, 2), aggregation=len, mins=(0, 0), maxs=(4, 4))
+    e4 = (('key', 'value'),
+          (((0, 2), (0, 2)), 0),
+          (((0, 2), (2, 4)), 0),
+          (((2, 4), (0, 2)), 0),
+          (((2, 4), (2, 4)), 0))
+    ieq(e4, t4)
     
