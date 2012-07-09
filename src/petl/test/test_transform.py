@@ -3996,14 +3996,19 @@ def test_fillleft():
     
 
 def test_multirangeaggregate():
-    
+
     t1 = (('x', 'y', 'z'),
           (1, 3, 9),
           (2, 3, 12),
           (4, 2, 17),
           (2, 7, 3),
           (1, 6, 1))
-    
+
+    # I'm dubious about whether this would ever be useful, where no minimum
+    # or maximum is given, because the second level minimums could then be 
+    # different under different first level bins, and usually what you want is
+    # a consistent grid.
+        
     t2 = multirangeaggregate(t1, keys=('x', 'y'), widths=(2, 2), aggregation=len)
     e2 = (('key', 'value'),
           (((1, 3), (3, 5)), 2),
@@ -4013,8 +4018,13 @@ def test_multirangeaggregate():
     ieq(e2, t2)
     ieq(e2, t2)
 
-    # explicit mins
-    t3 = multirangeaggregate(t1, keys=('x', 'y'), widths=(2, 2), aggregation=len, mins=(0, 0))
+    # Explicit mins - at least here the grid minimums would be consistent, 
+    # however the grid might be sparse because bins are only created as long as
+    # there is data, and again usually what you want is a consistent grid, not
+    # missing cells.
+
+    t3 = multirangeaggregate(t1, keys=('x', 'y'), widths=(2, 2), aggregation=len, 
+                             mins=(0, 0))
     e3 = (('key', 'value'),
           (((0, 2), (0, 2)), 0),
           (((0, 2), (2, 4)), 1),
@@ -4028,8 +4038,11 @@ def test_multirangeaggregate():
           (((4, 6), (2, 4)), 1))
     ieq(e3, t3)
 
-    # explicit mins and maxs
-    t4 = multirangeaggregate(t1, keys=('x', 'y'), widths=(2, 2), aggregation=len, mins=(0, 0), maxs=(4, 6))
+    # Explicit mins and maxs - this is probably the only sensible version of the
+    # function, and the most straightforward to implement.
+    
+    t4 = multirangeaggregate(t1, keys=('x', 'y'), widths=(2, 2), aggregation=len, 
+                             mins=(0, 0), maxs=(4, 6))
     e4 = (('key', 'value'),
           (((0, 2), (0, 2)), 0),
           (((0, 2), (2, 4)), 1),
@@ -4039,8 +4052,10 @@ def test_multirangeaggregate():
           (((2, 4), (4, 6)), 0))
     ieq(e4, t4)
     
-    # aggregation function
-    t5 = multirangeaggregate(t1, keys=('x', 'y'), widths=(2, 2), aggregation=sum, value='z')
+    # Test a different aggregation function.
+    
+    t5 = multirangeaggregate(t1, keys=('x', 'y'), widths=(2, 2), aggregation=sum, 
+                             value='z')
     e5 = (('key', 'value'),
           (((1, 3), (3, 5)), 21),
           (((1, 3), (5, 7)), 1),
@@ -4048,8 +4063,10 @@ def test_multirangeaggregate():
           (((3, 5), (2, 4)), 17))
     ieq(e5, t5)
 
-    # explicit mins and maxs
-    t6 = multirangeaggregate(t1, keys=('x', 'y'), widths=(2, 2), aggregation=len, mins=(-2, 0), maxs=(4, 6))
+    # Check different explicit mins and maxs.
+    
+    t6 = multirangeaggregate(t1, keys=('x', 'y'), widths=(2, 2), aggregation=len, 
+                             mins=(-2, 0), maxs=(4, 6))
     e6 = (('key', 'value'),
           (((-2, 0), (0, 2)), 0),
           (((-2, 0), (2, 4)), 0),
@@ -4062,19 +4079,45 @@ def test_multirangeaggregate():
           (((2, 4), (4, 6)), 0))
     ieq(e6, t6)
     
+    # check explicit mins and maxs with aggregation function over value
+    t7 = multirangeaggregate(t1, keys=('x', 'y'), widths=(2, 2), aggregation=sum, 
+                             mins=(-2, 0), maxs=(4, 6), value='z')
+    e7 = (('key', 'value'),
+          (((-2, 0), (0, 2)), 0),
+          (((-2, 0), (2, 4)), 0),
+          (((-2, 0), (4, 6)), 0),
+          (((0, 2), (0, 2)), 0),
+          (((0, 2), (2, 4)), 9),
+          (((0, 2), (4, 6)), 1),
+          (((2, 4), (0, 2)), 0),
+          (((2, 4), (2, 4)), 29),
+          (((2, 4), (4, 6)), 0))
+    ieq(e7, t7)
 
 def test_multirangeaggregate_empty():
     
+    # Check sanity with empty input.
+    
     t1 = (('x', 'y', 'z'),)
 
+    # If no mins or maxs are given, output will be empty also.
+    
     t2 = multirangeaggregate(t1, keys=('x', 'y'), widths=(2, 2), aggregation=len)
     e2 = (('key', 'value'),)
     ieq(e2, t2)
     
-    t3 = multirangeaggregate(t1, keys=('x', 'y'), widths=(2, 2), aggregation=len, mins=(0, 0))
+    # It only mins are given, output will be empty also.
+
+    t3 = multirangeaggregate(t1, keys=('x', 'y'), widths=(2, 2), aggregation=len, 
+                             mins=(0, 0))
     ieq(e2, t3)
-    
-    t4 = multirangeaggregate(t1, keys=('x', 'y'), widths=(2, 2), aggregation=len, mins=(0, 0), maxs=(4, 4))
+
+    # If mins and maxs are given, then aggregation function will be applied for
+    # each bin to an empty list of rows. This is probably the most useful form
+    # of the function.
+        
+    t4 = multirangeaggregate(t1, keys=('x', 'y'), widths=(2, 2), aggregation=len, 
+                             mins=(0, 0), maxs=(4, 4))
     e4 = (('key', 'value'),
           (((0, 2), (0, 2)), 0),
           (((0, 2), (2, 4)), 0),

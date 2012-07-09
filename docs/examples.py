@@ -1689,3 +1689,17 @@ look(table1)
 table2 = fillleft(table1)
 look(table2)
     
+
+# multirangeaggregate
+
+table1 = (('x', 'y', 'z'),
+      (1, 3, 9),
+      (2, 3, 12),
+      (4, 2, 17),
+      (2, 7, 3),
+      (1, 6, 1))
+
+from petl import look, multirangeaggregate
+look(table1)
+table2 = multirangeaggregate(table1, keys=('x', 'y'), widths=(2, 2), aggregation=sum, mins=(0, 0), maxs=(4, 4), value='z')
+look(table2)

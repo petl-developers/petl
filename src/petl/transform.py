@@ -8074,20 +8074,55 @@ def iterfillleft(table, missing):
         yield tuple(reversed(outrow))
         
              
+# N.B., there are issues with this function as it currently stands. The usability
+# may be dubious given the different behaviour with mins and maxs specified
+# vs not specified. The implementation itself may also be very innefficient.
+        
 def multirangeaggregate(table, keys, widths, aggregation, value=None, 
-                           mins=None, maxs=None):
+                        mins=None, maxs=None):
     """
-    TODO doc me
+    Group rows at multiple levels then aggregate whole rows or specified values.
+    E.g.::
+
+        >>> from petl import look, multirangeaggregate
+        >>> look(table1)
+        +-----+-----+-----+
+        | 'x' | 'y' | 'z' |
+        +=====+=====+=====+
+        | 1   | 3   | 9   |
+        +-----+-----+-----+
+        | 2   | 3   | 12  |
+        +-----+-----+-----+
+        | 4   | 2   | 17  |
+        +-----+-----+-----+
+        | 2   | 7   | 3   |
+        +-----+-----+-----+
+        | 1   | 6   | 1   |
+        +-----+-----+-----+
+        
+        >>> table2 = multirangeaggregate(table1, keys=('x', 'y'), widths=(2, 2), aggregation=sum, mins=(0, 0), maxs=(4, 4), value='z')
+        >>> look(table2)
+        +------------------+---------+
+        | 'key'            | 'value' |
+        +==================+=========+
+        | ((0, 2), (0, 2)) | 0       |
+        +------------------+---------+
+        | ((0, 2), (2, 4)) | 9       |
+        +------------------+---------+
+        | ((2, 4), (0, 2)) | 0       |
+        +------------------+---------+
+        | ((2, 4), (2, 4)) | 29      |
+        +------------------+---------+
+
+    .. versionadded:: 0.12
     
     """
     
-    if callable(aggregation):
-        return SimpleMultiRangeAggregateView(table, keys, widths, aggregation, 
-                                             value=value,
-                                             mins=mins,
-                                             maxs=maxs)
-    else:
-        raise Exception('TODO currently only simple aggregation is supported')
+    assert callable(aggregation), 'aggregation argument must be callable'
+    return SimpleMultiRangeAggregateView(table, keys, widths, aggregation, 
+                                         value=value,
+                                         mins=mins,
+                                         maxs=maxs)
     
     
 class SimpleMultiRangeAggregateView(RowContainer):
@@ -8110,7 +8145,6 @@ class SimpleMultiRangeAggregateView(RowContainer):
             self.maxs = [None] * len(keys)
         else:
             self.maxs = maxs
-        # TODO handle presorted
         
     def __iter__(self):
         return itersimplemultirangeaggregate(self.table, self.keys, self.widths,
@@ -8162,11 +8196,11 @@ def _recursive_bin(outerbin, level, bindef, fields, keys, widths, getval, mins, 
                         row = it.next()
                         keyv = getkey(row)
                     while binminv <= keyv < binmaxv: # within the bin
-                        binnedrows.append(getval(row))
+                        binnedrows.append(row)
                         row = it.next()
                         keyv = getkey(row)
                     while keyv == binmaxv == maxv: # possible floating point precision bug here?
-                        binnedrows.append(getval(row)) # last bin is open if maxv is specified
+                        binnedrows.append(row) # last bin is open if maxv is specified
                         row = it.next()
                         keyv = getkey(row)
                 except StopIteration:
@@ -8176,6 +8210,9 @@ def _recursive_bin(outerbin, level, bindef, fields, keys, widths, getval, mins, 
     
         else:
                 
+            # use a different algorithm if min or max is not specified, where
+            # the unspecified limit is determined from the data
+            
             # initialise minimum value
             try:
                 row = it.next() # what happens if this raises StopIteration?

@@ -107,7 +107,7 @@ Functions for transforming tables:
 +--------------------------------+-----------------------------+-------------------------------+
 |  :func:`lookupjoin`            |  :func:`hashlookupjoin`     |  :func:`filldown`             |
 +--------------------------------+-----------------------------+-------------------------------+
-|  :func:`fillright`             |  :func:`fillleft`           |                               |
+|  :func:`fillright`             |  :func:`fillleft`           |  :func:`multirangeaggregate`  |
 +--------------------------------+-----------------------------+-------------------------------+
 
 Functions for loading (writing) data to files and databases:
@@ -525,6 +525,7 @@ Transform - transforming tables
 .. autofunction:: petl.filldown
 .. autofunction:: petl.fillright
 .. autofunction:: petl.fillleft
+.. autofunction:: petl.multirangeaggregate
 
 
 Load - writing tables to files and databases
