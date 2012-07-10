@@ -109,6 +109,8 @@ Functions for transforming tables:
 +--------------------------------+-----------------------------+-------------------------------+
 |  :func:`fillright`             |  :func:`fillleft`           |  :func:`multirangeaggregate`  |
 +--------------------------------+-----------------------------+-------------------------------+
+|  :func:`unjoin`                |  :func:`distinct`           |  :func:`rowgroupmap`          |
++--------------------------------+-----------------------------+-------------------------------+
 
 Functions for loading (writing) data to files and databases:
 
@@ -526,6 +528,9 @@ Transform - transforming tables
 .. autofunction:: petl.fillright
 .. autofunction:: petl.fillleft
 .. autofunction:: petl.multirangeaggregate
+.. autofunction:: petl.unjoin
+.. autofunction:: petl.distinct
+.. autofunction:: petl.rowgroupmap
 
 
 Load - writing tables to files and databases

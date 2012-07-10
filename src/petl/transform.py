@@ -1922,9 +1922,10 @@ def iterrecast(source, key, variablefield, valuefield,
         yield tuple(out_row)
                 
             
-def duplicates(table, key, presorted=False, buffersize=None):
+def duplicates(table, key=None, presorted=False, buffersize=None):
     """
-    Select rows with duplicate values under a given key. E.g.::
+    Select rows with duplicate values under a given key (or duplicate
+    rows where no key is given). E.g.::
 
         >>> from petl import duplicates, look    
         >>> look(table1)
@@ -1978,14 +1979,17 @@ def duplicates(table, key, presorted=False, buffersize=None):
     are sorted, see also the discussion of the `buffersize` argument under the 
     :func:`sort` function.
     
+    See also :func:`unique` and :func:`distinct`.
+    
     """
 
-    return DuplicatesView(table, key, presorted, buffersize)
+    return DuplicatesView(table, key=key, presorted=presorted, 
+                          buffersize=buffersize)
 
 
 class DuplicatesView(RowContainer):
     
-    def __init__(self, source, key, presorted=False, buffersize=None):
+    def __init__(self, source, key=None, presorted=False, buffersize=None):
         if presorted:
             self.source = source
         else:
@@ -2011,7 +2015,10 @@ def iterduplicates(source, key):
     yield tuple(flds)
 
     # convert field selection into field indices
-    indices = asindices(flds, key)
+    if key is None:
+        indices = range(len(flds))
+    else:
+        indices = asindices(flds, key)
         
     # now use field indices to construct a _getkey function
     # N.B., this may raise an exception on short rows, depending on
@@ -2038,9 +2045,10 @@ def iterduplicates(source, key):
             previous = row
     
     
-def unique(table, key, presorted=False, buffersize=None):
+def unique(table, key=None, presorted=False, buffersize=None):
     """
-    Select rows with unique values under a given key. E.g.::
+    Select rows with unique values under a given key (or unique rows
+    if no key is given). E.g.::
 
         >>> from petl import unique, look
         >>> look(table1)
@@ -2082,15 +2090,18 @@ def unique(table, key, presorted=False, buffersize=None):
     :func:`sort` function.
 
     .. versionadded:: 0.10
+
+    See also :func:`duplicates` and :func:`distinct`.
     
     """
 
-    return UniqueView(table, key, presorted, buffersize)
+    return UniqueView(table, key=key, presorted=presorted, 
+                      buffersize=buffersize)
 
 
 class UniqueView(RowContainer):
     
-    def __init__(self, source, key, presorted=False, buffersize=None):
+    def __init__(self, source, key=None, presorted=False, buffersize=None):
         if presorted:
             self.source = source
         else:
@@ -2116,7 +2127,10 @@ def iterunique(source, key):
     yield tuple(flds)
 
     # convert field selection into field indices
-    indices = asindices(flds, key)
+    if key is None:
+        indices = range(len(flds))
+    else:
+        indices = asindices(flds, key)
         
     # now use field indices to construct a _getkey function
     # N.B., this may raise an exception on short rows, depending on
@@ -8287,6 +8301,222 @@ def itersimplemultirangeaggregate(table, keys, widths, aggregation, value,
         yield bindef, aggregation(vals)
 
     
+################################################################################
+################################################################################
+## UNJOIN
+################################################################################
+################################################################################
+
+    
+def unjoin(table, value, key=None, autoincrement=(1, 1), presorted=False, buffersize=None):
+    """
+    Split a table into two tables by reversing an inner join.
+    
+    E.g., if the join key is present in the table::
+
+        >>> from petl import look, unjoin
+        >>> look(table1)
+        +-------+-------+----------+
+        | 'foo' | 'bar' | 'baz'    |
+        +=======+=======+==========+
+        | 'A'   | 1     | 'apple'  |
+        +-------+-------+----------+
+        | 'B'   | 1     | 'apple'  |
+        +-------+-------+----------+
+        | 'C'   | 2     | 'orange' |
+        +-------+-------+----------+
+        
+        >>> table2, table3 = unjoin(table1, 'baz', key='bar')
+        >>> look(table2)
+        +-------+-------+
+        | 'foo' | 'bar' |
+        +=======+=======+
+        | 'A'   | 1     |
+        +-------+-------+
+        | 'B'   | 1     |
+        +-------+-------+
+        | 'C'   | 2     |
+        +-------+-------+
+        
+        >>> look(table3)    
+        +-------+----------+
+        | 'bar' | 'baz'    |
+        +=======+==========+
+        | 1     | 'apple'  |
+        +-------+----------+
+        | 2     | 'orange' |
+        +-------+----------+
+        
+    An integer join key can also be reconstructed, e.g.::
+    
+        >>> look(table4)
+        +-------+----------+
+        | 'foo' | 'bar'    |
+        +=======+==========+
+        | 'A'   | 'apple'  |
+        +-------+----------+
+        | 'B'   | 'apple'  |
+        +-------+----------+
+        | 'C'   | 'orange' |
+        +-------+----------+
+        
+        >>> table5, table6 = unjoin(table4, 'bar')
+        >>> look(table5)
+        +-------+----------+
+        | 'foo' | 'bar_id' |
+        +=======+==========+
+        | 'A'   | 1        |
+        +-------+----------+
+        | 'B'   | 1        |
+        +-------+----------+
+        | 'C'   | 2        |
+        +-------+----------+
+        
+        >>> look(table6)
+        +------+----------+
+        | 'id' | 'bar'    |
+        +======+==========+
+        | 1    | 'apple'  |
+        +------+----------+
+        | 2    | 'orange' |
+        +------+----------+
+        
+    .. versionadded:: 0.12
+    
+    """
+
+    if key is None:
+        # first sort the table by the value field
+        if presorted:
+            tbl_sorted = table
+        else:
+            tbl_sorted = sort(table, value, buffersize=buffersize)
+        # on the left, return the original table but with the value field
+        # replaced by an incrementing integer
+        left = ConvertToIncrementingCounterView(tbl_sorted, value, autoincrement)
+        # on the right, return a new table with distinct values from the
+        # given field
+        right = EnumerateDistinctView(tbl_sorted, value, autoincrement)
+    else:
+        # on the left, return distinct rows from the original table
+        # with the value field cut out
+        left = distinct(cutout(table, value))
+        # on the right, return distinct rows from the original table
+        # with all fields but the key and value cut out
+        right = distinct(cut(table, key, value))
+    return left, right
     
     
+class ConvertToIncrementingCounterView(RowContainer):
     
+    def __init__(self, tbl, value, autoincrement):
+        self.table = tbl
+        self.value = value
+        self.autoincrement = autoincrement
+        
+    def __iter__(self):
+        it = iter(self.table)
+        fields = it.next()
+        table = chain([fields], it)
+        value = self.value
+        vidx = fields.index(value)
+        outflds = list(fields)
+        outflds[vidx] = '%s_id' % value
+        yield tuple(outflds)
+        offset, multiplier = self.autoincrement
+        for n, (_, group) in enumerate(rowgroupby(table, value)):
+            for row in group:
+                outrow = list(row)
+                outrow[vidx] = (n * multiplier) + offset 
+                yield tuple(outrow)
+        
+
+class EnumerateDistinctView(RowContainer):
+    
+    def __init__(self, tbl, value, autoincrement):
+        self.table = tbl
+        self.value = value
+        self.autoincrement = autoincrement
+        
+    def __iter__(self):
+        offset, multiplier = self.autoincrement
+        yield ('id', self.value)
+        for n, (v, _) in enumerate(rowgroupby(self.table, self.value)):
+            yield ((n * multiplier) + offset, v) 
+        
+
+def rowgroupmap(table, key, mapper, fields=None, missing=None, presorted=False, buffersize=None):
+    """
+    Group rows under the given key then apply `mapper` to yield zero or more
+    output rows for each input group of rows. 
+    
+    .. versionadded:: 0.12
+    
+    """
+
+    return RowGroupMapView(table, key, mapper, fields=fields,
+                           presorted=presorted, 
+                           buffersize=buffersize)
+
+
+class RowGroupMapView(RowContainer):
+    
+    def __init__(self, source, key, mapper, fields=None, 
+                 presorted=False, buffersize=None):
+        if presorted:
+            self.source = source
+        else:
+            self.source = sort(source, key, buffersize=buffersize)
+        self.key = key
+        self.fields = fields
+        self.mapper = mapper
+
+    def __iter__(self):
+        return iterrowgroupmap(self.source, self.key, self.mapper, self.fields)
+
+    def cachetag(self):
+        try:
+            return hash((self.source.cachetag(), self.key, 
+                         tuple(self.fields) if self.fields else self.fields, 
+                         self.mapper))
+        except Exception as e:
+            raise Uncacheable(e)
+
+    
+def iterrowgroupmap(source, key, mapper, fields):
+    yield tuple(fields)
+    for key, rows in rowgroupby(source, key):
+        for row in mapper(key, rows):
+            yield row
+        
+
+def distinct(table, presorted=False, buffersize=None):
+    """
+    Return only distinct rows in the table. See also :func:`duplicates` and
+    :func:`unique`.
+    
+    .. versionadded:: 0.12
+    
+    """
+    
+    return DistinctView(table, presorted=presorted, buffersize=buffersize)
+
+
+class DistinctView(RowContainer):
+    
+    def __init__(self, table, presorted=False, buffersize=None):
+        if presorted:
+            self.table = table
+        else:
+            self.table = sort(table, buffersize=buffersize)
+        
+    def __iter__(self):
+        it = iter(self.table)
+        yield it.next()
+        previous = None
+        for row in it:
+            if row != previous:
+                yield row
+            previous = row
+            
+            

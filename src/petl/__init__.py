@@ -37,7 +37,7 @@ from petl.transform import rename, cut, cat, convert, fieldconvert, addfield, ro
            resub, flatten, unflatten, mergesort, annex, unpackdict, unique, \
            fold, mergeduplicates, addrownumbers, selectcontains, search, sub, \
            addcolumn, lookupjoin, hashlookupjoin, filldown, fillright, fillleft, \
-           multirangeaggregate
+           multirangeaggregate, unjoin, rowgroupmap, distinct
            
            
 VERSION = '0.12-SNAPSHOT'

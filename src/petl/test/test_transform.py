@@ -25,7 +25,7 @@ from petl import rename, fieldnames, cut, cat, convert, addfield, \
                 flatten, unflatten, mergesort, annex, unpackdict, unique, \
                 selectin, fold, addrownumbers, selectcontains, search, \
                 addcolumn, lookupjoin, hashlookupjoin, filldown, fillright, \
-                fillleft, multirangeaggregate
+                fillleft, multirangeaggregate, unjoin
 from ..transform import Conflict
 
 
@@ -1062,6 +1062,21 @@ def test_duplicates_empty():
     ieq(expect, actual)
 
 
+def test_duplicates_wholerow():
+    
+    table = (('foo', 'bar', 'baz'),
+             ('A', 1, 2),
+             ('B', '2', '3.4'),
+             ('B', '2', '3.4'),
+             ('D', 4, 12.3))
+
+    result = duplicates(table)
+    expectation = (('foo', 'bar', 'baz'),
+             ('B', '2', '3.4'),
+             ('B', '2', '3.4'))
+    ieq(expectation, result)
+    
+
 def test_unique():
     
     table = (('foo', 'bar', 'baz'),
@@ -1101,6 +1116,21 @@ def test_unique_empty():
     actual = unique(table, key='foo')
     ieq(expect, actual)
 
+
+def test_unique_wholerow():
+    
+    table = (('foo', 'bar', 'baz'),
+             ('A', 1, 2),
+             ('B', '2', '3.4'),
+             ('B', '2', '3.4'),
+             ('D', 4, 12.3))
+
+    result = unique(table)
+    expectation = (('foo', 'bar', 'baz'),
+             ('A', 1, 2),
+             ('D', 4, 12.3))
+    ieq(expectation, result)
+    
 
 def test_conflicts():
     
@@ -4125,3 +4155,174 @@ def test_multirangeaggregate_empty():
           (((2, 4), (2, 4)), 0))
     ieq(e4, t4)
     
+    
+def test_unjoin_implicit_key():
+
+    # test the case where the join key needs to be reconstructed
+        
+    table1 = (('foo', 'bar'),
+              (1, 'apple'),
+              (2, 'apple'),
+              (3, 'orange'))
+    
+    expect_left = (('foo', 'bar_id'),
+                   (1, 1),
+                   (2, 1),
+                   (3, 2))
+    expect_right = (('id', 'bar'),
+                    (1, 'apple'),
+                    (2, 'orange'))
+    
+    left, right = unjoin(table1, 'bar')
+    ieq(expect_left, left)
+    ieq(expect_left, left)
+    ieq(expect_right, right)
+    ieq(expect_right, right)
+
+    
+def test_unjoin_explicit_key():
+
+    # test the case where the join key is still present
+    
+    table2 = (('Customer ID', 'First Name', 'Surname', 'Telephone Number'),
+              (123, 'Robert', 'Ingram', '555-861-2025'),
+              (456, 'Jane', 'Wright', '555-403-1659'),
+              (456, 'Jane', 'Wright', '555-776-4100'),
+              (789, 'Maria', 'Fernandez', '555-808-9633'))
+    
+    expect_left = (('Customer ID', 'First Name', 'Surname'),
+                   (123, 'Robert', 'Ingram'),
+                   (456, 'Jane', 'Wright'),
+                   (789, 'Maria', 'Fernandez'))
+    expect_right = (('Customer ID', 'Telephone Number'),
+                    (123, '555-861-2025'),
+                    (456, '555-403-1659'),
+                    (456, '555-776-4100'),
+                    (789, '555-808-9633'))
+    left, right = unjoin(table2, 'Telephone Number', key='Customer ID')
+    ieq(expect_left, left)
+    ieq(expect_left, left)
+    ieq(expect_right, right)
+    ieq(expect_right, right)
+
+
+def test_unjoin_explicit_key_2():
+    
+    table3 = (('Employee', 'Skill', 'Current Work Location'),
+              ('Jones', 'Typing', '114 Main Street'),
+              ('Jones', 'Shorthand', '114 Main Street'),
+              ('Jones', 'Whittling', '114 Main Street'),
+              ('Bravo', 'Light Cleaning', '73 Industrial Way'),
+              ('Ellis', 'Alchemy', '73 Industrial Way'),
+              ('Ellis', 'Flying', '73 Industrial Way'),
+              ('Harrison', 'Light Cleaning', '73 Industrial Way'))
+    # N.B., we do expect rows will get sorted
+    expect_left = (('Employee', 'Current Work Location'),
+                   ('Bravo', '73 Industrial Way'),
+                   ('Ellis', '73 Industrial Way'),
+                   ('Harrison', '73 Industrial Way'),
+                   ('Jones', '114 Main Street'))
+    expect_right = (('Employee', 'Skill'),
+                    ('Bravo', 'Light Cleaning'),
+                    ('Ellis', 'Alchemy'),
+                    ('Ellis', 'Flying'),
+                    ('Harrison', 'Light Cleaning'),
+                    ('Jones', 'Shorthand'),
+                    ('Jones', 'Typing'),
+                    ('Jones', 'Whittling'))
+    left, right = unjoin(table3, 'Skill', key='Employee')
+    ieq(expect_left, left)
+    ieq(expect_left, left)
+    ieq(expect_right, right)
+    ieq(expect_right, right)
+
+
+def test_unjoin_explicit_key_3():
+    
+    table4 = (('Tournament', 'Year', 'Winner', 'Date of Birth'),
+              ('Indiana Invitational', 1998, 'Al Fredrickson', '21 July 1975'),
+              ('Cleveland Open', 1999, 'Bob Albertson', '28 September 1968'),
+              ('Des Moines Masters', 1999, 'Al Fredrickson', '21 July 1975'),
+              ('Indiana Invitational', 1999, 'Chip Masterson', '14 March 1977'))
+    
+    # N.B., we do expect rows will get sorted
+    expect_left = (('Tournament', 'Year', 'Winner'),
+                   ('Cleveland Open', 1999, 'Bob Albertson'),
+                   ('Des Moines Masters', 1999, 'Al Fredrickson'),
+                   ('Indiana Invitational', 1998, 'Al Fredrickson'),
+                   ('Indiana Invitational', 1999, 'Chip Masterson'))    
+    expect_right = (('Winner', 'Date of Birth'),
+                    ('Al Fredrickson', '21 July 1975'),
+                    ('Bob Albertson', '28 September 1968'),
+                    ('Chip Masterson', '14 March 1977'))
+    left, right = unjoin(table4, 'Date of Birth', key='Winner')
+    ieq(expect_left, left)
+    ieq(expect_left, left)
+    ieq(expect_right, right)
+    ieq(expect_right, right)
+
+
+def test_unjoin_explicit_key_4():
+    
+    table5 = (('Restaurant', 'Pizza Variety', 'Delivery Area'),
+            ('A1 Pizza', 'Thick Crust', 'Springfield'),
+            ('A1 Pizza', 'Thick Crust', 'Shelbyville'),
+            ('A1 Pizza', 'Thick Crust', 'Capital City'),
+            ('A1 Pizza', 'Stuffed Crust', 'Springfield'),
+            ('A1 Pizza', 'Stuffed Crust', 'Shelbyville'),
+            ('A1 Pizza', 'Stuffed Crust', 'Capital City'),
+            ('Elite Pizza', 'Thin Crust', 'Capital City'),
+            ('Elite Pizza', 'Stuffed Crust', 'Capital City'),
+            ("Vincenzo's Pizza", "Thick Crust", "Springfield"),
+            ("Vincenzo's Pizza", "Thick Crust", "Shelbyville"),
+            ("Vincenzo's Pizza", "Thin Crust", "Springfield"),
+            ("Vincenzo's Pizza", "Thin Crust", "Shelbyville"))
+    
+    # N.B., we do expect rows will get sorted
+    expect_left = (('Restaurant', 'Pizza Variety'),
+            ('A1 Pizza', 'Stuffed Crust'),
+            ('A1 Pizza', 'Thick Crust'),
+            ('Elite Pizza', 'Stuffed Crust'),
+            ('Elite Pizza', 'Thin Crust'),
+            ("Vincenzo's Pizza", "Thick Crust"),
+            ("Vincenzo's Pizza", "Thin Crust"))  
+    expect_right = (('Restaurant', 'Delivery Area'),
+            ('A1 Pizza', 'Capital City'),
+            ('A1 Pizza', 'Shelbyville'),
+            ('A1 Pizza', 'Springfield'),
+            ('Elite Pizza', 'Capital City'),
+            ("Vincenzo's Pizza", "Shelbyville"),
+            ("Vincenzo's Pizza", "Springfield"))
+    left, right = unjoin(table5, 'Delivery Area', key='Restaurant')
+    ieq(expect_left, left)
+    ieq(expect_left, left)
+    ieq(expect_right, right)
+    ieq(expect_right, right)
+
+
+def test_unjoin_explicit_key_5():
+    
+    table6 = (('ColA', 'ColB', 'ColC'),
+            ('A', 1, 'apple'),
+            ('B', 1, 'apple'),
+            ('C', 2, 'orange'),
+            ('D', 3, 'lemon'),
+            ('E', 3, 'lemon'))
+    
+    # N.B., we do expect rows will get sorted
+    expect_left = (('ColA', 'ColB'),
+            ('A', 1),
+            ('B', 1),
+            ('C', 2),
+            ('D', 3),
+            ('E', 3))  
+    expect_right = (('ColB', 'ColC'),
+            (1, 'apple'),
+            (2, 'orange'),
+            (3, 'lemon'))
+    left, right = unjoin(table6, 'ColC', key='ColB')
+    ieq(expect_left, left)
+    ieq(expect_left, left)
+    ieq(expect_right, right)
+    ieq(expect_right, right)
+

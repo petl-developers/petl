@@ -1703,3 +1703,25 @@ from petl import look, multirangeaggregate
 look(table1)
 table2 = multirangeaggregate(table1, keys=('x', 'y'), widths=(2, 2), aggregation=sum, mins=(0, 0), maxs=(4, 4), value='z')
 look(table2)
+
+
+# unjoin
+table1 = (('foo', 'bar', 'baz'),
+          ('A', 1, 'apple'),
+          ('B', 1, 'apple'),
+          ('C', 2, 'orange'))
+table4 = (('foo', 'bar'),
+          ('A', 'apple'),
+          ('B', 'apple'),
+          ('C', 'orange'))
+
+from petl import look, unjoin
+look(table1)
+table2, table3 = unjoin(table1, 'baz', key='bar')
+look(table2)
+look(table3)    
+
+look(table4)
+table5, table6 = unjoin(table4, 'bar')
+look(table5)
+look(table6)
