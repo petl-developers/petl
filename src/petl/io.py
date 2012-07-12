@@ -1526,10 +1526,15 @@ def _insert(cursor, tablename, placeholders, table):
 def _placeholders(connection, names):    
     # discover the paramstyle
     if connection is None:
+        # default to using question mark
         placeholders = ', '.join(['?'] * len(names))
     else:
         mod = __import__(connection.__class__.__module__)
-        if mod.paramstyle == 'qmark':
+        if not hasattr(mod, 'paramstyle'):
+            # default to using question mark
+            # TODO check this is a sensible thing to do
+            placeholders = ', '.join(['?'] * len(names))            
+        elif mod.paramstyle == 'qmark':
             placeholders = ', '.join(['?'] * len(names))
         elif mod.paramstyle in ('format', 'pyformat'):
             # TODO test this!
