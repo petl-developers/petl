@@ -20,9 +20,17 @@ import zipfile
 import urllib2
 from contextlib import contextmanager
 import cStringIO
+import logging
 
 
 from .util import data, header, fieldnames, asdict, records, RowContainer
+from petl.util import iterpeek
+
+
+logger = logging.getLogger(__name__)
+warning = logger.warning
+info = logger.info
+debug = logger.debug
 
 
 class Uncacheable(Exception):
@@ -483,7 +491,7 @@ class Sqlite3View(RowContainer):
             raise Uncacheable
                 
     
-def fromdb(connection, query, *args, **kwargs):
+def fromdb(dbo, query, *args, **kwargs):
     """
     Provides access to data from any DB-API 2.0 connection via a given query. 
     E.g., using `sqlite3`::
@@ -527,48 +535,126 @@ def fromdb(connection, query, *args, **kwargs):
     
     """
     
-    return DbView(connection, query, *args, **kwargs)
+    return DbView(dbo, query, *args, **kwargs)
+
+
+def _is_dbapi_connection(dbo):
+    return _hasmethod(dbo, 'cursor')
+
+
+def _is_dbapi_cursor(dbo):
+    return _hasmethods(dbo, 'execute', 'executemany', 'fetchone', 'fetchmany', 'fetchall')
+
+
+def _is_sqlalchemy_engine(dbo):
+    return _hasmethods(dbo, 'execute', 'contextual_connect', 'raw_connection') and _hasprop(dbo, 'driver')
+
+
+def _is_sqlalchemy_session(dbo):
+    return _hasmethods(dbo, 'execute', 'connection', 'get_bind')
+
+
+def _is_sqlalchemy_connection(dbo):
+    # N.B., this are not completely selective conditions, this test needs
+    # to be applied after ruling out DB-API cursor
+    return _hasmethod(dbo, 'execute') and _hasprop(dbo, 'connection')
+
 
 
 class DbView(RowContainer):
 
-    def __init__(self, connection, query, *args, **kwargs):
-        self.connection = connection
+    def __init__(self, dbo, query, *args, **kwargs):
+        self.dbo = dbo
         self.query = query
         self.args = args
         self.kwargs = kwargs
         
     def __iter__(self):
-        # N.B., each iterator needs its own cursor so iterators are independent
 
-        # support anything with an execute method (e.g., sqlalchemy engine or connection?)
-        if hasattr(self.connection, 'execute') and callable(self.connection.execute):
-            cursor = self.connection.execute(self.query, *self.args, **self.kwargs)
-        # support DB-API connection object
-        elif hasattr(self.connection, 'cursor') and callable(self.connection.cursor):
-            cursor = self.connection.cursor()
-            cursor.execute(self.query, *self.args, **self.kwargs)
-        # support cursor factory function
-        elif callable(self.connection):
-            cursor = self.connection()
-            cursor.execute(self.query, *self.args, **self.kwargs)
-        else:
-            raise Exception('connection arg must have execute method or cursor method or be callable and return something with an execute method')
-        
-        # determine output header
-        if hasattr(cursor, 'description'): # DB-API cursor
-            fields = [d[0] for d in cursor.description]
-        elif hasattr(cursor, 'keys') and callable(cursor.keys): # sqlalchemy result proxy?
-            fields = cursor.keys()
-        else:
-            raise Exception('could not determine field names from cursor: %r' % cursor)
-        yield tuple(fields)
-        
-        for row in cursor:
-            yield row # don't wrap, return whatever the database engine returns
+        # does it quack like a standard DB-API 2.0 connection?
+        if _is_dbapi_connection(self.dbo):
+            debug('assuming %r is standard DB-API 2.0 connection', self.dbo)
+            _iter = _iter_dbapi_connection
+
+        # does it quack like a standard DB-API 2.0 cursor?
+        elif _is_dbapi_cursor(self.dbo):
+            debug('assuming %r is standard DB-API 2.0 cursor')
+            warning('using a DB-API cursor with fromdb() is not recommended and may lead to unexpected results, a DB-API connection is better')
+            _iter = _iter_dbapi_cursor
             
-        if hasattr(cursor, 'close') and callable(cursor.close):
-            cursor.close()
+        # does it quack like an SQLAlchemy engine?
+        elif _is_sqlalchemy_engine(self.dbo):
+            debug('assuming %r is an instance of sqlalchemy.engine.base.Engine', self.dbo)
+            _iter = _iter_sqlalchemy_engine
+        
+        # does it quack like an SQLAlchemy session?
+        elif _is_sqlalchemy_session(self.dbo):
+            debug('assuming %r is an instance of sqlalchemy.orm.session.Session', self.dbo)
+            _iter = _iter_sqlalchemy_session
+        
+        # does it quack like an SQLAlchemy connection?
+        elif _is_sqlalchemy_connection(self.dbo):
+            debug('assuming %r is an instance of sqlalchemy.engine.base.Connection', self.dbo)
+            _iter = _iter_sqlalchemy_connection
+            
+        elif callable(self.dbo):
+            debug('assuming %r is a function returning a cursor', self.dbo)
+            _iter = _iter_dbapi_mkcurs
+            
+        # some other sort of duck...
+        else:
+            raise Exception('unsupported database object type: %r' % self.dbo)
+        
+        return _iter(self.dbo, self.query, *self.args, **self.kwargs)
+    
+
+def _iter_dbapi_mkcurs(mkcurs, query, *args, **kwargs):
+    cursor = mkcurs()
+    cursor.execute(query, *args, **kwargs)
+    fields = [d[0] for d in cursor.description]
+    yield tuple(fields)
+    for row in cursor:
+        yield row # don't wrap, return whatever the database engine returns
+    cursor.close()
+
+
+def _iter_dbapi_connection(connection, query, *args, **kwargs):
+    cursor = connection.cursor()
+    cursor.execute(query, *args, **kwargs)
+    fields = [d[0] for d in cursor.description]
+    yield tuple(fields)
+    for row in cursor:
+        yield row # don't wrap, return whatever the database engine returns
+    cursor.close()
+    
+    
+def _iter_dbapi_cursor(cursor, query, *args, **kwargs):
+    cursor.execute(query, *args, **kwargs)
+    fields = [d[0] for d in cursor.description]
+    yield tuple(fields)
+    for row in cursor:
+        yield row # don't wrap, return whatever the database engine returns
+    
+    
+def _iter_sqlalchemy_engine(engine, query, *args, **kwargs):
+    return _iter_sqlalchemy_connection(engine.contextual_connect(), query, *args, **kwargs)
+
+
+def _iter_sqlalchemy_connection(connection, query, *args, **kwargs):
+    debug('connection: %r', connection)
+    results = connection.execute(query, *args, **kwargs)
+    fields = results.keys()
+    yield tuple(fields)
+    for row in results:
+        yield row
+
+
+def _iter_sqlalchemy_session(session, query, *args, **kwargs):
+    results = session.execute(query, *args, **kwargs)
+    fields = results.keys()
+    yield tuple(fields)
+    for row in results:
+        yield row
     
             
 def fromtext(source=None, header=['lines'], strip=None):
@@ -1226,9 +1312,13 @@ def tosqlite3(table, filename_or_connection, tablename, create=True, commit=True
 
     """
     
-    tablename = _quote(tablename)
-    names = [_quote(n) for n in fieldnames(table)]
-
+    return _tosqlite3(table, filename_or_connection, tablename, create=create, 
+                      commit=commit, truncate=True)
+    
+    
+def _tosqlite3(table, filename_or_connection, tablename, create=False, commit=True,
+               truncate=False):
+    
     if isinstance(filename_or_connection, basestring):
         conn = sqlite3.connect(filename_or_connection)
     elif isinstance(filename_or_connection, sqlite3.Connection):
@@ -1236,24 +1326,33 @@ def tosqlite3(table, filename_or_connection, tablename, create=True, commit=True
     else:
         raise Exception('filename_or_connection argument must be filename or connection; found %r' % filename_or_connection)
     
+    tablename = _quote(tablename)
+    it = iter(table)
+    fields = it.next()
+    fieldnames = map(str, fields)
+    colnames = [_quote(n) for n in fieldnames]
+
     cursor = conn.cursor()
     
     if create: # force table creation
         cursor.execute('DROP TABLE IF EXISTS %s' % tablename)
-        cursor.execute('CREATE TABLE %s (%s)' % (tablename, ', '.join(names)))
+        cursor.execute('CREATE TABLE %s (%s)' % (tablename, ', '.join(colnames)))
     
-    # truncate table
-    cursor.execute('DELETE FROM %s' % tablename)
+    if truncate:
+        # truncate table
+        cursor.execute('DELETE FROM %s' % tablename)
     
-    placeholders = ', '.join(['?'] * len(names))
-    _insert(cursor, tablename, placeholders, table)
+    # insert rows
+    placeholders = ', '.join(['?'] * len(colnames))
+    insertquery = 'INSERT INTO %s VALUES (%s);' % (tablename, placeholders)
+    cursor.executemany(insertquery, it)
 
     # tidy up
     cursor.close()
     if commit:
         conn.commit()
 
-    return conn # in case people want to close it
+    return conn # in case people want to re-use it or close it
     
     
 def appendsqlite3(table, filename_or_connection, tablename, commit=True):
@@ -1303,31 +1402,11 @@ def appendsqlite3(table, filename_or_connection, tablename, commit=True):
 
     """
 
-    # sanitise table name
-    tablename = _quote(tablename)
-
-    if isinstance(filename_or_connection, basestring):
-        conn = sqlite3.connect(filename_or_connection)
-    elif isinstance(filename_or_connection, sqlite3.Connection):
-        conn = filename_or_connection
-    else:
-        raise Exception('filename_or_connection argument must be filename or connection; found %r' % filename_or_connection)
-
-    cursor = conn.cursor()
-    
-    flds = header(table) # just need to know how many fields there are
-    placeholders = ', '.join(['?'] * len(flds))
-    _insert(cursor, tablename, placeholders, table)
-
-    # tidy up
-    cursor.close()
-    if commit:
-        conn.commit()
-
-    return conn # in case people want to close it
+    return _tosqlite3(table, filename_or_connection, tablename, create=False, 
+                      commit=commit, truncate=False)
     
     
-def todb(table, connection_or_cursor, tablename, commit=True):
+def todb(table, dbo, tablename, commit=True):
     """
     Load data into an existing database table via a DB-API 2.0
     connection or cursor. Note that the database table will be truncated, 
@@ -1382,61 +1461,197 @@ def todb(table, connection_or_cursor, tablename, commit=True):
         >>> todb(table, cursor, 'foobar')    
     
     """
-
-    executor, connection = _handle_connection_or_cursor_arg(connection_or_cursor)
-            
-    # sanitise table and field names
-    tablename = _quote(tablename)
-    names = [_quote(n) for n in fieldnames(table)]
-    placeholders = _placeholders(connection, names)
-
-    try:
-        # truncate the table
-        query = 'TRUNCATE %s' % tablename
-        executor.execute(query)
-    except:
-        # TRUNCATE is not supported in some databases
-        query = 'DELETE FROM %s' % tablename
-        executor.execute(query)
     
-    # insert some data
-    _insert(executor, tablename, placeholders, table)
+    _todb(table, dbo, tablename, commit=commit, truncate=True)
+    
+    
+def _hasmethod(o, n):
+    return hasattr(o, n) and callable(getattr(o, n))
+    
+def _hasmethods(o, *l):
+    return all(_hasmethod(o, n) for n in l)
+
+def _hasprop(o, n):
+    return hasattr(o, n) and not callable(getattr(o, n))
+
+
+def _todb(table, dbo, tablename, commit=True, truncate=False):
+    
+    # need to deal with polymorphic dbo argument
+    # what sort of duck is it?
+    
+    # does it quack like a standard DB-API 2.0 connection?
+    if _is_dbapi_connection(dbo):
+        debug('assuming %r is standard DB-API 2.0 connection', dbo)
+        _todb_dbapi_connection(table, dbo, tablename, commit=commit, truncate=truncate)
+        
+    # does it quack like a standard DB-API 2.0 cursor?
+    elif _is_dbapi_cursor(dbo):
+        debug('assuming %r is standard DB-API 2.0 cursor')
+        _todb_dbapi_cursor(table, dbo, tablename, commit=commit, truncate=truncate)
+        
+    # does it quack like an SQLAlchemy engine?
+    elif _is_sqlalchemy_engine(dbo):
+        debug('assuming %r is an instance of sqlalchemy.engine.base.Engine', dbo)
+        _todb_sqlalchemy_engine(table, dbo, tablename, commit=commit, truncate=truncate)
+
+    # does it quack like an SQLAlchemy session?
+    elif _is_sqlalchemy_session(dbo):
+        debug('assuming %r is an instance of sqlalchemy.orm.session.Session', dbo)
+        _todb_sqlalchemy_session(table, dbo, tablename, commit=commit, truncate=truncate)
+
+    # does it quack like an SQLAlchemy connection?
+    elif _is_sqlalchemy_connection(dbo):
+        debug('assuming %r is an instance of sqlalchemy.engine.base.Connection', dbo)
+        _todb_sqlalchemy_connection(table, dbo, tablename, commit=commit, truncate=truncate)
+        
+    # some other sort of duck...
+    else:
+        raise Exception('unsupported database object type: %r' % dbo)
+
+
+def _todb_dbapi_connection(table, connection, tablename, commit=True, truncate=False):
+    
+    # sanitise table name
+    tablename = _quote(tablename)
+    debug('tablename: %r', tablename)
+    
+    # sanitise field names
+    it = iter(table)
+    fields = it.next()
+    fieldnames = map(str, fields)
+    colnames = [_quote(n) for n in fieldnames]
+    debug('column names: %r', colnames)
+
+    # determine paramstyle and build placeholders string
+    placeholders = _placeholders(connection, colnames)
+    debug('placeholders: %r', placeholders)
+
+    # get a cursor
+    cursor = connection.cursor()
+    
+    if truncate:
+        # TRUNCATE is not supported in some databases and causing locks with
+        # MySQL used via SQLAlchemy, fall back to DELETE FROM for now
+        truncatequery = 'DELETE FROM %s' % tablename
+        debug('truncate the table via query %r', truncatequery)
+        cursor.execute(truncatequery)
+    
+    debug('insert data')
+    insertquery = 'INSERT INTO %s VALUES (%s)' % (tablename, placeholders)
+    cursor.executemany(insertquery, it)
 
     # finish up
-    if hasattr(connection_or_cursor, 'cursor') and callable(connection_or_cursor.cursor):
-        # close the cursor we created
-        executor.close()
+    debug('close the cursor')
+    cursor.close()
 
-    if commit and connection is not None and hasattr(connection, 'commit'):
+    if commit:
+        debug('commit transaction')
         connection.commit()
     
+
+def _todb_dbapi_cursor(table, cursor, tablename, commit=True, truncate=False):
     
-def _handle_connection_or_cursor_arg(connection_or_cursor):
-    # deal with polymorphic arg
-    if hasattr(connection_or_cursor, 'cursor') and callable(connection_or_cursor.cursor):
-        # assume standard db-api connection
-        connection = connection_or_cursor
-        executor = connection_or_cursor.cursor()
-    elif hasattr(connection_or_cursor, 'execute') and callable(connection_or_cursor.execute):
-        executor = connection_or_cursor
-        # need to get at the true connection object so we can figure out paramstyle
-        # try sqlalchemy engine
-        if hasattr(executor, 'raw_connection'):
-            connection = executor.raw_connection().connection
-        # try sqlalchemy connection
-        elif hasattr(executor, 'connection') and hasattr(executor.connection, 'connection'):
-            connection = executor.connection.connection
-        # try db-api cursor with connection access
-        elif hasattr(executor, 'connection'):
-            connection = executor.connection
-        else:
-            connection = None
-    else:
-        raise Exception('expected connection or cursor, found: %r' % connection_or_cursor)
-    return executor, connection
+    # sanitise table name
+    tablename = _quote(tablename)
+    debug('tablename: %r', tablename)
+    
+    # sanitise field names
+    it = iter(table)
+    fields = it.next()
+    fieldnames = map(str, fields)
+    colnames = [_quote(n) for n in fieldnames]
+    debug('column names: %r', colnames)
+
+    debug('obtain connection via cursor')
+    # N.B., we depend on this optional DB-API 2.0 attribute being implemented
+    assert hasattr(cursor, 'connection'), 'could not obtain connection via cursor'
+    connection = cursor.connection
+
+    # determine paramstyle and build placeholders string
+    placeholders = _placeholders(connection, colnames)
+    debug('placeholders: %r', placeholders)
+    
+    if truncate:
+        # TRUNCATE is not supported in some databases and causing locks with
+        # MySQL used via SQLAlchemy, fall back to DELETE FROM for now
+        truncatequery = 'DELETE FROM %s' % tablename
+        debug('truncate the table via query %r', truncatequery)
+        cursor.execute(truncatequery)
+    
+    debug('insert data')
+    insertquery = 'INSERT INTO %s VALUES (%s)' % (tablename, placeholders)
+    cursor.executemany(insertquery, it)
+
+    # N.B., don't close the cursor, leave that to the application
+    
+    if commit:
+        debug('commit transaction')
+        connection.commit()
+    
+
+def _todb_sqlalchemy_engine(table, engine, tablename, commit=True, truncate=False):
+    
+    _todb_sqlalchemy_connection(table, engine.contextual_connect(), tablename, 
+                                commit=commit, truncate=truncate)
+    
+
+def _todb_sqlalchemy_connection(table, connection, tablename, commit=True, truncate=False):
+    
+    debug('connection: %r', connection)
+    
+    # sanitise table name
+    tablename = _quote(tablename)
+    debug('tablename: %r', tablename)
+    
+    # sanitise field names
+    it = iter(table)
+    fields = it.next()
+    fieldnames = map(str, fields)
+    colnames = [_quote(n) for n in fieldnames]
+    debug('column names: %r', colnames)
+    
+    # N.B., we need to obtain a reference to the underlying DB-API connection so 
+    # we can import the module and determine the paramstyle
+    proxied_raw_connection = connection.connection
+    actual_raw_connection = proxied_raw_connection.connection 
+    
+    # determine paramstyle and build placeholders string
+    placeholders = _placeholders(actual_raw_connection, colnames)
+    debug('placeholders: %r', placeholders)
+    
+    if commit:
+        debug('begin transaction')
+        trans = connection.begin()
+
+    if truncate:
+        # TRUNCATE is not supported in some databases and causing locks with
+        # MySQL used via SQLAlchemy, fall back to DELETE FROM for now
+        truncatequery = 'DELETE FROM %s' % tablename
+        debug('truncate the table via query %r', truncatequery)
+        connection.execute(truncatequery)
+    
+    debug('insert data')
+    insertquery = 'INSERT INTO %s VALUES (%s)' % (tablename, placeholders)
+    for row in it:
+        connection.execute(insertquery, row)
+
+    # finish up
+    
+    if commit:
+        debug('commit transaction')
+        trans.commit()
+        
+    # N.B., don't close connection, leave that to the application
+    
+
+def _todb_sqlalchemy_session(table, session, tablename, commit=True, truncate=False):
+    
+    _todb_sqlalchemy_connection(table, session.connection(), tablename, commit=commit,
+                                truncate=truncate)
     
     
-def appenddb(table, connection_or_cursor, tablename, commit=True):
+def appenddb(table, dbo, tablename, commit=True):
     """
     Load data into an existing database table via a DB-API 2.0
     connection or cursor. Note that the database table will be appended, 
@@ -1492,23 +1707,7 @@ def appenddb(table, connection_or_cursor, tablename, commit=True):
     
     """
     
-    executor, connection = _handle_connection_or_cursor_arg(connection_or_cursor)
-    
-    # sanitise table and field names
-    tablename = _quote(tablename)
-    names = [_quote(n) for n in fieldnames(table)]
-    placeholders = _placeholders(connection, names)
-    
-    # insert some data
-    _insert(executor, tablename, placeholders, table)
-
-    # finish up
-    if hasattr(connection_or_cursor, 'cursor') and callable(connection_or_cursor.cursor):
-        # close the cursor we created
-        executor.close()
-
-    if commit and connection is not None and hasattr(connection, 'commit'):
-        connection.commit()
+    _todb(table, dbo, tablename, commit=commit, truncate=False)
 
 
 def _quote(s):
@@ -1516,33 +1715,33 @@ def _quote(s):
     # conform with the SQL-92 standard. See http://stackoverflow.com/a/214344
     return '"%s"' % s.replace('"', '""')
 
-
-def _insert(cursor, tablename, placeholders, table):    
-    insertquery = 'INSERT INTO %s VALUES (%s)' % (tablename, placeholders)
-    for row in data(table):
-        cursor.execute(insertquery, row)
-
     
 def _placeholders(connection, names):    
     # discover the paramstyle
     if connection is None:
         # default to using question mark
+        debug('connection is None, default to using qmark paramstyle')
         placeholders = ', '.join(['?'] * len(names))
     else:
         mod = __import__(connection.__class__.__module__)
         if not hasattr(mod, 'paramstyle'):
+            debug('module %r from connection %r has no attribute paramstyle, defaulting to qmark' , mod, connection)
             # default to using question mark
             # TODO check this is a sensible thing to do
             placeholders = ', '.join(['?'] * len(names))            
         elif mod.paramstyle == 'qmark':
+            debug('found paramstyle qmark')
             placeholders = ', '.join(['?'] * len(names))
         elif mod.paramstyle in ('format', 'pyformat'):
             # TODO test this!
+            debug('found paramstyle pyformat')
             placeholders = ', '.join(['%s'] * len(names))
         elif mod.paramstyle == 'numeric':
             # TODO test this!
+            debug('found paramstyle numeric')
             placeholders = ', '.join([':' + str(i + 1) for i in range(len(names))])
         else:
+            debug('found unexpected paramstyle %r, defaulting to qmark', mod.paramstyle)
             placeholders = ', '.join(['?'] * len(names))
     return placeholders
 
