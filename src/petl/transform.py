@@ -18,7 +18,7 @@ from .util import asindices, rowgetter, asdict,\
     values, shortlistmergesorted, heapqmergesorted, hybridrows, rowgroupby,\
     iterpeek, count, Counter, OrderedDict
 from .io import Uncacheable
-from .util import RowContainer, sortable_itemgetter
+from .util import RowContainer, SortableItem, sortable_itemgetter
 from petl.util import FieldSelectionError, rowgroupbybin, rowitemgetter
 
 
@@ -2385,14 +2385,14 @@ def itercomplement(ta, tb):
     aflds = [str(f) for f in ita.next()]
     itb.next() # ignore b fields
     yield tuple(aflds)
-    
+
     try:
-        a = tuple(ita.next())
+        a = ita.next()
     except StopIteration:
         pass # a is empty, we're done
     else:
         try:
-            b = tuple(itb.next())
+            b = itb.next()
         except StopIteration:
             # b is empty, just iterate through a
             yield a
@@ -2401,27 +2401,27 @@ def itercomplement(ta, tb):
         else:
             # we want the elements in a that are not in b
             while True:
-                if b is None or a < b:
-                    yield a
+                if b is None or SortableItem(a) < SortableItem(b):
+                    yield tuple(a)
                     # advance a
                     try:
-                        a = tuple(ita.next())
+                        a = ita.next()
                     except StopIteration:
                         break
                 elif a == b:
                     # advance both
                     try:
-                        a = tuple(ita.next())
+                        a = ita.next()
                     except StopIteration:
                         break
                     try:
-                        b = tuple(itb.next())
+                        b = itb.next()
                     except StopIteration:
                         b = None
                 else:
                     # advance b
                     try:
-                        b = tuple(itb.next())
+                        b = itb.next()
                     except StopIteration:
                         b = None
         
