@@ -1309,13 +1309,33 @@ def _test_complement_4(f):
     result = f(table1, table2)
     ieq(expectation, result)
     ieq(expectation, result)
-    
-    
+
+
+def _test_complement_none(f):
+    # test behaviour with unsortable types
+    now = datetime.now()
+
+    ta = [['a', 'b'], [None, None]]
+    tb = [['a', 'b'], [None, now]]
+
+    expectation = (('a', 'b'), (None, None))
+    result = f(ta, tb)
+    ieq(expectation, result)
+
+    ta = [['a'], [now], [None]]
+    tb = [['a'], [None], [None]]
+
+    expectation = (('a',), (now,))
+    result = f(ta, tb)
+    ieq(expectation, result)
+
+
 def _test_complement(f):
     _test_complement_1(f)
     _test_complement_2(f)
     _test_complement_3(f)
     _test_complement_4(f)
+    _test_complement_none(f)
 
 
 def test_complement():

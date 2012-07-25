@@ -2842,6 +2842,8 @@ class SortableItem(object):
     def __new__(cls, obj):
         if obj in SINGLETONS or obj.__class__ in SAFE_TYPES:
             return obj
+        if isinstance(obj, (list, tuple)):
+            return tuple(cls(o) for o in obj)
         return object.__new__(cls)
     def __init__(self, obj):
         self.obj = obj
@@ -2854,8 +2856,6 @@ class SortableItem(object):
             other = other.obj
         if other is None:
             return False
-        if self.obj is None:
-            return True
         return self.obj < other
     def __le__(self, other):
         return self < other or self == other
@@ -2863,6 +2863,7 @@ class SortableItem(object):
         return not (self < other or self == other)
     def __ge__(self, other):
         return not (self < other)
+SAFE_TYPES.add(SortableItem)
 
 
 def sortable_itemgetter(*items):
