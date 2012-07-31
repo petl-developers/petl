@@ -1342,6 +1342,24 @@ def test_complement():
     _test_complement(complement)
 
 
+def test_complement_seqtypes():
+    # test complement isn't confused by list vs tuple
+    ta = [['a', 'b'], ['A', 1], ['B', 2]]
+    tb = [('a', 'b'), ('A', 1), ('B', 2)]
+    expectation = (('a', 'b'),)
+    actual = complement(ta, tb, presorted=True)
+    ieq(expectation, actual)
+
+
+def test_hashcomplement_seqtypes():
+    # test complement isn't confused by list vs tuple
+    ta = [['a', 'b'], ['A', 1], ['B', 2]]
+    tb = [('a', 'b'), ('A', 1), ('B', 2)]
+    expectation = (('a', 'b'),)
+    actual = hashcomplement(ta, tb)
+    ieq(expectation, actual)
+
+
 def test_diff():
 
     tablea = (('foo', 'bar', 'baz'),

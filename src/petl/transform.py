@@ -11,6 +11,7 @@ from tempfile import NamedTemporaryFile
 import operator
 import re
 from math import ceil
+import logging
 
 
 from .util import asindices, rowgetter, asdict,\
@@ -20,6 +21,12 @@ from .util import asindices, rowgetter, asdict,\
 from .io import Uncacheable
 from .util import RowContainer, SortableItem, sortable_itemgetter
 from petl.util import FieldSelectionError, rowgroupbybin, rowitemgetter
+
+
+logger = logging.getLogger(__name__)
+warning = logger.warning
+info = logger.info
+debug = logger.debug
 
 
 def rename(table, *args):
@@ -2380,36 +2387,39 @@ class ComplementView(RowContainer):
 
 
 def itercomplement(ta, tb):
-    ita = iter(ta) 
-    itb = iter(tb)
-    aflds = [str(f) for f in ita.next()]
+    # coerce rows to tuples to ensure hashable and comparable
+    ita = (tuple(row) for row in iter(ta)) 
+    itb = (tuple(row) for row in iter(tb))
+    aflds = tuple(str(f) for f in ita.next())
     itb.next() # ignore b fields
-    yield tuple(aflds)
+    yield aflds
 
     try:
         a = ita.next()
     except StopIteration:
-        pass # a is empty, we're done
+        debug('a is empty, nothing to yield')
+        pass
     else:
         try:
             b = itb.next()
         except StopIteration:
-            # b is empty, just iterate through a
+            debug('b is empty, just iterate through a')
             yield a
             for row in ita:
                 yield row
         else:
             # we want the elements in a that are not in b
             while True:
+                debug('current rows: %r %r', a, b)
                 if b is None or SortableItem(a) < SortableItem(b):
-                    yield tuple(a)
-                    # advance a
+                    yield a
+                    debug('advance a')
                     try:
                         a = ita.next()
                     except StopIteration:
                         break
                 elif a == b:
-                    # advance both
+                    debug('advance both')
                     try:
                         a = ita.next()
                     except StopIteration:
@@ -2419,7 +2429,7 @@ def itercomplement(ta, tb):
                     except StopIteration:
                         b = None
                 else:
-                    # advance b
+                    debug('advance b')
                     try:
                         b = itb.next()
                     except StopIteration:
