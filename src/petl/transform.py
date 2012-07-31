@@ -21,6 +21,7 @@ from .util import asindices, rowgetter, asdict,\
 from .io import Uncacheable
 from .util import RowContainer, SortableItem, sortable_itemgetter
 from petl.util import FieldSelectionError, rowgroupbybin, rowitemgetter
+import os
 
 
 logger = logging.getLogger(__name__)
@@ -1421,12 +1422,14 @@ class SortView(RowContainer):
             yield tuple(row)
             
     def _iterfromfilecache(self):
+        debug('iterate from file cache: %r', [f.name for f in self._filecache])
         yield tuple(self._fldcache)
         chunkiters = [iterchunk(f.name) for f in self._filecache]
         for row in _mergesorted(self._getkey, self.reverse, *chunkiters):
             yield tuple(row)
         
     def _iternocache(self, source, key, reverse):
+        debug('iterate without cache')
         self._clearcache()
         it = iter(source)
 
@@ -1453,11 +1456,12 @@ class SortView(RowContainer):
                 # TODO possible race condition here, attributes determining
                 # cachetag have changed since we entered this function?
                 self._internalcachetag = self.cachetag()
-                self._fldcache = flds
-                self._memcache = rows
-                self._getkey = getkey
             except Uncacheable:
                 pass
+            else:
+                self._fldcache = flds
+                self._memcache = rows
+                self._getkey = getkey # actually not needed to iterate from memcache
     
             for row in rows:
                 yield tuple(row)
@@ -1469,10 +1473,17 @@ class SortView(RowContainer):
             while rows:
             
                 # dump the chunk
-                f = NamedTemporaryFile(delete=False)
+                f = NamedTemporaryFile()
                 for row in rows:
                     pickle.dump(row, f, protocol=-1)
-                f.close()
+                f.flush()
+                # N.B., do not close the file! Closing will delete
+                # the file, and we might want to keep it around
+                # if it can be cached. We'll let garbage collection
+                # deal with this, i.e., when no references to the 
+                # chunk files exist any more, garbage collection
+                # should be an implicit close, which will cause file
+                # deletion.
                 chunkfiles.append(f)
                 
                 # grab the next chunk
@@ -1483,11 +1494,12 @@ class SortView(RowContainer):
                 # TODO possible race condition here, attributes determining
                 # cachetag have changed since we entered this function?
                 self._internalcachetag = self.cachetag()
+            except Uncacheable:
+                pass
+            else:
                 self._fldcache = flds
                 self._filecache = chunkfiles
                 self._getkey = getkey
-            except Uncacheable:
-                pass
 
             chunkiters = [iterchunk(f.name) for f in chunkfiles]
             for row in _mergesorted(getkey, reverse, *chunkiters):
