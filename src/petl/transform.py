@@ -11,6 +11,7 @@ from tempfile import NamedTemporaryFile
 import operator
 import re
 from math import ceil
+import logging
 
 
 from .util import asindices, rowgetter, asdict,\
@@ -18,8 +19,15 @@ from .util import asindices, rowgetter, asdict,\
     values, shortlistmergesorted, heapqmergesorted, hybridrows, rowgroupby,\
     iterpeek, count, Counter, OrderedDict
 from .io import Uncacheable
-from .util import RowContainer, sortable_itemgetter
+from .util import RowContainer, SortableItem, sortable_itemgetter
 from petl.util import FieldSelectionError, rowgroupbybin, rowitemgetter
+import os
+
+
+logger = logging.getLogger(__name__)
+warning = logger.warning
+info = logger.info
+debug = logger.debug
 
 
 def rename(table, *args):
@@ -1414,12 +1422,14 @@ class SortView(RowContainer):
             yield tuple(row)
             
     def _iterfromfilecache(self):
+        debug('iterate from file cache: %r', [f.name for f in self._filecache])
         yield tuple(self._fldcache)
         chunkiters = [iterchunk(f.name) for f in self._filecache]
         for row in _mergesorted(self._getkey, self.reverse, *chunkiters):
             yield tuple(row)
         
     def _iternocache(self, source, key, reverse):
+        debug('iterate without cache')
         self._clearcache()
         it = iter(source)
 
@@ -1446,11 +1456,12 @@ class SortView(RowContainer):
                 # TODO possible race condition here, attributes determining
                 # cachetag have changed since we entered this function?
                 self._internalcachetag = self.cachetag()
-                self._fldcache = flds
-                self._memcache = rows
-                self._getkey = getkey
             except Uncacheable:
                 pass
+            else:
+                self._fldcache = flds
+                self._memcache = rows
+                self._getkey = getkey # actually not needed to iterate from memcache
     
             for row in rows:
                 yield tuple(row)
@@ -1462,10 +1473,17 @@ class SortView(RowContainer):
             while rows:
             
                 # dump the chunk
-                f = NamedTemporaryFile(delete=False)
+                f = NamedTemporaryFile()
                 for row in rows:
                     pickle.dump(row, f, protocol=-1)
-                f.close()
+                f.flush()
+                # N.B., do not close the file! Closing will delete
+                # the file, and we might want to keep it around
+                # if it can be cached. We'll let garbage collection
+                # deal with this, i.e., when no references to the 
+                # chunk files exist any more, garbage collection
+                # should be an implicit close, which will cause file
+                # deletion.
                 chunkfiles.append(f)
                 
                 # grab the next chunk
@@ -1476,11 +1494,12 @@ class SortView(RowContainer):
                 # TODO possible race condition here, attributes determining
                 # cachetag have changed since we entered this function?
                 self._internalcachetag = self.cachetag()
+            except Uncacheable:
+                pass
+            else:
                 self._fldcache = flds
                 self._filecache = chunkfiles
                 self._getkey = getkey
-            except Uncacheable:
-                pass
 
             chunkiters = [iterchunk(f.name) for f in chunkfiles]
             for row in _mergesorted(getkey, reverse, *chunkiters):
@@ -2380,48 +2399,51 @@ class ComplementView(RowContainer):
 
 
 def itercomplement(ta, tb):
-    ita = iter(ta) 
-    itb = iter(tb)
-    aflds = [str(f) for f in ita.next()]
+    # coerce rows to tuples to ensure hashable and comparable
+    ita = (tuple(row) for row in iter(ta)) 
+    itb = (tuple(row) for row in iter(tb))
+    aflds = tuple(str(f) for f in ita.next())
     itb.next() # ignore b fields
-    yield tuple(aflds)
-    
+    yield aflds
+
     try:
-        a = tuple(ita.next())
+        a = ita.next()
     except StopIteration:
-        pass # a is empty, we're done
+        debug('a is empty, nothing to yield')
+        pass
     else:
         try:
-            b = tuple(itb.next())
+            b = itb.next()
         except StopIteration:
-            # b is empty, just iterate through a
+            debug('b is empty, just iterate through a')
             yield a
             for row in ita:
                 yield row
         else:
             # we want the elements in a that are not in b
             while True:
-                if b is None or a < b:
+                debug('current rows: %r %r', a, b)
+                if b is None or SortableItem(a) < SortableItem(b):
                     yield a
-                    # advance a
+                    debug('advance a')
                     try:
-                        a = tuple(ita.next())
+                        a = ita.next()
                     except StopIteration:
                         break
                 elif a == b:
-                    # advance both
+                    debug('advance both')
                     try:
-                        a = tuple(ita.next())
+                        a = ita.next()
                     except StopIteration:
                         break
                     try:
-                        b = tuple(itb.next())
+                        b = itb.next()
                     except StopIteration:
                         b = None
                 else:
-                    # advance b
+                    debug('advance b')
                     try:
-                        b = tuple(itb.next())
+                        b = itb.next()
                     except StopIteration:
                         b = None
         
