@@ -748,7 +748,7 @@ def test_sort_6():
     ieq(expectation, result)
     
 
-def test_sort_mergesort():
+def test_sort_buffered():
     
     table = (('foo', 'bar'),
              ('C', 2),
@@ -795,6 +795,28 @@ def test_sort_mergesort():
     result = sort(table, reverse=True, buffersize=2)
     ieq(expectation, result)
     
+    
+def test_sort_buffered_tempdir():
+    
+    table = (('foo', 'bar'),
+             ('C', 2),
+             ('A', 9),
+             ('A', 6),
+             ('F', 1),
+             ('D', 10))
+
+    # test sort forwards
+    expectation = (('foo', 'bar'),
+                   ('F', 1),
+                   ('C', 2),
+                   ('A', 6),
+                   ('A', 9),
+                   ('D', 10))
+    result = sort(table, 'bar')
+    ieq(expectation, result)
+    result = sort(table, 'bar', buffersize=2, tempdir='/tmp/petl')
+    ieq(expectation, result)
+            
     
 def test_sort_empty():
     table = (('foo', 'bar'),)

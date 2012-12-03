@@ -1260,7 +1260,7 @@ def itertail(source, n):
         yield tuple(row)
 
 
-def sort(table, key=None, reverse=False, buffersize=None):
+def sort(table, key=None, reverse=False, buffersize=None, tempdir=None):
     """
     Sort the table. Field names or indices (from zero) can be used to specify 
     the key. E.g.::
@@ -1349,7 +1349,8 @@ def sort(table, key=None, reverse=False, buffersize=None):
 
     """
     
-    return SortView(table, key=key, reverse=reverse, buffersize=buffersize)
+    return SortView(table, key=key, reverse=reverse, buffersize=buffersize,
+                    tempdir=tempdir)
     
 
 def iterchunk(filename):
@@ -1380,7 +1381,8 @@ defaultbuffersize = 100000
     
 class SortView(RowContainer):
     
-    def __init__(self, source, key=None, reverse=False, buffersize=None):
+    def __init__(self, source, key=None, reverse=False, buffersize=None,
+                 tempdir=None):
         self.source = source
         self.key = key
         self.reverse = reverse
@@ -1388,6 +1390,7 @@ class SortView(RowContainer):
             self.buffersize = defaultbuffersize
         else:
             self.buffersize = buffersize
+        self.tempdir = tempdir
         self._fldcache = None
         self._memcache = None
         self._filecache = None
@@ -1473,7 +1476,7 @@ class SortView(RowContainer):
             while rows:
             
                 # dump the chunk
-                f = NamedTemporaryFile()
+                f = NamedTemporaryFile(dir=self.tempdir)
                 for row in rows:
                     pickle.dump(row, f, protocol=-1)
                 f.flush()
