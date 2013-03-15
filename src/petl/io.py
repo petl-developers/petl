@@ -251,7 +251,7 @@ def _read_source_from_arg(source):
     elif isinstance(source, basestring):
         if any(map(source.startswith, ['http://', 'https://', 'ftp://'])):
             return URLSource(source)
-        elif source.endswith('.gz'):
+        elif source.endswith('.gz') or source.endswith('.bgz'):
             return GzipSource(source)
         elif source.endswith('.bz2'):
             return BZ2Source(source)
@@ -265,7 +265,7 @@ def _write_source_from_arg(source):
     if source is None:
         return StdoutSource()
     elif isinstance(source, basestring):
-        if source.endswith('.gz'):
+        if source.endswith('.gz') or source.endswith('.bgz'):
             return GzipSource(source)
         elif source.endswith('.bz2'):
             return BZ2Source(source)
@@ -1831,13 +1831,9 @@ def tohtml(table, source=None):
         +-------+-------+
         
         >>> tohtml(table, 'test.html')
-        >>> 
-        >>> # see what we did
-        ... with open('test.html') as f:
-        ...     print f.read()
-        ...     
 
-        TODO
+    .. versionadded:: 0.12
+
     """
     
     source = _write_source_from_arg(source)
