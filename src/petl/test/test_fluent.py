@@ -57,4 +57,21 @@ def test_staticmethods():
     ieq(expect, actual) # verify can iterate twice
     
     
+def test_container():
+    table = (('foo', 'bar'),
+             ('a', 1),
+             ('b', 2),
+             ('c', 2))
+    actual = etl(table)[0]
+    expect = ('foo', 'bar')
+    eq_(expect, actual)
+    actual = etl(table)['bar']
+    expect = (1, 2, 2)
+    ieq(expect, actual)
+    actual = len(etl(table))
+    expect = 4
+    eq_(expect, actual)
+    
+    
+    
     

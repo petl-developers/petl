@@ -15,7 +15,7 @@ petl = sys.modules['petl']
 thismodule = sys.modules[__name__]
 
 
-class FluentWrapper(object):
+class FluentWrapper(RowContainer):
     
     def __init__(self, inner=None):
         object.__setattr__(self, '_inner', inner)
@@ -31,13 +31,13 @@ class FluentWrapper(object):
         # pass through
         setattr(self._inner, attr, value)
         
-    def __getitem__(self, item):
-        # pass through
-        return self._inner[item]
-    
-    def __setitem__(self, item, value):
-        # pass through
-        self._inner[item] = value
+#    def __getitem__(self, item):
+#        # pass through
+#        return self._inner[item]
+#    
+#    def __setitem__(self, item, value):
+#        # pass through
+#        self._inner[item] = value
 
     def __str__(self):
         return str(self._inner)
