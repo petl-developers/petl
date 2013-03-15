@@ -180,14 +180,16 @@ class ZipSource(object):
 
 class StdinSource(object):
 
+    @contextmanager
     def open_(self, *args):
-        return sys.stdin
+        yield sys.stdin
     
 
 class StdoutSource(object):
 
+    @contextmanager
     def open_(self, *args):
-        return sys.stdout
+        yield sys.stdout
     
 
 class URLSource(object):
@@ -1835,6 +1837,7 @@ def tohtml(table, source=None):
         ...     print f.read()
         ...     
 
+        TODO
     """
     
     source = _write_source_from_arg(source)
