@@ -411,13 +411,19 @@ class Look(object):
         
         # construct a line for each data row
         rowlines = list()
-        for valsrepr in rowsrepr:
+        for vals, valsrepr in zip(rows, rowsrepr):
             rowline = u'|'
             for i, w in enumerate(colwidths):
-                v = valsrepr[i]
-                rowline += u' ' + v
-                rowline += u' ' * (w - len(v)) # padding
-                rowline += u' |'
+                vr = valsrepr[i]
+                if i < len(vals) and isinstance(vals[i], (int, long, float)):
+                    # left pad numbers
+                    rowline += u' ' * (w + 1 - len(vr)) # padding
+                    rowline += vr + u' |'
+                else:      
+                    # right pad everything else
+                    rowline += u' ' + vr
+                    rowline += u' ' * (w - len(vr)) # padding
+                    rowline += u' |'
             rowline += u'\n'
             rowlines.append(rowline)
             
