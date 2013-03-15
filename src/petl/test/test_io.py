@@ -16,7 +16,7 @@ import os
 from petl import fromcsv, frompickle, fromsqlite3, adler32sum, crc32sum, fromdb, \
                 tocsv, topickle, appendcsv, appendpickle, tosqlite3, appendsqlite3, \
                 todb, appenddb, fromtext, totext, fromxml, fromjson, fromdicts, \
-                tojson, fromtsv, totsv, appendtsv, tojsonarrays
+                tojson, fromtsv, totsv, appendtsv, tojsonarrays, tohtml
 from ..testutils import ieq
 from ..io import FileSource, StringSource
 import petl.io
@@ -1025,6 +1025,40 @@ def test_totext():
 | c
 | 2
 |}"""
+        eq_(expect, actual)
+    
+    
+def test_tohtml():
+    
+    # exercise function
+    table = (('foo', 'bar'),
+             ('a', 1),
+             ('b', 2))
+    f = NamedTemporaryFile(delete=False)
+    tohtml(table, f.name)
+    
+    # check what it did
+    with open(f.name, 'rb') as o:
+        actual = o.read()
+        expect = """<table>
+<thead>
+<tr>
+<th>foo</th>
+<th>bar</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>a</td>
+<td style='text-align: right'>1</td>
+</tr>
+<tr>
+<td>b</td>
+<td style='text-align: right'>2</td>
+</tr>
+</tbody>
+</table>
+"""
         eq_(expect, actual)
     
     

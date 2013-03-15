@@ -1812,6 +1812,55 @@ def totext(table, source=None, template=None, prologue=None, epilogue=None):
             f.write(epilogue)
             
     
+def tohtml(table, source=None):
+    """
+    Write the table as simple HTML to a file. E.g.::
+
+        >>> from petl import tohtml, look    
+        >>> look(table)
+        +-------+-------+
+        | 'foo' | 'bar' |
+        +=======+=======+
+        | 'a'   | 1     |
+        +-------+-------+
+        | 'b'   | 2     |
+        +-------+-------+
+        | 'c'   | 2     |
+        +-------+-------+
+        
+        >>> tohtml(table, 'test.html')
+        >>> 
+        >>> # see what we did
+        ... with open('test.html') as f:
+        ...     print f.read()
+        ...     
+
+    """
+    
+    source = _write_source_from_arg(source)
+    with source.open_('wb') as f:
+        it = iter(table)
+        print >>f, '<table>'
+        flds = it.next()
+        print >>f, '<thead>'
+        print >>f, '<tr>'
+        for h in flds:
+            print >>f, '<th>%s</th>' % h
+        print >>f, '</tr>'
+        print >>f, '</thead>'
+        print >>f, '<tbody>'
+        for row in it:
+            print >>f, '<tr>'
+            for v in row:
+                if isinstance(v, (int, long, float)):
+                    print >>f, "<td style='text-align: right'>%s</td>" % v
+                else:
+                    print >>f, '<td>%s</td>' % v
+            print >>f, '</tr>'
+        print >>f, '</tbody>'
+        print >>f, '</table>'
+            
+    
 def appendtext(table, source=None, template=None, prologue=None, epilogue=None):
     """
     As :func:`totext` but the file is opened in append mode.
