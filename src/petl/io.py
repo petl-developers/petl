@@ -23,8 +23,7 @@ import cStringIO
 import logging
 
 
-from .util import data, header, fieldnames, asdict, records, RowContainer
-from petl.util import iterpeek
+from .util import data, header, asdict, records, RowContainer
 
 
 logger = logging.getLogger(__name__)
