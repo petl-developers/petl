@@ -814,7 +814,7 @@ def test_sort_buffered_tempdir():
                    ('D', 10))
     result = sort(table, 'bar')
     ieq(expectation, result)
-    result = sort(table, 'bar', buffersize=2, tempdir='/tmp/petl')
+    result = sort(table, 'bar', buffersize=2, tempdir='/tmp')
     ieq(expectation, result)
             
     
