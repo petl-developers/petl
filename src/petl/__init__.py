@@ -40,7 +40,7 @@ from petl.transform import rename, cut, cat, convert, fieldconvert, addfield, ro
            multirangeaggregate, unjoin, rowgroupmap, distinct
            
            
-VERSION = '0.12-SNAPSHOT'
+VERSION = '0.12'
            
            
 def lenstats(table, field):

@@ -1,8 +1,8 @@
 petl - Extract, Transform and Load (Tables of Data)
 ===================================================
 
-`petl` is a tentative Python module for extracting, transforming and
-loading tables of data.
+`petl` is a Python module for extracting, transforming and loading
+tables of data.
 
 - Docs: http://packages.python.org/petl
 - Source: https://github.com/alimanfoo/petl
