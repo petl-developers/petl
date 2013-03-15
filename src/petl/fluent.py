@@ -17,7 +17,7 @@ thismodule = sys.modules[__name__]
 
 class FluentWrapper(object):
     
-    def __init__(self, inner):
+    def __init__(self, inner=None):
         object.__setattr__(self, '_inner', inner)
 
     def __iter__(self):
@@ -71,7 +71,10 @@ for n, c in petl.__dict__.items():
 # TODO add only those methods that expect to have row container as first argument
 for n, c in thismodule.__dict__.items():
     if callable(c):
-        setattr(FluentWrapper, n, c) 
+        if n.startswith('from'): # avoids having to import anything other than "etl"
+            setattr(FluentWrapper, n, staticmethod(c))
+        else:
+            setattr(FluentWrapper, n, c) 
         
         
 # need to manually override for facet(), because it returns a dict 
@@ -87,7 +90,9 @@ def diff(*args, **kwargs):
     a, b = petl.diff(*args, **kwargs)
     return FluentWrapper(a), FluentWrapper(b)
 
-    
+
+# short alias to wrap explicitly
+etl = FluentWrapper    
 
 
 

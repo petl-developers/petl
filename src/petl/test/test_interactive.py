@@ -9,7 +9,7 @@ from nose.tools import eq_
 
 
 import petl
-from ..fluent import etl
+from ..interactive import etl
 from ..testutils import ieq
 
 

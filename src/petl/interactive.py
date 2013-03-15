@@ -22,7 +22,7 @@ representation = petl.look
 
 class InteractiveWrapper(petl.fluent.FluentWrapper):
     
-    def __init__(self, inner):
+    def __init__(self, inner=None):
         super(InteractiveWrapper, self).__init__(inner)
         object.__setattr__(self, '_cache', [])
         object.__setattr__(self, '_tag', None)
@@ -95,7 +95,10 @@ for n, c in petl.__dict__.items():
 # TODO add only those methods that expect to have row container as first argument
 for n, c in thismodule.__dict__.items():
     if callable(c):
-        setattr(InteractiveWrapper, n, c) 
+        if n.startswith('from'): # avoids having to import anything other than "etl"
+            setattr(InteractiveWrapper, n, staticmethod(c))
+        else:
+            setattr(InteractiveWrapper, n, c) 
         
         
 # need to manually override for facet, because it returns a dict 
@@ -110,5 +113,9 @@ def facet(table, field):
 def diff(*args, **kwargs):
     a, b = petl.diff(*args, **kwargs)
     return InteractiveWrapper(a), InteractiveWrapper(b)
+
+
+# short alias to wrap explicitly
+etl = InteractiveWrapper    
 
     
