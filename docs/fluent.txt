@@ -63,6 +63,40 @@ be used in a fluent style. E.g.::
    | 34    | 'APPLES' | 0.18846546302867728  | 42     | 1428    |
    +-------+----------+----------------------+--------+---------+
 
+Alternatively, if you don't want to import all petl function names
+into the root namespace, you can just import "etl", e.g.::
+
+     >>> from petl.fluent import etl
+     >>> l = [['foo', 'bar'], ['a', 1], ['b', 3]]
+     >>> etl(l).look()
+     +-------+-------+
+     | 'foo' | 'bar' |
+     +=======+=======+
+     | 'a'   | 1     |
+     +-------+-------+
+     | 'b'   | 3     |
+     +-------+-------+
+     
+     >>> etl(l).cut('foo').look()
+     +-------+
+     | 'foo' |
+     +=======+
+     | 'a'   |
+     +-------+
+     | 'b'   |
+     +-------+
+     
+     >>> etl(l).tocsv('test.csv')
+     >>> etl().fromcsv('test.csv').look()
+     +-------+-------+
+     | 'foo' | 'bar' |
+     +=======+=======+
+     | 'a'   | '1'   |
+     +-------+-------+
+     | 'b'   | '3'   |
+     +-------+-------+
+
+
 ``petl`` executable
 -------------------
 

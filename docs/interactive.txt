@@ -24,7 +24,7 @@ from previous steps will have been cached.
 The default cache size can be changed by setting
 ``petl.interactive.cachesize`` to an integer value.
 
-Note also that, by default, the :func:`look` function is used to generate a
+Also, by default, the :func:`look` function is used to generate a
 representation of tables. So you don't need to type, e.g., ``>>>
 look(mytable)``, you can just type ``>>> mytable``. The default
 representation function can be changed by setting
@@ -32,3 +32,35 @@ representation function can be changed by setting
 ``petl.interactive.representation = petl.see``, or
 ``petl.interactive.representation = None`` to disable this behaviour.
 
+Finally, this module extends :mod:`petl.fluent` so you can use the
+fluent style if you wish, e.g.::
+
+     >>> from petl.interactive import etl
+     >>> l = [['foo', 'bar'], ['a', 1], ['b', 3]]
+     >>> etl(l)
+     +-------+-------+
+     | 'foo' | 'bar' |
+     +=======+=======+
+     | 'a'   | 1     |
+     +-------+-------+
+     | 'b'   | 3     |
+     +-------+-------+
+
+     >>> etl(l).cut('foo')
+     +-------+
+     | 'foo' |
+     +=======+
+     | 'a'   |
+     +-------+
+     | 'b'   |
+     +-------+
+
+     >>> etl(l).tocsv('test.csv')
+     >>> etl().fromcsv('test.csv')
+     +-------+-------+
+     | 'foo' | 'bar' |
+     +=======+=======+
+     | 'a'   | '1'   |
+     +-------+-------+
+     | 'b'   | '3'   |
+     +-------+-------+
