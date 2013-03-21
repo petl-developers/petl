@@ -3,6 +3,10 @@ The `petl` module.
 
 """
 
+
+VERSION = '0.14-SNAPSHOT'
+                      
+
 from petl.util import header, fieldnames, data, records, rowcount, look, see, \
            itervalues, values, iterdata, valuecounter, valuecounts, \
            valueset, isunique, lookup, lookupone, recordlookup, recordlookupone, \
@@ -38,9 +42,6 @@ from petl.transform import rename, cut, cat, convert, fieldconvert, addfield, ro
            fold, mergeduplicates, addrownumbers, selectcontains, search, sub, \
            addcolumn, lookupjoin, hashlookupjoin, filldown, fillright, fillleft, \
            multirangeaggregate, unjoin, rowgroupmap, distinct
-           
-           
-VERSION = '0.13'
            
            
 def lenstats(table, field):
