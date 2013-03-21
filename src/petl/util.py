@@ -276,7 +276,7 @@ def look(table, *sliceargs, **kwargs):
     .. versionchanged:: 0.8
     
     The properties `n` and `p` can be used to look at the next and previous rows
-    respectively. I.e., try ``>>> look(table)`` then ``>>> _.n``` then ``>>> _.p``. 
+    respectively. I.e., try ``>>> look(table)`` then ``>>> _.n`` then ``>>> _.p``. 
 
     .. versionchanged:: 0.13
     
