@@ -239,7 +239,7 @@ def nrows(table):
 rowcount = nrows # backwards compatibility
 
     
-def look(table, *sliceargs):
+def look(table, *sliceargs, **kwargs):
     """
     Format a portion of the table as text for inspection in an interactive
     session. E.g.::
@@ -276,21 +276,64 @@ def look(table, *sliceargs):
     .. versionchanged:: 0.8
     
     The properties `n` and `p` can be used to look at the next and previous rows
-    respectively. I.e., try ``>>> look(table)`` then ``>>> _.n``` then ``>>> _.p``. 
+    respectively. I.e., try ``>>> look(table)`` then ``>>> _.n`` then ``>>> _.p``. 
 
+    .. versionchanged:: 0.13
+    
+    Three alternative presentation styles are available: 'grid', 'simple' and 
+    'minimal', where 'grid' is the default. A different style can be specified
+    using the `style` keyword argument, e.g.::
+    
+        >>> table = [['foo', 'bar'], ['a', 1], ['b', 2]]
+        >>> look(table, style='simple')
+        =====  =====
+        'foo'  'bar'
+        =====  =====
+        'a'        1
+        'b'        2
+        =====  =====
+        
+        >>> look(table, style='minimal')
+        'foo'  'bar'
+        'a'        1
+        'b'        2
+        
+    The default style can also be changed, e.g.::
+        
+        >>> look.default_style = 'simple'
+        >>> look(table)
+        =====  =====
+        'foo'  'bar'
+        =====  =====
+        'a'        1
+        'b'        2
+        =====  =====
+        
+        >>> look.default_style = 'grid'
+        >>> look(table)
+        +-------+-------+
+        | 'foo' | 'bar' |
+        +=======+=======+
+        | 'a'   |     1 |
+        +-------+-------+
+        | 'b'   |     2 |
+        +-------+-------+    
+    
+    See also :func:`lookall` and :func:`see`.
+    
     """
     
-    return Look(table, *sliceargs)
+    return Look(table, *sliceargs, **kwargs)
 
 
-def lookall(table):
+def lookall(table, **kwargs):
     """
     Format the entire table as text for inspection in an interactive session.
     
     N.B., this will load the entire table into memory.
     """
     
-    return look(table, 0, None)
+    return look(table, 0, None, **kwargs)
     
     
 class Look(object):
@@ -305,6 +348,10 @@ class Look(object):
             self.vrepr = kwargs['vrepr']
         else:
             self.vrepr = repr
+        if 'style' in kwargs:
+            self.style = kwargs['style']
+        else:
+            self.style = look.default_style
         
     @property
     def n(self):
@@ -353,90 +400,227 @@ class Look(object):
         return Look(self.table, *sliceargs)
     
     def __repr__(self):
-        it = iter(self.table)
-            
-        vrepr = self.vrepr
-        
-        # fields representation
-        flds = it.next()
-        fldsrepr = [vrepr(f) for f in flds]
-        
-        # rows representations
-        rows = list(islice(it, *self.sliceargs))
-        rowsrepr = [[vrepr(v) for v in row] for row in rows]
-        
-        # find maximum row length - may be uneven
-        rowlens = [len(flds)]
-        rowlens.extend([len(row) for row in rows])
-        maxrowlen = max(rowlens)
-        
-        # pad short fields and rows
-        if len(flds) < maxrowlen:
-            fldsrepr.extend([u''] * (maxrowlen - len(flds)))
-        for valsrepr in rowsrepr:
-            if len(valsrepr) < maxrowlen:
-                valsrepr.extend([u''] * (maxrowlen - len(valsrepr)))
-        
-        # find longest representations so we know how wide to make cells
-        colwidths = [0] * maxrowlen # initialise to 0
-        for i, fr in enumerate(fldsrepr):
-            colwidths[i] = len(fr)
-        for valsrepr in rowsrepr:
-            for i, vr in enumerate(valsrepr):
-                if len(vr) > colwidths[i]:
-                    colwidths[i] = len(vr)
-                    
-        # construct a line separator
-        sep = u'+'
-        for w in colwidths:
-            sep += u'-' * (w + 2)
-            sep += u'+'
-        sep += u'\n'
-        
-        # construct a header separator
-        hedsep = u'+'
-        for w in colwidths:
-            hedsep += u'=' * (w + 2)
-            hedsep += u'+'
-        hedsep += u'\n'
-        
-        # construct a line for the header row
-        fldsline = u'|'
-        for i, w in enumerate(colwidths):
-            f = fldsrepr[i]
-            fldsline += u' ' + f
-            fldsline += u' ' * (w - len(f)) # padding
-            fldsline += u' |'
-        fldsline += u'\n'
-        
-        # construct a line for each data row
-        rowlines = list()
-        for vals, valsrepr in zip(rows, rowsrepr):
-            rowline = u'|'
-            for i, w in enumerate(colwidths):
-                vr = valsrepr[i]
-                if i < len(vals) and isinstance(vals[i], (int, long, float)):
-                    # left pad numbers
-                    rowline += u' ' * (w + 1 - len(vr)) # padding
-                    rowline += vr + u' |'
-                else:      
-                    # right pad everything else
-                    rowline += u' ' + vr
-                    rowline += u' ' * (w - len(vr)) # padding
-                    rowline += u' |'
-            rowline += u'\n'
-            rowlines.append(rowline)
-            
-        # put it all together
-        output = sep + fldsline + hedsep
-        for line in rowlines:
-            output += line + sep
-        
-        return output
+        if self.style == 'simple':
+            return format_table_simple(self.table, self.vrepr, self.sliceargs)
+        elif self.style == 'minimal':
+            return format_table_minimal(self.table, self.vrepr, self.sliceargs)
+        else:
+            return format_table_grid(self.table, self.vrepr, self.sliceargs)
     
     
     def __str__(self):
         return repr(self)
+
+
+look.default_style = 'grid'
+    
+    
+def format_table_grid(table, vrepr, sliceargs):
+    it = iter(table)
+    
+    # fields representation
+    flds = it.next()
+    fldsrepr = [vrepr(f) for f in flds]
+    
+    # rows representations
+    rows = list(islice(it, *sliceargs))
+    rowsrepr = [[vrepr(v) for v in row] for row in rows]
+    
+    # find maximum row length - may be uneven
+    rowlens = [len(flds)]
+    rowlens.extend([len(row) for row in rows])
+    maxrowlen = max(rowlens)
+    
+    # pad short fields and rows
+    if len(flds) < maxrowlen:
+        fldsrepr.extend([u''] * (maxrowlen - len(flds)))
+    for valsrepr in rowsrepr:
+        if len(valsrepr) < maxrowlen:
+            valsrepr.extend([u''] * (maxrowlen - len(valsrepr)))
+    
+    # find longest representations so we know how wide to make cells
+    colwidths = [0] * maxrowlen # initialise to 0
+    for i, fr in enumerate(fldsrepr):
+        colwidths[i] = len(fr)
+    for valsrepr in rowsrepr:
+        for i, vr in enumerate(valsrepr):
+            if len(vr) > colwidths[i]:
+                colwidths[i] = len(vr)
+                
+    # construct a line separator
+    sep = u'+'
+    for w in colwidths:
+        sep += u'-' * (w + 2)
+        sep += u'+'
+    sep += u'\n'
+    
+    # construct a header separator
+    hedsep = u'+'
+    for w in colwidths:
+        hedsep += u'=' * (w + 2)
+        hedsep += u'+'
+    hedsep += u'\n'
+    
+    # construct a line for the header row
+    fldsline = u'|'
+    for i, w in enumerate(colwidths):
+        f = fldsrepr[i]
+        fldsline += u' ' + f
+        fldsline += u' ' * (w - len(f)) # padding
+        fldsline += u' |'
+    fldsline += u'\n'
+    
+    # construct a line for each data row
+    rowlines = list()
+    for vals, valsrepr in zip(rows, rowsrepr):
+        rowline = u'|'
+        for i, w in enumerate(colwidths):
+            vr = valsrepr[i]
+            if i < len(vals) and isinstance(vals[i], (int, long, float)):
+                # left pad numbers
+                rowline += u' ' * (w + 1 - len(vr)) # padding
+                rowline += vr + u' |'
+            else:      
+                # right pad everything else
+                rowline += u' ' + vr
+                rowline += u' ' * (w - len(vr)) # padding
+                rowline += u' |'
+        rowline += u'\n'
+        rowlines.append(rowline)
+        
+    # put it all together
+    output = sep + fldsline + hedsep
+    for line in rowlines:
+        output += line + sep
+    
+    return output
+
+
+def format_table_simple(table, vrepr, sliceargs):
+    it = iter(table)
+    
+    # fields representation
+    flds = it.next()
+    fldsrepr = [vrepr(f) for f in flds]
+    
+    # rows representations
+    rows = list(islice(it, *sliceargs))
+    rowsrepr = [[vrepr(v) for v in row] for row in rows]
+    
+    # find maximum row length - may be uneven
+    rowlens = [len(flds)]
+    rowlens.extend([len(row) for row in rows])
+    maxrowlen = max(rowlens)
+    
+    # pad short fields and rows
+    if len(flds) < maxrowlen:
+        fldsrepr.extend([u''] * (maxrowlen - len(flds)))
+    for valsrepr in rowsrepr:
+        if len(valsrepr) < maxrowlen:
+            valsrepr.extend([u''] * (maxrowlen - len(valsrepr)))
+    
+    # find longest representations so we know how wide to make cells
+    colwidths = [0] * maxrowlen # initialise to 0
+    for i, fr in enumerate(fldsrepr):
+        colwidths[i] = len(fr)
+    for valsrepr in rowsrepr:
+        for i, vr in enumerate(valsrepr):
+            if len(vr) > colwidths[i]:
+                colwidths[i] = len(vr)
+                
+    # construct a header separator
+    hedsep = u'  '.join(u'=' * w for w in colwidths)
+    hedsep += u'\n'
+    
+    # construct a line for the header row
+    fldsline = u'  '.join(f.ljust(w) for f, w in zip(fldsrepr, colwidths))
+    fldsline += u'\n'
+    
+    # construct a line for each data row
+    rowlines = list()
+    for vals, valsrepr in zip(rows, rowsrepr):
+        rowline = u''
+        for i, w in enumerate(colwidths):
+            vr = valsrepr[i]
+            if i < len(vals) and isinstance(vals[i], (int, long, float)):
+                # left pad numbers
+                rowline += vr.rjust(w)
+            else:      
+                # right pad everything else
+                rowline += vr.ljust(w)
+            if i < len(colwidths) - 1:
+                rowline += '  '
+        rowline += u'\n'
+        rowlines.append(rowline)
+        
+    # put it all together
+    output = hedsep + fldsline + hedsep
+    for line in rowlines:
+        output += line
+    output += hedsep
+    
+    return output
+        
+        
+def format_table_minimal(table, vrepr, sliceargs):
+    it = iter(table)
+    
+    # fields representation
+    flds = it.next()
+    fldsrepr = [vrepr(f) for f in flds]
+    
+    # rows representations
+    rows = list(islice(it, *sliceargs))
+    rowsrepr = [[vrepr(v) for v in row] for row in rows]
+    
+    # find maximum row length - may be uneven
+    rowlens = [len(flds)]
+    rowlens.extend([len(row) for row in rows])
+    maxrowlen = max(rowlens)
+    
+    # pad short fields and rows
+    if len(flds) < maxrowlen:
+        fldsrepr.extend([u''] * (maxrowlen - len(flds)))
+    for valsrepr in rowsrepr:
+        if len(valsrepr) < maxrowlen:
+            valsrepr.extend([u''] * (maxrowlen - len(valsrepr)))
+    
+    # find longest representations so we know how wide to make cells
+    colwidths = [0] * maxrowlen # initialise to 0
+    for i, fr in enumerate(fldsrepr):
+        colwidths[i] = len(fr)
+    for valsrepr in rowsrepr:
+        for i, vr in enumerate(valsrepr):
+            if len(vr) > colwidths[i]:
+                colwidths[i] = len(vr)
+                
+    # construct a line for the header row
+    fldsline = u'  '.join(f.ljust(w) for f, w in zip(fldsrepr, colwidths))
+    fldsline += u'\n'
+    
+    # construct a line for each data row
+    rowlines = list()
+    for vals, valsrepr in zip(rows, rowsrepr):
+        rowline = u''
+        for i, w in enumerate(colwidths):
+            vr = valsrepr[i]
+            if i < len(vals) and isinstance(vals[i], (int, long, float)):
+                # left pad numbers
+                rowline += vr.rjust(w)
+            else:      
+                # right pad everything else
+                rowline += vr.ljust(w)
+            if i < len(colwidths) - 1:
+                rowline += '  '
+        rowline += u'\n'
+        rowlines.append(rowline)
+        
+    # put it all together
+    output = fldsline
+    for line in rowlines:
+        output += line
+    
+    return output
         
         
 def lookstr(table, *sliceargs):

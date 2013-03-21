@@ -115,6 +115,37 @@ def test_look_irregular_rows():
 +-------+-------+------+
 """
     eq_(expect, actual)
+    
+    
+def test_look_style_simple():
+    table = (('foo', 'bar'), ('a', 1), ('b', 2))
+    actual = repr(look(table, style='simple'))
+    expect = """=====  =====
+'foo'  'bar'
+=====  =====
+'a'        1
+'b'        2
+=====  =====
+"""
+    eq_(expect, actual)
+    look.default_style = 'simple'
+    actual = repr(look(table))
+    eq_(expect, actual)
+    look.default_style = 'grid'
+
+    
+def test_look_style_minimal():
+    table = (('foo', 'bar'), ('a', 1), ('b', 2))
+    actual = repr(look(table, style='minimal'))
+    expect = """'foo'  'bar'
+'a'        1
+'b'        2
+"""
+    eq_(expect, actual)
+    look.default_style = 'minimal'
+    actual = repr(look(table))
+    eq_(expect, actual)
+    look.default_style = 'grid'
 
     
 def test_see():
