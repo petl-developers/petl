@@ -9,6 +9,7 @@ from itertools import islice
 import sys
 from .util import valueset, RowContainer
 import petl.fluent
+from petl.io import tohtml, StringSource
 
 
 petl = sys.modules['petl']
@@ -69,6 +70,11 @@ class InteractiveWrapper(petl.fluent.FluentWrapper):
             return repr(representation(self))
         else:
             return object.__repr__(self)
+        
+    def _repr_html_(self):
+        buf = StringSource()
+        tohtml(self, buf)
+        return buf.getvalue()
             
     
 def wrap(f):

@@ -1,3 +1,4 @@
+nosetests
 # remove -SNAPSHOT from src/petl/__init__.py and docs/conf.py
 sed -i -e 's/-SNAPSHOT//' src/petl/__init__.py 
 sed -i -e 's/-SNAPSHOT//' docs/conf.py
@@ -17,3 +18,4 @@ emacs docs/conf.py
 # git commit and push
 git commit -a -m 'increment version'; git push
 # activate version at rtfd
+# notify
