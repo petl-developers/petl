@@ -1,0 +1,7 @@
+# remove -SNAPSHOT from src/petlx/__init__.py and docs/conf.py
+# git commit and push
+# git tag and push 
+# python setup.py sdist upload
+# increment version and add -SNAPSHOT in src/petlx/__init__.py and docs/conf.py
+# git commit and push
+# activate version at rtfd
