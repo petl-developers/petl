@@ -8605,4 +8605,20 @@ def groupselectmax(table, key, value):
     return groupselectfirst(sort(table, value, reverse=True), key)
     
 
+def coalesce(*fields, **kwargs):
+    try:
+        missing = kwargs['missing']
+    except:
+        missing = None
+    try:
+        default = kwargs['default']
+    except:
+        default = None
+    def _coalesce(row):
+        for f in fields:
+            v = row[f]
+            if v is not missing:
+                return v
+        return default
+    return _coalesce
             

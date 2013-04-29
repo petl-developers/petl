@@ -25,7 +25,7 @@ from petl import rename, fieldnames, cut, cat, convert, addfield, \
                 flatten, unflatten, mergesort, annex, unpackdict, unique, \
                 selectin, fold, addrownumbers, selectcontains, search, \
                 addcolumn, lookupjoin, hashlookupjoin, filldown, fillright, \
-                fillleft, multirangeaggregate, unjoin
+                fillleft, multirangeaggregate, unjoin, coalesce 
 from ..transform import Conflict
 
 
@@ -478,8 +478,6 @@ def test_convert_translate():
 
 
 def test_addfield():
-    """Test the addfield function."""
-
     table = (('foo', 'bar'),
              ('M', 12),
              ('F', 34),
@@ -524,6 +522,29 @@ def test_addfield_empty():
     actual = addfield(table, 'baz', 42)
     ieq(expect, actual)
     ieq(expect, actual)
+
+
+def test_addfield_coalesce():
+    table = (('foo', 'bar', 'baz', 'quux'),
+             ('M', 12, 23, 44),
+             ('F', None, 23, 11),
+             ('-', None, None, 42))
+    
+    result = addfield(table, 'spong', coalesce('bar', 'baz', 'quux'))
+    expect = (('foo', 'bar', 'baz', 'quux', 'spong'),
+              ('M', 12, 23, 44, 12),
+              ('F', None, 23, 11, 23),
+              ('-', None, None, 42, 42))
+    ieq(expect, result)
+    ieq(expect, result)
+
+    result = addfield(table, 'spong', coalesce(1, 2, 3))
+    expect = (('foo', 'bar', 'baz', 'quux', 'spong'),
+              ('M', 12, 23, 44, 12),
+              ('F', None, 23, 11, 23),
+              ('-', None, None, 42, 42))
+    ieq(expect, result)
+    ieq(expect, result)
 
 
 def test_rowslice():

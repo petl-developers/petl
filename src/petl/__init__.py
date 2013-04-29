@@ -43,7 +43,7 @@ from petl.transform import rename, cut, cat, convert, fieldconvert, addfield, ro
            fold, mergeduplicates, addrownumbers, selectcontains, search, sub, \
            addcolumn, lookupjoin, hashlookupjoin, filldown, fillright, fillleft, \
            multirangeaggregate, unjoin, rowgroupmap, distinct, groupcountdistinctvalues, \
-           groupselectfirst, groupselectmax, groupselectmin
+           groupselectfirst, groupselectmax, groupselectmin, coalesce
            
            
 def lenstats(table, field):
