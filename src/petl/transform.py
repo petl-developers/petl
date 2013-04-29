@@ -21,7 +21,7 @@ from .util import asindices, rowgetter, asdict,\
 from .io import Uncacheable
 from .util import RowContainer, SortableItem, sortable_itemgetter
 from petl.util import FieldSelectionError, rowgroupbybin, rowitemgetter
-import os
+#import os
 
 
 logger = logging.getLogger(__name__)
