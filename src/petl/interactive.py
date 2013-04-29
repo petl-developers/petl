@@ -75,8 +75,8 @@ class InteractiveWrapper(petl.fluent.FluentWrapper):
         buf = StringSource()
         tohtml(self, buf)
         return buf.getvalue()
-            
-    
+
+
 def wrap(f):
     def wrapper(*args, **kwargs):
         _innerresult = f(*args, **kwargs)
@@ -101,11 +101,20 @@ for n, c in petl.__dict__.items():
 # TODO add only those methods that expect to have row container as first argument
 for n, c in thismodule.__dict__.items():
     if callable(c):
-        if n.startswith('from'): # avoids having to import anything other than "etl"
+        if n.startswith('from') or n in petl.fluent.STATICMETHODS: # avoids having to import anything other than "etl"
             setattr(InteractiveWrapper, n, staticmethod(c))
         else:
             setattr(InteractiveWrapper, n, c) 
-        
+            
+            
+# special case to act like static method if no inner
+def _catmethod(self, *args, **kwargs):
+    if self._inner is None:
+        return InteractiveWrapper(petl.cat(*args, **kwargs))
+    else:
+        return InteractiveWrapper(petl.cat(self, *args, **kwargs))
+setattr(InteractiveWrapper, 'cat', _catmethod)        
+
         
 # need to manually override for facet, because it returns a dict 
 def facet(table, field):

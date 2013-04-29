@@ -16,7 +16,8 @@ from petl.util import header, fieldnames, data, records, rowcount, look, see, \
            stringpatterns, stringpatterncounter, randomtable, dummytable, \
            diffheaders, diffvalues, columns, facetcolumns, heapqmergesorted, \
            shortlistmergesorted, progress, clock, isordered, rowgroupby, nrows, \
-           nthword, lookstr
+           nthword, lookstr, listoflists, tupleoftuples, listoftuples, tupleoflists, \
+           lol, tot, tol, lot
 
 from petl.io import fromcsv, frompickle, fromsqlite3, tocsv, topickle, \
            tosqlite3, crc32sum, adler32sum, statsum, fromdb, \
@@ -41,7 +42,8 @@ from petl.transform import rename, cut, cat, convert, fieldconvert, addfield, ro
            resub, flatten, unflatten, mergesort, annex, unpackdict, unique, \
            fold, mergeduplicates, addrownumbers, selectcontains, search, sub, \
            addcolumn, lookupjoin, hashlookupjoin, filldown, fillright, fillleft, \
-           multirangeaggregate, unjoin, rowgroupmap, distinct
+           multirangeaggregate, unjoin, rowgroupmap, distinct, groupcountdistinctvalues, \
+           groupselectfirst, groupselectmax, groupselectmin
            
            
 def lenstats(table, field):

@@ -67,15 +67,26 @@ for n, c in petl.__dict__.items():
         setattr(thismodule, n, c)
 
 
+STATICMETHODS = ['dummytable', 'randomtable']
+
 # add module functions as methods on the wrapper class
 # TODO add only those methods that expect to have row container as first argument
 for n, c in thismodule.__dict__.items():
     if callable(c):
-        if n.startswith('from'): # avoids having to import anything other than "etl"
+        if n.startswith('from') or n in STATICMETHODS: # avoids having to import anything other than "etl"
             setattr(FluentWrapper, n, staticmethod(c))
         else:
             setattr(FluentWrapper, n, c) 
         
+        
+# special case to act like static method if no inner
+def _catmethod(self, *args, **kwargs):
+    if self._inner is None:
+        return FluentWrapper(petl.cat(*args, **kwargs))
+    else:
+        return FluentWrapper(petl.cat(self, *args, **kwargs))
+setattr(FluentWrapper, 'cat', _catmethod)        
+
         
 # need to manually override for facet(), because it returns a dict 
 def facet(table, field):

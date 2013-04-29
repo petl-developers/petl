@@ -3,6 +3,12 @@ Base classes.
 
 """
 
+# Python 2.6 compatibility
+try:
+    from collections import Counter, OrderedDict
+except ImportError:
+    from .compat import Counter, OrderedDict
+
 
 from itertools import islice
 
@@ -81,3 +87,9 @@ class IterContainer(object):
     def apply(self, function):
         for item in self:
             function(item)
+            
+    def counter(self):
+        return Counter(self)
+    
+    def ordereddict(self):
+        return OrderedDict(self)

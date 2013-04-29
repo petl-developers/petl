@@ -3098,3 +3098,24 @@ def sortable_itemgetter(*items):
         def g(obj):
             return tuple(SortableItem(item) for item in ig(obj))
     return g
+
+
+def listoflists(tbl):
+    return [list(row) for row in tbl]
+
+lol = listoflists
+
+def tupleoftuples(tbl):
+    return tuple(tuple(row) for row in tbl)
+
+tot = tupleoftuples
+
+def listoftuples(tbl):
+    return [tuple(row) for row in tbl]
+
+lot = listoftuples
+
+def tupleoflists(tbl):
+    return tuple(list(row) for row in tbl)
+
+tol = tupleoflists
