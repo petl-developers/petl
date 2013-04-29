@@ -1859,8 +1859,10 @@ def tohtml(table, source=None):
             for v in row:
                 if isinstance(v, (int, long, float)):
                     print >>f, "<td style='text-align: right'>%s</td>" % v
+                elif isinstance(v, tuple):
+                    print >>f, '<td>%s</td>' % repr(v)                    
                 else:
-                    print >>f, '<td>%s</td>' % v
+                    print >>f, '<td>%r</td>' % v
             print >>f, '</tr>'
         print >>f, '</tbody>'
         print >>f, '</table>'

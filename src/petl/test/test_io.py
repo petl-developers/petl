@@ -1033,7 +1033,7 @@ def test_tohtml():
     # exercise function
     table = (('foo', 'bar'),
              ('a', 1),
-             ('b', 2))
+             ('b', (1, 2)))
     f = NamedTemporaryFile(delete=False)
     tohtml(table, f.name)
     
@@ -1049,12 +1049,12 @@ def test_tohtml():
 </thead>
 <tbody>
 <tr>
-<td>a</td>
+<td>'a'</td>
 <td style='text-align: right'>1</td>
 </tr>
 <tr>
-<td>b</td>
-<td style='text-align: right'>2</td>
+<td>'b'</td>
+<td>(1, 2)</td>
 </tr>
 </tbody>
 </table>
