@@ -41,9 +41,14 @@ def exercise(dbo):
     ieq(expect, actual)
     print look(actual)
     
-    print 'cut and verify'
+    print 'cut, overwrite and verify'
     todb(cut(expect, 'bar', 'foo'), dbo, 'test')
     ieq(expect, actual)
+    print look(actual)
+
+    print 'cut, append and verify'
+    appenddb(cut(expect, 'bar', 'foo'), dbo, 'test')
+    ieq(expect_appended, actual)
     print look(actual)
 
 
