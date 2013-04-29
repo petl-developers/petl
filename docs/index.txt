@@ -531,6 +531,10 @@ Transform - transforming tables
 .. autofunction:: petl.unjoin
 .. autofunction:: petl.distinct
 .. autofunction:: petl.rowgroupmap
+.. autofunction:: petl.groupcountdistinctvalues
+.. autofunction:: petl.groupselectfirst
+.. autofunction:: petl.groupselectmin
+.. autofunction:: petl.groupselectmax
 
 
 Load - writing tables to files and databases

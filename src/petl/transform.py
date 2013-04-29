@@ -3687,6 +3687,9 @@ class RowReduceView(RowContainer):
 
     
 def iterrowreduce(source, key, reducer, fields):
+    if fields is None:
+        # output fields from source
+        fields, source = iterpeek(source)
     yield tuple(fields)
     for key, rows in rowgroupby(source, key):
         yield tuple(reducer(key, rows))
@@ -8548,4 +8551,58 @@ class DistinctView(RowContainer):
                 yield row
             previous = row
             
+            
+def groupcountdistinctvalues(table, key, value):
+    """
+    Group by the `key` field then count the number of distinct values in the 
+    `value` field.
+    
+    .. versionadded:: 0.14
+    
+    """
+    
+    s1 = cut(table, key, value)
+    s2 = distinct(s1)
+    s3 = aggregate(s2, key, len)
+    return s3
+
+
+def groupselectfirst(table, key):
+    """
+    Group by the `key` field then return the first row within each group.
+    
+    .. versionadded:: 0.14
+
+    """
+
+    _reducer = lambda key, rows: rows.next()
+    return rowreduce(table, key, reducer=_reducer)
+
+
+def groupselectmin(table, key, value):
+    """
+    Group by the `key` field then return the row with the maximum of the `value`
+    field within each group. N.B., will only return one row for each group,
+    even if multiple rows have the same (maximum) value.
+
+    .. versionadded:: 0.14
+    
+    """
+
+    return groupselectfirst(sort(table, value, reverse=False), key)
+    
+    
+def groupselectmax(table, key, value):
+    """
+    Group by the `key` field then return the row with the minimum of the `value`
+    field within each group. N.B., will only return one row for each group,
+    even if multiple rows have the same (maximum) value.
+
+    .. versionadded:: 0.14
+    
+    """
+
+    return groupselectfirst(sort(table, value, reverse=True), key)
+    
+
             
