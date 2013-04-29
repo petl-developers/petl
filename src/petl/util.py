@@ -798,6 +798,9 @@ class ValuesContainer(IterContainer):
     def __iter__(self):
         return itervalues(self.table, self.field, *self.sliceargs, **self.kwargs)
     
+    def sum(self):
+        return sum(self)
+    
         
 def valueset(table, field, missing=None):
     """

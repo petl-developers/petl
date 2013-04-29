@@ -32,5 +32,17 @@ class IterContainer(object):
             if o == item:
                 return i
         raise ValueError('%s is not in container' % item)
+    
+    def set(self):
+        return set(self)
+    
+    def list(self):
+        return list(self)
+
+    def tuple(self):
+        return tuple(self)
+    
+    def dict(self):
+        return dict(self)
 
 

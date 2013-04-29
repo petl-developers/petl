@@ -73,5 +73,31 @@ def test_container():
     eq_(expect, actual)
     
     
+def test_values_container_convenience_methods():
+    table = etl((('foo', 'bar'),
+                 ('a', 1),
+                 ('b', 2),
+                 ('c', 2)))
+    
+    actual = table.values('foo').set()
+    expect = {'a', 'b', 'c'}
+    eq_(expect, actual)
+    
+    actual = table.values('foo').list()
+    expect = ['a', 'b', 'c']
+    eq_(expect, actual)
+    
+    actual = table.values('foo').tuple()
+    expect = ('a', 'b', 'c')
+    eq_(expect, actual)
+    
+    actual = table.values('bar').sum()
+    expect = 5
+    eq_(expect, actual)
+    
+    actual = table.data().dict()
+    expect = {'a': 1, 'b': 2, 'c': 2}
+    eq_(expect, actual)
+    
     
     

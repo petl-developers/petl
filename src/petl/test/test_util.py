@@ -776,3 +776,6 @@ def test_rowgroupby():
     eq_(True, vals[0])
     eq_(None, vals[1]) # gets padded
     
+    
+    
+    
