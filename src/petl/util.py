@@ -910,9 +910,28 @@ def valuecounts(table, *fields, **kwargs):
         | False   | 1       | 0.3333333333333333 |
         +---------+---------+--------------------+
             
-    The `field` argument can be a single field name or index (starting from zero)
-    or a tuple of field names and/or indexes.    
-
+    If more than one field is given, a report of value counts for each field
+    is given, e.g.::
+    
+        >>> look(valuecounts(table, 'foo', 'bar'))
+        +---------+---------+---------+-------------+
+        | 'field' | 'value' | 'count' | 'frequency' |
+        +=========+=========+=========+=============+
+        | 'foo'   | 'b'     |       2 |         0.5 |
+        +---------+---------+---------+-------------+
+        | 'foo'   | 'a'     |       1 |        0.25 |
+        +---------+---------+---------+-------------+
+        | 'foo'   | 'c'     |       1 |        0.25 |
+        +---------+---------+---------+-------------+
+        | 'bar'   |    True |       2 |         0.5 |
+        +---------+---------+---------+-------------+
+        | 'bar'   | None    |       1 |        0.25 |
+        +---------+---------+---------+-------------+
+        | 'bar'   |   False |       1 |        0.25 |
+        +---------+---------+---------+-------------+
+        
+    If rows are short, the value of the keyword argument `missing` is counted.
+    
     """
     
     if 'missing' in kwargs:
