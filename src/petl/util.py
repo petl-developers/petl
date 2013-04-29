@@ -798,9 +798,6 @@ class ValuesContainer(IterContainer):
     def __iter__(self):
         return itervalues(self.table, self.field, *self.sliceargs, **self.kwargs)
     
-    def sum(self):
-        return sum(self)
-    
     def __repr__(self):
         vreprs = map(repr, islice(self, 11))
         r = ', '.join(vreprs[:10])

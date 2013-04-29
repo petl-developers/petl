@@ -33,8 +33,20 @@ class IterContainer(object):
                 return i
         raise ValueError('%s is not in container' % item)
     
+    def min(self, **kwargs):
+        return min(self, **kwargs)
+    
+    def max(self, **kwargs):
+        return max(self, **kwargs)
+    
+    def len(self):
+        return len(self)
+    
     def set(self):
         return set(self)
+    
+    def frozenset(self):
+        return frozenset(self)
     
     def list(self):
         return list(self)
@@ -42,7 +54,30 @@ class IterContainer(object):
     def tuple(self):
         return tuple(self)
     
-    def dict(self):
-        return dict(self)
+    def dict(self, **kwargs):
+        return dict(self, **kwargs)
+    
+    def enumerate(self, start=0):
+        return enumerate(self, start)
+    
+    def filter(self, function):
+        return filter(function, self)
 
+    def map(self, function):
+        return map(function, self)
 
+    def reduce(self, function, **kwargs):
+        return reduce(function, self, **kwargs)
+
+    def sum(self, *args, **kwargs):
+        return sum(self, *args, **kwargs)
+    
+    def all(self):
+        return all(self)
+    
+    def any(self):
+        return any(self)
+    
+    def apply(self, function):
+        for item in self:
+            function(item)
