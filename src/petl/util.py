@@ -801,6 +801,13 @@ class ValuesContainer(IterContainer):
     def sum(self):
         return sum(self)
     
+    def __repr__(self):
+        vreprs = map(repr, islice(self, 11))
+        r = ', '.join(vreprs[:10])
+        if len(vreprs) > 10:
+            r += ', ...'
+        return r
+    
         
 def valueset(table, field, missing=None):
     """
