@@ -1538,8 +1538,10 @@ def _todb_dbapi_connection(table, connection, tablename, commit=True, truncate=F
         debug('truncate the table via query %r', truncatequery)
         cursor.execute(truncatequery)
     
-    debug('insert data')
-    insertquery = 'INSERT INTO %s VALUES (%s)' % (tablename, placeholders)
+#    insertquery = 'INSERT INTO %s VALUES (%s)' % (tablename, placeholders)
+    insertcolnames = ', '.join(colnames)
+    insertquery = 'INSERT INTO %s (%s) VALUES (%s)' % (tablename, insertcolnames, placeholders)
+    debug('insert data via query %r' % insertquery)
     cursor.executemany(insertquery, it)
 
     # finish up
@@ -1580,8 +1582,10 @@ def _todb_dbapi_cursor(table, cursor, tablename, commit=True, truncate=False):
         debug('truncate the table via query %r', truncatequery)
         cursor.execute(truncatequery)
     
-    debug('insert data')
-    insertquery = 'INSERT INTO %s VALUES (%s)' % (tablename, placeholders)
+#    insertquery = 'INSERT INTO %s VALUES (%s)' % (tablename, placeholders)
+    insertcolnames = ', '.join(colnames)
+    insertquery = 'INSERT INTO %s (%s) VALUES (%s)' % (tablename, insertcolnames, placeholders)
+    debug('insert data via query %r' % insertquery)
     cursor.executemany(insertquery, it)
 
     # N.B., don't close the cursor, leave that to the application
@@ -1632,8 +1636,10 @@ def _todb_sqlalchemy_connection(table, connection, tablename, commit=True, trunc
         debug('truncate the table via query %r', truncatequery)
         connection.execute(truncatequery)
     
-    debug('insert data')
-    insertquery = 'INSERT INTO %s VALUES (%s)' % (tablename, placeholders)
+#    insertquery = 'INSERT INTO %s VALUES (%s)' % (tablename, placeholders)
+    insertcolnames = ', '.join(colnames)
+    insertquery = 'INSERT INTO %s (%s) VALUES (%s)' % (tablename, insertcolnames, placeholders)
+    debug('insert data via query %r' % insertquery)
     for row in it:
         connection.execute(insertquery, row)
 
