@@ -1248,6 +1248,23 @@ def test_mergeduplicates_shortrows():
     ieq(expect, actual)
         
     
+def test_mergeduplicates_compoundkey():
+    table = [['foo', 'bar', 'baz'], 
+             ['a', 1, True], 
+             ['a', 1, True], 
+             ['a', 2, False],
+             ['a', 2, None],
+             ['c', 3, True],
+             ['c', 3, False],
+             ]
+    actual = mergeduplicates(table, key=('foo', 'bar'))
+    expect = [('foo', 'bar', 'baz'), 
+              ('a', 1, True), 
+              ('a', 2, False), 
+              ('c', 3, Conflict([True, False]))]
+    ieq(expect, actual)
+        
+    
 def _test_complement_1(f):
 
     table1 = (('foo', 'bar'),
