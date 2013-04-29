@@ -1236,7 +1236,17 @@ def test_mergeduplicates_empty():
     expect = (('foo', 'bar'),)
     actual = mergeduplicates(table, key='foo')
     ieq(expect, actual)
-    
+
+
+def test_mergeduplicates_shortrows():
+    table = [['foo', 'bar', 'baz'], 
+             ['a', 1, True], 
+             ['b', 2, True], 
+             ['b', 3]]
+    actual = mergeduplicates(table, 'foo')
+    expect = [('foo', 'bar', 'baz'), ('a', 1, True), ('b', Conflict([2, 3]), True)]
+    ieq(expect, actual)
+        
     
 def _test_complement_1(f):
 

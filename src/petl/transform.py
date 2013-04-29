@@ -3795,6 +3795,7 @@ def itermergeduplicates(table, key, missing):
         outflds = ['key']
         keyflds = set(key)
     valflds = [f for f in fields if f not in keyflds]
+    valfldidxs = [fields.index(f) for f in valflds]
     outflds.extend(valflds)
     yield tuple(outflds)
 
@@ -3802,7 +3803,7 @@ def itermergeduplicates(table, key, missing):
     for k, grp in rowgroupby(it, key):
         grp = list(grp)
         outrow = [k]
-        mergedvals = [set(row[fields.index(f)] for row in grp if row[fields.index(f)] != missing) for f in valflds]
+        mergedvals = [set(row[i] for row in grp if len(row) > i and row[i] != missing) for i in valfldidxs]
         normedvals = [vals.pop() if len(vals) == 1 else missing if len(vals) == 0 else Conflict(vals) for vals in mergedvals]
         outrow.extend(normedvals)
         yield tuple(outrow)

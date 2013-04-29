@@ -8,3 +8,4 @@ MANIFEST
 dist
 *.swp
 *.csv
+sandbox.*
