@@ -64,3 +64,12 @@ def lenstats(table, field):
     """
 
     return stats(convert(table, field, lambda v: len(v)), field)
+
+
+# convenience aliases
+eq = selecteq
+ne = selectne
+lt = selectlt
+gt = selectgt
+le = selectle
+ge = selectge
