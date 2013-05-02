@@ -5,10 +5,10 @@ sed -i -e 's/-SNAPSHOT//' docs/conf.py
 version=`grep VERSION src/petl/__init__.py | sed -e "s/VERSION[ ]=[ ]'\(.*\)'/\1/"`
 echo $version
 # git commit and push
-git commit -a -m 'release $version'
+git commit -a -m v$version
 git push
 # git tag and push
-git tag -a v$version -m 'release $version'
+git tag -a v$version -m v$version
 git push --tags
 # update pypi
 python setup.py sdist upload
