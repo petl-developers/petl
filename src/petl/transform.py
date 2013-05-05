@@ -4071,6 +4071,16 @@ def itermultiaggregate(source, key, aggregation):
             if srcfld is None:
                 aggval = aggfun(rows)
                 outrow.append(aggval)
+            elif type(srcfld) is list:
+                indexes = []
+                for fld in srcfld:
+                    indexes.append(srcflds.index(fld))
+                def generator():
+                    for row in rows:
+                        yield [row[idx] for idx in indexes]
+                vals = generator()
+                aggval = aggfun(vals)
+                outrow.append(aggval)
             else:
                 idx = srcflds.index(srcfld)
                 # try using generator comprehension
