@@ -1,7 +1,6 @@
 nosetests
-# remove -SNAPSHOT from src/petl/__init__.py and docs/conf.py
+# remove -SNAPSHOT from src/petl/__init__.py 
 sed -i -e 's/-SNAPSHOT//' src/petl/__init__.py 
-sed -i -e 's/-SNAPSHOT//' docs/conf.py
 version=`grep VERSION src/petl/__init__.py | sed -e "s/VERSION[ ]=[ ]'\(.*\)'/\1/"`
 echo $version
 # git commit and push
@@ -12,9 +11,8 @@ git tag -a v$version -m v$version
 git push --tags
 # update pypi
 python setup.py sdist upload
-# increment version and add -SNAPSHOT in src/petl/__init__.py and docs/conf.py
+# increment version and add -SNAPSHOT in src/petl/__init__.py 
 emacs src/petl/__init__.py
-emacs docs/conf.py
 # git commit and push
 git commit -a -m 'increment version'; git push
 # activate version at rtfd
