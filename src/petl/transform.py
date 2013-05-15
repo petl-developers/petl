@@ -2904,8 +2904,10 @@ def select(table, *args, **kwargs):
         | 'c'   | 2     |       |
         +-------+-------+-------+
         
-        >>> # the second positional argument can be a function accepting a row
-        ... table2 = select(table1, lambda rec: rec['foo'] == 'a' and rec['baz'] > 88.1)
+        >>> # the second positional argument can be a function accepting a record
+        ... table2 = select(table1, lambda rec: rec[0] == 'a' and rec[1] > 88.1)
+        ... # table2 = select(table1, lambda rec: rec['foo'] == 'a' and rec['baz'] > 88.1)
+        ... # table2 = select(table1, lambda rec: rec.foo == 'a' and rec.baz > 88.1)
         >>> look(table2)
         +-------+-------+-------+
         | 'foo' | 'bar' | 'baz' |
