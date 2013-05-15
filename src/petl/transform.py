@@ -3832,26 +3832,24 @@ class Conflict(frozenset):
 def aggregate(table, key, aggregation=None, value=None, presorted=False,
               buffersize=None):
     """
-    Group rows under the given key then apply aggregation functions. 
+    Group rows under the given key then apply aggregation functions. E.g.::
     
-    E.g., applying an aggregation function to whole rows::
-
         >>> from petl import aggregate, look
         >>> look(table1)
         +-------+-------+-------+
         | 'foo' | 'bar' | 'baz' |
         +=======+=======+=======+
-        | 'a'   | 3     | True  |
+        | 'a'   |     3 |  True |
         +-------+-------+-------+
-        | 'a'   | 7     | False |
+        | 'a'   |     7 | False |
         +-------+-------+-------+
-        | 'b'   | 2     | True  |
+        | 'b'   |     2 |  True |
         +-------+-------+-------+
-        | 'b'   | 2     | False |
+        | 'b'   |     2 | False |
         +-------+-------+-------+
-        | 'b'   | 9     | False |
+        | 'b'   |     9 | False |
         +-------+-------+-------+
-        | 'c'   | 4     | True  |
+        | 'c'   |     4 |  True |
         +-------+-------+-------+
         
         >>> # aggregate whole rows
@@ -3860,26 +3858,24 @@ def aggregate(table, key, aggregation=None, value=None, presorted=False,
         +-------+---------+
         | 'key' | 'value' |
         +=======+=========+
-        | 'a'   | 2       |
+        | 'a'   |       2 |
         +-------+---------+
-        | 'b'   | 3       |
+        | 'b'   |       3 |
         +-------+---------+
-        | 'c'   | 1       |
+        | 'c'   |       1 |
         +-------+---------+
-
-    E.g., aggregating single fields::
-    
+        
         >>> # aggregate single field
         ... table3 = aggregate(table1, 'foo', sum, 'bar')
         >>> look(table3)
         +-------+---------+
         | 'key' | 'value' |
         +=======+=========+
-        | 'a'   | 10      |
+        | 'a'   |      10 |
         +-------+---------+
-        | 'b'   | 13      |
+        | 'b'   |      13 |
         +-------+---------+
-        | 'c'   | 4       |
+        | 'c'   |       4 |
         +-------+---------+
         
         >>> # alternative signature for single field aggregation using keyword args
@@ -3898,9 +3894,7 @@ def aggregate(table, key, aggregation=None, value=None, presorted=False,
         +----------+-------------------------+
         | ('c', 4) | [(4, True)]             |
         +----------+-------------------------+
-
-    E.g., multiple aggregations::
-    
+        
         >>> # aggregate multiple fields
         ... from collections import OrderedDict
         >>> from petl import strjoin
@@ -3910,18 +3904,19 @@ def aggregate(table, key, aggregation=None, value=None, presorted=False,
         >>> aggregation['maxbar'] = 'bar', max
         >>> aggregation['sumbar'] = 'bar', sum
         >>> aggregation['listbar'] = 'bar' # default aggregation function is list
+        >>> aggregation['listbarbaz'] = ('bar', 'baz'), list
         >>> aggregation['bars'] = 'bar', strjoin(', ')
         >>> table5 = aggregate(table1, 'foo', aggregation)
         >>> look(table5)
-        +-------+---------+----------+----------+----------+-----------+-----------+
-        | 'key' | 'count' | 'minbar' | 'maxbar' | 'sumbar' | 'listbar' | 'bars'    |
-        +=======+=========+==========+==========+==========+===========+===========+
-        | 'a'   | 2       | 3        | 7        | 10       | [3, 7]    | '3, 7'    |
-        +-------+---------+----------+----------+----------+-----------+-----------+
-        | 'b'   | 3       | 2        | 9        | 13       | [2, 2, 9] | '2, 2, 9' |
-        +-------+---------+----------+----------+----------+-----------+-----------+
-        | 'c'   | 1       | 4        | 4        | 4        | [4]       | '4'       |
-        +-------+---------+----------+----------+----------+-----------+-----------+
+        +-------+---------+----------+----------+----------+-----------+-------------------------------------+-----------+
+        | 'key' | 'count' | 'minbar' | 'maxbar' | 'sumbar' | 'listbar' | 'listbarbaz'                        | 'bars'    |
+        +=======+=========+==========+==========+==========+===========+=====================================+===========+
+        | 'a'   |       2 |        3 |        7 |       10 | [3, 7]    | [(3, True), (7, False)]             | '3, 7'    |
+        +-------+---------+----------+----------+----------+-----------+-------------------------------------+-----------+
+        | 'b'   |       3 |        2 |        9 |       13 | [2, 2, 9] | [(2, True), (2, False), (9, False)] | '2, 2, 9' |
+        +-------+---------+----------+----------+----------+-----------+-------------------------------------+-----------+
+        | 'c'   |       1 |        4 |        4 |        4 | [4]       | [(4, True)]                         | '4'       |
+        +-------+---------+----------+----------+----------+-----------+-------------------------------------+-----------+
         
         >>> # can also use list or tuple to specify multiple field aggregation
         ... aggregation = [('count', len),
@@ -3929,18 +3924,19 @@ def aggregate(table, key, aggregation=None, value=None, presorted=False,
         ...                ('maxbar', 'bar', max),
         ...                ('sumbar', 'bar', sum),
         ...                ('listbar', 'bar'), # default aggregation function is list
+        ...                ('listbarbaz', ('bar', 'baz'), list),
         ...                ('bars', 'bar', strjoin(', '))]
         >>> table6 = aggregate(table1, 'foo', aggregation)
         >>> look(table6)
-        +-------+---------+----------+----------+----------+-----------+-----------+
-        | 'key' | 'count' | 'minbar' | 'maxbar' | 'sumbar' | 'listbar' | 'bars'    |
-        +=======+=========+==========+==========+==========+===========+===========+
-        | 'a'   | 2       | 3        | 7        | 10       | [3, 7]    | '3, 7'    |
-        +-------+---------+----------+----------+----------+-----------+-----------+
-        | 'b'   | 3       | 2        | 9        | 13       | [2, 2, 9] | '2, 2, 9' |
-        +-------+---------+----------+----------+----------+-----------+-----------+
-        | 'c'   | 1       | 4        | 4        | 4        | [4]       | '4'       |
-        +-------+---------+----------+----------+----------+-----------+-----------+
+        +-------+---------+----------+----------+----------+-----------+-------------------------------------+-----------+
+        | 'key' | 'count' | 'minbar' | 'maxbar' | 'sumbar' | 'listbar' | 'listbarbaz'                        | 'bars'    |
+        +=======+=========+==========+==========+==========+===========+=====================================+===========+
+        | 'a'   |       2 |        3 |        7 |       10 | [3, 7]    | [(3, True), (7, False)]             | '3, 7'    |
+        +-------+---------+----------+----------+----------+-----------+-------------------------------------+-----------+
+        | 'b'   |       3 |        2 |        9 |       13 | [2, 2, 9] | [(2, True), (2, False), (9, False)] | '2, 2, 9' |
+        +-------+---------+----------+----------+----------+-----------+-------------------------------------+-----------+
+        | 'c'   |       1 |        4 |        4 |        4 | [4]       | [(4, True)]                         | '4'       |
+        +-------+---------+----------+----------+----------+-----------+-------------------------------------+-----------+
         
         >>> # can also use suffix notation
         ... table7 = aggregate(table1, 'foo')
@@ -3949,17 +3945,18 @@ def aggregate(table, key, aggregation=None, value=None, presorted=False,
         >>> table7['maxbar'] = 'bar', max
         >>> table7['sumbar'] = 'bar', sum
         >>> table7['listbar'] = 'bar' # default aggregation function is list
+        >>> table7['listbarbaz'] = ('bar', 'baz'), list
         >>> table7['bars'] = 'bar', strjoin(', ')
         >>> look(table7)
-        +-------+---------+----------+----------+----------+-----------+-----------+
-        | 'key' | 'count' | 'minbar' | 'maxbar' | 'sumbar' | 'listbar' | 'bars'    |
-        +=======+=========+==========+==========+==========+===========+===========+
-        | 'a'   | 2       | 3        | 7        | 10       | [3, 7]    | '3, 7'    |
-        +-------+---------+----------+----------+----------+-----------+-----------+
-        | 'b'   | 3       | 2        | 9        | 13       | [2, 2, 9] | '2, 2, 9' |
-        +-------+---------+----------+----------+----------+-----------+-----------+
-        | 'c'   | 1       | 4        | 4        | 4        | [4]       | '4'       |
-        +-------+---------+----------+----------+----------+-----------+-----------+
+        +-------+---------+----------+----------+----------+-----------+-------------------------------------+-----------+
+        | 'key' | 'count' | 'minbar' | 'maxbar' | 'sumbar' | 'listbar' | 'listbarbaz'                        | 'bars'    |
+        +=======+=========+==========+==========+==========+===========+=====================================+===========+
+        | 'a'   |       2 |        3 |        7 |       10 | [3, 7]    | [(3, True), (7, False)]             | '3, 7'    |
+        +-------+---------+----------+----------+----------+-----------+-------------------------------------+-----------+
+        | 'b'   |       3 |        2 |        9 |       13 | [2, 2, 9] | [(2, True), (2, False), (9, False)] | '2, 2, 9' |
+        +-------+---------+----------+----------+----------+-----------+-------------------------------------+-----------+
+        | 'c'   |       1 |        4 |        4 |        4 | [4]       | [(4, True)]                         | '4'       |
+        +-------+---------+----------+----------+----------+-----------+-------------------------------------+-----------+
 
     If `presorted` is True, it is assumed that the data are already sorted by
     the given key, and the `buffersize` argument is ignored. Otherwise, the data 
@@ -4074,6 +4071,12 @@ def itermultiaggregate(source, key, aggregation):
             srcfld, aggfun = aggregation[outfld]
             if srcfld is None:
                 aggval = aggfun(rows)
+                outrow.append(aggval)
+            elif isinstance(srcfld, (list, tuple)):
+                idxs = [srcflds.index(f) for f in srcfld]
+                valgetter = itemgetter(*idxs)
+                vals = (valgetter(row) for row in rows)
+                aggval = aggfun(vals)
                 outrow.append(aggval)
             else:
                 idx = srcflds.index(srcfld)

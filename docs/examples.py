@@ -678,36 +678,57 @@ look(table3)
 
 
 # aggregate
-
-table1 = [['foo', 'bar'],
-          ['a', 3],
-          ['a', 7],
-          ['b', 2],
-          ['b', 1],
-          ['b', 9],
-          ['c', 4],
-          ['d', 3],
-          ['d'],
-          ['e']]
-
+table1 = [['foo', 'bar', 'baz'],
+          ['a', 3, True],
+          ['a', 7, False],
+          ['b', 2, True],
+          ['b', 2, False],
+          ['b', 9, False],
+          ['c', 4, True]]
 from petl import aggregate, look
 look(table1)
-from collections import OrderedDict
-aggregators = OrderedDict()
-aggregators['minbar'] = 'bar', min
-aggregators['maxbar'] = 'bar', max
-aggregators['sumbar'] = 'bar', sum
-aggregators['listbar'] = 'bar', list
-table2 = aggregate(table1, 'foo', aggregators)
+# aggregate whole rows
+table2 = aggregate(table1, 'foo', len)
 look(table2)
-# aggregation functions can also be added and/or updated using the suffix
-# notation on the returned table object, e.g.::
-table3 = aggregate(table1, 'foo')
-table3['minbar'] = 'bar', min
-table3['maxbar'] = 'bar', max
-table3['sumbar'] = 'bar', sum
-table3['listbar'] = 'bar' # default aggregation is list
+# aggregate single field
+table3 = aggregate(table1, 'foo', sum, 'bar')
 look(table3)
+# alternative signature for single field aggregation using keyword args
+table4 = aggregate(table1, key=('foo', 'bar'), aggregation=list, value=('bar', 'baz'))
+look(table4)
+# aggregate multiple fields
+from collections import OrderedDict
+from petl import strjoin
+aggregation = OrderedDict()
+aggregation['count'] = len
+aggregation['minbar'] = 'bar', min
+aggregation['maxbar'] = 'bar', max
+aggregation['sumbar'] = 'bar', sum
+aggregation['listbar'] = 'bar' # default aggregation function is list
+aggregation['listbarbaz'] = ('bar', 'baz'), list
+aggregation['bars'] = 'bar', strjoin(', ')
+table5 = aggregate(table1, 'foo', aggregation)
+look(table5)
+# can also use list or tuple to specify multiple field aggregation
+aggregation = [('count', len),
+               ('minbar', 'bar', min),
+               ('maxbar', 'bar', max),
+               ('sumbar', 'bar', sum),
+               ('listbar', 'bar'), # default aggregation function is list
+               ('listbarbaz', ('bar', 'baz'), list),
+               ('bars', 'bar', strjoin(', '))]
+table6 = aggregate(table1, 'foo', aggregation)
+look(table6)
+# can also use suffix notation
+table7 = aggregate(table1, 'foo')
+table7['count'] = len
+table7['minbar'] = 'bar', min
+table7['maxbar'] = 'bar', max
+table7['sumbar'] = 'bar', sum
+table7['listbar'] = 'bar' # default aggregation function is list
+table7['listbarbaz'] = ('bar', 'baz'), list
+table7['bars'] = 'bar', strjoin(', ')
+look(table7)
 
 
 # rangerowreduce
