@@ -4,7 +4,7 @@ The `petl` module.
 """
 
 
-VERSION = '0.15'
+VERSION = '0.16-SNAPSHOT'
                       
 
 from petl.util import header, fieldnames, data, records, rowcount, look, see, \
