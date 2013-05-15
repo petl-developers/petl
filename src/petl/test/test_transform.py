@@ -1757,7 +1757,37 @@ def test_select():
              ('d', 7, 100.9),
              ('c', 2))
 
+    actual = select(table, lambda rec: rec[0] == 'a')
+    expect = (('foo', 'bar', 'baz'),
+              ('a', 4, 9.3),
+              ('a', 2, 88.2))
+    ieq(expect, actual)
+    ieq(expect, actual) # check can iterate twice
+ 
+    table = (('foo', 'bar', 'baz'),
+             ('a', 4, 9.3),
+             ('a', 2, 88.2),
+             ('b', 1, 23.3),
+             ('c', 8, 42.0),
+             ('d', 7, 100.9),
+             ('c', 2))
+
     actual = select(table, lambda rec: rec['foo'] == 'a')
+    expect = (('foo', 'bar', 'baz'),
+              ('a', 4, 9.3),
+              ('a', 2, 88.2))
+    ieq(expect, actual)
+    ieq(expect, actual) # check can iterate twice
+ 
+    table = (('foo', 'bar', 'baz'),
+             ('a', 4, 9.3),
+             ('a', 2, 88.2),
+             ('b', 1, 23.3),
+             ('c', 8, 42.0),
+             ('d', 7, 100.9),
+             ('c', 2))
+
+    actual = select(table, lambda rec: rec.foo == 'a')
     expect = (('foo', 'bar', 'baz'),
               ('a', 4, 9.3),
               ('a', 2, 88.2))
