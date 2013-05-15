@@ -17,7 +17,8 @@ from petl.util import header, fieldnames, data, records, rowcount, look, see, \
            diffheaders, diffvalues, columns, facetcolumns, heapqmergesorted, \
            shortlistmergesorted, progress, clock, isordered, rowgroupby, nrows, \
            nthword, lookstr, listoflists, tupleoftuples, listoftuples, tupleoflists, \
-           lol, tot, tol, lot
+           lol, tot, tol, lot, iternamedtuples, namedtuples, iterrecords, dicts, \
+           iterdicts, dictlookup, dictlookupone
 
 from petl.io import fromcsv, frompickle, fromsqlite3, tocsv, topickle, \
            tosqlite3, crc32sum, adler32sum, statsum, fromdb, \

@@ -12,13 +12,11 @@ from petl import header, fieldnames, data, records, rowcount, look, see, iterval
                 DuplicateKeyError, rowlengths, stats, typecounts, parsecounts, typeset, \
                 valuecount, parsenumber, stringpatterns, diffheaders, diffvalues, \
                 datetimeparser, values, columns, facetcolumns, isordered, \
-                rowgroupby, lookstr
+                rowgroupby, lookstr, namedtuples, dicts
 from ..testutils import ieq
 
 
 def test_header():
-    """Test the header function."""
-    
     table = (('foo', 'bar'), ('a', 1), ('b', 2))
     actual = header(table)
     expect = ('foo', 'bar')
@@ -26,8 +24,6 @@ def test_header():
     
     
 def test_fieldnames():
-    """Test the fieldnames function."""
-    
     table = (('foo', 'bar'), ('a', 1), ('b', 2))
     actual = fieldnames(table)
     expect = ['foo', 'bar']
@@ -51,35 +47,93 @@ def test_fieldnames():
     
     
 def test_data():
-    """Test the data function."""
-
     table = (('foo', 'bar'), ('a', 1), ('b', 2))
     actual = data(table)
     expect = (('a', 1), ('b', 2))
     ieq(expect, actual)
 
 
-def test_records():
-    """Test the records function."""
-
+def test_dicts():
     table = (('foo', 'bar'), ('a', 1), ('b', 2))
-    actual = records(table)
+    actual = dicts(table)
     expect = ({'foo': 'a', 'bar': 1}, {'foo': 'b', 'bar': 2})
     ieq(expect, actual)
     
         
-def test_records_shortrows():
-    """Test the records function on a table with short rows."""
-
+def test_dicts_shortrows():
     table = (('foo', 'bar'), ('a', 1), ('b',))
-    actual = records(table)
+    actual = dicts(table)
     expect = ({'foo': 'a', 'bar': 1}, {'foo': 'b', 'bar': None})
     ieq(expect, actual)
     
     
-def test_rowcount():
-    """Test the rowcount function."""
+def test_records():
+    table = (('foo', 'bar'), ('a', 1), ('b', 2))
+    actual = records(table)
+    # access items
+    it = iter(actual)
+    o = it.next()
+    eq_('a', o['foo'])
+    eq_(1, o['bar'])
+    o = it.next()
+    eq_('b', o['foo'])
+    eq_(2, o['bar'])
+    # access attributes
+    it = iter(actual)
+    o = it.next()
+    eq_('a', o.foo)
+    eq_(1, o.bar)
+    o = it.next()
+    eq_('b', o.foo)
+    eq_(2, o.bar)
     
+        
+def test_records_unevenrows():
+    table = (('foo', 'bar'), ('a', 1, True), ('b',))
+    actual = records(table)
+    # access items
+    it = iter(actual)
+    o = it.next()
+    eq_('a', o['foo'])
+    eq_(1, o['bar'])
+    o = it.next()
+    eq_('b', o['foo'])
+    eq_(None, o['bar'])
+    # access attributes
+    it = iter(actual)
+    o = it.next()
+    eq_('a', o.foo)
+    eq_(1, o.bar)
+    o = it.next()
+    eq_('b', o.foo)
+    eq_(None, o.bar)
+ 
+ 
+def test_namedtuples():
+    table = (('foo', 'bar'), ('a', 1), ('b', 2))
+    actual = namedtuples(table)
+    it = iter(actual)
+    o = it.next()
+    eq_('a', o.foo)
+    eq_(1, o.bar)
+    o = it.next()
+    eq_('b', o.foo)
+    eq_(2, o.bar)
+       
+    
+def test_namedtuples_unevenrows():
+    table = (('foo', 'bar'), ('a', 1, True), ('b',))
+    actual = namedtuples(table)
+    it = iter(actual)
+    o = it.next()
+    eq_('a', o.foo)
+    eq_(1, o.bar)
+    o = it.next()
+    eq_('b', o.foo)
+    eq_(None, o.bar)
+       
+    
+def test_rowcount():
     table = (('foo', 'bar'), ('a', 1), ('b',))
     actual = rowcount(table)
     expect = 2

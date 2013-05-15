@@ -163,14 +163,14 @@ def dataslice(table, *args):
     return islice(data(table), *args)
 
     
-def records(table, missing=None):
+def iterdicts(table, *sliceargs, **kwargs):
     """
     Return an iterator over the data in the table, yielding each row as a 
     dictionary of values indexed by field name. E.g.::
     
-        >>> from petl import records
+        >>> from petl import dicts
         >>> table = [['foo', 'bar'], ['a', 1], ['b', 2]]
-        >>> it = records(table)
+        >>> it = dicts(table)
         >>> it.next()
         {'foo': 'a', 'bar': 1}
         >>> it.next()
@@ -183,7 +183,7 @@ def records(table, missing=None):
     Short rows are padded, e.g.::
     
         >>> table = [['foo', 'bar'], ['a', 1], ['b']]
-        >>> it = records(table)
+        >>> it = dicts(table)
         >>> it.next()
         {'foo': 'a', 'bar': 1}
         >>> it.next()
@@ -192,14 +192,53 @@ def records(table, missing=None):
         Traceback (most recent call last):
           File "<stdin>", line 1, in <module>
         StopIteration
+        
+    .. versionadded:: 0.15
 
     """
     
+    if 'missing' in kwargs:
+        missing = kwargs['missing']
+    else:
+        missing = None
     it = iter(table)
     flds = it.next()
+    if sliceargs:
+        it = islice(it, *sliceargs)
     for row in it:
         yield asdict(flds, row, missing)
+        
+        
+class DictsContainer(IterContainer):
+
+    def __init__(self, table, *sliceargs, **kwargs):
+        self.table = table
+        self.sliceargs = sliceargs
+        self.kwargs = kwargs
+        
+    def __iter__(self):
+        return iterdicts(self.table, *self.sliceargs, **self.kwargs)
     
+    def __repr__(self):
+        vreprs = map(repr, islice(self, 11))
+        r = '\n'.join(vreprs[:10])
+        if len(vreprs) > 10:
+            r += '\n...'
+        return r
+
+
+def dicts(table, *sliceargs, **kwargs):
+    """
+    Return a container supporting iteration over rows as dicts. I.e., like 
+    :func:`iterdicts` only a container is returned so you can iterate over it 
+    multiple times.
+    
+    .. versionadded:: 0.15
+
+    """
+    
+    return DictsContainer(table, *sliceargs, **kwargs)
+        
     
 def asdict(flds, row, missing=None):
     names = [str(f) for f in flds]
@@ -217,7 +256,84 @@ def asdict(flds, row, missing=None):
             items.append((f, v))
     return dict(items)
     
+
+def asnamedtuple(nt, row, missing=None):
+    try:
+        return nt(*row)
+    except TypeError:
+        # row may be long or short
+        # expected number of fields
+        ne = len(nt._fields)
+        # actual number of values
+        na = len(row)
+        if ne > na:
+            # pad short rows
+            padded = tuple(row) + (missing,) * (ne-na)
+            return nt(*padded)
+        elif ne < na:
+            # truncate long rows
+            return nt(*row[:ne])
+        else:
+            raise
+        
+
+def namedtuples(table, *sliceargs, **kwargs):
+    """
+    View the table as a container of named tuples. I.e., like 
+    :func:`iternamedtuples` only a container is returned so you can iterate over 
+    it multiple times.
     
+    .. versionadded:: 0.15
+    
+    """
+
+    return NamedTuplesContainer(table, *sliceargs, **kwargs)
+
+
+class NamedTuplesContainer(IterContainer):
+
+    def __init__(self, table, *sliceargs, **kwargs):
+        self.table = table
+        self.sliceargs = sliceargs
+        self.kwargs = kwargs
+        
+    def __iter__(self):
+        return iternamedtuples(self.table, *self.sliceargs, **self.kwargs)
+    
+    def __repr__(self):
+        vreprs = map(repr, islice(self, 11))
+        r = '\n'.join(vreprs[:10])
+        if len(vreprs) > 10:
+            r += '\n...'
+        return r
+
+
+def iternamedtuples(table, *sliceargs, **kwargs):
+    """
+    Return an iterator over the data in the table, yielding each row as a 
+    named tuple.
+    
+    .. versionadded:: 0.15
+    
+    """
+    
+    if 'missing' in kwargs:
+        missing = kwargs['missing']
+    else:
+        missing = None
+    if 'name' in kwargs:
+        name = kwargs['name']
+    else:
+        name = 'row'
+    it = iter(table)
+    flds = it.next()
+    nt = namedtuple(name, tuple(flds))
+    if sliceargs:
+        it = islice(it, *sliceargs)
+    for row in it:
+        yield asnamedtuple(nt, row, missing)
+    
+
 def nrows(table):
     """
     Count the number of data rows in a table. E.g.::
@@ -1313,13 +1429,13 @@ def lookupone(table, keyspec, valuespec=None, dictionary=None, strict=False):
     return dictionary
     
     
-def recordlookup(table, keyspec, dictionary=None):
+def dictlookup(table, keyspec, dictionary=None):
     """
-    Load a dictionary with data from the given table, mapping to records. E.g.::
+    Load a dictionary with data from the given table, mapping to dicts. E.g.::
     
-        >>> from petl import recordlookup
+        >>> from petl import dictlookup
         >>> table = [['foo', 'bar'], ['a', 1], ['b', 2], ['b', 3]]
-        >>> lkp = recordlookup(table, 'foo')
+        >>> lkp = dictlookup(table, 'foo')
         >>> lkp['a']
         [{'foo': 'a', 'bar': 1}]
         >>> lkp['b']
@@ -1332,7 +1448,7 @@ def recordlookup(table, keyspec, dictionary=None):
         ...       ['b', 2, False],
         ...       ['b', 3, True],
         ...       ['b', 3, False]]
-        >>> lkp = recordlookup(t2, ('foo', 'bar'))
+        >>> lkp = dictlookup(t2, ('foo', 'bar'))
         >>> lkp[('a', 1)]
         [{'baz': True, 'foo': 'a', 'bar': 1}]
         >>> lkp[('b', 2)]
@@ -1345,8 +1461,8 @@ def recordlookup(table, keyspec, dictionary=None):
 
         >>> import shelve
         >>> table = [['foo', 'bar'], ['a', 1], ['b', 2], ['b', 3]]
-        >>> lkp = shelve.open('myrecordlookup.dat')
-        >>> lkp = recordlookup(table, 'foo', dictionary=lkp)
+        >>> lkp = shelve.open('mydictlookup.dat')
+        >>> lkp = dictlookup(table, 'foo', dictionary=lkp)
         >>> lkp.close()
         >>> exit()
         $ python
@@ -1354,12 +1470,16 @@ def recordlookup(table, keyspec, dictionary=None):
         [GCC 4.5.2] on linux2
         Type "help", "copyright", "credits" or "license" for more information.
         >>> import shelve
-        >>> lkp = shelve.open('myrecordlookup.dat')
+        >>> lkp = shelve.open('mydictlookup.dat')
         >>> lkp['a']
         [{'foo': 'a', 'bar': 1}]
         >>> lkp['b']
         [{'foo': 'b', 'bar': 2}, {'foo': 'b', 'bar': 3}]
 
+    .. versionchanged:: 0.15
+    
+    Renamed from `recordlookup`.
+    
     """
     
     if dictionary is None:
@@ -1382,15 +1502,19 @@ def recordlookup(table, keyspec, dictionary=None):
             dictionary[k] = [rec]
     return dictionary
     
-        
-def recordlookupone(table, keyspec, dictionary=None, strict=False):
-    """
-    Load a dictionary with data from the given table, mapping to records,
-    assuming there is at most one record for each key. E.g.::
     
-        >>> from petl import recordlookupone
+#backwards compatibility
+recordlookup = dictlookup
+        
+        
+def dictlookupone(table, keyspec, dictionary=None, strict=False):
+    """
+    Load a dictionary with data from the given table, mapping to dicts,
+    assuming there is at most one row for each key. E.g.::
+    
+        >>> from petl import dictlookupone
         >>> table = [['foo', 'bar'], ['a', 1], ['b', 2], ['c', 2]]
-        >>> lkp = recordlookupone(table, 'foo')
+        >>> lkp = dictlookupone(table, 'foo')
         >>> lkp['a']
         {'foo': 'a', 'bar': 1}
         >>> lkp['b']
@@ -1399,10 +1523,10 @@ def recordlookupone(table, keyspec, dictionary=None, strict=False):
         {'foo': 'c', 'bar': 2}
         
     If the specified key is not unique and strict=False (default), 
-    the first record wins, e.g.::
+    the first dict wins, e.g.::
 
         >>> table = [['foo', 'bar'], ['a', 1], ['b', 2], ['b', 3]]
-        >>> lkp = recordlookupone(table, 'foo')
+        >>> lkp = dictlookupone(table, 'foo')
         >>> lkp['a']
         {'foo': 'a', 'bar': 1}
         >>> lkp['b']
@@ -1412,7 +1536,7 @@ def recordlookupone(table, keyspec, dictionary=None, strict=False):
     DuplicateKeyError, e.g.::
 
         >>> table = [['foo', 'bar'], ['a', 1], ['b', 2], ['b', 3]]
-        >>> lkp = recordlookupone(table, 'foo', strict=True)
+        >>> lkp = dictlookupone(table, 'foo', strict=True)
         Traceback (most recent call last):
           File "<stdin>", line 1, in <module>
           File "petl/util.py", line 451, in lookupone
@@ -1424,7 +1548,7 @@ def recordlookupone(table, keyspec, dictionary=None, strict=False):
         ...       ['a', 1, True],
         ...       ['b', 2, False],
         ...       ['b', 3, True]]
-        >>> lkp = recordlookupone(t2, ('foo', 'bar'), strict=False)
+        >>> lkp = dictlookupone(t2, ('foo', 'bar'), strict=False)
         >>> lkp[('a', 1)]
         {'baz': True, 'foo': 'a', 'bar': 1}
         >>> lkp[('b', 2)]
@@ -1436,9 +1560,9 @@ def recordlookupone(table, keyspec, dictionary=None, strict=False):
     persistent dictionaries created via the :mod:`shelve` module, e.g.::
 
         >>> import shelve
-        >>> lkp = shelve.open('myrecordlookupone.dat')
+        >>> lkp = shelve.open('mydictlookupone.dat')
         >>> table = [['foo', 'bar'], ['a', 1], ['b', 2], ['c', 2]]
-        >>> lkp = recordlookupone(table, 'foo', dictionary=lkp)
+        >>> lkp = dictlookupone(table, 'foo', dictionary=lkp)
         >>> lkp.close()
         >>> exit()
         $ python
@@ -1446,7 +1570,7 @@ def recordlookupone(table, keyspec, dictionary=None, strict=False):
         [GCC 4.5.2] on linux2
         Type "help", "copyright", "credits" or "license" for more information.
         >>> import shelve
-        >>> lkp = shelve.open('myrecordlookupone.dat')
+        >>> lkp = shelve.open('mydictlookupone.dat')
         >>> lkp['a']
         {'foo': 'a', 'bar': 1}
         >>> lkp['b']
@@ -1457,6 +1581,10 @@ def recordlookupone(table, keyspec, dictionary=None, strict=False):
     .. versionchanged:: 0.11
     
     Changed so that strict=False is default and first value wins.
+    
+    .. versionchanged:: 0.15
+    
+    Renamed from `recordlookupone`.
     
     """    
 
@@ -1476,6 +1604,10 @@ def recordlookupone(table, keyspec, dictionary=None, strict=False):
             d = asdict(flds, row)
             dictionary[k] = d
     return dictionary
+
+
+#backwards compatibility
+recordlookupone = dictlookupone
     
             
 class DuplicateKeyError(Exception):
@@ -2617,7 +2749,7 @@ def shortlistmergesorted(key=None, reverse=False, *iterables):
             del iterators[nextidx]
         
     
-class HybridRow(tuple):
+class Record(tuple):
     
     def __new__(cls, row, flds, missing=None):
         t = super(HybridRow, cls).__new__(cls, row)
@@ -2647,7 +2779,71 @@ class HybridRow(tuple):
         else:
             raise Exception('item ' + str(f) + ' not in fields ' + str(self.flds))
 
+
+# backwards compatibility
+HybridRow = Record
+
+
+def iterrecords(table, *sliceargs, **kwargs):
+    """
+    Return an iterator over the data in the table, where rows support value 
+    access by index or field name. See also :func:`iterdicts`.
     
+    .. versionchanged:: 0.15 
+    
+    Previously returned dicts, now returns hybrid objects which behave like 
+    tuples/dicts/namedtuples. 
+
+    """
+    
+    if 'missing' in kwargs:
+        missing = kwargs['missing']
+    else:
+        missing = None
+    it = iter(table)
+    flds = it.next()
+    print flds
+    if sliceargs:
+        it = islice(it, *sliceargs)
+    for row in it:
+        yield Record(row, flds, missing=missing)
+        
+        
+class RecordsContainer(IterContainer):
+
+    def __init__(self, table, *sliceargs, **kwargs):
+        self.table = table
+        self.sliceargs = sliceargs
+        self.kwargs = kwargs
+        
+    def __iter__(self):
+        return iterrecords(self.table, *self.sliceargs, **self.kwargs)
+    
+    def __repr__(self):
+        vreprs = map(repr, islice(self, 11))
+        r = '\n'.join(vreprs[:10])
+        if len(vreprs) > 10:
+            r += '\n...'
+        return r
+
+
+def records(table, *sliceargs, **kwargs):
+    """
+    Return a container supporting iteration over rows as records. I.e., like 
+    :func:`iterrecords` only a container is returned so you can iterate over it 
+    multiple times. See also :func:`dicts`.
+    
+    .. versionchanged:: 0.15
+    
+    Previously returned dicts, now returns hybrid objects which behave like 
+    tuples/dicts/namedtuples. 
+
+    """
+    
+    return RecordsContainer(table, *sliceargs, **kwargs)
+    
+    
+# retain for backwards compatibility
 def hybridrows(flds, it, missing=None):
     return (HybridRow(row, flds, missing) for row in it)
     

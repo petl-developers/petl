@@ -23,7 +23,7 @@ import cStringIO
 import logging
 
 
-from .util import data, header, asdict, records, RowContainer
+from .util import data, header, asdict, dicts, RowContainer
 
 
 logger = logging.getLogger(__name__)
@@ -1927,7 +1927,7 @@ def tojson(table, source=None, prefix=None, suffix=None, *args, **kwargs):
     with source.open_('wb') as f:
         if prefix is not None:
             f.write(prefix)
-        for chunk in encoder.iterencode(list(records(table))):
+        for chunk in encoder.iterencode(list(dicts(table))):
             f.write(chunk)
         if suffix is not None:
             f.write(suffix)
