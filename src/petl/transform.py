@@ -1916,12 +1916,16 @@ def iterrecast(source, key, variablefield, valuefield,
     
     source = sort(source, key=keyfields)
     it = islice(source, 1, None) # skip header row
-    getkey = sortable_itemgetter(*keyindices)
+    getsortablekey = sortable_itemgetter(*keyindices)
+    getactualkey = itemgetter(*keyindices)
     
     # process sorted data in newfields
-    groups = groupby(it, key=getkey)
-    for key_value, group in groups:
+    groups = groupby(it, key=getsortablekey)
+    for _, group in groups:
         group = list(group) # may need to iterate over the group more than once
+        # N.B., key returned by groupby may be wrapped as SortableItem, we want
+        # to output the actual key value, get it from the first row in the group
+        key_value = getactualkey(group[0])
         if len(keyfields) > 1:
             out_row = list(key_value)
         else:
