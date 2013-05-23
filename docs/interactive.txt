@@ -10,13 +10,13 @@ The module :mod:`petl.interactive` provides all of the functions
 present in the root :mod:`petl` module, but with a couple of
 optimisations for use within an interactive session.
 
-The main optimisation is that some caching is done behind the scenes,
-so that by default the first 100 rows of any table are cached in
+The main optimisation is that some caching is done by default,
+such that the first 10000 rows of any table are cached in
 memory the first time they are requested. This usually provides a
 better experience when building up a transformation pipeline one step
 at a time, where you are examining the outputs of each intermediate
 step as its written via :func:`look` or :func:`see`. I.e., as each new
-step is added and the output examined, as long as less than 100 rows
+step is added and the output examined, as long as less than 10000 rows
 are requested, only that new step will actually be executed, and none
 of the upstream transformations will be repeated, because the outputs
 from previous steps will have been cached. 
