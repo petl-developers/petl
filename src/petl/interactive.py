@@ -10,6 +10,11 @@ import sys
 from .util import valueset, RowContainer
 import petl.fluent
 from petl.io import tohtml, StringSource
+import logging
+logger = logging.getLogger(__name__)
+warning = logger.warning
+info = logger.info
+debug = logger.debug
 
 
 petl = sys.modules['petl']
@@ -17,7 +22,6 @@ thismodule = sys.modules[__name__]
 
 
 cachesize = 10000
-debug = False
 representation = petl.look
 
 
@@ -33,15 +37,16 @@ class InteractiveWrapper(petl.fluent.FluentWrapper):
         object.__setattr__(self, '_cachecomplete', False)
         
     def __iter__(self):
-        if debug: print repr(self._inner) + ' :: serving from cache, cache size ' + str(len(self._cache))
+        debug('serving from cache, cache size %s', len(self._cache))
 
         # serve whatever is in the cache first
         for row in self._cache:
             yield row
             
         if not self._cachecomplete:
+            
             # serve the remainder from the inner iterator
-            if debug: print repr(self._inner) + ' :: cache exhausted, serving from inner iterator'    
+            debug('cache exhausted, serving from inner iterator')
             it = iter(self._inner)
             for row in islice(it, len(self._cache), None):
                 # maybe there's more room in the cache?
@@ -49,8 +54,10 @@ class InteractiveWrapper(petl.fluent.FluentWrapper):
                     self._cache.append(row)
                 yield row
                 
-        if len(self._cache) < cachesize:
-            object.__setattr__(self, '_cachecomplete', True)
+            # does the cache contain a complete copy of the inner table?
+            if len(self._cache) < cachesize:
+                debug('cache is complete')
+                object.__setattr__(self, '_cachecomplete', True)
         
     def __repr__(self):
         if representation is not None:

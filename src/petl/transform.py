@@ -11,7 +11,6 @@ from tempfile import NamedTemporaryFile
 import operator
 import re
 from math import ceil
-import logging
 
 
 from .util import asindices, rowgetter, asdict,\
@@ -23,6 +22,7 @@ from petl.util import FieldSelectionError, rowgroupbybin, rowitemgetter
 #import os
 
 
+import logging
 logger = logging.getLogger(__name__)
 warning = logger.warning
 info = logger.info
