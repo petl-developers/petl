@@ -16,7 +16,7 @@ petl = sys.modules['petl']
 thismodule = sys.modules[__name__]
 
 
-cachesize = 1000
+cachesize = 10000
 debug = False
 representation = petl.look
 
@@ -26,26 +26,13 @@ class InteractiveWrapper(petl.fluent.FluentWrapper):
     def __init__(self, inner=None):
         super(InteractiveWrapper, self).__init__(inner)
         object.__setattr__(self, '_cache', [])
-        object.__setattr__(self, '_tag', None)
+        object.__setattr__(self, '_cachecomplete', False)
+        
+    def clearcache(self):
+        object.__setattr__(self, '_cache', []) # reset cache
         object.__setattr__(self, '_cachecomplete', False)
         
     def __iter__(self):
-        try:
-            tag = self._inner.cachetag()
-        except:
-            # cannot cache for some reason, just pass through
-            if debug: print repr(self._inner) + ' :: uncacheable'
-            return iter(self._inner)
-        else:
-            if self._tag is None or self._tag != tag:
-                # _tag is not fresh
-                if debug: print repr(self._inner) + ' :: stale, clearing cache'
-                object.__setattr__(self, '_cache', []) # reset cache
-                object.__setattr__(self, '_tag', tag)
-                object.__setattr__(self, '_cachecomplete', False)
-            return self._iterwithcache()
-            
-    def _iterwithcache(self):
         if debug: print repr(self._inner) + ' :: serving from cache, cache size ' + str(len(self._cache))
 
         # serve whatever is in the cache first

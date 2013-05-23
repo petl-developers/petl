@@ -21,9 +21,9 @@ from petl.util import header, fieldnames, data, records, rowcount, look, see, \
            iterdicts, dictlookup, dictlookupone
 
 from petl.io import fromcsv, frompickle, fromsqlite3, tocsv, topickle, \
-           tosqlite3, crc32sum, adler32sum, statsum, fromdb, \
+           tosqlite3, fromdb, \
            appendcsv, appendpickle, appendsqlite3, todb, appenddb, fromtext, \
-           totext, appendtext, fromxml, Uncacheable, fromjson, fromdicts, tojson, \
+           totext, appendtext, fromxml, fromjson, fromdicts, tojson, \
            fromtsv, totsv, appendtsv, tojsonarrays, tohtml
 
 from petl.transform import rename, cut, cat, convert, fieldconvert, addfield, rowslice, \

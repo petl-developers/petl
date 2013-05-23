@@ -189,8 +189,8 @@ without having to execute the transformation over all of the input
 data.
 
 
-Caching / memoization
-~~~~~~~~~~~~~~~~~~~~~
+Caching
+~~~~~~~
 
 This package tries to make efficient use of memory by using iterators
 and lazy evaluation where possible. However, some transformations
@@ -200,66 +200,25 @@ on disk.
 An example is the :func:`sort` function, which will either sort a
 table entirely in memory, or will sort the table in memory in chunks,
 writing chunks to disk and performing a final merge sort on the
-chunks. Which strategy is used will depend on the arguments passed
-into the :func:`sort` function when it is called.
+chunks. (Which strategy is used will depend on the arguments passed
+into the :func:`sort` function when it is called.)
 
 In either case, the sorting can take some time, and if the sorted data
 will be used more than once, it is obviously undesirable to throw away
 the sorted data and start again from scratch each time. It is better
-to cache (a.k.a., memoize) the sorted data, if possible, so it can be
-re-used. However, if a table upstream of the sort is mutable, there
-needs to be some way of discovering whether data have been changed
-since the last sort was performed, and hence whether the cached data
-are still fresh or not.
+to cache the sorted data, if possible, so it can be re-used.
 
-There are also cases where, even though data are generated in a purely
-iterative fashion, some programs may still want to cache some or all
-of the data. E.g., where data are calculated dynamically and are
-relatively expensive to compute, or require scanning many rows, or
-where data are being retrieved via a network and there is
-latency. Again, there needs to be some way of finding out whether
-cached data are fresh or not.
+The :func:`sort` function and all functions which use :func:`sort`
+internally provide a `cache` keyword argument, which can be used to
+turn on or off the caching of sorted data.
 
-To support caching, it is recommended (but not required) that row
-container objects also implement the `cachetag` method. This method
-should return an integer which changes whenever the table's fields or
-data changes (i.e., a row iterator would yield a different sequence of
-items). All :mod:`petl` row container objects implement this method,
-where applicable.
+There is also a :func:`cache` function, which can be used to cache in
+memory a configurable number of rows from a table, which can be useful
+when working interactively.
 
-Note in particular that the functions :func:`fromcsv`,
-:func:`frompickle` and :func:`fromsqlite3` return tables that
-implement the `cachetag` method, and that the implementation of
-`cachetag` in these cases depends on a checksum function operating on
-the underlying data file. By default, :func:`statsum` is used as the
-checksum function, which is cheap to compute but crude because it
-relies only on file name, size and time of modification, and on some
-systems this will **not** reveal changes within the same second that
-preserve file size. If you need a finer level of granularity, use
-either :func:`adler32sum` or :func:`crc32sum` instead. These can be
-passed in as arguments to :func:`fromcsv`, :func:`frompickle` and
-:func:`fromsqlite3`, or can be set globally, e.g.::
+.. versionchanged:: 0.16
 
-    >>> import petl.io
-    >>> petl.io.defaultsumfun = petl.io.adler32sum
-
-
-Care must be taken to ensure correct implementation of the `cachetag`
-method where a table is generating data dynamically from another table
-or tables. In these cases, the state of the upstream tables must be
-considered when generating a `cachetag` value. One strategy is to
-construct `cachetag` values by hashing the internal configuration
-attributes of a table, along with the `cachetag` values from any
-tables immediately upstream.
-
-In some cases, it may be difficult to determine whether data have
-changed, e.g., where data are being retrieved from a database. In
-these cases it is suggested that table objects use a user-configurable
-time to live (TTL) to generate `cachetag` values. E.g., where a
-database table is updated once a day at most, a TTL of a few hours
-would enable data to be cached during an interactive session, which
-might improve usability for someone exploring the data or developing a 
-transformation script.
+Use of the cachetag() method is now deprecated. 
 
 
 Extract - reading tables from files, databases and other sources
@@ -457,9 +416,6 @@ Utility functions
 .. autofunction:: petl.lookupone
 .. autofunction:: petl.dictlookup
 .. autofunction:: petl.dictlookupone
-.. autofunction:: petl.statsum
-.. autofunction:: petl.adler32sum
-.. autofunction:: petl.crc32sum
 .. autofunction:: petl.expr
 .. autofunction:: petl.strjoin
 .. autofunction:: petl.randomtable

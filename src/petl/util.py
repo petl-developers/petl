@@ -1047,15 +1047,10 @@ def valuecounts(table, *fields, **kwargs):
     
     """
     
-    if 'missing' in kwargs:
-        missing = kwargs['missing']
-    else:
-        missing = None
-
     if len(fields) == 1:
-        return ValueCountsView(table, fields[0], missing=missing)
+        return ValueCountsView(table, fields[0], **kwargs)
     else:
-        return MultiValueCountsView(table, fields, missing=missing)
+        return MultiValueCountsView(table, fields, **kwargs)
 
 
 class ValueCountsView(RowContainer):
@@ -1064,27 +1059,11 @@ class ValueCountsView(RowContainer):
         self.table = table
         self.field = field
         self.missing = missing
-        self.counter = None
-        self.tag = None
         
-    def cachetag(self):
-        return hash((self.table.cachetag(), self.field, self.missing))
-    
     def __iter__(self):
-        
-        try:
-            tag = self.table.cachetag()
-        except: # uncacheable
-            self.counter = valuecounter(self.table, self.field, missing=self.missing)
-        else:
-            if self.tag is None or tag != self.tag:
-                self.tag = tag
-                self.counter = valuecounter(self.table, self.field, missing=self.missing)
-            else:
-                pass # don't need to update counter
-
+        counter = valuecounter(self.table, self.field, missing=self.missing)
         yield ('value', 'count', 'frequency')
-        counts = self.counter.most_common()
+        counts = counter.most_common()
         total = sum(c[1] for c in counts)
         for c in counts:
             yield (c[0], c[1], float(c[1])/total)
@@ -1096,41 +1075,26 @@ class MultiValueCountsView(RowContainer):
         self.table = table
         self.fields = fields
         self.missing = missing
-        self.counters = dict()
-        self.tag = None
         
-    def cachetag(self):
-        return hash((self.table.cachetag(), self.fields, self.missing))
-    
     def __iter__(self):
         
-        refresh = True
-        try:
-            tag = self.table.cachetag()
-        except: # uncacheable
-            pass
+        counters = dict()
+        it = iter(self.table)
+        fields = it.next()
+        if self.fields:
+            self.countfields = self.fields
         else:
-            if self.tag is not None and self.tag == tag:
-                refresh = False
-
-        if refresh:
-            self.counters = dict()
-            it = iter(self.table)
-            fields = it.next()
-            if self.fields:
-                self.countfields = self.fields
-            else:
-                self.countfields = fields
-            for f in self.countfields:
-                self.counters[f] = Counter()
-            for row in it:
-                for f, v in izip_longest(fields, row, fillvalue=self.missing):
-                    if f != self.missing and f in self.countfields:
-                        self.counters[f][v] += 1
+            self.countfields = fields
+        for f in self.countfields:
+            counters[f] = Counter()
+        for row in it:
+            for f, v in izip_longest(fields, row, fillvalue=self.missing):
+                if f != self.missing and f in self.countfields:
+                    counters[f][v] += 1
                 
         yield ('field', 'value', 'count', 'frequency')
         for f in self.countfields:
-            counts = self.counters[f].most_common()
+            counts = counters[f].most_common()
             total = sum(c[1] for c in counts)
             for c in counts:
                 yield (f, c[0], c[1], float(c[1])/total)
@@ -1744,7 +1708,7 @@ def typecounter(table, field):
     return counter
 
 
-def typecounts(table, field):    
+def typecounts(table, field, **kwargs):    
     """
     Count the number of values found for each Python type and return a table
     mapping class names to counts and frequencies. E.g.::
@@ -1795,7 +1759,7 @@ def typecounts(table, field):
  
     """
     
-    return TypeCountsView(table, field)
+    return TypeCountsView(table, field, **kwargs)
 
 
 class TypeCountsView(RowContainer):
@@ -1803,27 +1767,11 @@ class TypeCountsView(RowContainer):
     def __init__(self, table, field):
         self.table = table
         self.field = field
-        self.counter = None
-        self.tag = None
         
-    def cachetag(self):
-        return hash((self.table.cachetag(), self.field))
-    
     def __iter__(self):
-        
-        try:
-            tag = self.table.cachetag()
-        except: # uncacheable
-            self.counter = typecounter(self.table, self.field)
-        else:
-            if self.tag is None or tag != self.tag:
-                self.tag = tag
-                self.counter = typecounter(self.table, self.field)
-            else:
-                pass # don't need to update counter
-
+        counter = typecounter(self.table, self.field)
         yield ('type', 'count', 'frequency')
-        counts = self.counter.most_common()
+        counts = counter.most_common()
         total = sum(c[1] for c in counts)
         for c in counts:
             yield (c[0], c[1], float(c[1])/total)
@@ -1938,29 +1886,12 @@ class ParseCountsView(RowContainer):
         self.table = table
         self.field = field
         self.parsers = parsers
-        self.counter = None
-        self.errors = None
-        self.tag = None
         
-    def cachetag(self):
-        return hash((self.table.cachetag(), self.field, tuple(self.parsers.items())))
-    
     def __iter__(self):
-        
-        try:
-            tag = self.table.cachetag()
-        except: # uncacheable
-            self.counter, self.errors = parsecounter(self.table, self.field, self.parsers)
-        else:
-            if self.tag is None or tag != self.tag:
-                self.tag = tag
-                self.counter, self.errors = parsecounter(self.table, self.field, self.parsers)
-            else:
-                pass # don't need to update counter
-
+        counter, errors = parsecounter(self.table, self.field, self.parsers)
         yield ('type', 'count', 'errors')
-        for (item, count) in self.counter.most_common():
-            yield (item, count, self.errors[item])
+        for (item, count) in counter.most_common():
+            yield (item, count, errors[item])
 
 
 def datetimeparser(fmt, strict=True):
@@ -2490,11 +2421,7 @@ class RandomTable(RowContainer):
             
     def reseed(self):
         self.seed = datetime.datetime.now()
-        
-    def cachetag(self):
-        return hash((self.numflds, self.numrows, self.seed))
-        
-        
+                
         
 def dummytable(numrows=100, 
                fields=[('foo', partial(random.randint, 0, 100)), 
@@ -2613,9 +2540,6 @@ class DummyTable(RowContainer):
             
     def reseed(self):
         self.seed = datetime.datetime.now()
-        
-    def cachetag(self):
-        return hash((self.numrows, self.seed, tuple(self.fields.items())))
         
 
 def diffheaders(t1, t2):
@@ -2885,9 +2809,6 @@ class ProgressView(RowContainer):
         self.prefix = prefix
         self.out = out
         
-    def cachetag(self):
-        return self.wrapped.cachetag()
-    
     def __iter__(self):
         start = time.time()
         batchstart = start
@@ -2958,9 +2879,6 @@ class ClockView(RowContainer):
     def __init__(self, wrapped):
         self.wrapped = wrapped
         
-    def cachetag(self):
-        return self.wrapped.cachetag()
-    
     def __iter__(self):
         self.time = 0
         it = iter(self.wrapped)

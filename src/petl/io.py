@@ -5,8 +5,6 @@ Extract and load data to/from files, databases, etc.
 
 
 import csv
-import os
-import zlib
 import cPickle as pickle
 import sqlite3
 from xml.etree import ElementTree
@@ -32,93 +30,10 @@ info = logger.info
 debug = logger.debug
 
 
-class Uncacheable(Exception):
-    
-    def __init__(self, nested=None):
-        self.nested = nested
-
-
-def crc32sum(filename):
-    """
-    Compute the CRC32 checksum of the file at the given location. Returns
-    the checksum as an integer, use hex(result) to view as hexadecimal.
-    
-    """
-    
-    checksum = None
-    with open(filename, 'rb') as f:
-        while True:
-            data = f.read(8192)
-            if not data:
-                break
-            if checksum is None:
-                checksum = zlib.crc32(data) & 0xffffffffL # deal with signed integer
-            else:
-                checksum = zlib.crc32(data, checksum) & 0xffffffffL # deal with signed integer
-    return checksum
-
-
-def adler32sum(filename):
-    """
-    Compute the Adler 32 checksum of the file at the given location. Returns
-    the checksum as an integer, use hex(result) to view as hexadecimal.
-    
-    """
-    
-    checksum = None
-    with open(filename, 'rb') as f:
-        while True:
-            data = f.read(8192)
-            if not data:
-                break
-            if checksum is None:
-                checksum = zlib.adler32(data) & 0xffffffffL # deal with signed integer
-            else:
-                checksum = zlib.adler32(data, checksum) & 0xffffffffL # deal with signed integer
-    return checksum
-
-
-def statsum(filename):
-    """
-    Compute a crude checksum of the file by hashing the file's absolute path
-    name, the file size, and the file's time of last modification. N.B., on
-    some systems this will give a 1s resolution, i.e., any changes to a file
-    within the same second that preserve the file size will *not* change the
-    result.
-    
-    """
-    
-    return hash((os.path.abspath(filename), 
-                 os.path.getsize(filename), 
-                 os.path.getmtime(filename)))
-
-
-defaultsumfun = statsum
-"""
-Default checksum function used when generating cachetags for file-backed tables.
-
-To change the default globally, e.g.::
-
-    >>> import petl.io
-    >>> petl.io.defaultsumfun = petl.io.adler32sum
-    
-"""
-
-
 class FileSource(object):
     
-    def __init__(self, filename, checksumfun=None):
+    def __init__(self, filename):
         self.filename = filename
-        self.checksumfun = checksumfun
-        
-    def checksum(self):        
-        p = self.filename
-        if os.path.isfile(p):
-            sumfun = self.checksumfun if self.checksumfun is not None else defaultsumfun
-            checksum = sumfun(p)
-            return checksum 
-        else:
-            raise Uncacheable
 
     def open_(self, *args):
         return open(self.filename, *args)
@@ -126,8 +41,8 @@ class FileSource(object):
 
 class GzipSource(FileSource):
 
-    def __init__(self, filename, checksumfun=None):
-        super(GzipSource, self).__init__(filename, checksumfun)
+    def __init__(self, filename):
+        super(GzipSource, self).__init__(filename)
 
     @contextmanager
     def open_(self, *args):
@@ -140,8 +55,8 @@ class GzipSource(FileSource):
 
 class BZ2Source(FileSource):
 
-    def __init__(self, filename, checksumfun=None):
-        super(BZ2Source, self).__init__(filename, checksumfun)
+    def __init__(self, filename):
+        super(BZ2Source, self).__init__(filename)
 
     @contextmanager
     def open_(self, *args):
@@ -158,14 +73,6 @@ class ZipSource(object):
         self.filename = filename
         self.membername = membername
         
-    def checksum(self):
-        try:
-            zf = zipfile.ZipFile(self.filename)
-            info = zf.getinfo(self.membername)
-            return info.CRC
-        except Exception as e:
-            raise Uncacheable(e)
-
     @contextmanager
     def open_(self, *args):
         zf = zipfile.ZipFile(self.filename, *args)
@@ -213,9 +120,6 @@ class StringSource(object):
         self.s = s
         self.buffer = None
         
-    def checksum(self):
-        return hash(self.s)
-
     @contextmanager
     def open_(self, *args):
         try:
@@ -310,10 +214,6 @@ def fromcsv(source=None, dialect=csv.excel, **kwargs):
     Note that all data values are strings, and any intended numeric values will
     need to be converted, see also :func:`convert`.
     
-    The returned table object implements the `cachetag()` method using the 
-    default checksum function (whatever `petl.io.defaultsumfun` is currently set
-    to).
-        
     Supports transparent reading from URLs, ``.gz`` and ``.bz2`` files.
 
     """
@@ -334,14 +234,6 @@ class CSVView(RowContainer):
             reader = csv.reader(f, dialect=self.dialect, **self.kwargs)
             for row in reader:
                 yield tuple(row)
-                
-    def cachetag(self):
-        try:
-            return hash((self.source.checksum(), 
-                         self.dialect, 
-                         tuple(self.kwargs.items()))) 
-        except Exception as e:
-            raise Uncacheable(e)    
                 
     
 def frompickle(source=None):
@@ -371,10 +263,6 @@ def frompickle(source=None):
         | 'c'   | 2.5   |
         +-------+-------+
 
-    The returned table object implements the `cachetag()` method using the 
-    default checksum function (whatever `petl.io.defaultsumfun` is currently set
-    to).
-        
     Supports transparent reading from URLs, ``.gz`` and ``.bz2`` files.
 
     """
@@ -395,12 +283,6 @@ class PickleView(RowContainer):
                     yield tuple(pickle.load(f))
             except EOFError:
                 pass
-                
-    def cachetag(self):
-        try:
-            return self.source.checksum()
-        except Exception as e:
-            raise Uncacheable(e)    
                 
 
 def fromsqlite3(source, query, *args, **kwargs):
@@ -439,15 +321,10 @@ def fromsqlite3(source, query, *args, **kwargs):
         | u'c'  | 2.0   |
         +-------+-------+
 
-    The returned table object implements the `cachetag()` method using the 
-    default checksum function (whatever `petl.io.defaultsumfun` is currently set
-    to).
-    
     .. versionchanged:: 0.10.2
     
     Either a database file name or a connection object can be given as the
-    first argument. (Note that `cachetag()` is only implemented if a file name
-    is given.)
+    first argument. 
     
     """
     
@@ -481,16 +358,7 @@ class Sqlite3View(RowContainer):
             
         # tidy up
         cursor.close()
-
-    def cachetag(self):
-        # will only work if we've been given a reference to the file, not the connection
-        p = self.source
-        if os.path.isfile(p):
-            checksum = defaultsumfun(p)
-            return hash((checksum, self.query))
-        else:
-            raise Uncacheable
-                
+      
     
 def fromdb(dbo, query, *args, **kwargs):
     """
@@ -518,8 +386,6 @@ def fromdb(dbo, query, *args, **kwargs):
         >>> connection = MySQLdb.connect(passwd="moonpie", db="thangs")
         >>> table = fromdb(connection, 'select * from test')
         >>> look(table)
-        
-    The returned table object does not implement the `cachetag()` method.
         
     .. versionchanged:: 0.10.2
     
@@ -726,14 +592,6 @@ class TextView(RowContainer):
             for line in f:
                 yield (line.strip(s),)
                 
-    def cachetag(self):
-        try:
-            return hash((self.source.checksum(), 
-                         tuple(self.header), 
-                         self.strip)) 
-        except Exception as e:
-            raise Uncacheable(e)    
-
 
 def fromxml(source, *args, **kwargs):
     """
@@ -910,13 +768,6 @@ class XmlView(RowContainer):
                 yield tuple(vgetters[f](rowelm.findall(vmatches[f])) for f in fields)
             
                     
-    def cachetag(self):
-        try:
-            return hash((self.source.checksum(), self.args, self.missing))
-        except Exception as e:
-            raise Uncacheable(e)
-        
-
 def fromjson(source, *args, **kwargs):
     """
     Extract data from a JSON file. The file must contain a JSON array as the top
@@ -986,12 +837,6 @@ class JsonView(RowContainer):
                 row = tuple(o[f] if f in o else None for f in header)
                 yield row
                     
-    def cachetag(self):
-        try:
-            return hash((self.source.checksum(), self.args, tuple(self.kwargs.items())))
-        except Exception as e:
-            raise Uncacheable(e)
-
 
 def fromdicts(dicts, header=None):
     """
@@ -1042,9 +887,6 @@ class DictsView(RowContainer):
             row = tuple(o[f] if f in o else None for f in header)
             yield row
                     
-    def cachetag(self):
-        raise Uncacheable
-
 
 def tocsv(table, source=None, dialect=csv.excel, **kwargs):
     """
@@ -1308,8 +1150,7 @@ def tosqlite3(table, filename_or_connection, tablename, create=True, commit=True
     .. versionchanged:: 0.10.2
     
     Either a database file name or a connection object can be given as the
-    second argument. (Note that `cachetag()` is only implemented if a file name
-    is given.)
+    second argument. 
 
     """
     
@@ -1398,8 +1239,7 @@ def appendsqlite3(table, filename_or_connection, tablename, commit=True):
     .. versionchanged:: 0.10.2
     
     Either a database file name or a connection object can be given as the
-    second argument. (Note that `cachetag()` is only implemented if a file name
-    is given.)
+    second argument. 
 
     """
 

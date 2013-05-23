@@ -13,7 +13,7 @@ import gzip
 import os
 
 
-from petl import fromcsv, frompickle, fromsqlite3, adler32sum, crc32sum, fromdb, \
+from petl import fromcsv, frompickle, fromsqlite3, fromdb, \
                 tocsv, topickle, appendcsv, appendpickle, tosqlite3, appendsqlite3, \
                 todb, appenddb, fromtext, totext, fromxml, fromjson, fromdicts, \
                 tojson, fromtsv, totsv, appendtsv, tojsonarrays, tohtml
@@ -44,72 +44,6 @@ def test_fromcsv():
     ieq(expect, actual) # verify can iterate twice
     
     
-def test_fromcsv_cachetag():
-    """Test the cachetag method on tables returned by fromcsv."""
-    
-    # initial data
-    f = NamedTemporaryFile(delete=False)
-    writer = csv.writer(f)
-    table = (('foo', 'bar'),
-             ('a', 1),
-             ('b', 2),
-             ('c', 2))
-    for row in table:
-        writer.writerow(row)
-    f.close()
-
-    # cachetag with initial data
-    tbl = fromcsv(f.name)
-    tag1 = tbl.cachetag()
-    
-    # make a change
-    with open(f.name, 'wb') as o:
-        writer = csv.writer(o)
-        rows = (('foo', 'bar'),
-                ('d', 3),
-#                ('e', 5),
-                ('f', 4))
-        for row in rows:
-            writer.writerow(row)
-
-    # check cachetag has changed
-    tag2 = tbl.cachetag()
-    assert tag2 != tag1, (tag2, tag1)
-    
-
-def test_fromcsv_cachetag_strict():
-    """Test the cachetag method on tables returned by fromcsv."""
-    
-    # initial data
-    f = NamedTemporaryFile(delete=False)
-    writer = csv.writer(f)
-    table = (('foo', 'bar'),
-             ('a', 1),
-             ('b', 2),
-             ('c', 2))
-    for row in table:
-        writer.writerow(row)
-    f.close()
-
-    # cachetag with initial data
-    tbl = fromcsv(FileSource(f.name, checksumfun=adler32sum))
-    tag1 = tbl.cachetag()
-    
-    # make a change, preserving file size
-    with open(f.name, 'wb') as o:
-        writer = csv.writer(o)
-        rows = (('foo', 'bar'),
-                ('d', 3),
-                ('e', 5),
-                ('f', 4))
-        for row in rows:
-            writer.writerow(row)
-
-    # check cachetag has changed
-    tag2 = tbl.cachetag()
-    assert tag2 != tag1, (tag2, tag1)
-    
-
 def test_fromtsv():
     
     f = NamedTemporaryFile(delete=False)
@@ -148,68 +82,6 @@ def test_frompickle():
     ieq(table, actual) # verify can iterate twice
     
     
-def test_frompickle_cachetag():
-    """Test the cachetag method on tables returned by frompickle."""
-    
-    # initial data
-    f = NamedTemporaryFile(delete=False)
-    table = (('foo', 'bar'),
-             ('a', 1),
-             ('b', 2),
-             ('c', 2))
-    for row in table:
-        pickle.dump(row, f)
-    f.close()
-
-    # cachetag with initial data
-    tbl = frompickle(f.name)
-    tag1 = tbl.cachetag()
-    
-    # make a change
-    with open(f.name, 'wb') as o:
-        rows = (('foo', 'bar'),
-                ('d', 3),
-#                ('e', 5),
-                ('f', 4))
-        for row in rows:
-            pickle.dump(row, o)
-
-    # check cachetag has changed
-    tag2 = tbl.cachetag()
-    assert tag2 != tag1, (tag2, tag1)
-    
-
-def test_frompickle_cachetag_strict():
-    """Test the cachetag method on tables returned by frompickle."""
-    
-    # initial data
-    f = NamedTemporaryFile(delete=False)
-    table = (('foo', 'bar'),
-             ('a', 1),
-             ('b', 2),
-             ('c', 2))
-    for row in table:
-        pickle.dump(row, f)
-    f.close()
-
-    # cachetag with initial data
-    tbl = frompickle(FileSource(f.name, checksumfun=crc32sum))
-    tag1 = tbl.cachetag()
-    
-    # make a change, preserving file size
-    with open(f.name, 'wb') as o:
-        rows = (('foo', 'bar'),
-                ('d', 3),
-                ('e', 5),
-                ('f', 4))
-        for row in rows:
-            pickle.dump(row, o)
-
-    # check cachetag has changed
-    tag2 = tbl.cachetag()
-    assert tag2 != tag1, (tag2, tag1)
-    
-
 def test_fromsqlite3():
     """Test the fromsqlite3 function."""
     
@@ -264,41 +136,6 @@ def test_fromsqlite3_connection():
     ieq(expect, actual, cast=tuple) # verify can iterate twice
 
 
-def test_fromsqlite3_cachetag():
-    """Test the fromsqlite3 cachetag function."""
-    
-    # initial data
-    f = NamedTemporaryFile(delete=False)
-    data = (('a', 1),
-            ('b', 2),
-            ('c', 2.0))
-    connection = sqlite3.connect(f.name)
-    c = connection.cursor()
-    c.execute('create table foobar (foo, bar)')
-    for row in data:
-        c.execute('insert into foobar values (?, ?)', row)
-    connection.commit()
-    c.close()
-    
-    # test the function
-    tbl = fromsqlite3(f.name, 'select * from foobar')
-    tag1 = tbl.cachetag()
-    
-    # update the data
-    modata = (('d', 1),
-              ('e', 2),
-              ('f', 2.0))
-    c = connection.cursor()
-    for _ in range(100):
-        for row in modata:
-            c.execute('insert into foobar values (?, ?)', row)
-    connection.commit()
-    c.close()
-    
-    tag2 = tbl.cachetag()
-    assert tag2 != tag1, (tag2, tag1)
-
-
 def test_fromsqlite3_withargs():
     
     # initial data
@@ -322,39 +159,6 @@ def test_fromsqlite3_withargs():
     ieq(expect, actual) # verify can iterate twice
 
 
-def test_fromsqlite3_cachetag_strict():
-    """Test the fromsqlite3 cachetag function under strict conditions."""
-    
-    # initial data
-    f = NamedTemporaryFile(delete=False)
-    data = (('a', 1),
-            ('b', 2),
-            ('c', 2.0))
-    connection = sqlite3.connect(f.name)
-    c = connection.cursor()
-    c.execute('create table foobar (foo, bar)')
-    for row in data:
-        c.execute('insert into foobar values (?, ?)', row)
-    connection.commit()
-    c.close()
-    
-    # test the function
-    prevdef = petl.io.defaultsumfun
-    petl.io.defaultsumfun = adler32sum
-    tbl = fromsqlite3(f.name, 'select * from foobar', checksumfun=adler32sum)
-    tag1 = tbl.cachetag()
-    
-    # update the data
-    connection.execute('update foobar set bar = ? where foo = ?', (42, 'a'))
-    connection.commit()
-    
-    tag2 = tbl.cachetag()
-    assert tag2 != tag1, (tag2, tag1)
-    
-    # reset default 
-    petl.io.defaultsumfun = prevdef
-    
-    
 def test_fromdb():
     """Test the fromdb function."""
     

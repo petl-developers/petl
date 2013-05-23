@@ -7,7 +7,6 @@ from itertools import islice, groupby, product, chain, izip_longest, izip
 from collections import deque, defaultdict
 from operator import itemgetter
 import cPickle as pickle
-from tempfile import TemporaryFile
 from tempfile import NamedTemporaryFile
 import operator
 import re
@@ -19,7 +18,6 @@ from .util import asindices, rowgetter, asdict,\
     expr, valueset, header, data, limits, itervalues, parsenumber, lookup,\
     values, shortlistmergesorted, heapqmergesorted, hybridrows, rowgroupby,\
     iterpeek, count, Counter, OrderedDict
-from .io import Uncacheable
 from .util import RowContainer, SortableItem, sortable_itemgetter
 from petl.util import FieldSelectionError, rowgroupbybin, rowitemgetter
 #import os
@@ -115,12 +113,6 @@ class RenameView(RowContainer):
     def __setitem__(self, key, value):
         self.spec[key] = value
         
-    def cachetag(self):
-        try:
-            return hash((self.source.cachetag(), tuple(self.spec.items())))
-        except Exception as e:
-            raise Uncacheable(e)
-    
     
 def iterrename(source, spec):
     it = iter(source)
@@ -243,12 +235,6 @@ class CutView(RowContainer):
     def __iter__(self):
         return itercut(self.source, self.spec, self.missing)
     
-    def cachetag(self):
-        try:
-            return hash((self.source.cachetag(), self.spec, self.missing))
-        except Exception as e:
-            raise Uncacheable(e)
-        
         
 def itercut(source, spec, missing=None):
     it = iter(source)
@@ -329,12 +315,6 @@ class CutOutView(RowContainer):
     def __iter__(self):
         return itercutout(self.source, self.spec, self.missing)
     
-    def cachetag(self):
-        try:
-            return hash((self.source.cachetag(), self.spec, self.missing))
-        except Exception as e:
-            raise Uncacheable(e)
-        
         
 def itercutout(source, spec, missing=None):
     it = iter(source)
@@ -510,13 +490,6 @@ class CatView(RowContainer):
     def __iter__(self):
         return itercat(self.sources, self.missing, self.header)
     
-    def cachetag(self):
-        try:
-            sourcetags = tuple(source.cachetag() for source in self.sources)
-            return hash((sourcetags, self.missing, self.header))
-        except Exception as e:
-            raise Uncacheable(e)
-        
 
 def itercat(sources, missing, header):
     its = [iter(t) for t in sources]
@@ -813,24 +786,6 @@ class FieldConvertView(RowContainer):
     def __setitem__(self, key, value):
         self.converters[key] = value
         
-    def cachetag(self):
-        try:
-            # need to make converters hashable
-            convhashable = list()
-            for f, c in self.converters.items():
-                if isinstance(c, list):
-                    convhashable.append((f, tuple(c)))
-                elif isinstance(c, dict):
-                    convhashable.append((f, tuple(c.items())))
-                else:
-                    convhashable.append((f, c))
-            return hash((self.source.cachetag(), 
-                         tuple(convhashable),
-                         self.failonerror,
-                         self.errorvalue))
-        except Exception as e:
-            raise Uncacheable(e)
-    
     
 def iterfieldconvert(source, converters, failonerror, errorvalue):
 
@@ -1010,13 +965,6 @@ class AddFieldView(RowContainer):
     def __iter__(self):
         return iteraddfield(self.source, self.field, self.value, self.index)
     
-    def cachetag(self):
-        try:
-            return hash((self.source.cachetag(), self.field, self.value,
-                         self.index))
-        except Exception as e:
-            raise Uncacheable(e)
-
 
 def iteraddfield(source, field, value, index):
     it = iter(source)
@@ -1120,12 +1068,6 @@ class RowSliceView(RowContainer):
         
     def __iter__(self):
         return iterrowslice(self.source, self.sliceargs)
-
-    def cachetag(self):
-        try:
-            return hash((self.source.cachetag(), self.sliceargs))
-        except Exception as e:
-            raise Uncacheable(e)
 
 
 def iterrowslice(source, sliceargs):    
@@ -1241,12 +1183,6 @@ class TailView(RowContainer):
         
     def __iter__(self):
         return itertail(self.source, self.n)
-
-    def cachetag(self):
-        try:
-            return hash((self.source.cachetag(), self.n))
-        except Exception as e:
-            raise Uncacheable(e)
 
 
 def itertail(source, n):
@@ -1517,13 +1453,6 @@ class SortView(RowContainer):
                 yield tuple(row)
 
     
-    def cachetag(self):
-        try:
-            return hash((self.key, self.reverse, self.source.cachetag()))
-        except Exception as e:
-            raise Uncacheable(e)
-
-
 def melt(table, key=None, variables=None, variablefield='variable', valuefield='value'):
     """
     Reshape a table, melting fields into data. E.g.::
@@ -1624,16 +1553,6 @@ class MeltView(RowContainer):
         return itermelt(self.source, self.key, self.variables, 
                         self.variablefield, self.valuefield)
     
-    def cachetag(self):
-        try:
-            return hash((self.source.cachetag(), 
-                         self.key, 
-                         self.variables,
-                         self.variablefield,
-                         self.valuefield))
-        except Exception as e:
-            raise Uncacheable(e)
-
 
 def itermelt(source, key, variables, variablefield, valuefield):
     it = iter(source)
@@ -1845,18 +1764,6 @@ class RecastView(RowContainer):
                           self.valuefield, self.samplesize, self.reducers,
                           self.missing)
 
-    def cachetag(self):
-        try:
-            return hash((self.source.cachetag(),
-                         tuple(self.key) if isinstance(self.key, list) else self.key,
-                         self.variablefield,
-                         self.valuefield,
-                         self.samplesize,
-                         tuple(self.reducers.items()) if self.reducers is not None else self.reducers,
-                         self.missing))
-        except Exception as e:
-            raise Uncacheable(e)
-
 
 def iterrecast(source, key, variablefield, valuefield, 
                samplesize, reducers, missing):        
@@ -2033,12 +1940,6 @@ class DuplicatesView(RowContainer):
     def __iter__(self):
         return iterduplicates(self.source, self.key)
 
-    def cachetag(self):
-        try:
-            return hash((self.source.cachetag(), self.key))
-        except Exception as e:
-            raise Uncacheable(e)
-
 
 def iterduplicates(source, key):
     # assume source is sorted
@@ -2144,12 +2045,6 @@ class UniqueView(RowContainer):
         
     def __iter__(self):
         return iterunique(self.source, self.key)
-
-    def cachetag(self):
-        try:
-            return hash((self.source.cachetag(), self.key))
-        except Exception as e:
-            raise Uncacheable(e)
 
 
 def iterunique(source, key):
@@ -2269,13 +2164,6 @@ class ConflictsView(RowContainer):
         return iterconflicts(self.source, self.key, self.missing, self.exclude, 
                              self.include)
     
-    def cachetag(self):
-        try:
-            return hash((self.source.cachetag(), self.key, self.missing, 
-                         self.exclude, self.include))
-        except Exception as e:
-            raise Uncacheable(e)
-
     
 def iterconflicts(source, key, missing, exclude, include):
 
@@ -2405,12 +2293,6 @@ class ComplementView(RowContainer):
             
     def __iter__(self):
         return itercomplement(self.a, self.b)
-
-    def cachetag(self):
-        try:
-            return hash((self.a.cachetag(), self.b.cachetag()))
-        except Exception as e:
-            raise Uncacheable(e)
 
 
 def itercomplement(ta, tb):
@@ -2742,17 +2624,6 @@ class CaptureView(RowContainer):
         return itercapture(self.source, self.field, self.pattern, self.newfields, 
                            self.include_original, self.flags)
 
-    def cachetag(self):
-        try:
-            return hash((self.source.cachetag(), 
-                         self.field,
-                         self.pattern,
-                         tuple(self.newfields),
-                         self.include_original,
-                         self.flags))
-        except Exception as e:
-            raise Uncacheable(e)
-
 
 def itercapture(source, field, pattern, newfields, include_original, flags):
     it = iter(source)
@@ -2843,18 +2714,6 @@ class SplitView(RowContainer):
     def __iter__(self):
         return itersplit(self.source, self.field, self.pattern, self.newfields, 
                          self.include_original, self.maxsplit, self.flags)
-
-    def cachetag(self):
-        try:
-            return hash((self.source.cachetag(), 
-                         self.field,
-                         self.pattern,
-                         tuple(self.newfields),
-                         self.include_original,
-                         self.maxsplit,
-                         self.flags))
-        except Exception as e:
-            raise Uncacheable(e)
 
 
 def itersplit(source, field, pattern, newfields, include_original, maxsplit,
@@ -3018,12 +2877,6 @@ class RowSelectView(RowContainer):
     def __iter__(self):
         return iterrowselect(self.source, self.where, self.missing, self.complement)
     
-    def cachetag(self):
-        try:
-            return hash((self.source.cachetag(), self.where, self.missing, self.complement))
-        except Exception as e:
-            raise Uncacheable(e)
-
 
 def iterrowselect(source, where, missing, complement):
     it = iter(source)
@@ -3074,12 +2927,6 @@ class FieldSelectView(RowContainer):
     def __iter__(self):
         return iterfieldselect(self.source, self.field, self.where, self.complement)
 
-    def cachetag(self):
-        try:
-            return hash((self.source.cachetag(), self.field, self.where, self.complement))
-        except Exception as e:
-            raise Uncacheable(e)
-    
     
 def iterfieldselect(source, field, where, complement):
     it = iter(source)
@@ -3188,27 +3035,6 @@ class FieldMapView(RowContainer):
         
     def __iter__(self):
         return iterfieldmap(self.source, self.mappings, self.failonerror, self.errorvalue)
-    
-    def cachetag(self):
-        try:
-            # need to make converters hashable
-            maphashable = list()
-            for outfld, m in self.mappings.items():
-                if isinstance(m, (tuple, list)) and len(m) == 2:
-                    srcfld = m[0]
-                    fm = m[1]
-                    if isinstance(fm, dict):
-                        maphashable.append((outfld, srcfld, tuple(fm.items())))
-                    else:
-                        maphashable.append((outfld, srcfld, fm))
-                else:
-                    maphashable.append((outfld, m))
-            return hash((self.source.cachetag(), 
-                         tuple(maphashable),
-                         self.failonerror,
-                         self.errorvalue))
-        except Exception as e:
-            raise Uncacheable(e)
     
     
 def iterfieldmap(source, mappings, failonerror, errorvalue):
@@ -3691,14 +3517,6 @@ class RowReduceView(RowContainer):
     def __iter__(self):
         return iterrowreduce(self.source, self.key, self.reducer, self.fields)
 
-    def cachetag(self):
-        try:
-            return hash((self.source.cachetag(), self.key, 
-                         tuple(self.fields) if self.fields else self.fields, 
-                         self.reducer))
-        except Exception as e:
-            raise Uncacheable(e)
-
     
 def iterrowreduce(source, key, reducer, fields):
     if fields is None:
@@ -3795,9 +3613,6 @@ class MergeDuplicatesView(RowContainer):
         
     def __iter__(self):
         return itermergeduplicates(self.table, self.key, self.missing)
-    
-    def cachetag(self):
-        raise Uncacheable() # TODO
     
     
 def itermergeduplicates(table, key, missing):
@@ -4001,9 +3816,6 @@ class SimpleAggregateView(RowContainer):
     def __iter__(self):
         return itersimpleaggregate(self.table, self.key, self.aggregation, self.value)
 
-    def cachetag(self):
-        raise Uncacheable() # TODO
-
 
 def itersimpleaggregate(table, key, aggregation, value):
     if aggregation == len:
@@ -4038,13 +3850,6 @@ class MultiAggregateView(RowContainer):
     
     def __setitem__(self, key, value):
         self.aggregation[key] = value
-
-    def cachetag(self):
-        try:
-            return hash((self.source.cachetag(), self.key, 
-                         tuple(self.aggregation.items())))
-        except Exception as e:
-            raise Uncacheable(e)
 
     
 def itermultiaggregate(source, key, aggregation):
@@ -4176,14 +3981,6 @@ class RangeRowReduceView(RowContainer):
     def __iter__(self):
         return iterrangerowreduce(self.source, self.key, self.width, self.reducer,
                                   self.fields, self.minv, self.maxv)
-
-    def cachetag(self):
-        try:
-            return hash((self.source.cachetag(), self.key, self.width,
-                         tuple(self.fields) if self.fields else self.fields, 
-                         self.reducer, self.minv, self.maxv))
-        except Exception as e:
-            raise Uncacheable(e)
 
 
 def iterrangerowreduce(table, key, width, reducer, fields, minv, maxv):
@@ -4400,9 +4197,6 @@ class SimpleRangeAggregateView(RowContainer):
                                         self.aggregation, self.value, self.minv, 
                                         self.maxv)
 
-    def cachetag(self):
-        raise Uncacheable() # TODO
-
 
 def itersimplerangeaggregate(table, key, width, aggregation, value, minv, maxv):
     if aggregation == len:
@@ -4440,13 +4234,6 @@ class MultiRangeAggregateView(RowContainer):
     
     def __setitem__(self, key, value):
         self.aggregation[key] = value
-
-    def cachetag(self):
-        try:
-            return hash((self.source.cachetag(), self.key, self.width, self.minv,
-                         self.maxv, tuple(self.aggregation.items())))
-        except Exception as e:
-            raise Uncacheable(e)
 
     
 def itermultirangeaggregate(source, key, width, aggregation, minv, maxv):
@@ -4567,13 +4354,6 @@ class RowMapView(RowContainer):
         return iterrowmap(self.source, self.rowmapper, self.fields, self.failonerror,
                           self.missing)
 
-    def cachetag(self):
-        try:
-            return hash((self.source.cachetag(), self.rowmapper, tuple(self.fields),
-                         self.failonerror, self.missing))
-        except Exception as e:
-            raise Uncacheable(e)
-
     
 def iterrowmap(source, rowmapper, fields, failonerror, missing):
     it = iter(source)
@@ -4680,13 +4460,6 @@ class RowMapManyView(RowContainer):
         return iterrowmapmany(self.source, self.rowgenerator, self.fields, 
                               self.failonerror, self.missing)
     
-    def cachetag(self):
-        try:
-            return hash((self.source.cachetag(), self.rowgenerator, tuple(self.fields),
-                         self.failonerror, self.missing))
-        except Exception as e:
-            raise Uncacheable(e)
-
     
 def iterrowmapmany(source, rowgenerator, fields, failonerror, missing):
     it = iter(source)
@@ -4755,12 +4528,6 @@ class SetHeaderView(RowContainer):
     def __iter__(self):
         return itersetheader(self.source, self.fields)   
 
-    def cachetag(self):
-        try:
-            return hash((self.source.cachetag(), tuple(self.fields)))
-        except Exception as e:
-            raise Uncacheable(e)
-
 
 def itersetheader(source, fields):
     it = iter(source)
@@ -4808,12 +4575,6 @@ class ExtendHeaderView(RowContainer):
         
     def __iter__(self):
         return iterextendheader(self.source, self.fields)   
-
-    def cachetag(self):
-        try:
-            return hash((self.source.cachetag(), tuple(self.fields)))
-        except Exception as e:
-            raise Uncacheable(e)
 
 
 def iterextendheader(source, fields):
@@ -4864,12 +4625,6 @@ class PushHeaderView(RowContainer):
         
     def __iter__(self):
         return iterpushheader(self.source, self.fields)   
-
-    def cachetag(self):
-        try:
-            return hash((self.source.cachetag(), tuple(self.fields)))
-        except Exception as e:
-            raise Uncacheable(e)
 
 
 def iterpushheader(source, fields):
@@ -4925,12 +4680,6 @@ class SkipView(RowContainer):
     def __iter__(self):
         return iterskip(self.source, self.n)   
 
-    def cachetag(self):
-        try:
-            return hash((self.source.cachetag(), self.n))
-        except Exception as e:
-            raise Uncacheable(e)
-
 
 def iterskip(source, n):
     return islice(source, n, None)
@@ -4982,12 +4731,6 @@ class SkipCommentsView(RowContainer):
         
     def __iter__(self):
         return iterskipcomments(self.source, self.prefix)   
-
-    def cachetag(self):
-        try:
-            return hash((self.source.cachetag(), self.prefix))
-        except Exception as e:
-            raise Uncacheable(e)
 
 
 def iterskipcomments(source, prefix):
@@ -5042,14 +4785,6 @@ class UnpackView(RowContainer):
     def __iter__(self):
         return iterunpack(self.source, self.field, self.newfields, self.maxunpack, 
                           self.include_original)
-
-    def cachetag(self):
-        try:
-            return hash((self.source.cachetag(), self.field, 
-                         tuple(self.newfields) if self.newfields else self.newfields,
-                         self.maxunpack, self.include_original))
-        except Exception as e:
-            raise Uncacheable(e)
 
 
 def iterunpack(source, field, newfields, maxv, include_original):
@@ -5234,14 +4969,6 @@ class ImplicitJoinView(RowContainer):
                                missing=self.missing,
                                buffersize=self.buffersize)
 
-    def cachetag(self):
-        try:
-            return hash((self.left.cachetag(), self.right.cachetag(),
-                         self.presorted, self.leftouter, self.rightouter,
-                         self.missing))
-        except Exception as e:
-            raise Uncacheable(e)
-
 
 class JoinView(RowContainer):
     
@@ -5264,14 +4991,6 @@ class JoinView(RowContainer):
         return iterjoin(self.left, self.right, self.key, leftouter=self.leftouter,
                         rightouter=self.rightouter, missing=self.missing)
     
-    def cachetag(self):
-        try:
-            return hash((self.left.cachetag(), self.right.cachetag(), 
-                         tuple(self.key) if isinstance(self.key, list) else self.key,
-                         self.leftouter, self.rightouter, self.missing))
-        except Exception as e:
-            raise Uncacheable(e)
-
     
 def leftjoin(left, right, key=None, missing=None, presorted=False, buffersize=None, tempdir=None, cache=True):
     """
@@ -5623,12 +5342,6 @@ class CrossJoinView(RowContainer):
     def __iter__(self):
         return itercrossjoin(self.sources)
     
-    def cachetag(self):
-        try:
-            return hash(tuple(source.cachetag() for source in self.sources))
-        except Exception as e:
-            raise Uncacheable(e)
-
     
 def itercrossjoin(sources):
 
@@ -5719,13 +5432,6 @@ class AntiJoinView(RowContainer):
     def __iter__(self):
         return iterantijoin(self.left, self.right, self.key)
     
-    def cachetag(self):
-        try:
-            return hash((self.left.cachetag(), self.right.cachetag(), 
-                         tuple(self.key) if isinstance(self.key, list) else self.key))
-        except Exception as e:
-            raise Uncacheable(e)
-
     
 def iterantijoin(left, right, key):
     lit = iter(left)
@@ -5794,13 +5500,6 @@ class ImplicitAntiJoinView(RowContainer):
     def __iter__(self):
         return iterimplicitantijoin(self.left, self.right, self.presorted, self.buffersize)
     
-    def cachetag(self):
-        try:
-            return hash((self.left.cachetag(), self.right.cachetag(), 
-                         self.presorted))
-        except Exception as e:
-            raise Uncacheable(e)
-
     
 def iterimplicitantijoin(left, right, presorted=False, buffersize=None, tempdir=None, cache=True):
     # determine key field or fields
@@ -6008,12 +5707,6 @@ class IntersectionView(RowContainer):
     def __iter__(self):
         return iterintersection(self.a, self.b)
 
-    def cachetag(self):
-        try:
-            return hash((self.a.cachetag(), self.b.cachetag()))
-        except Exception as e:
-            raise Uncacheable(e)
-
 
 def iterintersection(a, b):
     ita = iter(a) 
@@ -6122,13 +5815,6 @@ class PivotView(RowContainer):
     def __iter__(self):
         return iterpivot(self.source, self.f1, self.f2, self.f3, self.aggfun, self.missing)
     
-    def cachetag(self):
-        try:
-            return hash((self.source.cachetag(), self.f1, self.f2, self.f3,
-                         self.aggfun, self.missing))
-        except Exception as e:
-            raise Uncacheable(e)
-    
     
 def iterpivot(source, f1, f2, f3, aggfun, missing):
     
@@ -6182,12 +5868,6 @@ class ImplicitHashJoinView(RowContainer):
     def __iter__(self):
         return iterimplicithashjoin(self.left, self.right)
 
-    def cachetag(self):
-        try:
-            return hash((self.left.cachetag(), self.right.cachetag()))
-        except Exception as e:
-            raise Uncacheable(e)
-
 
 class HashJoinView(RowContainer):
     
@@ -6199,13 +5879,6 @@ class HashJoinView(RowContainer):
     def __iter__(self):
         return iterhashjoin(self.left, self.right, self.key)
     
-    def cachetag(self):
-        try:
-            return hash((self.left.cachetag(), self.right.cachetag(), 
-                         tuple(self.key) if isinstance(self.key, list) else self.key))
-        except Exception as e:
-            raise Uncacheable(e)
-
 
 def iterhashjoin(left, right, key):
     lit = iter(left)
@@ -6294,12 +5967,6 @@ class ImplicitHashLeftJoinView(RowContainer):
     def __iter__(self):
         return iterimplicithashleftjoin(self.left, self.right, self.missing)
 
-    def cachetag(self):
-        try:
-            return hash((self.left.cachetag(), self.right.cachetag(), self.missing))
-        except Exception as e:
-            raise Uncacheable(e)
-
 
 class HashLeftJoinView(RowContainer):
     
@@ -6312,14 +5979,6 @@ class HashLeftJoinView(RowContainer):
     def __iter__(self):
         return iterhashleftjoin(self.left, self.right, self.key, self.missing)
     
-    def cachetag(self):
-        try:
-            return hash((self.left.cachetag(), self.right.cachetag(), 
-                         tuple(self.key) if isinstance(self.key, list) else self.key,
-                         self.missing))
-        except Exception as e:
-            raise Uncacheable(e)
-
 
 def iterhashleftjoin(left, right, key, missing):
     lit = iter(left)
@@ -6413,12 +6072,6 @@ class ImplicitHashRightJoinView(RowContainer):
     def __iter__(self):
         return iterimplicithashrightjoin(self.left, self.right, self.missing)
 
-    def cachetag(self):
-        try:
-            return hash((self.left.cachetag(), self.right.cachetag(), self.missing))
-        except Exception as e:
-            raise Uncacheable(e)
-
 
 class HashRightJoinView(RowContainer):
     
@@ -6431,14 +6084,6 @@ class HashRightJoinView(RowContainer):
     def __iter__(self):
         return iterhashrightjoin(self.left, self.right, self.key, self.missing)
     
-    def cachetag(self):
-        try:
-            return hash((self.left.cachetag(), self.right.cachetag(), 
-                         tuple(self.key) if isinstance(self.key, list) else self.key,
-                         self.missing))
-        except Exception as e:
-            raise Uncacheable(e)
-
 
 def iterhashrightjoin(left, right, key, missing):
     lit = iter(left)
@@ -6536,13 +6181,6 @@ class HashAntiJoinView(RowContainer):
     def __iter__(self):
         return iterhashantijoin(self.left, self.right, self.key)
     
-    def cachetag(self):
-        try:
-            return hash((self.left.cachetag(), self.right.cachetag(), 
-                         tuple(self.key) if isinstance(self.key, list) else self.key))
-        except Exception as e:
-            raise Uncacheable(e)
-
     
 def iterhashantijoin(left, right, key):
     lit = iter(left)
@@ -6580,12 +6218,6 @@ class ImplicitHashAntiJoinView(RowContainer):
     def __iter__(self):
         return iterimplicithashantijoin(self.left, self.right)
     
-    def cachetag(self):
-        try:
-            return hash((self.left.cachetag(), self.right.cachetag()))
-        except Exception as e:
-            raise Uncacheable(e)
-
     
 def iterimplicithashantijoin(left, right):
     # determine key field or fields
@@ -6626,12 +6258,6 @@ class HashComplementView(RowContainer):
             
     def __iter__(self):
         return iterhashcomplement(self.a, self.b)
-
-    def cachetag(self):
-        try:
-            return hash((self.a.cachetag(), self.b.cachetag()))
-        except Exception as e:
-            raise Uncacheable(e)
 
 
 def iterhashcomplement(a, b):
@@ -6675,12 +6301,6 @@ class HashIntersectionView(RowContainer):
             
     def __iter__(self):
         return iterhashintersection(self.a, self.b)
-
-    def cachetag(self):
-        try:
-            return hash((self.a.cachetag(), self.b.cachetag()))
-        except Exception as e:
-            raise Uncacheable(e)
 
 
 def iterhashintersection(a, b):
@@ -6946,10 +6566,6 @@ class MergeSortView(RowContainer):
     def __iter__(self):
         return itermergesort(self.tables, self.key, self.header, self.missing, self.reverse)
 
-    def cachetag(self):
-        # TODO
-        raise Uncacheable
-    
     
 def itermergesort(sources, key, header, missing, reverse):
     
@@ -7114,10 +6730,6 @@ class AnnexView(RowContainer):
     def __iter__(self):
         return iterannex(self.tables, self.missing)
     
-    def cachetag(self):
-        # TODO
-        raise Uncacheable
-    
 
 def iterannex(tables, missing):
     iters = [iter(t) for t in tables]
@@ -7190,10 +6802,6 @@ class UnpackDictView(RowContainer):
         self.samplesize = samplesize
         self.missing = missing
 
-    def cachetag(self):
-        # TODO
-        raise Uncacheable()
-    
     def __iter__(self):
         return iterunpackdict(self.table, self.field, self.keys, 
                               self.includeoriginal, self.samplesize,
@@ -7292,9 +6900,6 @@ class FoldView(RowContainer):
     def __iter__(self):
         return iterfold(self.table, self.key, self.f, self.value)
     
-    def cachetag(self):
-        raise Uncacheable() # TODO
-    
 
 def iterfold(table, key, f, value):
     yield ('key', 'value')
@@ -7346,9 +6951,6 @@ class AddRowNumbersView(RowContainer):
 
     def __iter__(self):
         return iteraddrownumbers(self.table, self.start, self.step)
-    
-    def cachetag(self):
-        raise Uncacheable() # TODO
     
 
 def iteraddrownumbers(table, start, step):
@@ -7432,9 +7034,6 @@ class SearchView(RowContainer):
         
     def __iter__(self):
         return itersearch(self.table, self.pattern, self.field, self.flags)
-    
-    def cachetag(self):
-        raise Uncacheable() # TODO
     
     
 def itersearch(table, pattern, field, flags):
@@ -7607,13 +7206,6 @@ class ImplicitLookupJoinView(RowContainer):
                                       missing=self.missing,
                                       buffersize=self.buffersize)
 
-    def cachetag(self):
-        try:
-            return hash((self.left.cachetag(), self.right.cachetag(),
-                         self.presorted, self.missing))
-        except Exception as e:
-            raise Uncacheable(e)
-
 
 class LookupJoinView(RowContainer):
     
@@ -7634,14 +7226,6 @@ class LookupJoinView(RowContainer):
         return iterlookupjoin(self.left, self.right, self.key, 
                               missing=self.missing)
     
-    def cachetag(self):
-        try:
-            return hash((self.left.cachetag(), self.right.cachetag(), 
-                         tuple(self.key) if isinstance(self.key, list) else self.key,
-                         self.missing))
-        except Exception as e:
-            raise Uncacheable(e)
-
     
 def iterlookupjoin(left, right, key, missing=None):
     lit = iter(left)
@@ -7777,12 +7361,6 @@ class ImplicitHashLookupJoinView(RowContainer):
     def __iter__(self):
         return iterimplicithashlookupjoin(self.left, self.right, self.missing)
 
-    def cachetag(self):
-        try:
-            return hash((self.left.cachetag(), self.right.cachetag(), self.missing))
-        except Exception as e:
-            raise Uncacheable(e)
-
 
 class HashLookupJoinView(RowContainer):
     
@@ -7795,14 +7373,6 @@ class HashLookupJoinView(RowContainer):
     def __iter__(self):
         return iterhashlookupjoin(self.left, self.right, self.key, self.missing)
     
-    def cachetag(self):
-        try:
-            return hash((self.left.cachetag(), self.right.cachetag(), 
-                         tuple(self.key) if isinstance(self.key, list) else self.key,
-                         self.missing))
-        except Exception as e:
-            raise Uncacheable(e)
-
 
 def iterhashlookupjoin(left, right, key, missing):
     lit = iter(left)
@@ -7961,9 +7531,6 @@ class FillDownView(RowContainer):
         self.fields = fields
         self.missing = missing
         
-    def cachetag(self):
-        raise Uncacheable() # TODO
-    
     def __iter__(self):
         return iterfilldown(self.table, self.fields, self.missing)
     
@@ -8044,9 +7611,6 @@ class FillRightView(RowContainer):
         self.table = table
         self.missing = missing
         
-    def cachetag(self):
-        return hash((self.table.cachetag(), self.missing))
-    
     def __iter__(self):
         return iterfillright(self.table, self.missing)
     
@@ -8120,9 +7684,6 @@ class FillLeftView(RowContainer):
         self.table = table
         self.missing = missing
         
-    def cachetag(self):
-        return hash((self.table.cachetag(), self.missing))
-    
     def __iter__(self):
         return iterfillleft(self.table, self.missing)
     
@@ -8216,9 +7777,6 @@ class SimpleMultiRangeAggregateView(RowContainer):
                                              self.aggregation, self.value,
                                              self.mins, self.maxs)
         
-    def cachetag(self):
-        raise Uncacheable() # TODO    
-
 
 def _recursive_bin(outerbin, level, bindef, fields, keys, widths, getval, mins, maxs):
 
@@ -8524,14 +8082,6 @@ class RowGroupMapView(RowContainer):
 
     def __iter__(self):
         return iterrowgroupmap(self.source, self.key, self.mapper, self.fields)
-
-    def cachetag(self):
-        try:
-            return hash((self.source.cachetag(), self.key, 
-                         tuple(self.fields) if self.fields else self.fields, 
-                         self.mapper))
-        except Exception as e:
-            raise Uncacheable(e)
 
     
 def iterrowgroupmap(source, key, mapper, fields):
