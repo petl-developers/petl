@@ -25,7 +25,7 @@ from petl import rename, fieldnames, cut, cat, convert, addfield, \
                 flatten, unflatten, mergesort, annex, unpackdict, unique, \
                 selectin, fold, addrownumbers, selectcontains, search, \
                 addcolumn, lookupjoin, hashlookupjoin, filldown, fillright, \
-                fillleft, multirangeaggregate, unjoin, coalesce 
+                fillleft, multirangeaggregate, unjoin, coalesce, nrows 
 from ..transform import Conflict
 
 
@@ -837,6 +837,35 @@ def test_sort_buffered_tempdir():
     ieq(expectation, result)
     result = sort(table, 'bar', buffersize=2, tempdir='/tmp')
     ieq(expectation, result)
+            
+    
+def test_sort_buffered_independent():
+    
+    table = (('foo', 'bar'),
+             ('C', 2),
+             ('A', 9),
+             ('A', 6),
+             ('F', 1),
+             ('D', 10))
+    expectation = (('foo', 'bar'),
+                   ('F', 1),
+                   ('C', 2),
+                   ('A', 6),
+                   ('A', 9),
+                   ('D', 10))
+
+    result = sort(table, 'bar', buffersize=4)
+    nrows(result) # cause data to be cached
+    # check that two row iterators are independent, i.e., consuming rows
+    # from one does not affect the other
+    it1 = iter(result)
+    it2 = iter(result)
+    eq_(expectation[0], it1.next())
+    eq_(expectation[1], it1.next())
+    eq_(expectation[0], it2.next())
+    eq_(expectation[1], it2.next())
+    eq_(expectation[2], it2.next())
+    eq_(expectation[2], it1.next())
             
     
 def test_sort_empty():

@@ -7,6 +7,7 @@ from itertools import islice, groupby, product, chain, izip_longest, izip
 from collections import deque, defaultdict
 from operator import itemgetter
 import cPickle as pickle
+from tempfile import TemporaryFile
 from tempfile import NamedTemporaryFile
 import operator
 import re
@@ -1260,7 +1261,7 @@ def itertail(source, n):
         yield tuple(row)
 
 
-def sort(table, key=None, reverse=False, buffersize=None, tempdir=None):
+def sort(table, key=None, reverse=False, buffersize=None, tempdir=None, cache=True):
     """
     Sort the table. Field names or indices (from zero) can be used to specify 
     the key. E.g.::
@@ -1346,20 +1347,38 @@ def sort(table, key=None, reverse=False, buffersize=None, tempdir=None):
         
     If `petl.transform.defaultbuffersize` is set to `None`, this forces all
     sorting to be done entirely in memory.
+    
+    .. versionchanged:: 0.16
+    
+    By default the results of the sort will be cached, and so a second pass over
+    the sorted table will yield rows from the cache and will not repeat the
+    sort operation. To turn off caching, set the `cache` argument to `False`.
 
     """
     
     return SortView(table, key=key, reverse=reverse, buffersize=buffersize,
-                    tempdir=tempdir)
+                    tempdir=tempdir, cache=cache)
     
 
-def iterchunk(filename):
-    with open(filename, 'rb') as f:
+def iterchunk(f):
+    # reopen so iterators from file cache are independent
+    with open(f.name, 'rb') as f:
         try:
             while True:
                 yield pickle.load(f)
         except EOFError:
             pass
+
+# non-independent version of iteration from file cache which doesn't depend
+# on named temporary files
+#def iterchunk(f):
+#    debug('seek(0): %r', f)
+#    f.seek(0)
+#    try:
+#        while True:
+#            yield pickle.load(f)
+#    except EOFError:
+#        pass
 
 
 def _mergesorted(key=None, reverse=False, *iterables):
@@ -1382,7 +1401,7 @@ defaultbuffersize = 100000
 class SortView(RowContainer):
     
     def __init__(self, source, key=None, reverse=False, buffersize=None,
-                 tempdir=None):
+                 tempdir=None, cache=True):
         self.source = source
         self.key = key
         self.reverse = reverse
@@ -1391,14 +1410,16 @@ class SortView(RowContainer):
         else:
             self.buffersize = buffersize
         self.tempdir = tempdir
+        self.cache = cache
         self._fldcache = None
         self._memcache = None
         self._filecache = None
-        self._internalcachetag = None
         self._getkey = None
+    
+    def clearcache(self):
+        self._clearcache()
         
     def _clearcache(self):
-        self._internalcachetag = None
         self._fldcache = None
         self._memcache = None
         self._filecache = None
@@ -1408,26 +1429,23 @@ class SortView(RowContainer):
         source = self.source
         key = self.key
         reverse = self.reverse
-        try:
-            currcachetag = self.cachetag()
-            if self._internalcachetag == currcachetag and self._memcache is not None:
-                return self._iterfrommemcache()
-            elif self._internalcachetag == currcachetag and self._filecache is not None:
-                return self._iterfromfilecache()
-            else:
-                return self._iternocache(source, key, reverse)
-        except Uncacheable:
+        if self.cache and self._memcache is not None:
+            return self._iterfrommemcache()
+        elif self.cache and self._filecache is not None:
+            return self._iterfromfilecache()
+        else:
             return self._iternocache(source, key, reverse)
         
     def _iterfrommemcache(self):
+        debug('iterate from mem cache')
         yield tuple(self._fldcache)
         for row in self._memcache:
             yield tuple(row)
             
     def _iterfromfilecache(self):
-        debug('iterate from file cache: %r', [f.name for f in self._filecache])
+        debug('iterate from file cache: %r', [f for f in self._filecache])
         yield tuple(self._fldcache)
-        chunkiters = [iterchunk(f.name) for f in self._filecache]
+        chunkiters = [iterchunk(f) for f in self._filecache]
         for row in _mergesorted(self._getkey, self.reverse, *chunkiters):
             yield tuple(row)
         
@@ -1455,13 +1473,8 @@ class SortView(RowContainer):
         # have we exhausted the source iterator?
         if self.buffersize is None or len(rows) < self.buffersize:
 
-            try:
-                # TODO possible race condition here, attributes determining
-                # cachetag have changed since we entered this function?
-                self._internalcachetag = self.cachetag()
-            except Uncacheable:
-                pass
-            else:
+            if self.cache:
+                debug('caching mem')
                 self._fldcache = flds
                 self._memcache = rows
                 self._getkey = getkey # actually not needed to iterate from memcache
@@ -1493,18 +1506,13 @@ class SortView(RowContainer):
                 rows = list(islice(it, 0, self.buffersize))
                 rows.sort(key=getkey, reverse=reverse)
 
-            try:
-                # TODO possible race condition here, attributes determining
-                # cachetag have changed since we entered this function?
-                self._internalcachetag = self.cachetag()
-            except Uncacheable:
-                pass
-            else:
+            if self.cache:
+                debug('caching files %r', chunkfiles)
                 self._fldcache = flds
                 self._filecache = chunkfiles
                 self._getkey = getkey
 
-            chunkiters = [iterchunk(f.name) for f in chunkfiles]
+            chunkiters = [iterchunk(f) for f in chunkfiles]
             for row in _mergesorted(getkey, reverse, *chunkiters):
                 yield tuple(row)
 
