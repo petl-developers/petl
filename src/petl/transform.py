@@ -1956,7 +1956,7 @@ def iterrecast(source, key, variablefield, valuefield,
         yield tuple(out_row)
                 
             
-def duplicates(table, key=None, presorted=False, buffersize=None):
+def duplicates(table, key=None, presorted=False, buffersize=None, tempdir=None, cache=True):
     """
     Select rows with duplicate values under a given key (or duplicate
     rows where no key is given). E.g.::
@@ -2009,8 +2009,8 @@ def duplicates(table, key=None, presorted=False, buffersize=None):
         +-------+-------+-------+
         
     If `presorted` is True, it is assumed that the data are already sorted by
-    the given key, and the `buffersize` argument is ignored. Otherwise, the data 
-    are sorted, see also the discussion of the `buffersize` argument under the 
+    the given key, and the `buffersize`, `tempdir` and `cache` arguments are ignored. Otherwise, the data 
+    are sorted, see also the discussion of the `buffersize`, `tempdir` and `cache` arguments under the 
     :func:`sort` function.
     
     See also :func:`unique` and :func:`distinct`.
@@ -2018,16 +2018,16 @@ def duplicates(table, key=None, presorted=False, buffersize=None):
     """
 
     return DuplicatesView(table, key=key, presorted=presorted, 
-                          buffersize=buffersize)
+                          buffersize=buffersize, tempdir=tempdir, cache=cache)
 
 
 class DuplicatesView(RowContainer):
     
-    def __init__(self, source, key=None, presorted=False, buffersize=None):
+    def __init__(self, source, key=None, presorted=False, buffersize=None, tempdir=None, cache=True):
         if presorted:
             self.source = source
         else:
-            self.source = sort(source, key, buffersize=buffersize)
+            self.source = sort(source, key, buffersize=buffersize, tempdir=tempdir, cache=cache)
         self.key = key # TODO property
         
     def __iter__(self):
@@ -2079,7 +2079,7 @@ def iterduplicates(source, key):
             previous = row
     
     
-def unique(table, key=None, presorted=False, buffersize=None):
+def unique(table, key=None, presorted=False, buffersize=None, tempdir=None, cache=True):
     """
     Select rows with unique values under a given key (or unique rows
     if no key is given). E.g.::
@@ -2119,8 +2119,8 @@ def unique(table, key=None, presorted=False, buffersize=None):
         +-------+-------+-------+
         
     If `presorted` is True, it is assumed that the data are already sorted by
-    the given key, and the `buffersize` argument is ignored. Otherwise, the data 
-    are sorted, see also the discussion of the `buffersize` argument under the 
+    the given key, and the `buffersize`, `tempdir` and `cache` arguments are ignored. Otherwise, the data 
+    are sorted, see also the discussion of the `buffersize`, `tempdir` and `cache` arguments under the 
     :func:`sort` function.
 
     .. versionadded:: 0.10
@@ -2130,16 +2130,16 @@ def unique(table, key=None, presorted=False, buffersize=None):
     """
 
     return UniqueView(table, key=key, presorted=presorted, 
-                      buffersize=buffersize)
+                      buffersize=buffersize, tempdir=tempdir, cache=cache)
 
 
 class UniqueView(RowContainer):
     
-    def __init__(self, source, key=None, presorted=False, buffersize=None):
+    def __init__(self, source, key=None, presorted=False, buffersize=None, tempdir=None, cache=True):
         if presorted:
             self.source = source
         else:
-            self.source = sort(source, key, buffersize=buffersize)
+            self.source = sort(source, key, buffersize=buffersize, tempdir=tempdir, cache=cache)
         self.key = key # TODO property
         
     def __iter__(self):
@@ -2190,7 +2190,7 @@ def iterunique(source, key):
     
     
 def conflicts(table, key, missing=None, include=None, exclude=None, 
-              presorted=False, buffersize=None):
+              presorted=False, buffersize=None, tempdir=None, cache=True):
     """
     Select rows with the same key value but differing in some other field. E.g.::
 
@@ -2237,8 +2237,8 @@ def conflicts(table, key, missing=None, include=None, exclude=None,
     conflicts can be specified explicitly with the `include` keyword argument. 
 
     If `presorted` is True, it is assumed that the data are already sorted by
-    the given key, and the `buffersize` argument is ignored. Otherwise, the data 
-    are sorted, see also the discussion of the `buffersize` argument under the 
+    the given key, and the `buffersize`, `tempdir` and `cache` arguments are ignored. Otherwise, the data 
+    are sorted, see also the discussion of the `buffersize`, `tempdir` and `cache` arguments under the 
     :func:`sort` function.
     
     .. versionchanged:: 0.8
@@ -2249,17 +2249,17 @@ def conflicts(table, key, missing=None, include=None, exclude=None,
     """
     
     return ConflictsView(table, key, missing=missing, exclude=exclude, include=include,
-                         presorted=presorted, buffersize=buffersize)
+                         presorted=presorted, buffersize=buffersize, tempdir=tempdir, cache=cache)
 
 
 class ConflictsView(RowContainer):
     
     def __init__(self, source, key, missing=None, exclude=None, include=None, 
-                 presorted=False, buffersize=None):
+                 presorted=False, buffersize=None, tempdir=None, cache=True):
         if presorted:
             self.source = source
         else:
-            self.source = sort(source, key, buffersize=buffersize)
+            self.source = sort(source, key, buffersize=buffersize, tempdir=tempdir, cache=cache)
         self.key = key
         self.missing = missing
         self.exclude = exclude
@@ -2329,7 +2329,7 @@ def iterconflicts(source, key, missing, exclude, include):
             previous = row
     
 
-def complement(a, b, presorted=False, buffersize=None):
+def complement(a, b, presorted=False, buffersize=None, tempdir=None, cache=True):
     """
     Return rows in `a` that are not in `b`. E.g.::
     
@@ -2384,24 +2384,24 @@ def complement(a, b, presorted=False, buffersize=None):
     following a lexical sort. See also the :func:`recordcomplement` function.
     
     If `presorted` is True, it is assumed that the data are already sorted by
-    the given key, and the `buffersize` argument is ignored. Otherwise, the data 
-    are sorted, see also the discussion of the `buffersize` argument under the 
+    the given key, and the `buffersize`, `tempdir` and `cache` arguments are ignored. Otherwise, the data 
+    are sorted, see also the discussion of the `buffersize`, `tempdir` and `cache` arguments under the 
     :func:`sort` function.
     
     """
 
-    return ComplementView(a, b, presorted=presorted, buffersize=buffersize)
+    return ComplementView(a, b, presorted=presorted, buffersize=buffersize, tempdir=tempdir, cache=cache)
 
 
 class ComplementView(RowContainer):
     
-    def __init__(self, a, b, presorted=False, buffersize=None):
+    def __init__(self, a, b, presorted=False, buffersize=None, tempdir=None, cache=True):
         if presorted:
             self.a = a
             self.b = b
         else:
-            self.a = sort(a, buffersize=buffersize)
-            self.b = sort(b, buffersize=buffersize)
+            self.a = sort(a, buffersize=buffersize, tempdir=tempdir, cache=cache)
+            self.b = sort(b, buffersize=buffersize, tempdir=tempdir, cache=cache)
             
     def __iter__(self):
         return itercomplement(self.a, self.b)
@@ -2463,7 +2463,7 @@ def itercomplement(ta, tb):
                         b = None
         
     
-def recordcomplement(a, b, buffersize=None):
+def recordcomplement(a, b, buffersize=None, tempdir=None, cache=True):
     """
     Find records in `a` that are not in `b`. E.g.::
     
@@ -2517,7 +2517,7 @@ def recordcomplement(a, b, buffersize=None):
     Note that both tables must have the same set of fields, but that the order
     of the fields does not matter. See also the :func:`complement` function.
     
-    See also the discussion of the `buffersize` argument under the :func:`sort` 
+    See also the discussion of the `buffersize`, `tempdir` and `cache` arguments under the :func:`sort` 
     function.
     
     .. versionadded:: 0.3
@@ -2529,10 +2529,10 @@ def recordcomplement(a, b, buffersize=None):
     assert set(ha) == set(hb), 'both tables must have the same set of fields'
     # make sure fields are in the same order
     bv = cut(b, *ha)
-    return complement(a, bv, buffersize=buffersize)
+    return complement(a, bv, buffersize=buffersize, tempdir=tempdir, cache=cache)
 
 
-def diff(a, b, presorted=False, buffersize=None):
+def diff(a, b, presorted=False, buffersize=None, tempdir=None, cache=True):
     """
     Find the difference between rows in two tables. Returns a pair of tables. 
     E.g.::
@@ -2589,8 +2589,8 @@ def diff(a, b, presorted=False, buffersize=None):
     :func:`complement`.
 
     If `presorted` is True, it is assumed that the data are already sorted by
-    the given key, and the `buffersize` argument is ignored. Otherwise, the data 
-    are sorted, see also the discussion of the `buffersize` argument under the 
+    the given key, and the `buffersize`, `tempdir` and `cache` arguments are ignored. Otherwise, the data 
+    are sorted, see also the discussion of the `buffersize`, `tempdir` and `cache` arguments under the 
     :func:`sort` function.
     
     """
@@ -2598,12 +2598,12 @@ def diff(a, b, presorted=False, buffersize=None):
     if not presorted:    
         a = sort(a)
         b = sort(b)
-    added = complement(b, a, presorted=True, buffersize=buffersize)
-    subtracted = complement(a, b, presorted=True, buffersize=buffersize)
+    added = complement(b, a, presorted=True, buffersize=buffersize, tempdir=tempdir, cache=cache)
+    subtracted = complement(a, b, presorted=True, buffersize=buffersize, tempdir=tempdir, cache=cache)
     return added, subtracted
     
     
-def recorddiff(a, b, buffersize=None):
+def recorddiff(a, b, buffersize=None, tempdir=None, cache=True):
     """
     Find the difference between records in two tables. E.g.::
 
@@ -2656,15 +2656,15 @@ def recorddiff(a, b, buffersize=None):
     Convenient shorthand for ``(recordcomplement(b, a), recordcomplement(a, b))``. 
     See also :func:`recordcomplement`.
 
-    See also the discussion of the `buffersize` argument under the :func:`sort` 
+    See also the discussion of the `buffersize`, `tempdir` and `cache` arguments under the :func:`sort` 
     function.
     
     .. versionadded:: 0.3
     
     """
 
-    added = recordcomplement(b, a, buffersize=buffersize)
-    subtracted = recordcomplement(a, b, buffersize=buffersize)
+    added = recordcomplement(b, a, buffersize=buffersize, tempdir=tempdir, cache=cache)
+    subtracted = recordcomplement(a, b, buffersize=buffersize, tempdir=tempdir, cache=cache)
     return added, subtracted
     
     
@@ -3619,7 +3619,7 @@ def selectre(table, field, pattern, flags=0, complement=False):
     return fieldselect(table, field, test, complement=complement)
 
 
-def rowreduce(table, key, reducer, fields=None, missing=None, presorted=False, buffersize=None):
+def rowreduce(table, key, reducer, fields=None, missing=None, presorted=False, buffersize=None, tempdir=None, cache=True):
     """
     Group rows under the given key then apply `reducer` to produce a single 
     output row for each input group of rows. E.g.::
@@ -3673,17 +3673,17 @@ def rowreduce(table, key, reducer, fields=None, missing=None, presorted=False, b
 
     return RowReduceView(table, key, reducer, fields=fields,
                          presorted=presorted, 
-                         buffersize=buffersize)
+                         buffersize=buffersize, tempdir=tempdir, cache=cache)
 
 
 class RowReduceView(RowContainer):
     
     def __init__(self, source, key, reducer, fields=None, 
-                  presorted=False, buffersize=None):
+                  presorted=False, buffersize=None, tempdir=None, cache=True):
         if presorted:
             self.source = source
         else:
-            self.source = sort(source, key, buffersize=buffersize)
+            self.source = sort(source, key, buffersize=buffersize, tempdir=tempdir, cache=cache)
         self.key = key
         self.fields = fields
         self.reducer = reducer
@@ -3709,7 +3709,7 @@ def iterrowreduce(source, key, reducer, fields):
         yield tuple(reducer(key, rows))
         
 
-def recordreduce(table, key, reducer, fields=None, presorted=False, buffersize=None):
+def recordreduce(table, key, reducer, fields=None, presorted=False, buffersize=None, tempdir=None, cache=True):
     """
     .. deprecated:: 0.9
     
@@ -3718,10 +3718,10 @@ def recordreduce(table, key, reducer, fields=None, presorted=False, buffersize=N
     """
 
     return rowreduce(table, key, reducer, fields=fields, presorted=presorted, 
-                     buffersize=buffersize)
+                     buffersize=buffersize, tempdir=tempdir, cache=cache)
 
 
-def mergeduplicates(table, key, missing=None, presorted=False, buffersize=None):
+def mergeduplicates(table, key, missing=None, presorted=False, buffersize=None, tempdir=None, cache=True):
     """
     Merge duplicate rows under the given key. E.g.::
     
@@ -3763,8 +3763,8 @@ def mergeduplicates(table, key, missing=None, presorted=False, buffersize=None):
     reported as an instance of the Conflict class (sub-class of frozenset).
     
     If `presorted` is True, it is assumed that the data are already sorted by
-    the given key, and the `buffersize` argument is ignored. Otherwise, the data 
-    are sorted, see also the discussion of the `buffersize` argument under the 
+    the given key, and the `buffersize`, `tempdir` and `cache` arguments are ignored. Otherwise, the data 
+    are sorted, see also the discussion of the `buffersize`, `tempdir` and `cache` arguments under the 
     :func:`sort` function.
     
     .. versionchanged:: 0.3
@@ -3780,16 +3780,16 @@ def mergeduplicates(table, key, missing=None, presorted=False, buffersize=None):
     """
 
     return MergeDuplicatesView(table, key, missing=missing, presorted=presorted,
-                               buffersize=buffersize)
+                               buffersize=buffersize, tempdir=tempdir, cache=cache)
 
 
 class MergeDuplicatesView(RowContainer):
     
-    def __init__(self, table, key, missing=None, presorted=False, buffersize=None):
+    def __init__(self, table, key, missing=None, presorted=False, buffersize=None, tempdir=None, cache=True):
         if presorted:
             self.table = table
         else:
-            self.table = sort(table, key, buffersize=buffersize)
+            self.table = sort(table, key, buffersize=buffersize, tempdir=tempdir, cache=cache)
         self.key = key
         self.missing = missing
         
@@ -3840,7 +3840,7 @@ class Conflict(frozenset):
     
 
 def aggregate(table, key, aggregation=None, value=None, presorted=False,
-              buffersize=None):
+              buffersize=None, tempdir=None, cache=True):
     """
     Group rows under the given key then apply aggregation functions. E.g.::
     
@@ -3969,19 +3969,19 @@ def aggregate(table, key, aggregation=None, value=None, presorted=False,
         +-------+---------+----------+----------+----------+-----------+-------------------------------------+-----------+
 
     If `presorted` is True, it is assumed that the data are already sorted by
-    the given key, and the `buffersize` argument is ignored. Otherwise, the data 
-    are sorted, see also the discussion of the `buffersize` argument under the 
+    the given key, and the `buffersize`, `tempdir` and `cache` arguments are ignored. Otherwise, the data 
+    are sorted, see also the discussion of the `buffersize`, `tempdir` and `cache` arguments under the 
     :func:`sort` function.
     
     """
 
     if callable(aggregation):
         return SimpleAggregateView(table, key, aggregation=aggregation, value=value, 
-                                   presorted=presorted, buffersize=buffersize)
+                                   presorted=presorted, buffersize=buffersize, tempdir=tempdir, cache=cache)
     elif aggregation is None or isinstance(aggregation, (list, tuple, dict)):
         # ignore value arg
         return MultiAggregateView(table, key, aggregation=aggregation,  
-                                  presorted=presorted, buffersize=buffersize)
+                                  presorted=presorted, buffersize=buffersize, tempdir=tempdir, cache=cache)
     else:
         raise Exception('expected aggregation is callable, list, tuple, dict or None')
 
@@ -3989,11 +3989,11 @@ def aggregate(table, key, aggregation=None, value=None, presorted=False,
 class SimpleAggregateView(RowContainer):
     
     def __init__(self, table, key, aggregation=list, value=None, presorted=False,
-                 buffersize=None):
+                 buffersize=None, tempdir=None, cache=True):
         if presorted:
             self.table = table
         else:
-            self.table = sort(table, key, buffersize=buffersize)    
+            self.table = sort(table, key, buffersize=buffersize, tempdir=tempdir, cache=cache)    
         self.key = key
         self.aggregation = aggregation
         self.value = value
@@ -4016,11 +4016,11 @@ def itersimpleaggregate(table, key, aggregation, value):
 class MultiAggregateView(RowContainer):
     
     def __init__(self, source, key, aggregation=None, presorted=False, 
-                 buffersize=None):
+                 buffersize=None, tempdir=None, cache=True):
         if presorted:
             self.source = source
         else:
-            self.source = sort(source, key, buffersize=buffersize)
+            self.source = sort(source, key, buffersize=buffersize, tempdir=tempdir, cache=cache)
         self.key = key
         if aggregation is None:
             self.aggregation = OrderedDict()
@@ -4098,7 +4098,7 @@ def itermultiaggregate(source, key, aggregation):
             
 
 def rangerowreduce(table, key, width, reducer, fields=None, minv=None, maxv=None, 
-                     presorted=False, buffersize=None):
+                     presorted=False, buffersize=None, tempdir=None, cache=True):
     """
     Group rows into bins of a given `width` under the given numeric key then 
     apply `reducer` to produce a single output row for each input group of rows. 
@@ -4156,17 +4156,17 @@ def rangerowreduce(table, key, width, reducer, fields=None, minv=None, maxv=None
     """
     
     return RangeRowReduceView(table, key, width, reducer, fields=fields, minv=minv, 
-                              maxv=maxv, presorted=presorted, buffersize=buffersize)
+                              maxv=maxv, presorted=presorted, buffersize=buffersize, tempdir=tempdir, cache=cache)
         
 
 class RangeRowReduceView(RowContainer):
     
     def __init__(self, source, key, width, reducer, fields=None, minv=None, maxv=None, 
-                  presorted=False, buffersize=None):
+                  presorted=False, buffersize=None, tempdir=None, cache=True):
         if presorted:
             self.source = source
         else:
-            self.source = sort(source, key, buffersize=buffersize)
+            self.source = sort(source, key, buffersize=buffersize, tempdir=tempdir, cache=cache)
         self.key = key
         self.width = width
         self.reducer = reducer
@@ -4193,7 +4193,7 @@ def iterrangerowreduce(table, key, width, reducer, fields, minv, maxv):
     
         
 def rangerecordreduce(table, key, width, reducer, fields=None, minv=None, maxv=None, 
-                      failonerror=False, presorted=False, buffersize=None):
+                      failonerror=False, presorted=False, buffersize=None, tempdir=None, cache=True):
     """
     Reduce records grouped into bins under the given key via an arbitrary function. 
 
@@ -4205,11 +4205,11 @@ def rangerecordreduce(table, key, width, reducer, fields=None, minv=None, maxv=N
     
     return rangerowreduce(table, key, width, reducer, fields=fields, minv=minv, 
                                  maxv=maxv, failonerror=failonerror, 
-                                 presorted=presorted, buffersize=buffersize)
+                                 presorted=presorted, buffersize=buffersize, tempdir=tempdir, cache=cache)
         
 
 def rangecounts(table, key, width, minv=None, maxv=None, presorted=False,
-                buffersize=None):
+                buffersize=None, tempdir=None, cache=True):
     """
     Group rows into bins then count the number of rows in each bin. E.g.::
 
@@ -4254,7 +4254,7 @@ def rangecounts(table, key, width, minv=None, maxv=None, presorted=False,
     """
     
     return rangeaggregate(table, key, width, len, minv=minv, maxv=maxv,
-                          presorted=presorted, buffersize=buffersize)
+                          presorted=presorted, buffersize=buffersize, tempdir=tempdir, cache=cache)
     
     
 ###############################################################################
@@ -4263,7 +4263,7 @@ def rangecounts(table, key, width, minv=None, maxv=None, presorted=False,
 ###############################################################################
 ###############################################################################    
 def rangeaggregate(table, key, width, aggregation=None, value=None, minv=None, 
-                   maxv=None, presorted=False, buffersize=None):
+                   maxv=None, presorted=False, buffersize=None, tempdir=None, cache=True):
     """
     Group rows into bins then apply aggregation functions. E.g.::
     
@@ -4370,13 +4370,13 @@ def rangeaggregate(table, key, width, aggregation=None, value=None, minv=None,
         return SimpleRangeAggregateView(table, key, width, 
                                         aggregation=aggregation, 
                                         value=value, minv=minv, maxv=maxv,
-                                        presorted=presorted, buffersize=buffersize)
+                                        presorted=presorted, buffersize=buffersize, tempdir=tempdir, cache=cache)
     elif aggregation is None or isinstance(aggregation, (list, tuple, dict)):
         # ignore value arg
         return MultiRangeAggregateView(table, key, width, 
                                        aggregation=aggregation, 
                                        minv=minv, maxv=maxv, # ignore value
-                                       presorted=presorted, buffersize=buffersize)
+                                       presorted=presorted, buffersize=buffersize, tempdir=tempdir, cache=cache)
     else:
         raise Exception('expected aggregation is callable, list, tuple, dict or None')
     
@@ -4384,11 +4384,11 @@ def rangeaggregate(table, key, width, aggregation=None, value=None, minv=None,
 class SimpleRangeAggregateView(RowContainer):
     
     def __init__(self, table, key, width, aggregation=list, value=None, 
-                 minv=None, maxv=None, presorted=False, buffersize=None):
+                 minv=None, maxv=None, presorted=False, buffersize=None, tempdir=None, cache=True):
         if presorted:
             self.table = table
         else:
-            self.table = sort(table, key, buffersize=buffersize)    
+            self.table = sort(table, key, buffersize=buffersize, tempdir=tempdir, cache=cache)    
         self.key = key
         self.width = width
         self.aggregation = aggregation
@@ -4415,11 +4415,11 @@ def itersimplerangeaggregate(table, key, width, aggregation, value, minv, maxv):
 class MultiRangeAggregateView(RowContainer):
     
     def __init__(self, source, key, width, aggregation=None, 
-                  minv=None, maxv=None, presorted=False, buffersize=None):
+                  minv=None, maxv=None, presorted=False, buffersize=None, tempdir=None, cache=True):
         if presorted:
             self.source = source
         else:
-            self.source = sort(source, key, buffersize=buffersize)
+            self.source = sort(source, key, buffersize=buffersize, tempdir=tempdir, cache=cache)
         self.key = key
         self.width = width
         if aggregation is None:
@@ -5082,7 +5082,7 @@ def iterunpack(source, field, newfields, maxv, include_original):
         yield tuple(out_row)
         
         
-def join(left, right, key=None, presorted=False, buffersize=None):
+def join(left, right, key=None, presorted=False, buffersize=None, tempdir=None, cache=True):
     """
     Perform an equi-join on the given tables. E.g.::
         
@@ -5203,22 +5203,22 @@ def join(left, right, key=None, presorted=False, buffersize=None):
         +------+--------+----------+----------+
 
     If `presorted` is True, it is assumed that the data are already sorted by
-    the given key, and the `buffersize` argument is ignored. Otherwise, the data 
-    are sorted, see also the discussion of the `buffersize` argument under the 
+    the given key, and the `buffersize`, `tempdir` and `cache` arguments are ignored. Otherwise, the data 
+    are sorted, see also the discussion of the `buffersize`, `tempdir` and `cache` arguments under the 
     :func:`sort` function.
     
     """
     
     if key is None:
-        return ImplicitJoinView(left, right, presorted=presorted, buffersize=buffersize)
+        return ImplicitJoinView(left, right, presorted=presorted, buffersize=buffersize, tempdir=tempdir, cache=cache)
     else:
-        return JoinView(left, right, key, presorted=presorted, buffersize=buffersize)
+        return JoinView(left, right, key, presorted=presorted, buffersize=buffersize, tempdir=tempdir, cache=cache)
 
 
 class ImplicitJoinView(RowContainer):
     
     def __init__(self, left, right, presorted=False, leftouter=False, 
-                 rightouter=False, missing=None, buffersize=None):
+                 rightouter=False, missing=None, buffersize=None, tempdir=None, cache=True):
         self.left = left
         self.right = right
         self.presorted = presorted
@@ -5246,13 +5246,13 @@ class ImplicitJoinView(RowContainer):
 class JoinView(RowContainer):
     
     def __init__(self, left, right, key, presorted=False, leftouter=False, 
-                 rightouter=False, missing=None, buffersize=None):
+                 rightouter=False, missing=None, buffersize=None, tempdir=None, cache=True):
         if presorted:
             self.left = left
             self.right = right
         else:
-            self.left = sort(left, key, buffersize=buffersize)
-            self.right = sort(right, key, buffersize=buffersize)
+            self.left = sort(left, key, buffersize=buffersize, tempdir=tempdir, cache=cache)
+            self.right = sort(right, key, buffersize=buffersize, tempdir=tempdir, cache=cache)
             # TODO what if someone sets self.key to something else after __init__?
             # (sort will be incorrect - maybe need to protect key with property setter?)
         self.key = key
@@ -5273,7 +5273,7 @@ class JoinView(RowContainer):
             raise Uncacheable(e)
 
     
-def leftjoin(left, right, key=None, missing=None, presorted=False, buffersize=None):
+def leftjoin(left, right, key=None, missing=None, presorted=False, buffersize=None, tempdir=None, cache=True):
     """
     Perform a left outer join on the given tables. E.g.::
     
@@ -5313,21 +5313,21 @@ def leftjoin(left, right, key=None, missing=None, presorted=False, buffersize=No
         +------+----------+----------+
 
     If `presorted` is True, it is assumed that the data are already sorted by
-    the given key, and the `buffersize` argument is ignored. Otherwise, the data 
-    are sorted, see also the discussion of the `buffersize` argument under the 
+    the given key, and the `buffersize`, `tempdir` and `cache` arguments are ignored. Otherwise, the data 
+    are sorted, see also the discussion of the `buffersize`, `tempdir` and `cache` arguments under the 
     :func:`sort` function.
     
     """
     
     if key is None:
         return ImplicitJoinView(left, right, presorted=presorted, leftouter=True, 
-                               rightouter=False, missing=missing, buffersize=buffersize)
+                               rightouter=False, missing=missing, buffersize=buffersize, tempdir=tempdir, cache=cache)
     else:
         return JoinView(left, right, key, presorted=presorted, leftouter=True, 
-                        rightouter=False, missing=missing, buffersize=buffersize)
+                        rightouter=False, missing=missing, buffersize=buffersize, tempdir=tempdir, cache=cache)
 
     
-def rightjoin(left, right, key=None, missing=None, presorted=False, buffersize=None):
+def rightjoin(left, right, key=None, missing=None, presorted=False, buffersize=None, tempdir=None, cache=True):
     """
     Perform a right outer join on the given tables. E.g.::
 
@@ -5367,21 +5367,21 @@ def rightjoin(left, right, key=None, missing=None, presorted=False, buffersize=N
         +------+----------+-----------+
 
     If `presorted` is True, it is assumed that the data are already sorted by
-    the given key, and the `buffersize` argument is ignored. Otherwise, the data 
-    are sorted, see also the discussion of the `buffersize` argument under the 
+    the given key, and the `buffersize`, `tempdir` and `cache` arguments are ignored. Otherwise, the data 
+    are sorted, see also the discussion of the `buffersize`, `tempdir` and `cache` arguments under the 
     :func:`sort` function.
     
     """
     
     if key is None:
         return ImplicitJoinView(left, right, presorted=presorted, leftouter=False, 
-                               rightouter=True, missing=missing, buffersize=buffersize)
+                               rightouter=True, missing=missing, buffersize=buffersize, tempdir=tempdir, cache=cache)
     else:
         return JoinView(left, right, key, presorted=presorted, leftouter=False, 
-                        rightouter=True, missing=missing, buffersize=buffersize)
+                        rightouter=True, missing=missing, buffersize=buffersize, tempdir=tempdir, cache=cache)
     
     
-def outerjoin(left, right, key=None, missing=None, presorted=False, buffersize=None):
+def outerjoin(left, right, key=None, missing=None, presorted=False, buffersize=None, tempdir=None, cache=True):
     """
     Perform a full outer join on the given tables. E.g.::
 
@@ -5423,18 +5423,18 @@ def outerjoin(left, right, key=None, missing=None, presorted=False, buffersize=N
         +------+----------+-----------+
 
     If `presorted` is True, it is assumed that the data are already sorted by
-    the given key, and the `buffersize` argument is ignored. Otherwise, the data 
-    are sorted, see also the discussion of the `buffersize` argument under the 
+    the given key, and the `buffersize`, `tempdir` and `cache` arguments are ignored. Otherwise, the data 
+    are sorted, see also the discussion of the `buffersize`, `tempdir` and `cache` arguments under the 
     :func:`sort` function.
     
     """
 
     if key is None:
         return ImplicitJoinView(left, right, presorted=presorted, leftouter=True, 
-                               rightouter=True, missing=missing, buffersize=buffersize)
+                               rightouter=True, missing=missing, buffersize=buffersize, tempdir=tempdir, cache=cache)
     else:
         return JoinView(left, right, key, presorted=presorted, leftouter=True, 
-                        rightouter=True, missing=missing, buffersize=buffersize)
+                        rightouter=True, missing=missing, buffersize=buffersize, tempdir=tempdir, cache=cache)
     
     
 def iterjoin(left, right, key, leftouter=False, rightouter=False, missing=None):
@@ -5550,7 +5550,7 @@ def iterjoin(left, right, key, leftouter=False, rightouter=False, missing=None):
             
         
 def iterimplicitjoin(left, right, presorted=False, leftouter=False, 
-                    rightouter=False, missing=None, buffersize=None):
+                    rightouter=False, missing=None, buffersize=None, tempdir=None, cache=True):
     # determine key field or fields
     lflds = header(left)
     rflds = header(right)
@@ -5564,8 +5564,8 @@ def iterimplicitjoin(left, right, presorted=False, leftouter=False,
     if not presorted:
         # this is not optimal, have to sort each time, because key is determined
         # dynamically from the data
-        left = sort(left, key, buffersize=buffersize)
-        right = sort(right, key, buffersize=buffersize)
+        left = sort(left, key, buffersize=buffersize, tempdir=tempdir, cache=cache)
+        right = sort(right, key, buffersize=buffersize, tempdir=tempdir, cache=cache)
     # from here on it's the same as a normal join
     return iterjoin(left, right, key, leftouter=leftouter, rightouter=rightouter,
                     missing=missing)
@@ -5646,7 +5646,7 @@ def itercrossjoin(sources):
         yield tuple(outrow)
         
         
-def antijoin(left, right, key=None, presorted=False, buffersize=None):
+def antijoin(left, right, key=None, presorted=False, buffersize=None, tempdir=None, cache=True):
     """
     Return rows from the `left` table where the key value does not occur in the
     `right` table. E.g.::
@@ -5691,8 +5691,8 @@ def antijoin(left, right, key=None, presorted=False, buffersize=None):
         +------+----------+
     
     If `presorted` is True, it is assumed that the data are already sorted by
-    the given key, and the `buffersize` argument is ignored. Otherwise, the data 
-    are sorted, see also the discussion of the `buffersize` argument under the 
+    the given key, and the `buffersize`, `tempdir` and `cache` arguments are ignored. Otherwise, the data 
+    are sorted, see also the discussion of the `buffersize`, `tempdir` and `cache` arguments under the 
     :func:`sort` function.
     
     """
@@ -5705,13 +5705,13 @@ def antijoin(left, right, key=None, presorted=False, buffersize=None):
 
 class AntiJoinView(RowContainer):
     
-    def __init__(self, left, right, key, presorted=False, buffersize=None):
+    def __init__(self, left, right, key, presorted=False, buffersize=None, tempdir=None, cache=True):
         if presorted:
             self.left = left
             self.right = right
         else:
-            self.left = sort(left, key, buffersize=buffersize)
-            self.right = sort(right, key, buffersize=buffersize)
+            self.left = sort(left, key, buffersize=buffersize, tempdir=tempdir, cache=cache)
+            self.right = sort(right, key, buffersize=buffersize, tempdir=tempdir, cache=cache)
             # TODO what if someone sets self.key to something else after __init__?
             # (sort will be incorrect - maybe need to protect key with property setter?)
         self.key = key
@@ -5785,7 +5785,7 @@ def iterantijoin(left, right, key):
         
 class ImplicitAntiJoinView(RowContainer):
     
-    def __init__(self, left, right, presorted=False, buffersize=None):
+    def __init__(self, left, right, presorted=False, buffersize=None, tempdir=None, cache=True):
         self.left = left
         self.right = right
         self.presorted = presorted
@@ -5802,7 +5802,7 @@ class ImplicitAntiJoinView(RowContainer):
             raise Uncacheable(e)
 
     
-def iterimplicitantijoin(left, right, presorted=False, buffersize=None):
+def iterimplicitantijoin(left, right, presorted=False, buffersize=None, tempdir=None, cache=True):
     # determine key field or fields
     lflds = header(left)
     rflds = header(right)
@@ -5816,14 +5816,14 @@ def iterimplicitantijoin(left, right, presorted=False, buffersize=None):
     if not presorted:
         # this is not optimal, have to sort each time, because key is determined
         # dynamically from the data
-        left = sort(left, key, buffersize=buffersize)
-        right = sort(right, key, buffersize=buffersize)
+        left = sort(left, key, buffersize=buffersize, tempdir=tempdir, cache=cache)
+        right = sort(right, key, buffersize=buffersize, tempdir=tempdir, cache=cache)
     # from here on it's the same as a normal antijoin
     return iterantijoin(left, right, key)
 
 
 def rangefacet(table, field, width, minv=None, maxv=None, 
-               presorted=False, buffersize=None):
+               presorted=False, buffersize=None, tempdir=None, cache=True):
     """
     Return a dictionary mapping ranges to tables. E.g.::
     
@@ -5944,7 +5944,7 @@ def itertranspose(source):
         yield tuple(row[i] for row in its[i])
         
 
-def intersection(a, b, presorted=False, buffersize=None):
+def intersection(a, b, presorted=False, buffersize=None, tempdir=None, cache=True):
     """
     Return rows in `a` that are also in `b`. E.g.::
     
@@ -5986,8 +5986,8 @@ def intersection(a, b, presorted=False, buffersize=None):
         +-------+-------+-------+
 
     If `presorted` is True, it is assumed that the data are already sorted by
-    the given key, and the `buffersize` argument is ignored. Otherwise, the data 
-    are sorted, see also the discussion of the `buffersize` argument under the 
+    the given key, and the `buffersize`, `tempdir` and `cache` arguments are ignored. Otherwise, the data 
+    are sorted, see also the discussion of the `buffersize`, `tempdir` and `cache` arguments under the 
     :func:`sort` function.
     
     """
@@ -5997,13 +5997,13 @@ def intersection(a, b, presorted=False, buffersize=None):
 
 class IntersectionView(RowContainer):
     
-    def __init__(self, a, b, presorted=False, buffersize=None):
+    def __init__(self, a, b, presorted=False, buffersize=None, tempdir=None, cache=True):
         if presorted:
             self.a = a
             self.b = b
         else:
-            self.a = sort(a, buffersize=buffersize)
-            self.b = sort(b, buffersize=buffersize)
+            self.a = sort(a, buffersize=buffersize, tempdir=tempdir, cache=cache)
+            self.b = sort(b, buffersize=buffersize, tempdir=tempdir, cache=cache)
             
     def __iter__(self):
         return iterintersection(self.a, self.b)
@@ -6037,7 +6037,8 @@ def iterintersection(a, b):
         pass
     
     
-def pivot(table, f1, f2, f3, aggfun, presorted=False, buffersize=None, missing=None):
+def pivot(table, f1, f2, f3, aggfun, missing=None, 
+          presorted=False, buffersize=None, tempdir=None, cache=True):
     """
     Construct a pivot table. E.g.::
 
@@ -6101,18 +6102,19 @@ def pivot(table, f1, f2, f3, aggfun, presorted=False, buffersize=None, missing=N
 
     """
     
-    return PivotView(table, f1, f2, f3, aggfun,
-                     presorted=presorted, buffersize=buffersize, missing=missing)
+    return PivotView(table, f1, f2, f3, aggfun, missing=missing, 
+                     presorted=presorted, buffersize=buffersize, tempdir=tempdir,
+                     cache=cache)
 
 
 class PivotView(RowContainer):
     
-    def __init__(self, source, f1, f2, f3, aggfun, presorted=False, buffersize=None,
-                 missing=None):
+    def __init__(self, source, f1, f2, f3, aggfun, missing=None, 
+                 presorted=False, buffersize=None, tempdir=None, cache=True):
         if presorted:
             self.source = source
         else:
-            self.source = sort(source, key=(f1, f2), buffersize=buffersize)
+            self.source = sort(source, key=(f1, f2), buffersize=buffersize, tempdir=tempdir, cache=cache)
         self.f1, self.f2, self.f3 = f1, f2, f3
         self.aggfun = aggfun
         self.missing = missing
@@ -6931,12 +6933,12 @@ def mergesort(*tables, **kwargs):
 class MergeSortView(RowContainer):
     
     def __init__(self, tables, key=None, reverse=False, presorted=False, 
-                 missing=None, header=None, buffersize=None):
+                 missing=None, header=None, buffersize=None, tempdir=None, cache=True):
         self.key = key
         if presorted:
             self.tables = tables
         else:
-            self.tables = [sort(t, key=key, reverse=reverse, buffersize=buffersize) for t in tables]
+            self.tables = [sort(t, key=key, reverse=reverse, buffersize=buffersize, tempdir=tempdir, cache=cache) for t in tables]
         self.missing = missing
         self.header = header
         self.reverse = reverse
@@ -7236,7 +7238,7 @@ def iterunpackdict(table, field, keys, includeoriginal, samplesize, missing):
         yield tuple(outrow)
         
 
-def fold(table, key, f, value=None, presorted=False, buffersize=None):
+def fold(table, key, f, value=None, presorted=False, buffersize=None, tempdir=None, cache=True):
     """
     Reduce rows recursively via the Python standard :func:`reduce` function. E.g.::
 
@@ -7272,17 +7274,17 @@ def fold(table, key, f, value=None, presorted=False, buffersize=None):
     """
     
     return FoldView(table, key, f, value=value, presorted=presorted, 
-                    buffersize=buffersize)
+                    buffersize=buffersize, tempdir=tempdir, cache=cache)
     
 
 class FoldView(RowContainer):
     
     def __init__(self, table, key, f, value=None, presorted=False, 
-                 buffersize=None):
+                 buffersize=None, tempdir=None, cache=True):
         if presorted:
             self.table = table
         else:
-            self.table = sort(table, key, buffersize=buffersize)
+            self.table = sort(table, key, buffersize=buffersize, tempdir=tempdir, cache=cache)
         self.key = key
         self.f = f
         self.value = value
@@ -7529,7 +7531,7 @@ def iteraddcolumn(table, field, col, index, missing):
         
         
 def lookupjoin(left, right, key=None, missing=None, presorted=False, 
-               buffersize=None):
+               buffersize=None, tempdir=None, cache=True):
     """
     Perform a left join, but where the key is not unique in the right-hand
     table, arbitrarily choose the first row and ignore others. E.g.::
@@ -7583,16 +7585,16 @@ def lookupjoin(left, right, key=None, missing=None, presorted=False,
 
     if key is None:
         return ImplicitLookupJoinView(left, right, presorted=presorted, 
-                                      missing=missing, buffersize=buffersize)
+                                      missing=missing, buffersize=buffersize, tempdir=tempdir, cache=cache)
     else:
         return LookupJoinView(left, right, key, presorted=presorted, 
-                              missing=missing, buffersize=buffersize)
+                              missing=missing, buffersize=buffersize, tempdir=tempdir, cache=cache)
 
     
 class ImplicitLookupJoinView(RowContainer):
     
     def __init__(self, left, right, presorted=False, missing=None, 
-                 buffersize=None):
+                 buffersize=None, tempdir=None, cache=True):
         self.left = left
         self.right = right
         self.presorted = presorted
@@ -7616,13 +7618,13 @@ class ImplicitLookupJoinView(RowContainer):
 class LookupJoinView(RowContainer):
     
     def __init__(self, left, right, key, presorted=False, missing=None, 
-                 buffersize=None):
+                 buffersize=None, tempdir=None, cache=True):
         if presorted:
             self.left = left
             self.right = right
         else:
-            self.left = sort(left, key, buffersize=buffersize)
-            self.right = sort(right, key, buffersize=buffersize)
+            self.left = sort(left, key, buffersize=buffersize, tempdir=tempdir, cache=cache)
+            self.right = sort(right, key, buffersize=buffersize, tempdir=tempdir, cache=cache)
             # TODO what if someone sets self.key to something else after __init__?
             # (sort will be incorrect - maybe need to protect key with property setter?)
         self.key = key
@@ -7727,7 +7729,7 @@ def iterlookupjoin(left, right, key, missing=None):
             
         
 def iterimplicitlookupjoin(left, right, presorted=False, missing=None, 
-                           buffersize=None):
+                           buffersize=None, tempdir=None, cache=True):
     # determine key field or fields
     lflds = header(left)
     rflds = header(right)
@@ -7738,8 +7740,8 @@ def iterimplicitlookupjoin(left, right, presorted=False, missing=None,
     if not presorted:
         # this is not optimal, have to sort each time, because key is determined
         # dynamically from the data
-        left = sort(left, key, buffersize=buffersize)
-        right = sort(right, key, buffersize=buffersize)
+        left = sort(left, key, buffersize=buffersize, tempdir=tempdir, cache=cache)
+        right = sort(right, key, buffersize=buffersize, tempdir=tempdir, cache=cache)
     # from here on it's the same as a normal join
     return iterlookupjoin(left, right, key, missing=missing)
 
@@ -8357,7 +8359,7 @@ def itersimplemultirangeaggregate(table, keys, widths, aggregation, value,
 ################################################################################
 
     
-def unjoin(table, value, key=None, autoincrement=(1, 1), presorted=False, buffersize=None):
+def unjoin(table, value, key=None, autoincrement=(1, 1), presorted=False, buffersize=None, tempdir=None, cache=True):
     """
     Split a table into two tables by reversing an inner join.
     
@@ -8439,7 +8441,7 @@ def unjoin(table, value, key=None, autoincrement=(1, 1), presorted=False, buffer
         if presorted:
             tbl_sorted = table
         else:
-            tbl_sorted = sort(table, value, buffersize=buffersize)
+            tbl_sorted = sort(table, value, buffersize=buffersize, tempdir=tempdir, cache=cache)
         # on the left, return the original table but with the value field
         # replaced by an incrementing integer
         left = ConvertToIncrementingCounterView(tbl_sorted, value, autoincrement)
@@ -8494,7 +8496,7 @@ class EnumerateDistinctView(RowContainer):
             yield ((n * multiplier) + offset, v) 
         
 
-def rowgroupmap(table, key, mapper, fields=None, missing=None, presorted=False, buffersize=None):
+def rowgroupmap(table, key, mapper, fields=None, missing=None, presorted=False, buffersize=None, tempdir=None, cache=True):
     """
     Group rows under the given key then apply `mapper` to yield zero or more
     output rows for each input group of rows. 
@@ -8505,17 +8507,17 @@ def rowgroupmap(table, key, mapper, fields=None, missing=None, presorted=False, 
 
     return RowGroupMapView(table, key, mapper, fields=fields,
                            presorted=presorted, 
-                           buffersize=buffersize)
+                           buffersize=buffersize, tempdir=tempdir, cache=cache)
 
 
 class RowGroupMapView(RowContainer):
     
     def __init__(self, source, key, mapper, fields=None, 
-                 presorted=False, buffersize=None):
+                 presorted=False, buffersize=None, tempdir=None, cache=True):
         if presorted:
             self.source = source
         else:
-            self.source = sort(source, key, buffersize=buffersize)
+            self.source = sort(source, key, buffersize=buffersize, tempdir=tempdir, cache=cache)
         self.key = key
         self.fields = fields
         self.mapper = mapper
@@ -8539,7 +8541,7 @@ def iterrowgroupmap(source, key, mapper, fields):
             yield row
         
 
-def distinct(table, presorted=False, buffersize=None):
+def distinct(table, presorted=False, buffersize=None, tempdir=None, cache=True):
     """
     Return only distinct rows in the table. See also :func:`duplicates` and
     :func:`unique`.
@@ -8548,16 +8550,16 @@ def distinct(table, presorted=False, buffersize=None):
     
     """
     
-    return DistinctView(table, presorted=presorted, buffersize=buffersize)
+    return DistinctView(table, presorted=presorted, buffersize=buffersize, tempdir=tempdir, cache=cache)
 
 
 class DistinctView(RowContainer):
     
-    def __init__(self, table, presorted=False, buffersize=None):
+    def __init__(self, table, presorted=False, buffersize=None, tempdir=None, cache=True):
         if presorted:
             self.table = table
         else:
-            self.table = sort(table, buffersize=buffersize)
+            self.table = sort(table, buffersize=buffersize, tempdir=tempdir, cache=cache)
         
     def __iter__(self):
         it = iter(self.table)
