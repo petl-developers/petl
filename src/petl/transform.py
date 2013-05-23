@@ -5840,7 +5840,7 @@ def iterpivot(source, f1, f2, f3, aggfun, missing):
         yield tuple(outrow) 
     
     
-def hashjoin(left, right, key=None):
+def hashjoin(left, right, key=None, cache=True):
     """
     Alternative implementation of :func:`join`, where the join is executed
     by constructing an in-memory lookup for the right hand table, then iterating over rows 
@@ -5850,13 +5850,18 @@ def hashjoin(left, right, key=None):
     and the left table is large.
     
     .. versionadded:: 0.5
+    
+    .. versionchanged:: 0.16
+    
+    Added support for caching data from right hand table (only available when
+    `key` is given).
 
     """
     
     if key is None:
         return ImplicitHashJoinView(left, right)
     else:
-        return HashJoinView(left, right, key)
+        return HashJoinView(left, right, key, cache=cache)
 
 
 class ImplicitHashJoinView(RowContainer):
@@ -5871,16 +5876,20 @@ class ImplicitHashJoinView(RowContainer):
 
 class HashJoinView(RowContainer):
     
-    def __init__(self, left, right, key):
+    def __init__(self, left, right, key, cache=True):
         self.left = left
         self.right = right
         self.key = key
+        self.cache = True
+        self.rlookup = None
         
     def __iter__(self):
-        return iterhashjoin(self.left, self.right, self.key)
+        if not self.cache or self.rlookup is None:
+            self.rlookup = lookup(self.right, self.key)
+        return iterhashjoin(self.left, self.right, self.key, self.rlookup)
     
 
-def iterhashjoin(left, right, key):
+def iterhashjoin(left, right, key, rlookup):
     lit = iter(left)
     rit = iter(right)
 
@@ -5914,7 +5923,6 @@ def iterhashjoin(left, right, key):
             outrow.extend(rgetv(rrow))
             yield tuple(outrow)
 
-    rlookup = lookup(right, key)
     for lrow in lit:
         k = lgetk(lrow)
         if k in rlookup:
@@ -5934,11 +5942,12 @@ def iterimplicithashjoin(left, right):
     assert len(key) > 0, 'no fields in common'
     if len(key) == 1:
         key = key[0] # deal with singletons
+    rlookup = lookup(right, key)
     # from here on it's the same as a normal join
-    return iterhashjoin(left, right, key)
+    return iterhashjoin(left, right, key, rlookup)
 
 
-def hashleftjoin(left, right, key=None, missing=None):
+def hashleftjoin(left, right, key=None, missing=None, cache=True):
     """
     Alternative implementation of :func:`leftjoin`, where the join is executed
     by constructing an in-memory lookup for the right hand table, then iterating over rows 
@@ -5949,12 +5958,17 @@ def hashleftjoin(left, right, key=None, missing=None):
     
     .. versionadded:: 0.5
 
+    .. versionchanged:: 0.16
+    
+    Added support for caching data from right hand table (only available when
+    `key` is given).
+
     """
 
     if key is None:
         return ImplicitHashLeftJoinView(left, right, missing=missing)
     else:
-        return HashLeftJoinView(left, right, key, missing=missing)
+        return HashLeftJoinView(left, right, key, missing=missing, cache=cache)
 
 
 class ImplicitHashLeftJoinView(RowContainer):
@@ -5970,17 +5984,21 @@ class ImplicitHashLeftJoinView(RowContainer):
 
 class HashLeftJoinView(RowContainer):
     
-    def __init__(self, left, right, key, missing=None):
+    def __init__(self, left, right, key, missing=None, cache=True):
         self.left = left
         self.right = right
         self.key = key
         self.missing = missing
+        self.cache = cache
+        self.rlookup = None
         
     def __iter__(self):
-        return iterhashleftjoin(self.left, self.right, self.key, self.missing)
+        if not self.cache or self.rlookup is None:
+            self.rlookup = lookup(self.right, self.key)
+        return iterhashleftjoin(self.left, self.right, self.key, self.missing, self.rlookup)
     
 
-def iterhashleftjoin(left, right, key, missing):
+def iterhashleftjoin(left, right, key, missing, rlookup):
     lit = iter(left)
     rit = iter(right)
 
@@ -6014,7 +6032,6 @@ def iterhashleftjoin(left, right, key, missing):
             outrow.extend(rgetv(rrow))
             yield tuple(outrow)
 
-    rlookup = lookup(right, key)
     for lrow in lit:
         k = lgetk(lrow)
         if k in rlookup:
@@ -6039,11 +6056,12 @@ def iterimplicithashleftjoin(left, right, missing):
     assert len(key) > 0, 'no fields in common'
     if len(key) == 1:
         key = key[0] # deal with singletons
+    rlookup = lookup(right, key)
     # from here on it's the same as a normal join
-    return iterhashleftjoin(left, right, key, missing)
+    return iterhashleftjoin(left, right, key, missing, rlookup)
 
 
-def hashrightjoin(left, right, key=None, missing=None):
+def hashrightjoin(left, right, key=None, missing=None, cache=True):
     """
     Alternative implementation of :func:`rightjoin`, where the join is executed
     by constructing an in-memory lookup for the left hand table, then iterating over rows 
@@ -6054,12 +6072,17 @@ def hashrightjoin(left, right, key=None, missing=None):
     
     .. versionadded:: 0.5
 
+    .. versionchanged:: 0.16
+    
+    Added support for caching data from left hand table (only available when
+    `key` is given).
+
     """
 
     if key is None:
-        return ImplicitHashRightJoinView(left, right)
+        return ImplicitHashRightJoinView(left, right, missing=missing)
     else:
-        return HashRightJoinView(left, right, key)
+        return HashRightJoinView(left, right, key, missing=missing, cache=cache)
 
 
 class ImplicitHashRightJoinView(RowContainer):
@@ -6075,17 +6098,21 @@ class ImplicitHashRightJoinView(RowContainer):
 
 class HashRightJoinView(RowContainer):
     
-    def __init__(self, left, right, key, missing=None):
+    def __init__(self, left, right, key, missing=None, cache=True):
         self.left = left
         self.right = right
         self.key = key
         self.missing = missing
+        self.cache = cache
+        self.llookup = None
         
     def __iter__(self):
-        return iterhashrightjoin(self.left, self.right, self.key, self.missing)
+        if not self.cache or self.llookup is None:
+            self.llookup = lookup(self.left, self.key)
+        return iterhashrightjoin(self.left, self.right, self.key, self.missing, self.llookup)
     
 
-def iterhashrightjoin(left, right, key, missing):
+def iterhashrightjoin(left, right, key, missing, llookup):
     lit = iter(left)
     rit = iter(right)
 
@@ -6119,7 +6146,6 @@ def iterhashrightjoin(left, right, key, missing):
             outrow.extend(rgetv(rrow))
             yield tuple(outrow)
 
-    llookup = lookup(left, key)
     for rrow in rit:
         k = rgetk(rrow)
         if k in llookup:
@@ -6148,8 +6174,9 @@ def iterimplicithashrightjoin(left, right, missing):
     assert len(key) > 0, 'no fields in common'
     if len(key) == 1:
         key = key[0] # deal with singletons
+    llookup = lookup(left, key)
     # from here on it's the same as a normal join
-    return iterhashrightjoin(left, right, key, missing)
+    return iterhashrightjoin(left, right, key, missing, llookup)
 
 
 def hashantijoin(left, right, key=None):
