@@ -10,7 +10,7 @@ git push
 git tag -a v$version -m v$version
 git push --tags
 # update pypi
-python setup.py sdist upload
+python setup.py register sdist upload
 # increment version and add -SNAPSHOT in src/petl/__init__.py 
 emacs src/petl/__init__.py
 # git commit and push
