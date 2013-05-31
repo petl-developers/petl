@@ -3,8 +3,8 @@ The `petl` module.
 
 """
 
-
-VERSION = '0.16.1'
+#0.16.1
+VERSION = '0.17-SNAPSHOT'
 
 
 from petl.util import header, fieldnames, data, records, rowcount, look, see, \
