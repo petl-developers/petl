@@ -734,38 +734,40 @@ class XmlView(RowContainer):
             self.missing = None
         
     def __iter__(self):
-        tree = ElementTree.parse(self.source.open_())
-        if not hasattr(tree, 'iterfind'):
-            tree.iterfind = tree.getiterator
-        
-        if self.vmatch is not None:
-            # simple case, all value paths are the same
-            for rowelm in tree.iterfind(self.rmatch):
-                if self.attr is None:
-                    getv = attrgetter('text')
-                else:
-                    getv = lambda e: e.get(self.attr)
-                yield tuple(getv(velm) for velm in rowelm.findall(self.vmatch))
+        with self.source.open_() as f:
 
-        else:
-            # difficult case, deal with different paths for each field
-            fields = tuple(self.vdict.keys())
-            yield fields
-            vmatches = dict()
-            vgetters = dict()
-            for f in fields:
-                vmatch = self.vdict[f]
-                if isinstance(vmatch, basestring):
-                    # match element path
-                    vmatches[f] = vmatch
-                    vgetters[f] = lambda v: tuple(e.text for e in v) if len(v) > 1 else v[0].text if len(v) == 1 else self.missing
-                else:
-                    # match element path and attribute name
-                    vmatches[f] = vmatch[0]
-                    attr = vmatch[1]
-                    vgetters[f] = lambda v: tuple(e.get(attr) for e in v) if len(v) > 1 else v[0].get(attr) if len(v) == 1 else self.missing
-            for rowelm in tree.iterfind(self.rmatch):
-                yield tuple(vgetters[f](rowelm.findall(vmatches[f])) for f in fields)
+            tree = ElementTree.parse(f)
+            if not hasattr(tree, 'iterfind'):
+                tree.iterfind = tree.getiterator
+
+            if self.vmatch is not None:
+                # simple case, all value paths are the same
+                for rowelm in tree.iterfind(self.rmatch):
+                    if self.attr is None:
+                        getv = attrgetter('text')
+                    else:
+                        getv = lambda e: e.get(self.attr)
+                    yield tuple(getv(velm) for velm in rowelm.findall(self.vmatch))
+
+            else:
+                # difficult case, deal with different paths for each field
+                fields = tuple(self.vdict.keys())
+                yield fields
+                vmatches = dict()
+                vgetters = dict()
+                for f in fields:
+                    vmatch = self.vdict[f]
+                    if isinstance(vmatch, basestring):
+                        # match element path
+                        vmatches[f] = vmatch
+                        vgetters[f] = lambda v: tuple(e.text for e in v) if len(v) > 1 else v[0].text if len(v) == 1 else self.missing
+                    else:
+                        # match element path and attribute name
+                        vmatches[f] = vmatch[0]
+                        attr = vmatch[1]
+                        vgetters[f] = lambda v: tuple(e.get(attr) for e in v) if len(v) > 1 else v[0].get(attr) if len(v) == 1 else self.missing
+                for rowelm in tree.iterfind(self.rmatch):
+                    yield tuple(vgetters[f](rowelm.findall(vmatches[f])) for f in fields)
             
                     
 def fromjson(source, *args, **kwargs):

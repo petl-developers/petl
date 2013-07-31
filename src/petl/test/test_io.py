@@ -16,7 +16,7 @@ import os
 from petl import fromcsv, frompickle, fromsqlite3, fromdb, \
                 tocsv, topickle, appendcsv, appendpickle, tosqlite3, appendsqlite3, \
                 todb, appenddb, fromtext, totext, fromxml, fromjson, fromdicts, \
-                tojson, fromtsv, totsv, appendtsv, tojsonarrays, tohtml
+                tojson, fromtsv, totsv, appendtsv, tojsonarrays, tohtml, nrows
 from ..testutils import ieq
 from ..io import FileSource, StringSource
 import petl.io
@@ -1074,3 +1074,10 @@ def test_StringSource():
     actual = ss.getvalue()
     expect = "foo,bar\r\na,1\r\nb,2\r\nc,2\r\na,1\r\nb,2\r\nc,2\r\n"
     eq_(expect, actual)
+
+
+def test_fromxml_url():
+
+    tbl = fromxml('http://feeds.bbci.co.uk/news/rss.xml', './/item', 'title')
+    assert nrows(tbl) > 0
+
