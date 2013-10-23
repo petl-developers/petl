@@ -6,13 +6,12 @@ TODO doc me
 import sys
 from nose.tools import eq_
 
-
-from petl import header, fieldnames, data, records, rowcount, look, see, itervalues, valuecounter, valuecounts, valueset,\
-                isunique, lookup, lookupone, recordlookup, recordlookupone, \
-                DuplicateKeyError, rowlengths, stats, typecounts, parsecounts, typeset, \
-                valuecount, parsenumber, stringpatterns, diffheaders, diffvalues, \
-                datetimeparser, values, columns, facetcolumns, isordered, \
-                rowgroupby, lookstr, namedtuples, dicts
+from petl import header, fieldnames, data, records, rowcount, look, see, itervalues, valuecounter, valuecounts, \
+    valueset, isunique, lookup, lookupone, dictlookup, dictlookupone, \
+    DuplicateKeyError, rowlengths, stats, typecounts, parsecounts, typeset, \
+    valuecount, parsenumber, stringpatterns, diffheaders, diffvalues, \
+    datetimeparser, values, columns, facetcolumns, isordered, \
+    rowgroupby, lookstr, namedtuples, dicts, recordlookup, recordlookupone
 from petl.testutils import ieq
 
 
@@ -469,12 +468,12 @@ def test_lookupone():
     eq_(expect, actual)
     
 
-def test_recordlookup():
-    """Test the recordlookup function."""
+def test_dictlookup():
+    """Test the dictlookup function."""
     
     t1 = (('foo', 'bar'), ('a', 1), ('b', 2), ('b', 3))
     
-    actual = recordlookup(t1, 'foo') 
+    actual = dictlookup(t1, 'foo')
     expect = {'a': [{'foo': 'a', 'bar': 1}], 'b': [{'foo': 'b', 'bar': 2}, {'foo': 'b', 'bar': 3}]}
     eq_(expect, actual)
     
@@ -485,7 +484,7 @@ def test_recordlookup():
           ('b', 3, False))
     
     # test compound key
-    actual = recordlookup(t2, ('foo', 'bar'))
+    actual = dictlookup(t2, ('foo', 'bar'))
     expect = {('a', 1): [{'foo': 'a', 'bar': 1, 'baz': True}], 
               ('b', 2): [{'foo': 'b', 'bar': 2, 'baz': False}], 
               ('b', 3): [{'foo': 'b', 'bar': 3, 'baz': True}, 
@@ -493,20 +492,20 @@ def test_recordlookup():
     eq_(expect, actual)
     
     
-def test_recordlookupone():
-    """Test the recordlookupone function."""
+def test_dictlookupone():
+    """Test the dictlookupone function."""
     
     t1 = (('foo', 'bar'), ('a', 1), ('b', 2), ('b', 3))
     
     try:
-        recordlookupone(t1, 'foo', strict=True)
+        dictlookupone(t1, 'foo', strict=True)
     except DuplicateKeyError:
         pass # expected
     else:
         assert False, 'expected error'
         
     # relax 
-    actual = recordlookupone(t1, 'foo', strict=False)
+    actual = dictlookupone(t1, 'foo', strict=False)
     expect = {'a': {'foo': 'a', 'bar': 1}, 'b': {'foo': 'b', 'bar': 2}} # first wins
     eq_(expect, actual)
 
@@ -517,12 +516,40 @@ def test_recordlookupone():
           ('b', 3, False))
     
     # test compound key
-    actual = recordlookupone(t2, ('foo', 'bar'), strict=False)
+    actual = dictlookupone(t2, ('foo', 'bar'), strict=False)
     expect = {('a', 1): {'foo': 'a', 'bar': 1, 'baz': True}, 
               ('b', 2): {'foo': 'b', 'bar': 2, 'baz': False}, 
               ('b', 3): {'foo': 'b', 'bar': 3, 'baz': True}} # first wins
     eq_(expect, actual)
     
+
+def test_recordlookup():
+    """Test the recordlookup function."""
+
+    t1 = (('foo', 'bar'), ('a', 1), ('b', 2), ('b', 3))
+
+    lkp = recordlookup(t1, 'foo')
+    eq_([1], [r.bar for r in lkp['a']])
+    eq_([2, 3], [r.bar for r in lkp['b']])
+
+
+def test_recordlookupone():
+    """Test the recordlookupone function."""
+
+    t1 = (('foo', 'bar'), ('a', 1), ('b', 2), ('b', 3))
+
+    try:
+        recordlookupone(t1, 'foo', strict=True)
+    except DuplicateKeyError:
+        pass # expected
+    else:
+        assert False, 'expected error'
+
+    # relax
+    lkp = recordlookupone(t1, 'foo', strict=False)
+    eq_(1, lkp['a'].bar)
+    eq_(2, lkp['b'].bar)  # first wins
+
 
 def test_rowlengths():
     """Test the rowlengths function."""

@@ -1209,7 +1209,7 @@ def isunique(table, field):
     return True
        
         
-# TODO handle short rows in lookup, lookupone, recordlookup, recordlookupone?
+# TODO handle short rows in lookup, lookupone, dictlookup, dictlookupone?
 
 
 def lookup(table, keyspec, valuespec=None, dictionary=None):
@@ -1472,9 +1472,34 @@ def dictlookup(table, keyspec, dictionary=None):
     return dictionary
     
     
-#backwards compatibility
-recordlookup = dictlookup
-        
+def recordlookup(table, keyspec, dictionary=None):
+    """
+    Load a dictionary with data from the given table, mapping to record objects.
+
+    .. versionadded:: 0.17
+
+    """
+
+    if dictionary is None:
+        dictionary = dict()
+
+    it = iter(table)
+    flds = it.next()
+    keyindices = asindices(flds, keyspec)
+    assert len(keyindices) > 0, 'no keyspec selected'
+    getkey = itemgetter(*keyindices)
+    for row in it:
+        k = getkey(row)
+        rec = Record(row, flds)
+        if k in dictionary:
+            # work properly with shelve
+            l = dictionary[k]
+            l.append(rec)
+            dictionary[k] = l
+        else:
+            dictionary[k] = [rec]
+    return dictionary
+
         
 def dictlookupone(table, keyspec, dictionary=None, strict=False):
     """
@@ -1575,10 +1600,33 @@ def dictlookupone(table, keyspec, dictionary=None, strict=False):
     return dictionary
 
 
-#backwards compatibility
-recordlookupone = dictlookupone
-    
-            
+def recordlookupone(table, keyspec, dictionary=None, strict=False):
+    """
+    Load a dictionary with data from the given table, mapping to record objects,
+    assuming there is at most one row for each key.
+
+    .. versionchanged:: 0.17
+
+    """
+
+    if dictionary is None:
+        dictionary = dict()
+
+    it = iter(table)
+    flds = it.next()
+    keyindices = asindices(flds, keyspec)
+    assert len(keyindices) > 0, 'no keyspec selected'
+    getkey = itemgetter(*keyindices)
+    for row in it:
+        k = getkey(row)
+        if strict and k in dictionary:
+            raise DuplicateKeyError
+        elif k not in dictionary:
+            d = Record(row, flds)
+            dictionary[k] = d
+    return dictionary
+
+
 class DuplicateKeyError(Exception):
     pass
 
