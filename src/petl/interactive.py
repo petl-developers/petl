@@ -60,15 +60,29 @@ class InteractiveWrapper(petl.fluent.FluentWrapper):
                 object.__setattr__(self, '_cachecomplete', True)
         
     def __repr__(self):
-        if representation is not None:
-            return repr(representation(self))
+        if InteractiveWrapper.repr_index_header:
+            indexed_header = ['%s|%s' % (i, f) for (i, f) in enumerate(petl.util.header(self))]
+            target = petl.transform.setheader(self, indexed_header)
         else:
-            return object.__repr__(self)
+            target = self
+        if representation is not None:
+            return repr(representation(target))
+        else:
+            return object.__repr__(target)
         
     def _repr_html_(self):
+        if InteractiveWrapper.repr_index_header:
+            indexed_header = ['%s|%s' % (i, f) for (i, f) in enumerate(petl.util.header(self))]
+            target = petl.transform.setheader(self, indexed_header)
+        else:
+            target = self
         buf = StringSource()
-        tohtml(self, buf)
+        tohtml(target, buf)
         return buf.getvalue()
+
+
+# set True to display field indices
+InteractiveWrapper.repr_index_header = False
 
 
 def wrap(f):
