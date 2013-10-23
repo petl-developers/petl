@@ -2549,7 +2549,7 @@ def recorddiff(a, b, buffersize=None, tempdir=None, cache=True):
     
     
 def capture(table, field, pattern, newfields=None, include_original=False, 
-            flags=0):
+            flags=0, fill=None, skip=False):
     """
     Add one or more new fields with values captured from an
     existing field searched via a regular expression. E.g.::
@@ -2599,31 +2599,75 @@ def capture(table, field, pattern, newfields=None, include_original=False,
         
     By default the field on which the capture is performed is omitted. It can
     be included using the `include_original` argument.
-    
+
+        >>> # using the fill argument
+        ... table4 = capture(table1, 'variable', 'Nonmatching_Pattern', ['treat', 'time'], fill=[str, int])
+        >>> look(table4)      
+        +------+---------+---------+--------+
+        | 'id' | 'value' | 'treat' | 'time' |
+        +======+=========+=========+========+
+        | '1'  | '12'    | ''      | 0      |
+        +------+---------+---------+--------+
+        | '2'  | '15'    | ''      | 0      |
+        +------+---------+---------+--------+
+        | '3'  | '18'    | ''      | 0      |
+        +------+---------+---------+--------+
+        | '4'  | '19'    | ''      | 0      |
+        +------+---------+---------+--------+
+
+    Instead of the default behavior of raising an exception, the `fill` argument
+    can be used to specify default values for rows that don't match. It should
+    be the same length as newfields and contain callables which return the 
+    default value.
+
+        >>> # using the skip argument
+        ... table5 = capture(table1, 'variable', 'Nonmatching_Pattern', ['treat', 'time'], skip=True)
+        >>> look(table5)      
+        +------+------------+---------+
+        | 'id' | 'variable' | 'value' |
+        +======+============+=========+
+        | '1'  | 'A1'       | '12'    |
+        +------+------------+---------+
+        | '2'  | 'A2'       | '15'    |
+        +------+------------+---------+
+        | '3'  | 'B1'       | '18'    |
+        +------+------------+---------+
+        | '4'  | 'C12'      | '19'    |
+        +------+------------+---------+
+
+    By default an exception will be raised if the pattern does not match. It can
+    silently return the original object instead by setting the `skip` argument to
+    True.
+
+
     See also :func:`split`, :func:`re.search`.
     
     """
     
-    return CaptureView(table, field, pattern, newfields, include_original, flags)
+    return CaptureView(table, field, pattern, newfields, include_original, flags, 
+            fill, skip)
 
 
 class CaptureView(RowContainer):
     
     def __init__(self, source, field, pattern, newfields=None, 
-                 include_original=False, flags=0):
+                 include_original=False, flags=0, fill=None, skip=False):
         self.source = source
         self.field = field
         self.pattern = pattern
         self.newfields = newfields
         self.include_original = include_original
         self.flags = flags
+        self.fill = fill
+        self.skip = skip
         
     def __iter__(self):
         return itercapture(self.source, self.field, self.pattern, self.newfields, 
-                           self.include_original, self.flags)
+                           self.include_original, self.flags, self.fill, self.skip)
 
 
-def itercapture(source, field, pattern, newfields, include_original, flags):
+def itercapture(source, field, pattern, newfields, include_original, flags, fill,
+    skip):
     it = iter(source)
     prog = re.compile(pattern, flags)
     
@@ -2635,14 +2679,8 @@ def itercapture(source, field, pattern, newfields, include_original, flags):
     else:
         raise Exception('field invalid: must be either field name or index')
     
-    # determine output fields
-    out_flds = list(flds)
-    if not include_original:
-        out_flds.remove(field)
-    if newfields:   
-        out_flds.extend(newfields)
-    yield tuple(out_flds)
-    
+    rows = []
+    has_matches = False
     # construct the output data
     for row in it:
         value = row[field_index]
@@ -2650,9 +2688,30 @@ def itercapture(source, field, pattern, newfields, include_original, flags):
             out_row = list(row)
         else:
             out_row = [v for i, v in enumerate(row) if i != field_index]
-        out_row.extend(prog.search(value).groups())
-        yield tuple(out_row)
-        
+        matches = prog.search(value)
+        if matches:
+            has_matches = True
+            out_row.extend(matches.groups())
+        elif skip:
+            out_row = list(row)
+        elif fill:
+            has_matches = True
+            out_row.extend([x() for x in fill])   
+        else:
+            raise Exception('No matches found for pattern')
+        rows.append(tuple(out_row))
+
+    # determine output fields
+    out_flds = list(flds)
+    if has_matches or not rows:
+        if not include_original:
+            out_flds.remove(field)
+        if newfields:   
+            out_flds.extend(newfields)
+    yield tuple(out_flds)
+
+    for row in rows:
+        yield tuple(row)
         
 def split(table, field, pattern, newfields=None, include_original=False,
           maxsplit=0, flags=0):

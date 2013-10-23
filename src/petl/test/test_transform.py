@@ -1676,8 +1676,33 @@ def test_capture():
                    ('4', '19', 'C', '12'))
     result = capture(table, 'variable', '(\\w)(\\d+)')
     ieq(expectation, result)
-    
-    
+
+    # what if we don't match a pattern and specify fill?
+    expectation = (('id', 'value', 'treat', 'time'),
+                   ('1', '12', '', 0),  
+                   ('2', '15', '', 0),
+                   ('3', '18', '', 0),
+                   ('4', '19', '', 0))
+    result = capture(table, 'variable', 'Nonmatching_Pattern', ('treat', 'time'),
+      fill=[str, int])
+    ieq(expectation, result)
+
+    # what if some rows match and we specify fill?
+    expectation = (('id', 'value', 'treat', 'time'),
+                   ('1', '12', 'A', '1'),  
+                   ('2', '15', 'A', '2'),
+                   ('3', '18', '', 0),
+                   ('4', '19', '', 0))
+    result = capture(table, 'variable', '(A)(\\d+)', ('treat', 'time'),
+      fill=[str, int])
+    ieq(expectation, result)
+
+    # what if we don't match a pattern and specify skip?
+    expectation = table
+    result = capture(table, 'variable', 'Nonmatching_Pattern', ('treat', 'time'),
+      skip=True)
+    ieq(expectation, result)
+
 def test_capture_empty():
     table = (('foo', 'bar'),)
     expect = (('foo', 'baz', 'qux'),)
