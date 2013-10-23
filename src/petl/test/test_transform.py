@@ -26,7 +26,7 @@ from petl import rename, fieldnames, cut, cat, convert, addfield, \
                 selectin, fold, addrownumbers, selectcontains, search, \
                 addcolumn, lookupjoin, hashlookupjoin, filldown, fillright, \
                 fillleft, multirangeaggregate, unjoin, coalesce, nrows 
-from petl.transform import Conflict
+from petl.transform import Conflict, TransformError
 
 
 def test_rename():
@@ -1683,6 +1683,43 @@ def test_capture_empty():
     expect = (('foo', 'baz', 'qux'),)
     actual = capture(table, 'bar', r'(\w)(\d)', ('baz', 'qux'))
     ieq(expect, actual)
+
+
+def test_capture_nonmatching():
+
+    table = (('id', 'variable', 'value'),
+             ('1', 'A1', '12'),
+             ('2', 'A2', '15'),
+             ('3', 'B1', '18'),
+             ('4', 'C12', '19'))
+
+    expectation = (('id', 'value', 'treat', 'time'),
+                   ('1', '12', 'A', '1'),
+                   ('2', '15', 'A', '2'),
+                   ('3', '18', 'B', '1'))
+
+    # default behaviour, raise exception
+    result = capture(table, 'variable', r'([A-B])(\d+)', ('treat', 'time'))
+    it = iter(result)
+    eq_(expectation[0], it.next())  # header
+    eq_(expectation[1], it.next())
+    eq_(expectation[2], it.next())
+    eq_(expectation[3], it.next())
+    try:
+        it.next()  # doesn't match
+    except TransformError as e:
+        pass  # expected
+    else:
+        assert False, 'expected exception'
+
+    # explicit fill
+    result = capture(table, 'variable', r'([A-B])(\d+)', newfields=('treat', 'time'), fill=['', 0])
+    it = iter(result)
+    eq_(expectation[0], it.next())  # header
+    eq_(expectation[1], it.next())
+    eq_(expectation[2], it.next())
+    eq_(expectation[3], it.next())
+    eq_(('4', '19', '', 0), it.next())
 
 
 def test_split():

@@ -2549,7 +2549,7 @@ def recorddiff(a, b, buffersize=None, tempdir=None, cache=True):
     
     
 def capture(table, field, pattern, newfields=None, include_original=False, 
-            flags=0):
+            flags=0, fill=None):
     """
     Add one or more new fields with values captured from an
     existing field searched via a regular expression. E.g.::
@@ -2604,26 +2604,31 @@ def capture(table, field, pattern, newfields=None, include_original=False,
     
     """
     
-    return CaptureView(table, field, pattern, newfields, include_original, flags)
+    return CaptureView(table, field, pattern,
+                       newfields=newfields,
+                       include_original=include_original,
+                       flags=flags,
+                       fill=fill)
 
 
 class CaptureView(RowContainer):
     
     def __init__(self, source, field, pattern, newfields=None, 
-                 include_original=False, flags=0):
+                 include_original=False, flags=0, fill=None):
         self.source = source
         self.field = field
         self.pattern = pattern
         self.newfields = newfields
         self.include_original = include_original
         self.flags = flags
+        self.fill = fill
         
     def __iter__(self):
         return itercapture(self.source, self.field, self.pattern, self.newfields, 
-                           self.include_original, self.flags)
+                           self.include_original, self.flags, self.fill)
 
 
-def itercapture(source, field, pattern, newfields, include_original, flags):
+def itercapture(source, field, pattern, newfields, include_original, flags, fill):
     it = iter(source)
     prog = re.compile(pattern, flags)
     
@@ -2650,7 +2655,14 @@ def itercapture(source, field, pattern, newfields, include_original, flags):
             out_row = list(row)
         else:
             out_row = [v for i, v in enumerate(row) if i != field_index]
-        out_row.extend(prog.search(value).groups())
+        match = prog.search(value)
+        if match is None:
+            if fill is not None:
+                out_row.extend(fill)
+            else:
+                raise TransformError('value %r did not match pattern %r' % (value, pattern))
+        else:
+            out_row.extend(match.groups())
         yield tuple(out_row)
         
         
@@ -8216,3 +8228,8 @@ def coalesce(*fields, **kwargs):
         return default
     return _coalesce
             
+
+class TransformError(Exception):
+    pass
+
+
