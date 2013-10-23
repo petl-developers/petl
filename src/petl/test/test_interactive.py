@@ -9,8 +9,8 @@ from nose.tools import eq_
 
 
 import petl
-from ..interactive import etl
-from ..testutils import ieq
+from petl.interactive import etl
+from petl.testutils import ieq
 
 
 def test_basics():

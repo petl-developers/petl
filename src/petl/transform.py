@@ -13,13 +13,11 @@ import re
 from math import ceil
 
 
-from .util import asindices, rowgetter, asdict,\
+from petl.util import asindices, rowgetter, asdict,\
     expr, valueset, header, data, limits, itervalues, parsenumber, lookup,\
     values, shortlistmergesorted, heapqmergesorted, hybridrows, rowgroupby,\
-    iterpeek, count, Counter, OrderedDict
-from .util import RowContainer, SortableItem, sortable_itemgetter
-from petl.util import FieldSelectionError, rowgroupbybin, rowitemgetter
-#import os
+    iterpeek, count, Counter, OrderedDict, RowContainer, SortableItem, sortable_itemgetter, FieldSelectionError, \
+    rowgroupbybin, rowitemgetter
 
 
 import logging

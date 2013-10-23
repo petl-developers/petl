@@ -13,7 +13,7 @@ from petl import header, fieldnames, data, records, rowcount, look, see, iterval
                 valuecount, parsenumber, stringpatterns, diffheaders, diffvalues, \
                 datetimeparser, values, columns, facetcolumns, isordered, \
                 rowgroupby, lookstr, namedtuples, dicts
-from ..testutils import ieq
+from petl.testutils import ieq
 
 
 def test_header():

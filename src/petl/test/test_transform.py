@@ -8,8 +8,8 @@ from nose.tools import eq_
 import operator
 
 
-from ..util import OrderedDict
-from ..testutils import ieq
+from petl.util import OrderedDict
+from petl.testutils import ieq
 from petl import rename, fieldnames, cut, cat, convert, addfield, \
                 rowslice, head, tail, sort, melt, recast, duplicates, \
                 conflicts, mergeduplicates, select, complement, diff, capture, \
@@ -26,7 +26,7 @@ from petl import rename, fieldnames, cut, cat, convert, addfield, \
                 selectin, fold, addrownumbers, selectcontains, search, \
                 addcolumn, lookupjoin, hashlookupjoin, filldown, fillright, \
                 fillleft, multirangeaggregate, unjoin, coalesce, nrows 
-from ..transform import Conflict
+from petl.transform import Conflict
 
 
 def test_rename():

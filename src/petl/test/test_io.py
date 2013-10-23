@@ -3,6 +3,7 @@ Tests for the petl.io module.
 
 """
 
+
 from tempfile import NamedTemporaryFile
 import csv
 import cPickle as pickle
@@ -17,8 +18,8 @@ from petl import fromcsv, frompickle, fromsqlite3, fromdb, \
                 tocsv, topickle, appendcsv, appendpickle, tosqlite3, appendsqlite3, \
                 todb, appenddb, fromtext, totext, fromxml, fromjson, fromdicts, \
                 tojson, fromtsv, totsv, appendtsv, tojsonarrays, tohtml, nrows
-from ..testutils import ieq
-from ..io import FileSource, StringSource
+from petl.testutils import ieq
+from petl.io import FileSource, StringSource, PopenSource
 import petl.io
 
 
@@ -1080,4 +1081,12 @@ def test_fromxml_url():
 
     tbl = fromxml('http://feeds.bbci.co.uk/news/rss.xml', './/item', 'title')
     assert nrows(tbl) > 0
+
+
+def test_PopenSource():
+
+    expect = (('foo', 'bar'),
+              ('a', '1'))
+    actual = fromcsv(PopenSource(r'echo -e foo bar\\na 1', shell=True, executable='/bin/bash'), delimiter=' ')
+    ieq(expect, actual)
 

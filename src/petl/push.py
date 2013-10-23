@@ -11,7 +11,7 @@ from itertools import islice
 from collections import defaultdict
 import cPickle as pickle
 
-from .util import asindices, HybridRow, shortlistmergesorted
+from petl.util import asindices, HybridRow, shortlistmergesorted
 import petl.transform
 
 

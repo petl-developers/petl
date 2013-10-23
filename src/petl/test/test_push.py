@@ -5,10 +5,10 @@ Tests for the push module.
 
 from tempfile import NamedTemporaryFile
 
-from ..io import fromcsv, fromtsv, frompickle
-from ..testutils import ieq
+from petl.io import fromcsv, fromtsv, frompickle
+from petl.testutils import ieq
 
-from ..push import tocsv, totsv, topickle, partition, sort, duplicates, \
+from petl.push import tocsv, totsv, topickle, partition, sort, duplicates, \
     unique, diff
 
 

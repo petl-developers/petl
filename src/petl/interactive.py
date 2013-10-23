@@ -7,7 +7,7 @@ session.
 
 from itertools import islice
 import sys
-from .util import valueset, RowContainer
+from petl.util import valueset, RowContainer
 import petl.fluent
 from petl.io import tohtml, StringSource
 import logging

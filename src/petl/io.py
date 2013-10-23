@@ -19,9 +19,10 @@ import urllib2
 from contextlib import contextmanager
 import cStringIO
 import logging
+import subprocess
 
 
-from .util import data, header, asdict, dicts, RowContainer
+from petl.util import data, header, asdict, dicts, RowContainer
 
 
 logger = logging.getLogger(__name__)
@@ -147,6 +148,22 @@ class StringSource(object):
     def getvalue(self):
         if self.buffer:
             return self.buffer.getvalue()
+
+
+class PopenSource(object):
+
+    def __init__(self, *args, **kwargs):
+        self.args = args
+        self.kwargs = kwargs
+
+    @contextmanager
+    def open_(self, *args):
+        self.kwargs['stdout'] = subprocess.PIPE
+        proc = subprocess.Popen(*self.args, **self.kwargs)
+        try:
+            yield proc.stdout
+        finally:
+            pass
 
 
 def _read_source_from_arg(source):

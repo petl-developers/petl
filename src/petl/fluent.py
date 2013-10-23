@@ -8,7 +8,7 @@ usage.
 
 
 import sys
-from .util import valueset, RowContainer
+from petl.util import valueset, RowContainer
 
 
 petl = sys.modules['petl']

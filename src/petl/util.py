@@ -25,7 +25,7 @@ info = logger.info
 debug = logger.debug
 
 
-from .base import IterContainer
+from petl.base import IterContainer
 
 
 # Python 2.6 compatibility
