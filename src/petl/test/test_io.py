@@ -867,6 +867,41 @@ def test_tohtml():
         eq_(expect, actual)
     
     
+def test_tohtml_caption():
+
+    # exercise function
+    table = (('foo', 'bar'),
+             ('a', 1),
+             ('b', (1, 2)))
+    f = NamedTemporaryFile(delete=False)
+    tohtml(table, f.name, caption='my table')
+
+    # check what it did
+    with open(f.name, 'rb') as o:
+        actual = o.read()
+        expect = """<table>
+<caption>my table</caption>
+<thead>
+<tr>
+<th>foo</th>
+<th>bar</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>'a'</td>
+<td style='text-align: right'>1</td>
+</tr>
+<tr>
+<td>'b'</td>
+<td>(1, 2)</td>
+</tr>
+</tbody>
+</table>
+"""
+        eq_(expect, actual)
+
+
 def test_tojson():
     
     # exercise function

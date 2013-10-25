@@ -1679,7 +1679,7 @@ def totext(table, source=None, template=None, prologue=None, epilogue=None):
             f.write(epilogue)
             
     
-def tohtml(table, source=None):
+def tohtml(table, source=None, caption=None):
     """
     Write the table as simple HTML to a file. E.g.::
 
@@ -1705,6 +1705,8 @@ def tohtml(table, source=None):
     with source.open_('wb') as f:
         it = iter(table)
         print >>f, '<table>'
+        if caption is not None:
+            print >>f, '<caption>%s</caption>' % caption
         flds = it.next()
         print >>f, '<thead>'
         print >>f, '<tr>'
