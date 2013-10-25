@@ -1699,6 +1699,8 @@ def tohtml(table, source=None, caption=None):
 
     .. versionadded:: 0.12
 
+    .. versionchanged:: 0.17.1 Added support for ``caption`` keyword argument to provide table caption in output
+
     """
     
     source = _write_source_from_arg(source)
