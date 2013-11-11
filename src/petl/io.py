@@ -20,6 +20,7 @@ from contextlib import contextmanager
 import cStringIO
 import logging
 import subprocess
+from itertools import chain
 
 
 from petl.util import data, header, asdict, dicts, RowContainer
@@ -494,28 +495,33 @@ class DbView(RowContainer):
 
 def _iter_dbapi_mkcurs(mkcurs, query, *args, **kwargs):
     cursor = mkcurs()
-    cursor.execute(query, *args, **kwargs)
-    fields = [d[0] for d in cursor.description]
-    yield tuple(fields)
-    for row in cursor:
-        yield row # don't wrap, return whatever the database engine returns
-    cursor.close()
+    try:
+        for row in _iter_dbapi_cursor(cursor, query, *args, **kwargs):
+            yield row
+    finally:
+        cursor.close()
 
 
 def _iter_dbapi_connection(connection, query, *args, **kwargs):
     cursor = connection.cursor()
-    cursor.execute(query, *args, **kwargs)
-    fields = [d[0] for d in cursor.description]
-    yield tuple(fields)
-    for row in cursor:
-        yield row # don't wrap, return whatever the database engine returns
-    cursor.close()
+    try:
+        for row in _iter_dbapi_cursor(cursor, query, *args, **kwargs):
+            yield row
+    finally:
+        cursor.close()
     
     
 def _iter_dbapi_cursor(cursor, query, *args, **kwargs):
     cursor.execute(query, *args, **kwargs)
+    # fetch one row before iterating, to force population of cursor.description which may be postponed if using
+    # server-side cursors
+    first_row = cursor.fetchone()
+    # fields should be available now
     fields = [d[0] for d in cursor.description]
     yield tuple(fields)
+    if first_row is None:
+        raise StopIteration
+    yield first_row
     for row in cursor:
         yield row # don't wrap, return whatever the database engine returns
     
@@ -1364,6 +1370,10 @@ def _todb(table, dbo, tablename, commit=True, truncate=False):
     elif _is_sqlalchemy_connection(dbo):
         debug('assuming %r is an instance of sqlalchemy.engine.base.Connection', dbo)
         _todb_sqlalchemy_connection(table, dbo, tablename, commit=commit, truncate=truncate)
+
+    elif callable(dbo):
+        debug('assuming %r is a function returning standard DB-API 2.0 cursor objects', dbo)
+        _todb_dbapi_mkcurs(table, dbo, tablename, commit=commit, truncate=truncate)
         
     # some other sort of duck...
     else:
@@ -1396,6 +1406,9 @@ def _todb_dbapi_connection(table, connection, tablename, commit=True, truncate=F
         truncatequery = 'DELETE FROM %s' % tablename
         debug('truncate the table via query %r', truncatequery)
         cursor.execute(truncatequery)
+        # just in case, close and resurrect cursor
+        cursor.close()
+        cursor = connection.cursor()
     
 #    insertquery = 'INSERT INTO %s VALUES (%s)' % (tablename, placeholders)
     insertcolnames = ', '.join(colnames)
@@ -1410,14 +1423,58 @@ def _todb_dbapi_connection(table, connection, tablename, commit=True, truncate=F
     if commit:
         debug('commit transaction')
         connection.commit()
-    
 
-def _todb_dbapi_cursor(table, cursor, tablename, commit=True, truncate=False):
-    
+
+def _todb_dbapi_mkcurs(table, mkcurs, tablename, commit=True, truncate=False):
     # sanitise table name
     tablename = _quote(tablename)
     debug('tablename: %r', tablename)
-    
+
+    # sanitise field names
+    it = iter(table)
+    fields = it.next()
+    fieldnames = map(str, fields)
+    colnames = [_quote(n) for n in fieldnames]
+    debug('column names: %r', colnames)
+
+    debug('obtain cursor and connection')
+    cursor = mkcurs()
+    # N.B., we depend on this optional DB-API 2.0 attribute being implemented
+    assert hasattr(cursor, 'connection'), 'could not obtain connection via cursor'
+    connection = cursor.connection
+
+    # determine paramstyle and build placeholders string
+    placeholders = _placeholders(connection, colnames)
+    debug('placeholders: %r', placeholders)
+
+    if truncate:
+        # TRUNCATE is not supported in some databases and causing locks with
+        # MySQL used via SQLAlchemy, fall back to DELETE FROM for now
+        truncatequery = 'DELETE FROM %s' % tablename
+        debug('truncate the table via query %r', truncatequery)
+        cursor.execute(truncatequery)
+        # N.B., may be server-side cursor, need to resurrect
+        cursor.close()
+        cursor = mkcurs()
+
+#    insertquery = 'INSERT INTO %s VALUES (%s)' % (tablename, placeholders)
+    insertcolnames = ', '.join(colnames)
+    insertquery = 'INSERT INTO %s (%s) VALUES (%s)' % (tablename, insertcolnames, placeholders)
+    debug('insert data via query %r' % insertquery)
+    cursor.executemany(insertquery, it)
+    cursor.close()
+
+    if commit:
+        debug('commit transaction')
+        connection.commit()
+
+
+def _todb_dbapi_cursor(table, cursor, tablename, commit=True, truncate=False):
+
+    # sanitise table name
+    tablename = _quote(tablename)
+    debug('tablename: %r', tablename)
+
     # sanitise field names
     it = iter(table)
     fields = it.next()
@@ -1433,14 +1490,14 @@ def _todb_dbapi_cursor(table, cursor, tablename, commit=True, truncate=False):
     # determine paramstyle and build placeholders string
     placeholders = _placeholders(connection, colnames)
     debug('placeholders: %r', placeholders)
-    
+
     if truncate:
         # TRUNCATE is not supported in some databases and causing locks with
         # MySQL used via SQLAlchemy, fall back to DELETE FROM for now
         truncatequery = 'DELETE FROM %s' % tablename
         debug('truncate the table via query %r', truncatequery)
         cursor.execute(truncatequery)
-    
+
 #    insertquery = 'INSERT INTO %s VALUES (%s)' % (tablename, placeholders)
     insertcolnames = ', '.join(colnames)
     insertquery = 'INSERT INTO %s (%s) VALUES (%s)' % (tablename, insertcolnames, placeholders)
@@ -1448,22 +1505,22 @@ def _todb_dbapi_cursor(table, cursor, tablename, commit=True, truncate=False):
     cursor.executemany(insertquery, it)
 
     # N.B., don't close the cursor, leave that to the application
-    
+
     if commit:
         debug('commit transaction')
         connection.commit()
-    
+
 
 def _todb_sqlalchemy_engine(table, engine, tablename, commit=True, truncate=False):
-    
-    _todb_sqlalchemy_connection(table, engine.contextual_connect(), tablename, 
+
+    _todb_sqlalchemy_connection(table, engine.contextual_connect(), tablename,
                                 commit=commit, truncate=truncate)
-    
+
 
 def _todb_sqlalchemy_connection(table, connection, tablename, commit=True, truncate=False):
-    
+
     debug('connection: %r', connection)
-    
+
     # sanitise table name
     tablename = _quote(tablename)
     debug('tablename: %r', tablename)

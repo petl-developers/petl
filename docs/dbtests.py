@@ -52,6 +52,47 @@ def exercise(dbo):
     print look(actual)
 
 
+def exercise_ss_cursor(setup_dbo, ss_dbo):
+    print '=' * len(repr(ss_dbo))
+    print repr(ss_dbo)
+    print '=' * len(repr(ss_dbo))
+    print
+
+    expect_empty = (('foo', 'bar'),)
+    expect = (('foo', 'bar'), ('a', 1), ('b', 1))
+    expect_appended = (('foo', 'bar'), ('a', 1), ('b', 1), ('a', 1), ('b', 1))
+    actual = fromdb(ss_dbo, 'SELECT * FROM test')
+
+    print 'verify empty to start with...'
+    ieq(expect_empty, actual)
+    print look(actual)
+
+    print 'write some data and verify...'
+    todb(expect, setup_dbo, 'test')
+    ieq(expect, actual)
+    print look(actual)
+
+    print 'append some data and verify...'
+    appenddb(expect, setup_dbo, 'test')
+    ieq(expect_appended, actual)
+    print look(actual)
+
+    print 'overwrite and verify...'
+    todb(expect, setup_dbo, 'test')
+    ieq(expect, actual)
+    print look(actual)
+
+    print 'cut, overwrite and verify'
+    todb(cut(expect, 'bar', 'foo'), setup_dbo, 'test')
+    ieq(expect, actual)
+    print look(actual)
+
+    print 'cut, append and verify'
+    appenddb(cut(expect, 'bar', 'foo'), setup_dbo, 'test')
+    ieq(expect_appended, actual)
+    print look(actual)
+
+
 def setup_mysql(dbapi_connection):
     # setup table
     cursor = dbapi_connection.cursor()
@@ -96,6 +137,9 @@ def exercise_mysql(host, user, passwd, db):
     exercise(sqlalchemy_session)
     sqlalchemy_session.close()
 
+    # exercise using a server-side cursor (can only be used for SELECT)
+    exercise_ss_cursor(dbapi_connection, lambda: dbapi_connection.cursor(MySQLdb.cursors.SSCursor))
+
 
 def setup_postgresql(dbapi_connection):
     # setup table
@@ -137,6 +181,9 @@ def exercise_postgresql(host, user, passwd, db):
     sqlalchemy_session = Session()
     exercise(sqlalchemy_session)
     sqlalchemy_session.close()
+
+    # exercise using a server-side cursor (can only be used for SELECT)
+    exercise_ss_cursor(dbapi_connection, lambda: dbapi_connection.cursor(name='arbitrary'))
     
 
 if __name__ == '__main__':

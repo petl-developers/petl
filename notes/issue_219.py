@@ -1,80 +1,86 @@
 # -*- coding: utf-8 -*-
 # <nbformat>3.0</nbformat>
 
+# <headingcell level=1>
+
+# Using server-side cursors with PostgreSQL and MySQL 
+
 # <codecell>
 
 # see http://pynash.org/2013/03/06/timing-and-profiling.html for setup of profiling magics
 
 # <codecell>
 
+import sys
+sys.path.insert(0, '../src')
 import petl; print petl.VERSION
 from petl.fluent import etl
 import psycopg2
-from collections import OrderedDict
+import MySQLdb
 
 # <codecell>
 
-tbl_dummy_data = etl().dummytable(1000000)
+tbl_dummy_data = etl().dummytable(100000)
 tbl_dummy_data.look()
 
 # <codecell>
 
-%memit -r 1 print tbl_dummy_data.nrows()
+%memit print tbl_dummy_data.nrows()
+
+# <headingcell level=2>
+
+# PostgreSQL
 
 # <codecell>
 
-connection = psycopg2.connect(dbname='petl', user='petl', password='petl', host='localhost')
+psql_connection = psycopg2.connect(host='localhost', dbname='petl', user='petl', password='petl')
 
 # <codecell>
 
-%memit -r 1 tbl_dummy_data.progress(100000).todb(connection, 'issue_219')
+cursor = psql_connection.cursor()
+cursor.execute('DROP TABLE IF EXISTS issue_219;')
+cursor.execute('CREATE TABLE issue_219 (foo INTEGER, bar TEXT, baz FLOAT);')
 
 # <codecell>
 
-%memit print etl.fromdb(connection, 'select * from issue_219').look()
+%memit -r1 tbl_dummy_data.progress(10000).todb(psql_connection, 'issue_219')
 
 # <codecell>
 
-# use server-side cursor to avoid loading whole table into memory
-cursor = connection.cursor(name='cursor1')
+# memory usage using default cursor
+%memit print etl.fromdb(psql_connection, 'select * from issue_219 order by foo').look(2)
 
 # <codecell>
 
-cursor.execute('select * from issue_219')
+# memory usage using server-side cursor
+%memit print etl.fromdb(lambda: psql_connection.cursor(name='server-side'), 'select * from issue_219 order by foo').look(2)
+
+# <headingcell level=2>
+
+# MySQL
 
 # <codecell>
 
-print cursor.description
+mysql_connection = MySQLdb.connect(host='127.0.0.1', db='petl', user='petl', passwd='petl')
 
 # <codecell>
 
-cursor.fetchone()
+cursor = mysql_connection.cursor()
+cursor.execute('SET SQL_MODE=ANSI_QUOTES')
+cursor.execute('DROP TABLE IF EXISTS issue_219;')
+cursor.execute('CREATE TABLE issue_219 (foo INTEGER, bar TEXT, baz FLOAT);')
 
 # <codecell>
 
-print cursor.description
+%memit -r1 tbl_dummy_data.progress(10000).todb(mysql_connection, 'issue_219')
 
 # <codecell>
 
-%memit print etl.fromdb(cursor, 'select * from issue_219').look()
+# memory usage with default cursor
+%memit print etl.fromdb(mysql_connection, 'select * from issue_219 order by foo').look(2)
 
 # <codecell>
 
-from collections import OrderedDict
-mappings = OrderedDict([('A', lambda r: r['foo'] * 2),
-                        ('B', lambda r: r['bar'][:5]),
-                        ('C', lambda r: r['foo'] * r['baz'])])
-tbl_transformed = (etl
-    .fromdb(connection, 'select * from issue_219')
-    .fieldmap(mappings)
-)
-tbl_transformed.look()
-
-# <codecell>
-
-%memit -r 1 tbl_transformed.progress(100000).todb(connection, 'issue_219_transformed')
-
-# <codecell>
-
-etl.fromdb(connection, 'select * from issue_219_transformed').look()
+# memory usage with server-side cursor
+%memit print etl.fromdb(lambda: mysql_connection.cursor(MySQLdb.cursors.SSCursor), 'select * from issue_219 order by foo').look(2)
 
