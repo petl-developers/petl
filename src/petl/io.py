@@ -417,7 +417,37 @@ def fromdb(dbo, query, *args, **kwargs):
         >>> look(table)
     
     N.B., each call to the function should return a new cursor.
-    
+
+    .. versionchanged:: 0.18
+
+    Added support for server-side cursors.
+
+    Note that the default behaviour of most database servers and clients is for the entire result set for each query to
+    be sent from the server to the client. If your query returns a large result set this can result in significant
+    memory usage at the client. Some databases support server-side cursors which provide a means for client libraries
+    to fetch result sets incrementally, reducing memory usage at the client.
+
+    To use a server-side cursor with a PostgreSQL database, e.g.::
+
+        >>> import psycopg2
+        >>> from petl import look, fromdb
+        >>> connection = psycopg2.connect("dbname=test user=postgres")
+        >>> table = fromdb(lambda: connection.cursor(name='arbitrary'), 'select * from test')
+        >>> look(table)
+
+    To use a server-side cursor with a MySQL database, e.g.::
+
+        >>> import MySQLdb
+        >>> from petl import look, fromdb
+        >>> connection = MySQLdb.connect(passwd="moonpie", db="thangs")
+        >>> table = fromdb(lambda: connection.cursor(MySQLdb.cursors.SSCursor), 'select * from test')
+        >>> look(table)
+
+    For more information on server-side cursors see the following links:
+
+        * http://initd.org/psycopg/docs/usage.html#server-side-cursors
+        * http://mysql-python.sourceforge.net/MySQLdb.html#using-and-extending
+
     """
     
     return DbView(dbo, query, *args, **kwargs)
