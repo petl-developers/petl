@@ -2601,7 +2601,14 @@ def capture(table, field, pattern, newfields=None, include_original=False,
     be included using the `include_original` argument.
     
     See also :func:`split`, :func:`re.search`.
-    
+
+    ..versionchanged:: 0.18
+
+    The ``fill`` parameter can be used to provide a list or tuple of values to use if the regular expression does not
+    match. The ``fill`` parameter should contain as many values as there are capturing groups in the regular expression.
+    If ``fill`` is ``None`` (default) then a ``petl.transform.TransformError`` will be raised on the first non-matching
+    value.
+
     """
     
     return CaptureView(table, field, pattern,
