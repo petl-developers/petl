@@ -5,9 +5,9 @@ from distutils.core import setup
 def get_version(source='src/petl/__init__.py'):
     with open(source) as f:
         for line in f:
-            if line.startswith('VERSION'):
-                return literal_eval(line.partition('=')[2].lstrip())
-    raise ValueError("VERSION not found")
+            if line.startswith('__version__'):
+                return literal_eval(line.split('=')[-1].lstrip())
+    raise ValueError("__version__ not found")
 
 
 setup(
