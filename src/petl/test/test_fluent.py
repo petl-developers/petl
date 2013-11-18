@@ -80,7 +80,7 @@ def test_values_container_convenience_methods():
                  ('c', 2)))
     
     actual = table.values('foo').set()
-    expect = {'a', 'b', 'c'}
+    expect = set(['a', 'b', 'c'])
     eq_(expect, actual)
     
     actual = table.values('foo').list()

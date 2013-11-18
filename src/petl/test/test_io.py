@@ -1115,6 +1115,7 @@ def test_StringSource():
 def test_fromxml_url():
 
     tbl = fromxml('http://feeds.bbci.co.uk/news/rss.xml', './/item', 'title')
+    print tbl
     assert nrows(tbl) > 0
 
 

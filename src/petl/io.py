@@ -791,7 +791,8 @@ class XmlView(RowContainer):
 
             tree = ElementTree.parse(f)
             if not hasattr(tree, 'iterfind'):
-                tree.iterfind = tree.getiterator
+                # Python 2.6 compatibility
+                tree.iterfind = tree.findall
 
             if self.vmatch is not None:
                 # simple case, all value paths are the same
