@@ -1,7 +1,7 @@
 nosetests
 # remove -SNAPSHOT from src/petl/__init__.py 
 sed -i -e 's/-SNAPSHOT//' src/petl/__init__.py 
-version=`grep VERSION src/petl/__init__.py | sed -e "s/VERSION[ ]=[ ]'\(.*\)'/\1/"`
+version=`grep VERSION src/petl/__init__.py | sed -e "s/.*VERSION[ ]=[ ]'\(.*\)'/\1/"`
 echo $version
 # git commit and push
 git commit -a -m v$version
