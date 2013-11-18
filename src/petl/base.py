@@ -11,9 +11,13 @@ except ImportError:
 
 
 from itertools import islice, imap, izip, izip_longest, chain, cycle, product,\
-    permutations, combinations, compress, takewhile, dropwhile, ifilter, ifilterfalse, \
-    starmap, groupby, tee, combinations_with_replacement
+    permutations, combinations, takewhile, dropwhile, ifilter, ifilterfalse, \
+    starmap, groupby, tee
 
+try: 
+    from itertools import compress, combinations_with_replacement
+except ImportError:
+    from .compat import compress, combinations_with_replacement
 
 class IterContainer(object):
     
