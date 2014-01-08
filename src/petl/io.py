@@ -34,55 +34,55 @@ debug = logger.debug
 
 class FileSource(object):
     
-    def __init__(self, filename):
+    def __init__(self, filename, **kwargs):
         self.filename = filename
+        self.kwargs = kwargs
 
-    def open_(self, *args):
-        return open(self.filename, *args)
+    def open_(self, mode='r'):
+        return open(self.filename, mode, **self.kwargs)
 
 
-class GzipSource(FileSource):
+class GzipSource(object):
 
-    def __init__(self, filename):
-        super(GzipSource, self).__init__(filename)
+    def __init__(self, filename, **kwargs):
+        self.filename = filename
+        self.kwargs = kwargs
 
     @contextmanager
-    def open_(self, *args):
-        source = gzip.open(self.filename, *args)
+    def open_(self, mode='r'):
+        source = gzip.open(self.filename, mode, **self.kwargs)
         try:
             yield source
         finally:
             source.close()
 
 
-class BZ2Source(FileSource):
+class BZ2Source(object):
 
-    def __init__(self, filename):
-        super(BZ2Source, self).__init__(filename)
+    def __init__(self, filename, **kwargs):
+        self.filename = filename
+        self.kwargs = kwargs
 
-    @contextmanager
-    def open_(self, *args):
-        source = bz2.BZ2File(self.filename, *args)
-        try:
-            yield source
-        finally:
-            source.close()
+    def open_(self, mode='r'):
+        return bz2.BZ2File(self.filename, mode, **self.kwargs)
 
 
 class ZipSource(object):
     
-    def __init__(self, filename, membername):
+    def __init__(self, filename, membername, pwd=None, **kwargs):
         self.filename = filename
         self.membername = membername
-        
+        self.pwd = pwd
+        self.kwargs = kwargs
+
     @contextmanager
-    def open_(self, *args):
-        zf = zipfile.ZipFile(self.filename, *args)
+    def open_(self, mode):
+        zf = zipfile.ZipFile(self.filename, mode, **self.kwargs)
         try:
-            if args:
-                yield zf.open(self.membername, args[0])
+            if self.pwd is not None:
+                yield zf.open(self.membername, mode, self.pwd)
             else:
-                yield zf.open(self.membername)
+                yield zf.open(self.membername, mode)
         finally:
             zf.close()
 
@@ -90,14 +90,18 @@ class ZipSource(object):
 class StdinSource(object):
 
     @contextmanager
-    def open_(self, *args):
+    def open_(self, mode='r'):
+        if not mode.startswith('r'):
+            raise Exception('source is read-only')
         yield sys.stdin
     
 
 class StdoutSource(object):
 
     @contextmanager
-    def open_(self, *args):
+    def open_(self, mode):
+        if mode.startswith('r'):
+            raise Exception('source is write-only')
         yield sys.stdout
     
 
@@ -108,7 +112,9 @@ class URLSource(object):
         self.kwargs = kwargs
         
     @contextmanager
-    def open_(self, *args):
+    def open_(self, mode='r'):
+        if not mode.startswith('r'):
+            raise Exception('source is read-only')
         f = urllib2.urlopen(*self.args, **self.kwargs)
         try:
             yield f
@@ -123,20 +129,20 @@ class StringSource(object):
         self.buffer = None
         
     @contextmanager
-    def open_(self, *args):
+    def open_(self, mode='r'):
         try:
-            if len(args) == 0 or args[0].startswith('r'):  # read
+            if mode.startswith('r'):  # read
                 if self.s is not None:
                     self.buffer = cStringIO.StringIO(self.s)
                 else:
                     raise Exception('no string data supplied')
-            elif args[0].startswith('w'):  # write
+            elif mode.startswith('w'):  # write
                 # drop existing buffer
                 if self.buffer is not None:
                     self.buffer.close()
                 # new buffer
                 self.buffer = cStringIO.StringIO()
-            elif args[0].startswith('a'):  # append
+            elif mode.startswith('a'):  # append
                 # new buffer only if none already
                 if self.buffer is None:
                     self.buffer = cStringIO.StringIO()
@@ -158,7 +164,9 @@ class PopenSource(object):
         self.kwargs = kwargs
 
     @contextmanager
-    def open_(self, *args):
+    def open_(self, mode='r'):
+        if not mode.startswith('r'):
+            raise Exception('source is read-only')
         self.kwargs['stdout'] = subprocess.PIPE
         proc = subprocess.Popen(*self.args, **self.kwargs)
         try:

@@ -21,10 +21,9 @@ import codecs
 from petl import fromcsv, frompickle, fromsqlite3, fromdb, \
                 tocsv, topickle, appendcsv, appendpickle, tosqlite3, appendsqlite3, \
                 todb, appenddb, fromtext, totext, fromxml, fromjson, fromdicts, \
-                tojson, fromtsv, totsv, appendtsv, tojsonarrays, tohtml, nrows, fromucsv, toucsv, appenducsv
+                tojson, fromtsv, totsv, appendtsv, tojsonarrays, tohtml, nrows, fromucsv, toucsv, appenducsv, \
+                FileSource, StringSource, PopenSource
 from petl.testutils import ieq
-from petl.io import FileSource, StringSource, PopenSource
-import petl.io
 
 
 def test_fromcsv():
