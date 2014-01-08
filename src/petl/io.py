@@ -20,10 +20,10 @@ from contextlib import contextmanager
 import cStringIO
 import logging
 import subprocess
-from itertools import chain
 
 
-from petl.util import data, header, asdict, dicts, RowContainer
+import petl.ucsv as ucsv
+from petl.util import data, asdict, dicts, RowContainer
 
 
 logger = logging.getLogger(__name__)
@@ -125,18 +125,18 @@ class StringSource(object):
     @contextmanager
     def open_(self, *args):
         try:
-            if len(args) == 0 or args[0].startswith('r'): # read
+            if len(args) == 0 or args[0].startswith('r'):  # read
                 if self.s is not None:
                     self.buffer = cStringIO.StringIO(self.s)
                 else:
                     raise Exception('no string data supplied')
-            elif args[0].startswith('w'): # write
+            elif args[0].startswith('w'):  # write
                 # drop existing buffer
                 if self.buffer is not None:
                     self.buffer.close()
                 # new buffer
                 self.buffer = cStringIO.StringIO()
-            elif args[0].startswith('a'): # append
+            elif args[0].startswith('a'):  # append
                 # new buffer only if none already
                 if self.buffer is None:
                     self.buffer = cStringIO.StringIO()
@@ -254,6 +254,33 @@ class CSVView(RowContainer):
                 yield tuple(row)
                 
     
+def fromucsv(source=None, dialect=csv.excel, encoding='utf-8', **kwargs):
+    """
+    Returns a table containing unicode data extracted from a delimited file via the given encoding. Like :func:fromcsv
+    but accepts an additional ``encoding`` argument which should be one of the Python supported encodings. See also
+    :mod:codecs.
+
+    .. versionadded:: 0.19
+    """
+    source = _read_source_from_arg(source)
+    return UnicodeCSVView(source=source, dialect=dialect, encoding=encoding, **kwargs)
+
+
+class UnicodeCSVView(RowContainer):
+
+    def __init__(self, source=None, dialect=csv.excel, encoding='utf-8', **kwargs):
+        self.source = source
+        self.dialect = dialect
+        self.encoding = encoding
+        self.kwargs = kwargs
+
+    def __iter__(self):
+        with self.source.open_() as f:
+            reader = ucsv.UnicodeReader(f, dialect=self.dialect, encoding=self.encoding, **self.kwargs)
+            for row in reader:
+                yield tuple(row)
+
+
 def frompickle(source=None):
     """
     Returns a table providing access to the data pickled in the given file. The 
@@ -991,6 +1018,20 @@ def tocsv(table, source=None, dialect=csv.excel, **kwargs):
             writer.writerow(row)
 
 
+def toucsv(table, source=None, dialect=csv.excel, encoding='utf-8', **kwargs):
+    """
+    Write the table to a CSV file via the given encoding. Like :func:tocsv but accepts an additional ``encoding``
+    argument which should be one of the Python supported encodings. See also :mod:codecs.
+
+    .. versionadded:: 0.19
+    """
+    source = _write_source_from_arg(source)
+    with source.open_('wb') as f:
+        writer = ucsv.UnicodeWriter(f, dialect=dialect, encoding=encoding, **kwargs)
+        for row in table:
+            writer.writerow(row)
+
+
 def appendcsv(table, source=None, dialect=csv.excel, **kwargs):
     """
     Append data rows to an existing CSV file. E.g.::
@@ -1056,6 +1097,20 @@ def appendcsv(table, source=None, dialect=csv.excel, **kwargs):
     source = _write_source_from_arg(source)
     with source.open_('ab') as f:
         writer = csv.writer(f, dialect=dialect, **kwargs)
+        for row in data(table):
+            writer.writerow(row)
+
+
+def appenducsv(table, source=None, dialect=csv.excel, encoding='utf-8', **kwargs):
+    """
+    Append the table to a CSV file via the given encoding. Like :func:appendcsv but accepts an additional ``encoding``
+    argument which should be one of the Python supported encodings. See also :mod:codecs.
+
+    .. versionadded:: 0.19
+    """
+    source = _write_source_from_arg(source)
+    with source.open_('ab') as f:
+        writer = ucsv.UnicodeWriter(f, dialect=dialect, encoding=encoding, **kwargs)
         for row in data(table):
             writer.writerow(row)
 
