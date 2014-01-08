@@ -256,7 +256,7 @@ class CSVView(RowContainer):
         self.kwargs = kwargs
         
     def __iter__(self):
-        with self.source.open_() as f:
+        with self.source.open_('rb') as f:
             reader = csv.reader(f, dialect=self.dialect, **self.kwargs)
             for row in reader:
                 yield tuple(row)
@@ -283,7 +283,7 @@ class UnicodeCSVView(RowContainer):
         self.kwargs = kwargs
 
     def __iter__(self):
-        with self.source.open_() as f:
+        with self.source.open_('rb') as f:
             reader = ucsv.UnicodeReader(f, dialect=self.dialect, encoding=self.encoding, **self.kwargs)
             for row in reader:
                 yield tuple(row)
@@ -330,7 +330,7 @@ class PickleView(RowContainer):
         self.source = source
         
     def __iter__(self):
-        with self.source.open_() as f:
+        with self.source.open_('rb') as f:
             try:
                 while True:
                     yield tuple(pickle.load(f))
@@ -673,7 +673,7 @@ class TextView(RowContainer):
         self.strip = strip
         
     def __iter__(self):
-        with self.source.open_() as f:
+        with self.source.open_('r') as f:
             if self.header is not None:
                 yield tuple(self.header)
             s = self.strip
@@ -822,7 +822,7 @@ class XmlView(RowContainer):
             self.missing = None
         
     def __iter__(self):
-        with self.source.open_() as f:
+        with self.source.open_('rb') as f:
 
             tree = ElementTree.parse(f)
             if not hasattr(tree, 'iterfind'):
@@ -912,7 +912,7 @@ class JsonView(RowContainer):
             del self.kwargs['header']
         
     def __iter__(self):
-        with self.source.open_() as f:
+        with self.source.open_('rb') as f:
             result = json.load(f, *self.args, **self.kwargs)
             if self.header is None:
                 # determine fields
@@ -1817,7 +1817,7 @@ def totext(table, source=None, template=None, prologue=None, epilogue=None):
     """
     
     source = _write_source_from_arg(source)
-    with source.open_('wb') as f:
+    with source.open_('w') as f:
         if prologue is not None:
             f.write(prologue)
         it = iter(table)
@@ -1855,7 +1855,7 @@ def tohtml(table, source=None, caption=None):
     """
     
     source = _write_source_from_arg(source)
-    with source.open_('wb') as f:
+    with source.open_('w') as f:
         it = iter(table)
         print >>f, '<table>'
         if caption is not None:
@@ -1891,7 +1891,7 @@ def appendtext(table, source=None, template=None, prologue=None, epilogue=None):
     """
 
     source = _write_source_from_arg(source)
-    with source.open_('ab') as f:
+    with source.open_('a') as f:
         if prologue is not None:
             f.write(prologue)
         it = iter(table)
