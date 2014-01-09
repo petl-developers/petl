@@ -15,14 +15,12 @@ from nose.tools import eq_
 import json
 import gzip
 import os
-import codecs
 
 
 from petl import fromcsv, frompickle, fromsqlite3, fromdb, \
-                tocsv, topickle, appendcsv, appendpickle, tosqlite3, appendsqlite3, \
-                todb, appenddb, fromtext, totext, fromxml, fromjson, fromdicts, \
-                tojson, fromtsv, totsv, appendtsv, tojsonarrays, tohtml, nrows, fromucsv, toucsv, appenducsv, \
-                FileSource, StringSource, PopenSource
+    tocsv, topickle, appendcsv, appendpickle, tosqlite3, appendsqlite3, \
+    todb, appenddb, fromtext, totext, fromxml, fromjson, fromdicts, \
+    tojson, fromtsv, totsv, appendtsv, tojsonarrays, tohtml, nrows, StringSource, PopenSource
 from petl.testutils import ieq
 
 
@@ -1128,80 +1126,5 @@ def test_PopenSource():
               ('a', '1'))
     actual = fromcsv(PopenSource(r'echo -e foo bar\\na 1', shell=True, executable='/bin/bash'), delimiter=' ')
     ieq(expect, actual)
-
-
-def test_fromucsv():
-
-    data = u'''name,id
-Արամ Խաչատրյան,1
-Johann Strauß,2
-Вагиф Сәмәдоғлу,3
-章子怡,4
-'''
-    f = codecs.open('test_fromucsv.csv', encoding='utf-8', mode='w')
-    f.write(data)
-    f.close()
-
-    actual = fromucsv('test_fromucsv.csv')
-    expect = ((u'name', u'id'),
-              (u'Արամ Խաչատրյան', '1'),
-              (u'Johann Strauß', '2'),
-              (u'Вагиф Сәмәдоғлу', '3'),
-              (u'章子怡', '4'),
-            )
-    ieq(expect, actual)
-    ieq(expect, actual) # verify can iterate twice
-
-
-def test_toucsv():
-
-    tbl = ((u'name', u'id'),
-           (u'Արամ Խաչատրյան', '1'),
-           (u'Johann Strauß', '2'),
-           (u'Вагиф Сәмәдоғлу', '3'),
-           (u'章子怡', '4'),
-           )
-    toucsv(tbl, 'test_toucsv.csv', lineterminator='\n')
-
-    expect = u'''name,id
-Արամ Խաչատրյան,1
-Johann Strauß,2
-Вагиф Сәмәдоғлу,3
-章子怡,4
-'''
-    f = codecs.open('test_toucsv.csv', encoding='utf-8', mode='r')
-    actual = f.read()
-    eq_(expect, actual)
-
-
-def test_appenducsv():
-
-    data = u'''name,id
-Արամ Խաչատրյան,1
-Johann Strauß,2
-Вагиф Сәмәдоғлу,3
-章子怡,4
-'''
-    f = codecs.open('test_appenducsv.csv', encoding='utf-8', mode='w')
-    f.write(data)
-    f.close()
-
-    tbl = ((u'name', u'id'),
-           (u'ኃይሌ ገብረሥላሴ', '5'),
-           (u'ედუარდ შევარდნაძე', '6'),
-           )
-    appenducsv(tbl, 'test_appenducsv.csv', lineterminator='\n')
-
-    expect = u'''name,id
-Արամ Խաչատրյան,1
-Johann Strauß,2
-Вагиф Сәмәдоғлу,3
-章子怡,4
-ኃይሌ ገብረሥላሴ,5
-ედუარდ შევარდნაძე,6
-'''
-    f = codecs.open('test_appenducsv.csv', encoding='utf-8', mode='r')
-    actual = f.read()
-    eq_(expect, actual)
 
 

@@ -15,12 +15,12 @@ import sys, os
 from ast import literal_eval
 
 
-def get_version(source=os.path.abspath('../src/petl/__init__.py')):
+def get_version(source='src/petl/__init__.py'):
     with open(source) as f:
         for line in f:
-            if line.startswith('VERSION'):
-                return literal_eval(line.partition('=')[2].lstrip())
-    raise ValueError("VERSION not found")
+            if line.startswith('__version__'):
+                return literal_eval(line.split('=')[-1].lstrip())
+    raise ValueError("__version__ not found")
 
 
 # If extensions (or modules to document with autodoc) are in another directory,

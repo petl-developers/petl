@@ -14,7 +14,7 @@ loading tables of data.
 
 For examples of :mod:`petl` in use, see the case studies below:
 
-* `Case Study 1 - Comparing Tables <case_study_1.html>`_
+* `Comparing Tables <case_study_1.html>`_
 
 Overview
 --------
@@ -243,6 +243,7 @@ file, a string or a subprocess, see the section on I/O helper classes below for 
 .. autofunction:: petl.fromsqlite3
 .. autofunction:: petl.fromdb
 .. autofunction:: petl.fromtext
+.. autofunction:: petl.fromutext
 .. autofunction:: petl.fromxml
 .. autofunction:: petl.fromjson
 .. autofunction:: petl.fromdicts
@@ -390,6 +391,8 @@ file or string buffer, see the section on I/O helper classes below for more info
 .. autofunction:: petl.appenddb
 .. autofunction:: petl.totext
 .. autofunction:: petl.appendtext
+.. autofunction:: petl.toutext
+.. autofunction:: petl.appendutext
 .. autofunction:: petl.tojson
 .. autofunction:: petl.tojsonarrays
 

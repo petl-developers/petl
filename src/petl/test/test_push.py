@@ -108,8 +108,8 @@ def test_partition():
          ('kiwi', 'Berlin', 55)]
 
     p = partition('fruit')
-    p.pipe('orange', tocsv('oranges.csv'))
-    p.pipe('banana', tocsv('bananas.csv'))
+    p.pipe('orange', tocsv('tmp/oranges.csv'))
+    p.pipe('banana', tocsv('tmp/bananas.csv'))
     p.push(t)
 
     oranges_expected = [('fruit', 'city', 'sales'),
@@ -120,16 +120,16 @@ def test_partition():
                         ('banana', 'London', '42'),
                         ('banana', 'Amsterdam', '74')]
 
-    oranges_actual = fromcsv('oranges.csv')
-    bananas_actual = fromcsv('bananas.csv')
+    oranges_actual = fromcsv('tmp/oranges.csv')
+    bananas_actual = fromcsv('tmp/bananas.csv')
     ieq(oranges_expected, oranges_actual)
     ieq(bananas_expected, bananas_actual)
 
     # alternative syntax
 
     p = partition('fruit')
-    p | ('orange', tocsv('oranges.csv'))
-    p | ('banana', tocsv('bananas.csv'))
+    p | ('orange', tocsv('tmp/oranges.csv'))
+    p | ('banana', tocsv('tmp/bananas.csv'))
     p.push(t)
     ieq(oranges_expected, oranges_actual)
     ieq(bananas_expected, bananas_actual)
@@ -137,8 +137,8 @@ def test_partition():
     # test with callable discriminator
 
     p = partition(lambda row: row['sales'] > 40)
-    p | (True, tocsv('high.csv'))
-    p | (False, tocsv('low.csv'))
+    p | (True, tocsv('tmp/high.csv'))
+    p | (False, tocsv('tmp/low.csv'))
     p.push(t)
 
     high_expected = [('fruit', 'city', 'sales'),
@@ -150,8 +150,8 @@ def test_partition():
                     ('orange', 'London', '12'),
                     ('orange', 'Paris', '31')]
 
-    high_actual = fromcsv('high.csv')
-    low_actual = fromcsv('low.csv')
+    high_actual = fromcsv('tmp/high.csv')
+    low_actual = fromcsv('tmp/low.csv')
     ieq(high_expected, high_actual)
     ieq(low_expected, low_actual)
 

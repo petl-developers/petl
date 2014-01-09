@@ -20,6 +20,7 @@ from contextlib import contextmanager
 import cStringIO
 import logging
 import subprocess
+import codecs
 
 
 import petl.ucsv as ucsv
@@ -679,7 +680,30 @@ class TextView(RowContainer):
             s = self.strip
             for line in f:
                 yield (line.strip(s),)
-                
+
+
+def fromutext(source=None, header=[u'lines'], encoding='utf-8', strip=None):
+    source = _read_source_from_arg(source)
+    return UnicodeTextView(source, header, encoding=encoding, strip=strip)
+
+
+class UnicodeTextView(RowContainer):
+
+    def __init__(self, source, header=[u'lines'], encoding='utf-8', strip=None):
+        self.source = source
+        self.header = header
+        self.encoding = encoding
+        self.strip = strip
+
+    def __iter__(self):
+        with self.source.open_('r') as f:
+            f = codecs.getreader(self.encoding)(f)
+            if self.header is not None:
+                yield tuple(self.header)
+            s = self.strip
+            for line in f:
+                yield (line.strip(s),)
+
 
 def fromxml(source, *args, **kwargs):
     """
@@ -1816,20 +1840,78 @@ def totext(table, source=None, template=None, prologue=None, epilogue=None):
     
     """
     
+    assert template is not None, 'template is required'
     source = _write_source_from_arg(source)
     with source.open_('w') as f:
-        if prologue is not None:
-            f.write(prologue)
-        it = iter(table)
-        flds = it.next()
-        for row in it:
-            rec = asdict(flds, row)
-            s = template.format(**rec)
-            f.write(s)
-        if epilogue is not None:
-            f.write(epilogue)
-            
+        _writetext(table, f, prologue, template, epilogue)
+
+
+def appendtext(table, source=None, template=None, prologue=None, epilogue=None):
+    """
+    Append the table to a text file.
+
+    .. versionadded:: 0.19
+    """
+
+    assert template is not None, 'template is required'
+    source = _write_source_from_arg(source)
+    with source.open_('a') as f:
+        _writetext(table, f, prologue, template, epilogue)
+
+
+def toutext(table, source=None, encoding='utf-8', template=None, prologue=None, epilogue=None):
+    """
+    Write the table to a text file via the given encoding. Like :func:totext but accepts an additional ``encoding``
+    argument which should be one of the Python supported encodings. See also :mod:codecs.
+
+    .. versionadded:: 0.19
+    """
+
+    assert template is not None, 'template is required'
+    if prologue is not None:
+        prologue = unicode(prologue)
+    template = unicode(template)
+    if epilogue is not None:
+        epilogue = unicode(epilogue)
+    source = _write_source_from_arg(source)
+    with source.open_('w') as f:
+        f = codecs.getwriter(encoding)(f)
+        _writetext(table, f, prologue, template, epilogue)
+
     
+def appendutext(table, source=None, encoding='utf-8', template=None, prologue=None, epilogue=None):
+    """
+    Append the table to a text file via the given encoding. Like :func:appendtext but accepts an additional ``encoding``
+    argument which should be one of the Python supported encodings. See also :mod:codecs.
+
+    .. versionadded:: 0.19
+    """
+
+    assert template is not None, 'template is required'
+    if prologue is not None:
+        prologue = unicode(prologue)
+    template = unicode(template)
+    if epilogue is not None:
+        epilogue = unicode(epilogue)
+    source = _write_source_from_arg(source)
+    with source.open_('a') as f:
+        f = codecs.getwriter(encoding)(f)
+        _writetext(table, f, prologue, template, epilogue)
+
+
+def _writetext(table, f, prologue, template, epilogue):
+    if prologue is not None:
+        f.write(prologue)
+    it = iter(table)
+    flds = it.next()
+    for row in it:
+        rec = asdict(flds, row)
+        s = template.format(**rec)
+        f.write(s)
+    if epilogue is not None:
+        f.write(epilogue)
+
+
 def tohtml(table, source=None, caption=None):
     """
     Write the table as simple HTML to a file. E.g.::
@@ -1882,28 +1964,6 @@ def tohtml(table, source=None, caption=None):
         print >>f, '</table>'
             
     
-def appendtext(table, source=None, template=None, prologue=None, epilogue=None):
-    """
-    As :func:`totext` but the file is opened in append mode.
-    
-    Supports transparent writing to ``.gz`` and ``.bz2`` files.
-    
-    """
-
-    source = _write_source_from_arg(source)
-    with source.open_('a') as f:
-        if prologue is not None:
-            f.write(prologue)
-        it = iter(table)
-        flds = it.next()
-        for row in it:
-            rec = asdict(flds, row)
-            s = template.format(**rec)
-            f.write(s)
-        if epilogue is not None:
-            f.write(epilogue)
-            
-            
 def tojson(table, source=None, prefix=None, suffix=None, *args, **kwargs):
     """
     Write a table in JSON format, with rows output as JSON objects. E.g.::
