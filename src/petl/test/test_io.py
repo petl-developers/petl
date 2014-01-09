@@ -841,7 +841,7 @@ def test_tohtml():
              ('a', 1),
              ('b', (1, 2)))
     f = NamedTemporaryFile(delete=False)
-    tohtml(table, f.name)
+    tohtml(table, f.name, lineterminator='\n')
     
     # check what it did
     with open(f.name, 'rb') as o:
@@ -855,11 +855,11 @@ def test_tohtml():
 </thead>
 <tbody>
 <tr>
-<td>'a'</td>
+<td>a</td>
 <td style='text-align: right'>1</td>
 </tr>
 <tr>
-<td>'b'</td>
+<td>b</td>
 <td>(1, 2)</td>
 </tr>
 </tbody>
@@ -875,7 +875,7 @@ def test_tohtml_caption():
              ('a', 1),
              ('b', (1, 2)))
     f = NamedTemporaryFile(delete=False)
-    tohtml(table, f.name, caption='my table')
+    tohtml(table, f.name, caption='my table', lineterminator='\n')
 
     # check what it did
     with open(f.name, 'rb') as o:
@@ -890,11 +890,11 @@ def test_tohtml_caption():
 </thead>
 <tbody>
 <tr>
-<td>'a'</td>
+<td>a</td>
 <td style='text-align: right'>1</td>
 </tr>
 <tr>
-<td>'b'</td>
+<td>b</td>
 <td>(1, 2)</td>
 </tr>
 </tbody>

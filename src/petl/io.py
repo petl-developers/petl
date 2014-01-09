@@ -1912,7 +1912,7 @@ def _writetext(table, f, prologue, template, epilogue):
         f.write(epilogue)
 
 
-def tohtml(table, source=None, caption=None):
+def tohtml(table, source=None, caption=None, representation=str, lineterminator='\r\n'):
     """
     Write the table as simple HTML to a file. E.g.::
 
@@ -1939,31 +1939,65 @@ def tohtml(table, source=None, caption=None):
     source = _write_source_from_arg(source)
     with source.open_('w') as f:
         it = iter(table)
-        print >>f, '<table>'
+        f.write('<table>' + lineterminator)
         if caption is not None:
-            print >>f, '<caption>%s</caption>' % caption
+            f.write(('<caption>%s</caption>' % caption) + lineterminator)
         flds = it.next()
-        print >>f, '<thead>'
-        print >>f, '<tr>'
+        f.write('<thead>' + lineterminator)
+        f.write('<tr>' + lineterminator)
         for h in flds:
-            print >>f, '<th>%s</th>' % h
-        print >>f, '</tr>'
-        print >>f, '</thead>'
-        print >>f, '<tbody>'
+            f.write(('<th>%s</th>' % h) + lineterminator)
+        f.write('</tr>' + lineterminator)
+        f.write('</thead>' + lineterminator)
+        f.write('<tbody>' + lineterminator)
         for row in it:
-            print >>f, '<tr>'
+            f.write('<tr>' + lineterminator)
             for v in row:
+                r = representation(v)
                 if isinstance(v, (int, long, float)):
-                    print >>f, "<td style='text-align: right'>%s</td>" % v
-                elif isinstance(v, tuple):
-                    print >>f, '<td>%s</td>' % repr(v)                    
+                    f.write(("<td style='text-align: right'>%s</td>" % r) + lineterminator)
                 else:
-                    print >>f, '<td>%r</td>' % v
-            print >>f, '</tr>'
-        print >>f, '</tbody>'
-        print >>f, '</table>'
+                    f.write(('<td>%s</td>' % r) + lineterminator)
+            f.write('</tr>' + lineterminator)
+        f.write('</tbody>' + lineterminator)
+        f.write('</table>' + lineterminator)
             
     
+def touhtml(table, source=None, caption=None, encoding='utf-8', representation=unicode, lineterminator=u'\r\n'):
+    """
+    TODO
+
+    .. versionadded:: 0.19
+    """
+
+    source = _write_source_from_arg(source)
+    with source.open_('w') as f:
+        f = codecs.getwriter(encoding)(f)
+        it = iter(table)
+        f.write(u'<table>' + lineterminator)
+        if caption is not None:
+            f.write((u'<caption>%s</caption>' % caption) + lineterminator)
+        flds = it.next()
+        f.write(u'<thead>' + lineterminator)
+        f.write(u'<tr>' + lineterminator)
+        for h in flds:
+            f.write((u'<th>%s</th>' % h) + lineterminator)
+        f.write(u'</tr>' + lineterminator)
+        f.write(u'</thead>' + lineterminator)
+        f.write(u'<tbody>' + lineterminator)
+        for row in it:
+            f.write(u'<tr>' + lineterminator)
+            for v in row:
+                r = representation(v)
+                if isinstance(v, (int, long, float)):
+                    f.write((u"<td style='text-align: right'>%s</td>" % r) + lineterminator)
+                else:
+                    f.write((u'<td>%s</td>' % r) + lineterminator)
+            f.write(u'</tr>' + lineterminator)
+        f.write(u'</tbody>' + lineterminator)
+        f.write(u'</table>' + lineterminator)
+
+
 def tojson(table, source=None, prefix=None, suffix=None, *args, **kwargs):
     """
     Write a table in JSON format, with rows output as JSON objects. E.g.::

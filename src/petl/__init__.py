@@ -31,7 +31,7 @@ from petl.io import fromcsv, frompickle, fromsqlite3, tocsv, topickle, \
     totext, appendtext, fromxml, fromjson, fromdicts, tojson, \
     fromtsv, totsv, appendtsv, tojsonarrays, tohtml, fromucsv, toucsv, appenducsv, \
     FileSource, GzipSource, BZ2Source, URLSource, StdinSource, StdoutSource, StringSource, PopenSource, ZipSource, \
-    fromutext, toutext, appendutext
+    fromutext, toutext, appendutext, touhtml
 
 from petl.transform import rename, cut, cat, convert, fieldconvert, addfield, rowslice, \
     head, tail, sort, melt, recast, duplicates, conflicts, \

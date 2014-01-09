@@ -9,7 +9,7 @@ from itertools import islice
 import sys
 from petl.util import valueset, RowContainer
 import petl.fluent
-from petl.io import tohtml, StringSource
+from petl.io import tohtml, touhtml, StringSource
 import logging
 logger = logging.getLogger(__name__)
 warning = logger.warning
@@ -23,6 +23,28 @@ thismodule = sys.modules[__name__]
 
 cachesize = 10000
 representation = petl.look
+
+
+# set True to display field indices
+repr_index_header = False
+
+
+# set to str or repr for different behaviour
+repr_html_value = unicode
+
+
+def repr_html(tbl, index_header=False, representation=unicode, caption=None, encoding='utf-8'):
+    if index_header:
+        indexed_header = [u'%s|%s' % (i, f) for (i, f) in enumerate(petl.util.header(tbl))]
+        target = petl.transform.setheader(tbl, indexed_header)
+    else:
+        target = tbl
+    buf = StringSource()
+    if representation is unicode:
+        touhtml(target, buf, caption=caption, encoding=encoding)
+    else:
+        tohtml(target, buf, representation=representation, caption=caption)
+    return buf.getvalue()
 
 
 class InteractiveWrapper(petl.fluent.FluentWrapper):
@@ -60,7 +82,7 @@ class InteractiveWrapper(petl.fluent.FluentWrapper):
                 object.__setattr__(self, '_cachecomplete', True)
         
     def __repr__(self):
-        if InteractiveWrapper.repr_index_header:
+        if repr_index_header:
             indexed_header = ['%s|%s' % (i, f) for (i, f) in enumerate(petl.util.header(self))]
             target = petl.transform.setheader(self, indexed_header)
         else:
@@ -71,18 +93,9 @@ class InteractiveWrapper(petl.fluent.FluentWrapper):
             return object.__repr__(target)
         
     def _repr_html_(self):
-        if InteractiveWrapper.repr_index_header:
-            indexed_header = ['%s|%s' % (i, f) for (i, f) in enumerate(petl.util.header(self))]
-            target = petl.transform.setheader(self, indexed_header)
-        else:
-            target = self
-        buf = StringSource()
-        tohtml(target, buf)
-        return buf.getvalue()
-
-
-# set True to display field indices
-InteractiveWrapper.repr_index_header = False
+        return repr_html(self,
+                         index_header=repr_index_header,
+                         representation=repr_html_value)
 
 
 def wrap(f):
@@ -141,4 +154,3 @@ def diff(*args, **kwargs):
 # short alias to wrap explicitly
 etl = InteractiveWrapper    
 
-    

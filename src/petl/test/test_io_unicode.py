@@ -12,7 +12,7 @@ from nose.tools import eq_
 from petl.testutils import ieq
 
 
-from petl import fromucsv, toucsv, appenducsv, fromutext, toutext, appendutext
+from petl import fromucsv, toucsv, appenducsv, fromutext, toutext, touhtml
 
 
 def test_fromucsv():
@@ -29,10 +29,10 @@ Johann Strauß,2
 
     actual = fromucsv('tmp/test_fromucsv.csv')
     expect = ((u'name', u'id'),
-              (u'Արամ Խաչատրյան', '1'),
-              (u'Johann Strauß', '2'),
-              (u'Вагиф Сәмәдоғлу', '3'),
-              (u'章子怡', '4'),
+              (u'Արամ Խաչատրյան', u'1'),
+              (u'Johann Strauß', u'2'),
+              (u'Вагиф Сәмәдоғлу', u'3'),
+              (u'章子怡', u'4'),
             )
     ieq(expect, actual)
     ieq(expect, actual)  # verify can iterate twice
@@ -41,10 +41,10 @@ Johann Strauß,2
 def test_toucsv():
 
     tbl = ((u'name', u'id'),
-           (u'Արամ Խաչատրյան', '1'),
-           (u'Johann Strauß', '2'),
-           (u'Вагиф Сәмәдоғлу', '3'),
-           (u'章子怡', '4'),
+           (u'Արամ Խաչատրյան', 1),
+           (u'Johann Strauß', 2),
+           (u'Вагиф Сәмәдоғлу', 3),
+           (u'章子怡', 4),
            )
     toucsv(tbl, 'tmp/test_toucsv.csv', lineterminator='\n')
 
@@ -72,8 +72,8 @@ Johann Strauß,2
     f.close()
 
     tbl = ((u'name', u'id'),
-           (u'ኃይሌ ገብረሥላሴ', '5'),
-           (u'ედუარდ შევარდნაძე', '6'),
+           (u'ኃይሌ ገብረሥላሴ', 5),
+           (u'ედუარდ შევარდნაძე', 6),
            )
     appenducsv(tbl, 'tmp/test_appenducsv.csv', lineterminator='\n')
 
@@ -118,10 +118,10 @@ def test_toutext():
 
     # exercise function
     tbl = ((u'name', u'id'),
-           (u'Արամ Խաչատրյան', '1'),
-           (u'Johann Strauß', '2'),
-           (u'Вагиф Сәмәдоғлу', '3'),
-           (u'章子怡', '4'),
+           (u'Արամ Խաչատրյան', 1),
+           (u'Johann Strauß', 2),
+           (u'Вагиф Сәмәдоғлу', 3),
+           (u'章子怡', 4),
            )
     prologue = """{| class="wikitable"
 |-
@@ -156,6 +156,52 @@ def test_toutext():
 | 4
 |}"""
     eq_(expect, actual)
+
+
+def test_touhtml():
+
+    # exercise function
+    tbl = ((u'name', u'id'),
+           (u'Արամ Խաչատրյան', 1),
+           (u'Johann Strauß', 2),
+           (u'Вагиф Сәмәдоғлу', 3),
+           (u'章子怡', 4),
+           )
+    touhtml(tbl, 'tmp/test_touhtml.html', lineterminator='\n')
+
+    # check what it did
+    f = codecs.open('tmp/test_touhtml.html', mode='r', encoding='utf-8')
+    actual = f.read()
+    expect = u"""<table>
+<thead>
+<tr>
+<th>name</th>
+<th>id</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Արամ Խաչատրյան</td>
+<td style='text-align: right'>1</td>
+</tr>
+<tr>
+<td>Johann Strauß</td>
+<td style='text-align: right'>2</td>
+</tr>
+<tr>
+<td>Вагиф Сәмәдоғлу</td>
+<td style='text-align: right'>3</td>
+</tr>
+<tr>
+<td>章子怡</td>
+<td style='text-align: right'>4</td>
+</tr>
+</tbody>
+</table>
+"""
+    eq_(expect, actual)
+
+
 
 
 
