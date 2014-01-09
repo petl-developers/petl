@@ -1398,7 +1398,7 @@ def appendsqlite3(table, filename_or_connection, tablename, commit=True):
                       commit=commit, truncate=False)
     
     
-def todb(table, dbo, tablename, commit=True):
+def todb(table, dbo, tablename, schema=None, commit=True):
     """
     Load data into an existing database table via a DB-API 2.0
     connection or cursor. Note that the database table will be truncated, 
@@ -1454,7 +1454,7 @@ def todb(table, dbo, tablename, commit=True):
     
     """
     
-    _todb(table, dbo, tablename, commit=commit, truncate=True)
+    _todb(table, dbo, tablename, schema=schema, commit=commit, truncate=True)
     
     
 def _hasmethod(o, n):
@@ -1467,7 +1467,7 @@ def _hasprop(o, n):
     return hasattr(o, n) and not callable(getattr(o, n))
 
 
-def _todb(table, dbo, tablename, commit=True, truncate=False):
+def _todb(table, dbo, tablename, schema=None, commit=True, truncate=False):
     
     # need to deal with polymorphic dbo argument
     # what sort of duck is it?
@@ -1475,43 +1475,45 @@ def _todb(table, dbo, tablename, commit=True, truncate=False):
     # does it quack like a standard DB-API 2.0 connection?
     if _is_dbapi_connection(dbo):
         debug('assuming %r is standard DB-API 2.0 connection', dbo)
-        _todb_dbapi_connection(table, dbo, tablename, commit=commit, truncate=truncate)
+        _todb_dbapi_connection(table, dbo, tablename, schema=schema, commit=commit, truncate=truncate)
         
     # does it quack like a standard DB-API 2.0 cursor?
     elif _is_dbapi_cursor(dbo):
         debug('assuming %r is standard DB-API 2.0 cursor')
-        _todb_dbapi_cursor(table, dbo, tablename, commit=commit, truncate=truncate)
+        _todb_dbapi_cursor(table, dbo, tablename, schema=schema, commit=commit, truncate=truncate)
         
     # does it quack like an SQLAlchemy engine?
     elif _is_sqlalchemy_engine(dbo):
         debug('assuming %r is an instance of sqlalchemy.engine.base.Engine', dbo)
-        _todb_sqlalchemy_engine(table, dbo, tablename, commit=commit, truncate=truncate)
+        _todb_sqlalchemy_engine(table, dbo, tablename, schema=schema, commit=commit, truncate=truncate)
 
     # does it quack like an SQLAlchemy session?
     elif _is_sqlalchemy_session(dbo):
         debug('assuming %r is an instance of sqlalchemy.orm.session.Session', dbo)
-        _todb_sqlalchemy_session(table, dbo, tablename, commit=commit, truncate=truncate)
+        _todb_sqlalchemy_session(table, dbo, tablename, schema=schema, commit=commit, truncate=truncate)
 
     # does it quack like an SQLAlchemy connection?
     elif _is_sqlalchemy_connection(dbo):
         debug('assuming %r is an instance of sqlalchemy.engine.base.Connection', dbo)
-        _todb_sqlalchemy_connection(table, dbo, tablename, commit=commit, truncate=truncate)
+        _todb_sqlalchemy_connection(table, dbo, tablename, schema=schema, commit=commit, truncate=truncate)
 
     elif callable(dbo):
         debug('assuming %r is a function returning standard DB-API 2.0 cursor objects', dbo)
-        _todb_dbapi_mkcurs(table, dbo, tablename, commit=commit, truncate=truncate)
+        _todb_dbapi_mkcurs(table, dbo, tablename, schema=schema, commit=commit, truncate=truncate)
         
     # some other sort of duck...
     else:
         raise Exception('unsupported database object type: %r' % dbo)
 
 
-def _todb_dbapi_connection(table, connection, tablename, commit=True, truncate=False):
+def _todb_dbapi_connection(table, connection, tablename, schema=None, commit=True, truncate=False):
     
     # sanitise table name
     tablename = _quote(tablename)
+    if schema is not None:
+        tablename = _quote(schema) + '.' + tablename
     debug('tablename: %r', tablename)
-    
+
     # sanitise field names
     it = iter(table)
     fields = it.next()
@@ -1551,9 +1553,12 @@ def _todb_dbapi_connection(table, connection, tablename, commit=True, truncate=F
         connection.commit()
 
 
-def _todb_dbapi_mkcurs(table, mkcurs, tablename, commit=True, truncate=False):
+def _todb_dbapi_mkcurs(table, mkcurs, tablename, schema=None, commit=True, truncate=False):
+
     # sanitise table name
     tablename = _quote(tablename)
+    if schema is not None:
+        tablename = _quote(schema) + '.' + tablename
     debug('tablename: %r', tablename)
 
     # sanitise field names
@@ -1595,10 +1600,12 @@ def _todb_dbapi_mkcurs(table, mkcurs, tablename, commit=True, truncate=False):
         connection.commit()
 
 
-def _todb_dbapi_cursor(table, cursor, tablename, commit=True, truncate=False):
+def _todb_dbapi_cursor(table, cursor, tablename, schema=None, commit=True, truncate=False):
 
     # sanitise table name
     tablename = _quote(tablename)
+    if schema is not None:
+        tablename = _quote(schema) + '.' + tablename
     debug('tablename: %r', tablename)
 
     # sanitise field names
@@ -1637,18 +1644,20 @@ def _todb_dbapi_cursor(table, cursor, tablename, commit=True, truncate=False):
         connection.commit()
 
 
-def _todb_sqlalchemy_engine(table, engine, tablename, commit=True, truncate=False):
+def _todb_sqlalchemy_engine(table, engine, tablename, schema=None, commit=True, truncate=False):
 
     _todb_sqlalchemy_connection(table, engine.contextual_connect(), tablename,
-                                commit=commit, truncate=truncate)
+                                schema=schema, commit=commit, truncate=truncate)
 
 
-def _todb_sqlalchemy_connection(table, connection, tablename, commit=True, truncate=False):
+def _todb_sqlalchemy_connection(table, connection, tablename, schema=None, commit=True, truncate=False):
 
     debug('connection: %r', connection)
 
     # sanitise table name
     tablename = _quote(tablename)
+    if schema is not None:
+        tablename = _quote(schema) + '.' + tablename
     debug('tablename: %r', tablename)
     
     # sanitise field names
@@ -1694,13 +1703,13 @@ def _todb_sqlalchemy_connection(table, connection, tablename, commit=True, trunc
     # N.B., don't close connection, leave that to the application
     
 
-def _todb_sqlalchemy_session(table, session, tablename, commit=True, truncate=False):
+def _todb_sqlalchemy_session(table, session, tablename, schema=None, commit=True, truncate=False):
     
-    _todb_sqlalchemy_connection(table, session.connection(), tablename, commit=commit,
+    _todb_sqlalchemy_connection(table, session.connection(), tablename, schema=schema, commit=commit,
                                 truncate=truncate)
     
     
-def appenddb(table, dbo, tablename, commit=True):
+def appenddb(table, dbo, tablename, schema=None, commit=True):
     """
     Load data into an existing database table via a DB-API 2.0
     connection or cursor. Note that the database table will be appended, 
@@ -1756,7 +1765,7 @@ def appenddb(table, dbo, tablename, commit=True):
     
     """
     
-    _todb(table, dbo, tablename, commit=commit, truncate=False)
+    _todb(table, dbo, tablename, schema=schema, commit=commit, truncate=False)
 
 
 def _quote(s):

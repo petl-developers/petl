@@ -93,6 +93,28 @@ def exercise_ss_cursor(setup_dbo, ss_dbo):
     print look(actual)
 
 
+def exercise_with_schema(dbo, db):
+    print '=' * len(repr(dbo))
+    print repr(dbo)
+    print '=' * len(repr(dbo))
+    print
+    
+    expect_empty = (('foo', 'bar'),)
+    expect = (('foo', 'bar'), ('a', 1), ('b', 1))
+    expect_appended = (('foo', 'bar'), ('a', 1), ('b', 1), ('a', 1), ('b', 1))
+    actual = fromdb(dbo, 'SELECT * FROM test')
+
+    print 'write some data and verify...'
+    todb(expect, dbo, 'test', schema=db)
+    ieq(expect, actual)
+    print look(actual)
+    
+    print 'append some data and verify...'
+    appenddb(expect, dbo, 'test', schema=db)
+    ieq(expect_appended, actual)
+    print look(actual)
+    
+
 def setup_mysql(dbapi_connection):
     # setup table
     cursor = dbapi_connection.cursor()
@@ -140,6 +162,9 @@ def exercise_mysql(host, user, passwd, db):
     # exercise using a server-side cursor (can only be used for SELECT)
     exercise_ss_cursor(dbapi_connection, lambda: dbapi_connection.cursor(MySQLdb.cursors.SSCursor))
 
+    # exercise with explicit schema name
+    exercise_with_schema(dbapi_connection, db)
+
 
 def setup_postgresql(dbapi_connection):
     # setup table
@@ -184,6 +209,9 @@ def exercise_postgresql(host, user, passwd, db):
 
     # exercise using a server-side cursor (can only be used for SELECT)
     exercise_ss_cursor(dbapi_connection, lambda: dbapi_connection.cursor(name='arbitrary'))
+
+    # exercise with explicit schema name
+    exercise_with_schema(dbapi_connection, db)
     
 
 if __name__ == '__main__':
