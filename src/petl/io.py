@@ -683,6 +683,14 @@ class TextView(RowContainer):
 
 
 def fromutext(source=None, header=[u'lines'], encoding='utf-8', strip=None):
+    """
+    Construct a table from lines in the given text file via the given encoding. Like :func:`fromtext` but accepts an
+    additional ``encoding`` argument which should be one of the Python supported encodings. See also
+    :mod:`codecs`.
+
+    .. versionadded:: 0.19
+
+    """
     source = _read_source_from_arg(source)
     return UnicodeTextView(source, header, encoding=encoding, strip=strip)
 
