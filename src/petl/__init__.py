@@ -9,7 +9,7 @@ The `petl` module.
 #0.17.1
 #0.18
 #0.18.1
-__version__ = VERSION = '0.19-SNAPSHOT'
+__version__ = VERSION = '0.19'
 
 
 from petl.util import header, fieldnames, data, records, rowcount, look, see, \
