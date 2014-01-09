@@ -223,7 +223,7 @@ Use of the cachetag() method is now deprecated.
 Extract - reading tables from files, databases and other sources
 ----------------------------------------------------------------
 
-The following functions extract a table from a file-like source or database. For everything except :func:fromdb the
+The following functions extract a table from a file-like source or database. For everything except :func:`fromdb` the
 ``source`` argument provides information about where to read the underlying data from. If the ``source`` argument
 is ``None`` or a string it is interpreted as follows:
 
@@ -239,6 +239,7 @@ file, a string or a subprocess, see the section on I/O helper classes below for 
 .. autofunction:: petl.fromcsv
 .. autofunction:: petl.fromtsv
 .. autofunction:: petl.fromucsv
+.. autofunction:: petl.fromutsv
 .. autofunction:: petl.frompickle
 .. autofunction:: petl.fromsqlite3
 .. autofunction:: petl.fromdb
@@ -383,6 +384,8 @@ file or string buffer, see the section on I/O helper classes below for more info
 .. autofunction:: petl.appendtsv
 .. autofunction:: petl.toucsv
 .. autofunction:: petl.appenducsv
+.. autofunction:: petl.toutsv
+.. autofunction:: petl.appendutsv
 .. autofunction:: petl.topickle
 .. autofunction:: petl.appendpickle
 .. autofunction:: petl.tosqlite3
@@ -463,13 +466,13 @@ Utility functions
 I/O helper classes
 ------------------
 
-The following classes are helpers for extract (``from...()``) and load (``to...()```) functions that use a file-like
+The following classes are helpers for extract (``from...()``) and load (``to...()``) functions that use a file-like
 data source. An instance of any
-of the following classes can be used as the ``source`` argument to data extraction functions like :func:fromcsv etc.,
-with the exception of :class:StdoutSource which is write-only. An instance of any of the following classes can also be
-used as the ``source`` argument to data loading functions like :func:tocsv etc., with the exception of
-:class:StdinSource, :class:URLSource and :Class:PopenSource which are read-only. The behaviour of each source can
-usually be configured by passing arguments to the constructor, see the source code of the :mod:petl.io module for
+of the following classes can be used as the ``source`` argument to data extraction functions like :func:`fromcsv` etc.,
+with the exception of :class:`StdoutSource` which is write-only. An instance of any of the following classes can also be
+used as the ``source`` argument to data loading functions like :func:`tocsv` etc., with the exception of
+:class:`StdinSource`, :class:`URLSource` and :class:`PopenSource` which are read-only. The behaviour of each source can
+usually be configured by passing arguments to the constructor, see the source code of the :mod:`petl.io` module for
 full details.
 
 .. autoclass:: petl.FileSource

@@ -265,9 +265,9 @@ class CSVView(RowContainer):
     
 def fromucsv(source=None, dialect=csv.excel, encoding='utf-8', **kwargs):
     """
-    Returns a table containing unicode data extracted from a delimited file via the given encoding. Like :func:fromcsv
+    Returns a table containing unicode data extracted from a delimited file via the given encoding. Like :func:`fromcsv`
     but accepts an additional ``encoding`` argument which should be one of the Python supported encodings. See also
-    :mod:codecs.
+    :mod:`codecs`.
 
     .. versionadded:: 0.19
     """
@@ -1052,8 +1052,8 @@ def tocsv(table, source=None, dialect=csv.excel, **kwargs):
 
 def toucsv(table, source=None, dialect=csv.excel, encoding='utf-8', **kwargs):
     """
-    Write the table to a CSV file via the given encoding. Like :func:tocsv but accepts an additional ``encoding``
-    argument which should be one of the Python supported encodings. See also :mod:codecs.
+    Write the table to a CSV file via the given encoding. Like :func:`tocsv` but accepts an additional ``encoding``
+    argument which should be one of the Python supported encodings. See also :mod:`codecs`.
 
     .. versionadded:: 0.19
     """
@@ -1135,8 +1135,8 @@ def appendcsv(table, source=None, dialect=csv.excel, **kwargs):
 
 def appenducsv(table, source=None, dialect=csv.excel, encoding='utf-8', **kwargs):
     """
-    Append the table to a CSV file via the given encoding. Like :func:appendcsv but accepts an additional ``encoding``
-    argument which should be one of the Python supported encodings. See also :mod:codecs.
+    Append the table to a CSV file via the given encoding. Like :func:`appendcsv` but accepts an additional ``encoding``
+    argument which should be one of the Python supported encodings. See also :mod:`codecs`.
 
     .. versionadded:: 0.19
     """
@@ -1861,8 +1861,8 @@ def appendtext(table, source=None, template=None, prologue=None, epilogue=None):
 
 def toutext(table, source=None, encoding='utf-8', template=None, prologue=None, epilogue=None):
     """
-    Write the table to a text file via the given encoding. Like :func:totext but accepts an additional ``encoding``
-    argument which should be one of the Python supported encodings. See also :mod:codecs.
+    Write the table to a text file via the given encoding. Like :func:`totext` but accepts an additional ``encoding``
+    argument which should be one of the Python supported encodings. See also :mod:`codecs`.
 
     .. versionadded:: 0.19
     """
@@ -1881,8 +1881,8 @@ def toutext(table, source=None, encoding='utf-8', template=None, prologue=None, 
     
 def appendutext(table, source=None, encoding='utf-8', template=None, prologue=None, epilogue=None):
     """
-    Append the table to a text file via the given encoding. Like :func:appendtext but accepts an additional ``encoding``
-    argument which should be one of the Python supported encodings. See also :mod:codecs.
+    Append the table to a text file via the given encoding. Like :func:`appendtext` but accepts an additional ``encoding``
+    argument which should be one of the Python supported encodings. See also :mod:`codecs`.
 
     .. versionadded:: 0.19
     """
@@ -2128,5 +2128,41 @@ def appendtsv(table, source=None, dialect=csv.excel_tab, **kwargs):
     """    
 
     return appendcsv(table, source=source, dialect=dialect, **kwargs)
+
+
+def fromutsv(source=None, dialect=csv.excel_tab, **kwargs):
+    """
+    Convenience function, as :func:`fromucsv` but with different default dialect
+    (tab delimited).
+
+    .. versionadded:: 0.19
+
+    """
+
+    return fromucsv(source, dialect=dialect, **kwargs)
+
+
+def toutsv(table, source=None, dialect=csv.excel_tab, **kwargs):
+    """
+    Convenience function, as :func:`toucsv` but with different default dialect
+    (tab delimited).
+
+    .. versionadded:: 0.19
+
+    """
+
+    return toucsv(table, source=source, dialect=dialect, **kwargs)
+
+
+def appendutsv(table, source=None, dialect=csv.excel_tab, **kwargs):
+    """
+    Convenience function, as :func:`appenducsv` but with different default dialect
+    (tab delimited).
+
+    .. versionadded:: 0.19
+
+    """
+
+    return appenducsv(table, source=source, dialect=dialect, **kwargs)
 
 
