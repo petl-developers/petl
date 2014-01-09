@@ -1768,10 +1768,14 @@ def appenddb(table, dbo, tablename, schema=None, commit=True):
     _todb(table, dbo, tablename, schema=schema, commit=commit, truncate=False)
 
 
+# default DB quote char per SQL-92
+dbquotechar = '"'
+
+
 def _quote(s):
     # crude way to sanitise table and field names
     # conform with the SQL-92 standard. See http://stackoverflow.com/a/214344
-    return '"%s"' % s.replace('"', '""')
+    return dbquotechar + s.replace(dbquotechar, dbquotechar+dbquotechar) + dbquotechar
 
     
 def _placeholders(connection, names):    
@@ -1785,17 +1789,14 @@ def _placeholders(connection, names):
         if not hasattr(mod, 'paramstyle'):
             debug('module %r from connection %r has no attribute paramstyle, defaulting to qmark' , mod, connection)
             # default to using question mark
-            # TODO check this is a sensible thing to do
-            placeholders = ', '.join(['?'] * len(names))            
+            placeholders = ', '.join(['?'] * len(names))
         elif mod.paramstyle == 'qmark':
             debug('found paramstyle qmark')
             placeholders = ', '.join(['?'] * len(names))
         elif mod.paramstyle in ('format', 'pyformat'):
-            # TODO test this!
             debug('found paramstyle pyformat')
             placeholders = ', '.join(['%s'] * len(names))
         elif mod.paramstyle == 'numeric':
-            # TODO test this!
             debug('found paramstyle numeric')
             placeholders = ', '.join([':' + str(i + 1) for i in range(len(names))])
         else:
