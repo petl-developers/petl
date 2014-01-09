@@ -29,7 +29,7 @@ from petl.io import fromcsv, frompickle, fromsqlite3, tocsv, topickle, \
     tosqlite3, fromdb, \
     appendcsv, appendpickle, appendsqlite3, todb, appenddb, fromtext, \
     totext, appendtext, fromxml, fromjson, fromdicts, tojson, \
-    fromtsv, totsv, appendtsv, tojsonarrays, tohtml, fromucsv, toucsv, appenducsv, \
+    fromtsv, totsv, appendtsv, tojsonarrays, tohtml, fromucsv, toucsv, appenducsv, fromutsv, toutsv, appendutsv, \
     FileSource, GzipSource, BZ2Source, URLSource, StdinSource, StdoutSource, StringSource, PopenSource, ZipSource, \
     fromutext, toutext, appendutext, touhtml
 
