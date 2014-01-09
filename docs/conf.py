@@ -15,7 +15,7 @@ import sys, os
 from ast import literal_eval
 
 
-def get_version(source='src/petl/__init__.py'):
+def get_version(source=os.path.abspath('../src/petl/__init__.py')):
     with open(source) as f:
         for line in f:
             if line.startswith('__version__'):
