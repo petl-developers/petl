@@ -91,7 +91,7 @@ def _catmethod(self, *args, **kwargs):
 setattr(FluentWrapper, 'cat', _catmethod)        
 
         
-# need to manually override for facet(), because it returns a dict 
+# need to manually override because it returns a dict 
 def facet(table, field):
     fct = dict()
     for v in valueset(table, field):
@@ -99,9 +99,15 @@ def facet(table, field):
     return fct
 
 
-# need to manually override for diff(), because it returns a tuple 
+# need to manually override because it returns a tuple 
 def diff(*args, **kwargs):
     a, b = petl.diff(*args, **kwargs)
+    return FluentWrapper(a), FluentWrapper(b)
+
+
+# need to manually override because it returns a tuple 
+def unjoin(*args, **kwargs):
+    a, b = petl.unjoin(*args, **kwargs)
     return FluentWrapper(a), FluentWrapper(b)
 
 
