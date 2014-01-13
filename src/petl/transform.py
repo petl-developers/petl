@@ -673,7 +673,7 @@ def convert(table, *args, **kwargs):
     """
     
     if len(args) == 0:
-        converters = None # no conversion specified, can be set afterwards via suffix notation
+        converters = None  # no conversion specified, can be set afterwards via suffix notation
     elif len(args) == 1:
         converters = args[0]
     elif len(args) > 1:
@@ -684,7 +684,7 @@ def convert(table, *args, **kwargs):
             conv = args[1]
         else:
             conv = args[1:]
-        if isinstance(field, (list, tuple)): # allow for multiple fields
+        if isinstance(field, (list, tuple)):  # allow for multiple fields
             for f in field:
                 converters[f] = conv
         else:
@@ -790,7 +790,7 @@ def iterfieldconvert(source, converters, failonerror, errorvalue):
     # grab the fields in the source table
     it = iter(source)
     flds = it.next()
-    yield tuple(flds) # these are not modified
+    yield tuple(flds)  # these are not modified
 
     norm_converters = dict()
     # normalise converters
@@ -817,11 +817,10 @@ def iterfieldconvert(source, converters, failonerror, errorvalue):
         elif isinstance(c, dict):
             norm_converters[k] = dictconverter(c)
         elif c is None:
-            pass # ignore
+            pass  # ignore
         else:
             raise Exception('unexpected converter specification on field %r: %r' % (k, c))
-    
-    
+
     # define a function to transform a value
     def transform_value(i, v):
         if i not in norm_converters:
