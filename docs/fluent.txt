@@ -64,11 +64,13 @@ be used in a fluent style. E.g.::
    +-------+----------+----------------------+--------+---------+
 
 Alternatively, if you don't want to import all petl function names
-into the root namespace, you can just import "etl", e.g.::
+into the root namespace, you can just import the module and use the
+``wrap()`` function, e.g.::
 
-     >>> from petl.fluent import etl
+     >>> import petl.fluent as etl
      >>> l = [['foo', 'bar'], ['a', 1], ['b', 3]]
-     >>> etl(l).look()
+     >>> tbl = etl.wrap(l)
+     >>> tbl.look()
      +-------+-------+
      | 'foo' | 'bar' |
      +=======+=======+
@@ -77,7 +79,7 @@ into the root namespace, you can just import "etl", e.g.::
      | 'b'   | 3     |
      +-------+-------+
      
-     >>> etl(l).cut('foo').look()
+     >>> tbl.cut('foo').look()
      +-------+
      | 'foo' |
      +=======+
@@ -86,8 +88,8 @@ into the root namespace, you can just import "etl", e.g.::
      | 'b'   |
      +-------+
      
-     >>> etl(l).tocsv('test.csv')
-     >>> etl().fromcsv('test.csv').look()
+     >>> tbl.tocsv('test.csv')
+     >>> etl.fromcsv('test.csv').look()
      +-------+-------+
      | 'foo' | 'bar' |
      +=======+=======+
@@ -95,6 +97,10 @@ into the root namespace, you can just import "etl", e.g.::
      +-------+-------+
      | 'b'   | '3'   |
      +-------+-------+
+
+.. versionchanged:: 0.21
+
+The recommended import and wrapping pattern (described above) has changed, see https://github.com/alimanfoo/petl/issues/230 for more details.
 
 
 ``petl`` executable

@@ -9,7 +9,7 @@ from nose.tools import eq_
 
 
 import petl
-from petl.fluent import etl
+import petl.fluent as etl
 from petl.testutils import ieq
 
 
@@ -18,7 +18,7 @@ def test_basics():
     t1 = (('foo', 'bar'),
          ('A', 1),
          ('B', 2))
-    w1 = etl(t1)
+    w1 = etl.wrap(t1)
     
     eq_(('foo', 'bar'), w1.header())
     eq_(petl.header(w1), w1.header())
@@ -48,7 +48,7 @@ def test_staticmethods():
         writer.writerow(row)
     f.close()
     
-    actual = etl().fromcsv(f.name, delimiter='\t')
+    actual = etl.fromcsv(f.name, delimiter='\t')
     expect = (('foo', 'bar'),
               ('a', '1'),
               ('b', '2'),
@@ -62,19 +62,19 @@ def test_container():
              ('a', 1),
              ('b', 2),
              ('c', 2))
-    actual = etl(table)[0]
+    actual = etl.wrap(table)[0]
     expect = ('foo', 'bar')
     eq_(expect, actual)
-    actual = etl(table)['bar']
+    actual = etl.wrap(table)['bar']
     expect = (1, 2, 2)
     ieq(expect, actual)
-    actual = len(etl(table))
+    actual = len(etl.wrap(table))
     expect = 4
     eq_(expect, actual)
     
     
 def test_values_container_convenience_methods():
-    table = etl((('foo', 'bar'),
+    table = etl.wrap((('foo', 'bar'),
                  ('a', 1),
                  ('b', 2),
                  ('c', 2)))
