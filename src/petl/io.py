@@ -1506,6 +1506,10 @@ def _todb(table, dbo, tablename, schema=None, commit=True, truncate=False):
         raise Exception('unsupported database object type: %r' % dbo)
 
 
+SQL_TRUNCATE_QUERY = u'DELETE FROM %s'
+SQL_INSERT_QUERY = u'INSERT INTO %s (%s) VALUES (%s)'
+
+
 def _todb_dbapi_connection(table, connection, tablename, schema=None, commit=True, truncate=False):
     
     # sanitise table name
@@ -1531,7 +1535,7 @@ def _todb_dbapi_connection(table, connection, tablename, schema=None, commit=Tru
     if truncate:
         # TRUNCATE is not supported in some databases and causing locks with
         # MySQL used via SQLAlchemy, fall back to DELETE FROM for now
-        truncatequery = 'DELETE FROM %s' % tablename
+        truncatequery = SQL_TRUNCATE_QUERY % tablename
         debug('truncate the table via query %r', truncatequery)
         cursor.execute(truncatequery)
         # just in case, close and resurrect cursor
@@ -1540,7 +1544,7 @@ def _todb_dbapi_connection(table, connection, tablename, schema=None, commit=Tru
     
 #    insertquery = 'INSERT INTO %s VALUES (%s)' % (tablename, placeholders)
     insertcolnames = ', '.join(colnames)
-    insertquery = 'INSERT INTO %s (%s) VALUES (%s)' % (tablename, insertcolnames, placeholders)
+    insertquery = SQL_INSERT_QUERY % (tablename, insertcolnames, placeholders)
     debug('insert data via query %r' % insertquery)
     cursor.executemany(insertquery, it)
 
@@ -1581,7 +1585,7 @@ def _todb_dbapi_mkcurs(table, mkcurs, tablename, schema=None, commit=True, trunc
     if truncate:
         # TRUNCATE is not supported in some databases and causing locks with
         # MySQL used via SQLAlchemy, fall back to DELETE FROM for now
-        truncatequery = 'DELETE FROM %s' % tablename
+        truncatequery = SQL_TRUNCATE_QUERY % tablename
         debug('truncate the table via query %r', truncatequery)
         cursor.execute(truncatequery)
         # N.B., may be server-side cursor, need to resurrect
@@ -1590,7 +1594,7 @@ def _todb_dbapi_mkcurs(table, mkcurs, tablename, schema=None, commit=True, trunc
 
 #    insertquery = 'INSERT INTO %s VALUES (%s)' % (tablename, placeholders)
     insertcolnames = ', '.join(colnames)
-    insertquery = 'INSERT INTO %s (%s) VALUES (%s)' % (tablename, insertcolnames, placeholders)
+    insertquery = SQL_INSERT_QUERY % (tablename, insertcolnames, placeholders)
     debug('insert data via query %r' % insertquery)
     cursor.executemany(insertquery, it)
     cursor.close()
@@ -1627,13 +1631,13 @@ def _todb_dbapi_cursor(table, cursor, tablename, schema=None, commit=True, trunc
     if truncate:
         # TRUNCATE is not supported in some databases and causing locks with
         # MySQL used via SQLAlchemy, fall back to DELETE FROM for now
-        truncatequery = 'DELETE FROM %s' % tablename
+        truncatequery = SQL_TRUNCATE_QUERY % tablename
         debug('truncate the table via query %r', truncatequery)
         cursor.execute(truncatequery)
 
 #    insertquery = 'INSERT INTO %s VALUES (%s)' % (tablename, placeholders)
     insertcolnames = ', '.join(colnames)
-    insertquery = 'INSERT INTO %s (%s) VALUES (%s)' % (tablename, insertcolnames, placeholders)
+    insertquery = SQL_INSERT_QUERY % (tablename, insertcolnames, placeholders)
     debug('insert data via query %r' % insertquery)
     cursor.executemany(insertquery, it)
 
@@ -1683,13 +1687,13 @@ def _todb_sqlalchemy_connection(table, connection, tablename, schema=None, commi
     if truncate:
         # TRUNCATE is not supported in some databases and causing locks with
         # MySQL used via SQLAlchemy, fall back to DELETE FROM for now
-        truncatequery = 'DELETE FROM %s' % tablename
+        truncatequery = SQL_TRUNCATE_QUERY % tablename
         debug('truncate the table via query %r', truncatequery)
         connection.execute(truncatequery)
     
 #    insertquery = 'INSERT INTO %s VALUES (%s)' % (tablename, placeholders)
     insertcolnames = ', '.join(colnames)
-    insertquery = 'INSERT INTO %s (%s) VALUES (%s)' % (tablename, insertcolnames, placeholders)
+    insertquery = SQL_INSERT_QUERY % (tablename, insertcolnames, placeholders)
     debug('insert data via query %r' % insertquery)
     for row in it:
         connection.execute(insertquery, row)
