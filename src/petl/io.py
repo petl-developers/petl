@@ -1264,7 +1264,7 @@ def appendpickle(table, source=None, protocol=-1):
             pickle.dump(row, f, protocol)
     
 
-def tosqlite3(table, filename_or_connection, tablename, create=True, commit=True):
+def tosqlite3(table, filename_or_connection, tablename, create=False, commit=True):
     """
     Load data into a table in an :mod:`sqlite3` database. Note that if
     the database table exists, it will be truncated, i.e., all
@@ -1298,10 +1298,19 @@ def tosqlite3(table, filename_or_connection, tablename, create=True, commit=True
         | u'c'  | 2     |
         +-------+-------+
 
+    If the table does not exist and ``create=True`` then a table will be created
+    using the field names in the table header. However, note that no type specifications
+    will be included in the table creation statement and so column type affinities may
+    be inappropriate.
+
     .. versionchanged:: 0.10.2
     
     Either a database file name or a connection object can be given as the
-    second argument. 
+    second argument.
+
+    .. versionchanged:: 0.21
+
+    Default value for ``create`` argument changed to ``False``.
 
     """
     
@@ -1327,17 +1336,17 @@ def _tosqlite3(table, filename_or_connection, tablename, create=False, commit=Tr
 
     cursor = conn.cursor()
     
-    if create: # force table creation
-        cursor.execute('DROP TABLE IF EXISTS %s' % tablename)
-        cursor.execute('CREATE TABLE %s (%s)' % (tablename, ', '.join(colnames)))
+    if create:  # force table creation
+        cursor.execute(u'DROP TABLE IF EXISTS %s' % tablename)
+        cursor.execute(u'CREATE TABLE %s (%s)' % (tablename, ', '.join(colnames)))
     
     if truncate:
         # truncate table
-        cursor.execute('DELETE FROM %s' % tablename)
+        cursor.execute(u'DELETE FROM %s' % tablename)
     
     # insert rows
     placeholders = ', '.join(['?'] * len(colnames))
-    insertquery = 'INSERT INTO %s VALUES (%s);' % (tablename, placeholders)
+    insertquery = u'INSERT INTO %s VALUES (%s);' % (tablename, placeholders)
     cursor.executemany(insertquery, it)
 
     # tidy up
@@ -1345,7 +1354,7 @@ def _tosqlite3(table, filename_or_connection, tablename, create=False, commit=Tr
     if commit:
         conn.commit()
 
-    return conn # in case people want to re-use it or close it
+    return conn  # in case people want to re-use it or close it
     
     
 def appendsqlite3(table, filename_or_connection, tablename, commit=True):
