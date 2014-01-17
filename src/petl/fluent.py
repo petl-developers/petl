@@ -8,6 +8,7 @@ usage.
 
 
 import sys
+import inspect
 from petl.util import valueset, RowContainer
 
 
@@ -46,8 +47,7 @@ class FluentWrapper(RowContainer):
         return repr(self._inner)
 
 
-# define a wrapper function
-def wrap(f):
+def _wrap_function(f):
     def wrapper(*args, **kwargs):
         _innerresult = f(*args, **kwargs)
         if isinstance(_innerresult, RowContainer): 
@@ -61,24 +61,27 @@ def wrap(f):
         
 # import and wrap all functions from root petl module
 for n, c in petl.__dict__.items():
-    if callable(c):
-        setattr(thismodule, n, wrap(c))
+    if inspect.isfunction(c):
+        setattr(thismodule, n, _wrap_function(c))
     else:
         setattr(thismodule, n, c)
 
 
-STATICMETHODS = ['dummytable', 'randomtable']
+STATICMETHODS = ['dummytable', 'randomtable', 'dateparser', 'timeparser', 'datetimeparser', 'boolparser', 'parsenumber',
+                 'expr', 'strjoin', 'heapqmergesorted', 'shortlistmergesorted', 'nthword']
+
 
 # add module functions as methods on the wrapper class
-# TODO add only those methods that expect to have row container as first argument
+# N.B., add only those functions that expect to have row container (i.e., table) as first argument
+# i.e., only those were it makes sense for them to be methods
 for n, c in thismodule.__dict__.items():
-    if callable(c):
-        if n.startswith('from') or n in STATICMETHODS: # avoids having to import anything other than "etl"
+    if inspect.isfunction(c):
+        if n.startswith('from') or n in STATICMETHODS: 
             setattr(FluentWrapper, n, staticmethod(c))
         else:
             setattr(FluentWrapper, n, c) 
-        
-        
+
+
 # special case to act like static method if no inner
 def _catmethod(self, *args, **kwargs):
     if self._inner is None:
@@ -88,7 +91,7 @@ def _catmethod(self, *args, **kwargs):
 setattr(FluentWrapper, 'cat', _catmethod)        
 
         
-# need to manually override for facet(), because it returns a dict 
+# need to manually override because it returns a dict 
 def facet(table, field):
     fct = dict()
     for v in valueset(table, field):
@@ -96,14 +99,18 @@ def facet(table, field):
     return fct
 
 
-# need to manually override for diff(), because it returns a tuple 
+# need to manually override because it returns a tuple 
 def diff(*args, **kwargs):
     a, b = petl.diff(*args, **kwargs)
     return FluentWrapper(a), FluentWrapper(b)
 
 
-# short alias to wrap explicitly
-etl = FluentWrapper    
+# need to manually override because it returns a tuple 
+def unjoin(*args, **kwargs):
+    a, b = petl.unjoin(*args, **kwargs)
+    return FluentWrapper(a), FluentWrapper(b)
 
 
+# shorthand alias for wrapping tables
+wrap = FluentWrapper    
 

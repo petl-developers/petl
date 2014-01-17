@@ -7,6 +7,7 @@ session.
 
 from itertools import islice
 import sys
+import inspect
 from petl.util import valueset, RowContainer
 import petl.fluent
 from petl.io import tohtml, touhtml, StringSource
@@ -98,7 +99,7 @@ class InteractiveWrapper(petl.fluent.FluentWrapper):
                          representation=repr_html_value)
 
 
-def wrap(f):
+def _wrap_function(f):
     def wrapper(*args, **kwargs):
         _innerresult = f(*args, **kwargs)
         if isinstance(_innerresult, RowContainer):
@@ -112,22 +113,21 @@ def wrap(f):
         
 # import and wrap all functions from root petl module
 for n, c in petl.__dict__.items():
-    if callable(c):
-        setattr(thismodule, n, wrap(c))
+    if inspect.isfunction(c):
+        setattr(thismodule, n, _wrap_function(c))
     else:
         setattr(thismodule, n, c)
         
         
 # add module functions as methods on the wrapper class
-# TODO add only those methods that expect to have row container as first argument
 for n, c in thismodule.__dict__.items():
-    if callable(c):
-        if n.startswith('from') or n in petl.fluent.STATICMETHODS: # avoids having to import anything other than "etl"
+    if inspect.isfunction(c):
+        if n.startswith('from') or n in petl.fluent.STATICMETHODS: 
             setattr(InteractiveWrapper, n, staticmethod(c))
         else:
             setattr(InteractiveWrapper, n, c) 
-            
-            
+
+
 # special case to act like static method if no inner
 def _catmethod(self, *args, **kwargs):
     if self._inner is None:
@@ -137,7 +137,7 @@ def _catmethod(self, *args, **kwargs):
 setattr(InteractiveWrapper, 'cat', _catmethod)        
 
         
-# need to manually override for facet, because it returns a dict 
+# need to manually override because it returns a dict 
 def facet(table, field):
     fct = dict()
     for v in valueset(table, field):
@@ -145,12 +145,18 @@ def facet(table, field):
     return fct
 
 
-# need to manually override for diff(), because it returns a tuple 
+# need to manually override because it returns a tuple 
 def diff(*args, **kwargs):
     a, b = petl.diff(*args, **kwargs)
     return InteractiveWrapper(a), InteractiveWrapper(b)
 
 
-# short alias to wrap explicitly
-etl = InteractiveWrapper    
+# need to manually override because it returns a tuple 
+def unjoin(*args, **kwargs):
+    a, b = petl.unjoin(*args, **kwargs)
+    return InteractiveWrapper(a), InteractiveWrapper(b)
+
+
+# shorthand alias for wrapping tables 
+wrap = InteractiveWrapper    
 

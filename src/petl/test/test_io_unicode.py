@@ -34,7 +34,7 @@ Johann Strauß,2
               (u'Johann Strauß', u'2'),
               (u'Вагиф Сәмәдоғлу', u'3'),
               (u'章子怡', u'4'),
-            )
+              )
     ieq(expect, actual)
     ieq(expect, actual)  # verify can iterate twice
 

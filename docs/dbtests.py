@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+
+
 """
 DB-related tests, separated from main unit tests because they need local database
 setup prior to running.
@@ -54,6 +57,7 @@ def exercise(dbo):
 
 def exercise_ss_cursor(setup_dbo, ss_dbo):
     print '=' * len(repr(ss_dbo))
+    print 'EXERCISE WITH SERVER-SIDE CURSOR'
     print repr(ss_dbo)
     print '=' * len(repr(ss_dbo))
     print
@@ -95,11 +99,11 @@ def exercise_ss_cursor(setup_dbo, ss_dbo):
 
 def exercise_with_schema(dbo, db):
     print '=' * len(repr(dbo))
+    print 'EXERCISE WITH EXPLICIT SCHEMA NAME'
     print repr(dbo)
     print '=' * len(repr(dbo))
     print
     
-    expect_empty = (('foo', 'bar'),)
     expect = (('foo', 'bar'), ('a', 1), ('b', 1))
     expect_appended = (('foo', 'bar'), ('a', 1), ('b', 1), ('a', 1), ('b', 1))
     actual = fromdb(dbo, 'SELECT * FROM test')
@@ -115,6 +119,26 @@ def exercise_with_schema(dbo, db):
     print look(actual)
     
 
+def exercise_unicode(dbo):
+    print '=' * len(repr(dbo))
+    print 'EXERCISE UNICODE'
+    print repr(dbo)
+    print '=' * len(repr(dbo))
+    print
+
+    expect = ((u'name', u'id'),
+              (u'Արամ Խաչատրյան', 1),
+              (u'Johann Strauß', 2),
+              (u'Вагиф Сәмәдоғлу', 3),
+              (u'章子怡', 4),
+              )
+    actual = fromdb(dbo, 'SELECT * FROM test_unicode')
+    print 'write some data and verify...'
+    todb(expect, dbo, 'test_unicode')
+    ieq(expect, actual)
+    print look(actual)
+
+
 def setup_mysql(dbapi_connection):
     # setup table
     cursor = dbapi_connection.cursor()
@@ -122,6 +146,8 @@ def setup_mysql(dbapi_connection):
     cursor.execute('SET SQL_MODE=ANSI_QUOTES')
     cursor.execute('DROP TABLE IF EXISTS test')
     cursor.execute('CREATE TABLE test (foo TEXT, bar INT)')
+    cursor.execute('DROP TABLE IF EXISTS test_unicode')
+    cursor.execute('CREATE TABLE test_unicode (name TEXT, id INT) CHARACTER SET utf8')
     cursor.close()
     dbapi_connection.commit()
 
@@ -159,11 +185,12 @@ def exercise_mysql(host, user, passwd, db):
     exercise(sqlalchemy_session)
     sqlalchemy_session.close()
 
-    # exercise using a server-side cursor (can only be used for SELECT)
+    # other exercises
     exercise_ss_cursor(dbapi_connection, lambda: dbapi_connection.cursor(MySQLdb.cursors.SSCursor))
-
-    # exercise with explicit schema name
     exercise_with_schema(dbapi_connection, db)
+    utf8_connection = MySQLdb.connect(host=host, user=user, passwd=passwd, db=db, charset='utf8')
+    utf8_connection.cursor().execute('SET SQL_MODE=ANSI_QUOTES')
+    exercise_unicode(utf8_connection)
 
 
 def setup_postgresql(dbapi_connection):
@@ -171,13 +198,19 @@ def setup_postgresql(dbapi_connection):
     cursor = dbapi_connection.cursor()
     cursor.execute('DROP TABLE IF EXISTS test')
     cursor.execute('CREATE TABLE test (foo TEXT, bar INT)')
+    cursor.execute('DROP TABLE IF EXISTS test_unicode')
+    # assume character encoding UTF-8 already set at database level
+    cursor.execute('CREATE TABLE test_unicode (name TEXT, id INT)')
     cursor.close()
     dbapi_connection.commit()
     
     
 def exercise_postgresql(host, user, passwd, db):
     import psycopg2
-    
+    import psycopg2.extensions
+    psycopg2.extensions.register_type(psycopg2.extensions.UNICODE)
+    psycopg2.extensions.register_type(psycopg2.extensions.UNICODEARRAY)
+
     # assume database already created
     dbapi_connection = psycopg2.connect('host=%s dbname=%s user=%s password=%s' % (host, db, user, passwd))
 
@@ -207,12 +240,11 @@ def exercise_postgresql(host, user, passwd, db):
     exercise(sqlalchemy_session)
     sqlalchemy_session.close()
 
-    # exercise using a server-side cursor (can only be used for SELECT)
+    # other exercises
     exercise_ss_cursor(dbapi_connection, lambda: dbapi_connection.cursor(name='arbitrary'))
+    exercise_with_schema(dbapi_connection, 'public')
+    exercise_unicode(dbapi_connection)
 
-    # exercise with explicit schema name
-    exercise_with_schema(dbapi_connection, db)
-    
 
 if __name__ == '__main__':
     print petl.VERSION

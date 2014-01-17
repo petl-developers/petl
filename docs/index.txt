@@ -74,9 +74,9 @@ A *row iterator* is an iterator which satisfies the following:
 
 6. each subsequent item returned by the iterator is a *data row* comprising a list or tuple of *data values*
 
-7. a *field* is typically a string (`str` or `unicode`) but may be an object of any type as long as it implements `__str__`, is immutable (can be used as a dictionary key) and is pickleable
+7. a *field* is typically a string (`str` or `unicode`) but may be an object of any type as long as it implements `__str__` and is pickleable
 
-8. a *data value* is any pickleable object
+8. a *data value* is any pickleable object that supports rich comparison operators
 
 So, for example, the list of lists shown below is a row container::
 
@@ -122,6 +122,8 @@ Note that this convention does not place any restrictions on the
 lengths of header and data rows. A table may return a header row
 and/or data rows of varying lengths. 
 
+Note also that many features of :mod:`petl` depend on sorting which
+will only work if the data values support rich comparison operators.
 
 Transformation pipelines
 ~~~~~~~~~~~~~~~~~~~~~~~~

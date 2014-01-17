@@ -35,9 +35,10 @@ representation function can be changed by setting
 Finally, this module extends :mod:`petl.fluent` so you can use the
 fluent style if you wish, e.g.::
 
-     >>> from petl.interactive import etl
+     >>> import petl.interactive as etl
      >>> l = [['foo', 'bar'], ['a', 1], ['b', 3]]
-     >>> etl(l)
+     >>> tbl = etl.wrap(l)
+     >>> tbl
      +-------+-------+
      | 'foo' | 'bar' |
      +=======+=======+
@@ -46,7 +47,7 @@ fluent style if you wish, e.g.::
      | 'b'   | 3     |
      +-------+-------+
 
-     >>> etl(l).cut('foo')
+     >>> tbl.cut('foo')
      +-------+
      | 'foo' |
      +=======+
@@ -55,8 +56,8 @@ fluent style if you wish, e.g.::
      | 'b'   |
      +-------+
 
-     >>> etl(l).tocsv('test.csv')
-     >>> etl().fromcsv('test.csv')
+     >>> tbl.tocsv('test.csv')
+     >>> etl.fromcsv('test.csv')
      +-------+-------+
      | 'foo' | 'bar' |
      +=======+=======+
@@ -64,3 +65,7 @@ fluent style if you wish, e.g.::
      +-------+-------+
      | 'b'   | '3'   |
      +-------+-------+
+
+.. versionchanged:: 0.21
+
+The recommended import and wrapping pattern (described above) has changed, see https://github.com/alimanfoo/petl/issues/230 for more details.
