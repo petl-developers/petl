@@ -176,6 +176,9 @@ class PopenSource(object):
             pass
 
 
+_invalid_source_msg = 'invalid source argument, expected None or a string or an object implementing open_(), found %r'
+
+
 def _read_source_from_arg(source):
     if source is None:
         return StdinSource()
@@ -189,6 +192,7 @@ def _read_source_from_arg(source):
         else:
             return FileSource(source)
     else:
+        assert hasattr(source, 'open_') and callable(getattr(source, 'open_')), _invalid_source_msg % source
         return source
     
     
@@ -203,6 +207,7 @@ def _write_source_from_arg(source):
         else:
             return FileSource(source)
     else:
+        assert hasattr(source, 'open_') and callable(getattr(source, 'open_')), _invalid_source_msg % source
         return source
     
     
