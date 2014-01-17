@@ -34,7 +34,9 @@ repr_index_header = False
 repr_html_value = unicode
 
 
-def repr_html(tbl, index_header=False, representation=unicode, caption=None, encoding='utf-8'):
+def repr_html(tbl, index_header=None, representation=unicode, caption=None, encoding='utf-8'):
+    if index_header is None:
+        index_header = repr_index_header  # use default
     if index_header:
         indexed_header = [u'%s|%s' % (i, f) for (i, f) in enumerate(petl.util.header(tbl))]
         target = petl.transform.setheader(tbl, indexed_header)
