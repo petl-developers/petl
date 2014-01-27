@@ -20,7 +20,7 @@ import os
 from petl import fromcsv, frompickle, fromsqlite3, fromdb, \
     tocsv, topickle, appendcsv, appendpickle, tosqlite3, appendsqlite3, \
     todb, appenddb, fromtext, totext, fromxml, fromjson, fromdicts, \
-    tojson, fromtsv, totsv, appendtsv, tojsonarrays, tohtml, nrows, StringSource, PopenSource
+    tojson, fromtsv, totsv, appendtsv, tojsonarrays, tohtml, nrows, StringSource, PopenSource, cut
 from petl.testutils import ieq
 
 
@@ -1128,3 +1128,16 @@ def test_PopenSource():
     ieq(expect, actual)
 
 
+def test_issue_231():
+
+    table = [['foo', 'bar'], ['a', '1'], ['b', '2']]
+    t = cut(table, 'foo')
+    totsv(t, 'tmp/issue_231.tsv')
+    u = fromtsv('tmp/issue_231.tsv')
+    ieq(t, u)
+    tocsv(t, 'tmp/issue_231.csv')
+    u = fromcsv('tmp/issue_231.csv')
+    ieq(t, u)
+    topickle(t, 'tmp/issue_231.pickle')
+    u = frompickle('tmp/issue_231.pickle')
+    ieq(t, u)
