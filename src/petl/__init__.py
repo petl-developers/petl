@@ -12,7 +12,8 @@ The `petl` module.
 #0.19
 #0.20
 #0.21
-__version__ = VERSION = '0.21.1'
+#0.21.1
+__version__ = VERSION = '0.21.2'
 
 
 from petl.util import header, fieldnames, data, records, rowcount, look, see, \
