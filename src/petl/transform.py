@@ -4070,11 +4070,6 @@ def rangecounts(table, key, width, minv=None, maxv=None, presorted=False,
                           presorted=presorted, buffersize=buffersize, tempdir=tempdir, cache=cache)
     
     
-###############################################################################
-###############################################################################
-## rangeaggregate
-###############################################################################
-###############################################################################    
 def rangeaggregate(table, key, width, aggregation=None, value=None, minv=None, 
                    maxv=None, presorted=False, buffersize=None, tempdir=None, cache=True):
     """
@@ -4296,11 +4291,6 @@ def itermultirangeaggregate(source, key, width, aggregation, minv, maxv):
         yield tuple(outrow)
             
     
-###############################################################################
-###############################################################################
-## rowmap
-###############################################################################
-###############################################################################    
 def rowmap(table, rowmapper, fields, failonerror=False, missing=None):
     """
     Transform rows via an arbitrary function. E.g.::
@@ -7952,14 +7942,7 @@ def itersimplemultirangeaggregate(table, keys, widths, aggregation, value,
     for bindef, vals in _recursive_bin(it, 0, [], fields, keys, widths, getval, mins, maxs):
         yield bindef, aggregation(vals)
 
-    
-################################################################################
-################################################################################
-## UNJOIN
-################################################################################
-################################################################################
 
-    
 def unjoin(table, value, key=None, autoincrement=(1, 1), presorted=False, buffersize=None, tempdir=None, cache=True):
     """
     Split a table into two tables by reversing an inner join.
