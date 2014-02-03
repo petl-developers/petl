@@ -20,7 +20,7 @@ setup(
     scripts=['bin/petl'],
     url='https://github.com/alimanfoo/petl',
     license='MIT License',
-    description='A tentative Python module for extracting, transforming and loading tables of data.',
+    description='A Python module for extracting, transforming and loading tables of data.',
     long_description=open('README.txt').read(),
     classifiers=['Intended Audience :: Developers',
                  'License :: OSI Approved :: MIT License',
