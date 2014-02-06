@@ -9,3 +9,8 @@ tables of data.
 - Download: http://pypi.python.org/pypi/petl
 - Mailing list: http://groups.google.com/group/python-etl
 
+See also `petlx <https://github.com/alimanfoo/petlx>`_, a library of
+extension modules for `petl`.
+
+There is also some information for developers/contributors on the
+`project wiki <https://github.com/alimanfoo/petl/wiki>`_.
