@@ -664,11 +664,29 @@ def convert(table, *args, **kwargs):
         | 'c'   | 1.2   | 112   |
         +-------+-------+-------+
 
+        >>> # conversion can be conditional
+        ... table12 = convert(table1, 'baz', lambda v: v*2, where=lambda r: r.foo == 'B')
+        >>> look(table12)
+        +-------+-------+-------+
+        | 'foo' | 'bar' | 'baz' |
+        +=======+=======+=======+
+        | 'A'   | '2.4' |    12 |
+        +-------+-------+-------+
+        | 'B'   | '5.7' |    68 |
+        +-------+-------+-------+
+        | 'C'   | '1.2' |    56 |
+        +-------+-------+-------+
+
     Note that either field names or indexes can be given.
     
     .. versionchanged:: 0.11
     
     Now supports multiple field conversions.
+
+    .. versionchanged:: 0.22
+
+    The ``where`` keyword argument can be given with a callable or expression which is evaluated on each row
+    and which should return True if the conversion should be applied on that row, else False.
     
     """
     
@@ -718,7 +736,7 @@ def replaceall(table, a, b):
     return convertall(table, {a: b})
     
 
-def convertnumbers(table):
+def convertnumbers(table, **kwargs):
     """
     Convenience function to convert all field values to numbers where possible. 
     E.g.::
@@ -747,10 +765,10 @@ def convertnumbers(table):
     
     """
     
-    return convertall(table, parsenumber)
+    return convertall(table, parsenumber, **kwargs)
 
 
-def fieldconvert(table, converters=None, failonerror=False, errorvalue=None):
+def fieldconvert(table, converters=None, failonerror=False, errorvalue=None, **kwargs):
     """
     Transform values in one or more fields via functions or method invocations. 
 
@@ -760,12 +778,12 @@ def fieldconvert(table, converters=None, failonerror=False, errorvalue=None):
     
     """
 
-    return FieldConvertView(table, converters, failonerror, errorvalue)
+    return FieldConvertView(table, converters, failonerror, errorvalue, **kwargs)
 
 
 class FieldConvertView(RowContainer):
     
-    def __init__(self, source, converters=None, failonerror=False, errorvalue=None):
+    def __init__(self, source, converters=None, failonerror=False, errorvalue=None, where=None):
         self.source = source
         if converters is None:
             self.converters = dict()
@@ -777,15 +795,16 @@ class FieldConvertView(RowContainer):
             raise Exception('unexpected converters: %r' % converters)
         self.failonerror = failonerror
         self.errorvalue = errorvalue
+        self.where = where
         
     def __iter__(self):
-        return iterfieldconvert(self.source, self.converters, self.failonerror, self.errorvalue)
+        return iterfieldconvert(self.source, self.converters, self.failonerror, self.errorvalue, self.where)
     
     def __setitem__(self, key, value):
         self.converters[key] = value
         
     
-def iterfieldconvert(source, converters, failonerror, errorvalue):
+def iterfieldconvert(source, converters, failonerror, errorvalue, where):
 
     # grab the fields in the source table
     it = iter(source)
@@ -836,8 +855,20 @@ def iterfieldconvert(source, converters, failonerror, errorvalue):
                     return errorvalue
 
     # construct the data rows
-    for row in it:
-        yield tuple(transform_value(i, v) for i, v in enumerate(row))
+    if where is None:
+        for row in it:
+            yield tuple(transform_value(i, v) for i, v in enumerate(row))
+    else:
+        if isinstance(where, basestring):
+            where = expr(where)
+        else:
+            assert callable(where), 'expected callable for "where" argument, found %r' % r
+        for row in hybridrows(flds, it):
+            if where(row):
+                yield tuple(transform_value(i, v) for i, v in enumerate(row))
+            else:
+                yield row
+
 
             
 def methodcaller(nm, *args):

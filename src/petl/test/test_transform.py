@@ -4591,3 +4591,22 @@ def test_unjoin_explicit_key_5():
     ieq(expect_right, right)
     ieq(expect_right, right)
 
+
+def test_convert_where():
+    
+    tbl1 = (('foo', 'bar'),
+            ('a', 1),
+            ('b', 2))
+
+    expect = (('foo', 'bar'),
+              ('a', 1),
+              ('b', 4))
+
+    actual = convert(tbl1, 'bar', lambda v: v*2, where=lambda r: r.foo == 'b')
+    ieq(expect, actual)
+    ieq(expect, actual)
+    actual = convert(tbl1, 'bar', lambda v: v*2, where="{foo} == 'b'")
+    ieq(expect, actual)
+    ieq(expect, actual)
+
+    

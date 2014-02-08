@@ -165,6 +165,9 @@ table11['foo'] = 'lower'
 table11['bar'] = float
 table11['baz'] = lambda v: v*2
 look(table11)
+# conversion can be conditional
+table12 = convert(table1, 'baz', lambda v: v*2, where=lambda r: r.foo == 'B')
+look(table12)
 
 
 # convertnumbers
