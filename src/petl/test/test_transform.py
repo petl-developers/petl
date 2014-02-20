@@ -4627,4 +4627,3 @@ def test_replace_where():
     ieq(expect, actual)
     ieq(expect, actual)
 
-
