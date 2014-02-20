@@ -716,7 +716,12 @@ def convertall(table, *args, **kwargs):
     function or mapping. See also :func:`convert`.
     
     .. versionadded:: 0.4
-    
+
+    .. versionchanged:: 0.22
+
+    The ``where`` keyword argument can be given with a callable or expression which is evaluated on each row
+    and which should return True if the conversion should be applied on that row, else False.
+
     """
     
     # TODO don't read the data twice!
@@ -724,16 +729,21 @@ def convertall(table, *args, **kwargs):
     return convert(table, header(table), *args, **kwargs)
 
 
-def replaceall(table, a, b):
+def replaceall(table, a, b, **kwargs):
     """
     Convenience function to replace all instances of `a` with `b` under all 
     fields. See also :func:`convertall`.
      
     .. versionadded:: 0.5
 
+    .. versionchanged:: 0.22
+
+    The ``where`` keyword argument can be given with a callable or expression which is evaluated on each row
+    and which should return True if the conversion should be applied on that row, else False.
+
     """
     
-    return convertall(table, {a: b})
+    return convertall(table, {a: b}, **kwargs)
     
 
 def convertnumbers(table, **kwargs):
@@ -884,16 +894,21 @@ def dictconverter(d):
     return conv
 
 
-def replace(table, field, a, b):
+def replace(table, field, a, b, **kwargs):
     """
     Convenience function to replace all occurrences of `a` with `b` under the 
     given field. See also :func:`convert`.
     
     .. versionadded:: 0.5
-    
+
+    .. versionchanged:: 0.22
+
+    The ``where`` keyword argument can be given with a callable or expression which is evaluated on each row
+    and which should return True if the conversion should be applied on that row, else False.
+
     """
     
-    return convert(table, field, {a: b})
+    return convert(table, field, {a: b}, **kwargs)
 
 
 def sub(table, field, pattern, repl, count=0, flags=0):

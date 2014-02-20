@@ -25,7 +25,7 @@ from petl import rename, fieldnames, cut, cat, convert, addfield, \
                 flatten, unflatten, mergesort, annex, unpackdict, unique, \
                 selectin, fold, addrownumbers, selectcontains, search, \
                 addcolumn, lookupjoin, hashlookupjoin, filldown, fillright, \
-                fillleft, multirangeaggregate, unjoin, coalesce, nrows 
+                fillleft, multirangeaggregate, unjoin, coalesce, nrows, replace
 from petl.transform import Conflict, TransformError
 
 
@@ -4610,3 +4610,21 @@ def test_convert_where():
     ieq(expect, actual)
 
     
+def test_replace_where():
+
+    tbl1 = (('foo', 'bar'),
+            ('a', 1),
+            ('b', 2))
+
+    expect = (('foo', 'bar'),
+              ('a', 1),
+              ('b', 4))
+
+    actual = replace(tbl1, 'bar', 2, 4, where=lambda r: r.foo == 'b')
+    ieq(expect, actual)
+    ieq(expect, actual)
+    actual = replace(tbl1, 'bar', 2, 4, where="{foo} == 'b'")
+    ieq(expect, actual)
+    ieq(expect, actual)
+
+
