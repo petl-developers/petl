@@ -11,6 +11,7 @@ from tempfile import NamedTemporaryFile
 import operator
 import re
 from math import ceil
+import ast
 
 
 from petl.util import asindices, rowgetter, asdict,\
@@ -4865,7 +4866,11 @@ def iterunpack(source, field, newfields, maxv, include_original):
             out_row = list(row)
         else:
             out_row = [v for i, v in enumerate(row) if i != field_index]
-        out_row.extend(value[:maxv])
+        try:
+            values = ast.literal_eval(value)
+        except:
+            values = []
+        out_row.extend(values[:maxv])
         yield tuple(out_row)
         
         
