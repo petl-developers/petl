@@ -20,7 +20,7 @@ import os
 from petl import fromcsv, frompickle, fromsqlite3, fromdb, \
     tocsv, topickle, appendcsv, appendpickle, tosqlite3, appendsqlite3, \
     todb, appenddb, fromtext, totext, fromxml, fromjson, fromdicts, \
-    tojson, fromtsv, totsv, appendtsv, tojsonarrays, tohtml, nrows, StringSource, PopenSource, cut
+    tojson, fromtsv, totsv, appendtsv, tojsonarrays, tohtml, nrows, StringSource, PopenSource, cut, ZipSource
 from petl.testutils import ieq
 
 
@@ -1141,3 +1141,20 @@ def test_issue_231():
     topickle(t, 'tmp/issue_231.pickle')
     u = frompickle('tmp/issue_231.pickle')
     ieq(t, u)
+
+
+import zipfile
+
+
+def test_ZipSource():
+
+    # setup
+    table = [['foo', 'bar'], ['a', '1'], ['b', '2']]
+    totsv(table, 'tmp/issue_241.tsv')
+    z = zipfile.ZipFile('tmp/issue_241.zip', mode='w')
+    z.write('tmp/issue_241.tsv', 'data.tsv')
+    z.close()
+
+    # test
+    actual = fromtsv(ZipSource('tmp/issue_241.zip', 'data.tsv'))
+    ieq(table, actual)
