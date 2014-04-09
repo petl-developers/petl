@@ -3507,6 +3507,42 @@ def selectre(table, field, pattern, flags=0, complement=False):
     return fieldselect(table, field, test, complement=complement)
 
 
+def selecttrue(table, field, complement=False):
+    """
+    Select rows where the given field equals True.
+
+    """
+
+    return fieldselect(table, field, lambda v: bool(v), complement=complement)
+
+
+def selectfalse(table, field, complement=False):
+    """
+    Select rows where the given field equals False.
+
+    """
+
+    return fieldselect(table, field, lambda v: not bool(v), complement=complement)
+
+
+def selectnone(table, field, complement=False):
+    """
+    Select rows where the given field is None.
+
+    """
+
+    return fieldselect(table, field, lambda v: v is None, complement=complement)
+
+
+def selectnotnone(table, field, complement=False):
+    """
+    Select rows where the given field is not None.
+
+    """
+
+    return fieldselect(table, field, lambda v: v is not None, complement=complement)
+
+
 def rowreduce(table, key, reducer, fields=None, missing=None, presorted=False, buffersize=None, tempdir=None, cache=True):
     """
     Group rows under the given key then apply `reducer` to produce a single 

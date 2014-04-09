@@ -58,7 +58,8 @@ from petl.transform import rename, cut, cat, convert, fieldconvert, addfield, ro
     fold, mergeduplicates, addrownumbers, selectcontains, search, sub, \
     addcolumn, lookupjoin, hashlookupjoin, filldown, fillright, fillleft, \
     multirangeaggregate, unjoin, rowgroupmap, distinct, groupcountdistinctvalues, \
-    groupselectfirst, groupselectmax, groupselectmin, coalesce
+    groupselectfirst, groupselectmax, groupselectmin, coalesce, selecttrue, selectfalse, \
+    selectnone, selectnotnone
            
            
 def lenstats(table, field):
@@ -88,3 +89,7 @@ lt = selectlt
 gt = selectgt
 le = selectle
 ge = selectge
+true = selecttrue
+false = selectfalse
+none = selectnone
+notnone = selectnotnone
