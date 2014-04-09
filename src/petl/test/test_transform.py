@@ -2969,13 +2969,13 @@ def test_unpack():
     # check no new fields
     table3 = unpack(table1, 'bar')
     expect3 = (('foo',),
-               (1, 'a', 'b'),
-               (2, 'c', 'd'),
-               (3, 'e', 'f'))
+               (1,),
+               (2,),
+               (3,))
     ieq(expect3, table3)
     
-    # check maxv
-    table4 = unpack(table1, 'bar', ['baz'], maxunpack=1)
+    # check more values than new fields
+    table4 = unpack(table1, 'bar', ['baz'])
     expect4 = (('foo', 'baz'),
                (1, 'a'),
                (2, 'c'),
@@ -2983,14 +2983,30 @@ def test_unpack():
     ieq(expect4, table4)
     
     # check include original
-    table5 = unpack(table1, 'bar', ['baz'], maxunpack=1, include_original=True)
+    table5 = unpack(table1, 'bar', ['baz'], include_original=True)
     expect5 = (('foo', 'bar', 'baz'),
               (1, ['a', 'b'], 'a'),
               (2, ['c', 'd'], 'c'),
               (3, ['e', 'f'], 'e'))
     ieq(expect5, table5)
-    
-    
+
+    # check specify number to unpack
+    table6 = unpack(table1, 'bar', 3)
+    expect6 = (('foo', 'bar1', 'bar2', 'bar3'),
+               (1, 'a', 'b', None),
+               (2, 'c', 'd', None),
+               (3, 'e', 'f', None))
+    ieq(expect6, table6)
+
+    # check specify number to unpack, non-default missing value
+    table7 = unpack(table1, 'bar', 3, missing='NA')
+    expect7 = (('foo', 'bar1', 'bar2', 'bar3'),
+               (1, 'a', 'b', 'NA'),
+               (2, 'c', 'd', 'NA'),
+               (3, 'e', 'f', 'NA'))
+    ieq(expect7, table7)
+
+
 def test_unpack_empty():
     
     table1 = (('foo', 'bar'),)

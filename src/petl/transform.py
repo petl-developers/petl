@@ -4825,7 +4825,7 @@ def iterskipcomments(source, prefix):
     return (row for row in source if len(row) > 0 and not(isinstance(row[0], basestring) and row[0].startswith(prefix)))
         
     
-def unpack(table, field, newfields=None, maxunpack=None, include_original=False):
+def unpack(table, field, newfields=None, include_original=False, missing=None):
     """
     Unpack data values that are lists or tuples. E.g.::
     
@@ -4852,30 +4852,47 @@ def unpack(table, field, newfields=None, maxunpack=None, include_original=False)
         +-------+-------+--------+
         | 3     | 'e'   | 'f'    |
         +-------+-------+--------+
+
+        >>> table3 = unpack(table1, 'bar', 2)
+        >>> look(table3)
+        +-------+--------+--------+
+        | 'foo' | 'bar1' | 'bar2' |
+        +=======+========+========+
+        | 1     | 'a'    | 'b'    |
+        +-------+--------+--------+
+        | 2     | 'c'    | 'd'    |
+        +-------+--------+--------+
+        | 3     | 'e'    | 'f'    |
+        +-------+--------+--------+
+
     
     See also :func:`unpackdict`.
+
+    ..versionchanged:: 0.23
+
+    This function will attempt to unpack exactly the number of values as given by the number of new fields specified. If
+    there are more values than new fields, remaining values will not be unpacked. If there are less values than new
+    fields, missing values will be added.
     
     """
     
-    return UnpackView(table, field, newfields, maxunpack, include_original)
+    return UnpackView(table, field, newfields=newfields, include_original=include_original, missing=missing)
 
 
 class UnpackView(RowContainer):
     
-    def __init__(self, source, field, newfields=None, maxunpack=None, 
-                 include_original=False):
+    def __init__(self, source, field, newfields=None, include_original=False, missing=None):
         self.source = source
         self.field = field
         self.newfields = newfields
-        self.maxunpack = maxunpack
         self.include_original = include_original
+        self.missing = missing
         
     def __iter__(self):
-        return iterunpack(self.source, self.field, self.newfields, self.maxunpack, 
-                          self.include_original)
+        return iterunpack(self.source, self.field, self.newfields, self.include_original, self.missing)
 
 
-def iterunpack(source, field, newfields, maxv, include_original):
+def iterunpack(source, field, newfields, include_original, missing):
     it = iter(source)
 
     flds = it.next()
@@ -4890,8 +4907,17 @@ def iterunpack(source, field, newfields, maxv, include_original):
     out_flds = list(flds)
     if not include_original:
         out_flds.remove(field)
-    if newfields:   
+    if isinstance(newfields, (list, tuple)):
         out_flds.extend(newfields)
+        nunpack = len(newfields)
+    elif isinstance(newfields, int):
+        nunpack = newfields
+        newfields = [str(field) + str(i+1) for i in range(newfields)]
+        out_flds.extend(newfields)
+    elif newfields is None:
+        nunpack = 0
+    else:
+        raise Exception('newfields argument must be list or tuple of field names, or int (number of values to unpack)')
     yield tuple(out_flds)
     
     # construct the output data
@@ -4901,7 +4927,13 @@ def iterunpack(source, field, newfields, maxv, include_original):
             out_row = list(row)
         else:
             out_row = [v for i, v in enumerate(row) if i != field_index]
-        out_row.extend(value[:maxv])
+        nvals = len(value)
+        if nunpack > 0:
+            if nvals >= nunpack:
+                newvals = value[:nunpack]
+            else:
+                newvals = list(value) + ([missing] * (nunpack - nvals))
+            out_row.extend(newvals)
         yield tuple(out_row)
         
         
