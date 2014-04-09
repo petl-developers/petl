@@ -773,7 +773,7 @@ def replaceall(table, a, b, **kwargs):
 def update(table, field, value, **kwargs):
     """
     Convenience function to convert a field to a fixed value. Accepts the ``where`` keyword argument. See also
-    :func:convert().
+    :func:`convert`.
 
     .. versionadded:: 0.23
 
