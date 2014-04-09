@@ -225,9 +225,9 @@ class DictsContainer(IterContainer):
         return iterdicts(self.table, *self.sliceargs, **self.kwargs)
     
     def __repr__(self):
-        vreprs = map(repr, islice(self, 11))
-        r = '\n'.join(vreprs[:10])
-        if len(vreprs) > 10:
+        vreprs = map(repr, islice(self, 6))
+        r = '\n'.join(vreprs[:5])
+        if len(vreprs) > 5:
             r += '\n...'
         return r
 
@@ -306,9 +306,9 @@ class NamedTuplesContainer(IterContainer):
         return iternamedtuples(self.table, *self.sliceargs, **self.kwargs)
     
     def __repr__(self):
-        vreprs = map(repr, islice(self, 11))
-        r = '\n'.join(vreprs[:10])
-        if len(vreprs) > 10:
+        vreprs = map(repr, islice(self, 6))
+        r = '\n'.join(vreprs[:5])
+        if len(vreprs) > 5:
             r += '\n...'
         return r
 
@@ -462,7 +462,7 @@ class Look(object):
     def __init__(self, table, *sliceargs, **kwargs):
         self.table = table
         if not sliceargs:
-            self.sliceargs = (10,)
+            self.sliceargs = (5,)
         else:
             self.sliceargs = sliceargs
         if 'vrepr' in kwargs:
@@ -477,7 +477,7 @@ class Look(object):
     @property
     def n(self):
         if not self.sliceargs:
-            sliceargs = (10,)
+            sliceargs = (5,)
         elif len(self.sliceargs) == 1:
             stop = self.sliceargs[0]
             sliceargs = (stop, 2*stop)
@@ -497,7 +497,7 @@ class Look(object):
     @property
     def p(self):
         if not self.sliceargs:
-            sliceargs = (10,)
+            sliceargs = (5,)
         elif len(self.sliceargs) == 1:
             # already at the start, do nothing
             sliceargs = self.sliceargs
@@ -796,7 +796,7 @@ class See(object):
     def __init__(self, table, *sliceargs):
         self.table = table
         if not sliceargs:
-            self.sliceargs = (10,)
+            self.sliceargs = (5,)
         else:
             self.sliceargs = sliceargs
         
@@ -920,9 +920,9 @@ class ValuesContainer(IterContainer):
         return itervalues(self.table, self.field, *self.sliceargs, **self.kwargs)
     
     def __repr__(self):
-        vreprs = map(repr, islice(self, 11))
-        r = ', '.join(vreprs[:10])
-        if len(vreprs) > 10:
+        vreprs = map(repr, islice(self, 6))
+        r = ', '.join(vreprs[:5])
+        if len(vreprs) > 5:
             r += ', ...'
         return r
     
@@ -2796,9 +2796,9 @@ class RecordsContainer(IterContainer):
         return iterrecords(self.table, *self.sliceargs, **self.kwargs)
     
     def __repr__(self):
-        vreprs = map(repr, islice(self, 11))
-        r = '\n'.join(vreprs[:10])
-        if len(vreprs) > 10:
+        vreprs = map(repr, islice(self, 6))
+        r = '\n'.join(vreprs[:5])
+        if len(vreprs) > 5:
             r += '\n...'
         return r
 

@@ -1120,7 +1120,7 @@ def iterrowslice(source, sliceargs):
         yield tuple(row)
 
 
-def head(table, n=10):
+def head(table, n=5):
     """
     Choose the first n data rows. E.g.::
 
@@ -1165,7 +1165,7 @@ def head(table, n=10):
     return rowslice(table, n)
 
         
-def tail(table, n=10):
+def tail(table, n=5):
     """
     Choose the last n data rows. 
     
