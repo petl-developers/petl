@@ -3139,17 +3139,16 @@ def iterfieldmap(source, mappings, failonerror, errorvalue):
         else:
             raise Exception('invalid mapping', outfld, m) # TODO better error
             
-    for row in it:
-        rec = asdict(flds, row)
+    for row in hybridrows(flds, it):
         try:
             # use list comprehension if possible
-            outrow = [mapfuns[outfld](rec) for outfld in outflds]
+            outrow = [mapfuns[outfld](row) for outfld in outflds]
         except:
             # fall back to doing it one field at a time
             outrow = list()
             for outfld in outflds:
                 try:
-                    val = mapfuns[outfld](rec)
+                    val = mapfuns[outfld](row)
                 except:
                     if failonerror:
                         raise
