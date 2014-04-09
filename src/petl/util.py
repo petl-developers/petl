@@ -3345,7 +3345,7 @@ def empty():
         | 'B'   |     2 |
         +-------+-------+
 
-    ..versionadded:: 0.23
+    .. versionadded:: 0.23
 
     """
 

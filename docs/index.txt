@@ -300,6 +300,7 @@ Transform - transforming tables
 .. autofunction:: petl.replace
 .. autofunction:: petl.replaceall
 .. autofunction:: petl.convert
+.. autofunction:: petl.update
 .. autofunction:: petl.convertall
 .. autofunction:: petl.fieldconvert
 .. autofunction:: petl.convertnumbers

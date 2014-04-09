@@ -729,6 +729,23 @@ def convertall(table, *args, **kwargs):
     return convert(table, header(table), *args, **kwargs)
 
 
+def replace(table, field, a, b, **kwargs):
+    """
+    Convenience function to replace all occurrences of `a` with `b` under the
+    given field. See also :func:`convert`.
+
+    .. versionadded:: 0.5
+
+    .. versionchanged:: 0.22
+
+    The ``where`` keyword argument can be given with a callable or expression which is evaluated on each row
+    and which should return True if the conversion should be applied on that row, else False.
+
+    """
+
+    return convert(table, field, {a: b}, **kwargs)
+
+
 def replaceall(table, a, b, **kwargs):
     """
     Convenience function to replace all instances of `a` with `b` under all 
@@ -744,6 +761,18 @@ def replaceall(table, a, b, **kwargs):
     """
     
     return convertall(table, {a: b}, **kwargs)
+
+
+def update(table, field, value, **kwargs):
+    """
+    Convenience function to convert a field to a fixed value. Accepts the ``where`` keyword argument. See also
+    :func:convert().
+
+    .. versionadded:: 0.23
+
+    """
+
+    return convert(table, field, lambda v: value, **kwargs)
     
 
 def convertnumbers(table, **kwargs):
@@ -892,23 +921,6 @@ def dictconverter(d):
         else:
             return v
     return conv
-
-
-def replace(table, field, a, b, **kwargs):
-    """
-    Convenience function to replace all occurrences of `a` with `b` under the 
-    given field. See also :func:`convert`.
-    
-    .. versionadded:: 0.5
-
-    .. versionchanged:: 0.22
-
-    The ``where`` keyword argument can be given with a callable or expression which is evaluated on each row
-    and which should return True if the conversion should be applied on that row, else False.
-
-    """
-    
-    return convert(table, field, {a: b}, **kwargs)
 
 
 def sub(table, field, pattern, repl, count=0, flags=0):
@@ -2647,7 +2659,7 @@ def capture(table, field, pattern, newfields=None, include_original=False,
     
     See also :func:`split`, :func:`re.search`.
 
-    ..versionchanged:: 0.18
+    .. versionchanged:: 0.18
 
     The ``fill`` parameter can be used to provide a list or tuple of values to use if the regular expression does not
     match. The ``fill`` parameter should contain as many values as there are capturing groups in the regular expression.
@@ -3588,7 +3600,7 @@ def rowreduce(table, key, reducer, fields=None, missing=None, presorted=False, b
     
     See also :func:`aggregate` and :func:`fold`.
     
-    ..versionchanged:: 0.12
+    .. versionchanged:: 0.12
     
     Was previously deprecated, now resurrected as it is a useful function in it's
     own right.
@@ -4051,7 +4063,7 @@ def rangerowreduce(table, key, width, reducer, fields=None, minv=None, maxv=None
     
     See also :func:`rangeaggregate` and :func:`rangecounts`.
     
-    ..versionchanged:: 0.12
+    .. versionchanged:: 0.12
     
     Was previously deprecated, now resurrected as it is a useful function in it's
     own right.
@@ -4868,7 +4880,7 @@ def unpack(table, field, newfields=None, include_original=False, missing=None):
     
     See also :func:`unpackdict`.
 
-    ..versionchanged:: 0.23
+    .. versionchanged:: 0.23
 
     This function will attempt to unpack exactly the number of values as given by the number of new fields specified. If
     there are more values than new fields, remaining values will not be unpacked. If there are less values than new

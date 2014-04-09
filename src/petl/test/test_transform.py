@@ -26,7 +26,7 @@ from petl import rename, fieldnames, cut, cat, convert, addfield, \
                 selectin, fold, addrownumbers, selectcontains, search, \
                 addcolumn, lookupjoin, hashlookupjoin, filldown, fillright, \
                 fillleft, multirangeaggregate, unjoin, coalesce, nrows, replace, \
-                empty
+                empty, update
 from petl.transform import Conflict, TransformError
 
 
@@ -4656,3 +4656,22 @@ def test_replace_where():
     ieq(expect, actual)
     ieq(expect, actual)
 
+
+def test_update():
+
+    table1 = (('foo', 'bar', 'baz'),
+              ('A', 1, 2),
+              ('B', '2', '3.4'),
+              (u'B', u'3', u'7.8', True),
+              ('D', 'xyz', 9.0),
+              ('E', None))
+
+    table2 = update(table1, 'foo', 'X')
+    expect2 = (('foo', 'bar', 'baz'),
+               ('X', 1, 2),
+               ('X', '2', '3.4'),
+               ('X', u'3', u'7.8', True),
+               ('X', 'xyz', 9.0),
+               ('X', None))
+    ieq(expect2, table2)
+    ieq(expect2, table2)
