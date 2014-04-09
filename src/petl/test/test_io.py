@@ -1149,7 +1149,7 @@ import zipfile
 def test_ZipSource():
 
     # setup
-    table = [['foo', 'bar'], ['a', '1'], ['b', '2']]
+    table = [('foo', 'bar'), ('a', '1'), ('b', '2')]
     totsv(table, 'tmp/issue_241.tsv')
     z = zipfile.ZipFile('tmp/issue_241.zip', mode='w')
     z.write('tmp/issue_241.tsv', 'data.tsv')
