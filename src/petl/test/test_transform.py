@@ -25,7 +25,8 @@ from petl import rename, fieldnames, cut, cat, convert, addfield, \
                 flatten, unflatten, mergesort, annex, unpackdict, unique, \
                 selectin, fold, addrownumbers, selectcontains, search, \
                 addcolumn, lookupjoin, hashlookupjoin, filldown, fillright, \
-                fillleft, multirangeaggregate, unjoin, coalesce, nrows, replace
+                fillleft, multirangeaggregate, unjoin, coalesce, nrows, replace, \
+                empty
 from petl.transform import Conflict, TransformError
 
 
@@ -4192,6 +4193,18 @@ def test_addcolumn():
                (None, None, False))
     table5 = addcolumn(table1, 'baz', col)
     ieq(expect5, table5)
+
+
+def test_empty_addcolumn():
+
+    table1 = empty()
+    table2 = addcolumn(table1, 'foo', ['A', 'B'])
+    table3 = addcolumn(table2, 'bar', [1, 2])
+    expect = (('foo', 'bar'),
+              ('A', 1),
+              ('B', 2))
+    ieq(expect, table3)
+    ieq(expect, table3)
 
 
 def test_filldown():

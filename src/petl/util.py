@@ -3327,4 +3327,27 @@ class CacheContainer(RowContainer):
             if len(self._cache) < self._n:
                 debug('cache is complete')
                 object.__setattr__(self, '_cachecomplete', True)
-        
+
+
+def empty():
+    """
+    Convenience function to return an empty table. Can be useful when building up a table from a set of columns, e.g.::
+
+        >>> from petl import empty, addcolumn, look
+        >>> table1 = addcolumn(empty(), 'foo', ['A', 'B'])
+        >>> table2 = addcolumn(table1, 'bar', [1, 2])
+        >>> look(table2)
+        +-------+-------+
+        | 'foo' | 'bar' |
+        +=======+=======+
+        | 'A'   |     1 |
+        +-------+-------+
+        | 'B'   |     2 |
+        +-------+-------+
+
+    ..versionadded:: 0.23
+
+    """
+
+    return [[]]
+

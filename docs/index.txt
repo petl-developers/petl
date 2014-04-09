@@ -468,6 +468,7 @@ Utility functions
 .. autofunction:: petl.rowgroupby
 .. autofunction:: petl.nthword
 .. autofunction:: petl.cache
+.. autofunction:: petl.empty
 
 
 I/O helper classes
