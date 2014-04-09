@@ -3006,6 +3006,14 @@ def test_unpack():
                (3, 'e', 'f', 'NA'))
     ieq(expect7, table7)
 
+    # check can use field index
+    table8 = unpack(table1, 1, 3)
+    expect8 = (('foo', 'bar1', 'bar2', 'bar3'),
+               (1, 'a', 'b', None),
+               (2, 'c', 'd', None),
+               (3, 'e', 'f', None))
+    ieq(expect8, table8)
+
 
 def test_unpack_empty():
     
