@@ -89,6 +89,10 @@ def rename(table, *args):
     Function signature changed to support the simple 2 argument form when renaming
     a single field.
 
+    .. versionchanged:: 0.23
+
+    The field to rename can be specified as an index (i.e., integer representing field position).
+
     """
     
     return RenameView(table, *args)
@@ -114,9 +118,12 @@ class RenameView(RowContainer):
     
 def iterrename(source, spec):
     it = iter(source)
-    spec = spec.copy() # make sure nobody can change this midstream
+    spec = spec.copy()  # make sure nobody can change this midstream
     sourceflds = it.next()
-    newflds = [spec[f] if f in spec else f for f in sourceflds]
+    newflds = [spec[f] if f in spec
+               else spec[i] if i in spec
+               else f
+               for i, f in enumerate(sourceflds)]
     yield tuple(newflds)
     for row in it:
         yield tuple(row)

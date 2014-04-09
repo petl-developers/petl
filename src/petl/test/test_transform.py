@@ -40,6 +40,9 @@ def test_rename():
     result = rename(table, 'foo', 'foofoo')
     assert fieldnames(result) == ['foofoo', 'bar']
     
+    result = rename(table, 0, 'foofoo')
+    assert fieldnames(result) == ['foofoo', 'bar']
+
     result = rename(table, {'foo': 'foofoo', 'bar': 'barbar'})
     assert fieldnames(result) == ['foofoo', 'barbar']
     
