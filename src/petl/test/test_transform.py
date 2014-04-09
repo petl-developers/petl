@@ -1743,8 +1743,13 @@ def test_split():
     result = split(table, 'variable', 'd', ('variable', 'day'))
     ieq(expectation, result)
     ieq(expectation, result)
+
     # proper regex
     result = split(table, 'variable', '[Dd]', ('variable', 'day'))
+    ieq(expectation, result)
+
+    # integer field reference
+    result = split(table, 1, 'd', ('variable', 'day'))
     ieq(expectation, result)
 
     expectation = (('id', 'variable', 'value', 'variable', 'day'),

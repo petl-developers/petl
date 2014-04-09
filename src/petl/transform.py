@@ -2808,6 +2808,7 @@ def itersplit(source, field, pattern, newfields, include_original, maxsplit,
         field_index = flds.index(field)
     elif isinstance(field, int) and field < len(flds):
         field_index = field
+        field = flds[field_index]
     else:
         raise Exception('field invalid: must be either field name or index')
     

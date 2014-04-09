@@ -3,6 +3,7 @@ Base classes.
 
 """
 
+
 # Python 2.6 compatibility
 try:
     from collections import Counter, OrderedDict
@@ -18,6 +19,7 @@ try:
     from itertools import compress, combinations_with_replacement
 except ImportError:
     from .compat import compress, combinations_with_replacement
+
 
 class IterContainer(object):
     
