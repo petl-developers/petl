@@ -15,4 +15,6 @@ extension modules for ``petl``.
 There is also some information for developers/contributors on the
 `project wiki <https://github.com/alimanfoo/petl/wiki>`_.
 
-.. image:: https://travis-ci.org/alimanfoo/petl.svg?branch=master   :target: https://travis-ci.org/alimanfoo/petl
+.. image:: https://travis-ci.org/alimanfoo/petl.svg?branch=master 
+    :target: https://travis-ci.org/alimanfoo/petl
+    :alt: continuous integration build status
