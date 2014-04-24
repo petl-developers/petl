@@ -23,6 +23,10 @@ tbl1 = (etl
 )
 tbl1
 
+# <headingcell level=2>
+
+# Option 1 - using existing petl functions
+
 # <codecell>
 
 def make_room_for_category(row):
@@ -44,6 +48,39 @@ tbl3
 tbl4 = tbl3.ne('type', 'X')
 tbl4
 
+# <headingcell level=2>
+
+# Option 2 - custom transformer
+
 # <codecell>
 
+class CustomTransformer(object):
+    
+    def __init__(self, source):
+        self.source = source
+        
+    def __iter__(self):
+        it = iter(self.source)
+        
+        # construct new header
+        source_fields = it.next()
+        out_fields = ('category',) + tuple(source_fields)
+        yield out_fields
+        
+        # transform data
+        current_category = None
+        for row in it:
+            if len(row) == 1:
+                current_category = row[0]
+            else:
+                yield (current_category,) + tuple(row)
+
+# <codecell>
+
+tbl5 = CustomTransformer(tbl1)
+
+# <codecell>
+
+# just so it formats nicely as HTML in the notebook...
+etl.wrap(tbl5)
 
