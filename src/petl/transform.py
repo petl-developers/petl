@@ -3748,6 +3748,18 @@ def itermergeduplicates(table, key, missing):
     outflds.extend(valflds)
     yield tuple(outflds)
 
+    found = False
+    sourceIndx = -1
+    if '__SourceName__' in outflds:
+        found = True
+        sourceIndx = fields.index('__SourceName__')
+        valfldidxs.remove(sourceIndx)
+    #print 'Found:', found
+    '''if found:
+        for field in fields:
+            table = convert(table, field, lambda v : '''
+                
+                    
     # do the work
     for k, grp in rowgroupby(it, key):
         grp = list(grp)
@@ -3755,8 +3767,13 @@ def itermergeduplicates(table, key, missing):
             outrow = [k]
         else:
             outrow = list(k)
+        
         mergedvals = [set(row[i] for row in grp if len(row) > i and row[i] != missing) for i in valfldidxs]
-        normedvals = [vals.pop() if len(vals) == 1 else missing if len(vals) == 0 else Conflict(vals) for vals in mergedvals]
+        tmpIdx = [i for i in valfldidxs]
+        for i in xrange(len(mergedvals)):
+            if len(mergedvals[i]) > 1 and sourceIndx != -1:
+                mergedvals[i] = set(row[sourceIndx] + ':' + str(row[tmpIdx[i]])  for row in grp if len(row) > tmpIdx[i] and row[tmpIdx[i]] != missing)
+        normedvals = [vals.pop() if len(vals) == 1 else missing if len(vals) == 0 else tuple(val for val in vals) for vals in mergedvals]
         outrow.extend(normedvals)
         yield tuple(outrow)
 
@@ -6818,15 +6835,17 @@ def merge(*tables, **kwargs):
         
         >>> table3 = merge(table1, table2, key='bar')
         >>> look(table3)
-        +-------+-------+-------------------------+--------+
-        | 'bar' | 'foo' | 'baz'                   | 'quux' |
-        +=======+=======+=========================+========+
-        | 'A'   | 1     | True                    | 42.0   |
-        +-------+-------+-------------------------+--------+
-        | 'B'   | 2     | False                   | 79.3   |
-        +-------+-------+-------------------------+--------+
-        | 'C'   | 4     | Conflict([False, True]) | 12.4   |
-        +-------+-------+-------------------------+--------+
+        +-------+-------+-----------------------------------+--------+
+        | 'bar' | 'foo' | 'baz'                             | 'quux' |
+        +=======+=======+===================================+========+
+        | 'A'   | 1     | True                              | 42.0   |
+        +-------+-------+-----------------------------------+--------+
+        | 'B'   | 2     | False                             | 79.3   |
+        +-------+-------+-----------------------------------+--------+
+        | 'C'   | 4     | ('source1:True', 'source2:False') | 12.4   |
+        +-------+-------+-----------------------------------+--------+
+        
+    Note: You can also add a column called "__SourceName__" to table1 and table2 to change the name of "source1" and "source2".
         
     Keyword arguments are the same as for :func:`mergesort`, except `key` is
     required.
@@ -6839,8 +6858,15 @@ def merge(*tables, **kwargs):
     
     assert 'key' in kwargs, 'keyword argument "key" is required'
     key = kwargs['key']
-    t1 = mergesort(*tables, **kwargs)
+    newTables = list()
+    idx = 1
+    for t in tables:
+        t1 = addfield(t, '__SourceName__', 'source' + str(idx))
+        idx = idx + 1
+        newTables.append(t1)
+    t1 = mergesort(*newTables, **kwargs)
     t2 = mergeduplicates(t1, key=key, presorted=True)
+    t2 = cutout(t2, '__SourceName__')
     return t2
 
 
