@@ -94,3 +94,4 @@ true = selecttrue
 false = selectfalse
 none = selectnone
 notnone = selectnotnone
+counts = valuecounts

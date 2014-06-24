@@ -3,6 +3,23 @@ Examples used in docstrings.
 
 """
 
+# valuecounts
+##############
+
+table = (('foo', 'bar', 'baz'),
+         ('a', True, .12),
+         ('a', True, .17),
+         ('b', False, .34),
+         ('b', False, .44),
+         ('b',),
+         ('b', False, .56))
+
+from petl import look, valuecounts
+look(table)
+look(valuecounts(table, 'foo'))
+look(valuecounts(table, 'foo', 'bar'))
+
+
 # facetcolumns
 
 from petl import facetcolumns

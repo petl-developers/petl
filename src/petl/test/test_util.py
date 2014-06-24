@@ -6,7 +6,8 @@ TODO doc me
 import sys
 from nose.tools import eq_
 
-from petl import header, fieldnames, data, records, rowcount, look, see, itervalues, valuecounter, valuecounts, \
+from petl import header, fieldnames, data, records, rowcount, look, see, \
+    itervalues, valuecounter, valuecounts, \
     valueset, isunique, lookup, lookupone, dictlookup, dictlookupone, \
     DuplicateKeyError, rowlengths, stats, typecounts, parsecounts, typeset, \
     valuecount, parsenumber, stringpatterns, diffheaders, diffvalues, \
@@ -250,6 +251,10 @@ def test_itervalues():
     expect = (True, None, False)
     ieq(expect, actual)
 
+    actual = itervalues(table, ('foo', 'baz'))
+    expect = (('a', True), ('b', None), ('b', False))
+    ieq(expect, actual)
+
 
 def test_values():
     """Test the values function."""
@@ -268,12 +273,19 @@ def test_values():
     expect = (1, 2, 7)
     ieq(expect, actual) 
     ieq(expect, actual) 
-    
+
+    # old style signature for multiple fields, still supported
     actual = values(table, ('foo', 'bar'))
     expect = (('a', 1), ('b', 2), ('b', 7))
     ieq(expect, actual) 
     ieq(expect, actual) 
-    
+
+    # as of 0.24 new style signature for multiple fields
+    actual = values(table, 'foo', 'bar')
+    expect = (('a', 1), ('b', 2), ('b', 7))
+    ieq(expect, actual)
+    ieq(expect, actual)
+
     actual = values(table, 'baz')
     expect = (True, None, False)
     ieq(expect, actual)
@@ -298,12 +310,27 @@ def test_valuecounter():
     eq_(expect, actual) 
     
         
+def test_valuecounter_shortrows():
+    """Test the valuecounter function."""
+
+    table = (('foo', 'bar'), ('a', 7), ('b',), ('b', 7))
+    actual = valuecounter(table, 'foo')
+    expect = {'b': 2, 'a': 1}
+    eq_(expect, actual)
+    actual = valuecounter(table, 'bar')
+    expect = {7: 2, None: 1}
+    eq_(expect, actual)
+    actual = valuecounter(table, 'foo', 'bar')
+    expect = {('a', 7): 1, ('b', None): 1, ('b', 7): 1}
+    eq_(expect, actual)
+
+
 def test_valuecounts():
     """Test the valuecounts function."""
     
     table = (('foo', 'bar'), ('a', 1), ('b', 2), ('b', 7))
     actual = valuecounts(table, 'foo')
-    expect = (('value', 'count', 'frequency'), ('b', 2, 2./3), ('a', 1, 1./3))
+    expect = (('foo', 'count', 'frequency'), ('b', 2, 2./3), ('a', 1, 1./3))
     ieq(expect, actual) 
     ieq(expect, actual) 
 
@@ -318,7 +345,7 @@ def test_valuecounts_shortrows():
              ('c', False), 
              ('z', False))
     actual = valuecounts(table, 'bar')
-    expect = (('value', 'count', 'frequency'), 
+    expect = (('bar', 'count', 'frequency'),
               (True, 3, 3./6), 
               (False, 2, 2./6), 
               (None, 1, 1./6))
@@ -326,44 +353,20 @@ def test_valuecounts_shortrows():
     ieq(expect, actual) 
 
 
-def test_valuecounts_allfields():
-    
-    table = (('foo', 'bar'), 
-             ('a', True), 
-             ('b', True), 
-             ('b',), 
-             ('b', True), 
-             ('c', False), 
-             ('c', False))
-    actual = valuecounts(table)
-    expect = (('field', 'value', 'count', 'frequency'),
-              ('foo', 'b', 3, 3./6),
-              ('foo', 'c', 2, 2./6),
-              ('foo', 'a', 1, 1./6), 
-              ('bar', True, 3, 3./6), 
-              ('bar', False, 2, 2./6),
-              ('bar', None, 1, 1./6))
-    ieq(expect, actual) 
-    ieq(expect, actual) 
-
-    
-def test_valuecounts_somefields():
+def test_valuecounts_multifields():
     
     table = (('foo', 'bar', 'baz'), 
              ('a', True, .12), 
-             ('b', True, .34), 
-             ('b',), 
-             ('b', True, .56), 
-             ('c', False, .86), 
-             ('c', False, .92))
+             ('a', True, .17),
+             ('b', False, .34),
+             ('b', False, .44),
+             ('b',),
+             ('b', False, .56))
     actual = valuecounts(table, 'foo', 'bar')
-    expect = (('field', 'value', 'count', 'frequency'),
-              ('foo', 'b', 3, 3./6),
-              ('foo', 'c', 2, 2./6),
-              ('foo', 'a', 1, 1./6), 
-              ('bar', True, 3, 3./6), 
-              ('bar', False, 2, 2./6),
-              ('bar', None, 1, 1./6))
+    expect = (('foo', 'bar', 'count', 'frequency'),
+              ('b', False, 3, 3./6),
+              ('a', True, 2, 2./6),
+              ('b', None, 1, 1./6))
     ieq(expect, actual) 
     ieq(expect, actual) 
 
