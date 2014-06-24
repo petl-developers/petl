@@ -26,7 +26,7 @@ from petl import rename, fieldnames, cut, cat, convert, addfield, \
                 selectin, fold, addrownumbers, selectcontains, search, \
                 addcolumn, lookupjoin, hashlookupjoin, filldown, fillright, \
                 fillleft, multirangeaggregate, unjoin, coalesce, nrows, replace, \
-                empty, update, selectwithcontext
+                empty, update, selectusingcontext, addfieldusingcontext
 from petl.transform import Conflict, TransformError
 
 
@@ -4734,7 +4734,7 @@ def test_update():
     ieq(expect2, table2)
 
 
-def test_selectwithcontext():
+def test_selectusingcontext():
 
     table1 = (('foo', 'bar'),
               ('A', 1),
@@ -4750,7 +4750,39 @@ def test_selectwithcontext():
         return ((prv is not None and (cur.bar - prv.bar) < 2)
                 or (nxt is not None and (nxt.bar - cur.bar) < 2))
 
-    actual = selectwithcontext(table1, query)
+    actual = selectusingcontext(table1, query)
     ieq(expect, actual)
     ieq(expect, actual)
+
+
+def test_addfieldusingcontext():
+
+    table1 = (('foo', 'bar'),
+              ('A', 1),
+              ('B', 4),
+              ('C', 5),
+              ('D', 9))
+
+    expect = (('foo', 'bar', 'baz', 'quux'),
+              ('A', 1, None, 3),
+              ('B', 4, 3, 1),
+              ('C', 5, 1, 4),
+              ('D', 9, 4, None))
+
+    def upstream(prv, cur, nxt):
+        if prv is None:
+            return None
+        else:
+            return cur.bar - prv.bar
+
+    def downstream(prv, cur, nxt):
+        if nxt is None:
+            return None
+        else:
+            return nxt.bar - cur.bar
+
+    table2 = addfieldusingcontext(table1, 'baz', upstream)
+    table3 = addfieldusingcontext(table2, 'quux', downstream)
+    ieq(expect, table3)
+    ieq(expect, table3)
 

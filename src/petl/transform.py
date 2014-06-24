@@ -8384,12 +8384,12 @@ class TransformError(Exception):
     pass
 
 
-def selectwithcontext(table, query):
+def selectusingcontext(table, query):
     """
     Select rows based on data in the current row and/or previous and
     next row. E.g.::
 
-        >>> from petl import look, selectwithcontext
+        >>> from petl import look, selectusingcontext
         >>> look(table1)
         +-------+-------+
         | 'foo' | 'bar' |
@@ -8407,7 +8407,7 @@ def selectwithcontext(table, query):
         ...     return ((prv is not None and (cur.bar - prv.bar) < 2)
         ...             or (nxt is not None and (nxt.bar - cur.bar) < 2))
         ...
-        >>> table2 = selectwithcontext(table1, query)
+        >>> table2 = selectusingcontext(table1, query)
         >>> look(table2)
         +-------+-------+
         | 'foo' | 'bar' |
@@ -8421,20 +8421,20 @@ def selectwithcontext(table, query):
 
     """
 
-    return SelectWithContextView(table, query)
+    return SelectUsingContextView(table, query)
 
 
-class SelectWithContextView(object):
+class SelectUsingContextView(object):
 
     def __init__(self, table, query):
         self.table = table
         self.query = query
 
     def __iter__(self):
-        return iterselectwithcontext(self.table, self.query)
+        return iterselectusingcontext(self.table, self.query)
 
 
-def iterselectwithcontext(table, query):
+def iterselectusingcontext(table, query):
     it = iter(table)
     fields = tuple(it.next())
     yield fields
@@ -8449,4 +8449,86 @@ def iterselectwithcontext(table, query):
     # handle last row
     if query(prv, cur, None):
         yield cur
+
+
+def addfieldusingcontext(table, field, query):
+    """
+    Like :func:`addfield` but the `query` function is passed the previous,
+    current and next rows, so values may be calculated based on data in adjacent
+    rows.
+
+        >>> from petl import look, addfieldusingcontext
+        >>> look(table1)
+        +-------+-------+
+        | 'foo' | 'bar' |
+        +=======+=======+
+        | 'A'   |     1 |
+        +-------+-------+
+        | 'B'   |     4 |
+        +-------+-------+
+        | 'C'   |     5 |
+        +-------+-------+
+        | 'D'   |     9 |
+        +-------+-------+
+
+        >>> def upstream(prv, cur, nxt):
+        ...     if prv is None:
+        ...         return None
+        ...     else:
+        ...         return cur.bar - prv.bar
+        ...
+        >>> def downstream(prv, cur, nxt):
+        ...     if nxt is None:
+        ...         return None
+        ...     else:
+        ...         return nxt.bar - cur.bar
+        ...
+        >>> table2 = addfieldusingcontext(table1, 'baz', upstream)
+        >>> table3 = addfieldusingcontext(table2, 'quux', downstream)
+        >>> look(table3)
+        +-------+-------+-------+--------+
+        | 'foo' | 'bar' | 'baz' | 'quux' |
+        +=======+=======+=======+========+
+        | 'A'   |     1 | None  |      3 |
+        +-------+-------+-------+--------+
+        | 'B'   |     4 |     3 |      1 |
+        +-------+-------+-------+--------+
+        | 'C'   |     5 |     1 |      4 |
+        +-------+-------+-------+--------+
+        | 'D'   |     9 |     4 | None   |
+        +-------+-------+-------+--------+
+
+    .. versionadded:: 0.24
+
+    """
+
+    return AddFieldUsingContextView(table, field, query)
+
+
+class AddFieldUsingContextView(object):
+
+    def __init__(self, table, field, query):
+        self.table = table
+        self.field = field
+        self.query = query
+
+    def __iter__(self):
+        return iteraddfieldusingcontext(self.table, self.field, self.query)
+
+
+def iteraddfieldusingcontext(table, field, query):
+    it = iter(table)
+    fields = tuple(it.next())
+    yield fields + (field,)
+    it = hybridrows(fields, it)
+    prv = None
+    cur = it.next()
+    for nxt in it:
+        v = query(prv, cur, nxt)
+        yield tuple(cur) + (v,)
+        prv = cur
+        cur = nxt
+    # handle last row
+    v = query(prv, cur, None)
+    yield tuple(cur) + (v,)
 

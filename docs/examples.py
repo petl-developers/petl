@@ -1773,3 +1773,31 @@ def query(prv, cur, nxt):
 
 table2 = selectwithcontext(table1, query)
 look(table2)
+
+
+# addfieldusingcontext
+######################
+
+table1 = (('foo', 'bar'),
+          ('A', 1),
+          ('B', 4),
+          ('C', 5),
+          ('D', 9))
+
+from petl import look, addfieldusingcontext
+look(table1)
+def upstream(prv, cur, nxt):
+    if prv is None:
+        return None
+    else:
+        return cur.bar - prv.bar
+
+def downstream(prv, cur, nxt):
+    if nxt is None:
+        return None
+    else:
+        return nxt.bar - cur.bar
+
+table2 = addfieldusingcontext(table1, 'baz', upstream)
+table3 = addfieldusingcontext(table2, 'quux', downstream)
+look(table3)

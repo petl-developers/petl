@@ -291,7 +291,7 @@ Transform - transforming tables
 .. autofunction:: petl.selectfalse
 .. autofunction:: petl.selectnone
 .. autofunction:: petl.selectnotnone
-.. autofunction:: petl.selectwithcontext
+.. autofunction:: petl.selectusingcontext
 .. autofunction:: petl.rowselect
 .. autofunction:: petl.recordselect
 .. autofunction:: petl.rowlenselect
@@ -361,6 +361,7 @@ Transform - transforming tables
 .. autofunction:: petl.addrownumbers
 .. autofunction:: petl.addcolumn
 .. autofunction:: petl.addfield
+.. autofunction:: petl.addfieldusingcontext
 .. autofunction:: petl.filldown
 .. autofunction:: petl.fillright
 .. autofunction:: petl.fillleft
