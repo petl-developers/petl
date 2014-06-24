@@ -8384,3 +8384,69 @@ class TransformError(Exception):
     pass
 
 
+def selectwithcontext(table, query):
+    """
+    Select rows based on data in the current row and/or previous and
+    next row. E.g.::
+
+        >>> from petl import look, selectwithcontext
+        >>> look(table1)
+        +-------+-------+
+        | 'foo' | 'bar' |
+        +=======+=======+
+        | 'A'   |     1 |
+        +-------+-------+
+        | 'B'   |     4 |
+        +-------+-------+
+        | 'C'   |     5 |
+        +-------+-------+
+        | 'D'   |     9 |
+        +-------+-------+
+
+        >>> def query(prv, cur, nxt):
+        ...     return ((prv is not None and (cur.bar - prv.bar) < 2)
+        ...             or (nxt is not None and (nxt.bar - cur.bar) < 2))
+        ...
+        >>> table2 = selectwithcontext(table1, query)
+        >>> look(table2)
+        +-------+-------+
+        | 'foo' | 'bar' |
+        +=======+=======+
+        | 'B'   |     4 |
+        +-------+-------+
+        | 'C'   |     5 |
+        +-------+-------+
+
+    .. versionadded:: 0.24
+
+    """
+
+    return SelectWithContextView(table, query)
+
+
+class SelectWithContextView(object):
+
+    def __init__(self, table, query):
+        self.table = table
+        self.query = query
+
+    def __iter__(self):
+        return iterselectwithcontext(self.table, self.query)
+
+
+def iterselectwithcontext(table, query):
+    it = iter(table)
+    fields = tuple(it.next())
+    yield fields
+    it = hybridrows(fields, it)
+    prv = None
+    cur = it.next()
+    for nxt in it:
+        if query(prv, cur, nxt):
+            yield cur
+        prv = cur
+        cur = nxt
+    # handle last row
+    if query(prv, cur, None):
+        yield cur
+

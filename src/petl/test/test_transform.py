@@ -26,7 +26,7 @@ from petl import rename, fieldnames, cut, cat, convert, addfield, \
                 selectin, fold, addrownumbers, selectcontains, search, \
                 addcolumn, lookupjoin, hashlookupjoin, filldown, fillright, \
                 fillleft, multirangeaggregate, unjoin, coalesce, nrows, replace, \
-                empty, update
+                empty, update, selectwithcontext
 from petl.transform import Conflict, TransformError
 
 
@@ -4732,3 +4732,25 @@ def test_update():
                ('X', None))
     ieq(expect2, table2)
     ieq(expect2, table2)
+
+
+def test_selectwithcontext():
+
+    table1 = (('foo', 'bar'),
+              ('A', 1),
+              ('B', 4),
+              ('C', 5),
+              ('D', 9))
+
+    expect = (('foo', 'bar'),
+              ('B', 4),
+              ('C', 5))
+
+    def query(prv, cur, nxt):
+        return ((prv is not None and (cur.bar - prv.bar) < 2)
+                or (nxt is not None and (nxt.bar - cur.bar) < 2))
+
+    actual = selectwithcontext(table1, query)
+    ieq(expect, actual)
+    ieq(expect, actual)
+

@@ -1754,3 +1754,22 @@ look(table4)
 table5, table6 = unjoin(table4, 'bar')
 look(table5)
 look(table6)
+
+
+# selectwithcontext
+###################
+
+table1 = (('foo', 'bar'),
+          ('A', 1),
+          ('B', 4),
+          ('C', 5),
+          ('D', 9))
+
+from petl import look, selectwithcontext
+look(table1)
+def query(prv, cur, nxt):
+    return ((prv is not None and (cur.bar - prv.bar) < 2)
+            or (nxt is not None and (nxt.bar - cur.bar) < 2))
+
+table2 = selectwithcontext(table1, query)
+look(table2)
