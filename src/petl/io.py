@@ -854,10 +854,7 @@ class XmlView(RowContainer):
             self.attr = args[2]
         else:
             assert False, 'bad parameters'
-        if 'missing' in kwargs:
-            self.missing = kwargs['missing']
-        else:
-            self.missing = None
+        self.missing = kwargs.get('missing', None)
         
     def __iter__(self):
         with self.source.open_('rb') as f:
@@ -940,15 +937,9 @@ class JsonView(RowContainer):
         self.source = source
         self.args = args
         self.kwargs = kwargs
-        self.missing = None
-        self.header = None
-        if 'missing' in kwargs:
-            self.missing = kwargs['missing']
-            del self.kwargs['missing']
-        if 'header' in kwargs:
-            self.header = kwargs['header']
-            del self.kwargs['header']
-        
+        self.missing = kwargs.pop('missing', None)
+        self.header = kwargs.pop('header', None)
+
     def __iter__(self):
         with self.source.open_('rb') as f:
             result = json.load(f, *self.args, **self.kwargs)

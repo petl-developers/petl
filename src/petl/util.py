@@ -201,11 +201,8 @@ def iterdicts(table, *sliceargs, **kwargs):
     .. versionadded:: 0.15
 
     """
-    
-    if 'missing' in kwargs:
-        missing = kwargs['missing']
-    else:
-        missing = None
+
+    missing = kwargs.get('missing', None)
     it = iter(table)
     flds = it.next()
     if sliceargs:
@@ -321,15 +318,9 @@ def iternamedtuples(table, *sliceargs, **kwargs):
     .. versionadded:: 0.15
     
     """
-    
-    if 'missing' in kwargs:
-        missing = kwargs['missing']
-    else:
-        missing = None
-    if 'name' in kwargs:
-        name = kwargs['name']
-    else:
-        name = 'row'
+
+    missing = kwargs.get('missing', None)
+    name = kwargs.get('name', 'row')
     it = iter(table)
     flds = it.next()
     nt = namedtuple(name, tuple(flds))
@@ -465,15 +456,9 @@ class Look(object):
             self.sliceargs = (5,)
         else:
             self.sliceargs = sliceargs
-        if 'vrepr' in kwargs:
-            self.vrepr = kwargs['vrepr']
-        else:
-            self.vrepr = repr
-        if 'style' in kwargs:
-            self.style = kwargs['style']
-        else:
-            self.style = look.default_style
-        
+        self.vrepr = kwargs.get('vrepr', repr)
+        self.style = kwargs.get('style', look.default_style)
+
     @property
     def n(self):
         if not self.sliceargs:
@@ -872,11 +857,8 @@ def itervalues(table, field, *sliceargs, **kwargs):
     `missing` keyword argument.
 
     """
-    
-    if 'missing' in kwargs:
-        missing = kwargs['missing']
-    else:
-        missing = None
+
+    missing = kwargs.get('missing', None)
     it = iter(table)
     srcflds = it.next()
     indices = asindices(srcflds, field)
@@ -2810,11 +2792,8 @@ def iterrecords(table, *sliceargs, **kwargs):
     tuples/dicts/namedtuples. 
 
     """
-    
-    if 'missing' in kwargs:
-        missing = kwargs['missing']
-    else:
-        missing = None
+
+    missing = kwargs.get('missing', None)
     it = iter(table)
     flds = it.next()
     if sliceargs:

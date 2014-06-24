@@ -2930,15 +2930,8 @@ def select(table, *args, **kwargs):
 
     """
     
-    if 'missing' in kwargs:
-        missing = kwargs['missing']
-    else:
-        missing = None
-        
-    if 'complement' in kwargs:
-        complement = kwargs['complement']
-    else:
-        complement = False
+    missing = kwargs.get('missing', None)
+    complement = kwargs.get('complement', False)
         
     if len(args) == 0:
         raise Exception('missing positional argument')
@@ -6645,10 +6638,7 @@ class UnflattenView(RowContainer):
             self.period = args[2]
         else:
             assert False, 'invalid arguments'
-        if 'missing' in kwargs:
-            self.missing = kwargs['missing']
-        else:
-            self.missing = None
+        self.missing = kwargs.get('missing', None)
         
     def __iter__(self):
         inpt = self.input
