@@ -61,7 +61,7 @@ from petl.transform import rename, cut, cat, convert, fieldconvert, addfield, ro
     multirangeaggregate, unjoin, rowgroupmap, distinct, groupcountdistinctvalues, \
     groupselectfirst, groupselectmax, groupselectmin, coalesce, selecttrue, selectfalse, \
     selectnone, selectnotnone, update, selectusingcontext, addfieldusingcontext, \
-    prefixheader, suffixheader
+    prefixheader, suffixheader, movefield
 
            
            

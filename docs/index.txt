@@ -263,6 +263,7 @@ Transform - transforming tables
 .. autofunction:: petl.pushheader
 .. autofunction:: petl.prefixheader
 .. autofunction:: petl.suffixheader
+.. autofunction:: petl.movefield
 .. autofunction:: petl.skip
 .. autofunction:: petl.skipcomments
 .. autofunction:: petl.rowslice

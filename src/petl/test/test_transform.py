@@ -27,7 +27,7 @@ from petl import rename, fieldnames, cut, cat, convert, addfield, \
                 addcolumn, lookupjoin, hashlookupjoin, filldown, fillright, \
                 fillleft, multirangeaggregate, unjoin, coalesce, nrows, replace, \
                 empty, update, selectusingcontext, addfieldusingcontext, \
-                prefixheader, suffixheader
+                prefixheader, suffixheader, movefield
 from petl.transform import Conflict, TransformError
 
 
@@ -4817,4 +4817,22 @@ def test_suffixheader():
     ieq(expect, actual)
     ieq(expect, actual)
 
+
+def test_movefield():
+
+    table1 = (('foo', 'bar', 'baz'),
+              (1, 'A', True),
+              (2, 'B', False))
+
+    expect = (('bar', 'foo', 'baz'),
+              ('A', 1, True),
+              ('B', 2, False))
+
+    actual = movefield(table1, 'bar', 0)
+    ieq(expect, actual)
+    ieq(expect, actual)
+
+    actual = movefield(table1, 'foo', 1)
+    ieq(expect, actual)
+    ieq(expect, actual)
 

@@ -244,7 +244,7 @@ class CutView(RowContainer):
         
 def itercut(source, spec, missing=None):
     it = iter(source)
-    spec = tuple(spec) # make sure no-one can change midstream
+    spec = tuple(spec)  # make sure no-one can change midstream
     
     # convert field selection into field indices
     flds = it.next()
@@ -4954,6 +4954,48 @@ class SuffixHeaderView(object):
         yield outfields
         for row in it:
             yield row
+
+
+def movefield(table, field, index):
+    """
+    Move a field to a new position.
+
+    ..versionadded:: 0.24
+
+    """
+
+    return MoveFieldView(table, field, index)
+
+
+class MoveFieldView(object):
+
+    def __init__(self, table, field, index, missing=None):
+        self.table = table
+        self.field = field
+        self.index = index
+        self.missing = missing
+
+    def __iter__(self):
+        it = iter(self.table)
+
+        # determine output fields
+        fields = list(it.next())
+        newfields = [f for f in fields if f != self.field]
+        newfields.insert(self.index, self.field)
+        yield tuple(newfields)
+
+        # define a function to transform each row in the source data
+        # according to the field selection
+        indices = asindices(fields, newfields)
+        transform = rowgetter(*indices)
+
+        # construct the transformed data
+        for row in it:
+            try:
+                yield transform(row)
+            except IndexError:
+                # row is short, let's be kind and fill in any missing fields
+                yield tuple(row[i] if i < len(row) else self.missing for i in indices)
 
 
 def unpack(table, field, newfields=None, include_original=False, missing=None):
