@@ -2349,7 +2349,7 @@ def test_aggregate_simple():
 
     # simplest signature - aggregate whole rows
     table2 = aggregate(table1, 'foo', len)
-    expect2 = (('key', 'value'),
+    expect2 = (('foo', 'value'),
                ('a', 2),
                ('b', 3),
                ('c', 1))
@@ -2358,7 +2358,7 @@ def test_aggregate_simple():
 
     # next simplest signature - aggregate single field
     table3 = aggregate(table1, 'foo', sum, 'bar')
-    expect3 = (('key', 'value'),
+    expect3 = (('foo', 'value'),
                ('a', 10),
                ('b', 13),
                ('c', 4))
@@ -2367,12 +2367,12 @@ def test_aggregate_simple():
     
     # alternative signature for simple aggregation
     table4 = aggregate(table1, key=('foo', 'bar'), aggregation=list, value=('bar', 'baz'))
-    expect4 = (('key', 'value'),
-               (('a', 3), [(3, True)]),
-               (('a', 7), [(7, False)]),
-               (('b', 2), [(2, True), (2, False)]),
-               (('b', 9), [(9, False)]),
-               (('c', 4), [(4, True)]))
+    expect4 = (('foo', 'bar', 'value'),
+               ('a', 3, [(3, True)]),
+               ('a', 7, [(7, False)]),
+               ('b', 2, [(2, True), (2, False)]),
+               ('b', 9, [(9, False)]),
+               ('c', 4, [(4, True)]))
     ieq(expect4, table4)
     ieq(expect4, table4)
     
@@ -2398,12 +2398,12 @@ def test_aggregate_multifield():
     aggregators['bars'] = 'bar', strjoin(', ')
 
     table2 = aggregate(table1, 'foo', aggregators)
-    expect2 = (('key', 'count', 'minbar', 'maxbar', 'sumbar', 'listbar', 'bars'),
+    expect2 = (('foo', 'count', 'minbar', 'maxbar', 'sumbar', 'listbar', 'bars'),
                ('a', 2, 3, 7, 10, [3, 7], '3, 7'),
                ('b', 3, 1, 9, 12, [2, 1, 9], '2, 1, 9'),
                ('c', 1, 4, 4, 4, [4], '4'))
     ieq(expect2, table2)
-    ieq(expect2, table2) # check can iterate twice
+    ieq(expect2, table2)  # check can iterate twice
     
     # use suffix notation
     
@@ -2412,7 +2412,7 @@ def test_aggregate_multifield():
     table3['minbar'] = 'bar', min
     table3['maxbar'] = 'bar', max
     table3['sumbar'] = 'bar', sum
-    table3['listbar'] = 'bar' # default aggregation is list
+    table3['listbar'] = 'bar'  # default aggregation is list
     table3['bars'] = 'bar', strjoin(', ')
     ieq(expect2, table3)
     
@@ -2449,7 +2449,7 @@ def test_aggregate_more():
     aggregators['bars'] = 'bar', strjoin(', ')
 
     table2 = aggregate(table1, 'foo', aggregators)
-    expect2 = (('key', 'minbar', 'maxbar', 'sumbar', 'listbar', 'bars'),
+    expect2 = (('foo', 'minbar', 'maxbar', 'sumbar', 'listbar', 'bars'),
                ('aa', 3, 7, 10, [3, 7], '3, 7'),
                ('bb', 1, 9, 12, [2, 1, 9], '2, 1, 9'),
                ('cc', 4, 4, 4, [4], '4'),
@@ -2461,7 +2461,7 @@ def test_aggregate_more():
     table3['minbar'] = 'bar', min
     table3['maxbar'] = 'bar', max
     table3['sumbar'] = 'bar', sum
-    table3['listbar'] = 'bar' # default aggregation is list
+    table3['listbar'] = 'bar'  # default aggregation is list
     table3['bars'] = 'bar', strjoin(', ')
     ieq(expect2, table3)
     
@@ -2476,12 +2476,12 @@ def test_aggregate_multiple_source_fields():
              ('b', 9, False),
              ('c', 4, True))
 
-    expect = (('key', 'value'),
-              (('a', 3), [(3, True)]),
-              (('a', 7), [(7, False)]),
-              (('b', 2), [(2, True), (2, False)]),
-              (('b', 9), [(9, False)]),
-              (('c', 4), [(4, True)]))
+    expect = (('foo', 'bar', 'value'),
+              ('a', 3, [(3, True)]),
+              ('a', 7, [(7, False)]),
+              ('b', 2, [(2, True), (2, False)]),
+              ('b', 9, [(9, False)]),
+              ('c', 4, [(4, True)]))
 
     actual = aggregate(table, ('foo', 'bar'), list, ('bar', 'baz'))
     ieq(expect, actual)
@@ -2507,7 +2507,7 @@ def test_aggregate_empty():
     aggregators['sumbar'] = 'bar', sum
 
     actual = aggregate(table, 'foo', aggregators)
-    expect = (('key', 'minbar', 'maxbar', 'sumbar'),)
+    expect = (('foo', 'minbar', 'maxbar', 'sumbar'),)
     ieq(expect, actual)
 
 

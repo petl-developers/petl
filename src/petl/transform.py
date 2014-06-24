@@ -3806,7 +3806,7 @@ def aggregate(table, key, aggregation=None, value=None, presorted=False,
               buffersize=None, tempdir=None, cache=True):
     """
     Group rows under the given key then apply aggregation functions. E.g.::
-    
+
         >>> from petl import aggregate, look
         >>> look(table1)
         +-------+-------+-------+
@@ -3822,14 +3822,12 @@ def aggregate(table, key, aggregation=None, value=None, presorted=False,
         +-------+-------+-------+
         | 'b'   |     9 | False |
         +-------+-------+-------+
-        | 'c'   |     4 |  True |
-        +-------+-------+-------+
-        
+
         >>> # aggregate whole rows
         ... table2 = aggregate(table1, 'foo', len)
         >>> look(table2)
         +-------+---------+
-        | 'key' | 'value' |
+        | 'foo' | 'value' |
         +=======+=========+
         | 'a'   |       2 |
         +-------+---------+
@@ -3837,12 +3835,12 @@ def aggregate(table, key, aggregation=None, value=None, presorted=False,
         +-------+---------+
         | 'c'   |       1 |
         +-------+---------+
-        
+
         >>> # aggregate single field
         ... table3 = aggregate(table1, 'foo', sum, 'bar')
         >>> look(table3)
         +-------+---------+
-        | 'key' | 'value' |
+        | 'foo' | 'value' |
         +=======+=========+
         | 'a'   |      10 |
         +-------+---------+
@@ -3850,24 +3848,24 @@ def aggregate(table, key, aggregation=None, value=None, presorted=False,
         +-------+---------+
         | 'c'   |       4 |
         +-------+---------+
-        
+
         >>> # alternative signature for single field aggregation using keyword args
         ... table4 = aggregate(table1, key=('foo', 'bar'), aggregation=list, value=('bar', 'baz'))
         >>> look(table4)
-        +----------+-------------------------+
-        | 'key'    | 'value'                 |
-        +==========+=========================+
-        | ('a', 3) | [(3, True)]             |
-        +----------+-------------------------+
-        | ('a', 7) | [(7, False)]            |
-        +----------+-------------------------+
-        | ('b', 2) | [(2, True), (2, False)] |
-        +----------+-------------------------+
-        | ('b', 9) | [(9, False)]            |
-        +----------+-------------------------+
-        | ('c', 4) | [(4, True)]             |
-        +----------+-------------------------+
-        
+        +-------+-------+-------------------------+
+        | 'foo' | 'bar' | 'value'                 |
+        +=======+=======+=========================+
+        | 'a'   |     3 | [(3, True)]             |
+        +-------+-------+-------------------------+
+        | 'a'   |     7 | [(7, False)]            |
+        +-------+-------+-------------------------+
+        | 'b'   |     2 | [(2, True), (2, False)] |
+        +-------+-------+-------------------------+
+        | 'b'   |     9 | [(9, False)]            |
+        +-------+-------+-------------------------+
+        | 'c'   |     4 | [(4, True)]             |
+        +-------+-------+-------------------------+
+
         >>> # aggregate multiple fields
         ... from collections import OrderedDict
         >>> from petl import strjoin
@@ -3882,7 +3880,7 @@ def aggregate(table, key, aggregation=None, value=None, presorted=False,
         >>> table5 = aggregate(table1, 'foo', aggregation)
         >>> look(table5)
         +-------+---------+----------+----------+----------+-----------+-------------------------------------+-----------+
-        | 'key' | 'count' | 'minbar' | 'maxbar' | 'sumbar' | 'listbar' | 'listbarbaz'                        | 'bars'    |
+        | 'foo' | 'count' | 'minbar' | 'maxbar' | 'sumbar' | 'listbar' | 'listbarbaz'                        | 'bars'    |
         +=======+=========+==========+==========+==========+===========+=====================================+===========+
         | 'a'   |       2 |        3 |        7 |       10 | [3, 7]    | [(3, True), (7, False)]             | '3, 7'    |
         +-------+---------+----------+----------+----------+-----------+-------------------------------------+-----------+
@@ -3890,7 +3888,7 @@ def aggregate(table, key, aggregation=None, value=None, presorted=False,
         +-------+---------+----------+----------+----------+-----------+-------------------------------------+-----------+
         | 'c'   |       1 |        4 |        4 |        4 | [4]       | [(4, True)]                         | '4'       |
         +-------+---------+----------+----------+----------+-----------+-------------------------------------+-----------+
-        
+
         >>> # can also use list or tuple to specify multiple field aggregation
         ... aggregation = [('count', len),
         ...                ('minbar', 'bar', min),
@@ -3902,7 +3900,7 @@ def aggregate(table, key, aggregation=None, value=None, presorted=False,
         >>> table6 = aggregate(table1, 'foo', aggregation)
         >>> look(table6)
         +-------+---------+----------+----------+----------+-----------+-------------------------------------+-----------+
-        | 'key' | 'count' | 'minbar' | 'maxbar' | 'sumbar' | 'listbar' | 'listbarbaz'                        | 'bars'    |
+        | 'foo' | 'count' | 'minbar' | 'maxbar' | 'sumbar' | 'listbar' | 'listbarbaz'                        | 'bars'    |
         +=======+=========+==========+==========+==========+===========+=====================================+===========+
         | 'a'   |       2 |        3 |        7 |       10 | [3, 7]    | [(3, True), (7, False)]             | '3, 7'    |
         +-------+---------+----------+----------+----------+-----------+-------------------------------------+-----------+
@@ -3910,7 +3908,7 @@ def aggregate(table, key, aggregation=None, value=None, presorted=False,
         +-------+---------+----------+----------+----------+-----------+-------------------------------------+-----------+
         | 'c'   |       1 |        4 |        4 |        4 | [4]       | [(4, True)]                         | '4'       |
         +-------+---------+----------+----------+----------+-----------+-------------------------------------+-----------+
-        
+
         >>> # can also use suffix notation
         ... table7 = aggregate(table1, 'foo')
         >>> table7['count'] = len
@@ -3922,7 +3920,7 @@ def aggregate(table, key, aggregation=None, value=None, presorted=False,
         >>> table7['bars'] = 'bar', strjoin(', ')
         >>> look(table7)
         +-------+---------+----------+----------+----------+-----------+-------------------------------------+-----------+
-        | 'key' | 'count' | 'minbar' | 'maxbar' | 'sumbar' | 'listbar' | 'listbarbaz'                        | 'bars'    |
+        | 'foo' | 'count' | 'minbar' | 'maxbar' | 'sumbar' | 'listbar' | 'listbarbaz'                        | 'bars'    |
         +=======+=========+==========+==========+==========+===========+=====================================+===========+
         | 'a'   |       2 |        3 |        7 |       10 | [3, 7]    | [(3, True), (7, False)]             | '3, 7'    |
         +-------+---------+----------+----------+----------+-----------+-------------------------------------+-----------+
@@ -3935,6 +3933,11 @@ def aggregate(table, key, aggregation=None, value=None, presorted=False,
     the given key, and the `buffersize`, `tempdir` and `cache` arguments are ignored. Otherwise, the data 
     are sorted, see also the discussion of the `buffersize`, `tempdir` and `cache` arguments under the 
     :func:`sort` function.
+
+    .. versionchanged:: 0.24
+
+    The provided key field is used in the output header instead of 'key'. Also
+    compound keys are output as separate columns.
     
     """
 
@@ -3966,11 +3969,27 @@ class SimpleAggregateView(RowContainer):
 
 
 def itersimpleaggregate(table, key, aggregation, value):
+
+    # special case counting
     if aggregation == len:
-        aggregation = lambda grp: sum(1 for _ in grp) # count length of iterable
-    yield ('key', 'value')
-    for k, grp in rowgroupby(table, key, value):
-        yield k, aggregation(grp)
+        aggregation = lambda g: sum(1 for _ in g)  # count length of iterable
+
+    # determine output header
+    if isinstance(key, (list, tuple)):
+        outfields = tuple(key) + ('value',)
+    elif callable(key):
+        outfields = ('key', 'value')
+    else:
+        outfields = (key, 'value')
+    yield outfields
+
+    # generate data
+    if isinstance(key, (list, tuple)):
+        for k, grp in rowgroupby(table, key, value):
+            yield tuple(k) + (aggregation(grp),)
+    else:
+        for k, grp in rowgroupby(table, key, value):
+            yield k, aggregation(grp)
 
 
 class MultiAggregateView(RowContainer):
@@ -4004,7 +4023,7 @@ def itermultiaggregate(source, key, aggregation):
     aggregation = OrderedDict(aggregation.items()) # take a copy
     it = iter(source)
     srcflds = it.next()
-    it = chain([srcflds], it) # push back header to ensure we iterate only once
+    it = chain([srcflds], it)  # push back header to ensure we iterate only once
 
     # normalise aggregators
     for outfld in aggregation:
@@ -4012,24 +4031,35 @@ def itermultiaggregate(source, key, aggregation):
         if callable(agg):
             aggregation[outfld] = None, agg
         elif isinstance(agg, basestring):
-            aggregation[outfld] = agg, list # list is default
+            aggregation[outfld] = agg, list  # list is default
         elif len(agg) == 1 and isinstance(agg[0], basestring):
-            aggregation[outfld] = agg[0], list # list is default 
+            aggregation[outfld] = agg[0], list  # list is default
         elif len(agg) == 1 and callable(agg[0]):
-            aggregation[outfld] = None, agg[0] # aggregate whole rows
+            aggregation[outfld] = None, agg[0]  # aggregate whole rows
         elif len(agg) == 2:
             pass # no need to normalise
         else:
             raise Exception('invalid aggregation: %r, %r' % (outfld, agg))
-        
-    outflds = ['key']
+
+    # determine output header
+    if isinstance(key, (list, tuple)):
+        outflds = list(key)
+    elif callable(key):
+        outflds = ['key']
+    else:
+        outflds = [key]
     for outfld in aggregation:
         outflds.append(outfld)
     yield tuple(outflds)
     
+    # generate data
     for k, rows in rowgroupby(it, key):
         rows = list(rows) # may need to iterate over these more than once
-        outrow = [k]
+        # handle compound key
+        if isinstance(key, (list, tuple)):
+            outrow = list(k)
+        else:
+            outrow = [k]
         for outfld in aggregation:
             srcfld, aggfun = aggregation[outfld]
             if srcfld is None:
@@ -4051,7 +4081,7 @@ def itermultiaggregate(source, key, aggregation):
             
 
 def rangerowreduce(table, key, width, reducer, fields=None, minv=None, maxv=None, 
-                     presorted=False, buffersize=None, tempdir=None, cache=True):
+                   presorted=False, buffersize=None, tempdir=None, cache=True):
     """
     Group rows into bins of a given `width` under the given numeric key then 
     apply `reducer` to produce a single output row for each input group of rows. 
