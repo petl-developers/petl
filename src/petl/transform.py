@@ -11,13 +11,14 @@ from tempfile import NamedTemporaryFile
 import operator
 import re
 from math import ceil
+import inspect
 
 
-from petl.util import asindices, rowgetter, asdict,\
-    expr, valueset, header, data, limits, itervalues, parsenumber, lookup,\
-    values, shortlistmergesorted, heapqmergesorted, hybridrows, rowgroupby,\
-    iterpeek, count, Counter, OrderedDict, RowContainer, SortableItem, sortable_itemgetter, FieldSelectionError, \
-    rowgroupbybin, rowitemgetter
+from petl.util import asindices, rowgetter, \
+    expr, valueset, header, data, limits, itervalues, numparser, lookup, \
+    values, shortlistmergesorted, heapqmergesorted, hybridrows, rowgroupby, \
+    iterpeek, count, Counter, OrderedDict, RowContainer, SortableItem, \
+    sortable_itemgetter, FieldSelectionError, rowgroupbybin, rowitemgetter
 
 
 import logging
@@ -544,78 +545,78 @@ def convert(table, *args, **kwargs):
         +-------+-------+-------+
         | 'foo' | 'bar' | 'baz' |
         +=======+=======+=======+
-        | 'A'   | '2.4' | 12    |
+        | 'A'   | '2.4' |    12 |
         +-------+-------+-------+
-        | 'B'   | '5.7' | 34    |
+        | 'B'   | '5.7' |    34 |
         +-------+-------+-------+
-        | 'C'   | '1.2' | 56    |
+        | 'C'   | '1.2' |    56 |
         +-------+-------+-------+
-        
+
         >>> # using the built-in float function:
         ... table2 = convert(table1, 'bar', float)
         >>> look(table2)
         +-------+-------+-------+
         | 'foo' | 'bar' | 'baz' |
         +=======+=======+=======+
-        | 'A'   | 2.4   | 12    |
+        | 'A'   |   2.4 |    12 |
         +-------+-------+-------+
-        | 'B'   | 5.7   | 34    |
+        | 'B'   |   5.7 |    34 |
         +-------+-------+-------+
-        | 'C'   | 1.2   | 56    |
+        | 'C'   |   1.2 |    56 |
         +-------+-------+-------+
-        
+
         >>> # using a lambda function::
         ... table3 = convert(table1, 'baz', lambda v: v*2)
-        >>> look(table3)    
+        >>> look(table3)
         +-------+-------+-------+
         | 'foo' | 'bar' | 'baz' |
         +=======+=======+=======+
-        | 'A'   | '2.4' | 24    |
+        | 'A'   | '2.4' |    24 |
         +-------+-------+-------+
-        | 'B'   | '5.7' | 68    |
+        | 'B'   | '5.7' |    68 |
         +-------+-------+-------+
-        | 'C'   | '1.2' | 112   |
+        | 'C'   | '1.2' |   112 |
         +-------+-------+-------+
-        
+
         >>> # a method of the data value can also be invoked by passing the method name
         ... table4 = convert(table1, 'foo', 'lower')
         >>> look(table4)
         +-------+-------+-------+
         | 'foo' | 'bar' | 'baz' |
         +=======+=======+=======+
-        | 'a'   | '2.4' | 12    |
+        | 'a'   | '2.4' |    12 |
         +-------+-------+-------+
-        | 'b'   | '5.7' | 34    |
+        | 'b'   | '5.7' |    34 |
         +-------+-------+-------+
-        | 'c'   | '1.2' | 56    |
+        | 'c'   | '1.2' |    56 |
         +-------+-------+-------+
-        
+
         >>> # arguments to the method invocation can also be given
         ... table5 = convert(table1, 'foo', 'replace', 'A', 'AA')
         >>> look(table5)
         +-------+-------+-------+
         | 'foo' | 'bar' | 'baz' |
         +=======+=======+=======+
-        | 'AA'  | '2.4' | 12    |
+        | 'AA'  | '2.4' |    12 |
         +-------+-------+-------+
-        | 'B'   | '5.7' | 34    |
+        | 'B'   | '5.7' |    34 |
         +-------+-------+-------+
-        | 'C'   | '1.2' | 56    |
+        | 'C'   | '1.2' |    56 |
         +-------+-------+-------+
-        
+
         >>> # values can also be translated via a dictionary
         ... table7 = convert(table1, 'foo', {'A': 'Z', 'B': 'Y'})
         >>> look(table7)
         +-------+-------+-------+
         | 'foo' | 'bar' | 'baz' |
         +=======+=======+=======+
-        | 'Z'   | '2.4' | 12    |
+        | 'Z'   | '2.4' |    12 |
         +-------+-------+-------+
-        | 'Y'   | '5.7' | 34    |
+        | 'Y'   | '5.7' |    34 |
         +-------+-------+-------+
-        | 'C'   | '1.2' | 56    |
+        | 'C'   | '1.2' |    56 |
         +-------+-------+-------+
-        
+
         >>> # the same conversion can be applied to multiple fields
         ... table8 = convert(table1, ('foo', 'bar', 'baz'), unicode)
         >>> look(table8)
@@ -628,33 +629,33 @@ def convert(table, *args, **kwargs):
         +-------+--------+-------+
         | u'C'  | u'1.2' | u'56' |
         +-------+--------+-------+
-        
+
         >>> # multiple conversions can be specified at the same time
         ... table9 = convert(table1, {'foo': 'lower', 'bar': float, 'baz': lambda v: v*2})
         >>> look(table9)
         +-------+-------+-------+
         | 'foo' | 'bar' | 'baz' |
         +=======+=======+=======+
-        | 'a'   | 2.4   | 24    |
+        | 'a'   |   2.4 |    24 |
         +-------+-------+-------+
-        | 'b'   | 5.7   | 68    |
+        | 'b'   |   5.7 |    68 |
         +-------+-------+-------+
-        | 'c'   | 1.2   | 112   |
+        | 'c'   |   1.2 |   112 |
         +-------+-------+-------+
-        
+
         >>> # ...or alternatively via a list
         ... table10 = convert(table1, ['lower', float, lambda v: v*2])
         >>> look(table10)
         +-------+-------+-------+
         | 'foo' | 'bar' | 'baz' |
         +=======+=======+=======+
-        | 'a'   | 2.4   | 24    |
+        | 'a'   |   2.4 |    24 |
         +-------+-------+-------+
-        | 'b'   | 5.7   | 68    |
+        | 'b'   |   5.7 |    68 |
         +-------+-------+-------+
-        | 'c'   | 1.2   | 112   |
+        | 'c'   |   1.2 |   112 |
         +-------+-------+-------+
-        
+
         >>> # ...or alternatively via suffix notation on the returned table object
         ... table11 = convert(table1)
         >>> table11['foo'] = 'lower'
@@ -664,11 +665,11 @@ def convert(table, *args, **kwargs):
         +-------+-------+-------+
         | 'foo' | 'bar' | 'baz' |
         +=======+=======+=======+
-        | 'a'   | 2.4   | 24    |
+        | 'a'   |   2.4 |    24 |
         +-------+-------+-------+
-        | 'b'   | 5.7   | 68    |
+        | 'b'   |   5.7 |    68 |
         +-------+-------+-------+
-        | 'c'   | 1.2   | 112   |
+        | 'c'   |   1.2 |   112 |
         +-------+-------+-------+
 
         >>> # conversion can be conditional
@@ -684,6 +685,19 @@ def convert(table, *args, **kwargs):
         | 'C'   | '1.2' |    56 |
         +-------+-------+-------+
 
+        >>> # conversion can access other values from the same row
+        ... table14 = convert(table1, 'baz', lambda v, row: v * float(row.bar))
+        >>> look(table14)
+        +-------+-------+--------------------+
+        | 'foo' | 'bar' | 'baz'              |
+        +=======+=======+====================+
+        | 'A'   | '2.4' | 28.799999999999997 |
+        +-------+-------+--------------------+
+        | 'B'   | '5.7' |              193.8 |
+        +-------+-------+--------------------+
+        | 'C'   | '1.2' |               67.2 |
+        +-------+-------+--------------------+
+
     Note that either field names or indexes can be given.
     
     .. versionchanged:: 0.11
@@ -692,13 +706,21 @@ def convert(table, *args, **kwargs):
 
     .. versionchanged:: 0.22
 
-    The ``where`` keyword argument can be given with a callable or expression which is evaluated on each row
-    and which should return True if the conversion should be applied on that row, else False.
+    The ``where`` keyword argument can be given with a callable or expression
+    which is evaluated on each row and which should return True if the
+    conversion should be applied on that row, else False.
+
+    .. versionchanged:: 0.24
+
+    The user-provided conversion function can either accept a single argument,
+    in which case the value to be converted will be passed, or can accept two
+    arguments, in which case the value and the containing row will be passed.
     
     """
     
     if len(args) == 0:
-        converters = None  # no conversion specified, can be set afterwards via suffix notation
+        # no conversion specified, can be set afterwards via suffix notation
+        converters = None
     elif len(args) == 1:
         converters = args[0]
     elif len(args) > 1:
@@ -782,7 +804,7 @@ def update(table, field, value, **kwargs):
     return convert(table, field, lambda v: value, **kwargs)
     
 
-def convertnumbers(table, **kwargs):
+def convertnumbers(table, strict=False, **kwargs):
     """
     Convenience function to convert all field values to numbers where possible. 
     E.g.::
@@ -810,8 +832,8 @@ def convertnumbers(table, **kwargs):
     .. versionadded:: 0.4
     
     """
-    
-    return convertall(table, parsenumber, **kwargs)
+
+    return convertall(table, numparser(strict), **kwargs)
 
 
 def fieldconvert(table, converters=None, failonerror=False, errorvalue=None, **kwargs):
@@ -829,7 +851,8 @@ def fieldconvert(table, converters=None, failonerror=False, errorvalue=None, **k
 
 class FieldConvertView(RowContainer):
     
-    def __init__(self, source, converters=None, failonerror=False, errorvalue=None, where=None):
+    def __init__(self, source, converters=None, failonerror=False,
+                 errorvalue=None, where=None):
         self.source = source
         if converters is None:
             self.converters = dict()
@@ -857,9 +880,11 @@ def iterfieldconvert(source, converters, failonerror, errorvalue, where):
     flds = it.next()
     yield tuple(flds)  # these are not modified
 
-    norm_converters = dict()
-    # normalise converters
+    # build converter functions
+    converter_functions = dict()
+    with_row = set()
     for k, c in converters.items():
+
         # turn field names into row indices
         if isinstance(k, basestring):
             try:
@@ -867,33 +892,47 @@ def iterfieldconvert(source, converters, failonerror, errorvalue, where):
             except ValueError: # not in list
                 raise FieldSelectionError(k)
         assert isinstance(k, int), 'expected integer, found %r' % k
+
         # is converter a function?
         if callable(c):
-            norm_converters[k] = c
+            converter_functions[k] = c
+            # pass value only or also row?
+            if inspect.isfunction(c):
+                argspec = inspect.getargspec(c)
+                if len(argspec.args) > 1 or argspec.varargs is not None:
+                    with_row.add(k)
+
         # is converter a method name?
         elif isinstance(c, basestring):
-            norm_converters[k] = methodcaller(c)
+            converter_functions[k] = methodcaller(c)
+
         # is converter a method name with arguments?
         elif isinstance(c, (tuple, list)) and isinstance(c[0], basestring):
             methnm = c[0]
             methargs = c[1:]
-            norm_converters[k] = methodcaller(methnm, *methargs)
-        # is converter a dictionary
+            converter_functions[k] = methodcaller(methnm, *methargs)
+
+        # is converter a dictionary?
         elif isinstance(c, dict):
-            norm_converters[k] = dictconverter(c)
+            converter_functions[k] = dictconverter(c)
+
+        # is it something else?
         elif c is None:
             pass  # ignore
         else:
             raise Exception('unexpected converter specification on field %r: %r' % (k, c))
 
     # define a function to transform a value
-    def transform_value(i, v):
-        if i not in norm_converters:
+    def transform_value(i, v, r):
+        if i not in converter_functions:
             # no converter defined on this field, return value as-is
             return v
         else:
             try:
-                return norm_converters[i](v)
+                if i in with_row:
+                    return converter_functions[i](v, r)
+                else:
+                    return converter_functions[i](v)
             except:
                 if failonerror:
                     raise
@@ -902,21 +941,20 @@ def iterfieldconvert(source, converters, failonerror, errorvalue, where):
 
     # construct the data rows
     if where is None:
-        for row in it:
-            yield tuple(transform_value(i, v) for i, v in enumerate(row))
+        for row in hybridrows(flds, it):
+            yield tuple(transform_value(i, v, row) for i, v in enumerate(row))
     else:
         if isinstance(where, basestring):
             where = expr(where)
         else:
-            assert callable(where), 'expected callable for "where" argument, found %r' % r
+            assert callable(where), 'expected callable for "where" argument, found %r' % where
         for row in hybridrows(flds, it):
             if where(row):
-                yield tuple(transform_value(i, v) for i, v in enumerate(row))
+                yield tuple(transform_value(i, v, row) for i, v in enumerate(row))
             else:
                 yield row
 
 
-            
 def methodcaller(nm, *args):
     return lambda v: getattr(v, nm)(*args)
 

@@ -2307,9 +2307,13 @@ def parsenumber(v, strict=False):
     .. versionadded:: 0.4
     
     .. versionchanged:: 0.7 Set ``strict=True`` to get an exception if parsing fails.
+
+    .. deprecated:: 0.24
+
+    Use :func:`numparser` instead.
     
     """
-    
+
     try:
         return int(v)
     except:
@@ -2328,6 +2332,40 @@ def parsenumber(v, strict=False):
         if strict:
             raise
     return v
+
+
+def numparser(strict=False):
+    """
+    Return a function that will attempt to parse the value as a number, trying
+    :func:`int`, :func:`long`, :func:`float` and :func:`complex` in that order.
+    If all fail, return the value as-is, unless `strict`=`True`, in which case
+    raise the underlying exception.
+
+    .. versionadded:: 0.24
+
+    """
+
+    def f(v):
+        try:
+            return int(v)
+        except:
+            pass
+        try:
+            return long(v)
+        except:
+            pass
+        try:
+            return float(v)
+        except:
+            pass
+        try:
+            return complex(v)
+        except:
+            if strict:
+                raise
+        return v
+
+    return f
 
 
 def stringpatterncounter(table, field):

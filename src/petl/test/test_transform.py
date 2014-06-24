@@ -481,6 +481,21 @@ def test_convert_translate():
     ieq(expectation, result)
 
 
+def test_convert_with_row():
+
+    table = (('foo', 'bar'),
+             ('a', 1),
+             ('b', 2))
+
+    expect = (('foo', 'bar'),
+             ('a', 'A'),
+             ('b', 'B'))
+
+    actual = convert(table, 'bar',
+                     lambda v, row: row.foo.upper())
+    ieq(expect, actual)
+
+
 def test_addfield():
     table = (('foo', 'bar'),
              ('M', 12),
@@ -984,8 +999,9 @@ def test_recast_1():
                    (1, 12, 'F'),
                    (2, 17, 'M'),
                    (3, 16, 'M'))
-    
-    result = recast(table) # by default lift 'variable' field, hold everything else
+
+    # by default lift 'variable' field, hold everything else
+    result = recast(table)
     ieq(expectation, result)
 
     result = recast(table, variablefield='variable')

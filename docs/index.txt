@@ -455,6 +455,7 @@ Utility functions
 .. autofunction:: petl.timeparser
 .. autofunction:: petl.datetimeparser
 .. autofunction:: petl.boolparser
+.. autofunction:: petl.numparser
 .. autofunction:: petl.parsenumber
 .. autofunction:: petl.lookup
 .. autofunction:: petl.lookupone

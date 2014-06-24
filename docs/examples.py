@@ -126,7 +126,9 @@ table9 = cat(table7, table8, header=['A', 'foo', 'B', 'bar', 'C'])
 look(table9)
 
 
+#########
 # convert
+#########
 
 table1 = [['foo', 'bar', 'baz'],
           ['A', '2.4', 12],
@@ -168,6 +170,9 @@ look(table11)
 # conversion can be conditional
 table12 = convert(table1, 'baz', lambda v: v*2, where=lambda r: r.foo == 'B')
 look(table12)
+# conversion can access other values from the same row
+table14 = convert(table1, 'baz', lambda v, row: v * float(row.bar))
+look(table14)
 
 
 # convertnumbers
