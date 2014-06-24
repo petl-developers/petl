@@ -26,7 +26,8 @@ from petl import rename, fieldnames, cut, cat, convert, addfield, \
                 selectin, fold, addrownumbers, selectcontains, search, \
                 addcolumn, lookupjoin, hashlookupjoin, filldown, fillright, \
                 fillleft, multirangeaggregate, unjoin, coalesce, nrows, replace, \
-                empty, update, selectusingcontext, addfieldusingcontext
+                empty, update, selectusingcontext, addfieldusingcontext, \
+                prefixheader, suffixheader
 from petl.transform import Conflict, TransformError
 
 
@@ -4785,4 +4786,35 @@ def test_addfieldusingcontext():
     table3 = addfieldusingcontext(table2, 'quux', downstream)
     ieq(expect, table3)
     ieq(expect, table3)
+
+
+def test_prefixheader():
+
+    table1 = (('foo', 'bar'),
+              (1, 'A'),
+              (2, 'B'))
+
+    expect = (('pre_foo', 'pre_bar'),
+              (1, 'A'),
+              (2, 'B'))
+
+    actual = prefixheader(table1, 'pre_')
+    ieq(expect, actual)
+    ieq(expect, actual)
+
+
+def test_suffixheader():
+
+    table1 = (('foo', 'bar'),
+              (1, 'A'),
+              (2, 'B'))
+
+    expect = (('foo_suf', 'bar_suf'),
+              (1, 'A'),
+              (2, 'B'))
+
+    actual = suffixheader(table1, '_suf')
+    ieq(expect, actual)
+    ieq(expect, actual)
+
 

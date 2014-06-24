@@ -60,7 +60,9 @@ from petl.transform import rename, cut, cat, convert, fieldconvert, addfield, ro
     addcolumn, lookupjoin, hashlookupjoin, filldown, fillright, fillleft, \
     multirangeaggregate, unjoin, rowgroupmap, distinct, groupcountdistinctvalues, \
     groupselectfirst, groupselectmax, groupselectmin, coalesce, selecttrue, selectfalse, \
-    selectnone, selectnotnone, update, selectusingcontext, addfieldusingcontext
+    selectnone, selectnotnone, update, selectusingcontext, addfieldusingcontext, \
+    prefixheader, suffixheader
+
            
            
 def lenstats(table, field):

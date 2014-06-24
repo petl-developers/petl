@@ -4902,8 +4902,60 @@ class SkipCommentsView(RowContainer):
 
 def iterskipcomments(source, prefix):
     return (row for row in source if len(row) > 0 and not(isinstance(row[0], basestring) and row[0].startswith(prefix)))
-        
+
+
+def prefixheader(table, prefix):
+    """
+    Prefix all fields in the table header.
+
+    ..versionadded:: 0.24
+
+    """
+
+    return PrefixHeaderView(table, prefix)
+
+
+class PrefixHeaderView(object):
+
+    def __init__(self, table, prefix):
+        self.table = table
+        self.prefix = prefix
+
+    def __iter__(self):
+        it = iter(self.table)
+        fields = it.next()
+        outfields = tuple((self.prefix + f) for f in fields)
+        yield outfields
+        for row in it:
+            yield row
+
     
+def suffixheader(table, suffix):
+    """
+    Suffix all fields in the table header.
+
+    ..versionadded:: 0.24
+
+    """
+
+    return SuffixHeaderView(table, suffix)
+
+
+class SuffixHeaderView(object):
+
+    def __init__(self, table, suffix):
+        self.table = table
+        self.suffix = suffix
+
+    def __iter__(self):
+        it = iter(self.table)
+        fields = it.next()
+        outfields = tuple((f + self.suffix) for f in fields)
+        yield outfields
+        for row in it:
+            yield row
+
+
 def unpack(table, field, newfields=None, include_original=False, missing=None):
     """
     Unpack data values that are lists or tuples. E.g.::
