@@ -4924,7 +4924,7 @@ class PrefixHeaderView(object):
     def __iter__(self):
         it = iter(self.table)
         fields = it.next()
-        outfields = tuple((self.prefix + f) for f in fields)
+        outfields = tuple((str(self.prefix) + str(f)) for f in fields)
         yield outfields
         for row in it:
             yield row
@@ -4950,7 +4950,7 @@ class SuffixHeaderView(object):
     def __iter__(self):
         it = iter(self.table)
         fields = it.next()
-        outfields = tuple((f + self.suffix) for f in fields)
+        outfields = tuple((str(f) + str(self.suffix)) for f in fields)
         yield outfields
         for row in it:
             yield row
@@ -5111,7 +5111,8 @@ def iterunpack(source, field, newfields, include_original, missing):
         yield tuple(out_row)
         
         
-def join(left, right, key=None, presorted=False, buffersize=None, tempdir=None, cache=True):
+def join(left, right, key=None, presorted=False, buffersize=None, tempdir=None,
+         cache=True, lprefix=None, rprefix=None):
     """
     Perform an equi-join on the given tables. E.g.::
         
@@ -5239,35 +5240,17 @@ def join(left, right, key=None, presorted=False, buffersize=None, tempdir=None, 
     """
     
     if key is None:
-        return ImplicitJoinView(left, right, presorted=presorted, buffersize=buffersize, tempdir=tempdir, cache=cache)
-    else:
-        return JoinView(left, right, key, presorted=presorted, buffersize=buffersize, tempdir=tempdir, cache=cache)
-
-
-class ImplicitJoinView(RowContainer):
-    
-    def __init__(self, left, right, presorted=False, leftouter=False, 
-                 rightouter=False, missing=None, buffersize=None, tempdir=None, cache=True):
-        self.left = left
-        self.right = right
-        self.presorted = presorted
-        self.leftouter = leftouter
-        self.rightouter = rightouter
-        self.missing = missing
-        self.buffersize = buffersize
-        
-    def __iter__(self):
-        return iterimplicitjoin(self.left, self.right, self.presorted, 
-                               leftouter=self.leftouter, 
-                               rightouter=self.rightouter, 
-                               missing=self.missing,
-                               buffersize=self.buffersize)
+        key = _natural_key(left, right)
+    return JoinView(left, right, key, presorted=presorted,
+                    buffersize=buffersize, tempdir=tempdir, cache=cache,
+                    lprefix=lprefix, rprefix=rprefix)
 
 
 class JoinView(RowContainer):
     
     def __init__(self, left, right, key, presorted=False, leftouter=False, 
-                 rightouter=False, missing=None, buffersize=None, tempdir=None, cache=True):
+                 rightouter=False, missing=None, buffersize=None, tempdir=None,
+                 cache=True, lprefix=None, rprefix=None):
         if presorted:
             self.left = left
             self.right = right
@@ -5280,13 +5263,18 @@ class JoinView(RowContainer):
         self.leftouter = leftouter
         self.rightouter = rightouter
         self.missing = missing
-        
+        self.lprefix = lprefix
+        self.rprefix = rprefix
+
     def __iter__(self):
         return iterjoin(self.left, self.right, self.key, leftouter=self.leftouter,
-                        rightouter=self.rightouter, missing=self.missing)
+                        rightouter=self.rightouter, missing=self.missing,
+                        lprefix=self.lprefix, rprefix=self.rprefix)
     
     
-def leftjoin(left, right, key=None, missing=None, presorted=False, buffersize=None, tempdir=None, cache=True):
+def leftjoin(left, right, key=None, missing=None, presorted=False,
+             buffersize=None, tempdir=None, cache=True,
+             lprefix=None, rprefix=None):
     """
     Perform a left outer join on the given tables. E.g.::
     
@@ -5333,14 +5321,16 @@ def leftjoin(left, right, key=None, missing=None, presorted=False, buffersize=No
     """
     
     if key is None:
-        return ImplicitJoinView(left, right, presorted=presorted, leftouter=True, 
-                               rightouter=False, missing=missing, buffersize=buffersize, tempdir=tempdir, cache=cache)
-    else:
-        return JoinView(left, right, key, presorted=presorted, leftouter=True, 
-                        rightouter=False, missing=missing, buffersize=buffersize, tempdir=tempdir, cache=cache)
+        key = _natural_key(left, right)
+    return JoinView(left, right, key, presorted=presorted, leftouter=True,
+                    rightouter=False, missing=missing,
+                    buffersize=buffersize, tempdir=tempdir, cache=cache,
+                    lprefix=lprefix, rprefix=rprefix)
 
     
-def rightjoin(left, right, key=None, missing=None, presorted=False, buffersize=None, tempdir=None, cache=True):
+def rightjoin(left, right, key=None, missing=None, presorted=False,
+              buffersize=None, tempdir=None, cache=True, lprefix=None,
+              rprefix=None):
     """
     Perform a right outer join on the given tables. E.g.::
 
@@ -5387,14 +5377,16 @@ def rightjoin(left, right, key=None, missing=None, presorted=False, buffersize=N
     """
     
     if key is None:
-        return ImplicitJoinView(left, right, presorted=presorted, leftouter=False, 
-                               rightouter=True, missing=missing, buffersize=buffersize, tempdir=tempdir, cache=cache)
-    else:
-        return JoinView(left, right, key, presorted=presorted, leftouter=False, 
-                        rightouter=True, missing=missing, buffersize=buffersize, tempdir=tempdir, cache=cache)
+        key = _natural_key(left, right)
+    return JoinView(left, right, key, presorted=presorted, leftouter=False,
+                    rightouter=True, missing=missing, buffersize=buffersize,
+                    tempdir=tempdir, cache=cache, lprefix=lprefix,
+                    rprefix=rprefix)
     
     
-def outerjoin(left, right, key=None, missing=None, presorted=False, buffersize=None, tempdir=None, cache=True):
+def outerjoin(left, right, key=None, missing=None, presorted=False,
+              buffersize=None, tempdir=None, cache=True, lprefix=None,
+              rprefix=None):
     """
     Perform a full outer join on the given tables. E.g.::
 
@@ -5443,14 +5435,15 @@ def outerjoin(left, right, key=None, missing=None, presorted=False, buffersize=N
     """
 
     if key is None:
-        return ImplicitJoinView(left, right, presorted=presorted, leftouter=True, 
-                               rightouter=True, missing=missing, buffersize=buffersize, tempdir=tempdir, cache=cache)
-    else:
-        return JoinView(left, right, key, presorted=presorted, leftouter=True, 
-                        rightouter=True, missing=missing, buffersize=buffersize, tempdir=tempdir, cache=cache)
+        key = _natural_key(left, right)
+    return JoinView(left, right, key, presorted=presorted, leftouter=True,
+                    rightouter=True, missing=missing, buffersize=buffersize,
+                    tempdir=tempdir, cache=cache, lprefix=lprefix,
+                    rprefix=rprefix)
     
     
-def iterjoin(left, right, key, leftouter=False, rightouter=False, missing=None):
+def iterjoin(left, right, key, leftouter=False, rightouter=False, missing=None,
+             lprefix=None, rprefix=None):
     lit = iter(left)
     rit = iter(right)
 
@@ -5472,20 +5465,28 @@ def iterjoin(left, right, key, leftouter=False, rightouter=False, missing=None):
     rgetv = rowgetter(*rvind)
     
     # determine the output fields
-    outflds = list(lflds)
-    outflds.extend(rgetv(rflds))
+    if lprefix is None:
+        outflds = list(lflds)
+    else:
+        outflds = [f if f == key else (str(lprefix) + str(f)) 
+                   for f in lflds]
+    if rprefix is None:
+        outflds.extend(rgetv(rflds))
+    else:
+        outflds.extend([f if f == key else (str(rprefix) + str(f)) 
+                        for f in rgetv(rflds)])        
     yield tuple(outflds)
     
     # define a function to join two groups of rows
-    def joinrows(lrowgrp, rrowgrp):
-        if rrowgrp is None:
-            for lrow in lrowgrp:
-                outrow = list(lrow) # start with the left row
+    def joinrows(_lrowgrp, _rrowgrp):
+        if _rrowgrp is None:
+            for lrow in _lrowgrp:
+                outrow = list(lrow)  # start with the left row
                 # extend with missing values in place of the right row
                 outrow.extend([missing] * len(rvind))
                 yield tuple(outrow)
-        elif lrowgrp is None:
-            for rrow in rrowgrp:
+        elif _lrowgrp is None:
+            for rrow in _rrowgrp:
                 # start with missing values in place of the left row
                 outrow = [missing] * len(lflds)
                 # set key values
@@ -5495,9 +5496,9 @@ def iterjoin(left, right, key, leftouter=False, rightouter=False, missing=None):
                 outrow.extend(rgetv(rrow))
                 yield tuple(outrow)
         else:
-            rrowgrp = list(rrowgrp) # may need to iterate more than once
-            for lrow in lrowgrp:
-                for rrow in rrowgrp:
+            _rrowgrp = list(_rrowgrp)  # may need to iterate more than once
+            for lrow in _lrowgrp:
+                for rrow in _rrowgrp:
                     # start with the left row
                     outrow = list(lrow)
                     # extend with non-key values from the right row
@@ -5562,29 +5563,7 @@ def iterjoin(left, right, key, leftouter=False, rightouter=False, missing=None):
                 yield tuple(row)
             
         
-def iterimplicitjoin(left, right, presorted=False, leftouter=False, 
-                    rightouter=False, missing=None, buffersize=None, tempdir=None, cache=True):
-    # determine key field or fields
-    lflds = header(left)
-    rflds = header(right)
-    key = []
-    for f in lflds:
-        if f in rflds:
-            key.append(f)
-    assert len(key) > 0, 'no fields in common'
-    if len(key) == 1:
-        key = key[0] # deal with singletons
-    if not presorted:
-        # this is not optimal, have to sort each time, because key is determined
-        # dynamically from the data
-        left = sort(left, key, buffersize=buffersize, tempdir=tempdir, cache=cache)
-        right = sort(right, key, buffersize=buffersize, tempdir=tempdir, cache=cache)
-    # from here on it's the same as a normal join
-    return iterjoin(left, right, key, leftouter=leftouter, rightouter=rightouter,
-                    missing=missing)
-
-
-def crossjoin(*tables):
+def crossjoin(*tables, **kwargs):
     """
     Form the cartesian product of the given tables. E.g.::
 
@@ -5625,24 +5604,29 @@ def crossjoin(*tables):
     
     """
     
-    return CrossJoinView(*tables)
+    return CrossJoinView(*tables, **kwargs)
 
 
 class CrossJoinView(RowContainer):
     
-    def __init__(self, *sources):
+    def __init__(self, *sources, **kwargs):
         self.sources = sources
-        
+        self.prefix = kwargs.get('prefix', False)
+
     def __iter__(self):
-        return itercrossjoin(self.sources)
+        return itercrossjoin(self.sources, self.prefix)
     
     
-def itercrossjoin(sources):
+def itercrossjoin(sources, prefix):
 
     # construct fields
     outflds = list()
-    for s in sources:
-        outflds.extend(header(s))
+    for i, s in enumerate(sources):
+        if prefix:
+            # use one-based numbering
+            outflds.extend([str(i+1) + '_' + str(f) for f in header(s)])
+        else:
+            outflds.extend(header(s))
     yield tuple(outflds)
 
     datasrcs = [data(src) for src in sources]
@@ -5653,7 +5637,8 @@ def itercrossjoin(sources):
         yield tuple(outrow)
         
         
-def antijoin(left, right, key=None, presorted=False, buffersize=None, tempdir=None, cache=True):
+def antijoin(left, right, key=None, presorted=False, buffersize=None,
+             tempdir=None, cache=True):
     """
     Return rows from the `left` table where the key value does not occur in the
     `right` table. E.g.::
@@ -5705,9 +5690,8 @@ def antijoin(left, right, key=None, presorted=False, buffersize=None, tempdir=No
     """
     
     if key is None:
-        return ImplicitAntiJoinView(left, right, presorted, buffersize)
-    else:
-        return AntiJoinView(left, right, key, presorted, buffersize)
+        key = _natural_key(left, right)
+    return AntiJoinView(left, right, key, presorted, buffersize)
 
 
 class AntiJoinView(RowContainer):
@@ -5781,38 +5765,6 @@ def iterantijoin(left, right, key):
     for lkval, lrowgrp in lgit:
         for row in lrowgrp:
             yield tuple(row)
-
-        
-class ImplicitAntiJoinView(RowContainer):
-    
-    def __init__(self, left, right, presorted=False, buffersize=None, tempdir=None, cache=True):
-        self.left = left
-        self.right = right
-        self.presorted = presorted
-        self.buffersize = buffersize
-        
-    def __iter__(self):
-        return iterimplicitantijoin(self.left, self.right, self.presorted, self.buffersize)
-    
-    
-def iterimplicitantijoin(left, right, presorted=False, buffersize=None, tempdir=None, cache=True):
-    # determine key field or fields
-    lflds = header(left)
-    rflds = header(right)
-    key = []
-    for f in lflds:
-        if f in rflds:
-            key.append(f)
-    assert len(key) > 0, 'no fields in common'
-    if len(key) == 1:
-        key = key[0] # deal with singletons
-    if not presorted:
-        # this is not optimal, have to sort each time, because key is determined
-        # dynamically from the data
-        left = sort(left, key, buffersize=buffersize, tempdir=tempdir, cache=cache)
-        right = sort(right, key, buffersize=buffersize, tempdir=tempdir, cache=cache)
-    # from here on it's the same as a normal antijoin
-    return iterantijoin(left, right, key)
 
 
 def rangefacet(table, field, width, minv=None, maxv=None, 
@@ -6134,7 +6086,7 @@ def iterpivot(source, f1, f2, f3, aggfun, missing):
         yield tuple(outrow) 
     
     
-def hashjoin(left, right, key=None, cache=True):
+def hashjoin(left, right, key=None, cache=True, lprefix=None, rprefix=None):
     """
     Alternative implementation of :func:`join`, where the join is executed
     by constructing an in-memory lookup for the right hand table, then iterating over rows 
@@ -6153,37 +6105,31 @@ def hashjoin(left, right, key=None, cache=True):
     """
     
     if key is None:
-        return ImplicitHashJoinView(left, right)
-    else:
-        return HashJoinView(left, right, key, cache=cache)
-
-
-class ImplicitHashJoinView(RowContainer):
-    
-    def __init__(self, left, right):
-        self.left = left
-        self.right = right
-        
-    def __iter__(self):
-        return iterimplicithashjoin(self.left, self.right)
+        key = _natural_key(left, right)
+    return HashJoinView(left, right, key, cache=cache, lprefix=lprefix,
+                        rprefix=rprefix)
 
 
 class HashJoinView(RowContainer):
     
-    def __init__(self, left, right, key, cache=True):
+    def __init__(self, left, right, key, cache=True, lprefix=None,
+                 rprefix=None):
         self.left = left
         self.right = right
         self.key = key
         self.cache = True
         self.rlookup = None
+        self.lprefix = lprefix
+        self.rprefix = rprefix
         
     def __iter__(self):
         if not self.cache or self.rlookup is None:
             self.rlookup = lookup(self.right, self.key)
-        return iterhashjoin(self.left, self.right, self.key, self.rlookup)
+        return iterhashjoin(self.left, self.right, self.key, self.rlookup,
+                            self.lprefix, self.rprefix)
     
 
-def iterhashjoin(left, right, key, rlookup):
+def iterhashjoin(left, right, key, rlookup, lprefix, rprefix):
     lit = iter(left)
     rit = iter(right)
 
@@ -6204,18 +6150,26 @@ def iterhashjoin(left, right, key, rlookup):
     rgetv = rowgetter(*rvind)
     
     # determine the output fields
-    outflds = list(lflds)
-    outflds.extend(rgetv(rflds))
+    if lprefix is None:
+        outflds = list(lflds)
+    else:
+        outflds = [f if f == key else (str(lprefix) + str(f))
+                   for f in lflds]
+    if rprefix is None:
+        outflds.extend(rgetv(rflds))
+    else:
+        outflds.extend([f if f == key else (str(rprefix) + str(f))
+                        for f in rgetv(rflds)])
     yield tuple(outflds)
-    
+
     # define a function to join rows
-    def joinrows(lrow, rrows):
-        for rrow in rrows:
+    def joinrows(_lrow, _rrows):
+        for rrow in _rrows:
             # start with the left row
-            outrow = list(lrow)
+            _outrow = list(_lrow)
             # extend with non-key values from the right row
-            outrow.extend(rgetv(rrow))
-            yield tuple(outrow)
+            _outrow.extend(rgetv(rrow))
+            yield tuple(_outrow)
 
     for lrow in lit:
         k = lgetk(lrow)
@@ -6225,23 +6179,8 @@ def iterhashjoin(left, right, key, rlookup):
                 yield outrow
         
         
-def iterimplicithashjoin(left, right):
-    # determine key field or fields
-    lflds = header(left)
-    rflds = header(right)
-    key = []
-    for f in lflds:
-        if f in rflds:
-            key.append(f)
-    assert len(key) > 0, 'no fields in common'
-    if len(key) == 1:
-        key = key[0] # deal with singletons
-    rlookup = lookup(right, key)
-    # from here on it's the same as a normal join
-    return iterhashjoin(left, right, key, rlookup)
-
-
-def hashleftjoin(left, right, key=None, missing=None, cache=True):
+def hashleftjoin(left, right, key=None, missing=None, cache=True, lprefix=None,
+                 rprefix=None):
     """
     Alternative implementation of :func:`leftjoin`, where the join is executed
     by constructing an in-memory lookup for the right hand table, then iterating over rows 
@@ -6260,39 +6199,32 @@ def hashleftjoin(left, right, key=None, missing=None, cache=True):
     """
 
     if key is None:
-        return ImplicitHashLeftJoinView(left, right, missing=missing)
-    else:
-        return HashLeftJoinView(left, right, key, missing=missing, cache=cache)
-
-
-class ImplicitHashLeftJoinView(RowContainer):
-    
-    def __init__(self, left, right, missing=None):
-        self.left = left
-        self.right = right
-        self.missing = missing
-        
-    def __iter__(self):
-        return iterimplicithashleftjoin(self.left, self.right, self.missing)
+        key = _natural_key(left, right)
+    return HashLeftJoinView(left, right, key, missing=missing, cache=cache,
+                            lprefix=lprefix, rprefix=rprefix)
 
 
 class HashLeftJoinView(RowContainer):
     
-    def __init__(self, left, right, key, missing=None, cache=True):
+    def __init__(self, left, right, key, missing=None, cache=True, lprefix=None,
+                 rprefix=None):
         self.left = left
         self.right = right
         self.key = key
         self.missing = missing
         self.cache = cache
         self.rlookup = None
-        
+        self.lprefix = lprefix
+        self.rprefix = rprefix
+
     def __iter__(self):
         if not self.cache or self.rlookup is None:
             self.rlookup = lookup(self.right, self.key)
-        return iterhashleftjoin(self.left, self.right, self.key, self.missing, self.rlookup)
+        return iterhashleftjoin(self.left, self.right, self.key, self.missing,
+                                self.rlookup, self.lprefix, self.rprefix)
     
 
-def iterhashleftjoin(left, right, key, missing, rlookup):
+def iterhashleftjoin(left, right, key, missing, rlookup, lprefix, rprefix):
     lit = iter(left)
     rit = iter(right)
 
@@ -6313,18 +6245,26 @@ def iterhashleftjoin(left, right, key, missing, rlookup):
     rgetv = rowgetter(*rvind)
     
     # determine the output fields
-    outflds = list(lflds)
-    outflds.extend(rgetv(rflds))
+    if lprefix is None:
+        outflds = list(lflds)
+    else:
+        outflds = [f if f == key else (str(lprefix) + str(f))
+                   for f in lflds]
+    if rprefix is None:
+        outflds.extend(rgetv(rflds))
+    else:
+        outflds.extend([f if f == key else (str(rprefix) + str(f))
+                        for f in rgetv(rflds)])
     yield tuple(outflds)
-    
+
     # define a function to join rows
-    def joinrows(lrow, rrows):
-        for rrow in rrows:
+    def joinrows(_lrow, _rrows):
+        for rrow in _rrows:
             # start with the left row
-            outrow = list(lrow)
+            _outrow = list(_lrow)
             # extend with non-key values from the right row
-            outrow.extend(rgetv(rrow))
-            yield tuple(outrow)
+            _outrow.extend(rgetv(rrow))
+            yield tuple(_outrow)
 
     for lrow in lit:
         k = lgetk(lrow)
@@ -6339,23 +6279,8 @@ def iterhashleftjoin(left, right, key, missing, rlookup):
             yield tuple(outrow)
         
         
-def iterimplicithashleftjoin(left, right, missing):
-    # determine key field or fields
-    lflds = header(left)
-    rflds = header(right)
-    key = []
-    for f in lflds:
-        if f in rflds:
-            key.append(f)
-    assert len(key) > 0, 'no fields in common'
-    if len(key) == 1:
-        key = key[0] # deal with singletons
-    rlookup = lookup(right, key)
-    # from here on it's the same as a normal join
-    return iterhashleftjoin(left, right, key, missing, rlookup)
-
-
-def hashrightjoin(left, right, key=None, missing=None, cache=True):
+def hashrightjoin(left, right, key=None, missing=None, cache=True, lprefix=None,
+                  rprefix=None):
     """
     Alternative implementation of :func:`rightjoin`, where the join is executed
     by constructing an in-memory lookup for the left hand table, then iterating over rows 
@@ -6374,39 +6299,32 @@ def hashrightjoin(left, right, key=None, missing=None, cache=True):
     """
 
     if key is None:
-        return ImplicitHashRightJoinView(left, right, missing=missing)
-    else:
-        return HashRightJoinView(left, right, key, missing=missing, cache=cache)
-
-
-class ImplicitHashRightJoinView(RowContainer):
-    
-    def __init__(self, left, right, missing=None):
-        self.left = left
-        self.right = right
-        self.missing = missing
-        
-    def __iter__(self):
-        return iterimplicithashrightjoin(self.left, self.right, self.missing)
+        key = _natural_key(left, right)
+    return HashRightJoinView(left, right, key, missing=missing, cache=cache,
+                             lprefix=lprefix, rprefix=rprefix)
 
 
 class HashRightJoinView(RowContainer):
     
-    def __init__(self, left, right, key, missing=None, cache=True):
+    def __init__(self, left, right, key, missing=None, cache=True, lprefix=None,
+                 rprefix=None):
         self.left = left
         self.right = right
         self.key = key
         self.missing = missing
         self.cache = cache
         self.llookup = None
-        
+        self.lprefix = lprefix
+        self.rprefix = rprefix
+
     def __iter__(self):
         if not self.cache or self.llookup is None:
             self.llookup = lookup(self.left, self.key)
-        return iterhashrightjoin(self.left, self.right, self.key, self.missing, self.llookup)
+        return iterhashrightjoin(self.left, self.right, self.key, self.missing,
+                                 self.llookup, self.lprefix, self.rprefix)
     
 
-def iterhashrightjoin(left, right, key, missing, llookup):
+def iterhashrightjoin(left, right, key, missing, llookup, lprefix, rprefix):
     lit = iter(left)
     rit = iter(right)
 
@@ -6427,18 +6345,26 @@ def iterhashrightjoin(left, right, key, missing, llookup):
     rgetv = rowgetter(*rvind)
     
     # determine the output fields
-    outflds = list(lflds)
-    outflds.extend(rgetv(rflds))
+    if lprefix is None:
+        outflds = list(lflds)
+    else:
+        outflds = [f if f == key else (str(lprefix) + str(f))
+                   for f in lflds]
+    if rprefix is None:
+        outflds.extend(rgetv(rflds))
+    else:
+        outflds.extend([f if f == key else (str(rprefix) + str(f))
+                        for f in rgetv(rflds)])
     yield tuple(outflds)
-    
+
     # define a function to join rows
-    def joinrows(rrow, lrows):
-        for lrow in lrows:
+    def joinrows(_rrow, _lrows):
+        for lrow in _lrows:
             # start with the left row
-            outrow = list(lrow)
+            _outrow = list(lrow)
             # extend with non-key values from the right row
-            outrow.extend(rgetv(rrow))
-            yield tuple(outrow)
+            _outrow.extend(rgetv(_rrow))
+            yield tuple(_outrow)
 
     for rrow in rit:
         k = rgetk(rrow)
@@ -6457,22 +6383,6 @@ def iterhashrightjoin(left, right, key, missing, llookup):
             yield tuple(outrow)
         
         
-def iterimplicithashrightjoin(left, right, missing):
-    # determine key field or fields
-    lflds = header(left)
-    rflds = header(right)
-    key = []
-    for f in lflds:
-        if f in rflds:
-            key.append(f)
-    assert len(key) > 0, 'no fields in common'
-    if len(key) == 1:
-        key = key[0] # deal with singletons
-    llookup = lookup(left, key)
-    # from here on it's the same as a normal join
-    return iterhashrightjoin(left, right, key, missing, llookup)
-
-
 def hashantijoin(left, right, key=None):
     """
     Alternative implementation of :func:`antijoin`, where the join is executed
@@ -6487,9 +6397,8 @@ def hashantijoin(left, right, key=None):
     """
     
     if key is None:
-        return ImplicitHashAntiJoinView(left, right)
-    else:
-        return HashAntiJoinView(left, right, key)
+        key = _natural_key(left, right)
+    return HashAntiJoinView(left, right, key)
 
 
 class HashAntiJoinView(RowContainer):
@@ -6528,31 +6437,6 @@ def iterhashantijoin(left, right, key):
         lk = lgetk(lrow)
         if lk not in rkeys:
             yield tuple(lrow)
-
-        
-class ImplicitHashAntiJoinView(RowContainer):
-    
-    def __init__(self, left, right):
-        self.left = left
-        self.right = right
-        
-    def __iter__(self):
-        return iterimplicithashantijoin(self.left, self.right)
-    
-    
-def iterimplicithashantijoin(left, right):
-    # determine key field or fields
-    lflds = header(left)
-    rflds = header(right)
-    key = []
-    for f in lflds:
-        if f in rflds:
-            key.append(f)
-    assert len(key) > 0, 'no fields in common'
-    if len(key) == 1:
-        key = key[0] # deal with singletons
-    # from here on it's the same as a normal antijoin
-    return iterhashantijoin(left, right, key)
 
 
 def hashcomplement(a, b):
@@ -7448,7 +7332,8 @@ def iteraddcolumn(table, field, col, index, missing):
         
         
 def lookupjoin(left, right, key=None, missing=None, presorted=False, 
-               buffersize=None, tempdir=None, cache=True):
+               buffersize=None, tempdir=None, cache=True, lprefix=None,
+               rprefix=None):
     """
     Perform a left join, but where the key is not unique in the right-hand
     table, arbitrarily choose the first row and ignore others. E.g.::
@@ -7501,34 +7386,29 @@ def lookupjoin(left, right, key=None, missing=None, presorted=False,
     """
 
     if key is None:
-        return ImplicitLookupJoinView(left, right, presorted=presorted, 
-                                      missing=missing, buffersize=buffersize, tempdir=tempdir, cache=cache)
-    else:
-        return LookupJoinView(left, right, key, presorted=presorted, 
-                              missing=missing, buffersize=buffersize, tempdir=tempdir, cache=cache)
+        key = _natural_key(left, right)
+    return LookupJoinView(left, right, key, presorted=presorted,
+                          missing=missing, buffersize=buffersize,
+                          tempdir=tempdir, cache=cache,
+                          lprefix=lprefix, rprefix=rprefix)
 
-    
-class ImplicitLookupJoinView(RowContainer):
-    
-    def __init__(self, left, right, presorted=False, missing=None, 
-                 buffersize=None, tempdir=None, cache=True):
-        self.left = left
-        self.right = right
-        self.presorted = presorted
-        self.missing = missing
-        self.buffersize = buffersize
-        
-    def __iter__(self):
-        return iterimplicitlookupjoin(self.left, self.right, 
-                                      self.presorted, 
-                                      missing=self.missing,
-                                      buffersize=self.buffersize)
+
+def _natural_key(left, right):
+    # determine key field or fields
+    lflds = header(left)
+    rflds = header(right)
+    key = [f for f in lflds if f in rflds]
+    assert len(key) > 0, 'no fields in common'
+    if len(key) == 1:
+        key = key[0] # deal with singletons
+    return key
 
 
 class LookupJoinView(RowContainer):
     
     def __init__(self, left, right, key, presorted=False, missing=None, 
-                 buffersize=None, tempdir=None, cache=True):
+                 buffersize=None, tempdir=None, cache=True,
+                 lprefix=None, rprefix=None):
         if presorted:
             self.left = left
             self.right = right
@@ -7539,13 +7419,16 @@ class LookupJoinView(RowContainer):
             # (sort will be incorrect - maybe need to protect key with property setter?)
         self.key = key
         self.missing = missing
+        self.lprefix = lprefix
+        self.rprefix = rprefix
         
     def __iter__(self):
         return iterlookupjoin(self.left, self.right, self.key, 
-                              missing=self.missing)
+                              missing=self.missing, lprefix=self.lprefix,
+                              rprefix=self.rprefix)
     
     
-def iterlookupjoin(left, right, key, missing=None):
+def iterlookupjoin(left, right, key, missing=None, lprefix=None, rprefix=None):
     lit = iter(left)
     rit = iter(right)
 
@@ -7567,20 +7450,28 @@ def iterlookupjoin(left, right, key, missing=None):
     rgetv = rowgetter(*rvind)
     
     # determine the output fields
-    outflds = list(lflds)
-    outflds.extend(rgetv(rflds))
+    if lprefix is None:
+        outflds = list(lflds)
+    else:
+        outflds = [f if f == key else (str(lprefix) + str(f))
+                   for f in lflds]
+    if rprefix is None:
+        outflds.extend(rgetv(rflds))
+    else:
+        outflds.extend([f if f == key else (str(rprefix) + str(f))
+                        for f in rgetv(rflds)])
     yield tuple(outflds)
-    
+
     # define a function to join two groups of rows
     def joinrows(lrowgrp, rrowgrp):
         if rrowgrp is None:
             for lrow in lrowgrp:
-                outrow = list(lrow) # start with the left row
+                outrow = list(lrow)  # start with the left row
                 # extend with missing values in place of the right row
                 outrow.extend([missing] * len(rvind))
                 yield tuple(outrow)
         else:
-            rrow = iter(rrowgrp).next() # pick first arbitrarily
+            rrow = iter(rrowgrp).next()  # pick first arbitrarily
             for lrow in lrowgrp:
                 # start with the left row
                 outrow = list(lrow)
@@ -7630,27 +7521,8 @@ def iterlookupjoin(left, right, key, missing=None):
             yield tuple(row)
             
         
-def iterimplicitlookupjoin(left, right, presorted=False, missing=None, 
-                           buffersize=None, tempdir=None, cache=True):
-    # determine key field or fields
-    lflds = header(left)
-    rflds = header(right)
-    key = [f for f in lflds if f in rflds]
-    assert len(key) > 0, 'no fields in common'
-    if len(key) == 1:
-        key = key[0] # deal with singletons
-    if not presorted:
-        # this is not optimal, have to sort each time, because key is determined
-        # dynamically from the data
-        left = sort(left, key, buffersize=buffersize, tempdir=tempdir, cache=cache)
-        right = sort(right, key, buffersize=buffersize, tempdir=tempdir, cache=cache)
-    # from here on it's the same as a normal join
-    return iterlookupjoin(left, right, key, missing=missing)
-
-
-
-
-def hashlookupjoin(left, right, key=None, missing=None):
+def hashlookupjoin(left, right, key=None, missing=None, lprefix=None,
+                   rprefix=None):
     """
     Alternative implementation of :func:`lookupjoin`, where the join is executed
     by constructing an in-memory lookup for the right hand table, then iterating 
@@ -7664,35 +7536,44 @@ def hashlookupjoin(left, right, key=None, missing=None):
     """
 
     if key is None:
-        return ImplicitHashLookupJoinView(left, right, missing=missing)
+        return ImplicitHashLookupJoinView(left, right, missing=missing,
+                                          lprefix=lprefix, rprefix=rprefix)
     else:
-        return HashLookupJoinView(left, right, key, missing=missing)
+        return HashLookupJoinView(left, right, key, missing=missing,
+                                  lprefix=lprefix, rprefix=rprefix)
 
 
 class ImplicitHashLookupJoinView(RowContainer):
     
-    def __init__(self, left, right, missing=None):
+    def __init__(self, left, right, missing=None, lprefix=None, rprefix=None):
         self.left = left
         self.right = right
         self.missing = missing
+        self.lprefix = lprefix
+        self.rprefix = rprefix
         
     def __iter__(self):
-        return iterimplicithashlookupjoin(self.left, self.right, self.missing)
+        return iterimplicithashlookupjoin(self.left, self.right, self.missing,
+                                          self.lprefix, self.rprefix)
 
 
 class HashLookupJoinView(RowContainer):
     
-    def __init__(self, left, right, key, missing=None):
+    def __init__(self, left, right, key, missing=None, lprefix=None,
+                 rprefix=None):
         self.left = left
         self.right = right
         self.key = key
         self.missing = missing
-        
+        self.lprefix = lprefix
+        self.rprefix = rprefix
+
     def __iter__(self):
-        return iterhashlookupjoin(self.left, self.right, self.key, self.missing)
+        return iterhashlookupjoin(self.left, self.right, self.key, self.missing,
+                                  self.lprefix, self.rprefix)
     
 
-def iterhashlookupjoin(left, right, key, missing):
+def iterhashlookupjoin(left, right, key, missing, lprefix, rprefix):
     lit = iter(left)
     lflds = lit.next()
 
@@ -7714,10 +7595,18 @@ def iterhashlookupjoin(left, right, key, missing):
     rgetv = rowgetter(*rvind)
     
     # determine the output fields
-    outflds = list(lflds)
-    outflds.extend(rgetv(rflds))
+    if lprefix is None:
+        outflds = list(lflds)
+    else:
+        outflds = [f if f == key else (str(lprefix) + str(f))
+                   for f in lflds]
+    if rprefix is None:
+        outflds.extend(rgetv(rflds))
+    else:
+        outflds.extend([f if f == key else (str(rprefix) + str(f))
+                        for f in rgetv(rflds)])
     yield tuple(outflds)
-    
+
     # define a function to join rows
     def joinrows(lrow, rrow):
         # start with the left row
@@ -7738,7 +7627,7 @@ def iterhashlookupjoin(left, right, key, missing):
             yield tuple(outrow)
         
         
-def iterimplicithashlookupjoin(left, right, missing):
+def iterimplicithashlookupjoin(left, right, missing, lprefix, rprefix):
     # determine key field or fields
     lflds, lit = iterpeek(left)
     rflds, rit = iterpeek(right)
@@ -7747,7 +7636,7 @@ def iterimplicithashlookupjoin(left, right, missing):
     if len(key) == 1:
         key = key[0] # deal with singletons
     # from here on it's the same as a normal join
-    return iterhashlookupjoin(lit, rit, key, missing)
+    return iterhashlookupjoin(lit, rit, key, missing, lprefix, rprefix)
 
 
 def filldown(table, *fields, **kwargs):

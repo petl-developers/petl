@@ -1366,7 +1366,7 @@ def test_mergeduplicates_compoundkey():
     ieq(expect, actual)
         
     
-def _test_complement_1(f):
+def _test_complement_1(complement_impl):
 
     table1 = (('foo', 'bar'),
               ('A', 1),
@@ -1382,11 +1382,11 @@ def _test_complement_1(f):
                    ('A', 1),
                    ('C', 7))
     
-    result = f(table1, table2)
+    result = complement_impl(table1, table2)
     ieq(expectation, result)
     
     
-def _test_complement_2(f):
+def _test_complement_2(complement_impl):
 
     tablea = (('foo', 'bar', 'baz'),
               ('A', 1, True),
@@ -1404,18 +1404,18 @@ def _test_complement_2(f):
                ('A', 1, True),
                ('C', 7, False))
     
-    result = f(tablea, tableb)
+    result = complement_impl(tablea, tableb)
     ieq(aminusb, result)
     
     bminusa = (('x', 'y', 'z'),
                ('A', 9, False),
                ('B', 3, True))
     
-    result = f(tableb, tablea)
+    result = complement_impl(tableb, tablea)
     ieq(bminusa, result)
     
 
-def _test_complement_3(f):
+def _test_complement_3(complement_impl):
 
     # make sure we deal with empty tables
     
@@ -1428,17 +1428,17 @@ def _test_complement_3(f):
     expectation = (('foo', 'bar'),
                    ('A', 1),
                    ('B', 2))
-    result = f(table1, table2)
+    result = complement_impl(table1, table2)
     ieq(expectation, result)
     ieq(expectation, result)
     
     expectation = (('foo', 'bar'),)
-    result = f(table2, table1)
+    result = complement_impl(table2, table1)
     ieq(expectation, result)
     ieq(expectation, result)
     
     
-def _test_complement_4(f):
+def _test_complement_4(complement_impl):
 
     # test behaviour with duplicate rows
     
@@ -1456,12 +1456,12 @@ def _test_complement_4(f):
                    ('B', 2),
                    ('C', 7))
     
-    result = f(table1, table2)
+    result = complement_impl(table1, table2)
     ieq(expectation, result)
     ieq(expectation, result)
 
 
-def _test_complement_none(f):
+def _test_complement_none(complement_impl):
     # test behaviour with unsortable types
     now = datetime.now()
 
@@ -1469,14 +1469,14 @@ def _test_complement_none(f):
     tb = [['a', 'b'], [None, now]]
 
     expectation = (('a', 'b'), (None, None))
-    result = f(ta, tb)
+    result = complement_impl(ta, tb)
     ieq(expectation, result)
 
     ta = [['a'], [now], [None]]
     tb = [['a'], [None], [None]]
 
     expectation = (('a',), (now,))
-    result = f(ta, tb)
+    result = complement_impl(ta, tb)
     ieq(expectation, result)
 
 
@@ -3073,7 +3073,7 @@ def test_unpack_empty():
     ieq(expect2, table2)
     
 
-def _test_join_basic(join):
+def _test_join_basic(join_impl):
     
     table1 = (('id', 'colour'),
               (1, 'blue'),
@@ -3085,7 +3085,7 @@ def _test_join_basic(join):
               (4, 'ellipse'))
     
     # normal inner join
-    table3 = join(table1, table2, key='id')
+    table3 = join_impl(table1, table2, key='id')
     expect3 = (('id', 'colour', 'shape'),
                (1, 'blue', 'circle'),
                (3, 'purple', 'square'))
@@ -3093,7 +3093,7 @@ def _test_join_basic(join):
     ieq(expect3, table3) # check twice
     
     # natural join
-    table4 = join(table1, table2)
+    table4 = join_impl(table1, table2)
     expect4 = expect3
     ieq(expect4, table4)
     ieq(expect4, table4) # check twice
@@ -3107,7 +3107,7 @@ def _test_join_basic(join):
               (1, 'circle'),
               (1, 'square'),
               (2, 'ellipse'))
-    table7 = join(table5, table6, key='id')
+    table7 = join_impl(table5, table6, key='id')
     expect7 = (('id', 'colour', 'shape'),
                (1, 'blue', 'circle'),
                (1, 'blue', 'square'),
@@ -3117,7 +3117,7 @@ def _test_join_basic(join):
     ieq(expect7, table7)
     
     
-def _test_join_compound_keys(join):
+def _test_join_compound_keys(join_impl):
     
     # compound keys
     table8 = (('id', 'time', 'height'),
@@ -3128,19 +3128,19 @@ def _test_join_compound_keys(join):
               (1, 2, 4.5),
               (2, 1, 6.7),
               (2, 2, 8.9))
-    table10 = join(table8, table9, key=['id', 'time'])
+    table10 = join_impl(table8, table9, key=['id', 'time'])
     expect10 = (('id', 'time', 'height', 'weight'),
                 (1, 2, 34.5, 4.5),
                 (2, 1, 56.7, 6.7))
     ieq(expect10, table10)
 
     # natural join on compound key
-    table11 = join(table8, table9)
+    table11 = join_impl(table8, table9)
     expect11 = expect10
     ieq(expect11, table11)
     
     
-def _test_join_string_key(join):
+def _test_join_string_key(join_impl):
     
     table1 = (('id', 'colour'),
               ('aa', 'blue'),
@@ -3152,7 +3152,7 @@ def _test_join_string_key(join):
               ('dd', 'ellipse'))
     
     # normal inner join
-    table3 = join(table1, table2, key='id')
+    table3 = join_impl(table1, table2, key='id')
     expect3 = (('id', 'colour', 'shape'),
                ('aa', 'blue', 'circle'),
                ('cc', 'purple', 'square'))
@@ -3160,14 +3160,14 @@ def _test_join_string_key(join):
     ieq(expect3, table3) # check twice
 
 
-def _test_join_empty(join):
+def _test_join_empty(join_impl):
     
     table1 = (('id', 'colour'),
               (1, 'blue'),
               (2, 'red'),
               (3, 'purple'))
     table2 = (('id', 'shape'),)
-    table3 = join(table1, table2, key='id')
+    table3 = join_impl(table1, table2, key='id')
     expect3 = (('id', 'colour', 'shape'),)
     ieq(expect3, table3)
     
@@ -3176,23 +3176,42 @@ def _test_join_empty(join):
               (1, 'circle'),
               (3, 'square'),
               (4, 'ellipse'))
-    table3 = join(table1, table2, key='id')
+    table3 = join_impl(table1, table2, key='id')
     expect3 = (('id', 'colour', 'shape'),)
     ieq(expect3, table3)
-    
 
-def _test_join(join):
-    _test_join_basic(join)
-    _test_join_compound_keys(join)
-    _test_join_string_key(join)
-    _test_join_empty(join)
+
+def _test_join_prefix(join_impl):
+
+    table1 = (('id', 'colour'),
+              ('aa', 'blue'),
+              ('bb', 'red'),
+              ('cc', 'purple'))
+    table2 = (('id', 'shape'),
+              ('aa', 'circle'),
+              ('cc', 'square'),
+              ('dd', 'ellipse'))
+
+    table3 = join_impl(table1, table2, key='id', lprefix='l_', rprefix='r_')
+    expect3 = (('id', 'l_colour', 'r_shape'),
+               ('aa', 'blue', 'circle'),
+               ('cc', 'purple', 'square'))
+    ieq(expect3, table3)
+
+
+def _test_join(join_impl):
+    _test_join_basic(join_impl)
+    _test_join_compound_keys(join_impl)
+    _test_join_string_key(join_impl)
+    _test_join_empty(join_impl)
+    _test_join_prefix(join_impl)
 
 
 def test_join():
     _test_join(join)
     
     
-def _test_leftjoin_1(leftjoin):
+def _test_leftjoin_1(leftjoin_impl):
     
     table1 = (('id', 'colour'),
               (1, 'blue'),
@@ -3204,7 +3223,7 @@ def _test_leftjoin_1(leftjoin):
               (1, 'circle'),
               (3, 'square'),
               (4, 'ellipse'))
-    table3 = leftjoin(table1, table2, key='id')
+    table3 = leftjoin_impl(table1, table2, key='id')
     expect3 = (('id', 'colour', 'shape'),
                (1, 'blue', 'circle'),
                (2, 'red', None),
@@ -3215,12 +3234,12 @@ def _test_leftjoin_1(leftjoin):
     ieq(expect3, table3) # check twice
     
     # natural join
-    table4 = leftjoin(table1, table2)
+    table4 = leftjoin_impl(table1, table2)
     expect4 = expect3
     ieq(expect4, table4)
     
     
-def _test_leftjoin_2(leftjoin):
+def _test_leftjoin_2(leftjoin_impl):
     
     table1 = (('id', 'colour'),
               (1, 'blue'),
@@ -3231,7 +3250,7 @@ def _test_leftjoin_2(leftjoin):
     table2 = (('id', 'shape'),
               (1, 'circle'),
               (3, 'square'))
-    table3 = leftjoin(table1, table2, key='id')
+    table3 = leftjoin_impl(table1, table2, key='id')
     expect3 = (('id', 'colour', 'shape'),
                (1, 'blue', 'circle'),
                (2, 'red', None),
@@ -3242,12 +3261,12 @@ def _test_leftjoin_2(leftjoin):
     ieq(expect3, table3) # check twice
     
     # natural join
-    table4 = leftjoin(table1, table2)
+    table4 = leftjoin_impl(table1, table2)
     expect4 = expect3
     ieq(expect4, table4)
     
     
-def _test_leftjoin_3(leftjoin):
+def _test_leftjoin_3(leftjoin_impl):
     
     table1 = (('id', 'colour'),
               (1, 'blue'),
@@ -3258,7 +3277,7 @@ def _test_leftjoin_3(leftjoin):
               (3, 'square'),
               (4, 'ellipse'),
               (5, 'triangle'))
-    table3 = leftjoin(table1, table2, key='id')
+    table3 = leftjoin_impl(table1, table2, key='id')
     expect3 = (('id', 'colour', 'shape'),
                (1, 'blue', 'circle'),
                (2, 'red', None),
@@ -3267,12 +3286,12 @@ def _test_leftjoin_3(leftjoin):
     ieq(expect3, table3) # check twice
     
     # natural join
-    table4 = leftjoin(table1, table2)
+    table4 = leftjoin_impl(table1, table2)
     expect4 = expect3
     ieq(expect4, table4)
     
     
-def _test_leftjoin_compound_keys(leftjoin):
+def _test_leftjoin_compound_keys(leftjoin_impl):
     
     # compound keys
     table5 = (('id', 'time', 'height'),
@@ -3283,7 +3302,7 @@ def _test_leftjoin_compound_keys(leftjoin):
               (1, 2, 4.5, 120),
               (2, 1, 6.7, 110),
               (2, 2, 8.9, 100))
-    table7 = leftjoin(table5, table6, key=['id', 'time'])
+    table7 = leftjoin_impl(table5, table6, key=['id', 'time'])
     expect7 = (('id', 'time', 'height', 'weight', 'bp'),
                 (1, 1, 12.3, None, None),
                 (1, 2, 34.5, 4.5, 120),
@@ -3291,7 +3310,7 @@ def _test_leftjoin_compound_keys(leftjoin):
     ieq(expect7, table7)
 
 
-def _test_leftjoin_empty(leftjoin):
+def _test_leftjoin_empty(leftjoin_impl):
     
     table1 = (('id', 'colour'),
               (1, 'blue'),
@@ -3300,7 +3319,7 @@ def _test_leftjoin_empty(leftjoin):
               (5, 'yellow'),
               (7, 'orange'))
     table2 = (('id', 'shape'),)
-    table3 = leftjoin(table1, table2, key='id')
+    table3 = leftjoin_impl(table1, table2, key='id')
     expect3 = (('id', 'colour', 'shape'),
                (1, 'blue', None),
                (2, 'red', None),
@@ -3310,7 +3329,7 @@ def _test_leftjoin_empty(leftjoin):
     ieq(expect3, table3)
    
    
-def _test_leftjoin_multiple(leftjoin):
+def _test_leftjoin_multiple(leftjoin_impl):
 
     table1 = (('id', 'color', 'cost'), 
               (1, 'blue', 12), 
@@ -3325,7 +3344,7 @@ def _test_leftjoin_multiple(leftjoin):
               (3, 'ellipse', 'small'), 
               (3, 'ellipse', 'tiny'))
 
-    actual = leftjoin(table1, table2, key='id')
+    actual = leftjoin_impl(table1, table2, key='id')
     expect = (('id', 'color', 'cost', 'shape', 'size'),
               (1, 'blue', 12, 'circle', 'big'), 
               (1, 'blue', 12, 'circle', 'small'), 
@@ -3336,20 +3355,42 @@ def _test_leftjoin_multiple(leftjoin):
     ieq(expect, actual)
 
 
-def _test_leftjoin(leftjoin):
-    _test_leftjoin_1(leftjoin)
-    _test_leftjoin_2(leftjoin)
-    _test_leftjoin_3(leftjoin)
-    _test_leftjoin_compound_keys(leftjoin)
-    _test_leftjoin_empty(leftjoin)
-    _test_leftjoin_multiple(leftjoin)
+def _test_leftjoin_prefix(leftjoin_impl):
+    table1 = (('id', 'colour'),
+              (1, 'blue'),
+              (2, 'red'),
+              (3, 'purple'),
+              (5, 'yellow'),
+              (7, 'orange'))
+    table2 = (('id', 'shape'),
+              (1, 'circle'),
+              (3, 'square'),
+              (4, 'ellipse'))
+    table3 = leftjoin_impl(table1, table2, key='id', lprefix='l_', rprefix='r_')
+    expect3 = (('id', 'l_colour', 'r_shape'),
+               (1, 'blue', 'circle'),
+               (2, 'red', None),
+               (3, 'purple', 'square'),
+               (5, 'yellow', None,),
+               (7, 'orange', None))
+    ieq(expect3, table3)
+
+
+def _test_leftjoin(leftjoin_impl):
+    _test_leftjoin_1(leftjoin_impl)
+    _test_leftjoin_2(leftjoin_impl)
+    _test_leftjoin_3(leftjoin_impl)
+    _test_leftjoin_compound_keys(leftjoin_impl)
+    _test_leftjoin_empty(leftjoin_impl)
+    _test_leftjoin_multiple(leftjoin_impl)
+    _test_leftjoin_prefix(leftjoin_impl)
 
 
 def test_leftjoin():
     _test_leftjoin(leftjoin)
     
     
-def _test_rightjoin_1(rightjoin):
+def _test_rightjoin_1(rightjoin_impl):
     
     table1 = (('id', 'colour'),
               (1, 'blue'),
@@ -3361,7 +3402,7 @@ def _test_rightjoin_1(rightjoin):
               (3, 'square'),
               (4, 'ellipse'),
               (5, 'pentagon'))
-    table3 = rightjoin(table1, table2, key='id')
+    table3 = rightjoin_impl(table1, table2, key='id')
     expect3 = (('id', 'colour', 'shape'),
                (0, None, 'triangle'),
                (1, 'blue', 'circle'),
@@ -3372,12 +3413,12 @@ def _test_rightjoin_1(rightjoin):
     ieq(expect3, table3) # check twice
     
     # natural join
-    table4 = rightjoin(table1, table2)
+    table4 = rightjoin_impl(table1, table2)
     expect4 = expect3
     ieq(expect4, table4)
     
     
-def _test_rightjoin_2(rightjoin):
+def _test_rightjoin_2(rightjoin_impl):
     
     table1 = (('id', 'colour'),
               (0, 'black'),
@@ -3390,7 +3431,7 @@ def _test_rightjoin_2(rightjoin):
               (1, 'circle'),
               (3, 'square'),
               (4, 'ellipse'))
-    table3 = rightjoin(table1, table2, key='id')
+    table3 = rightjoin_impl(table1, table2, key='id')
     expect3 = (('id', 'colour', 'shape'),
                (1, 'blue', 'circle'),
                (3, 'purple', 'square'),
@@ -3399,12 +3440,12 @@ def _test_rightjoin_2(rightjoin):
     ieq(expect3, table3) # check twice
     
     # natural join
-    table4 = rightjoin(table1, table2)
+    table4 = rightjoin_impl(table1, table2)
     expect4 = expect3
     ieq(expect4, table4)
     
     
-def _test_rightjoin_3(rightjoin):
+def _test_rightjoin_3(rightjoin_impl):
     
     table1 = (('id', 'colour'),
               (1, 'blue'),
@@ -3417,7 +3458,7 @@ def _test_rightjoin_3(rightjoin):
               (3, 'square'),
               (5, 'ellipse'),
               (7, 'pentagon'))
-    table3 = rightjoin(table1, table2, key='id')
+    table3 = rightjoin_impl(table1, table2, key='id')
     expect3 = (('id', 'colour', 'shape'),
                (0, None, 'triangle'),
                (1, 'blue', 'circle'),
@@ -3428,12 +3469,12 @@ def _test_rightjoin_3(rightjoin):
     ieq(expect3, table3) # check twice
     
     # natural join
-    table4 = rightjoin(table1, table2)
+    table4 = rightjoin_impl(table1, table2)
     expect4 = expect3
     ieq(expect4, table4)
     
     
-def _test_rightjoin_empty(rightjoin):
+def _test_rightjoin_empty(rightjoin_impl):
     
     table1 = (('id', 'colour'),)
     table2 = (('id', 'shape'),
@@ -3442,7 +3483,7 @@ def _test_rightjoin_empty(rightjoin):
               (3, 'square'),
               (4, 'ellipse'),
               (5, 'pentagon'))
-    table3 = rightjoin(table1, table2, key='id')
+    table3 = rightjoin_impl(table1, table2, key='id')
     expect3 = (('id', 'colour', 'shape'),
                (0, None, 'triangle'),
                (1, None, 'circle'),
@@ -3450,13 +3491,35 @@ def _test_rightjoin_empty(rightjoin):
                (4, None, 'ellipse'),
                (5, None, 'pentagon'))
     ieq(expect3, table3)
-    
 
-def _test_rightjoin(rightjoin):
-    _test_rightjoin_1(rightjoin)
-    _test_rightjoin_2(rightjoin)
-    _test_rightjoin_3(rightjoin)
-    _test_rightjoin_empty(rightjoin)
+
+def _test_rightjoin_prefix(rightjoin_impl):
+    table1 = (('id', 'colour'),
+              (1, 'blue'),
+              (2, 'red'),
+              (3, 'purple'))
+    table2 = (('id', 'shape'),
+              (0, 'triangle'),
+              (1, 'circle'),
+              (3, 'square'),
+              (4, 'ellipse'),
+              (5, 'pentagon'))
+    table3 = rightjoin_impl(table1, table2, key='id', lprefix='l_', rprefix='r_')
+    expect3 = (('id', 'l_colour', 'r_shape'),
+               (0, None, 'triangle'),
+               (1, 'blue', 'circle'),
+               (3, 'purple', 'square'),
+               (4, None, 'ellipse'),
+               (5, None, 'pentagon'))
+    ieq(expect3, table3)
+
+
+def _test_rightjoin(rightjoin_impl):
+    _test_rightjoin_1(rightjoin_impl)
+    _test_rightjoin_2(rightjoin_impl)
+    _test_rightjoin_3(rightjoin_impl)
+    _test_rightjoin_empty(rightjoin_impl)
+    _test_rightjoin_prefix(rightjoin_impl)
 
 
 def test_rightjoin():
@@ -3563,6 +3626,32 @@ def test_outerjoin_empty():
                (7, 'white', None))
     ieq(expect3, table3)
 
+
+def test_outerjoin_prefix():
+
+    table1 = (('id', 'colour'),
+              (0, 'black'),
+              (1, 'blue'),
+              (2, 'red'),
+              (3, 'purple'),
+              (5, 'yellow'),
+              (7, 'white'))
+    table2 = (('id', 'shape'),
+              (1, 'circle'),
+              (3, 'square'),
+              (4, 'ellipse'))
+    table3 = outerjoin(table1, table2, key='id', lprefix='l_', rprefix='r_')
+    expect3 = (('id', 'l_colour', 'r_shape'),
+               (0, 'black', None),
+               (1, 'blue', 'circle'),
+               (2, 'red', None),
+               (3, 'purple', 'square'),
+               (4, None, 'ellipse'),
+               (5, 'yellow', None),
+               (7, 'white', None))
+    ieq(expect3, table3)
+    ieq(expect3, table3) # check twice
+
     
 def test_crossjoin():
     
@@ -3592,7 +3681,24 @@ def test_crossjoin_empty():
     ieq(expect3, table3)
     
     
-def _test_antijoin(antijoin):
+def test_crossjoin_prefix():
+
+    table1 = (('id', 'colour'),
+              (1, 'blue'),
+              (2, 'red'))
+    table2 = (('id', 'shape'),
+              (1, 'circle'),
+              (3, 'square'))
+    table3 = crossjoin(table1, table2, prefix=True)
+    expect3 = (('1_id', '1_colour', '2_id', '2_shape'),
+               (1, 'blue', 1, 'circle'),
+               (1, 'blue', 3, 'square'),
+               (2, 'red', 1, 'circle'),
+               (2, 'red', 3, 'square'))
+    ieq(expect3, table3)
+
+
+def _test_antijoin(antijoin_impl):
     
     table1 = (('id', 'colour'),
               (0, 'black'),
@@ -3603,7 +3709,7 @@ def _test_antijoin(antijoin):
     table2 = (('id', 'shape'),
               (1, 'circle'),
               (3, 'square'))
-    table3 = antijoin(table1, table2, key='id')
+    table3 = antijoin_impl(table1, table2, key='id')
     expect3 = (('id', 'colour'),
                (0, 'black'),
                (2, 'red'),
@@ -3611,12 +3717,12 @@ def _test_antijoin(antijoin):
                (5, 'white'))
     ieq(expect3, table3)
 
-    table4 = antijoin(table1, table2) 
+    table4 = antijoin_impl(table1, table2)
     expect4 = expect3
     ieq(expect4, table4)
 
 
-def _test_antijoin_empty(antijoin):
+def _test_antijoin_empty(antijoin_impl):
     
     table1 = (('id', 'colour'),
               (0, 'black'),
@@ -3625,7 +3731,7 @@ def _test_antijoin_empty(antijoin):
               (4, 'yellow'),
               (5, 'white'))
     table2 = (('id', 'shape'),)
-    actual = antijoin(table1, table2, key='id')
+    actual = antijoin_impl(table1, table2, key='id')
     expect = table1
     ieq(expect, actual)
 
@@ -3635,7 +3741,7 @@ def test_antijoin():
     _test_antijoin_empty(antijoin)    
     
     
-def _test_lookupjoin_1(lookupjoin):
+def _test_lookupjoin_1(lookupjoin_impl):
 
     table1 = (('id', 'color', 'cost'), 
               (1, 'blue', 12), 
@@ -3647,7 +3753,7 @@ def _test_lookupjoin_1(lookupjoin):
               (2, 'square', 'tiny'), 
               (3, 'ellipse', 'small'))
 
-    actual = lookupjoin(table1, table2, key='id')
+    actual = lookupjoin_impl(table1, table2, key='id')
     expect = (('id', 'color', 'cost', 'shape', 'size'),
               (1, 'blue', 12, 'circle', 'big'), 
               (2, 'red', 8, 'square', 'tiny'), 
@@ -3656,7 +3762,7 @@ def _test_lookupjoin_1(lookupjoin):
     ieq(expect, actual)
 
     # natural join
-    actual = lookupjoin(table1, table2)
+    actual = lookupjoin_impl(table1, table2)
     expect = (('id', 'color', 'cost', 'shape', 'size'),
               (1, 'blue', 12, 'circle', 'big'), 
               (2, 'red', 8, 'square', 'tiny'), 
@@ -3665,7 +3771,7 @@ def _test_lookupjoin_1(lookupjoin):
     ieq(expect, actual)
 
 
-def _test_lookupjoin_2(lookupjoin):
+def _test_lookupjoin_2(lookupjoin_impl):
 
     table1 = (('id', 'color', 'cost'), 
               (1, 'blue', 12), 
@@ -3680,7 +3786,7 @@ def _test_lookupjoin_2(lookupjoin):
               (3, 'ellipse', 'small'), 
               (3, 'ellipse', 'tiny'))
 
-    actual = lookupjoin(table1, table2, key='id')
+    actual = lookupjoin_impl(table1, table2, key='id')
     expect = (('id', 'color', 'cost', 'shape', 'size'),
               (1, 'blue', 12, 'circle', 'big'), 
               (2, 'red', 8, 'square', 'tiny'), 
@@ -3689,9 +3795,30 @@ def _test_lookupjoin_2(lookupjoin):
     ieq(expect, actual)
 
 
-def _test_lookupjoin(lookupjoin):
-    _test_lookupjoin_1(lookupjoin)
-    _test_lookupjoin_2(lookupjoin)
+def _test_lookupjoin_prefix(lookupjoin_impl):
+
+    table1 = (('id', 'color', 'cost'),
+              (1, 'blue', 12),
+              (2, 'red', 8),
+              (3, 'purple', 4))
+
+    table2 = (('id', 'shape', 'size'),
+              (1, 'circle', 'big'),
+              (2, 'square', 'tiny'),
+              (3, 'ellipse', 'small'))
+
+    actual = lookupjoin_impl(table1, table2, key='id', lprefix='l_', rprefix='r_')
+    expect = (('id', 'l_color', 'l_cost', 'r_shape', 'r_size'),
+              (1, 'blue', 12, 'circle', 'big'),
+              (2, 'red', 8, 'square', 'tiny'),
+              (3, 'purple', 4, 'ellipse', 'small'))
+    ieq(expect, actual)
+
+
+def _test_lookupjoin(lookupjoin_impl):
+    _test_lookupjoin_1(lookupjoin_impl)
+    _test_lookupjoin_2(lookupjoin_impl)
+    _test_lookupjoin_prefix(lookupjoin_impl)
 
 
 def test_lookupjoin():
@@ -3720,7 +3847,7 @@ def test_transpose_empty():
     ieq(expect2, table2)
     
     
-def _test_intersection_1(intersection):
+def _test_intersection_1(intersection_impl):
 
     table1 = (('foo', 'bar'),
               ('A', 1),
@@ -3735,11 +3862,11 @@ def _test_intersection_1(intersection):
     expectation = (('foo', 'bar'),
                    ('B', 2))
     
-    result = intersection(table1, table2)
+    result = intersection_impl(table1, table2)
     ieq(expectation, result)
     
     
-def _test_intersection_2(intersection):
+def _test_intersection_2(intersection_impl):
 
     table1 = (('foo', 'bar', 'baz'),
               ('A', 1, True),
@@ -3757,11 +3884,11 @@ def _test_intersection_2(intersection):
               ('B', 2, False),
               ('C', 9, True))
     
-    table3 = intersection(table1, table2)
+    table3 = intersection_impl(table1, table2)
     ieq(expect, table3)
     
     
-def _test_intersection_3(intersection):
+def _test_intersection_3(intersection_impl):
 
     # empty table
     table1 = (('foo', 'bar'),
@@ -3772,12 +3899,12 @@ def _test_intersection_3(intersection):
     table2 = (('foo', 'bar'),)
     
     expectation = (('foo', 'bar'),)
-    result = intersection(table1, table2)
+    result = intersection_impl(table1, table2)
     ieq(expectation, result)
     ieq(expectation, result)
     
     
-def _test_intersection_4(intersection):
+def _test_intersection_4(intersection_impl):
 
     # duplicate rows
     
@@ -3798,12 +3925,12 @@ def _test_intersection_4(intersection):
                    ('B', 2),
                    ('B', 2))
     
-    result = intersection(table1, table2)
+    result = intersection_impl(table1, table2)
     ieq(expectation, result)
     ieq(expectation, result)
     
     
-def _test_intersection_empty(intersection):
+def _test_intersection_empty(intersection_impl):
 
     table1 = (('foo', 'bar'),
               ('A', 1),
@@ -3811,16 +3938,16 @@ def _test_intersection_empty(intersection):
               ('C', 7))
     table2 = (('foo', 'bar'),)
     expectation = (('foo', 'bar'),)
-    result = intersection(table1, table2)
+    result = intersection_impl(table1, table2)
     ieq(expectation, result)
     
     
-def _test_intersection(intersection):
-    _test_intersection_1(intersection)
-    _test_intersection_2(intersection)
-    _test_intersection_3(intersection)
-    _test_intersection_4(intersection)
-    _test_intersection_empty(intersection)
+def _test_intersection(intersection_impl):
+    _test_intersection_1(intersection_impl)
+    _test_intersection_2(intersection_impl)
+    _test_intersection_3(intersection_impl)
+    _test_intersection_4(intersection_impl)
+    _test_intersection_empty(intersection_impl)
 
 
 def test_intersection():
