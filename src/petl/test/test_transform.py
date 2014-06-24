@@ -2524,7 +2524,7 @@ def test_rangeaggregate_simple():
 
     # simplest signature - aggregate whole rows
     table2 = rangeaggregate(table1, 'bar', 2, len)
-    expect2 = (('key', 'value'),
+    expect2 = (('bar', 'value'),
                ((1, 3), 2),
                ((3, 5), 3),
                ((5, 7), 0),
@@ -2535,7 +2535,7 @@ def test_rangeaggregate_simple():
 
     # next simplest signature - aggregate single field
     table3 = rangeaggregate(table1, 'bar', 2, list, 'foo')
-    expect3 = (('key', 'value'),
+    expect3 = (('bar', 'value'),
                ((1, 3), ['b', 'b']),
                ((3, 5), ['a', 'd', 'c']),
                ((5, 7), []),
@@ -2561,7 +2561,7 @@ def test_rangeaggregate_minmax():
 
     # check specifying minimum value for first bin
     table2 = rangeaggregate(table1, 'bar', 2, len, minv=0)
-    expect2 = (('key', 'value'),
+    expect2 = (('bar', 'value'),
                ((0, 2), 1),
                ((2, 4), 3),
                ((4, 6), 1),
@@ -2571,14 +2571,14 @@ def test_rangeaggregate_minmax():
 
     # check specifying min and max values
     table3 = rangeaggregate(table1, 'bar', 2, len, minv=2, maxv=6)
-    expect3 = (('key', 'value'),
+    expect3 = (('bar', 'value'),
                ((2, 4), 3),
                ((4, 6), 1))
     ieq(expect3, table3)
 
     # check last bin is open if maxv is specified
     table4 = rangeaggregate(table1, 'bar', 2, len, maxv=9)
-    expect4 = (('key', 'value'),
+    expect4 = (('bar', 'value'),
                ((1, 3), 2),
                ((3, 5), 3),
                ((5, 7), 0),
@@ -2587,7 +2587,7 @@ def test_rangeaggregate_minmax():
     
     # check we get empty bins if maxv is large
     table5 = rangeaggregate(table1, 'bar', 2, len, minv=10, maxv=14)
-    expect5 = (('key', 'value'),
+    expect5 = (('bar', 'value'),
                ((10, 12), 0),
                ((12, 14), 0))
     ieq(expect5, table5)
@@ -2597,14 +2597,14 @@ def test_rangeaggregate_empty():
     
     table1 = (('foo', 'bar'),)
     table2 = rangeaggregate(table1, 'bar', 2, len)
-    expect2 = (('key', 'value'),)
+    expect2 = (('bar', 'value'),)
     ieq(expect2, table2)
 
     table3 = rangeaggregate(table1, 'bar', 2, len, minv=0)
     ieq(expect2, table3)
 
     table4 = rangeaggregate(table1, 'bar', 2, len, minv=0, maxv=4)
-    expect4 = (('key', 'value'),
+    expect4 = (('bar', 'value'),
                ((0, 2), 0),
                ((2, 4), 0))
     ieq(expect4, table4)
@@ -2629,7 +2629,7 @@ def test_rangeaggregate_multifield():
     aggregators['foolist'] = 'foo' # default is list
     
     table2 = rangeaggregate(table1, 'bar', 2, aggregators)
-    expect2 = (('key', 'foocount', 'foojoin', 'foolist'),
+    expect2 = (('bar', 'foocount', 'foojoin', 'foolist'),
                ((1, 3), 2, 'bb', ['b', 'b']),
                ((3, 5), 3, 'adc', ['a', 'd', 'c']),
                ((5, 7), 0, '', []),
@@ -2668,7 +2668,7 @@ def test_rangeaggregate_multifield_2():
     table2 = rangeaggregate(table1, 'bar', 2)
     table2['foocount'] = len
     table2['foolist'] = 'foo' # default is list
-    expect2 = (('key', 'foocount', 'foolist'),
+    expect2 = (('bar', 'foocount', 'foolist'),
                ((1, 3), 2, ['bb', 'bb']),
                ((3, 5), 3, ['aa', 'dd', 'cc']),
                ((5, 7), 0, []),
@@ -2689,7 +2689,7 @@ def test_rangecounts():
               ('d', 3))
 
     table2 = rangecounts(table1, 'bar', width=2)
-    expect2 = (('key', 'value'),
+    expect2 = (('bar', 'value'),
                ((1, 3), 2),
                ((3, 5), 3),
                ((5, 7), 0),
@@ -2699,7 +2699,7 @@ def test_rangecounts():
     ieq(expect2, table2)
 
     table3 = rangecounts(table1, 'bar', width=2, minv=0)
-    expect3 = (('key', 'value'),
+    expect3 = (('bar', 'value'),
                ((0, 2), 1),
                ((2, 4), 3),
                ((4, 6), 1),
@@ -2708,14 +2708,14 @@ def test_rangecounts():
     ieq(expect3, table3)
 
     table4 = rangecounts(table1, 'bar', width=2, minv=2, maxv=6)
-    expect4 = (('key', 'value'),
+    expect4 = (('bar', 'value'),
                ((2, 4), 3),
                ((4, 6), 1))
     ieq(expect4, table4)
 
     # N.B., last bin is open if maxv is specified
     table5 = rangecounts(table1, 'bar', width=2, maxv=9)
-    expect5 = (('key', 'value'),
+    expect5 = (('bar', 'value'),
                ((1, 3), 2),
                ((3, 5), 3),
                ((5, 7), 0),

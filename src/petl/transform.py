@@ -4242,43 +4242,39 @@ def rangeaggregate(table, key, width, aggregation=None, value=None, minv=None,
         +-------+-------+
         | 'foo' | 'bar' |
         +=======+=======+
-        | 'a'   | 3     |
+        | 'a'   |     3 |
         +-------+-------+
-        | 'a'   | 7     |
+        | 'a'   |     7 |
         +-------+-------+
-        | 'b'   | 2     |
+        | 'b'   |     2 |
         +-------+-------+
-        | 'b'   | 1     |
+        | 'b'   |     1 |
         +-------+-------+
-        | 'b'   | 9     |
+        | 'b'   |     9 |
         +-------+-------+
-        | 'c'   | 4     |
-        +-------+-------+
-        | 'd'   | 3     |
-        +-------+-------+
-        
+
         >>> # aggregate whole rows
         ... table2 = rangeaggregate(table1, 'bar', 2, len)
         >>> look(table2)
         +---------+---------+
-        | 'key'   | 'value' |
+        | 'bar'   | 'value' |
         +=========+=========+
-        | (1, 3)  | 2       |
+        | (1, 3)  |       2 |
         +---------+---------+
-        | (3, 5)  | 3       |
+        | (3, 5)  |       3 |
         +---------+---------+
-        | (5, 7)  | 0       |
+        | (5, 7)  |       0 |
         +---------+---------+
-        | (7, 9)  | 1       |
+        | (7, 9)  |       1 |
         +---------+---------+
-        | (9, 11) | 1       |
+        | (9, 11) |       1 |
         +---------+---------+
-        
+
         >>> # aggregate single field
         ... table3 = rangeaggregate(table1, 'bar', 2, list, 'foo')
         >>> look(table3)
         +---------+-----------------+
-        | 'key'   | 'value'         |
+        | 'bar'   | 'value'         |
         +=========+=================+
         | (1, 3)  | ['b', 'b']      |
         +---------+-----------------+
@@ -4290,12 +4286,12 @@ def rangeaggregate(table, key, width, aggregation=None, value=None, minv=None,
         +---------+-----------------+
         | (9, 11) | ['b']           |
         +---------+-----------------+
-        
+
         >>> # aggregate single field - alternative signature using keyword args
         ... table4 = rangeaggregate(table1, key='bar', width=2, aggregation=list, value='foo')
         >>> look(table4)
         +---------+-----------------+
-        | 'key'   | 'value'         |
+        | 'bar'   | 'value'         |
         +=========+=================+
         | (1, 3)  | ['b', 'b']      |
         +---------+-----------------+
@@ -4307,33 +4303,37 @@ def rangeaggregate(table, key, width, aggregation=None, value=None, minv=None,
         +---------+-----------------+
         | (9, 11) | ['b']           |
         +---------+-----------------+
-        
+
         >>> # aggregate multiple fields
         ... from collections import OrderedDict
         >>> aggregation = OrderedDict()
-        >>> aggregation['foocount'] = len 
+        >>> aggregation['foocount'] = len
         >>> aggregation['foojoin'] = 'foo', strjoin('')
         >>> aggregation['foolist'] = 'foo' # default is list
         >>> table5 = rangeaggregate(table1, 'bar', 2, aggregation)
         >>> look(table5)
         +---------+------------+-----------+-----------------+
-        | 'key'   | 'foocount' | 'foojoin' | 'foolist'       |
+        | 'bar'   | 'foocount' | 'foojoin' | 'foolist'       |
         +=========+============+===========+=================+
-        | (1, 3)  | 2          | 'bb'      | ['b', 'b']      |
+        | (1, 3)  |          2 | 'bb'      | ['b', 'b']      |
         +---------+------------+-----------+-----------------+
-        | (3, 5)  | 3          | 'adc'     | ['a', 'd', 'c'] |
+        | (3, 5)  |          3 | 'adc'     | ['a', 'd', 'c'] |
         +---------+------------+-----------+-----------------+
-        | (5, 7)  | 0          | ''        | []              |
+        | (5, 7)  |          0 | ''        | []              |
         +---------+------------+-----------+-----------------+
-        | (7, 9)  | 1          | 'a'       | ['a']           |
+        | (7, 9)  |          1 | 'a'       | ['a']           |
         +---------+------------+-----------+-----------------+
-        | (9, 11) | 1          | 'b'       | ['b']           |
+        | (9, 11) |          1 | 'b'       | ['b']           |
         +---------+------------+-----------+-----------------+
-        
+
     .. versionchanged:: 0.12
     
     Changed signature to simplify and make consistent with :func:`aggregate`.
-    
+
+    .. versionchanged:: 0.24
+
+    The provided key is used in the output header instead of 'key'.
+
     """
 
     if callable(aggregation):
@@ -4374,7 +4374,7 @@ class SimpleRangeAggregateView(RowContainer):
 def itersimplerangeaggregate(table, key, width, aggregation, value, minv, maxv):
     if aggregation == len:
         aggregation = lambda grp: sum(1 for _ in grp) # count length of iterable
-    yield ('key', 'value')
+    yield (key, 'value')
     for k, grp in rowgroupbybin(table, key, width, value=value, minv=minv, maxv=maxv):
         yield k, aggregation(grp)
 
@@ -4382,7 +4382,7 @@ def itersimplerangeaggregate(table, key, width, aggregation, value, minv, maxv):
 class MultiRangeAggregateView(RowContainer):
     
     def __init__(self, source, key, width, aggregation=None, 
-                  minv=None, maxv=None, presorted=False, buffersize=None, tempdir=None, cache=True):
+                 minv=None, maxv=None, presorted=False, buffersize=None, tempdir=None, cache=True):
         if presorted:
             self.source = source
         else:
@@ -4431,13 +4431,12 @@ def itermultirangeaggregate(source, key, width, aggregation, minv, maxv):
         else:
             raise Exception('invalid aggregation: %r, %r' % (outfld, agg))
         
-    outflds = ['key']
+    outflds = [key]
     for outfld in aggregation:
         outflds.append(outfld)
     yield tuple(outflds)
     
     for k, rows in rowgroupbybin(it, key, width, minv=minv, maxv=maxv):
-#        rows = list(rows) # not strictly necessary as rowgroupbybin returns a list already
         outrow = [k]
         for outfld in aggregation:
             srcfld, aggfun = aggregation[outfld]
