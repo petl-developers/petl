@@ -415,6 +415,8 @@ the section on I/O helper classes below for more information.
 .. autofunction:: petl.appendutext
 .. autofunction:: petl.tojson
 .. autofunction:: petl.tojsonarrays
+.. autofunction:: petl.tohtml
+.. autofunction:: petl.touhtml
 
 
 Utility functions

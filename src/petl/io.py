@@ -1942,7 +1942,7 @@ def _writetext(table, f, prologue, template, epilogue):
 
 def tohtml(table, source=None, caption=None, representation=str, lineterminator='\r\n'):
     """
-    Write the table as simple HTML to a file. E.g.::
+    Write the table as HTML to a file. E.g.::
 
         >>> from petl import tohtml, look    
         >>> look(table)
@@ -1982,7 +1982,7 @@ def tohtml(table, source=None, caption=None, representation=str, lineterminator=
             f.write('<tr>' + lineterminator)
             for v in row:
                 r = representation(v)
-                if isinstance(v, (int, long, float)):
+                if isinstance(v, (int, long, float)) and not isinstance(v, bool):
                     f.write(("<td style='text-align: right'>%s</td>" % r) + lineterminator)
                 else:
                     f.write(('<td>%s</td>' % r) + lineterminator)
@@ -1993,7 +1993,7 @@ def tohtml(table, source=None, caption=None, representation=str, lineterminator=
     
 def touhtml(table, source=None, caption=None, encoding='utf-8', representation=unicode, lineterminator=u'\r\n'):
     """
-    TODO
+    Write the table as Unicode HTML to a file. E.g.::
 
     .. versionadded:: 0.19
     """
@@ -2017,7 +2017,7 @@ def touhtml(table, source=None, caption=None, encoding='utf-8', representation=u
             f.write(u'<tr>' + lineterminator)
             for v in row:
                 r = representation(v)
-                if isinstance(v, (int, long, float)):
+                if isinstance(v, (int, long, float)) and not isinstance(v, bool):
                     f.write((u"<td style='text-align: right'>%s</td>" % r) + lineterminator)
                 else:
                     f.write((u'<td>%s</td>' % r) + lineterminator)

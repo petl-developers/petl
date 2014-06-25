@@ -34,7 +34,13 @@ repr_index_header = False
 repr_html_value = unicode
 
 
-def repr_html(tbl, index_header=None, representation=unicode, caption=None, encoding='utf-8'):
+# default limit for html table representation
+repr_html_limit = 5
+
+
+def repr_html(tbl, index_header=None, representation=unicode, caption=None, encoding='utf-8', limit=None):
+
+    # add column indices to header?
     if index_header is None:
         index_header = repr_index_header  # use default
     if index_header:
@@ -42,12 +48,30 @@ def repr_html(tbl, index_header=None, representation=unicode, caption=None, enco
         target = petl.transform.setheader(tbl, indexed_header)
     else:
         target = tbl
+
+    # limit number of rows output?
+    # N.B., limit is max number of data rows (not including header)
+    if limit is None:
+        limit = repr_html_limit
+    if limit > 0:
+        target = list(islice(target, 0, limit+2))
+    if len(target) > limit+1:
+        overflow = True
+        target = target[:-1]
+    else:
+        overflow = False
+
+    # write to html string
     buf = StringSource()
     if representation is unicode:
         touhtml(target, buf, caption=caption, encoding=encoding)
     else:
         tohtml(target, buf, representation=representation, caption=caption)
-    return buf.getvalue()
+
+    if overflow:
+        return buf.getvalue() + u'<p>...</p>'
+    else:
+        return buf.getvalue()
 
 
 class InteractiveWrapper(petl.fluent.FluentWrapper):

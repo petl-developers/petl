@@ -68,6 +68,77 @@ def test_container():
     actual = len(etl.wrap(table))
     expect = 4
     eq_(expect, actual)
+
+
+def test_repr_html():
+    table = (('foo', 'bar'),
+             ('a', 1),
+             ('b', 2),
+             ('c', 2))
+    expect = u"""<table>
+<thead>
+<tr>
+<th>foo</th>
+<th>bar</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>a</td>
+<td style='text-align: right'>1</td>
+</tr>
+<tr>
+<td>b</td>
+<td style='text-align: right'>2</td>
+</tr>
+<tr>
+<td>c</td>
+<td style='text-align: right'>2</td>
+</tr>
+</tbody>
+</table>
+"""
+    actual = etl.wrap(table)._repr_html_()
+    for l1, l2 in zip(expect.split('\n'), actual.split('\r\n')):
+        print l1, l2
+        eq_(l1, l2)
+
+
+def test_repr_html_limit():
+    table = (('foo', 'bar'),
+             ('a', 1),
+             ('b', 2),
+             ('c', 2))
+
+    # lower repr limit
+    etl.repr_html_limit = 2
+
+    expect = u"""<table>
+<thead>
+<tr>
+<th>foo</th>
+<th>bar</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>a</td>
+<td style='text-align: right'>1</td>
+</tr>
+<tr>
+<td>b</td>
+<td style='text-align: right'>2</td>
+</tr>
+</tbody>
+</table>
+<p>...</p>
+"""
+    actual = etl.wrap(table)._repr_html_()
+    for l1, l2 in zip(expect.split('\n'), actual.split('\r\n')):
+        print l1, l2
+        eq_(l1, l2)
+
+
     
     
     
