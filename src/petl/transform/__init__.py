@@ -6,10 +6,10 @@ Functions for transforming tables.
 from petl.transform.misc import cut, cutout, cat, \
     addfield, rowslice, head, tail, duplicates, unique, \
     conflicts, complement, recordcomplement, diff, recorddiff, \
-    fieldmap, facet, rangefacet, \
-    rowmap, recordmap, rowmapmany, recordmapmany, skipcomments, movefield, \
+    facet, rangefacet, \
+    skipcomments, movefield, \
     unpack, unpackdict, intersection, \
-    annex, fold, addrownumbers, addcolumn, rowgroupmap, \
+    annex, fold, addrownumbers, addcolumn, \
     distinct, coalesce, addfieldusingcontext
 
 from petl.transform.headers import rename, setheader, extendheader, \
@@ -44,3 +44,6 @@ from petl.transform.regex import capture, split, search, sub, resub
 
 from petl.transform.reshape import melt, recast, transpose, pivot, flatten, \
     unflatten
+
+from petl.transform.maps import fieldmap, rowmap, recordmap, rowmapmany, \
+    recordmapmany, rowgroupmap
