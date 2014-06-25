@@ -5,18 +5,18 @@ Functions for transforming tables.
 
 from petl.transform.misc import cut, cutout, cat, \
     addfield, rowslice, head, tail, melt, recast, duplicates, unique, \
-    conflicts, complement, recordcomplement, diff, recorddiff, capture, split, \
+    conflicts, complement, recordcomplement, diff, recorddiff, \
     fieldmap, facet, rangefacet, \
     rowmap, recordmap, rowmapmany, recordmapmany, skipcomments, movefield, \
     unpack, unpackdict, transpose, intersection, pivot, flatten, unflatten, \
-    annex, fold, addrownumbers, search, addcolumn, rowgroupmap, \
+    annex, fold, addrownumbers, addcolumn, rowgroupmap, \
     distinct, coalesce, addfieldusingcontext
 
 from petl.transform.headers import rename, setheader, extendheader, \
     pushheader, skip, prefixheader, suffixheader
 
 from petl.transform.conversions import convert, convertall, replace, \
-    replaceall, update, convertnumbers, fieldconvert, sub, resub
+    replaceall, update, convertnumbers, fieldconvert
 
 from petl.transform.sorts import sort, mergesort
 
@@ -39,4 +39,6 @@ from petl.transform.reductions import rowreduce, recordreduce, mergeduplicates,\
     mergereduce, merge, multirangeaggregate
 
 from petl.transform.fills import filldown, fillright, fillleft
+
+from petl.transform.regex import capture, split, search, sub, resub
 

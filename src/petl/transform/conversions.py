@@ -441,26 +441,3 @@ def dictconverter(d):
         else:
             return v
     return conv
-
-
-def sub(table, field, pattern, repl, count=0, flags=0):
-    """
-    Convenience function to convert values under the given field using a
-    regular expression substitution. See also :func:`re.sub`.
-
-    .. versionadded:: 0.5
-
-    .. versionchanged:: 0.10
-
-    Renamed 'resub' to 'sub'.
-
-    """
-
-    prog = re.compile(pattern, flags)
-    conv = lambda v: prog.sub(repl, v, count=count)
-    return convert(table, field, conv)
-
-
-resub = sub # backwards compatibility
-
-
