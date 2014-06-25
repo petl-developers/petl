@@ -4,11 +4,11 @@ Functions for transforming tables.
 """
 
 from petl.transform.misc import cut, cutout, cat, \
-    addfield, rowslice, head, tail, melt, recast, duplicates, unique, \
+    addfield, rowslice, head, tail, duplicates, unique, \
     conflicts, complement, recordcomplement, diff, recorddiff, \
     fieldmap, facet, rangefacet, \
     rowmap, recordmap, rowmapmany, recordmapmany, skipcomments, movefield, \
-    unpack, unpackdict, transpose, intersection, pivot, flatten, unflatten, \
+    unpack, unpackdict, intersection, \
     annex, fold, addrownumbers, addcolumn, rowgroupmap, \
     distinct, coalesce, addfieldusingcontext
 
@@ -42,3 +42,5 @@ from petl.transform.fills import filldown, fillright, fillleft
 
 from petl.transform.regex import capture, split, search, sub, resub
 
+from petl.transform.reshape import melt, recast, transpose, pivot, flatten, \
+    unflatten

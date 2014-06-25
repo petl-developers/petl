@@ -6,8 +6,7 @@ import inspect
 
 
 from petl.util import numparser, RowContainer, FieldSelectionError, hybridrows,\
-    expr
-from petl.transform.misc import header
+    expr, header
 
 
 def convert(table, *args, **kwargs):

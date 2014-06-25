@@ -93,3 +93,4 @@ false = selectfalse
 none = selectnone
 notnone = selectnotnone
 counts = valuecounts
+move = movefield
