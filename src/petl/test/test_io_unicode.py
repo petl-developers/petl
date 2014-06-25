@@ -173,7 +173,7 @@ def test_touhtml():
     # check what it did
     f = codecs.open('tmp/test_touhtml.html', mode='r', encoding='utf-8')
     actual = f.read()
-    expect = u"""<table>
+    expect = u"""<table class='petl'>
 <thead>
 <tr>
 <th>name</th>

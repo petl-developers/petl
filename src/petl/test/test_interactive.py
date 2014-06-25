@@ -75,7 +75,7 @@ def test_repr_html():
              ('a', 1),
              ('b', 2),
              ('c', 2))
-    expect = u"""<table>
+    expect = u"""<table class='petl'>
 <thead>
 <tr>
 <th>foo</th>
@@ -113,7 +113,7 @@ def test_repr_html_limit():
     # lower repr limit
     etl.repr_html_limit = 2
 
-    expect = u"""<table>
+    expect = u"""<table class='petl'>
 <thead>
 <tr>
 <th>foo</th>

@@ -9,5 +9,6 @@ dist
 *.swp
 *.csv
 sandbox.*
+.ipynb_checkpoints/
 .idea
 tmp/*.*

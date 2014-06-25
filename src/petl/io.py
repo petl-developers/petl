@@ -1967,7 +1967,7 @@ def tohtml(table, source=None, caption=None, representation=str, lineterminator=
     source = _write_source_from_arg(source)
     with source.open_('w') as f:
         it = iter(table)
-        f.write('<table>' + lineterminator)
+        f.write("<table class='petl'>" + lineterminator)
         if caption is not None:
             f.write(('<caption>%s</caption>' % caption) + lineterminator)
         flds = it.next()
@@ -2002,7 +2002,7 @@ def touhtml(table, source=None, caption=None, encoding='utf-8', representation=u
     with source.open_('w') as f:
         f = codecs.getwriter(encoding)(f)
         it = iter(table)
-        f.write(u'<table>' + lineterminator)
+        f.write(u"<table class='petl'>" + lineterminator)
         if caption is not None:
             f.write((u'<caption>%s</caption>' % caption) + lineterminator)
         flds = it.next()

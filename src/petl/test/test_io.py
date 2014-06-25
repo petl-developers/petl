@@ -848,7 +848,7 @@ def test_tohtml():
     # check what it did
     with open(f.name, 'rb') as o:
         actual = o.read()
-        expect = """<table>
+        expect = """<table class='petl'>
 <thead>
 <tr>
 <th>foo</th>
@@ -886,7 +886,7 @@ def test_tohtml_caption():
     # check what it did
     with open(f.name, 'rb') as o:
         actual = o.read()
-        expect = """<table>
+        expect = """<table class='petl'>
 <caption>my table</caption>
 <thead>
 <tr>
