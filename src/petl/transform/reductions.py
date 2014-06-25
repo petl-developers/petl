@@ -1162,11 +1162,14 @@ def _recursive_bin(outerbin, level, bindef, fields, keys, widths, getval, mins, 
                         for r in _recursive_bin(binnedrows, level+1, thisbindef, fields, keys, widths, getval, mins, maxs):
                             yield r
 
-                        if maxv is not None and binmaxv == maxv: # possible floating point precision bug here?
+                        # possible floating point precision bug here?
+                        if maxv is not None and binmaxv == maxv:
                             break
                 except StopIteration:
                     # don't forget to handle the last bin
-                    for r in _recursive_bin(binnedrows, level+1, thisbindef, fields, keys, widths, getval, mins, maxs):
+                    for r in _recursive_bin(binnedrows, level+1, thisbindef,
+                                            fields, keys, widths, getval, mins,
+                                            maxs):
                         yield r
 
 
@@ -1196,7 +1199,72 @@ def itersimplemultirangeaggregate(table, keys, widths, aggregation, value,
             vindices = asindices(fields, value)
             getval = operator.itemgetter(*vindices)
 
-    for bindef, vals in _recursive_bin(it, 0, [], fields, keys, widths, getval, mins, maxs):
+    for bindef, vals in _recursive_bin(it, 0, [], fields, keys, widths, getval,
+                                       mins, maxs):
         yield bindef, aggregation(vals)
+
+
+def fold(table, key, f, value=None, presorted=False, buffersize=None,
+         tempdir=None, cache=True):
+    """
+    Reduce rows recursively via the Python standard :func:`reduce` function. E.g.::
+
+        >>> from petl import fold, look
+        >>> look(table1)
+        +------+---------+
+        | 'id' | 'count' |
+        +======+=========+
+        | 1    | 3       |
+        +------+---------+
+        | 1    | 5       |
+        +------+---------+
+        | 2    | 4       |
+        +------+---------+
+        | 2    | 8       |
+        +------+---------+
+
+        >>> import operator
+        >>> table2 = fold(table1, 'id', operator.add, 'count', presorted=True)
+        >>> look(table2)
+        +-------+---------+
+        | 'key' | 'value' |
+        +=======+=========+
+        | 1     | 8       |
+        +-------+---------+
+        | 2     | 12      |
+        +-------+---------+
+
+    See also :func:`aggregate`, :func:`rowreduce`.
+
+    .. versionadded:: 0.10
+
+    """
+
+    return FoldView(table, key, f, value=value, presorted=presorted,
+                    buffersize=buffersize, tempdir=tempdir, cache=cache)
+
+
+class FoldView(RowContainer):
+
+    def __init__(self, table, key, f, value=None, presorted=False,
+                 buffersize=None, tempdir=None, cache=True):
+        if presorted:
+            self.table = table
+        else:
+            self.table = sort(table, key, buffersize=buffersize,
+                              tempdir=tempdir, cache=cache)
+        self.key = key
+        self.f = f
+        self.value = value
+
+    def __iter__(self):
+        return iterfold(self.table, self.key, self.f, self.value)
+
+
+def iterfold(table, key, f, value):
+    yield ('key', 'value')
+    for k, grp in rowgroupby(table, key, value):
+        yield k, reduce(f, grp)
+
 
 
