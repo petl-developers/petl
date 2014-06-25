@@ -3396,6 +3396,27 @@ def _test_leftjoin_prefix(leftjoin_impl):
     ieq(expect3, table3)
 
 
+def _test_leftjoin_lrkey(leftjoin_impl):
+    table1 = (('id', 'colour'),
+              (1, 'blue'),
+              (2, 'red'),
+              (3, 'purple'),
+              (5, 'yellow'),
+              (7, 'orange'))
+    table2 = (('identifier', 'shape'),
+              (1, 'circle'),
+              (3, 'square'),
+              (4, 'ellipse'))
+    table3 = leftjoin_impl(table1, table2, lkey='id', rkey='identifier')
+    expect3 = (('id', 'colour', 'shape'),
+               (1, 'blue', 'circle'),
+               (2, 'red', None),
+               (3, 'purple', 'square'),
+               (5, 'yellow', None,),
+               (7, 'orange', None))
+    ieq(expect3, table3)
+
+
 def _test_leftjoin(leftjoin_impl):
     _test_leftjoin_1(leftjoin_impl)
     _test_leftjoin_2(leftjoin_impl)
@@ -3404,6 +3425,7 @@ def _test_leftjoin(leftjoin_impl):
     _test_leftjoin_empty(leftjoin_impl)
     _test_leftjoin_multiple(leftjoin_impl)
     _test_leftjoin_prefix(leftjoin_impl)
+    _test_leftjoin_lrkey(leftjoin_impl)
 
 
 def test_leftjoin():
@@ -3534,12 +3556,34 @@ def _test_rightjoin_prefix(rightjoin_impl):
     ieq(expect3, table3)
 
 
+def _test_rightjoin_lrkey(rightjoin_impl):
+    table1 = (('id', 'colour'),
+              (1, 'blue'),
+              (2, 'red'),
+              (3, 'purple'))
+    table2 = (('identifier', 'shape'),
+              (0, 'triangle'),
+              (1, 'circle'),
+              (3, 'square'),
+              (4, 'ellipse'),
+              (5, 'pentagon'))
+    table3 = rightjoin_impl(table1, table2, lkey='id', rkey='identifier')
+    expect3 = (('id', 'colour', 'shape'),
+               (0, None, 'triangle'),
+               (1, 'blue', 'circle'),
+               (3, 'purple', 'square'),
+               (4, None, 'ellipse'),
+               (5, None, 'pentagon'))
+    ieq(expect3, table3)
+
+
 def _test_rightjoin(rightjoin_impl):
     _test_rightjoin_1(rightjoin_impl)
     _test_rightjoin_2(rightjoin_impl)
     _test_rightjoin_3(rightjoin_impl)
     _test_rightjoin_empty(rightjoin_impl)
     _test_rightjoin_prefix(rightjoin_impl)
+    _test_rightjoin_lrkey(rightjoin_impl)
 
 
 def test_rightjoin():
@@ -3673,6 +3717,32 @@ def test_outerjoin_prefix():
     ieq(expect3, table3) # check twice
 
     
+def test_outerjoin_lrkey():
+
+    table1 = (('id', 'colour'),
+              (0, 'black'),
+              (1, 'blue'),
+              (2, 'red'),
+              (3, 'purple'),
+              (5, 'yellow'),
+              (7, 'white'))
+    table2 = (('identifier', 'shape'),
+              (1, 'circle'),
+              (3, 'square'),
+              (4, 'ellipse'))
+    table3 = outerjoin(table1, table2, lkey='id', rkey='identifier')
+    expect3 = (('id', 'colour', 'shape'),
+               (0, 'black', None),
+               (1, 'blue', 'circle'),
+               (2, 'red', None),
+               (3, 'purple', 'square'),
+               (4, None, 'ellipse'),
+               (5, 'yellow', None),
+               (7, 'white', None))
+    ieq(expect3, table3)
+    ieq(expect3, table3) # check twice
+
+
 def test_crossjoin():
     
     table1 = (('id', 'colour'),
@@ -3718,7 +3788,7 @@ def test_crossjoin_prefix():
     ieq(expect3, table3)
 
 
-def _test_antijoin(antijoin_impl):
+def _test_antijoin_basics(antijoin_impl):
     
     table1 = (('id', 'colour'),
               (0, 'black'),
@@ -3756,10 +3826,35 @@ def _test_antijoin_empty(antijoin_impl):
     ieq(expect, actual)
 
 
+def _test_antijoin_lrkey(antijoin_impl):
+
+    table1 = (('id', 'colour'),
+              (0, 'black'),
+              (1, 'blue'),
+              (2, 'red'),
+              (4, 'yellow'),
+              (5, 'white'))
+    table2 = (('identifier', 'shape'),
+              (1, 'circle'),
+              (3, 'square'))
+    table3 = antijoin_impl(table1, table2, lkey='id', rkey='identifier')
+    expect3 = (('id', 'colour'),
+               (0, 'black'),
+               (2, 'red'),
+               (4, 'yellow'),
+               (5, 'white'))
+    ieq(expect3, table3)
+
+
+def _test_antijoin(antijoin_impl):
+    _test_antijoin_basics(antijoin_impl)
+    _test_antijoin_empty(antijoin_impl)
+    _test_antijoin_lrkey(antijoin_impl)
+
+
 def test_antijoin():
-    _test_antijoin(antijoin)    
-    _test_antijoin_empty(antijoin)    
-    
+    _test_antijoin(antijoin)
+
     
 def _test_lookupjoin_1(lookupjoin_impl):
 
@@ -3835,10 +3930,31 @@ def _test_lookupjoin_prefix(lookupjoin_impl):
     ieq(expect, actual)
 
 
+def _test_lookupjoin_lrkey(lookupjoin_impl):
+
+    table1 = (('id', 'color', 'cost'),
+              (1, 'blue', 12),
+              (2, 'red', 8),
+              (3, 'purple', 4))
+
+    table2 = (('identifier', 'shape', 'size'),
+              (1, 'circle', 'big'),
+              (2, 'square', 'tiny'),
+              (3, 'ellipse', 'small'))
+
+    actual = lookupjoin_impl(table1, table2, lkey='id', rkey='identifier')
+    expect = (('id', 'color', 'cost', 'shape', 'size'),
+              (1, 'blue', 12, 'circle', 'big'),
+              (2, 'red', 8, 'square', 'tiny'),
+              (3, 'purple', 4, 'ellipse', 'small'))
+    ieq(expect, actual)
+
+
 def _test_lookupjoin(lookupjoin_impl):
     _test_lookupjoin_1(lookupjoin_impl)
     _test_lookupjoin_2(lookupjoin_impl)
     _test_lookupjoin_prefix(lookupjoin_impl)
+    _test_lookupjoin_lrkey(lookupjoin_impl)
 
 
 def test_lookupjoin():
@@ -4020,7 +4136,6 @@ def test_hashrightjoin():
 
 def test_hashantijoin():
     _test_antijoin(hashantijoin)    
-    _test_antijoin_empty(hashantijoin)    
 
     
 def test_hashcomplement():

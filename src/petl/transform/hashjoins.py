@@ -6,10 +6,11 @@ import operator
 
 
 from petl.util import RowContainer, lookup, asindices, rowgetter, iterpeek
-from petl.transform.joins import natural_key
+from petl.transform.joins import natural_key, keys_from_args
 
 
-def hashjoin(left, right, key=None, cache=True, lprefix=None, rprefix=None):
+def hashjoin(left, right, key=None, lkey=None, rkey=None, cache=True,
+             lprefix=None, rprefix=None):
     """
     Alternative implementation of :func:`join`, where the join is executed
     by constructing an in-memory lookup for the right hand table, then iterating over rows 
@@ -27,19 +28,19 @@ def hashjoin(left, right, key=None, cache=True, lprefix=None, rprefix=None):
 
     """
     
-    if key is None:
-        key = natural_key(left, right)
-    return HashJoinView(left, right, key, cache=cache, lprefix=lprefix,
-                        rprefix=rprefix)
+    lkey, rkey = keys_from_args(left, right, key, lkey, rkey)
+    return HashJoinView(left, right, lkey=lkey, rkey=rkey, cache=cache,
+                        lprefix=lprefix, rprefix=rprefix)
 
 
 class HashJoinView(RowContainer):
     
-    def __init__(self, left, right, key, cache=True, lprefix=None,
+    def __init__(self, left, right, lkey, rkey, cache=True, lprefix=None,
                  rprefix=None):
         self.left = left
         self.right = right
-        self.key = key
+        self.lkey = lkey
+        self.rkey = rkey
         self.cache = True
         self.rlookup = None
         self.lprefix = lprefix
@@ -47,12 +48,12 @@ class HashJoinView(RowContainer):
         
     def __iter__(self):
         if not self.cache or self.rlookup is None:
-            self.rlookup = lookup(self.right, self.key)
-        return iterhashjoin(self.left, self.right, self.key, self.rlookup,
-                            self.lprefix, self.rprefix)
+            self.rlookup = lookup(self.right, self.rkey)
+        return iterhashjoin(self.left, self.right, self.lkey, self.rkey,
+                            self.rlookup, self.lprefix, self.rprefix)
     
 
-def iterhashjoin(left, right, key, rlookup, lprefix, rprefix):
+def iterhashjoin(left, right, lkey, rkey, rlookup, lprefix, rprefix):
     lit = iter(left)
     rit = iter(right)
 
@@ -60,8 +61,8 @@ def iterhashjoin(left, right, key, rlookup, lprefix, rprefix):
     rflds = rit.next()
     
     # determine indices of the key fields in left and right tables
-    lkind = asindices(lflds, key)
-    rkind = asindices(rflds, key)
+    lkind = asindices(lflds, lkey)
+    rkind = asindices(rflds, rkey)
     
     # construct functions to extract key values from left table
     lgetk = operator.itemgetter(*lkind)
@@ -76,13 +77,12 @@ def iterhashjoin(left, right, key, rlookup, lprefix, rprefix):
     if lprefix is None:
         outflds = list(lflds)
     else:
-        outflds = [f if f == key else (str(lprefix) + str(f))
+        outflds = [f if f == lkey else (str(lprefix) + str(f))
                    for f in lflds]
     if rprefix is None:
         outflds.extend(rgetv(rflds))
     else:
-        outflds.extend([f if f == key else (str(rprefix) + str(f))
-                        for f in rgetv(rflds)])
+        outflds.extend([(str(rprefix) + str(f)) for f in rgetv(rflds)])
     yield tuple(outflds)
 
     # define a function to join rows
@@ -102,8 +102,8 @@ def iterhashjoin(left, right, key, rlookup, lprefix, rprefix):
                 yield outrow
         
         
-def hashleftjoin(left, right, key=None, missing=None, cache=True, lprefix=None,
-                 rprefix=None):
+def hashleftjoin(left, right, key=None, lkey=None, rkey=None, missing=None,
+                 cache=True, lprefix=None, rprefix=None):
     """
     Alternative implementation of :func:`leftjoin`, where the join is executed
     by constructing an in-memory lookup for the right hand table, then iterating over rows 
@@ -121,19 +121,19 @@ def hashleftjoin(left, right, key=None, missing=None, cache=True, lprefix=None,
 
     """
 
-    if key is None:
-        key = natural_key(left, right)
-    return HashLeftJoinView(left, right, key, missing=missing, cache=cache,
+    lkey, rkey = keys_from_args(left, right, key, lkey, rkey)
+    return HashLeftJoinView(left, right, lkey, rkey, missing=missing, cache=cache,
                             lprefix=lprefix, rprefix=rprefix)
 
 
 class HashLeftJoinView(RowContainer):
     
-    def __init__(self, left, right, key, missing=None, cache=True, lprefix=None,
+    def __init__(self, left, right, lkey, rkey, missing=None, cache=True, lprefix=None,
                  rprefix=None):
         self.left = left
         self.right = right
-        self.key = key
+        self.lkey = lkey
+        self.rkey = rkey
         self.missing = missing
         self.cache = cache
         self.rlookup = None
@@ -142,12 +142,14 @@ class HashLeftJoinView(RowContainer):
 
     def __iter__(self):
         if not self.cache or self.rlookup is None:
-            self.rlookup = lookup(self.right, self.key)
-        return iterhashleftjoin(self.left, self.right, self.key, self.missing,
-                                self.rlookup, self.lprefix, self.rprefix)
+            self.rlookup = lookup(self.right, self.rkey)
+        return iterhashleftjoin(self.left, self.right, self.lkey, self.rkey,
+                                self.missing, self.rlookup, self.lprefix,
+                                self.rprefix)
     
 
-def iterhashleftjoin(left, right, key, missing, rlookup, lprefix, rprefix):
+def iterhashleftjoin(left, right, lkey, rkey, missing, rlookup, lprefix,
+                     rprefix):
     lit = iter(left)
     rit = iter(right)
 
@@ -155,8 +157,8 @@ def iterhashleftjoin(left, right, key, missing, rlookup, lprefix, rprefix):
     rflds = rit.next()
     
     # determine indices of the key fields in left and right tables
-    lkind = asindices(lflds, key)
-    rkind = asindices(rflds, key)
+    lkind = asindices(lflds, lkey)
+    rkind = asindices(rflds, rkey)
     
     # construct functions to extract key values from left table
     lgetk = operator.itemgetter(*lkind)
@@ -171,13 +173,12 @@ def iterhashleftjoin(left, right, key, missing, rlookup, lprefix, rprefix):
     if lprefix is None:
         outflds = list(lflds)
     else:
-        outflds = [f if f == key else (str(lprefix) + str(f))
+        outflds = [f if f == lkey else (str(lprefix) + str(f))
                    for f in lflds]
     if rprefix is None:
         outflds.extend(rgetv(rflds))
     else:
-        outflds.extend([f if f == key else (str(rprefix) + str(f))
-                        for f in rgetv(rflds)])
+        outflds.extend([(str(rprefix) + str(f)) for f in rgetv(rflds)])
     yield tuple(outflds)
 
     # define a function to join rows
@@ -202,8 +203,8 @@ def iterhashleftjoin(left, right, key, missing, rlookup, lprefix, rprefix):
             yield tuple(outrow)
         
         
-def hashrightjoin(left, right, key=None, missing=None, cache=True, lprefix=None,
-                  rprefix=None):
+def hashrightjoin(left, right, key=None, lkey=None, rkey=None, missing=None,
+                  cache=True, lprefix=None, rprefix=None):
     """
     Alternative implementation of :func:`rightjoin`, where the join is executed
     by constructing an in-memory lookup for the left hand table, then iterating over rows 
@@ -221,19 +222,19 @@ def hashrightjoin(left, right, key=None, missing=None, cache=True, lprefix=None,
 
     """
 
-    if key is None:
-        key = natural_key(left, right)
-    return HashRightJoinView(left, right, key, missing=missing, cache=cache,
-                             lprefix=lprefix, rprefix=rprefix)
+    lkey, rkey = keys_from_args(left, right, key, lkey, rkey)
+    return HashRightJoinView(left, right, lkey, rkey, missing=missing,
+                             cache=cache, lprefix=lprefix, rprefix=rprefix)
 
 
 class HashRightJoinView(RowContainer):
     
-    def __init__(self, left, right, key, missing=None, cache=True, lprefix=None,
-                 rprefix=None):
+    def __init__(self, left, right, lkey, rkey, missing=None, cache=True,
+                 lprefix=None, rprefix=None):
         self.left = left
         self.right = right
-        self.key = key
+        self.lkey = lkey
+        self.rkey = rkey
         self.missing = missing
         self.cache = cache
         self.llookup = None
@@ -242,12 +243,14 @@ class HashRightJoinView(RowContainer):
 
     def __iter__(self):
         if not self.cache or self.llookup is None:
-            self.llookup = lookup(self.left, self.key)
-        return iterhashrightjoin(self.left, self.right, self.key, self.missing,
-                                 self.llookup, self.lprefix, self.rprefix)
+            self.llookup = lookup(self.left, self.lkey)
+        return iterhashrightjoin(self.left, self.right, self.lkey, self.rkey,
+                                 self.missing, self.llookup, self.lprefix,
+                                 self.rprefix)
     
 
-def iterhashrightjoin(left, right, key, missing, llookup, lprefix, rprefix):
+def iterhashrightjoin(left, right, lkey, rkey, missing, llookup, lprefix,
+                      rprefix):
     lit = iter(left)
     rit = iter(right)
 
@@ -255,8 +258,8 @@ def iterhashrightjoin(left, right, key, missing, llookup, lprefix, rprefix):
     rflds = rit.next()
     
     # determine indices of the key fields in left and right tables
-    lkind = asindices(lflds, key)
-    rkind = asindices(rflds, key)
+    lkind = asindices(lflds, lkey)
+    rkind = asindices(rflds, rkey)
     
     # construct functions to extract key values from left table
     rgetk = operator.itemgetter(*rkind)
@@ -271,13 +274,12 @@ def iterhashrightjoin(left, right, key, missing, llookup, lprefix, rprefix):
     if lprefix is None:
         outflds = list(lflds)
     else:
-        outflds = [f if f == key else (str(lprefix) + str(f))
+        outflds = [f if f == lkey else (str(lprefix) + str(f))
                    for f in lflds]
     if rprefix is None:
         outflds.extend(rgetv(rflds))
     else:
-        outflds.extend([f if f == key else (str(rprefix) + str(f))
-                        for f in rgetv(rflds)])
+        outflds.extend([(str(rprefix) + str(f)) for f in rgetv(rflds)])
     yield tuple(outflds)
 
     # define a function to join rows
@@ -306,7 +308,7 @@ def iterhashrightjoin(left, right, key, missing, llookup, lprefix, rprefix):
             yield tuple(outrow)
         
         
-def hashantijoin(left, right, key=None):
+def hashantijoin(left, right, key=None, lkey=None, rkey=None):
     """
     Alternative implementation of :func:`antijoin`, where the join is executed
     by constructing an in-memory set for all keys found in the right hand table, then 
@@ -319,23 +321,23 @@ def hashantijoin(left, right, key=None):
 
     """
     
-    if key is None:
-        key = natural_key(left, right)
-    return HashAntiJoinView(left, right, key)
+    lkey, rkey = keys_from_args(left, right, key, lkey, rkey)
+    return HashAntiJoinView(left, right, lkey, rkey)
 
 
 class HashAntiJoinView(RowContainer):
     
-    def __init__(self, left, right, key):
+    def __init__(self, left, right, lkey, rkey):
         self.left = left
         self.right = right
-        self.key = key
-        
+        self.lkey = lkey
+        self.rkey = rkey
+
     def __iter__(self):
-        return iterhashantijoin(self.left, self.right, self.key)
+        return iterhashantijoin(self.left, self.right, self.lkey, self.rkey)
     
     
-def iterhashantijoin(left, right, key):
+def iterhashantijoin(left, right, lkey, rkey):
     lit = iter(left)
     rit = iter(right)
 
@@ -344,8 +346,8 @@ def iterhashantijoin(left, right, key):
     yield tuple(lflds)
 
     # determine indices of the key fields in left and right tables
-    lkind = asindices(lflds, key)
-    rkind = asindices(rflds, key)
+    lkind = asindices(lflds, lkey)
+    rkind = asindices(rflds, rkey)
     
     # construct functions to extract key values from both tables
     lgetk = operator.itemgetter(*lkind)
@@ -362,8 +364,8 @@ def iterhashantijoin(left, right, key):
             yield tuple(lrow)
 
 
-def hashlookupjoin(left, right, key=None, missing=None, lprefix=None,
-                   rprefix=None):
+def hashlookupjoin(left, right, key=None, lkey=None, rkey=None, missing=None,
+                   lprefix=None, rprefix=None):
     """
     Alternative implementation of :func:`lookupjoin`, where the join is executed
     by constructing an in-memory lookup for the right hand table, then iterating
@@ -376,39 +378,39 @@ def hashlookupjoin(left, right, key=None, missing=None, lprefix=None,
 
     """
 
-    if key is None:
-        key = natural_key(left, right)
-    return HashLookupJoinView(left, right, key, missing=missing,
+    lkey, rkey = keys_from_args(left, right, key, lkey, rkey)
+    return HashLookupJoinView(left, right, lkey, rkey, missing=missing,
                               lprefix=lprefix, rprefix=rprefix)
 
 
 class HashLookupJoinView(RowContainer):
 
-    def __init__(self, left, right, key, missing=None, lprefix=None,
+    def __init__(self, left, right, lkey, rkey, missing=None, lprefix=None,
                  rprefix=None):
         self.left = left
         self.right = right
-        self.key = key
+        self.lkey = lkey
+        self.rkey = rkey
         self.missing = missing
         self.lprefix = lprefix
         self.rprefix = rprefix
 
     def __iter__(self):
-        return iterhashlookupjoin(self.left, self.right, self.key, self.missing,
-                                  self.lprefix, self.rprefix)
+        return iterhashlookupjoin(self.left, self.right, self.lkey, self.rkey,
+                                  self.missing, self.lprefix, self.rprefix)
 
 
-def iterhashlookupjoin(left, right, key, missing, lprefix, rprefix):
+def iterhashlookupjoin(left, right, lkey, rkey, missing, lprefix, rprefix):
     lit = iter(left)
     lflds = lit.next()
 
     rflds, rit = iterpeek(right)  # need the whole lot to pass to lookup
     from petl.util import lookupone
-    rlookup = lookupone(rit, key, strict=False)
+    rlookup = lookupone(rit, rkey, strict=False)
 
     # determine indices of the key fields in left and right tables
-    lkind = asindices(lflds, key)
-    rkind = asindices(rflds, key)
+    lkind = asindices(lflds, lkey)
+    rkind = asindices(rflds, rkey)
 
     # construct functions to extract key values from left table
     lgetk = operator.itemgetter(*lkind)
@@ -423,22 +425,22 @@ def iterhashlookupjoin(left, right, key, missing, lprefix, rprefix):
     if lprefix is None:
         outflds = list(lflds)
     else:
-        outflds = [f if f == key else (str(lprefix) + str(f))
+        outflds = [f if f == lkey else (str(lprefix) + str(f))
                    for f in lflds]
     if rprefix is None:
         outflds.extend(rgetv(rflds))
     else:
-        outflds.extend([f if f == key else (str(rprefix) + str(f))
+        outflds.extend([(str(rprefix) + str(f))
                         for f in rgetv(rflds)])
     yield tuple(outflds)
 
     # define a function to join rows
-    def joinrows(lrow, rrow):
+    def joinrows(_lrow, _rrow):
         # start with the left row
-        outrow = list(lrow)
+        _outrow = list(_lrow)
         # extend with non-key values from the right row
-        outrow.extend(rgetv(rrow))
-        return tuple(outrow)
+        _outrow.extend(rgetv(_rrow))
+        return tuple(_outrow)
 
     for lrow in lit:
         k = lgetk(lrow)
@@ -450,8 +452,4 @@ def iterhashlookupjoin(left, right, key, missing, lprefix, rprefix):
             # extend with missing values in place of the right row
             outrow.extend([missing] * len(rvind))
             yield tuple(outrow)
-
-
-
-
 

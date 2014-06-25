@@ -22,8 +22,8 @@ def natural_key(left, right):
     return key
 
 
-def join(left, right, key=None, presorted=False, buffersize=None, tempdir=None,
-         cache=True, lprefix=None, rprefix=None):
+def join(left, right, key=None, lkey=None, rkey=None, presorted=False,
+         buffersize=None, tempdir=None, cache=True, lprefix=None, rprefix=None):
     """
     Perform an equi-join on the given tables. E.g.::
 
@@ -144,33 +144,54 @@ def join(left, right, key=None, presorted=False, buffersize=None, tempdir=None,
         +------+--------+----------+----------+
 
     If `presorted` is True, it is assumed that the data are already sorted by
-    the given key, and the `buffersize`, `tempdir` and `cache` arguments are ignored. Otherwise, the data
-    are sorted, see also the discussion of the `buffersize`, `tempdir` and `cache` arguments under the
+    the given key, and the `buffersize`, `tempdir` and `cache` arguments are
+    ignored. Otherwise, the data
+    are sorted, see also the discussion of the `buffersize`, `tempdir` and
+    `cache` arguments under the
     :func:`sort` function.
 
     """
 
-    if key is None:
-        key = natural_key(left, right)
-    return JoinView(left, right, key, presorted=presorted,
-                    buffersize=buffersize, tempdir=tempdir, cache=cache,
-                    lprefix=lprefix, rprefix=rprefix)
+    lkey, rkey = keys_from_args(left, right, key, lkey, rkey)
+    return JoinView(left, right, lkey=lkey, rkey=rkey,
+                    presorted=presorted, buffersize=buffersize, tempdir=tempdir,
+                    cache=cache, lprefix=lprefix, rprefix=rprefix)
+
+
+def keys_from_args(left, right, key, lkey, rkey):
+    if key is lkey is rkey is None:
+        # no keys specified, attempt natural join
+        lkey = rkey = natural_key(left, right)
+    elif key is lkey is None:
+        # only right key specified, use it for both tables
+        lkey = rkey
+    elif key is rkey is None:
+        # only left key specified, use it for both tables
+        rkey = lkey
+    else:
+        if lkey is None:
+            lkey = key
+        if rkey is None:
+            rkey = key
+    return lkey, rkey
 
 
 class JoinView(RowContainer):
 
-    def __init__(self, left, right, key, presorted=False, leftouter=False,
-                 rightouter=False, missing=None, buffersize=None, tempdir=None,
-                 cache=True, lprefix=None, rprefix=None):
+    def __init__(self, left, right, lkey, rkey,
+                 presorted=False, leftouter=False, rightouter=False,
+                 missing=None, buffersize=None, tempdir=None, cache=True,
+                 lprefix=None, rprefix=None):
+        self.lkey = lkey
+        self.rkey = rkey
         if presorted:
             self.left = left
             self.right = right
         else:
-            self.left = sort(left, key, buffersize=buffersize, tempdir=tempdir, cache=cache)
-            self.right = sort(right, key, buffersize=buffersize, tempdir=tempdir, cache=cache)
-            # TODO what if someone sets self.key to something else after __init__?
-            # (sort will be incorrect - maybe need to protect key with property setter?)
-        self.key = key
+            self.left = sort(left, lkey, buffersize=buffersize,
+                             tempdir=tempdir, cache=cache)
+            self.right = sort(right, rkey, buffersize=buffersize,
+                              tempdir=tempdir, cache=cache)
         self.leftouter = leftouter
         self.rightouter = rightouter
         self.missing = missing
@@ -178,13 +199,14 @@ class JoinView(RowContainer):
         self.rprefix = rprefix
 
     def __iter__(self):
-        return iterjoin(self.left, self.right, self.key, leftouter=self.leftouter,
-                        rightouter=self.rightouter, missing=self.missing,
-                        lprefix=self.lprefix, rprefix=self.rprefix)
+        return iterjoin(self.left, self.right, self.lkey, self.rkey,
+                        leftouter=self.leftouter, rightouter=self.rightouter,
+                        missing=self.missing, lprefix=self.lprefix,
+                        rprefix=self.rprefix)
 
 
-def leftjoin(left, right, key=None, missing=None, presorted=False,
-             buffersize=None, tempdir=None, cache=True,
+def leftjoin(left, right, key=None, lkey=None, rkey=None, missing=None,
+             presorted=False, buffersize=None, tempdir=None, cache=True,
              lprefix=None, rprefix=None):
     """
     Perform a left outer join on the given tables. E.g.::
@@ -225,23 +247,24 @@ def leftjoin(left, right, key=None, missing=None, presorted=False,
         +------+----------+----------+
 
     If `presorted` is True, it is assumed that the data are already sorted by
-    the given key, and the `buffersize`, `tempdir` and `cache` arguments are ignored. Otherwise, the data
-    are sorted, see also the discussion of the `buffersize`, `tempdir` and `cache` arguments under the
+    the given key, and the `buffersize`, `tempdir` and `cache` arguments are
+    ignored. Otherwise, the data
+    are sorted, see also the discussion of the `buffersize`, `tempdir` and
+    `cache` arguments under the
     :func:`sort` function.
 
     """
 
-    if key is None:
-        key = natural_key(left, right)
-    return JoinView(left, right, key, presorted=presorted, leftouter=True,
-                    rightouter=False, missing=missing,
-                    buffersize=buffersize, tempdir=tempdir, cache=cache,
-                    lprefix=lprefix, rprefix=rprefix)
+    lkey, rkey = keys_from_args(left, right, key, lkey, rkey)
+    return JoinView(left, right, lkey=lkey, rkey=rkey,
+                    presorted=presorted, leftouter=True, rightouter=False,
+                    missing=missing, buffersize=buffersize, tempdir=tempdir,
+                    cache=cache, lprefix=lprefix, rprefix=rprefix)
 
 
-def rightjoin(left, right, key=None, missing=None, presorted=False,
-              buffersize=None, tempdir=None, cache=True, lprefix=None,
-              rprefix=None):
+def rightjoin(left, right, key=None, lkey=None, rkey=None, missing=None,
+              presorted=False, buffersize=None, tempdir=None, cache=True,
+              lprefix=None, rprefix=None):
     """
     Perform a right outer join on the given tables. E.g.::
 
@@ -281,23 +304,25 @@ def rightjoin(left, right, key=None, missing=None, presorted=False,
         +------+----------+-----------+
 
     If `presorted` is True, it is assumed that the data are already sorted by
-    the given key, and the `buffersize`, `tempdir` and `cache` arguments are ignored. Otherwise, the data
-    are sorted, see also the discussion of the `buffersize`, `tempdir` and `cache` arguments under the
+    the given key, and the `buffersize`, `tempdir` and `cache` arguments are
+    ignored. Otherwise, the data
+    are sorted, see also the discussion of the `buffersize`, `tempdir` and
+    `cache` arguments under the
     :func:`sort` function.
 
     """
 
-    if key is None:
-        key = natural_key(left, right)
-    return JoinView(left, right, key, presorted=presorted, leftouter=False,
-                    rightouter=True, missing=missing, buffersize=buffersize,
+    lkey, rkey = keys_from_args(left, right, key, lkey, rkey)
+    return JoinView(left, right, lkey=lkey, rkey=rkey,
+                    presorted=presorted, leftouter=False, rightouter=True,
+                    missing=missing, buffersize=buffersize,
                     tempdir=tempdir, cache=cache, lprefix=lprefix,
                     rprefix=rprefix)
 
 
-def outerjoin(left, right, key=None, missing=None, presorted=False,
-              buffersize=None, tempdir=None, cache=True, lprefix=None,
-              rprefix=None):
+def outerjoin(left, right, key=None, lkey=None, rkey=None, missing=None,
+              presorted=False, buffersize=None, tempdir=None, cache=True,
+              lprefix=None, rprefix=None):
     """
     Perform a full outer join on the given tables. E.g.::
 
@@ -339,22 +364,23 @@ def outerjoin(left, right, key=None, missing=None, presorted=False,
         +------+----------+-----------+
 
     If `presorted` is True, it is assumed that the data are already sorted by
-    the given key, and the `buffersize`, `tempdir` and `cache` arguments are ignored. Otherwise, the data
-    are sorted, see also the discussion of the `buffersize`, `tempdir` and `cache` arguments under the
+    the given key, and the `buffersize`, `tempdir` and `cache` arguments are
+    ignored. Otherwise, the data
+    are sorted, see also the discussion of the `buffersize`, `tempdir` and
+    `cache` arguments under the
     :func:`sort` function.
 
     """
 
-    if key is None:
-        key = natural_key(left, right)
-    return JoinView(left, right, key, presorted=presorted, leftouter=True,
-                    rightouter=True, missing=missing, buffersize=buffersize,
-                    tempdir=tempdir, cache=cache, lprefix=lprefix,
-                    rprefix=rprefix)
+    lkey, rkey = keys_from_args(left, right, key, lkey, rkey)
+    return JoinView(left, right, lkey=lkey, rkey=rkey,
+                    presorted=presorted, leftouter=True, rightouter=True,
+                    missing=missing, buffersize=buffersize, tempdir=tempdir,
+                    cache=cache, lprefix=lprefix, rprefix=rprefix)
 
 
-def iterjoin(left, right, key, leftouter=False, rightouter=False, missing=None,
-             lprefix=None, rprefix=None):
+def iterjoin(left, right, lkey, rkey, leftouter=False, rightouter=False,
+             missing=None, lprefix=None, rprefix=None):
     lit = iter(left)
     rit = iter(right)
 
@@ -362,8 +388,8 @@ def iterjoin(left, right, key, leftouter=False, rightouter=False, missing=None,
     rflds = rit.next()
 
     # determine indices of the key fields in left and right tables
-    lkind = asindices(lflds, key)
-    rkind = asindices(rflds, key)
+    lkind = asindices(lflds, lkey)
+    rkind = asindices(rflds, rkey)
 
     # construct functions to extract key values from both tables
     lgetk = operator.itemgetter(*lkind)
@@ -379,13 +405,12 @@ def iterjoin(left, right, key, leftouter=False, rightouter=False, missing=None,
     if lprefix is None:
         outflds = list(lflds)
     else:
-        outflds = [f if f == key else (str(lprefix) + str(f))
+        outflds = [f if f == lkey else (str(lprefix) + str(f))
                    for f in lflds]
     if rprefix is None:
         outflds.extend(rgetv(rflds))
     else:
-        outflds.extend([f if f == key else (str(rprefix) + str(f))
-                        for f in rgetv(rflds)])
+        outflds.extend([(str(rprefix) + str(f)) for f in rgetv(rflds)])
     yield tuple(outflds)
 
     # define a function to join two groups of rows
@@ -548,8 +573,8 @@ def itercrossjoin(sources, prefix):
         yield tuple(outrow)
 
 
-def antijoin(left, right, key=None, presorted=False, buffersize=None,
-             tempdir=None, cache=True):
+def antijoin(left, right, key=None, lkey=None, rkey=None, presorted=False,
+             buffersize=None, tempdir=None, cache=True):
     """
     Return rows from the `left` table where the key value does not occur in the
     `right` table. E.g.::
@@ -600,29 +625,28 @@ def antijoin(left, right, key=None, presorted=False, buffersize=None,
 
     """
 
-    if key is None:
-        key = natural_key(left, right)
-    return AntiJoinView(left, right, key, presorted, buffersize)
+    lkey, rkey = keys_from_args(left, right, key, lkey, rkey)
+    return AntiJoinView(left, right, lkey, rkey, presorted, buffersize)
 
 
 class AntiJoinView(RowContainer):
 
-    def __init__(self, left, right, key, presorted=False, buffersize=None, tempdir=None, cache=True):
+    def __init__(self, left, right, lkey, rkey, presorted=False,
+                 buffersize=None, tempdir=None, cache=True):
         if presorted:
             self.left = left
             self.right = right
         else:
-            self.left = sort(left, key, buffersize=buffersize, tempdir=tempdir, cache=cache)
-            self.right = sort(right, key, buffersize=buffersize, tempdir=tempdir, cache=cache)
-            # TODO what if someone sets self.key to something else after __init__?
-            # (sort will be incorrect - maybe need to protect key with property setter?)
-        self.key = key
+            self.left = sort(left, lkey, buffersize=buffersize, tempdir=tempdir, cache=cache)
+            self.right = sort(right, rkey, buffersize=buffersize, tempdir=tempdir, cache=cache)
+        self.lkey = lkey
+        self.rkey = rkey
 
     def __iter__(self):
-        return iterantijoin(self.left, self.right, self.key)
+        return iterantijoin(self.left, self.right, self.lkey, self.rkey)
 
 
-def iterantijoin(left, right, key):
+def iterantijoin(left, right, lkey, rkey):
     lit = iter(left)
     rit = iter(right)
 
@@ -631,8 +655,8 @@ def iterantijoin(left, right, key):
     yield tuple(lflds)
 
     # determine indices of the key fields in left and right tables
-    lkind = asindices(lflds, key)
-    rkind = asindices(rflds, key)
+    lkind = asindices(lflds, lkey)
+    rkind = asindices(rflds, rkey)
 
     # construct functions to extract key values from both tables
     lgetk = operator.itemgetter(*lkind)
@@ -643,7 +667,7 @@ def iterantijoin(left, right, key):
     rgit = itertools.groupby(rit, key=rgetk)
 
     # loop until *either* of the iterators is exhausted
-    lkval, rkval = None, None # initialise here to handle empty tables
+    lkval, rkval = None, None  # initialise here to handle empty tables
     try:
 
         # pick off initial row groups
@@ -678,9 +702,9 @@ def iterantijoin(left, right, key):
             yield tuple(row)
 
 
-def lookupjoin(left, right, key=None, missing=None, presorted=False,
-               buffersize=None, tempdir=None, cache=True, lprefix=None,
-               rprefix=None):
+def lookupjoin(left, right, key=None, lkey=None, rkey=None, missing=None,
+               presorted=False, buffersize=None, tempdir=None, cache=True,
+               lprefix=None, rprefix=None):
     """
     Perform a left join, but where the key is not unique in the right-hand
     table, arbitrarily choose the first row and ignore others. E.g.::
@@ -732,9 +756,8 @@ def lookupjoin(left, right, key=None, missing=None, presorted=False,
 
     """
 
-    if key is None:
-        key = natural_key(left, right)
-    return LookupJoinView(left, right, key, presorted=presorted,
+    lkey, rkey = keys_from_args(left, right, key, lkey, rkey)
+    return LookupJoinView(left, right, lkey, rkey, presorted=presorted,
                           missing=missing, buffersize=buffersize,
                           tempdir=tempdir, cache=cache,
                           lprefix=lprefix, rprefix=rprefix)
@@ -742,29 +765,31 @@ def lookupjoin(left, right, key=None, missing=None, presorted=False,
 
 class LookupJoinView(RowContainer):
 
-    def __init__(self, left, right, key, presorted=False, missing=None,
+    def __init__(self, left, right, lkey, rkey, presorted=False, missing=None,
                  buffersize=None, tempdir=None, cache=True,
                  lprefix=None, rprefix=None):
         if presorted:
             self.left = left
             self.right = right
         else:
-            self.left = sort(left, key, buffersize=buffersize, tempdir=tempdir, cache=cache)
-            self.right = sort(right, key, buffersize=buffersize, tempdir=tempdir, cache=cache)
-            # TODO what if someone sets self.key to something else after __init__?
-            # (sort will be incorrect - maybe need to protect key with property setter?)
-        self.key = key
+            self.left = sort(left, lkey, buffersize=buffersize,
+                             tempdir=tempdir, cache=cache)
+            self.right = sort(right, rkey, buffersize=buffersize,
+                              tempdir=tempdir, cache=cache)
+        self.lkey = lkey
+        self.rkey = rkey
         self.missing = missing
         self.lprefix = lprefix
         self.rprefix = rprefix
 
     def __iter__(self):
-        return iterlookupjoin(self.left, self.right, self.key,
+        return iterlookupjoin(self.left, self.right, self.lkey, self.rkey,
                               missing=self.missing, lprefix=self.lprefix,
                               rprefix=self.rprefix)
 
 
-def iterlookupjoin(left, right, key, missing=None, lprefix=None, rprefix=None):
+def iterlookupjoin(left, right, lkey, rkey, missing=None, lprefix=None,
+                   rprefix=None):
     lit = iter(left)
     rit = iter(right)
 
@@ -772,8 +797,8 @@ def iterlookupjoin(left, right, key, missing=None, lprefix=None, rprefix=None):
     rflds = rit.next()
 
     # determine indices of the key fields in left and right tables
-    lkind = asindices(lflds, key)
-    rkind = asindices(rflds, key)
+    lkind = asindices(lflds, lkey)
+    rkind = asindices(rflds, rkey)
 
     # construct functions to extract key values from both tables
     lgetk = operator.itemgetter(*lkind)
@@ -789,13 +814,12 @@ def iterlookupjoin(left, right, key, missing=None, lprefix=None, rprefix=None):
     if lprefix is None:
         outflds = list(lflds)
     else:
-        outflds = [f if f == key else (str(lprefix) + str(f))
+        outflds = [f if f == lkey else (str(lprefix) + str(f))
                    for f in lflds]
     if rprefix is None:
         outflds.extend(rgetv(rflds))
     else:
-        outflds.extend([f if f == key else (str(rprefix) + str(f))
-                        for f in rgetv(rflds)])
+        outflds.extend([(str(rprefix) + str(f)) for f in rgetv(rflds)])
     yield tuple(outflds)
 
     # define a function to join two groups of rows
