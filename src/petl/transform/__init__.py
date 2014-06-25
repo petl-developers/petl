@@ -5,9 +5,7 @@ Functions for transforming tables.
 
 from petl.transform.misc import cut, cutout, movefield, cat, annex, \
     addfield, addfieldusingcontext, addrownumbers, addcolumn, rowslice, head, \
-    tail, duplicates, unique, distinct, conflicts, complement, intersection, \
-    recordcomplement, diff, recorddiff, facet, rangefacet, skipcomments, \
-    coalesce
+    tail, facet, rangefacet, skipcomments, coalesce
 
 from petl.transform.headers import rename, setheader, extendheader, \
     pushheader, skip, prefixheader, suffixheader
@@ -28,7 +26,7 @@ from petl.transform.joins import join, leftjoin, rightjoin, outerjoin, \
     crossjoin, antijoin, lookupjoin, unjoin
 
 from petl.transform.hashjoins import hashjoin, hashleftjoin, hashrightjoin, \
-    hashantijoin, hashlookupjoin, hashintersection, hashcomplement
+    hashantijoin, hashlookupjoin
 
 from petl.transform.reductions import rowreduce, recordreduce, mergeduplicates,\
     aggregate, rangeaggregate, rangecounts, rangerecordreduce, rangerowreduce, \
@@ -46,3 +44,8 @@ from petl.transform.maps import fieldmap, rowmap, recordmap, rowmapmany, \
     recordmapmany, rowgroupmap
 
 from petl.transform.unpacks import unpack, unpackdict
+
+from petl.transform.dedup import duplicates, unique, distinct, conflicts
+
+from petl.transform.setops import complement, intersection, \
+    recordcomplement, diff, recorddiff, hashintersection, hashcomplement

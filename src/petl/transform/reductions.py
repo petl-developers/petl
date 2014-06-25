@@ -10,7 +10,8 @@ import math
 from petl.util import RowContainer, iterpeek, rowgroupby, rowgroupbybin, \
     asindices, hybridrows, rowitemgetter, count
 from petl.transform.sorts import sort, mergesort
-from petl.transform.misc import cut, distinct
+from petl.transform.misc import cut
+from petl.transform.dedup import distinct
 
 
 def rowreduce(table, key, reducer, fields=None, missing=None, presorted=False, 

@@ -7,7 +7,8 @@ import operator
 
 from petl.util import RowContainer, asindices, rowgetter, rowgroupby
 from petl.transform.sorts import sort
-from petl.transform.misc import header, data, cut, cutout, distinct
+from petl.transform.misc import header, data, cut, cutout
+from petl.transform.dedup import distinct
 
 
 def natural_key(left, right):
