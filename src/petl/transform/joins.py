@@ -150,6 +150,11 @@ def join(left, right, key=None, lkey=None, rkey=None, presorted=False,
     `cache` arguments under the
     :func:`sort` function.
 
+    .. versionchanged:: 0.24
+
+    Added support for left and right tables with different key fields via the
+    `lkey` and `rkey` arguments.
+
     """
 
     lkey, rkey = keys_from_args(left, right, key, lkey, rkey)
@@ -253,6 +258,11 @@ def leftjoin(left, right, key=None, lkey=None, rkey=None, missing=None,
     `cache` arguments under the
     :func:`sort` function.
 
+    .. versionchanged:: 0.24
+
+    Added support for left and right tables with different key fields via the
+    `lkey` and `rkey` arguments.
+
     """
 
     lkey, rkey = keys_from_args(left, right, key, lkey, rkey)
@@ -309,6 +319,11 @@ def rightjoin(left, right, key=None, lkey=None, rkey=None, missing=None,
     are sorted, see also the discussion of the `buffersize`, `tempdir` and
     `cache` arguments under the
     :func:`sort` function.
+
+    .. versionchanged:: 0.24
+
+    Added support for left and right tables with different key fields via the
+    `lkey` and `rkey` arguments.
 
     """
 
@@ -369,6 +384,11 @@ def outerjoin(left, right, key=None, lkey=None, rkey=None, missing=None,
     are sorted, see also the discussion of the `buffersize`, `tempdir` and
     `cache` arguments under the
     :func:`sort` function.
+
+    .. versionchanged:: 0.24
+
+    Added support for left and right tables with different key fields via the
+    `lkey` and `rkey` arguments.
 
     """
 
@@ -623,6 +643,11 @@ def antijoin(left, right, key=None, lkey=None, rkey=None, presorted=False,
     are sorted, see also the discussion of the `buffersize`, `tempdir` and `cache` arguments under the
     :func:`sort` function.
 
+    .. versionchanged:: 0.24
+
+    Added support for left and right tables with different key fields via the
+    `lkey` and `rkey` arguments.
+
     """
 
     lkey, rkey = keys_from_args(left, right, key, lkey, rkey)
@@ -753,6 +778,11 @@ def lookupjoin(left, right, key=None, lkey=None, rkey=None, missing=None,
     See also :func:`leftjoin`.
 
     .. versionadded:: 0.11
+
+    .. versionchanged:: 0.24
+
+    Added support for left and right tables with different key fields via the
+    `lkey` and `rkey` arguments.
 
     """
 

@@ -26,6 +26,11 @@ def hashjoin(left, right, key=None, lkey=None, rkey=None, cache=True,
     Added support for caching data from right hand table (only available when
     `key` is given).
 
+    .. versionchanged:: 0.24
+
+    Added support for left and right tables with different key fields via the
+    `lkey` and `rkey` arguments.
+
     """
     
     lkey, rkey = keys_from_args(left, right, key, lkey, rkey)
@@ -118,6 +123,11 @@ def hashleftjoin(left, right, key=None, lkey=None, rkey=None, missing=None,
     
     Added support for caching data from right hand table (only available when
     `key` is given).
+
+    .. versionchanged:: 0.24
+
+    Added support for left and right tables with different key fields via the
+    `lkey` and `rkey` arguments.
 
     """
 
@@ -220,6 +230,11 @@ def hashrightjoin(left, right, key=None, lkey=None, rkey=None, missing=None,
     Added support for caching data from left hand table (only available when
     `key` is given).
 
+    .. versionchanged:: 0.24
+
+    Added support for left and right tables with different key fields via the
+    `lkey` and `rkey` arguments.
+
     """
 
     lkey, rkey = keys_from_args(left, right, key, lkey, rkey)
@@ -319,6 +334,11 @@ def hashantijoin(left, right, key=None, lkey=None, rkey=None):
     
     .. versionadded:: 0.5
 
+    .. versionchanged:: 0.24
+
+    Added support for left and right tables with different key fields via the
+    `lkey` and `rkey` arguments.
+
     """
     
     lkey, rkey = keys_from_args(left, right, key, lkey, rkey)
@@ -375,6 +395,11 @@ def hashlookupjoin(left, right, key=None, lkey=None, rkey=None, missing=None,
     and the left table is large.
 
     .. versionadded:: 0.11
+
+    .. versionchanged:: 0.24
+
+    Added support for left and right tables with different key fields via the
+    `lkey` and `rkey` arguments.
 
     """
 
