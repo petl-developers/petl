@@ -11,24 +11,25 @@ import operator
 from petl.util import OrderedDict
 from petl.testutils import ieq
 from petl import rename, fieldnames, cut, cat, convert, addfield, \
-                rowslice, head, tail, sort, melt, recast, duplicates, \
-                conflicts, mergeduplicates, select, complement, diff, capture, \
-                split, expr, fieldmap, facet, rowreduce, aggregate, \
-                rowmap, recordmap, rowmapmany, setheader, pushheader, \
-                skip, extendheader, unpack, join, leftjoin, rightjoin, \
-                outerjoin, crossjoin, antijoin, rangeaggregate, rangecounts, \
-                rangefacet, rangerowreduce, selectre, rowselect, \
-                rowlenselect, strjoin, transpose, intersection, pivot, \
-                recorddiff, recordcomplement, cutout, skipcomments, \
-                convertall, convertnumbers, hashjoin, hashleftjoin, \
-                hashrightjoin, hashantijoin, hashcomplement, hashintersection, \
-                flatten, unflatten, mergesort, annex, unpackdict, unique, \
-                selectin, fold, addrownumbers, selectcontains, search, \
-                addcolumn, lookupjoin, hashlookupjoin, filldown, fillright, \
-                fillleft, multirangeaggregate, unjoin, coalesce, nrows, replace, \
-                empty, update, selectusingcontext, addfieldusingcontext, \
-                prefixheader, suffixheader, movefield
-from petl.transform import Conflict, TransformError
+    rowslice, head, tail, sort, melt, recast, duplicates, \
+    conflicts, mergeduplicates, select, complement, diff, capture, \
+    split, expr, fieldmap, facet, rowreduce, aggregate, \
+    rowmap, recordmap, rowmapmany, setheader, pushheader, \
+    skip, extendheader, unpack, join, leftjoin, rightjoin, \
+    outerjoin, crossjoin, antijoin, rangeaggregate, rangecounts, \
+    rangefacet, rangerowreduce, selectre, rowselect, \
+    rowlenselect, strjoin, transpose, intersection, pivot, \
+    recorddiff, recordcomplement, cutout, skipcomments, \
+    convertall, convertnumbers, hashjoin, hashleftjoin, \
+    hashrightjoin, hashantijoin, hashcomplement, hashintersection, \
+    flatten, unflatten, mergesort, annex, unpackdict, unique, \
+    selectin, fold, addrownumbers, selectcontains, search, \
+    addcolumn, lookupjoin, hashlookupjoin, filldown, fillright, \
+    fillleft, multirangeaggregate, unjoin, coalesce, nrows, replace, \
+    empty, update, selectusingcontext, addfieldusingcontext, \
+    prefixheader, suffixheader, movefield
+from petl.transform.misc import TransformError
+from petl.transform.reductions import Conflict
 
 
 def test_rename():
@@ -3199,12 +3200,31 @@ def _test_join_prefix(join_impl):
     ieq(expect3, table3)
 
 
+def _test_join_lrkey(join_impl):
+
+    table1 = (('id', 'colour'),
+              ('aa', 'blue'),
+              ('bb', 'red'),
+              ('cc', 'purple'))
+    table2 = (('identifier', 'shape'),
+              ('aa', 'circle'),
+              ('cc', 'square'),
+              ('dd', 'ellipse'))
+
+    table3 = join_impl(table1, table2, lkey='id', rkey='identifier')
+    expect3 = (('id', 'colour', 'shape'),
+               ('aa', 'blue', 'circle'),
+               ('cc', 'purple', 'square'))
+    ieq(expect3, table3)
+
+
 def _test_join(join_impl):
     _test_join_basic(join_impl)
     _test_join_compound_keys(join_impl)
     _test_join_string_key(join_impl)
     _test_join_empty(join_impl)
     _test_join_prefix(join_impl)
+    _test_join_lrkey(join_impl)
 
 
 def test_join():

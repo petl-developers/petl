@@ -276,7 +276,7 @@ class SortConnection(PipelineConnection):
         self.reverse = reverse
 
         if buffersize is None:
-            self.buffersize = petl.transform.defaultbuffersize
+            self.buffersize = petl.transform.sorts.defaultbuffersize
         else:
             self.buffersize = buffersize
 
