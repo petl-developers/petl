@@ -3,15 +3,17 @@ Functions for transforming tables.
 
 """
 
-from petl.transform.misc import rename, cut, cutout, cat, \
+from petl.transform.misc import cut, cutout, cat, \
     addfield, rowslice, head, tail, melt, recast, duplicates, unique, \
     conflicts, complement, recordcomplement, diff, recorddiff, capture, split, \
     fieldmap, facet, rangefacet, \
-    rowmap, recordmap, rowmapmany, recordmapmany, setheader, extendheader, \
-    pushheader, skip, skipcomments, prefixheader, suffixheader, movefield, \
+    rowmap, recordmap, rowmapmany, recordmapmany, skipcomments, movefield, \
     unpack, unpackdict, transpose, intersection, pivot, flatten, unflatten, \
     annex, fold, addrownumbers, search, addcolumn, rowgroupmap, \
     distinct, coalesce, addfieldusingcontext
+
+from petl.transform.headers import rename, setheader, extendheader, \
+    pushheader, skip, prefixheader, suffixheader
 
 from petl.transform.conversions import convert, convertall, replace, \
     replaceall, update, convertnumbers, fieldconvert, sub, resub
