@@ -582,7 +582,7 @@ def format_table_grid(table, vrepr, sliceargs):
         rowline = u'|'
         for i, w in enumerate(colwidths):
             vr = valsrepr[i]
-            if i < len(vals) and isinstance(vals[i], (int, long, float)):
+            if i < len(vals) and isinstance(vals[i], (int, long, float)) and not isinstance(vals[i], bool):
                 # left pad numbers
                 rowline += u' ' * (w + 1 - len(vr)) # padding
                 rowline += vr + u' |'
@@ -648,7 +648,7 @@ def format_table_simple(table, vrepr, sliceargs):
         rowline = u''
         for i, w in enumerate(colwidths):
             vr = valsrepr[i]
-            if i < len(vals) and isinstance(vals[i], (int, long, float)):
+            if i < len(vals) and isinstance(vals[i], (int, long, float)) and not isinstance(vals[i], bool):
                 # left pad numbers
                 rowline += vr.rjust(w)
             else:      
@@ -710,7 +710,7 @@ def format_table_minimal(table, vrepr, sliceargs):
         rowline = u''
         for i, w in enumerate(colwidths):
             vr = valsrepr[i]
-            if i < len(vals) and isinstance(vals[i], (int, long, float)):
+            if i < len(vals) and isinstance(vals[i], (int, long, float)) and not isinstance(vals[i], bool):
                 # left pad numbers
                 rowline += vr.rjust(w)
             else:      

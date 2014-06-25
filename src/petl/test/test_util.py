@@ -141,8 +141,7 @@ def test_rowcount():
     
     
 def test_look():
-    """Test the look function."""
-    
+
     table = (('foo', 'bar'), ('a', 1), ('b', 2))
     actual = repr(look(table))
     expect = """+-------+-------+
@@ -171,6 +170,21 @@ def test_look_irregular_rows():
     eq_(expect, actual)
     
     
+def test_look_bool():
+
+    table = (('foo', 'bar'), ('a', True), ('b', False))
+    actual = repr(look(table))
+    expect = """+-------+-------+
+| 'foo' | 'bar' |
++=======+=======+
+| 'a'   | True  |
++-------+-------+
+| 'b'   | False |
++-------+-------+
+"""
+    eq_(expect, actual)
+
+
 def test_look_style_simple():
     table = (('foo', 'bar'), ('a', 1), ('b', 2))
     actual = repr(look(table, style='simple'))
