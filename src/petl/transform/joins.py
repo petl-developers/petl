@@ -425,7 +425,7 @@ def iterjoin(left, right, lkey, rkey, leftouter=False, rightouter=False,
     if lprefix is None:
         outflds = list(lflds)
     else:
-        outflds = [f if f == lkey else (str(lprefix) + str(f))
+        outflds = [(str(lprefix) + str(f))
                    for f in lflds]
     if rprefix is None:
         outflds.extend(rgetv(rflds))
@@ -844,7 +844,7 @@ def iterlookupjoin(left, right, lkey, rkey, missing=None, lprefix=None,
     if lprefix is None:
         outflds = list(lflds)
     else:
-        outflds = [f if f == lkey else (str(lprefix) + str(f))
+        outflds = [(str(lprefix) + str(f))
                    for f in lflds]
     if rprefix is None:
         outflds.extend(rgetv(rflds))

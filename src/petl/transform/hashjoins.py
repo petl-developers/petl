@@ -82,7 +82,7 @@ def iterhashjoin(left, right, lkey, rkey, rlookup, lprefix, rprefix):
     if lprefix is None:
         outflds = list(lflds)
     else:
-        outflds = [f if f == lkey else (str(lprefix) + str(f))
+        outflds = [(str(lprefix) + str(f))
                    for f in lflds]
     if rprefix is None:
         outflds.extend(rgetv(rflds))
@@ -183,7 +183,7 @@ def iterhashleftjoin(left, right, lkey, rkey, missing, rlookup, lprefix,
     if lprefix is None:
         outflds = list(lflds)
     else:
-        outflds = [f if f == lkey else (str(lprefix) + str(f))
+        outflds = [(str(lprefix) + str(f))
                    for f in lflds]
     if rprefix is None:
         outflds.extend(rgetv(rflds))
@@ -289,7 +289,7 @@ def iterhashrightjoin(left, right, lkey, rkey, missing, llookup, lprefix,
     if lprefix is None:
         outflds = list(lflds)
     else:
-        outflds = [f if f == lkey else (str(lprefix) + str(f))
+        outflds = [(str(lprefix) + str(f))
                    for f in lflds]
     if rprefix is None:
         outflds.extend(rgetv(rflds))
@@ -450,7 +450,7 @@ def iterhashlookupjoin(left, right, lkey, rkey, missing, lprefix, rprefix):
     if lprefix is None:
         outflds = list(lflds)
     else:
-        outflds = [f if f == lkey else (str(lprefix) + str(f))
+        outflds = [(str(lprefix) + str(f))
                    for f in lflds]
     if rprefix is None:
         outflds.extend(rgetv(rflds))
