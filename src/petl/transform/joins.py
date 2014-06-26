@@ -23,6 +23,25 @@ def natural_key(left, right):
     return key
 
 
+def keys_from_args(left, right, key, lkey, rkey):
+
+    if key is lkey is rkey is None:
+        # no keys specified, attempt natural join
+        lkey = rkey = natural_key(left, right)
+    elif key is not None and lkey is rkey is None:
+        # common key specified
+        lkey = rkey = key
+    elif key is None and None not in {lkey, rkey}:
+        # left and right keys specified
+        pass
+    else:
+        raise Exception(
+            'bad key arguments: either specify key, or specify both lkey and '
+            'rkey, or provide no key/lkey/rkey arguments at all (natural join)'
+        )
+    return lkey, rkey
+
+
 def join(left, right, key=None, lkey=None, rkey=None, presorted=False,
          buffersize=None, tempdir=None, cache=True, lprefix=None, rprefix=None):
     """
@@ -162,24 +181,6 @@ def join(left, right, key=None, lkey=None, rkey=None, presorted=False,
     return JoinView(left, right, lkey=lkey, rkey=rkey,
                     presorted=presorted, buffersize=buffersize, tempdir=tempdir,
                     cache=cache, lprefix=lprefix, rprefix=rprefix)
-
-
-def keys_from_args(left, right, key, lkey, rkey):
-    if key is lkey is rkey is None:
-        # no keys specified, attempt natural join
-        lkey = rkey = natural_key(left, right)
-    elif key is lkey is None:
-        # only right key specified, use it for both tables
-        lkey = rkey
-    elif key is rkey is None:
-        # only left key specified, use it for both tables
-        rkey = lkey
-    else:
-        if lkey is None:
-            lkey = key
-        if rkey is None:
-            rkey = key
-    return lkey, rkey
 
 
 class JoinView(RowContainer):
