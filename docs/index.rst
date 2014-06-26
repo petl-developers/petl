@@ -22,11 +22,9 @@ see the :ref:`genindex`.
    :maxdepth: 2
 
    intro
-   extract
+   io
    transform
-   load
    util
-   iohelp
    fluent
    interactive
    push
