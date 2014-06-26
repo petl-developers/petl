@@ -5,7 +5,9 @@ import operator
 import re
 
 
-from petl.util import asindices, expr, RowContainer, hybridrows
+from petl.compat import OrderedDict
+from petl.util import asindices, expr, RowContainer, hybridrows, values, \
+    itervalues, limits
 
 
 def select(table, *args, **kwargs):
@@ -584,3 +586,127 @@ def iterselectusingcontext(table, query):
         yield cur
 
 
+def facet(table, field):
+    """
+    Return a dictionary mapping field values to tables.
+
+    E.g.::
+
+        >>> from petl import facet, look
+        >>> look(table1)
+        +-------+-------+-------+
+        | 'foo' | 'bar' | 'baz' |
+        +=======+=======+=======+
+        | 'a'   | 4     | 9.3   |
+        +-------+-------+-------+
+        | 'a'   | 2     | 88.2  |
+        +-------+-------+-------+
+        | 'b'   | 1     | 23.3  |
+        +-------+-------+-------+
+        | 'c'   | 8     | 42.0  |
+        +-------+-------+-------+
+        | 'd'   | 7     | 100.9 |
+        +-------+-------+-------+
+        | 'c'   | 2     |       |
+        +-------+-------+-------+
+
+        >>> foo = facet(table1, 'foo')
+        >>> foo.keys()
+        ['a', 'c', 'b', 'd']
+        >>> look(foo['a'])
+        +-------+-------+-------+
+        | 'foo' | 'bar' | 'baz' |
+        +=======+=======+=======+
+        | 'a'   | 4     | 9.3   |
+        +-------+-------+-------+
+        | 'a'   | 2     | 88.2  |
+        +-------+-------+-------+
+
+        >>> look(foo['c'])
+        +-------+-------+-------+
+        | 'foo' | 'bar' | 'baz' |
+        +=======+=======+=======+
+        | 'c'   | 8     | 42.0  |
+        +-------+-------+-------+
+        | 'c'   | 2     |       |
+        +-------+-------+-------+
+
+    See also :func:`facetcolumns`.
+
+    """
+
+    fct = dict()
+    for v in set(values(table, field)):
+        fct[v] = selecteq(table, field, v)
+    return fct
+
+
+def rangefacet(table, field, width, minv=None, maxv=None,
+               presorted=False, buffersize=None, tempdir=None, cache=True):
+    """
+    Return a dictionary mapping ranges to tables. E.g.::
+
+        >>> from petl import rangefacet, look
+        >>> look(table1)
+        +-------+-------+
+        | 'foo' | 'bar' |
+        +=======+=======+
+        | 'a'   | 3     |
+        +-------+-------+
+        | 'a'   | 7     |
+        +-------+-------+
+        | 'b'   | 2     |
+        +-------+-------+
+        | 'b'   | 1     |
+        +-------+-------+
+        | 'b'   | 9     |
+        +-------+-------+
+        | 'c'   | 4     |
+        +-------+-------+
+        | 'd'   | 3     |
+        +-------+-------+
+
+        >>> rf = rangefacet(table1, 'bar', 2)
+        >>> rf.keys()
+        [(1, 3), (3, 5), (5, 7), (7, 9)]
+        >>> look(rf[(1, 3)])
+        +-------+-------+
+        | 'foo' | 'bar' |
+        +=======+=======+
+        | 'b'   | 2     |
+        +-------+-------+
+        | 'b'   | 1     |
+        +-------+-------+
+
+        >>> look(rf[(7, 9)])
+        +-------+-------+
+        | 'foo' | 'bar' |
+        +=======+=======+
+        | 'a'   | 7     |
+        +-------+-------+
+        | 'b'   | 9     |
+        +-------+-------+
+
+    Note that the last bin includes both edges.
+
+    """
+
+    # determine minimum and maximum values
+    if minv is None and maxv is None:
+        minv, maxv = limits(table, field)
+    elif minv is None:
+        minv = min(itervalues(table, field))
+    elif max is None:
+        maxv = max(itervalues(table, field))
+
+    fct = OrderedDict()
+    for binminv in xrange(minv, maxv, width):
+        binmaxv = binminv + width
+        if binmaxv >= maxv: # final bin
+            binmaxv = maxv
+            # final bin includes right edge
+            fct[(binminv, binmaxv)] = selectrangeopen(table, field, binminv, binmaxv)
+        else:
+            fct[(binminv, binmaxv)] = selectrangeopenleft(table, field, binminv, binmaxv)
+
+    return fct

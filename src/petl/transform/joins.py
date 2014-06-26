@@ -5,9 +5,10 @@ import itertools
 import operator
 
 
-from petl.util import RowContainer, asindices, rowgetter, rowgroupby
+from petl.util import RowContainer, asindices, rowgetter, rowgroupby, header,\
+    data
 from petl.transform.sorts import sort
-from petl.transform.misc import header, data, cut, cutout
+from petl.transform.misc import cut, cutout
 from petl.transform.dedup import distinct
 
 
@@ -18,7 +19,7 @@ def natural_key(left, right):
     key = [f for f in lflds if f in rflds]
     assert len(key) > 0, 'no fields in common'
     if len(key) == 1:
-        key = key[0] # deal with singletons
+        key = key[0]  # deal with singletons
     return key
 
 
@@ -60,7 +61,7 @@ def join(left, right, key=None, lkey=None, rkey=None, presorted=False,
         | 3    | 'purple' | 'square' |
         +------+----------+----------+
 
-        >>> # if no key is given, a natural join is tried
+        >>>  # if no key is given, a natural join is tried
         ... table4 = join(table1, table2)
         >>> look(table4)
         +------+----------+----------+
@@ -71,7 +72,7 @@ def join(left, right, key=None, lkey=None, rkey=None, presorted=False,
         | 3    | 'purple' | 'square' |
         +------+----------+----------+
 
-        >>> # note behaviour if the key is not unique in either or both tables
+        >>>  # note behaviour if the key is not unique in either or both tables
         ... look(table5)
         +------+----------+
         | 'id' | 'colour' |
@@ -110,7 +111,7 @@ def join(left, right, key=None, lkey=None, rkey=None, presorted=False,
         | 2    | 'purple' | 'ellipse' |
         +------+----------+-----------+
 
-        >>> # compound keys are supported
+        >>>  # compound keys are supported
         ... look(table8)
         +------+--------+----------+
         | 'id' | 'time' | 'height' |
@@ -466,7 +467,7 @@ def iterjoin(left, right, lkey, rkey, leftouter=False, rightouter=False,
     rgit = itertools.groupby(rit, key=rgetk)
 
     # loop until *either* of the iterators is exhausted
-    lkval, rkval = None, None # initialise here to handle empty tables
+    lkval, rkval = None, None  # initialise here to handle empty tables
     try:
 
         # pick off initial row groups
@@ -662,8 +663,10 @@ class AntiJoinView(RowContainer):
             self.left = left
             self.right = right
         else:
-            self.left = sort(left, lkey, buffersize=buffersize, tempdir=tempdir, cache=cache)
-            self.right = sort(right, rkey, buffersize=buffersize, tempdir=tempdir, cache=cache)
+            self.left = sort(left, lkey, buffersize=buffersize,
+                             tempdir=tempdir, cache=cache)
+            self.right = sort(right, rkey, buffersize=buffersize,
+                              tempdir=tempdir, cache=cache)
         self.lkey = lkey
         self.rkey = rkey
 
@@ -874,7 +877,7 @@ def iterlookupjoin(left, right, lkey, rkey, missing=None, lprefix=None,
     rgit = itertools.groupby(rit, key=rgetk)
 
     # loop until *either* of the iterators is exhausted
-    lkval, rkval = None, None # initialise here to handle empty tables
+    lkval, rkval = None, None  # initialise here to handle empty tables
     try:
 
         # pick off initial row groups
@@ -994,10 +997,12 @@ def unjoin(table, value, key=None, autoincrement=(1, 1), presorted=False,
         if presorted:
             tbl_sorted = table
         else:
-            tbl_sorted = sort(table, value, buffersize=buffersize, tempdir=tempdir, cache=cache)
+            tbl_sorted = sort(table, value, buffersize=buffersize,
+                              tempdir=tempdir, cache=cache)
         # on the left, return the original table but with the value field
         # replaced by an incrementing integer
-        left = ConvertToIncrementingCounterView(tbl_sorted, value, autoincrement)
+        left = ConvertToIncrementingCounterView(tbl_sorted, value,
+                                                autoincrement)
         # on the right, return a new table with distinct values from the
         # given field
         right = EnumerateDistinctView(tbl_sorted, value, autoincrement)

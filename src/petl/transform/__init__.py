@@ -5,7 +5,7 @@ Functions for transforming tables.
 
 from petl.transform.misc import cut, cutout, movefield, cat, annex, \
     addfield, addfieldusingcontext, addrownumbers, addcolumn, rowslice, head, \
-    tail, facet, rangefacet, skipcomments, coalesce
+    tail, skipcomments, coalesce
 
 from petl.transform.headers import rename, setheader, extendheader, \
     pushheader, skip, prefixheader, suffixheader
@@ -20,7 +20,7 @@ from petl.transform.selects import select, selectop, selectcontains, selecteq, \
     selectisnot, selectle, selectlt, selectne, selectnone, selectnotin, \
     selectnotnone, selectrangeclosed, selectrangeopen, selectrangeopenleft, \
     selectrangeopenright, selectre, selecttrue, selectusingcontext, \
-    recordselect, rowselect, rowlenselect, fieldselect
+    recordselect, rowselect, rowlenselect, fieldselect, facet, rangefacet
 
 from petl.transform.joins import join, leftjoin, rightjoin, outerjoin, \
     crossjoin, antijoin, lookupjoin, unjoin
