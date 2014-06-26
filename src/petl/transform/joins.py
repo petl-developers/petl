@@ -8,7 +8,7 @@ import operator
 from petl.util import RowContainer, asindices, rowgetter, rowgroupby, header,\
     data
 from petl.transform.sorts import sort
-from petl.transform.misc import cut, cutout
+from petl.transform.basics import cut, cutout
 from petl.transform.dedup import distinct
 
 

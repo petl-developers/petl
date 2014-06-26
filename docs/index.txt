@@ -240,22 +240,64 @@ follows:
 Some helper classes are also available for reading from other types of file-like sources, e.g., reading data from a Zip
 file, a string or a subprocess, see the section on I/O helper classes below for more information.
 
+Delimited files
+~~~~~~~~~~~~~~~
+
 .. autofunction:: petl.fromcsv
 .. autofunction:: petl.fromtsv
 .. autofunction:: petl.fromucsv
 .. autofunction:: petl.fromutsv
+
+Pickle files
+~~~~~~~~~~~~
+
 .. autofunction:: petl.frompickle
-.. autofunction:: petl.fromsqlite3
-.. autofunction:: petl.fromdb
+
+Text files
+~~~~~~~~~~
+
 .. autofunction:: petl.fromtext
 .. autofunction:: petl.fromutext
+
+XML files
+~~~~~~~~~
+
 .. autofunction:: petl.fromxml
+
+JSON files
+~~~~~~~~~~
+
 .. autofunction:: petl.fromjson
 .. autofunction:: petl.fromdicts
+
+Databases
+~~~~~~~~~
+.. autofunction:: petl.fromsqlite3
+.. autofunction:: petl.fromdb
 
 
 Transform - transforming tables
 -------------------------------
+
+Basic transformations
+~~~~~~~~~~~~~~~~~~~~~
+
+.. autofunction:: petl.head
+.. autofunction:: petl.tail
+.. autofunction:: petl.rowslice
+.. autofunction:: petl.cut
+.. autofunction:: petl.cutout
+.. autofunction:: petl.movefield
+.. autofunction:: petl.cat
+.. autofunction:: petl.skipcomments
+.. autofunction:: petl.addfield
+.. autofunction:: petl.addcolumn
+.. autofunction:: petl.addrownumbers
+.. autofunction:: petl.addfieldusingcontext
+.. autofunction:: petl.annex
+
+Header manipulations
+~~~~~~~~~~~~~~~~~~~~
 
 .. autofunction:: petl.rename
 .. autofunction:: petl.setheader
@@ -263,14 +305,22 @@ Transform - transforming tables
 .. autofunction:: petl.pushheader
 .. autofunction:: petl.prefixheader
 .. autofunction:: petl.suffixheader
-.. autofunction:: petl.movefield
 .. autofunction:: petl.skip
-.. autofunction:: petl.skipcomments
-.. autofunction:: petl.rowslice
-.. autofunction:: petl.head
-.. autofunction:: petl.tail
-.. autofunction:: petl.cut
-.. autofunction:: petl.cutout
+
+Converting values
+~~~~~~~~~~~~~~~~~
+
+.. autofunction:: petl.convert
+.. autofunction:: petl.convertall
+.. autofunction:: petl.convertnumbers
+.. autofunction:: petl.replace
+.. autofunction:: petl.replaceall
+.. autofunction:: petl.update
+.. autofunction:: petl.fieldconvert
+
+Selecting rows
+~~~~~~~~~~~~~~
+
 .. autofunction:: petl.select
 .. autofunction:: petl.selectop
 .. autofunction:: petl.selecteq
@@ -301,29 +351,48 @@ Transform - transforming tables
 .. autofunction:: petl.fieldselect
 .. autofunction:: petl.facet
 .. autofunction:: petl.rangefacet
-.. autofunction:: petl.replace
-.. autofunction:: petl.replaceall
-.. autofunction:: petl.convert
-.. autofunction:: petl.update
-.. autofunction:: petl.convertall
-.. autofunction:: petl.fieldconvert
-.. autofunction:: petl.convertnumbers
+
+Regular expressions
+~~~~~~~~~~~~~~~~~~~
+
 .. autofunction:: petl.search
 .. autofunction:: petl.sub
 .. autofunction:: petl.split
 .. autofunction:: petl.capture
+
+Deduplicating rows
+~~~~~~~~~~~~~~~~~~~
+
+.. autofunction:: petl.duplicates
+.. autofunction:: petl.unique
+.. autofunction:: petl.conflicts
+.. autofunction:: petl.distinct
+
+Unpacking compound values
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
 .. autofunction:: petl.unpack
 .. autofunction:: petl.unpackdict
+
+Transforming rows
+~~~~~~~~~~~~~~~~~
+
 .. autofunction:: petl.fieldmap
 .. autofunction:: petl.rowmap
 .. autofunction:: petl.recordmap
 .. autofunction:: petl.rowmapmany
 .. autofunction:: petl.recordmapmany
-.. autofunction:: petl.cat
-.. autofunction:: petl.duplicates
-.. autofunction:: petl.unique
-.. autofunction:: petl.conflicts
+.. autofunction:: petl.rowgroupmap
+
+Sorting
+~~~~~~~
+
 .. autofunction:: petl.sort
+.. autofunction:: petl.mergesort
+
+Joins
+~~~~~
+
 .. autofunction:: petl.join
 .. autofunction:: petl.leftjoin
 .. autofunction:: petl.lookupjoin
@@ -331,11 +400,27 @@ Transform - transforming tables
 .. autofunction:: petl.outerjoin
 .. autofunction:: petl.crossjoin
 .. autofunction:: petl.antijoin
+.. autofunction:: petl.unjoin
+.. autofunction:: petl.hashjoin
+.. autofunction:: petl.hashleftjoin
+.. autofunction:: petl.hashlookupjoin
+.. autofunction:: petl.hashrightjoin
+.. autofunction:: petl.hashantijoin
+
+Set operations
+~~~~~~~~~~~~~~
+
 .. autofunction:: petl.complement
 .. autofunction:: petl.diff
 .. autofunction:: petl.recordcomplement
 .. autofunction:: petl.recorddiff
 .. autofunction:: petl.intersection
+.. autofunction:: petl.hashcomplement
+.. autofunction:: petl.hashintersection
+
+Reducing rows
+~~~~~~~~~~~~~
+
 .. autofunction:: petl.aggregate
 .. autofunction:: petl.rangeaggregate
 .. autofunction:: petl.rangecounts
@@ -344,38 +429,30 @@ Transform - transforming tables
 .. autofunction:: petl.rangerowreduce
 .. autofunction:: petl.rangerecordreduce
 .. autofunction:: petl.mergeduplicates
-.. autofunction:: petl.mergesort
 .. autofunction:: petl.merge
-.. autofunction:: petl.melt
-.. autofunction:: petl.recast
-.. autofunction:: petl.transpose
-.. autofunction:: petl.pivot
-.. autofunction:: petl.hashjoin
-.. autofunction:: petl.hashleftjoin
-.. autofunction:: petl.hashlookupjoin
-.. autofunction:: petl.hashrightjoin
-.. autofunction:: petl.hashantijoin
-.. autofunction:: petl.hashcomplement
-.. autofunction:: petl.hashintersection
-.. autofunction:: petl.flatten
-.. autofunction:: petl.unflatten
-.. autofunction:: petl.annex
 .. autofunction:: petl.fold
-.. autofunction:: petl.addrownumbers
-.. autofunction:: petl.addcolumn
-.. autofunction:: petl.addfield
-.. autofunction:: petl.addfieldusingcontext
-.. autofunction:: petl.filldown
-.. autofunction:: petl.fillright
-.. autofunction:: petl.fillleft
 .. autofunction:: petl.multirangeaggregate
-.. autofunction:: petl.unjoin
-.. autofunction:: petl.distinct
-.. autofunction:: petl.rowgroupmap
 .. autofunction:: petl.groupcountdistinctvalues
 .. autofunction:: petl.groupselectfirst
 .. autofunction:: petl.groupselectmin
 .. autofunction:: petl.groupselectmax
+
+Reshaping tables
+~~~~~~~~~~~~~~~~
+
+.. autofunction:: petl.melt
+.. autofunction:: petl.recast
+.. autofunction:: petl.transpose
+.. autofunction:: petl.pivot
+.. autofunction:: petl.flatten
+.. autofunction:: petl.unflatten
+
+Filling missing values
+~~~~~~~~~~~~~~~~~~~~~~
+
+.. autofunction:: petl.filldown
+.. autofunction:: petl.fillright
+.. autofunction:: petl.fillleft
 
 
 Load - writing tables to files and databases
@@ -395,6 +472,9 @@ Some helper classes are also available for writing to other types of
 file-like sources, e.g., writing to a Zip file or string buffer, see
 the section on I/O helper classes below for more information.
 
+Delimited files
+~~~~~~~~~~~~~~~
+
 .. autofunction:: petl.tocsv
 .. autofunction:: petl.appendcsv
 .. autofunction:: petl.totsv
@@ -403,20 +483,40 @@ the section on I/O helper classes below for more information.
 .. autofunction:: petl.appenducsv
 .. autofunction:: petl.toutsv
 .. autofunction:: petl.appendutsv
+
+Pickle files
+~~~~~~~~~~~~
+
 .. autofunction:: petl.topickle
 .. autofunction:: petl.appendpickle
-.. autofunction:: petl.tosqlite3
-.. autofunction:: petl.appendsqlite3
-.. autofunction:: petl.todb
-.. autofunction:: petl.appenddb
+
+Text files
+~~~~~~~~~~
+
 .. autofunction:: petl.totext
 .. autofunction:: petl.appendtext
 .. autofunction:: petl.toutext
 .. autofunction:: petl.appendutext
+
+JSON files
+~~~~~~~~~~
+
 .. autofunction:: petl.tojson
 .. autofunction:: petl.tojsonarrays
+
+HTML files
+~~~~~~~~~~
+
 .. autofunction:: petl.tohtml
 .. autofunction:: petl.touhtml
+
+Databases
+~~~~~~~~~
+
+.. autofunction:: petl.tosqlite3
+.. autofunction:: petl.appendsqlite3
+.. autofunction:: petl.todb
+.. autofunction:: petl.appenddb
 
 
 Utility functions
@@ -482,6 +582,7 @@ Utility functions
 .. autofunction:: petl.nthword
 .. autofunction:: petl.cache
 .. autofunction:: petl.empty
+.. autofunction:: petl.coalesce
 
 
 I/O helper classes

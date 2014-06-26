@@ -2,9 +2,9 @@ __author__ = 'Alistair Miles <alimanfoo@googlemail.com>'
 
 
 from petl.testutils import ieq
-from petl.util import expr, empty
-from petl.transform.misc import cut, cat, addfield, rowslice, head, tail, \
-    cutout, skipcomments, annex, addrownumbers, addcolumn, coalesce, \
+from petl.util import expr, empty, coalesce
+from petl.transform.basics import cut, cat, addfield, rowslice, head, tail, \
+    cutout, skipcomments, annex, addrownumbers, addcolumn, \
     addfieldusingcontext, movefield
 
 

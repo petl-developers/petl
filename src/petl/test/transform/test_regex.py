@@ -6,7 +6,7 @@ from nose.tools import eq_
 
 from petl.testutils import ieq
 from petl.transform.regex import capture, split, search
-from petl.transform.misc import TransformError
+from petl.transform.basics import TransformError
 
 
 def test_capture():

@@ -3370,3 +3370,21 @@ def empty():
 
     return [[]]
 
+
+def coalesce(*fields, **kwargs):
+    """
+    Return a function which accepts a row and returns the first non-missing
+    value from the specified fields.
+
+    """
+    missing = kwargs.get('missing', None)
+    default = kwargs.get('default', None)
+
+    def _coalesce(row):
+        for f in fields:
+            v = row[f]
+            if v is not missing:
+                return v
+        return default
+
+    return _coalesce

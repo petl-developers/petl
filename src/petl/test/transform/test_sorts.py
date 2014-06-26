@@ -7,7 +7,7 @@ from nose.tools import eq_
 
 from petl.testutils import ieq
 from petl.util import nrows
-from petl.transform.misc import cat
+from petl.transform.basics import cat
 from petl.transform.sorts import sort, mergesort
 
 

@@ -97,13 +97,13 @@ def sort(table, key=None, reverse=False, buffersize=None, tempdir=None,
     no more than `buffersize` rows, each chunk is written to a temporary file,
     and then a merge sort is performed on the temporary files.
 
-    If `buffersize` is `None`, the value of `petl.transform.defaultbuffersize`
+    If `buffersize` is `None`, the value of `petl.transform.sorts.defaultbuffersize`
     will be used. By default this is set to 100000 rows, but can be changed, e.g.::
 
         >>> import petl.transform.sorts
         >>> petl.transform.sorts.defaultbuffersize = 500000
 
-    If `petl.transform.defaultbuffersize` is set to `None`, this forces all
+    If `petl.transform.sorts.defaultbuffersize` is set to `None`, this forces all
     sorting to be done entirely in memory.
 
     .. versionchanged:: 0.16

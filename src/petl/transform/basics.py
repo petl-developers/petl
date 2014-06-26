@@ -791,7 +791,7 @@ def movefield(table, field, index):
     """
     Move a field to a new position.
 
-    ..versionadded:: 0.24
+    .. versionadded:: 0.24
 
     """
 
@@ -1032,18 +1032,6 @@ def iteraddcolumn(table, field, col, index, missing):
         yield tuple(outrow)
         
         
-def coalesce(*fields, **kwargs):
-    missing = kwargs.get('missing', None)
-    default = kwargs.get('default', None)
-    def _coalesce(row):
-        for f in fields:
-            v = row[f]
-            if v is not missing:
-                return v
-        return default
-    return _coalesce
-            
-
 class TransformError(Exception):
     pass
 

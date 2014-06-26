@@ -19,7 +19,7 @@ from petl.util import header, fieldnames, data, records, rowcount, look, see, \
     shortlistmergesorted, progress, clock, isordered, rowgroupby, nrows, \
     nthword, lookstr, listoflists, tupleoftuples, listoftuples, tupleoflists, \
     lol, tot, tol, lot, iternamedtuples, namedtuples, iterrecords, dicts, \
-    iterdicts, dictlookup, dictlookupone, cache, empty, numparser
+    iterdicts, dictlookup, dictlookupone, cache, empty, numparser, coalesce
 
 from petl.io import fromcsv, frompickle, fromsqlite3, tocsv, topickle, \
     tosqlite3, fromdb, \
@@ -54,7 +54,7 @@ from petl.transform import rename, cut, cat, convert, fieldconvert, addfield, \
     addcolumn, lookupjoin, hashlookupjoin, filldown, fillright, fillleft, \
     multirangeaggregate, unjoin, rowgroupmap, distinct, \
     groupcountdistinctvalues, \
-    groupselectfirst, groupselectmax, groupselectmin, coalesce, selecttrue, \
+    groupselectfirst, groupselectmax, groupselectmin, selecttrue, \
     selectfalse, \
     selectnone, selectnotnone, update, selectusingcontext, \
     addfieldusingcontext, \

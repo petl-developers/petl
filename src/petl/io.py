@@ -1993,7 +1993,7 @@ def tohtml(table, source=None, caption=None, representation=str, lineterminator=
     
 def touhtml(table, source=None, caption=None, encoding='utf-8', representation=unicode, lineterminator=u'\r\n'):
     """
-    Write the table as Unicode HTML to a file. E.g.::
+    Write the table as Unicode HTML to a file.
 
     .. versionadded:: 0.19
     """

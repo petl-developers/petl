@@ -6,7 +6,7 @@ import operator
 
 
 from petl.util import RowContainer, asindices
-from petl.transform.misc import TransformError
+from petl.transform.basics import TransformError
 from petl.transform.conversions import convert
 
 

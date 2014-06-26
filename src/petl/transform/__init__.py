@@ -3,9 +3,9 @@ Functions for transforming tables.
 
 """
 
-from petl.transform.misc import cut, cutout, movefield, cat, annex, \
+from petl.transform.basics import cut, cutout, movefield, cat, annex, \
     addfield, addfieldusingcontext, addrownumbers, addcolumn, rowslice, head, \
-    tail, skipcomments, coalesce
+    tail, skipcomments
 
 from petl.transform.headers import rename, setheader, extendheader, \
     pushheader, skip, prefixheader, suffixheader

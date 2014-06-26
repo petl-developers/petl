@@ -6,7 +6,7 @@ import collections
 
 from petl.util import header, RowContainer, SortableItem
 from petl.transform.sorts import sort
-from petl.transform.misc import cut
+from petl.transform.basics import cut
 
 
 import logging

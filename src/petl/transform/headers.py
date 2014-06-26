@@ -310,7 +310,7 @@ def prefixheader(table, prefix):
     """
     Prefix all fields in the table header.
 
-    ..versionadded:: 0.24
+    .. versionadded:: 0.24
 
     """
 
@@ -336,7 +336,7 @@ def suffixheader(table, suffix):
     """
     Suffix all fields in the table header.
 
-    ..versionadded:: 0.24
+    .. versionadded:: 0.24
 
     """
 

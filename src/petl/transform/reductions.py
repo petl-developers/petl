@@ -10,7 +10,7 @@ import math
 from petl.util import RowContainer, iterpeek, rowgroupby, rowgroupbybin, \
     asindices, hybridrows, rowitemgetter, count
 from petl.transform.sorts import sort, mergesort
-from petl.transform.misc import cut
+from petl.transform.basics import cut
 from petl.transform.dedup import distinct
 
 
