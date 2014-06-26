@@ -14,8 +14,7 @@ from petl import rename, fieldnames, cut, cat, addfield, \
     rowslice, head, tail, sort, melt, recast, \
     mergeduplicates, select, complement, diff, capture, \
     split, expr, fieldmap, facet, rowreduce, aggregate, \
-    rowmap, recordmap, rowmapmany, setheader, pushheader, \
-    skip, extendheader, unpack, rangeaggregate, rangecounts, \
+    rowmap, recordmap, rowmapmany, unpack, rangeaggregate, rangecounts, \
     rangefacet, rangerowreduce, selectre, rowselect, \
     rowlenselect, strjoin, transpose, intersection, pivot, \
     recorddiff, recordcomplement, cutout, skipcomments, \
@@ -2470,99 +2469,6 @@ def test_recordmapmany():
     ieq(expect, actual) # can iteratate twice?
         
 
-def test_setheader():
-    
-    table1 = (('foo', 'bar'),
-              ('a', 1),
-              ('b', 2))
-    table2 = setheader(table1, ['foofoo', 'barbar'])
-    expect2 = (('foofoo', 'barbar'),
-               ('a', 1),
-               ('b', 2))
-    ieq(expect2, table2)
-    ieq(expect2, table2) # can iterate twice?
-    
-    
-def test_setheader_empty():
-    
-    table1 = (('foo', 'bar'),)
-    table2 = setheader(table1, ['foofoo', 'barbar'])
-    expect2 = (('foofoo', 'barbar'),)
-    ieq(expect2, table2)
-    
-    
-def test_extendheader():
-    
-    table1 = (('foo',),
-              ('a', 1, True),
-              ('b', 2, False))
-    table2 = extendheader(table1, ['bar', 'baz'])
-    expect2 = (('foo', 'bar', 'baz'),
-               ('a', 1, True),
-               ('b', 2, False))
-    ieq(expect2, table2)
-    ieq(expect2, table2) # can iterate twice?
-    
-    
-def test_extendheader_empty():
-    
-    table1 = (('foo',),)
-    table2 = extendheader(table1, ['bar', 'baz'])
-    expect2 = (('foo', 'bar', 'baz'),)
-    ieq(expect2, table2)
-    
-    
-def test_pushheader():
-    
-    table1 = (('a', 1),
-              ('b', 2))
-    table2 = pushheader(table1, ['foo', 'bar'])
-    expect2 = (('foo', 'bar'),
-               ('a', 1),
-               ('b', 2))
-    ieq(expect2, table2)
-    ieq(expect2, table2) # can iterate twice?
-    
-
-def test_pushheader_empty():
-    
-    table1 = (('a', 1),)
-    table2 = pushheader(table1, ['foo', 'bar'])
-    expect2 = (('foo', 'bar'),
-               ('a', 1))
-    ieq(expect2, table2)
-    
-    table1 = tuple()
-    table2 = pushheader(table1, ['foo', 'bar'])
-    expect2 = (('foo', 'bar'),)
-    ieq(expect2, table2)
-    
-
-def test_skip():
-    
-    table1 = (('#aaa', 'bbb', 'ccc'),
-              ('#mmm'),
-              ('foo', 'bar'),
-              ('a', 1),
-              ('b', 2))
-    table2 = skip(table1, 2)
-    expect2 = (('foo', 'bar'),
-               ('a', 1),
-               ('b', 2))
-    ieq(expect2, table2)
-    ieq(expect2, table2) # can iterate twice?
-    
-    
-def test_skip_empty():
-    
-    table1 = (('#aaa', 'bbb', 'ccc'),
-              ('#mmm'),
-              ('foo', 'bar'))
-    table2 = skip(table1, 2)
-    expect2 = (('foo', 'bar'),)
-    ieq(expect2, table2)
-    
-    
 def test_skipcomments():
 
     table1 = (('##aaa', 'bbb', 'ccc'),
