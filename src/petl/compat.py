@@ -511,6 +511,8 @@ class Counter(dict):
             if newcount > 0:
                 result[elem] = newcount
         return result
+
+
 ####################################################################
 #  itertools functions  new in Python 2.7 - Quick Fix:
 ####################################################################

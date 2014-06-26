@@ -1,9 +1,7 @@
 __author__ = 'Alistair Miles <alimanfoo@googlemail.com>'
 
 
-from collections import OrderedDict
-
-
+from petl.compat import OrderedDict
 from petl.testutils import ieq
 from petl.transform.maps import fieldmap, rowmap, recordmap, rowmapmany
 

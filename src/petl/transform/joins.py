@@ -31,7 +31,7 @@ def keys_from_args(left, right, key, lkey, rkey):
     elif key is not None and lkey is rkey is None:
         # common key specified
         lkey = rkey = key
-    elif key is None and None not in {lkey, rkey}:
+    elif key is None and lkey is not None and rkey is not None:
         # left and right keys specified
         pass
     else:

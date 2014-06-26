@@ -1,9 +1,7 @@
 __author__ = 'aliman'
 
 
-import collections
-
-
+from petl.compat import Counter
 from petl.util import header, RowContainer, SortableItem
 from petl.transform.sorts import sort
 from petl.transform.basics import cut
@@ -470,7 +468,7 @@ def iterhashcomplement(a, b):
     itb.next() # discard b fields, assume they are the same
 
     # n.b., need to account for possibility of duplicate rows
-    bcnt = collections.Counter(tuple(row) for row in itb)
+    bcnt = Counter(tuple(row) for row in itb)
     for ar in ita:
         t = tuple(ar)
         if bcnt[t] > 0:
@@ -513,7 +511,7 @@ def iterhashintersection(a, b):
     itb.next() # discard b fields, assume they are the same
 
     # n.b., need to account for possibility of duplicate rows
-    bcnt = collections.Counter(tuple(row) for row in itb)
+    bcnt = Counter(tuple(row) for row in itb)
     for ar in ita:
         t = tuple(ar)
         if bcnt[t] > 0:

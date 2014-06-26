@@ -1,10 +1,10 @@
 __author__ = 'aliman'
 
 
-import collections
 import operator
 
 
+from petl.compat import OrderedDict
 from petl.util import RowContainer, hybridrows, expr, rowgroupby
 from petl.transform.sorts import sort
 
@@ -93,7 +93,7 @@ class FieldMapView(RowContainer):
     def __init__(self, source, mappings=None, failonerror=False, errorvalue=None):
         self.source = source
         if mappings is None:
-            self.mappings = collections.OrderedDict()
+            self.mappings = OrderedDict()
         else:
             self.mappings = mappings
         self.failonerror = failonerror

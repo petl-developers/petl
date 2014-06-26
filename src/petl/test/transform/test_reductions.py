@@ -1,10 +1,10 @@
 __author__ = 'Alistair Miles <alimanfoo@googlemail.com>'
 
 
-from collections import OrderedDict
 import operator
 
 
+from petl.compat import OrderedDict
 from petl.testutils import ieq
 from petl.util import strjoin
 from petl.transform.reductions import rowreduce, rangerowreduce, aggregate, \

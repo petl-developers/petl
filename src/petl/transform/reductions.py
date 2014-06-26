@@ -1,12 +1,12 @@
 __author__ = 'aliman'
 
 
-import collections
 import itertools
 import operator
 import math
 
 
+from petl.compat import OrderedDict
 from petl.util import RowContainer, iterpeek, rowgroupby, rowgroupbybin, \
     asindices, hybridrows, rowitemgetter, count
 from petl.transform.sorts import sort, mergesort
@@ -174,9 +174,9 @@ def aggregate(table, key, aggregation=None, value=None, presorted=False,
         +-------+-------+-------------------------+
 
         >>> # aggregate multiple fields
-        ... from collections import collections.OrderedDict
+        ... from collections import OrderedDict
         >>> from petl import strjoin
-        >>> aggregation = collections.OrderedDict()
+        >>> aggregation = OrderedDict()
         >>> aggregation['count'] = len
         >>> aggregation['minbar'] = 'bar', min
         >>> aggregation['maxbar'] = 'bar', max
@@ -309,9 +309,9 @@ class MultiAggregateView(RowContainer):
             self.source = sort(source, key, buffersize=buffersize, tempdir=tempdir, cache=cache)
         self.key = key
         if aggregation is None:
-            self.aggregation = collections.OrderedDict()
+            self.aggregation = OrderedDict()
         elif isinstance(aggregation, (list, tuple)):
-            self.aggregation = collections.OrderedDict()
+            self.aggregation = OrderedDict()
             for t in aggregation:
                 self.aggregation[t[0]] = t[1:]
         elif isinstance(aggregation, dict):
@@ -327,7 +327,7 @@ class MultiAggregateView(RowContainer):
 
     
 def itermultiaggregate(source, key, aggregation):
-    aggregation = collections.OrderedDict(aggregation.items()) # take a copy
+    aggregation = OrderedDict(aggregation.items()) # take a copy
     it = iter(source)
     srcflds = it.next()
     it = itertools.chain([srcflds], it)  # push back header to ensure we iterate only once
@@ -612,8 +612,8 @@ def rangeaggregate(table, key, width, aggregation=None, value=None, minv=None,
         +---------+-----------------+
 
         >>> # aggregate multiple fields
-        ... from collections import collections.OrderedDict
-        >>> aggregation = collections.OrderedDict()
+        ... from collections import OrderedDict
+        >>> aggregation = OrderedDict()
         >>> aggregation['foocount'] = len
         >>> aggregation['foojoin'] = 'foo', strjoin('')
         >>> aggregation['foolist'] = 'foo' # default is list
@@ -697,9 +697,9 @@ class MultiRangeAggregateView(RowContainer):
         self.key = key
         self.width = width
         if aggregation is None:
-            self.aggregation = collections.OrderedDict()
+            self.aggregation = OrderedDict()
         elif isinstance(aggregation, (list, tuple)):
-            self.aggregation = collections.OrderedDict()
+            self.aggregation = OrderedDict()
             for t in aggregation:
                 self.aggregation[t[0]] = t[1:]
         elif isinstance(aggregation, dict):
@@ -717,7 +717,7 @@ class MultiRangeAggregateView(RowContainer):
 
     
 def itermultirangeaggregate(source, key, width, aggregation, minv, maxv):
-    aggregation = collections.OrderedDict(aggregation.items()) # take a copy
+    aggregation = OrderedDict(aggregation.items()) # take a copy
     it = iter(source)
     srcflds = it.next()
     # push back header to ensure we iterate only once
