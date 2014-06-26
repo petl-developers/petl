@@ -16,7 +16,7 @@ setup(
     author='Alistair Miles',
     author_email='alimanfoo@googlemail.com',
     package_dir={'': 'src'},
-    packages=['petl'],
+    packages=['petl', 'petl.transform'],
     scripts=['bin/petl'],
     url='https://github.com/alimanfoo/petl',
     license='MIT License',
