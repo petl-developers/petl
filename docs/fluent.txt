@@ -37,7 +37,12 @@ be used in a fluent style. E.g.::
    | 96    | 'oranges' | 0.3004187573856759   |
    +-------+-----------+----------------------+
    
-   >>> t1 = t0.convert('bar', 'upper').extend('quux', 42).extend('spong', expr('{foo} * {quux}')).selecteq('bar', 'APPLES')
+   >>> t1 = (t0
+   ...     .convert('bar', 'upper')
+   ...     .addfield('quux', 42)
+   ...     .addfield('spong', lambda row: row.foo * row.quux)
+   ...     .selecteq('bar', 'APPLES')
+   ... )
    >>> t1.look()
    +-------+----------+----------------------+--------+---------+
    | 'foo' | 'bar'    | 'baz'                | 'quux' | 'spong' |
