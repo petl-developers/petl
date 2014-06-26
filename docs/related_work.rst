@@ -1,16 +1,14 @@
 Related Work
 ============
 
-continuum.io
-------------
+**continuum.io**
 
 - http://continuum.io
 
 In development, a major revision of NumPy to better support a range of
 data integration and processing use cases.
 
-pandas (Python package)
------------------------
+**pandas (Python package)**
 
 - http://pandas.sourceforge.net/
 - http://pypi.python.org/pypi/pandas
@@ -21,8 +19,7 @@ NumPy, and inspired by R's dataframe concept. Functionality includes
 support for missing data, inserting and deleting columns, group
 by/aggregation, merging, joining, reshaping, pivoting.
 
-tabular (Python package)
-------------------------
+**tabular (Python package)**
 
 - http://pypi.python.org/pypi/tabular
 - http://packages.python.org/tabular/html/
@@ -36,8 +33,7 @@ comparisons.
 Does require a uniform datatype for each column. All data is handled
 in memory.
 
-datarray (Python package)
--------------------------
+**datarray (Python package)**
 
 - http://pypi.python.org/pypi/datarray
 - http://github.com/fperez/datarray
@@ -50,15 +46,13 @@ any axis with the tick labels instead of only integers reduction
 operations (like .sum, .mean, etc) support named axis arguments
 instead of only integer indices.
 
-pydataframe (Python package)
-----------------------------
+**pydataframe (Python package)**
 
 - http://code.google.com/p/pydataframe/
 
 An implemention of an almost R like DataFrame object.
 
-larry (Python package)
-----------------------
+**larry (Python package)**
 
 - http://pypi.python.org/pypi/la
 
@@ -69,8 +63,7 @@ built-in methods such as ranking, merge, shuffle, move_sum, zscore,
 demean, lag as well as typical Numpy methods like sum, max, std, sign,
 clip. NaNs are treated as missing data.
 
-picalo (Python package)
------------------------
+**picalo (Python package)**
 
 - http://www.picalo.org/ 
 - http://pypi.python.org/pypi/picalo/ 
@@ -84,8 +77,7 @@ transpose, crosstable/pivot.
 Does not rely on streaming/iterative processing of data, and has a
 persistence capability based on zodb for handling larger datasets.
 
-csvkit (Python package)
------------------------
+**csvkit (Python package)**
 
 - http://pypi.python.org/pypi/picalo/
 - http://csvkit.rtfd.org/
@@ -94,18 +86,15 @@ A set of command-line utilities for transforming tabular data from CSV
 (delimited) files. Includes csvclean, csvcut, csvjoin, csvsort,
 csvstack, csvstat, csvgrep, csvlook.
 
-csvutils (Python package)
--------------------------
+**csvutils (Python package)**
 
 - http://pypi.python.org/pypi/csvutils
 
-python-pipeline (Python package
--------------------------------
+**python-pipeline (Python package)**
 
 - http://code.google.com/p/python-pipeline/
 
-Google Refine
--------------
+**Google Refine**
 
 - http://code.google.com/p/google-refine/
 
@@ -119,8 +108,7 @@ Has an extension capability, two third party extensions known at the
 time of writing, including a `stats extension
 <http://blog.apps.chicagotribune.com/2010/11/18/sprint-our-first-google-refine-extension-refine-stats/>`_.
 
-Data Wrangler
--------------
+**Data Wrangler**
 
 - http://vis.stanford.edu/wrangler/
 - http://vis.stanford.edu/papers/wrangler
@@ -138,15 +126,13 @@ functions as found in the GUI. The research paper has a good
 discussion of data transformation and quality issues, esp. w.r.t. tool
 usability.
 
-Pentaho Data Integration (a.k.a. Kettle)
-----------------------------------------
+**Pentaho Data Integration (a.k.a. Kettle)**
 
 - http://kettle.pentaho.com/
 - http://wiki.pentaho.com/display/EAI/Getting+Started
 - http://wiki.pentaho.com/display/EAI/Pentaho+Data+Integration+Steps
 
-SnapLogic
----------
+**SnapLogic**
 
 - http://www.snaplogic.com
 - https://www.snaplogic.org/Documentation/3.2/ComponentRef/index.html
@@ -155,164 +141,134 @@ A data integration platform, where ETL components are web resources
 with a RESTful interface. Standard components for transforms like
 filter, join and sort.
 
-Talend
-------
+**Talend**
 
 - http://www.talend.com
 
-Jaspersoft ETL
---------------
+**Jaspersoft ETL**
 
 - http://www.jaspersoft.com/jasperetl
 
-CloverETL
----------
+**CloverETL**
 
 - http://www.cloveretl.com/
 
-Apatar
-------
+**Apatar**
 
 - http://apatar.com/
 
-Jitterbit
----------
+**Jitterbit**
 
 - http://www.jitterbit.com/
 
-Scriptella
-----------
+**Scriptella**
 
 - http://scriptella.javaforge.com/
 
-Kapow Katalyst
---------------
+**Kapow Katalyst**
 
 - http://kapowsoftware.com/products/kapow-katalyst-platform/index.php
 - http://kapowsoftware.com/products/kapow-katalyst-platform/extraction-browser.php
 - http://kapowsoftware.com/products/kapow-katalyst-platform/transformation-normalization.php
 
-Flat File Checker (FlaFi)
--------------------------
+**Flat File Checker (FlaFi)**
 
 - http://www.flat-file.net/
  
-Orange
-------
+**Orange**
 
 - http://orange.biolab.si/
 
-North Concepts Data Pipeline
-----------------------------
+**North Concepts Data Pipeline**
 
 - http://northconcepts.com/data-pipeline/
 
-SAS Clinical Data Integration
------------------------------
+**SAS Clinical Data Integration**
 
 - http://www.sas.com/industry/pharma/cdi/index.html
 
-R Reshape Package
------------------
+**R Reshape Package**
 
 - http://had.co.nz/reshape/
 
-TableFu
--------
+**TableFu**
 
 - http://propublica.github.com/table-fu/
 
-python-tablefu
---------------
+**python-tablefu**
 
 - https://github.com/eyeseast/python-tablefu
 
-pygrametl (Python package)
---------------------------
+**pygrametl (Python package)**
 
 - http://www.pygrametl.org/
 - http://people.cs.aau.dk/~chr/pygrametl/pygrametl.html
 - http://dbtr.cs.aau.dk/DBPublications/DBTR-25.pdf
 
-etlpy (Python package)
-----------------------
+**etlpy (Python package)**
 
 - http://sourceforge.net/projects/etlpy/
 - http://etlpy.svn.sourceforge.net/viewvc/etlpy/source/samples/
 
 Looks abandoned since 2009, but there is some code.
 
-OpenETL
--------
+**OpenETL**
 
 - https://launchpad.net/openetl
 - http://bazaar.launchpad.net/~openerp-commiter/openetl/OpenETL/files/head:/lib/openetl/component/transform/
 
-Data River
-----------
+**Data River**
 
 - http://www.datariver.it/
 
-Ruffus
-------
+**Ruffus**
 
 - http://www.ruffus.org.uk/
 
-PyF
----
+**PyF**
 
 - http://pyfproject.org/
 
-PyDTA
------
+**PyDTA**
 
 - http://presbrey.mit.edu/PyDTA
 
-Google Fusion Tables
---------------------
+**Google Fusion Tables**
 
 - http://www.google.com/fusiontables/Home/
 
-pivottable (Python package)
----------------------------
+**pivottable (Python package)**
 
 - http://pypi.python.org/pypi/pivottable/0.8
 
-PrettyTable (Python package)
-----------------------------
+**PrettyTable (Python package)**
 
 - http://pypi.python.org/pypi/PrettyTable
 
-PyTables (Python package)
--------------------------
+**PyTables (Python package)**
 
 - http://www.pytables.org/
 
-plyr
-----
+**plyr**
 
 - http://plyr.had.co.nz/
 
-PowerShell
-----------
+**PowerShell**
 
 - http://technet.microsoft.com/en-us/library/ee176874.aspx - Import-Csv
 - http://technet.microsoft.com/en-us/library/ee176955.aspx - Select-Object
 - http://technet.microsoft.com/en-us/library/ee176968.aspx - Sort-Object
 - http://technet.microsoft.com/en-us/library/ee176864.aspx - Group-Object
 
-SwiftRiver
-----------
+**SwiftRiver**
 
 - http://ushahidi.com/products/swiftriver-platform
 
-Data Science Toolkit
---------------------
+**Data Science Toolkit**
 
 - http://www.datasciencetoolkit.org/about
 
-IncPy
------
+**IncPy**
 
 - http://www.stanford.edu/~pgbovine/incpy.html
 
@@ -321,8 +277,7 @@ to exploratory development of a transformation pipeline, because you
 could avoid having to rerun the whole pipeline every time you add a
 new step.
 
-Articles, Blogs, Other ...
---------------------------
+**Articles, Blogs, Other**
 
 - http://metadeveloper.blogspot.com/2008/02/iron-python-dsl-for-etl.html
 - http://www.cs.uoi.gr/~pvassil/publications/2009_IJDWM/IJDWM_2009.pdf
