@@ -131,15 +131,9 @@ def test_repr_html_limit():
 </tr>
 </tbody>
 </table>
-<p>...</p>
+<p><strong>...</strong></p>
 """
     actual = etl.wrap(table)._repr_html_()
     for l1, l2 in zip(expect.split('\n'), actual.split('\r\n')):
         print l1, l2
         eq_(l1, l2)
-
-
-    
-    
-    
-    

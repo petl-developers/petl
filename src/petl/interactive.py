@@ -38,7 +38,8 @@ repr_html_value = unicode
 repr_html_limit = 5
 
 
-def repr_html(tbl, index_header=None, representation=unicode, caption=None, encoding='utf-8', limit=None):
+def repr_html(tbl, limit=None, index_header=None, representation=unicode,
+              caption=None, encoding='utf-8'):
 
     # add column indices to header?
     if index_header is None:
@@ -52,14 +53,19 @@ def repr_html(tbl, index_header=None, representation=unicode, caption=None, enco
     # limit number of rows output?
     # N.B., limit is max number of data rows (not including header)
     if limit is None:
+        # use default
         limit = repr_html_limit
+
+    overflow = False
     if limit > 0:
+        # try reading one more than the limit, to see if there are more rows
         target = list(islice(target, 0, limit+2))
-    if len(target) > limit+1:
-        overflow = True
-        target = target[:-1]
+        if len(target) > limit+1:
+            overflow = True
+            target = target[:-1]
     else:
-        overflow = False
+        # render the entire table
+        pass
 
     # write to html string
     buf = StringSource()
@@ -69,7 +75,7 @@ def repr_html(tbl, index_header=None, representation=unicode, caption=None, enco
         tohtml(target, buf, representation=representation, caption=caption)
 
     if overflow:
-        return buf.getvalue() + u'<p>...</p>'
+        return buf.getvalue() + u'<p><strong>...</strong></p>'
     else:
         return buf.getvalue()
 
