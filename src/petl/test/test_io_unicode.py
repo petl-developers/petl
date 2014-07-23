@@ -59,6 +59,26 @@ Johann Strauß,2
     actual = f.read()
     eq_(expect, actual)
 
+    # Test with write_header=False
+    tbl = ((u'name', u'id'),
+           (u'Արամ Խաչատրյան', 1),
+           (u'Johann Strauß', 2),
+           (u'Вагиф Сәмәдоғлу', 3),
+           (u'章子怡', 4),
+           )
+    toucsv(tbl, 'tmp/test_toucsv.csv', lineterminator='\n', write_header=False)
+
+    expect = u'''Արամ Խաչատրյան,1
+Johann Strauß,2
+Вагиф Сәмәдоғлу,3
+章子怡,4
+'''
+    f = codecs.open('tmp/test_toucsv.csv', encoding='utf-8', mode='r')
+    actual = f.read()
+    eq_(expect, actual)
+
+
+
 
 def test_appenducsv():
 

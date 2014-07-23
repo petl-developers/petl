@@ -2184,7 +2184,7 @@ def fromutsv(source=None, dialect=csv.excel_tab, **kwargs):
     return fromucsv(source, dialect=dialect, **kwargs)
 
 
-def toutsv(table, source=None, dialect=csv.excel_tab, **kwargs):
+def toutsv(table, source=None, dialect=csv.excel_tab, write_header=False, **kwargs):
     """
     Convenience function, as :func:`toucsv` but with different default dialect
     (tab delimited).
@@ -2193,7 +2193,7 @@ def toutsv(table, source=None, dialect=csv.excel_tab, **kwargs):
 
     """
 
-    return toucsv(table, source=source, dialect=dialect, **kwargs)
+    return toucsv(table, source=source, dialect=dialect, write_header=write_header, **kwargs)
 
 
 def appendutsv(table, source=None, dialect=csv.excel_tab, **kwargs):
