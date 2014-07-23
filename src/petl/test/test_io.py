@@ -516,7 +516,7 @@ def test_tocsv_appendcsv():
                   ['b', '2'],
                   ['c', '2']]
         ieq(expect, actual)
-    
+
     # check appending
     table2 = (('foo', 'bar'),
               ('d', 7),
@@ -535,8 +535,23 @@ def test_tocsv_appendcsv():
                   ['e', '9'],
                   ['f', '1']]
         ieq(expect, actual)
-    
-        
+
+    # check explicit no header
+    table = (('foo', 'bar'),
+             ('a', 1),
+             ('b', 2),
+             ('c', 2))
+    f = NamedTemporaryFile(delete=False)
+    tocsv(table, f.name, delimiter='\t', write_header=False)
+
+    # check what it did
+    with open(f.name, 'rb') as o:
+        actual = csv.reader(o, delimiter='\t')
+        expect = [['a', '1'],
+                  ['b', '2'],
+                  ['c', '2']]
+        ieq(expect, actual)
+
 def test_totsv_appendtsv():
     
     # exercise function
@@ -575,7 +590,22 @@ def test_totsv_appendtsv():
                   ['f', '1']]
         ieq(expect, actual)
     
-    
+    # check explicit no header
+    table = (('foo', 'bar'),
+             ('a', 1),
+             ('b', 2),
+             ('c', 2))
+    f = NamedTemporaryFile(delete=False)
+    tocsv(table, f.name, delimiter='\t', write_header=False)
+
+    # check what it did
+    with open(f.name, 'rb') as o:
+        actual = csv.reader(o, delimiter='\t')
+        expect = [['a', '1'],
+                  ['b', '2'],
+                  ['c', '2']]
+        ieq(expect, actual)
+
 def test_topickle_appendpickle():
     """Test the topickle and appendpickle functions."""
     

@@ -1008,7 +1008,7 @@ class DictsView(RowContainer):
             yield row
                     
 
-def tocsv(table, source=None, dialect=csv.excel, **kwargs):
+def tocsv(table, source=None, dialect=csv.excel, write_header=True, **kwargs):
     """
     Write the table to a CSV file. E.g.::
 
@@ -1038,10 +1038,12 @@ def tocsv(table, source=None, dialect=csv.excel, **kwargs):
         | 'c'   | '2'   |
         +-------+-------+
 
-    The `filename` argument is the path of the delimited file, all other keyword
-    arguments are passed to :func:`csv.writer`. So, e.g., to override the delimiter
-    from the default CSV dialect, provide the `delimiter` keyword argument.
-     
+    The `filename` argument is the path of the delimited file, and the optional
+    `write_header` argument specifies whether to include the field names in the
+    delimited file.  All other keyword arguments are passed to :func:`csv.writer`.
+    So, e.g., to override the delimiter from the default CSV dialect, provide
+    the `delimiter` keyword argument.
+
     Note that if a file already exists at the given location, it will be overwritten.
 
     Supports transparent writing to ``.gz`` and ``.bz2`` files.
@@ -1051,11 +1053,17 @@ def tocsv(table, source=None, dialect=csv.excel, **kwargs):
     source = _write_source_from_arg(source)
     with source.open_('wb') as f:
         writer = csv.writer(f, dialect=dialect, **kwargs)
-        for row in table:
-            writer.writerow(row)
+        # User specified no header
+        if write_header == False:
+            for row in data(table):
+                writer.writerow(row)
+        # Default behavior, write the header
+        else:
+            for row in table:
+                writer.writerow(row)
 
 
-def toucsv(table, source=None, dialect=csv.excel, encoding='utf-8', **kwargs):
+def toucsv(table, source=None, dialect=csv.excel, encoding='utf-8', write_header=True, **kwargs):
     """
     Write the table to a CSV file via the given encoding. Like :func:`tocsv` but accepts an additional ``encoding``
     argument which should be one of the Python supported encodings. See also :mod:`codecs`.
@@ -1065,8 +1073,14 @@ def toucsv(table, source=None, dialect=csv.excel, encoding='utf-8', **kwargs):
     source = _write_source_from_arg(source)
     with source.open_('wb') as f:
         writer = ucsv.UnicodeWriter(f, dialect=dialect, encoding=encoding, **kwargs)
-        for row in table:
-            writer.writerow(row)
+        # User specified no header
+        if write_header == False:
+            for row in data(table):
+                writer.writerow(row)
+        # Default behavior, write the header
+        else:
+            for row in table:
+                writer.writerow(row)
 
 
 def appendcsv(table, source=None, dialect=csv.excel, **kwargs):
@@ -2130,7 +2144,7 @@ def fromtsv(source=None, dialect=csv.excel_tab, **kwargs):
     return fromcsv(source, dialect=dialect, **kwargs)
 
 
-def totsv(table, source=None, dialect=csv.excel_tab, **kwargs):
+def totsv(table, source=None, dialect=csv.excel_tab, write_header=True, **kwargs):
     """
     Convenience function, as :func:`tocsv` but with different default dialect
     (tab delimited).
@@ -2141,7 +2155,7 @@ def totsv(table, source=None, dialect=csv.excel_tab, **kwargs):
         
     """    
 
-    return tocsv(table, source=source, dialect=dialect, **kwargs)
+    return tocsv(table, source=source, dialect=dialect, write_header=write_header, **kwargs)
 
 
 def appendtsv(table, source=None, dialect=csv.excel_tab, **kwargs):
