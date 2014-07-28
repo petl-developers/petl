@@ -792,12 +792,12 @@ class See(object):
         for row in islice(it, *self.sliceargs):
             for i, f in enumerate(flds):
                 try:
-                    cols[str(i)].append(repr(row[i]))
+                    cols[str(f)].append(repr(row[i]))
                 except IndexError:
                     cols[str(f)].append('')
         output = u''
-        for i, f in enumerate(flds):
-            output += u'%r: %s\n' % (f, u', '.join(cols[str(i)]))
+        for f in flds:
+            output += u'%r: %s\n' % (f, u', '.join(cols[str(f)]))
         return output
         
     
