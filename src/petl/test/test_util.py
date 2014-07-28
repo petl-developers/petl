@@ -225,6 +225,18 @@ def test_see():
 """
     eq_(expect, actual)
 
+def test_see_duplicateheader():
+
+    table = (('foo', 'bar', 'foo'), ('a', 1, 'a_prime'), ('b', 2, 'b_prime'))
+    actual = repr(see(table))
+    expect = """'foo': 'a', 'b'
+'bar': 1, 2
+'foo': 'a_prime', 'b_prime'
+"""
+    eq_(expect, actual)
+
+
+
 
 def test_lookstr():
     
