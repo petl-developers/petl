@@ -63,6 +63,26 @@ def test_melt_empty():
     actual = melt(table, key='foo')
     ieq(expect, actual)
 
+def test_melt_non_string_key():
+
+    table = ((0.0, 'gender', 'age'),
+             (1, 'F', 12),
+             (2, 'M', 17),
+             (3, 'M', 16))
+
+    expectation = ((0.0, 'variable', 'value'),
+                   (1, 'gender', 'F'),
+                   (1, 'age', 12),
+                   (2, 'gender', 'M'),
+                   (2, 'age', 17),
+                   (3, 'gender', 'M'),
+                   (3, 'age', 16))
+
+    result = melt(table, key=0.0)
+    ieq(expectation, result)
+
+    result = melt(table, key=0.0, variablefield='variable', valuefield='value')
+    ieq(expectation, result)
 
 def test_recast_1():
 
