@@ -8,7 +8,7 @@ from collections import deque
 
 
 from petl.util import asindices, rowgetter, valueset, limits, itervalues, \
-    hybridrows, OrderedDict, RowContainer, count
+    hybridrows, OrderedDict, RowContainer, count, fieldnames
 
 
 from petl.transform.selects import selecteq, selectrangeopenleft, \
@@ -498,20 +498,21 @@ class AddFieldView(RowContainer):
         self.source = source
         self.field = field
         self.value = value
-        self.index = index
-        
+        self.totalfields = len(fieldnames(source)) # total number of fields in source table
+
+        if index is None:
+            self.index = self.totalfields # index should be total number of fields
+        else:
+            self.index = index
+
     def __iter__(self):
-        return iteraddfield(self.source, self.field, self.value, self.index)
+        return iteraddfield(self.source, self.field, self.value, self.index, self.totalfields)
     
 
-def iteraddfield(source, field, value, index):
+def iteraddfield(source, field, value, index, totalfields):
     it = iter(source)
     flds = it.next()
     
-    # determine index of new field
-    if index is None:
-        index = len(flds)
-        
     # construct output fields
     outflds = list(flds)    
     outflds.insert(index, field)
@@ -521,12 +522,23 @@ def iteraddfield(source, field, value, index):
     if callable(value):
         for row in hybridrows(flds, it):
             outrow = list(row)
-            v = value(row)
+            # pad short rows with None until length matches
+            while totalfields > len(outrow):
+                outrow.insert(len(outrow), None)
+
+            # Now that None is possible value, need try:except for value
+            try:
+                v = value(row)
+            except:
+                v = None
             outrow.insert(index, v)
             yield tuple(outrow)
     else:
         for row in it:
             outrow = list(row)
+            # pad short rows with None until length matches
+            while totalfields > len(outrow):
+                outrow.insert(len(outrow), None)
             outrow.insert(index, value)
             yield tuple(outrow)
         
