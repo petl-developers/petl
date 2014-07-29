@@ -195,15 +195,15 @@ def test_searchcomplement():
     ieq(expect3, table3)
     ieq(expect3, table3)
 
-    # search any field, using complement_flag
-    table2 = search(table1, '.g.', complement_flag=True)
+    # search any field, using complement
+    table2 = search(table1, '.g.', complement=True)
     expect2 = (('foo', 'bar', 'baz'),
                ('banana', 74, 'lovely too'))
     ieq(expect2, table2)
     ieq(expect2, table2)
 
-    # search a specific field, using complement_flag
-    table3 = search(table1, 'foo', '.g.', complement_flag=True)
+    # search a specific field, using complement
+    table3 = search(table1, 'foo', '.g.', complement=True)
     expect3 = (('foo', 'bar', 'baz'),
                ('banana', 74, 'lovely too'),
                ('cucumber', 41, 'better than mango'))

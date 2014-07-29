@@ -299,7 +299,7 @@ def search(table, *args, **kwargs):
     """
 
     # kwarg, not exposed as interface to user
-    complement_flag = kwargs.get("complement_flag", False)
+    complement = kwargs.get("complement", False)
 
     if len(args) == 1:
         field = None
@@ -314,18 +314,18 @@ def search(table, *args, **kwargs):
 
 class SearchView(RowContainer):
 
-    def __init__(self, table, pattern, field=None, flags=0, complement_flag=False):
+    def __init__(self, table, pattern, field=None, flags=0, complement=False):
         self.table = table
         self.pattern = pattern
         self.field = field
         self.flags = flags
-        self.complement_flag = complement_flag
+        self.complement = complement
 
     def __iter__(self):
-        return itersearch(self.table, self.pattern, self.field, self.flags, self.complement_flag)
+        return itersearch(self.table, self.pattern, self.field, self.flags, self.complement)
 
 
-def itersearch(table, pattern, field, flags, complement_flag):
+def itersearch(table, pattern, field, flags, complement):
     prog = re.compile(pattern, flags)
     it = iter(table)
     fields = [str(f) for f in it.next()]
@@ -344,12 +344,12 @@ def itersearch(table, pattern, field, flags, complement_flag):
         getvals = operator.itemgetter(*indices)
         test = lambda row: any(prog.search(str(v)) for v in getvals(row))
 
-    # complement_flag==False, return rows that match
-    if complement_flag == False:
+    # complement==False, return rows that match
+    if complement == False:
         for row in it:
             if test(row):
                 yield tuple(row)
-    # complement_flag==True, return rows that do not match
+    # complement==True, return rows that do not match
     else:
         for row in it:
             if not test(row):
@@ -398,4 +398,4 @@ def searchcomplement(table, *args, **kwargs):
     .. versionadded:: 0.25
 
     """
-    return search(table, *args, complement_flag=True, **kwargs)
+    return search(table, *args, complement=True, **kwargs)
