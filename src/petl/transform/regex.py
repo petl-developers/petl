@@ -293,6 +293,8 @@ def search(table, *args, **kwargs):
         | 'mango'  | 42    | 'I like them'            |
         +----------+-------+--------------------------+
 
+    The complement of search() (i.e., the rose not found via search())
+    can be found via :func:`searchcomplement`
 
     .. versionadded:: 0.10
 
@@ -358,7 +360,9 @@ def itersearch(table, pattern, field, flags, complement):
 def searchcomplement(table, *args, **kwargs):
     """
     Perform a regular expression search, returning rows that **do not** match a given
-    pattern, either anywhere in the row or within a specific field. E.g.::
+    pattern, either anywhere in the row or within a specific field. This returns the
+    complement of :func:`search`
+    E.g.::
 
         >>> from petl import searchcomplement, look
         >>> look(table1)
@@ -393,7 +397,6 @@ def searchcomplement(table, *args, **kwargs):
         +------------+-------+------------------------+
         | 'cucumber' | 41    | 'better than mango'    |
         +------------+-------+------------------------+
-
 
     .. versionadded:: 0.25
 
