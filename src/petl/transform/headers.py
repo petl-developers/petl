@@ -256,7 +256,7 @@ class PushHeaderView(RowContainer):
         self.source = source
         self.args = args
         # if user passes fields as a list, just use this and ignore args
-        if isinstance(fields, list):
+        if isinstance(fields, (list, tuple)):
             self.fields = fields
         # otherwise,
         elif len(args) > 0:
