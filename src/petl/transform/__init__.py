@@ -35,7 +35,7 @@ from petl.transform.reductions import rowreduce, recordreduce, mergeduplicates,\
 
 from petl.transform.fills import filldown, fillright, fillleft
 
-from petl.transform.regex import capture, split, search, sub, resub
+from petl.transform.regex import capture, split, search, searchcomplement, sub, resub
 
 from petl.transform.reshape import melt, recast, transpose, pivot, flatten, \
     unflatten

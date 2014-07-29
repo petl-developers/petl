@@ -5,7 +5,7 @@ from nose.tools import eq_
 
 
 from petl.testutils import ieq
-from petl.transform.regex import capture, split, search
+from petl.transform.regex import capture, split, search, searchcomplement
 from petl.transform.basics import TransformError
 
 
@@ -169,6 +169,44 @@ def test_search():
     expect3 = (('foo', 'bar', 'baz'),
                ('orange', 12, 'oranges are nice fruit'),
                ('mango', 42, 'I like them'))
+    ieq(expect3, table3)
+    ieq(expect3, table3)
+
+def test_searchcomplement():
+
+    table1 = (('foo', 'bar', 'baz'),
+              ('orange', 12, 'oranges are nice fruit'),
+              ('mango', 42, 'I like them'),
+              ('banana', 74, 'lovely too'),
+              ('cucumber', 41, 'better than mango'))
+
+    # search any field
+    table2 = searchcomplement(table1, '.g.')
+    expect2 = (('foo', 'bar', 'baz'),
+               ('banana', 74, 'lovely too'))
+    ieq(expect2, table2)
+    ieq(expect2, table2)
+
+    # search a specific field
+    table3 = searchcomplement(table1, 'foo', '.g.')
+    expect3 = (('foo', 'bar', 'baz'),
+               ('banana', 74, 'lovely too'),
+               ('cucumber', 41, 'better than mango'))
+    ieq(expect3, table3)
+    ieq(expect3, table3)
+
+    # search any field, using complement_flag
+    table2 = search(table1, '.g.', complement_flag=True)
+    expect2 = (('foo', 'bar', 'baz'),
+               ('banana', 74, 'lovely too'))
+    ieq(expect2, table2)
+    ieq(expect2, table2)
+
+    # search a specific field, using complement_flag
+    table3 = search(table1, 'foo', '.g.', complement_flag=True)
+    expect3 = (('foo', 'bar', 'baz'),
+               ('banana', 74, 'lovely too'),
+               ('cucumber', 41, 'better than mango'))
     ieq(expect3, table3)
     ieq(expect3, table3)
 
