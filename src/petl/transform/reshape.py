@@ -143,10 +143,14 @@ def itermelt(source, key, variables, variablefield, valuefield):
     for row in it:
         k = getkey(row)
         for v, i in zip(variables, variables_indices):
-            o = list(k) # populate with key values initially
-            o.append(v) # add variable
-            o.append(row[i]) # add value
-            yield tuple(o)
+            try:
+                o = list(k) # populate with key values initially
+                o.append(v) # add variable
+                o.append(row[i]) # add value
+                yield tuple(o)
+            except:
+                pass
+
 
 
 def recast(table, key=None, variablefield='variable', valuefield='value',
