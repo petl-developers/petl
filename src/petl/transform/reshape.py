@@ -118,21 +118,24 @@ def itermelt(source, key, variables, variablefield, valuefield):
     # normalise some stuff
     flds = it.next()
 
-    # key needs to be iterable, but strings are iterable - normalise to tuple
+    # ensure key is iterable object
     if isinstance(key, basestring):
         key = (key,)    # normalise to a tuple if a basestring
-    # key is another type - see if it can iterate, otherwise normalise to tuple
+    # check if key is not specified
+    elif key is None:
+        # assume key is fields not in variables
+        key = [f for f in flds if f not in variables]
+    # key needs to be iterable, but strings are iterable - normalise to tuple
     else:
         try:
             iter(key)   # check if the key is already iterable
-        except:
+        except TypeError:
+            # Non-iterable object
             key = (key,)    # normalise to a tuple if not iterable
+
     if isinstance(variables, basestring):
         # shouldn't expect this, but ... ?
         variables = (variables,) # normalise to a tuple
-    if not key:
-        # assume key is fields not in variables
-        key = [f for f in flds if f not in variables]
     if not variables:
         # assume variables are fields not in key
         variables = [f for f in flds if f not in key]
