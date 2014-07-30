@@ -293,7 +293,7 @@ def search(table, *args, **kwargs):
         | 'mango'  | 42    | 'I like them'            |
         +----------+-------+--------------------------+
 
-    The complement of search() (i.e., the rose not found via search())
+    The complement of search() (i.e., the rows not found via search())
     can be found via :func:`searchcomplement`
 
     .. versionadded:: 0.10
