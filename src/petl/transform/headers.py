@@ -208,7 +208,7 @@ def iterextendheader(source, fields):
         yield tuple(row)
 
 
-def pushheader(table, fields):
+def pushheader(table, fields, *args):
     """
     Push rows down and prepend a header row. E.g.::
 
@@ -220,7 +220,19 @@ def pushheader(table, fields):
         | 'b' | 2 |
         +-----+---+
 
+        The header row can either be a list or positional arguments:
+
         >>> table2 = pushheader(table1, ['foo', 'bar'])
+        >>> look(table2)
+        +-------+-------+
+        | 'foo' | 'bar' |
+        +=======+=======+
+        | 'a'   | 1     |
+        +-------+-------+
+        | 'b'   | 2     |
+        +-------+-------+
+
+        >>> table2 = pushheader(table1, 'foo', 'bar')
         >>> look(table2)
         +-------+-------+
         | 'foo' | 'bar' |
@@ -235,14 +247,25 @@ def pushheader(table, fields):
 
     """
 
-    return PushHeaderView(table, fields)
+    return PushHeaderView(table, fields, *args)
 
 
 class PushHeaderView(RowContainer):
 
-    def __init__(self, source, fields):
+    def __init__(self, source, fields, *args):
         self.source = source
-        self.fields = fields
+        self.args = args
+        # if user passes fields as a list, just use this and ignore args
+        if isinstance(fields, (list, tuple)):
+            self.fields = fields
+        # otherwise,
+        elif len(args) > 0:
+            self.fields = []
+            self.fields.append(fields) # first argument is named fields
+            for arg in args:
+                self.fields.append(arg) # add the other positional arguments
+        else:
+            assert False, 'bad parameters'
 
     def __iter__(self):
         return iterpushheader(self.source, self.fields)

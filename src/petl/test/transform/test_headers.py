@@ -74,6 +74,51 @@ def test_pushheader_empty():
     expect2 = (('foo', 'bar'),)
     ieq(expect2, table2)
 
+    table1 = tuple()
+    table2 = pushheader(table1, 'foo', 'bar')
+    expect2 = (('foo', 'bar'),)
+    ieq(expect2, table2)
+
+def test_pushheader_positional():
+
+    table1 = (('a', 1),
+              ('b', 2))
+    table2 = pushheader(table1, 'foo', 'bar')   # positional arguments instead of list
+    expect2 = (('foo', 'bar'),
+               ('a', 1),
+               ('b', 2))
+    ieq(expect2, table2)
+    ieq(expect2, table2)  # can iterate twice?
+
+    # test with many fields
+    table1 = (('a', 1, 11, 111, 1111),
+              ('b', 2, 22, 222, 2222))
+    table2 = pushheader(table1, 'foo', 'bar', 'foo1', 'foo2', 'foo3')   # positional arguments instead of list
+    expect2 = (('foo', 'bar', 'foo1', 'foo2', 'foo3'),
+               ('a', 1, 11, 111, 1111),
+               ('b', 2, 22, 222, 2222))
+    ieq(expect2, table2)
+    ieq(expect2, table2)  # can iterate twice?
+
+    # test with too few fields in header
+    table1 = (('a', 1, 11, 111, 1111),
+              ('b', 2, 22, 222, 2222))
+    table2 = pushheader(table1, 'foo', 'bar', 'foo1', 'foo2')   # positional arguments instead of list
+    expect2 = (('foo', 'bar', 'foo1', 'foo2'),
+               ('a', 1, 11, 111, 1111),
+               ('b', 2, 22, 222, 2222))
+    ieq(expect2, table2)
+    ieq(expect2, table2)  # can iterate twice?
+
+    # test with too many fields in header
+    table1 = (('a', 1, 11, 111, 1111),
+              ('b', 2, 22, 222, 2222))
+    table2 = pushheader(table1, 'foo', 'bar', 'foo1', 'foo2', 'foo3', 'foo4')   # positional arguments instead of list
+    expect2 = (('foo', 'bar', 'foo1', 'foo2', 'foo3', 'foo4'),
+               ('a', 1, 11, 111, 1111),
+               ('b', 2, 22, 222, 2222))
+    ieq(expect2, table2)
+    ieq(expect2, table2)  # can iterate twice?
 
 def test_skip():
 
