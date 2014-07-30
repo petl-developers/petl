@@ -148,7 +148,8 @@ def itermelt(source, key, variables, variablefield, valuefield):
                 o.append(v) # add variable
                 o.append(row[i]) # add value
                 yield tuple(o)
-            except:
+            except IndexError:
+                # row is missing this value, and melt() should yield no row
                 pass
 
 
