@@ -293,10 +293,15 @@ def search(table, *args, **kwargs):
         | 'mango'  | 42    | 'I like them'            |
         +----------+-------+--------------------------+
 
+    The complement of search() (i.e., the rows not found via search())
+    can be found via :func:`searchcomplement`
 
     .. versionadded:: 0.10
 
     """
+
+    # kwarg, not exposed as interface to user
+    complement = kwargs.get("complement", False)
 
     if len(args) == 1:
         field = None
@@ -311,17 +316,18 @@ def search(table, *args, **kwargs):
 
 class SearchView(RowContainer):
 
-    def __init__(self, table, pattern, field=None, flags=0):
+    def __init__(self, table, pattern, field=None, flags=0, complement=False):
         self.table = table
         self.pattern = pattern
         self.field = field
         self.flags = flags
+        self.complement = complement
 
     def __iter__(self):
-        return itersearch(self.table, self.pattern, self.field, self.flags)
+        return itersearch(self.table, self.pattern, self.field, self.flags, self.complement)
 
 
-def itersearch(table, pattern, field, flags):
+def itersearch(table, pattern, field, flags, complement):
     prog = re.compile(pattern, flags)
     it = iter(table)
     fields = [str(f) for f in it.next()]
@@ -340,7 +346,59 @@ def itersearch(table, pattern, field, flags):
         getvals = operator.itemgetter(*indices)
         test = lambda row: any(prog.search(str(v)) for v in getvals(row))
 
-    for row in it:
-        if test(row):
-            yield tuple(row)
+    # complement==False, return rows that match
+    if complement == False:
+        for row in it:
+            if test(row):
+                yield tuple(row)
+    # complement==True, return rows that do not match
+    else:
+        for row in it:
+            if not test(row):
+                yield tuple(row)
 
+def searchcomplement(table, *args, **kwargs):
+    """
+    Perform a regular expression search, returning rows that **do not** match a given
+    pattern, either anywhere in the row or within a specific field. This returns the
+    complement of :func:`search`
+    E.g.::
+
+        >>> from petl import searchcomplement, look
+        >>> look(table1)
+        +------------+-------+--------------------------+
+        | 'foo'      | 'bar' | 'baz'                    |
+        +============+=======+==========================+
+        | 'orange'   | 12    | 'oranges are nice fruit' |
+        +------------+-------+--------------------------+
+        | 'mango'    | 42    | 'I like them'            |
+        +------------+-------+--------------------------+
+        | 'banana'   | 74    | 'lovely too'             |
+        +------------+-------+--------------------------+
+        | 'cucumber' | 41    | 'better than mango'      |
+        +------------+-------+--------------------------+
+
+        >>> # search all fields
+        ... table2 = searchcomplement(table1, '.g.')
+        >>> look(table2)
+        +------------+-------+--------------------------+
+        | 'foo'      | 'bar' | 'baz'                    |
+        +============+=======+==========================+
+        | 'banana'   | 74    | 'lovely too'             |
+        +------------+-------+--------------------------+
+
+        >>> # search a specific field
+        ... table3 = searchcomplement(table1, 'foo', '.g.')
+        >>> look(table3)
+        +----------+-------+--------------------------+
+        | 'foo'    | 'bar' | 'baz'                    |
+        +==========+=======+==========================+
+        | 'banana'   | 74    | 'lovely too'           |
+        +------------+-------+------------------------+
+        | 'cucumber' | 41    | 'better than mango'    |
+        +------------+-------+------------------------+
+
+    .. versionadded:: 0.25
+
+    """
+    return search(table, *args, complement=True, **kwargs)
