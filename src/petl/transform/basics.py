@@ -498,21 +498,21 @@ class AddFieldView(RowContainer):
         self.source = source
         self.field = field
         self.value = value
-        self.totalfields = len(fieldnames(source)) # total number of fields in source table
-
-        if index is None:
-            self.index = self.totalfields # index should be total number of fields
-        else:
-            self.index = index
+        self.index = index
 
     def __iter__(self):
-        return iteraddfield(self.source, self.field, self.value, self.index, self.totalfields)
+        return iteraddfield(self.source, self.field, self.value, self.index)
     
 
-def iteraddfield(source, field, value, index, totalfields):
+def iteraddfield(source, field, value, index):
     it = iter(source)
     flds = it.next()
-    
+
+    totalfields = len(fieldnames(source)) # total number of fields in source table
+
+    if index is None:
+        index = totalfields # index should be total number of fields
+
     # construct output fields
     outflds = list(flds)    
     outflds.insert(index, field)
@@ -524,12 +524,13 @@ def iteraddfield(source, field, value, index, totalfields):
             outrow = list(row)
             # pad short rows with None until length matches
             while totalfields > len(outrow):
-                outrow.insert(len(outrow), None)
+                outrow.append(None)
 
             # Now that None is possible value, need try:except for value
             try:
                 v = value(row)
-            except:
+            except TypeError:
+                # evaluation of value() including None will fail
                 v = None
             outrow.insert(index, v)
             yield tuple(outrow)
