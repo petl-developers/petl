@@ -379,35 +379,59 @@ def iterconflicts(source, key, missing, exclude, include):
             previous = row
     
 
-def distinct(table, presorted=False, buffersize=None, tempdir=None, cache=True):
+def distinct(table, count=None, presorted=False, buffersize=None,
+             tempdir=None, cache=True):
     """
     Return only distinct rows in the table. See also :func:`duplicates` and
     :func:`unique`.
     
     .. versionadded:: 0.12
+
+    .. versionchanged:: 0.25
+
+    The `count` keyword argument has been added. If this argument is not
+    None, it will be used as the name for an additional field, and the values of
+    the field will be the number of duplicate rows.
     
     """
     
-    return DistinctView(table, presorted=presorted, buffersize=buffersize,
-                        tempdir=tempdir, cache=cache)
+    return DistinctView(table, count=count, presorted=presorted,
+                        buffersize=buffersize, tempdir=tempdir, cache=cache)
 
 
 class DistinctView(RowContainer):
     
-    def __init__(self, table, presorted=False, buffersize=None, tempdir=None,
-                 cache=True):
+    def __init__(self, table, count=None, presorted=False, buffersize=None,
+                 tempdir=None, cache=True):
         if presorted:
             self.table = table
         else:
             self.table = sort(table, buffersize=buffersize, tempdir=tempdir,
                               cache=cache)
+        self.count = count
         
     def __iter__(self):
         it = iter(self.table)
-        yield it.next()
-        previous = None
-        for row in it:
-            if row != previous:
-                yield row
-            previous = row
+        flds = it.next()
+        if self.count:
+            flds = tuple(flds) + (self.count,)
+            yield flds
+            previous = None
+            n_dup = 1
+            for row in it:
+                if row == previous:
+                    n_dup += 1
+                elif previous is not None:
+                    yield tuple(previous) + (n_dup,)
+                    n_dup = 1
+                previous = row
+            # deal with last row
+            yield tuple(previous) + (n_dup,)
+        else:
+            yield flds
+            previous = None
+            for row in it:
+                if row != previous:
+                    yield tuple(row)
+                previous = row
 
