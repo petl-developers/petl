@@ -7,6 +7,10 @@ setup prior to running.
 
 """
 
+
+from __future__ import absolute_import, print_function, division
+
+
 import sys
 sys.path.insert(0, './src')
 import petl
@@ -15,117 +19,113 @@ from petl import look, fromdb, todb, appenddb, cut
 
 
 def exercise(dbo):
-    print '=' * len(repr(dbo))
-    print repr(dbo)
-    print '=' * len(repr(dbo))
-    print
-    
+    print('=' * len(repr(dbo)))
+    print(repr(dbo))
+    print('=' * len(repr(dbo)))
+    print(    )
     expect_empty = (('foo', 'bar'),)
     expect = (('foo', 'bar'), ('a', 1), ('b', 1))
     expect_appended = (('foo', 'bar'), ('a', 1), ('b', 1), ('a', 1), ('b', 1))
     actual = fromdb(dbo, 'SELECT * FROM test')
 
-    print 'verify empty to start with...'
+    print('verify empty to start with...')
     ieq(expect_empty, actual)
-    print look(actual)
+    print(look(actual))
     
-    print 'write some data and verify...'
+    print('write some data and verify...')
     todb(expect, dbo, 'test')
     ieq(expect, actual)
-    print look(actual)
+    print(look(actual))
     
-    print 'append some data and verify...'
+    print('append some data and verify...')
     appenddb(expect, dbo, 'test')
     ieq(expect_appended, actual)
-    print look(actual)
+    print(look(actual))
     
-    print 'overwrite and verify...'
+    print('overwrite and verify...')
     todb(expect, dbo, 'test')
     ieq(expect, actual)
-    print look(actual)
+    print(look(actual))
     
-    print 'cut, overwrite and verify'
+    print('cut, overwrite and verify')
     todb(cut(expect, 'bar', 'foo'), dbo, 'test')
     ieq(expect, actual)
-    print look(actual)
+    print(look(actual))
 
-    print 'cut, append and verify'
+    print('cut, append and verify')
     appenddb(cut(expect, 'bar', 'foo'), dbo, 'test')
     ieq(expect_appended, actual)
-    print look(actual)
+    print(look(actual))
 
 
 def exercise_ss_cursor(setup_dbo, ss_dbo):
-    print '=' * len(repr(ss_dbo))
-    print 'EXERCISE WITH SERVER-SIDE CURSOR'
-    print repr(ss_dbo)
-    print '=' * len(repr(ss_dbo))
-    print
-
+    print('=' * len(repr(ss_dbo)))
+    print('EXERCISE WITH SERVER-SIDE CURSOR')
+    print(repr(ss_dbo))
+    print('=' * len(repr(ss_dbo)))
+    print()
     expect_empty = (('foo', 'bar'),)
     expect = (('foo', 'bar'), ('a', 1), ('b', 1))
     expect_appended = (('foo', 'bar'), ('a', 1), ('b', 1), ('a', 1), ('b', 1))
     actual = fromdb(ss_dbo, 'SELECT * FROM test')
 
-    print 'verify empty to start with...'
+    print('verify empty to start with...')
     ieq(expect_empty, actual)
-    print look(actual)
+    print(look(actual))
 
-    print 'write some data and verify...'
+    print('write some data and verify...')
     todb(expect, setup_dbo, 'test')
     ieq(expect, actual)
-    print look(actual)
+    print(look(actual))
 
-    print 'append some data and verify...'
+    print('append some data and verify...')
     appenddb(expect, setup_dbo, 'test')
     ieq(expect_appended, actual)
-    print look(actual)
+    print(look(actual))
 
-    print 'overwrite and verify...'
+    print('overwrite and verify...')
     todb(expect, setup_dbo, 'test')
     ieq(expect, actual)
-    print look(actual)
+    print(look(actual))
 
-    print 'cut, overwrite and verify'
+    print('cut, overwrite and verify')
     todb(cut(expect, 'bar', 'foo'), setup_dbo, 'test')
     ieq(expect, actual)
-    print look(actual)
+    print(look(actual))
 
-    print 'cut, append and verify'
+    print('cut, append and verify')
     appenddb(cut(expect, 'bar', 'foo'), setup_dbo, 'test')
     ieq(expect_appended, actual)
-    print look(actual)
+    print(look(actual))
 
 
 def exercise_with_schema(dbo, db):
-    print '=' * len(repr(dbo))
-    print 'EXERCISE WITH EXPLICIT SCHEMA NAME'
-    print repr(dbo)
-    print '=' * len(repr(dbo))
-    print
-    
+    print('=' * len(repr(dbo)))
+    print('EXERCISE WITH EXPLICIT SCHEMA NAME')
+    print(repr(dbo))
+    print('=' * len(repr(dbo)))
+    print(    )
     expect = (('foo', 'bar'), ('a', 1), ('b', 1))
     expect_appended = (('foo', 'bar'), ('a', 1), ('b', 1), ('a', 1), ('b', 1))
     actual = fromdb(dbo, 'SELECT * FROM test')
 
-    print 'write some data and verify...'
+    print('write some data and verify...')
     todb(expect, dbo, 'test', schema=db)
     ieq(expect, actual)
-    print look(actual)
+    print(look(actual))
     
-    print 'append some data and verify...'
+    print('append some data and verify...')
     appenddb(expect, dbo, 'test', schema=db)
     ieq(expect_appended, actual)
-    print look(actual)
+    print(look(actual))
     
 
 def exercise_unicode(dbo):
-    print '=' * len(repr(dbo))
-    print 'EXERCISE UNICODE'
-    print repr(dbo)
-    print '=' * len(repr(dbo))
-    print
-
+    print('=' * len(repr(dbo)))
+    print('EXERCISE UNICODE')
+    print(repr(dbo))
+    print('=' * len(repr(dbo)))
+    print()
     expect = ((u'name', u'id'),
               (u'Արամ Խաչատրյան', 1),
               (u'Johann Strauß', 2),
@@ -133,10 +133,10 @@ def exercise_unicode(dbo):
               (u'章子怡', 4),
               )
     actual = fromdb(dbo, 'SELECT * FROM test_unicode')
-    print 'write some data and verify...'
+    print('write some data and verify...')
     todb(expect, dbo, 'test_unicode')
     ieq(expect, actual)
-    print look(actual)
+    print(look(actual))
 
 
 def setup_mysql(dbapi_connection):
@@ -247,7 +247,7 @@ def exercise_postgresql(host, user, passwd, db):
 
 
 if __name__ == '__main__':
-    print petl.VERSION
+    print(petl.VERSION)
     
     # setup logging
     import logging
@@ -264,7 +264,7 @@ if __name__ == '__main__':
     elif sys.argv[1] == 'postgresql':
         exercise_postgresql(*sys.argv[2:])
     else:
-        print 'either mysql or postgresql'
+        print('either mysql or postgresql')
     
     
     
