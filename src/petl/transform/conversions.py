@@ -160,7 +160,7 @@ def convert(table, *args, **kwargs):
         +-------+-------+-------+
 
         >>> # conversion can access other values from the same row
-        ... table14 = convert(table1, 'baz', lambda v, row: v * float(row.bar))
+        ... table14 = convert(table1, 'baz', lambda v, row: v * float(row.bar), pass_row=True)
         >>> look(table14)
         +-------+-------+--------------------+
         | 'foo' | 'bar' | 'baz'              |
@@ -184,11 +184,12 @@ def convert(table, *args, **kwargs):
     which is evaluated on each row and which should return True if the
     conversion should be applied on that row, else False.
 
-    .. versionchanged:: 0.24
+    .. versionchanged:: 0.25
 
-    The user-provided conversion function can either accept a single argument,
-    in which case the value to be converted will be passed, or can accept two
-    arguments, in which case the value and the containing row will be passed.
+    The ``pass_row`` keyword argument can be given, which if True will mean
+    that both the value and the containing row will be passed as
+    arguments to the conversion function (so, i.e., the conversion function
+    should accept two arguments).
 
     """
 
@@ -326,7 +327,7 @@ def fieldconvert(table, converters=None, failonerror=False, errorvalue=None, **k
 class FieldConvertView(RowContainer):
 
     def __init__(self, source, converters=None, failonerror=False,
-                 errorvalue=None, where=None):
+                 errorvalue=None, where=None, pass_row=False):
         self.source = source
         if converters is None:
             self.converters = dict()
@@ -339,15 +340,18 @@ class FieldConvertView(RowContainer):
         self.failonerror = failonerror
         self.errorvalue = errorvalue
         self.where = where
+        self.pass_row = pass_row
 
     def __iter__(self):
-        return iterfieldconvert(self.source, self.converters, self.failonerror, self.errorvalue, self.where)
+        return iterfieldconvert(self.source, self.converters, self.failonerror,
+                                self.errorvalue, self.where, self.pass_row)
 
     def __setitem__(self, key, value):
         self.converters[key] = value
 
 
-def iterfieldconvert(source, converters, failonerror, errorvalue, where):
+def iterfieldconvert(source, converters, failonerror, errorvalue, where,
+                     pass_row):
 
     # grab the fields in the source table
     it = iter(source)
@@ -370,11 +374,8 @@ def iterfieldconvert(source, converters, failonerror, errorvalue, where):
         # is converter a function?
         if callable(c):
             converter_functions[k] = c
-            # pass value only or also row?
-            if inspect.isfunction(c):
-                argspec = inspect.getargspec(c)
-                if len(argspec.args) > 1 or argspec.varargs is not None:
-                    with_row.add(k)
+            if pass_row:
+                with_row.add(k)
 
         # is converter a method name?
         elif isinstance(c, basestring):

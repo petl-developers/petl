@@ -1,6 +1,7 @@
 __author__ = 'Alistair Miles <alimanfoo@googlemail.com>'
 
 
+import string
 from petl.testutils import ieq
 from petl.transform.conversions import convert, convertall, convertnumbers, \
     replace, update
@@ -251,7 +252,22 @@ def test_convert_with_row():
              ('b', 'B'))
 
     actual = convert(table, 'bar',
-                     lambda v, row: row.foo.upper())
+                     lambda v, row: row.foo.upper(),
+                     pass_row=True)
+    ieq(expect, actual)
+
+
+def test_convert_with_row_backwards_compat():
+
+    table = (('foo', 'bar'),
+             (' a ', 1),
+             (' b ', 2))
+
+    expect = (('foo', 'bar'),
+             ('a', 1),
+             ('b', 2))
+
+    actual = convert(table, 'foo', string.strip)
     ieq(expect, actual)
 
 
