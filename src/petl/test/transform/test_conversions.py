@@ -311,3 +311,10 @@ def test_update():
     ieq(expect2, table2)
 
 
+def test_replace_unhashable():
+
+    table1 = (('foo', 'bar'), ('a', ['b']), ('c', None))
+    expect = (('foo', 'bar'), ('a', ['b']), ('c', []))
+    actual = replace(table1, 'bar', None, [])
+    ieq(expect, actual)
+

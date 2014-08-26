@@ -435,8 +435,12 @@ def methodcaller(nm, *args):
 
 def dictconverter(d):
     def conv(v):
-        if v in d:
+        try:
             return d[v]
-        else:
+        except KeyError:
+            # value is not in dictionary
+            return v
+        except TypeError:
+            # value is not hashable
             return v
     return conv
