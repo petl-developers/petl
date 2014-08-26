@@ -3,6 +3,9 @@ Tests for the push module.
 
 """
 
+from __future__ import absolute_import, print_function, division
+
+
 from tempfile import NamedTemporaryFile
 
 from petl.io import fromcsv, fromtsv, frompickle
@@ -200,7 +203,6 @@ def test_sort_buffered():
                    ('D', '10'),
                    ('F', '1'))
     actual = frompickle(f.name)
-    print list(actual)
     ieq(expectation, actual)
 
 

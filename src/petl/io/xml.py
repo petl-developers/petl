@@ -127,9 +127,9 @@ def fromxml(source, *args, **kwargs):
 
     .. versionchanged:: 0.25
 
-    If there is more than one element name used for row values, a list of
-    paths can be provided, e.g.,
-    ``fromxml('example.html', '//tr', ('th', 'td'))``.
+    If there is more than one element name used for row values, a tuple
+    or list of paths can be provided, e.g.,
+    ``fromxml('example.html', './/tr', ('th', 'td'))``.
 
     """
 

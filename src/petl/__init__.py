@@ -4,7 +4,7 @@ The `petl` module.
 """
 
 
-__version__ = VERSION = '0.25-SNAPSHOT'
+from __future__ import absolute_import, print_function, division
 
 
 from petl.util import header, fieldnames, data, records, rowcount, look, see, \
@@ -24,6 +24,9 @@ from petl.util import header, fieldnames, data, records, rowcount, look, see, \
 from petl.io import *
 
 from petl.transform import *
+
+
+__version__ = VERSION = '0.25-SNAPSHOT'
 
 
 def lenstats(table, field):

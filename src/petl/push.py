@@ -4,6 +4,9 @@ A tentative module for pushing data through branching pipelines.
 """
 
 
+from __future__ import absolute_import, print_function, division
+
+
 import csv
 from tempfile import NamedTemporaryFile
 from operator import itemgetter

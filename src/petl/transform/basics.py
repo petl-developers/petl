@@ -3,6 +3,9 @@ Functions for transforming tables.
 
 """
 
+from __future__ import absolute_import, print_function, division
+
+
 from itertools import islice, chain, izip_longest, izip
 from collections import deque
 

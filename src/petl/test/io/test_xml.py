@@ -181,7 +181,7 @@ def test_fromxml_6():
     f.write(data)
     f.close()
 
-    actual = fromxml(f.name, '//tr', ('th', 'td'))
+    actual = fromxml(f.name, './/tr', ('th', 'td'))
     print(look(actual))
     expect = (('foo', 'bar'),
               ('a', '2'),

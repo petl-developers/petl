@@ -1,8 +1,4 @@
-__author__ = 'aliman'
-
-
-import re
-import inspect
+from __future__ import absolute_import, print_function, division
 
 
 from petl.util import numparser, RowContainer, FieldSelectionError, hybridrows,\

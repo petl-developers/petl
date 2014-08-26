@@ -172,7 +172,7 @@ def test_teehtml():
     f2 = NamedTemporaryFile(delete=False)
     etl.wrap(t1).teehtml(f1.name).selectgt('bar', 1).topickle(f2.name)
 
-    ieq(t1, etl.fromxml(f1.name, '//tr', ('th', 'td')).convertnumbers())
+    ieq(t1, etl.fromxml(f1.name, './/tr', ('th', 'td')).convertnumbers())
     ieq(etl.wrap(t1).selectgt('bar', 1), etl.frompickle(f2.name))
 
 
@@ -187,7 +187,7 @@ def test_teeuhtml():
     f2 = NamedTemporaryFile(delete=False)
     etl.wrap(t1).teeuhtml(f1.name).selectgt('bar', 1).topickle(f2.name)
 
-    ieq(t1, etl.fromxml(f1.name, '//tr', ('th', 'td')).convertnumbers())
+    ieq(t1, etl.fromxml(f1.name, './/tr', ('th', 'td')).convertnumbers())
     ieq(etl.wrap(t1).selectgt('bar', 1), etl.frompickle(f2.name))
 
 

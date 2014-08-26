@@ -4,6 +4,9 @@ Base classes.
 """
 
 
+from __future__ import absolute_import, print_function, division
+
+
 # Python 2.6 compatibility
 try:
     from collections import Counter, OrderedDict

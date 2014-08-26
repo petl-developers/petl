@@ -3,6 +3,9 @@ Tests for the petl.fluent module.
 
 """
 
+from __future__ import absolute_import, print_function, division
+
+
 from tempfile import NamedTemporaryFile
 import csv
 from nose.tools import eq_
@@ -100,7 +103,6 @@ def test_repr_html():
 """
     actual = etl.wrap(table)._repr_html_()
     for l1, l2 in zip(expect.split('\n'), actual.split('\r\n')):
-        print l1, l2
         eq_(l1, l2)
 
 
@@ -135,5 +137,4 @@ def test_repr_html_limit():
 """
     actual = etl.wrap(table)._repr_html_()
     for l1, l2 in zip(expect.split('\n'), actual.split('\r\n')):
-        print l1, l2
         eq_(l1, l2)

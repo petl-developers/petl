@@ -1,6 +1,9 @@
-
 # -*- coding: utf-8 -*-
 # Copy of the "OrderedDict" and "Counter" classes from Python 2.7
+
+
+from __future__ import absolute_import, print_function, division
+
 
 import heapq
 from collections import KeysView, ValuesView, ItemsView, Mapping, MutableMapping

@@ -1,10 +1,9 @@
-"""
-TODO doc me
+from __future__ import absolute_import, print_function, division
 
-"""
 
 import sys
 from nose.tools import eq_
+
 
 from petl import header, fieldnames, data, records, rowcount, look, see, \
     itervalues, valuecounter, valuecounts, \
