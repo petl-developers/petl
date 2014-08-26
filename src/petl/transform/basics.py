@@ -365,7 +365,12 @@ def cat(*tables, **kwargs):
     
     Note that the tables do not need to share exactly the same fields, any 
     missing fields will be padded with `None` or whatever is provided via the 
-    `missing` keyword argument. 
+    `missing` keyword argument.
+
+    Note that :func:`cat` can be used with a single table argument, in which
+    case it has the effect of ensuring all data rows are the same length as
+    the header row, truncating any long rows and padding any short rows with
+    the value of the `missing` keyword argument.
 
     .. versionchanged:: 0.5
     
@@ -430,7 +435,7 @@ def itercat(sources, missing, header):
                 yield tuple(outrow)
 
 
-def addfield(table, field, value=None, index=None):
+def addfield(table, field, value=None, index=None, missing=None):
     """
     Add a field with a fixed or calculated value. E.g.::
     
@@ -492,13 +497,15 @@ def addfield(table, field, value=None, index=None):
     
     """
 
-    return AddFieldView(table, field, value=value, index=index)
+    return AddFieldView(table, field, value=value, index=index,
+                        missing=missing)
 
 
 class AddFieldView(RowContainer):
     
-    def __init__(self, source, field, value=None, index=None):
-        self.source = source
+    def __init__(self, source, field, value=None, index=None, missing=None):
+        # ensure rows are all the same length
+        self.source = cat(source, missing=missing)
         self.field = field
         self.value = value
         self.index = index

@@ -270,6 +270,20 @@ def test_addfield_coalesce():
     ieq(expect, result)
 
 
+def test_addfield_uneven_rows():
+    table = (('foo', 'bar'),
+             ('M',),
+             ('F', 34),
+             ('-', 56, 'spong'))
+    result = addfield(table, 'baz', 42)
+    expectation = (('foo', 'bar', 'baz'),
+                   ('M', None, 42),
+                   ('F', 34, 42),
+                   ('-', 56, 42))
+    ieq(expectation, result)
+    ieq(expectation, result)
+
+
 def test_rowslice():
     """Test the rowslice function."""
     
