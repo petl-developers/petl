@@ -237,7 +237,44 @@ def test_addfield():
                    (42, '-', 56))
     ieq(expectation, result)
     ieq(expectation, result)
-    
+
+def test_addfield_shortrow():
+    table = (('foo', 'bar'),
+             ('M', 12),
+             ('F', 34),
+             ('-',))
+
+    result = addfield(table, 'baz', 42)
+    expectation = (('foo', 'bar', 'baz'),
+                   ('M', 12, 42),
+                   ('F', 34, 42),
+                   ('-', None, 42))
+    ieq(expectation, result)
+    ieq(expectation, result)
+
+    result = addfield(table, 'baz', lambda rec: rec['bar'] * 2)
+    expectation = (('foo', 'bar', 'baz'),
+                   ('M', 12, 24),
+                   ('F', 34, 68),
+                   ('-', None, None))
+    ieq(expectation, result)
+    ieq(expectation, result)
+
+    result = addfield(table, 'baz', expr('{bar} * 2'))
+    expectation = (('foo', 'bar', 'baz'),
+                   ('M', 12, 24),
+                   ('F', 34, 68),
+                   ('-', None, None))
+    ieq(expectation, result)
+    ieq(expectation, result)
+
+    result = addfield(table, 'baz', 42, index=0)
+    expectation = (('baz', 'foo', 'bar'),
+                   (42, 'M', 12),
+                   (42, 'F', 34),
+                   (42, '-', None))
+    ieq(expectation, result)
+    ieq(expectation, result)
 
 def test_addfield_empty():
     table = (('foo', 'bar'),)
