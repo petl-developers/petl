@@ -15,7 +15,6 @@ from petl.io.csv import fromcsv, fromtsv, tocsv, appendcsv, totsv, appendtsv
 
 
 def test_fromcsv():
-    """Test the fromcsv function."""
 
     f = NamedTemporaryFile(delete=False)
     writer = csv.writer(f, delimiter='\t')
@@ -58,7 +57,6 @@ def test_fromtsv():
 
 
 def test_tocsv_appendcsv():
-    """Test the tocsv and appendcsv function."""
 
     # exercise function
     table = (('foo', 'bar'),
@@ -169,7 +167,6 @@ def test_totsv_appendtsv():
 
 
 def test_fromcsv_gz():
-    """Test the fromcsv function on a gzipped file."""
 
     f = NamedTemporaryFile(delete=False)
     f.close()
@@ -196,7 +193,6 @@ def test_fromcsv_gz():
 
 
 def test_tocsv_appendcsv_gz():
-    """Test the tocsv and appendcsv function."""
 
     # exercise function
     table = (('foo', 'bar'),

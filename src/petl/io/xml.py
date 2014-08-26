@@ -7,6 +7,7 @@ __author__ = 'Alistair Miles <alimanfoo@googlemail.com>'
 # standard library dependencies
 from xml.etree import ElementTree
 from operator import attrgetter
+import itertools
 
 
 # internal dependencies
@@ -124,6 +125,12 @@ def fromxml(source, *args, **kwargs):
     If multiple elements match a given field, all values are reported as a
     tuple.
 
+    .. versionchanged:: 0.25
+
+    If there is more than one element name used for row values, a list of
+    paths can be provided, e.g.,
+    ``fromxml('example.html', '//tr', ('th', 'td'))``.
+
     """
 
     source = read_source_from_arg(source)
@@ -135,7 +142,7 @@ class XmlView(RowContainer):
     def __init__(self, source, *args, **kwargs):
         self.source = source
         self.args = args
-        if len(args) == 2 and isinstance(args[1], basestring):
+        if len(args) == 2 and isinstance(args[1], (basestring, tuple, list)):
             self.rmatch = args[0]
             self.vmatch = args[1]
             self.vdict = None
@@ -155,6 +162,9 @@ class XmlView(RowContainer):
         self.missing = kwargs.get('missing', None)
 
     def __iter__(self):
+        vmatch = self.vmatch
+        vdict = self.vdict
+
         with self.source.open_('rb') as xmlf:
 
             tree = ElementTree.parse(xmlf)
@@ -162,21 +172,28 @@ class XmlView(RowContainer):
                 # Python 2.6 compatibility
                 tree.iterfind = tree.findall
 
-            if self.vmatch is not None:
+            if vmatch is not None:
                 # simple case, all value paths are the same
                 for rowelm in tree.iterfind(self.rmatch):
                     if self.attr is None:
                         getv = attrgetter('text')
                     else:
                         getv = lambda e: e.get(self.attr)
+                    if isinstance(vmatch, basestring):
+                        # match only one path
+                        velms = rowelm.findall(vmatch)
+                    else:
+                        # match multiple paths
+                        velms = itertools.chain(*[rowelm.findall(enm)
+                                                  for enm in vmatch])
                     yield tuple(getv(velm)
-                                for velm in rowelm.findall(self.vmatch))
+                                for velm in velms)
 
             else:
                 # difficult case, deal with different paths for each field
 
                 # determine output header
-                fields = tuple(self.vdict.keys())
+                fields = tuple(vdict.keys())
                 yield fields
 
                 # setup value getters

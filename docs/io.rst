@@ -46,15 +46,19 @@ Delimited files
 .. autofunction:: petl.fromcsv
 .. autofunction:: petl.tocsv
 .. autofunction:: petl.appendcsv
+.. autofunction:: petl.teecsv
 .. autofunction:: petl.fromtsv
 .. autofunction:: petl.totsv
 .. autofunction:: petl.appendtsv
+.. autofunction:: petl.teetsv
 .. autofunction:: petl.fromucsv
 .. autofunction:: petl.toucsv
 .. autofunction:: petl.appenducsv
+.. autofunction:: petl.teeucsv
 .. autofunction:: petl.fromutsv
 .. autofunction:: petl.toutsv
 .. autofunction:: petl.appendutsv
+.. autofunction:: petl.teeutsv
 
 Pickle files
 ------------
@@ -62,6 +66,7 @@ Pickle files
 .. autofunction:: petl.frompickle
 .. autofunction:: petl.topickle
 .. autofunction:: petl.appendpickle
+.. autofunction:: petl.teepickle
 
 Text files
 ----------
@@ -69,9 +74,11 @@ Text files
 .. autofunction:: petl.fromtext
 .. autofunction:: petl.totext
 .. autofunction:: petl.appendtext
+.. autofunction:: petl.teetext
 .. autofunction:: petl.fromutext
 .. autofunction:: petl.toutext
 .. autofunction:: petl.appendutext
+.. autofunction:: petl.teeutext
 
 XML files
 ---------
@@ -84,7 +91,9 @@ HTML files
 ----------
 
 .. autofunction:: petl.tohtml
+.. autofunction:: petl.teehtml
 .. autofunction:: petl.touhtml
+.. autofunction:: petl.teeuhtml
 
 JSON files
 ----------

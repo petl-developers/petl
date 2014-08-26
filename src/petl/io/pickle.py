@@ -172,3 +172,28 @@ def appendpickle(table, source=None, protocol=-1):
             pickle.dump(row, f, protocol)
 
 
+def teepickle(table, source=None, protocol=-1):
+    """
+    Return a table that writes rows to a pickle file as they are iterated over.
+
+    .. versionadded:: 0.25
+
+    """
+
+    return TeePickleContainer(table, source=source, protocol=protocol)
+
+
+class TeePickleContainer(RowContainer):
+
+    def __init__(self, table, source=None, protocol=-1):
+        self.table = table
+        self.source = source
+        self.protocol = protocol
+
+    def __iter__(self):
+        protocol = self.protocol
+        source = write_source_from_arg(self.source)
+        with source.open_('wb') as f:
+            for row in self.table:
+                pickle.dump(row, f, protocol)
+                yield row

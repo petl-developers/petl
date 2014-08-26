@@ -243,3 +243,92 @@ def _writetext(table, f, prologue, template, epilogue):
         f.write(s)
     if epilogue is not None:
         f.write(epilogue)
+
+
+def _teetext(table, f, prologue, template, epilogue):
+    if prologue is not None:
+        f.write(prologue)
+    it = iter(table)
+    flds = it.next()
+    yield flds
+    for row in it:
+        rec = asdict(flds, row)
+        s = template.format(**rec)
+        f.write(s)
+        yield row
+    if epilogue is not None:
+        f.write(epilogue)
+
+
+def teetext(table, source=None, template=None, prologue=None, epilogue=None):
+    """
+    Return a table that writes rows to a text file as they are iterated over.
+
+    .. versionadded:: 0.25
+
+    """
+
+    assert template is not None, 'template is required'
+    return TeeTextContainer(table, source=source, template=template,
+                            prologue=prologue, epilogue=epilogue)
+
+
+class TeeTextContainer(RowContainer):
+
+    def __init__(self, table, source=None, template=None, prologue=None,
+                 epilogue=None):
+        self.table = table
+        self.source = source
+        self.template = template
+        self.prologue = prologue
+        self.epilogue = epilogue
+
+    def __iter__(self):
+        source = write_source_from_arg(self.source)
+        with source.open_('w') as f:
+            for row in _teetext(self.table, f, self.prologue, self.template,
+                                self.epilogue):
+                yield row
+
+
+def teeutext(table, source=None, encoding='utf-8', template=None,
+             prologue=None, epilogue=None):
+    """
+    Return a table that writes rows to a Unicode text file as they are
+    iterated over.
+
+    .. versionadded:: 0.25
+
+    """
+
+    assert template is not None, 'template is required'
+    return TeeUTextContainer(table, source=source,
+                             encoding=encoding, template=template,
+                             prologue=prologue, epilogue=epilogue)
+
+
+class TeeUTextContainer(RowContainer):
+
+    def __init__(self, table, source=None, encoding='utf-8', template=None,
+                 prologue=None, epilogue=None):
+        self.table = table
+        self.source = source
+        self.encoding = encoding
+        self.template = template
+        self.prologue = prologue
+        self.epilogue = epilogue
+
+    def __iter__(self):
+        source = write_source_from_arg(self.source)
+        prologue = self.prologue
+        if prologue is not None:
+            prologue = unicode(prologue)
+        template = unicode(self.template)
+        epilogue = self.epilogue
+        if epilogue is not None:
+            epilogue = unicode(epilogue)
+        with source.open_('w') as f:
+            f = codecs.getwriter(self.encoding)(f)
+            for row in _teetext(self.table, f, prologue, template,
+                                epilogue):
+                yield row

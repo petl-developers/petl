@@ -8,7 +8,7 @@ from tempfile import NamedTemporaryFile
 
 
 from petl.testutils import ieq
-from petl.util import nrows
+from petl.util import nrows, look
 from petl.io.xml import fromxml
 
 
@@ -151,6 +151,45 @@ def test_fromxml_5():
               ('c', '2'))
     ieq(expect, actual)
     ieq(expect, actual)  # verify can iterate twice
+
+
+def test_fromxml_6():
+
+    data = """<table class='petl'>
+<thead>
+<tr>
+<th>foo</th>
+<th>bar</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>a</td>
+<td style='text-align: right'>2</td>
+</tr>
+<tr>
+<td>b</td>
+<td style='text-align: right'>1</td>
+</tr>
+<tr>
+<td>c</td>
+<td style='text-align: right'>3</td>
+</tr>
+</tbody>
+</table>"""
+    f = NamedTemporaryFile(delete=False)
+    f.write(data)
+    f.close()
+
+    actual = fromxml(f.name, '//tr', ('th', 'td'))
+    print(look(actual))
+    expect = (('foo', 'bar'),
+              ('a', '2'),
+              ('b', '1'),
+              ('c', '3'))
+    ieq(expect, actual)
+    ieq(expect, actual)  # verify can iterate twice
+
 
 
 def test_fromxml_url():
