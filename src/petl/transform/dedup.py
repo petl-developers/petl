@@ -377,61 +377,80 @@ def iterconflicts(source, key, missing, exclude, include):
                 # reset
                 previous_yielded = False
             previous = row
-    
 
-def distinct(table, count=None, presorted=False, buffersize=None,
+
+def distinct(table, key=None, count=None, presorted=False, buffersize=None,
              tempdir=None, cache=True):
     """
     Return only distinct rows in the table. See also :func:`duplicates` and
     :func:`unique`.
-    
+
     .. versionadded:: 0.12
 
     .. versionchanged:: 0.25
 
     The `count` keyword argument has been added. If this argument is not
-    None, it will be used as the name for an additional field, and the values of
-    the field will be the number of duplicate rows.
-    
+    None, it will be used as the name for an additional field, and the values
+    of the field will be the number of duplicate rows.
+
+    If the `key` keyword argument is passed, the comparison is done on the
+    given key instead of the full row
+
     """
-    
-    return DistinctView(table, count=count, presorted=presorted,
+    return DistinctView(table, key=key, count=count, presorted=presorted,
                         buffersize=buffersize, tempdir=tempdir, cache=cache)
 
 
 class DistinctView(RowContainer):
-    
-    def __init__(self, table, count=None, presorted=False, buffersize=None,
-                 tempdir=None, cache=True):
+    def __init__(self, table, key=None, count=None, presorted=False,
+                 buffersize=None, tempdir=None, cache=True):
         if presorted:
             self.table = table
         else:
             self.table = sort(table, buffersize=buffersize, tempdir=tempdir,
                               cache=cache)
+        self.key = key
         self.count = count
-        
+
     def __iter__(self):
         it = iter(self.table)
         flds = it.next()
+
+        # convert field selection into field indices
+        if self.key is None:
+            indices = range(len(flds))
+        else:
+            indices = asindices(flds, self.key)
+
+        # now use field indices to construct a _getkey function
+        # N.B., this may raise an exception on short rows, depending on
+        # the field selection
+        getkey = operator.itemgetter(*indices)
+
         if self.count:
             flds = tuple(flds) + (self.count,)
             yield flds
             previous = None
             n_dup = 1
             for row in it:
-                if row == previous:
-                    n_dup += 1
-                elif previous is not None:
-                    yield tuple(previous) + (n_dup,)
-                    n_dup = 1
-                previous = row
+                if previous is None:
+                    previous = row
+                else:
+                    kprev = getkey(previous)
+                    kcurr = getkey(row)
+                    if kprev == kcurr:
+                        n_dup += 1
+                    else:
+                        yield tuple(previous) + (n_dup,)
+                        n_dup = 1
+                        previous = row
             # deal with last row
             yield tuple(previous) + (n_dup,)
         else:
             yield flds
-            previous = None
+            previous_keys = None
             for row in it:
-                if row != previous:
+                keys = getkey(row)
+                if keys != previous_keys:
                     yield tuple(row)
-                previous = row
-
+                previous_keys = keys
