@@ -67,7 +67,7 @@ class CSVView(RowContainer):
         self.kwargs = kwargs
 
     def __iter__(self):
-        with self.source.open_('rb') as f:
+        with self.source.open_('rbU') as f:
             reader = csv.reader(f, dialect=self.dialect, **self.kwargs)
             for row in reader:
                 yield tuple(row)
