@@ -5,13 +5,14 @@ import sys
 from nose.tools import eq_
 
 
-from petl import header, fieldnames, data, records, rowcount, look, see, \
+from petl.util import header, fieldnames, data, records, rowcount, look, see, \
     itervalues, valuecounter, valuecounts, \
     valueset, isunique, lookup, lookupone, dictlookup, dictlookupone, \
     DuplicateKeyError, rowlengths, stats, typecounts, parsecounts, typeset, \
     valuecount, parsenumber, stringpatterns, diffheaders, diffvalues, \
     datetimeparser, values, columns, facetcolumns, isordered, \
-    rowgroupby, lookstr, namedtuples, dicts, recordlookup, recordlookupone
+    rowgroupby, lookstr, namedtuples, dicts, recordlookup, recordlookupone, \
+    nrows, progress
 from petl.testutils import ieq
 
 
@@ -884,4 +885,12 @@ def test_rowgroupby():
     eq_(2, len(vals))
     eq_(True, vals[0])
     eq_(None, vals[1]) # gets padded
-    
+
+
+def test_progress():
+    # make sure progress doesn't raise exception
+    table = (('foo', 'bar', 'baz'),
+             ('a', 1, True),
+             ('b', 2, True),
+             ('b', 3))
+    nrows(progress(table))

@@ -2895,7 +2895,9 @@ class ProgressView(RowContainer):
                 batchrate = int(self.batchsize / batchtime)
                 v = (n, elapsedtime, rate, batchtime, batchrate)
                 message = self.prefix + '%s rows in %.2fs (%s row/s); batch in %.2fs (%s row/s)' % v
-                print >>self.out, message
+                print(message, file=self.out)
+                if hasattr(self.out, 'flush'):
+                    self.out.flush()
                 batchstart = batchend
             yield r
         end = time.time()
@@ -2903,8 +2905,10 @@ class ProgressView(RowContainer):
         rate = int(n / elapsedtime)    
         v = (n, elapsedtime, rate)
         message = self.prefix + '%s rows in %.2fs (%s row/s)' % v
-        print >>self.out, message
-            
+        print(message, file=self.out)
+        if hasattr(self.out, 'flush'):
+            self.out.flush()
+
 
 def clock(table):
     """
