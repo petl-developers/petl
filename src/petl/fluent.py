@@ -70,12 +70,15 @@ for n, c in petl.__dict__.items():
         setattr(thismodule, n, c)
 
 
-STATICMETHODS = ['dummytable', 'randomtable', 'dateparser', 'timeparser', 'datetimeparser', 'boolparser', 'parsenumber',
-                 'expr', 'strjoin', 'heapqmergesorted', 'shortlistmergesorted', 'nthword']
+STATICMETHODS = ['dummytable', 'randomtable', 'dateparser', 'timeparser',
+                 'datetimeparser', 'boolparser', 'parsenumber', 'expr',
+                 'strjoin', 'heapqmergesorted', 'shortlistmergesorted',
+                 'nthword']
 
 
 # add module functions as methods on the wrapper class
-# N.B., add only those functions that expect to have row container (i.e., table) as first argument
+# N.B., add only those functions that expect to have row container (i.e., table)
+# as first argument
 # i.e., only those were it makes sense for them to be methods
 for n, c in thismodule.__dict__.items():
     if inspect.isfunction(c):

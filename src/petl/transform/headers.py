@@ -340,7 +340,7 @@ def prefixheader(table, prefix):
     return PrefixHeaderView(table, prefix)
 
 
-class PrefixHeaderView(object):
+class PrefixHeaderView(RowContainer):
 
     def __init__(self, table, prefix):
         self.table = table
@@ -366,7 +366,7 @@ def suffixheader(table, suffix):
     return SuffixHeaderView(table, suffix)
 
 
-class SuffixHeaderView(object):
+class SuffixHeaderView(RowContainer):
 
     def __init__(self, table, suffix):
         self.table = table
