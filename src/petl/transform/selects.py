@@ -559,7 +559,7 @@ def selectusingcontext(table, query):
     return SelectUsingContextView(table, query)
 
 
-class SelectUsingContextView(object):
+class SelectUsingContextView(RowContainer):
 
     def __init__(self, table, query):
         self.table = table

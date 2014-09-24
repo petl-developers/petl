@@ -808,7 +808,7 @@ def movefield(table, field, index):
     return MoveFieldView(table, field, index)
 
 
-class MoveFieldView(object):
+class MoveFieldView(RowContainer):
 
     def __init__(self, table, field, index, missing=None):
         self.table = table
@@ -1100,7 +1100,7 @@ def addfieldusingcontext(table, field, query):
     return AddFieldUsingContextView(table, field, query)
 
 
-class AddFieldUsingContextView(object):
+class AddFieldUsingContextView(RowContainer):
 
     def __init__(self, table, field, query):
         self.table = table
