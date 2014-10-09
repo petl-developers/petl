@@ -2891,8 +2891,14 @@ class ProgressView(RowContainer):
                 batchend = time.time()
                 batchtime = batchend - batchstart
                 elapsedtime = batchend - start
-                rate = int(n / elapsedtime)
-                batchrate = int(self.batchsize / batchtime)
+                try:
+                    rate = int(n / elapsedtime)
+                except ZeroDivisionError:
+                    rate = 0
+                try:
+                    batchrate = int(self.batchsize / batchtime)
+                except ZeroDivisionError:
+                    batchrate = 0
                 v = (n, elapsedtime, rate, batchtime, batchrate)
                 message = self.prefix + '%s rows in %.2fs (%s row/s); batch in %.2fs (%s row/s)' % v
                 print(message, file=self.out)
@@ -2902,7 +2908,10 @@ class ProgressView(RowContainer):
             yield r
         end = time.time()
         elapsedtime = end - start
-        rate = int(n / elapsedtime)    
+        try:
+            rate = int(n / elapsedtime)
+        except ZeroDivisionError:
+            rate = 0
         v = (n, elapsedtime, rate)
         message = self.prefix + '%s rows in %.2fs (%s row/s)' % v
         print(message, file=self.out)
