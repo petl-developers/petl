@@ -35,6 +35,27 @@ def test_fromcsv():
     ieq(expect, actual)  # verify can iterate twice
 
 
+def test_fromcsv_lineterminators():
+
+    table = (('foo', 'bar'),
+             ('a', 1),
+             ('b', 2),
+             ('c', 2))
+    expect = (('foo', 'bar'),
+              ('a', '1'),
+              ('b', '2'),
+              ('c', '2'))
+
+    for lt in '\r', '\n', '\r\n':
+        f = NamedTemporaryFile(delete=False)
+        writer = csv.writer(f, lineterminator=lt)
+        for row in table:
+            writer.writerow(row)
+        f.close()
+        actual = fromcsv(f.name)
+        ieq(expect, actual)
+
+
 def test_fromtsv():
 
     f = NamedTemporaryFile(delete=False)
@@ -168,28 +189,30 @@ def test_totsv_appendtsv():
 
 def test_fromcsv_gz():
 
-    f = NamedTemporaryFile(delete=False)
-    f.close()
-    fn = f.name + '.gz'
-    os.rename(f.name, fn)
-
-    fz = gzip.open(fn, 'wb')
-    writer = csv.writer(fz, delimiter='\t')
     table = (('foo', 'bar'),
              ('a', 1),
              ('b', 2),
              ('c', 2))
-    for row in table:
-        writer.writerow(row)
-    fz.close()
-
-    actual = fromcsv(fn, delimiter='\t')
     expect = (('foo', 'bar'),
               ('a', '1'),
               ('b', '2'),
               ('c', '2'))
-    ieq(expect, actual)
-    ieq(expect, actual)  # verify can iterate twice
+
+    for lt in '\n', '\r\n':
+        # N.B., '\r' not supported because universal newline mode is
+        # not supported by gzip module
+        f = NamedTemporaryFile(delete=False)
+        f.close()
+        fn = f.name + '.gz'
+        os.rename(f.name, fn)
+        fz = gzip.open(fn, 'wb')
+        writer = csv.writer(fz, delimiter='\t', lineterminator=lt)
+        for row in table:
+            writer.writerow(row)
+        fz.close()
+        actual = fromcsv(fn, delimiter='\t')
+        ieq(expect, actual)
+        ieq(expect, actual)  # verify can iterate twice
 
 
 def test_tocsv_appendcsv_gz():

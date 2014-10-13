@@ -38,6 +38,26 @@ Johann Strauß,2
     ieq(expect, actual)  # verify can iterate twice
 
 
+def test_fromucsv_lineterminators():
+    data = (u'name,id',
+            u'Արամ Խաչատրյան,1',
+            u'Johann Strauß,2',
+            u'Вагиф Сәмәдоғлу,3',
+            u'章子怡,4')
+    expect = ((u'name', u'id'),
+              (u'Արամ Խաչատրյան', u'1'),
+              (u'Johann Strauß', u'2'),
+              (u'Вагиф Сәмәдоғлу', u'3'),
+              (u'章子怡', u'4'))
+
+    for lt in u'\r', u'\n', u'\r\n':
+        f = codecs.open('tmp/test_fromucsv.csv', encoding='utf-8', mode='w')
+        f.write(lt.join(data))
+        f.close()
+        actual = fromucsv('tmp/test_fromucsv.csv')
+        ieq(expect, actual)
+
+
 def test_toucsv():
 
     tbl = ((u'name', u'id'),
