@@ -2886,6 +2886,9 @@ class ProgressView(RowContainer):
     def __iter__(self):
         start = time.time()
         batchstart = start
+        batchstats = {}
+        ss = 0
+        batches = ('time','rate')
         for n, r in enumerate(self.wrapped):
             if n % self.batchsize == 0 and n > 0:
                 batchend = time.time()
@@ -2899,6 +2902,23 @@ class ProgressView(RowContainer):
                     batchrate = int(self.batchsize / batchtime)
                 except ZeroDivisionError:
                     batchrate = 0
+                if ss == 0:
+                    batchstats['rate_mean_prv'] = 0
+                    batchstats['time_mean_prv'] = 0
+                    batchstats['rate_variance'] = 0
+                    batchstats['time_variance'] = 0
+
+                ss += 1
+                batchstats['time'] = batchtime
+                batchstats['rate'] = batchrate
+
+                for param in batches:
+
+                    batchstats['%s_mean' % param] = (((ss - 1)*batchstats['%s_mean_prv' % param]) + batchstats['%s' % param])/ss
+                    batchstats['%s_variance' % param] = (((ss - 1)*batchstats['%s_variance' % param]) + (batchstats['%s' % param] - batchstats['%s_mean_prv' % param])*(batchstats['%s' % param] - batchstats['%s_mean' % param]))/ss
+                    batchstats['%s_sd' % param] = batchstats['%s_variance' % param]**0.5
+                    batchstats['%s_mean_prv' % param] = batchstats['%s_mean' % param]
+
                 v = (n, elapsedtime, rate, batchtime, batchrate)
                 message = self.prefix + '%s rows in %.2fs (%s row/s); batch in %.2fs (%s row/s)' % v
                 print(message, file=self.out)
@@ -2908,6 +2928,10 @@ class ProgressView(RowContainer):
             yield r
         end = time.time()
         elapsedtime = end - start
+
+        print(batchstats['rate_mean'])
+        print(batchstats['time_mean'])
+
         try:
             rate = int(n / elapsedtime)
         except ZeroDivisionError:
