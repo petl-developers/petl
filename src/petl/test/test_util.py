@@ -21,7 +21,10 @@ def test_header():
     actual = header(table)
     expect = ('foo', 'bar')
     eq_(expect, actual)
-    
+    table = (['foo', 'bar'], ['a', 1], ['b', 2])
+    actual = header(table)
+    eq_(expect, actual)
+
     
 def test_fieldnames():
     table = (('foo', 'bar'), ('a', 1), ('b', 2))
