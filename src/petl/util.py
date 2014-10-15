@@ -2887,13 +2887,10 @@ class ProgressView(RowContainer):
         start = time.time()
         batchstart = start
         ss = 0
-        batches = ('time','rate')
-        batchstats = {}
-        for param in batches:
-            batchstats['%s_mean' % param] = 0
-            batchstats['%s_mean_prv' % param] = 0
-            batchstats['%s_variance' % param] = 0
-            batchstats['%s_sd' % param] = 0
+        batchratemean = 0
+        batchratevariance = 0
+        batchtimemean = 0
+        batchtimevariance = 0
         for n, r in enumerate(self.wrapped):
             if n % self.batchsize == 0 and n > 0:
                 batchend = time.time()
@@ -2908,12 +2905,11 @@ class ProgressView(RowContainer):
                 except ZeroDivisionError:
                     batchrate = 0
                 ss += 1
-                for param in batches:
-                    batchvar = 'batch' + param
-                    batchstats['%s_mean' % param] = (((ss - 1)*batchstats['%s_mean_prv' % param]) + eval(batchvar))/ss
-                    batchstats['%s_variance' % param] = (((ss - 1)*batchstats['%s_variance' % param]) + (eval(batchvar) - batchstats['%s_mean_prv' % param])*(eval(batchvar) - batchstats['%s_mean' % param]))/ss
-                    batchstats['%s_sd' % param] = batchstats['%s_variance' % param]**0.5
-                    batchstats['%s_mean_prv' % param] = batchstats['%s_mean' % param]
+                batchtimemeanprv, batchtimemean = self._onlinemean(batchtime, ss, meanprv=batchtimemean)
+                batchtimevariance = self._onlinevariance(batchtime, ss, batchtimemean, meanprv=batchtimemeanprv, varianceprv=batchtimevariance)
+
+                batchratemeanprv, batchratemean = self._onlinemean(batchrate, ss, meanprv=batchratemean)
+                batchratevariance = self._onlinevariance(batchrate, ss, batchratemean, meanprv=batchratemeanprv, varianceprv=batchratevariance)
 
                 v = (n, elapsedtime, rate, batchtime, batchrate)
                 message = self.prefix + '%s rows in %.2fs (%s row/s); batch in %.2fs (%s row/s)' % v
@@ -2924,16 +2920,25 @@ class ProgressView(RowContainer):
             yield r
         end = time.time()
         elapsedtime = end - start
+        batchtimesd = batchtimevariance**0.5
+        batchratesd = batchratevariance**0.5
         try:
             rate = int(n / elapsedtime)
         except ZeroDivisionError:
             rate = 0
-        v = (n, elapsedtime, rate, batchstats['time_mean'], batchstats['time_sd'], batchstats['rate_mean'], batchstats['rate_sd'])
-        message = self.prefix + '%s rows in %.2fs (%s row/s); batch mean: %.2fs, sd: %.2fs (mean: %s row/s, sd: %s row/s)' % v
+        v = (n, elapsedtime, rate, batchtimemean, batchtimesd, batchratemean, batchratesd)
+        message = self.prefix + '%s rows in %.2fs (%s row/s); batch mean: %.2fs, sd: %.2fs (mean: %.f row/s, sd: %.f row/s)' % v
         print(message, file=self.out)
         if hasattr(self.out, 'flush'):
             self.out.flush()
 
+    def _onlinemean(self, xi, n, meanprv=0):
+        mean = (((n - 1)*meanprv) + xi)/n
+        return meanprv, mean
+
+    def _onlinevariance(self, xi, n, mean, meanprv=0, varianceprv=0):
+        variance = (((n -1)*varianceprv) + ((xi - meanprv)*(xi - mean)))/n
+        return variance
 
 def clock(table):
     """
