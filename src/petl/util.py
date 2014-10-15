@@ -2916,8 +2916,6 @@ class ProgressView(RowContainer):
             yield r
         end = time.time()
         elapsedtime = end - start
-        print(rate_temp)
-        print(time_temp)
         try:
             rate = int(n / elapsedtime)
         except ZeroDivisionError:
