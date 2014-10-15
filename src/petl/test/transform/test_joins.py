@@ -7,7 +7,7 @@ __author__ = 'Alistair Miles'
 from petl.testutils import ieq
 from petl import join, leftjoin, rightjoin, outerjoin, crossjoin, antijoin, \
     lookupjoin, hashjoin, hashleftjoin, hashrightjoin, hashantijoin, \
-    hashlookupjoin, unjoin
+    hashlookupjoin, unjoin, sort, lookall
 
 
 def _test_join_basic(join_impl):
@@ -154,6 +154,37 @@ def _test_join_lrkey(join_impl):
     ieq(expect3, table3)
 
 
+def _test_join_multiple(join_impl):
+
+    table1 = (('id', 'color', 'cost'),
+              (1, 'blue', 12),
+              (1, 'red', 8),
+              (2, 'yellow', 15),
+              (2, 'orange', 5),
+              (3, 'purple', 4),
+              (4, 'chartreuse', 42))
+
+    table2 = (('id', 'shape', 'size'),
+              (1, 'circle', 'big'),
+              (2, 'square', 'tiny'),
+              (2, 'square', 'big'),
+              (3, 'ellipse', 'small'),
+              (3, 'ellipse', 'tiny'),
+              (5, 'didodecahedron', 3.14159265))
+
+    actual = join_impl(table1, table2, key='id')
+    expect = (('id', 'color', 'cost', 'shape', 'size'),
+              (1, 'blue', 12, 'circle', 'big'),
+              (1, 'red', 8, 'circle', 'big'),
+              (2, 'yellow', 15, 'square', 'tiny'),
+              (2, 'yellow', 15, 'square', 'big'),
+              (2, 'orange', 5, 'square', 'tiny'),
+              (2, 'orange', 5, 'square', 'big'),
+              (3, 'purple', 4, 'ellipse', 'small'),
+              (3, 'purple', 4, 'ellipse', 'tiny'))
+    ieq(expect, actual)
+
+
 def _test_join(join_impl):
     _test_join_basic(join_impl)
     _test_join_compound_keys(join_impl)
@@ -161,6 +192,7 @@ def _test_join(join_impl):
     _test_join_empty(join_impl)
     _test_join_prefix(join_impl)
     _test_join_lrkey(join_impl)
+    _test_join_multiple(join_impl)
 
 
 def test_join():
@@ -289,25 +321,31 @@ def _test_leftjoin_multiple(leftjoin_impl):
 
     table1 = (('id', 'color', 'cost'),
               (1, 'blue', 12),
-              (2, 'red', 8),
-              (3, 'purple', 4))
+              (1, 'red', 8),
+              (2, 'yellow', 15),
+              (2, 'orange', 5),
+              (3, 'purple', 4),
+              (4, 'chartreuse', 42))
 
     table2 = (('id', 'shape', 'size'),
               (1, 'circle', 'big'),
-              (1, 'circle', 'small'),
               (2, 'square', 'tiny'),
               (2, 'square', 'big'),
               (3, 'ellipse', 'small'),
-              (3, 'ellipse', 'tiny'))
+              (3, 'ellipse', 'tiny'),
+              (5, 'didodecahedron', 3.14159265))
 
     actual = leftjoin_impl(table1, table2, key='id')
     expect = (('id', 'color', 'cost', 'shape', 'size'),
               (1, 'blue', 12, 'circle', 'big'),
-              (1, 'blue', 12, 'circle', 'small'),
-              (2, 'red', 8, 'square', 'tiny'),
-              (2, 'red', 8, 'square', 'big'),
+              (1, 'red', 8, 'circle', 'big'),
+              (2, 'yellow', 15, 'square', 'tiny'),
+              (2, 'yellow', 15, 'square', 'big'),
+              (2, 'orange', 5, 'square', 'tiny'),
+              (2, 'orange', 5, 'square', 'big'),
               (3, 'purple', 4, 'ellipse', 'small'),
-              (3, 'purple', 4, 'ellipse', 'tiny'))
+              (3, 'purple', 4, 'ellipse', 'tiny'),
+              (4, 'chartreuse', 42, None, None))
     ieq(expect, actual)
 
 
@@ -514,6 +552,41 @@ def _test_rightjoin_lrkey(rightjoin_impl):
     ieq(expect3, table3)
 
 
+def _test_rightjoin_multiple(rightjoin_impl):
+
+    table1 = (('id', 'color', 'cost'),
+              (1, 'blue', 12),
+              (1, 'red', 8),
+              (2, 'yellow', 15),
+              (2, 'orange', 5),
+              (3, 'purple', 4),
+              (4, 'chartreuse', 42))
+
+    table2 = (('id', 'shape', 'size'),
+              (1, 'circle', 'big'),
+              (2, 'square', 'tiny'),
+              (2, 'square', 'big'),
+              (3, 'ellipse', 'small'),
+              (3, 'ellipse', 'tiny'),
+              (5, 'didodecahedron', 3.14159265))
+
+    actual = rightjoin_impl(table1, table2, key='id')
+    expect = (('id', 'color', 'cost', 'shape', 'size'),
+              (1, 'blue', 12, 'circle', 'big'),
+              (1, 'red', 8, 'circle', 'big'),
+              (2, 'yellow', 15, 'square', 'tiny'),
+              (2, 'yellow', 15, 'square', 'big'),
+              (2, 'orange', 5, 'square', 'tiny'),
+              (2, 'orange', 5, 'square', 'big'),
+              (3, 'purple', 4, 'ellipse', 'small'),
+              (3, 'purple', 4, 'ellipse', 'tiny'),
+              (5, None, None, 'didodecahedron', 3.14159265))
+
+    # N.B., need to sort because hash and sort implementations will return
+    # rows in a different order
+    ieq(sort(expect), sort(actual))
+
+
 def _test_rightjoin(rightjoin_impl):
     _test_rightjoin_1(rightjoin_impl)
     _test_rightjoin_2(rightjoin_impl)
@@ -521,6 +594,7 @@ def _test_rightjoin(rightjoin_impl):
     _test_rightjoin_empty(rightjoin_impl)
     _test_rightjoin_prefix(rightjoin_impl)
     _test_rightjoin_lrkey(rightjoin_impl)
+    _test_rightjoin_multiple(rightjoin_impl)
 
 
 def test_rightjoin():
@@ -678,6 +752,40 @@ def test_outerjoin_lrkey():
                (7, 'white', None))
     ieq(expect3, table3)
     ieq(expect3, table3)  # check twice
+
+
+def test_outerjoin_multiple():
+
+    table1 = (('id', 'color', 'cost'),
+              (1, 'blue', 12),
+              (1, 'red', 8),
+              (2, 'yellow', 15),
+              (2, 'orange', 5),
+              (3, 'purple', 4),
+              (4, 'chartreuse', 42))
+
+    table2 = (('id', 'shape', 'size'),
+              (1, 'circle', 'big'),
+              (2, 'square', 'tiny'),
+              (2, 'square', 'big'),
+              (3, 'ellipse', 'small'),
+              (3, 'ellipse', 'tiny'),
+              (5, 'didodecahedron', 3.14159265))
+
+    actual = outerjoin(table1, table2, key='id')
+    expect = (('id', 'color', 'cost', 'shape', 'size'),
+              (1, 'blue', 12, 'circle', 'big'),
+              (1, 'red', 8, 'circle', 'big'),
+              (2, 'yellow', 15, 'square', 'tiny'),
+              (2, 'yellow', 15, 'square', 'big'),
+              (2, 'orange', 5, 'square', 'tiny'),
+              (2, 'orange', 5, 'square', 'big'),
+              (3, 'purple', 4, 'ellipse', 'small'),
+              (3, 'purple', 4, 'ellipse', 'tiny'),
+              (4, 'chartreuse', 42, None, None),
+              (5, None, None, 'didodecahedron', 3.14159265))
+
+    ieq(expect, actual)
 
 
 def test_crossjoin():
