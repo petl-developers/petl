@@ -2887,10 +2887,8 @@ class ProgressView(RowContainer):
         start = time.time()
         batchstart = start
         ss = 0
-        batchratemean = 0
-        batchratevariance = 0
-        batchtimemean = 0
-        batchtimevariance = 0
+        batchtimemean, batchtimevariance, batchtimesd = 0, 0, 0
+        batchratemean, batchratevariance, batchratesd = 0, 0, 0
         for n, r in enumerate(self.wrapped):
             if n % self.batchsize == 0 and n > 0:
                 batchend = time.time()
@@ -2905,12 +2903,10 @@ class ProgressView(RowContainer):
                 except ZeroDivisionError:
                     batchrate = 0
                 ss += 1
-                batchtimemeanprv, batchtimemean = self._onlinemean(batchtime, ss, meanprv=batchtimemean)
-                batchtimevariance = self._onlinevariance(batchtime, ss, batchtimemean, meanprv=batchtimemeanprv, varianceprv=batchtimevariance)
-
-                batchratemeanprv, batchratemean = self._onlinemean(batchrate, ss, meanprv=batchratemean)
-                batchratevariance = self._onlinevariance(batchrate, ss, batchratemean, meanprv=batchratemeanprv, varianceprv=batchratevariance)
-
+                batchtimemean, batchtimevariance = self._onlinestats(batchtime, ss, mean=batchtimemean, variance=batchtimevariance)
+                batchratemean, batchratevariance = self._onlinestats(batchrate, ss, mean=batchratemean, variance=batchratevariance)
+                batchtimesd = batchtimevariance**0.5
+                batchratesd = batchratevariance**0.5
                 v = (n, elapsedtime, rate, batchtime, batchrate)
                 message = self.prefix + '%s rows in %.2fs (%s row/s); batch in %.2fs (%s row/s)' % v
                 print(message, file=self.out)
@@ -2920,8 +2916,8 @@ class ProgressView(RowContainer):
             yield r
         end = time.time()
         elapsedtime = end - start
-        batchtimesd = batchtimevariance**0.5
-        batchratesd = batchratevariance**0.5
+        print(rate_temp)
+        print(time_temp)
         try:
             rate = int(n / elapsedtime)
         except ZeroDivisionError:
@@ -2932,13 +2928,13 @@ class ProgressView(RowContainer):
         if hasattr(self.out, 'flush'):
             self.out.flush()
 
-    def _onlinemean(self, xi, n, meanprv=0):
+    def _onlinestats(self, xi, n, mean=0, variance=0):
+        meanprv = mean
+        varianceprv = variance
         mean = (((n - 1)*meanprv) + xi)/n
-        return meanprv, mean
+        variance = (((n - 1)*varianceprv) + ((xi - meanprv)*(xi - mean)))/n
 
-    def _onlinevariance(self, xi, n, mean, meanprv=0, varianceprv=0):
-        variance = (((n -1)*varianceprv) + ((xi - meanprv)*(xi - mean)))/n
-        return variance
+        return mean, variance
 
 def clock(table):
     """
