@@ -26,7 +26,7 @@ from petl.io import *
 from petl.transform import *
 
 
-__version__ = VERSION = '0.26'
+__version__ = VERSION = '0.27-SNAPSHOT'
 
 
 def lenstats(table, field):
