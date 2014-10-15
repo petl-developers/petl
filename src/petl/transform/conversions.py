@@ -356,7 +356,6 @@ def iterfieldconvert(source, converters, failonerror, errorvalue, where,
 
     # build converter functions
     converter_functions = dict()
-    with_row = set()
     for k, c in converters.items():
 
         # turn field names into row indices
@@ -370,8 +369,6 @@ def iterfieldconvert(source, converters, failonerror, errorvalue, where,
         # is converter a function?
         if callable(c):
             converter_functions[k] = c
-            if pass_row:
-                with_row.add(k)
 
         # is converter a method name?
         elif isinstance(c, basestring):
@@ -394,34 +391,51 @@ def iterfieldconvert(source, converters, failonerror, errorvalue, where,
             raise Exception('unexpected converter specification on field %r: %r' % (k, c))
 
     # define a function to transform a value
-    def transform_value(i, v, r):
+    def transform_value(i, v, *args):
         if i not in converter_functions:
             # no converter defined on this field, return value as-is
             return v
         else:
             try:
-                if i in with_row:
-                    return converter_functions[i](v, r)
-                else:
-                    return converter_functions[i](v)
+                return converter_functions[i](v, *args)
             except:
                 if failonerror:
                     raise
                 else:
                     return errorvalue
 
+    # define a function to transform a row
+    if pass_row:
+        def transform_row(_row):
+            return tuple(transform_value(i, v, _row)
+                         for i, v in enumerate(_row))
+    else:
+        def transform_row(_row):
+            return tuple(transform_value(i, v)
+                         for i, v in enumerate(_row))
+
+    # prepare where function
+    if isinstance(where, basestring):
+        where = expr(where)
+    elif where is not None:
+        assert callable(where), 'expected callable for "where" argument, ' \
+                                'found %r' % where
+
+    # prepare iterator
+    if pass_row or where:
+        # use hybrid rows as more user-friendly, but N.B. has performance cost
+        it = hybridrows(flds, it)
+
     # construct the data rows
     if where is None:
-        for row in hybridrows(flds, it):
-            yield tuple(transform_value(i, v, row) for i, v in enumerate(row))
+        # simple case, transform all rows
+        for row in it:
+            yield transform_row(row)
     else:
-        if isinstance(where, basestring):
-            where = expr(where)
-        else:
-            assert callable(where), 'expected callable for "where" argument, found %r' % where
-        for row in hybridrows(flds, it):
+        # conditionally transform rows
+        for row in it:
             if where(row):
-                yield tuple(transform_value(i, v, row) for i, v in enumerate(row))
+                yield transform_row(row)
             else:
                 yield row
 
@@ -433,10 +447,10 @@ def methodcaller(nm, *args):
 def dictconverter(d):
     def conv(v):
         try:
-            return d[v]
-        except KeyError:
-            # value is not in dictionary
-            return v
+            if v in d:
+                return d[v]
+            else:
+                return v
         except TypeError:
             # value is not hashable
             return v

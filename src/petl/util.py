@@ -65,7 +65,7 @@ def header(table):
     """
     
     it = iter(table)
-    return it.next()
+    return tuple(it.next())
 
 
 def fieldnames(table):

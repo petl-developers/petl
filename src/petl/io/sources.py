@@ -59,9 +59,8 @@ class ZipSource(object):
 
     @contextmanager
     def open_(self, mode):
-        # N.B., ZipFile open doesn't support binary mode
-        mode = mode.translate(None, 'b')
-        zf = zipfile.ZipFile(self.filename, mode, **self.kwargs)
+        outer_mode = mode.translate(None, 'bU')
+        zf = zipfile.ZipFile(self.filename, outer_mode, **self.kwargs)
         try:
             if self.pwd is not None:
                 yield zf.open(self.membername, mode, self.pwd)
