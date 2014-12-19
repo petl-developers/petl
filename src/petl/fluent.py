@@ -50,13 +50,20 @@ class FluentWrapper(RowContainer):
         return repr(self._inner)
 
 
+def _wrap_result(inner_result):
+    if isinstance(inner_result, RowContainer):
+        return FluentWrapper(inner_result)
+    else:
+        return inner_result
+
+
 def _wrap_function(f):
     def wrapper(*args, **kwargs):
         _innerresult = f(*args, **kwargs)
-        if isinstance(_innerresult, RowContainer): 
-            return FluentWrapper(_innerresult)
+        if isinstance(_innerresult, tuple):
+            return tuple(_wrap_result(item) for item in _innerresult)
         else:
-            return _innerresult
+            return _wrap_result(_innerresult)
     wrapper.__name__ = f.__name__
     wrapper.__doc__ = f.__doc__
     return wrapper
