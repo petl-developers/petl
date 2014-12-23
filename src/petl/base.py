@@ -66,11 +66,16 @@ class IterContainer(object):
         return frozenset(self)
     
     def list(self):
-        return list(self)
+        # avoid iterating twice
+        l = list()
+        for i in iter(self):
+            l.append(i)
+        return l
 
     def tuple(self):
-        return tuple(self)
-    
+        # avoid iterating twice
+        return tuple(self.list())
+
     def dict(self, **kwargs):
         return dict(self, **kwargs)
     
@@ -164,6 +169,4 @@ class IterContainer(object):
     
     def __iadd__(self, other):
         return chain(self, other)
-    
-    
-    
+

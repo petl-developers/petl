@@ -3364,6 +3364,13 @@ class CacheContainer(RowContainer):
                 object.__setattr__(self, '_cachecomplete', True)
 
 
+class EmptyContainer(RowContainer):
+
+    def __iter__(self):
+        # empty header row
+        yield tuple()
+
+
 def empty():
     """
     Convenience function to return an empty table. Can be useful when building up a table from a set of columns, e.g.::
@@ -3384,7 +3391,7 @@ def empty():
 
     """
 
-    return [[]]
+    return EmptyContainer()
 
 
 def coalesce(*fields, **kwargs):

@@ -103,4 +103,16 @@ def test_values_container_convenience_methods():
     eq_(expect, actual)
     
     
+def test_empty():
 
+    actual = (etl
+        .empty()
+        .addcolumn('foo', ['a', 'b', 'c'])
+        .addcolumn('bar', [1, 2, 2])
+    )
+    expect = (('foo', 'bar'),
+              ('a', 1),
+              ('b', 2),
+              ('c', 2))
+    ieq(expect, actual)
+    ieq(expect, actual)
