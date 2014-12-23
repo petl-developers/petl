@@ -68,7 +68,7 @@ def _wrap_function_dict(f):
     def wrapper(*args, **kwargs):
         _innerresult = f(*args, **kwargs)
         assert isinstance(_innerresult, dict)
-        for k, v in _innerresult.iteritems():
+        for k, v in _innerresult.items():
             _innerresult[k] = FluentWrapper(v)
         return _innerresult
     wrapper.__name__ = f.__name__
