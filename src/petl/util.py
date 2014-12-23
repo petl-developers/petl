@@ -11,12 +11,16 @@ from itertools import islice, groupby, chain, count
 from collections import defaultdict, namedtuple
 from operator import itemgetter
 import re
-from string import maketrans
+import petl.six
+if petl.six.PY2:
+    from string import maketrans
+else:
+    maketrans = str.maketrans
 import random
 import time
 import datetime
 from functools import partial
-from itertools import izip_longest
+from petl.six.moves import zip_longest as izip_longest
 import heapq
 import sys
 import operator
@@ -2364,8 +2368,10 @@ def stringpatterncounter(table, field):
 
     """
     
-    trans = maketrans('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789', 
-                      'AAAAAAAAAAAAAAAAAAAAAAAAAAaaaaaaaaaaaaaaaaaaaaaaaaaa9999999999')
+    trans = maketrans(
+        'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789',
+        'AAAAAAAAAAAAAAAAAAAAAAAAAAaaaaaaaaaaaaaaaaaaaaaaaaaa9999999999'
+    )
     counter = Counter()
     for v in itervalues(table, field):
         p = str(v).translate(trans)

@@ -14,8 +14,18 @@ except ImportError:
     from .compat import Counter, OrderedDict
 
 
-from itertools import islice, imap, izip, izip_longest, chain, cycle, product,\
-    permutations, combinations, takewhile, dropwhile, ifilter, ifilterfalse, \
+from petl.six.moves import map as imap
+from petl.six.moves import zip as izip
+from petl.six.moves import zip_longest as izip_longest
+import petl.six
+if petl.six.PY2:
+    from itertools import ifilter, ifilterfalse
+else:
+    ifilter = filter
+    from itertools import filterfalse as ifilterfalse
+
+from itertools import islice, chain, cycle, product,\
+    permutations, combinations, takewhile, dropwhile, \
     starmap, groupby, tee
 
 try: 
