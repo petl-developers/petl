@@ -25,7 +25,7 @@ petl = sys.modules['petl']
 thismodule = sys.modules[__name__]
 
 
-cachesize = 10000
+cachesize = 100
 representation = petl.look
 
 

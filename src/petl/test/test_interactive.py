@@ -19,8 +19,8 @@ from petl.testutils import ieq
 def test_basics():
     
     t1 = (('foo', 'bar'),
-         ('A', 1),
-         ('B', 2))
+          ('A', 1),
+          ('B', 2))
     w1 = etl.wrap(t1)
     
     eq_(('foo', 'bar'), w1.header())
@@ -138,3 +138,5 @@ def test_repr_html_limit():
     actual = etl.wrap(table)._repr_html_()
     for l1, l2 in zip(expect.split('\n'), actual.split('\r\n')):
         eq_(l1, l2)
+
+

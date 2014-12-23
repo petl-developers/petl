@@ -19,8 +19,8 @@ from petl.testutils import ieq
 def test_basics():
     
     t1 = (('foo', 'bar'),
-         ('A', 1),
-         ('B', 2))
+          ('A', 1),
+          ('B', 2))
     w1 = etl.wrap(t1)
     
     eq_(('foo', 'bar'), w1.header())
@@ -57,7 +57,7 @@ def test_staticmethods():
               ('b', '2'),
               ('c', '2'))
     ieq(expect, actual)
-    ieq(expect, actual) # verify can iterate twice
+    ieq(expect, actual)  # verify can iterate twice
     
     
 def test_container():
@@ -78,9 +78,9 @@ def test_container():
     
 def test_values_container_convenience_methods():
     table = etl.wrap((('foo', 'bar'),
-                 ('a', 1),
-                 ('b', 2),
-                 ('c', 2)))
+                      ('a', 1),
+                      ('b', 2),
+                      ('c', 2)))
     
     actual = table.values('foo').set()
     expect = set(['a', 'b', 'c'])
@@ -105,7 +105,8 @@ def test_values_container_convenience_methods():
     
 def test_empty():
 
-    actual = (etl
+    actual = (
+        etl
         .empty()
         .addcolumn('foo', ['a', 'b', 'c'])
         .addcolumn('bar', [1, 2, 2])
@@ -116,3 +117,18 @@ def test_empty():
               ('c', 2))
     ieq(expect, actual)
     ieq(expect, actual)
+
+
+def test_wrap_tuple_return():
+    tablea = etl.wrap((('foo', 'bar'),
+                       ('A', 1),
+                       ('C', 7)))
+    tableb = etl.wrap((('foo', 'bar'),
+                       ('B', 5),
+                       ('C', 7)))
+
+    added, removed = tablea.diff(tableb)
+    eq_(('foo', 'bar'), added.header())
+    eq_(('foo', 'bar'), removed.header())
+    ieq(petl.data(added), added.data())
+    ieq(petl.data(removed), removed.data())
