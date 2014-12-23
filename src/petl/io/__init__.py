@@ -1,9 +1,6 @@
 from __future__ import absolute_import, print_function, division
 
 
-__author__ = 'Alistair Miles <alimanfoo@googlemail.com>'
-
-
 from petl.io.sources import FileSource, GzipSource, BZ2Source, ZipSource, \
     StdinSource, StdoutSource, URLSource, StringSource, PopenSource
 

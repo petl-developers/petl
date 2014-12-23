@@ -1,3 +1,6 @@
+from __future__ import print_function, absolute_import, division, \
+    unicode_literals
+
 from ast import literal_eval
 from distutils.core import setup
 
@@ -20,7 +23,8 @@ setup(
     scripts=['bin/petl'],
     url='https://github.com/alimanfoo/petl',
     license='MIT License',
-    description='A Python package for extracting, transforming and loading tables of data.',
+    description='A Python package for extracting, transforming and loading '
+                'tables of data.',
     long_description=open('README.txt').read(),
     classifiers=['Intended Audience :: Developers',
                  'License :: OSI Approved :: MIT License',

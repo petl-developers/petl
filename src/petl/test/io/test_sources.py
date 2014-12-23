@@ -1,7 +1,5 @@
-from __future__ import absolute_import, print_function, division
-
-
-__author__ = 'Alistair Miles <alimanfoo@googlemail.com>'
+from __future__ import absolute_import, print_function, division, \
+    unicode_literals
 
 
 import zipfile
@@ -46,7 +44,7 @@ def test_popensource():
     actual = fromcsv(PopenSource(r'echo -e foo bar\\na 1',
                                  shell=True,
                                  executable='/bin/bash'),
-                     delimiter=' ')
+                     delimiter=b' ')
     ieq(expect, actual)
 
 

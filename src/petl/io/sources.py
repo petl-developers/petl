@@ -1,7 +1,4 @@
-from __future__ import absolute_import, print_function, division
-
-
-__author__ = 'Alistair Miles <alimanfoo@googlemail.com>'
+from __future__ import absolute_import, print_function, division, unicode_literals
 
 
 import gzip
@@ -59,7 +56,7 @@ class ZipSource(object):
 
     @contextmanager
     def open_(self, mode):
-        outer_mode = mode.translate(None, 'bU')
+        outer_mode = mode.translate({ord('b'): None, ord('U'): None})
         zf = zipfile.ZipFile(self.filename, outer_mode, **self.kwargs)
         try:
             if self.pwd is not None:

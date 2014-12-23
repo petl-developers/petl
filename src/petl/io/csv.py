@@ -1,7 +1,5 @@
-from __future__ import absolute_import, print_function, division
-
-
-__author__ = 'Alistair Miles <alimanfoo@googlemail.com>'
+from __future__ import absolute_import, print_function, division, \
+    unicode_literals
 
 
 # standard library dependencies
@@ -15,7 +13,7 @@ from petl.util import RowContainer, data
 from petl.io.sources import read_source_from_arg, write_source_from_arg
 
 
-def fromcsv(source=None, dialect=csv.excel, **kwargs):
+def fromcsv(source=None, dialect='excel', **kwargs):
     """
     Wrapper for the standard :func:`csv.reader` function. Returns a table
     providing access to the data in the given delimited file. E.g.::
@@ -61,7 +59,7 @@ def fromcsv(source=None, dialect=csv.excel, **kwargs):
 
 class CSVView(RowContainer):
 
-    def __init__(self, source=None, dialect=csv.excel, **kwargs):
+    def __init__(self, source=None, dialect='excel', **kwargs):
         self.source = source
         self.dialect = dialect
         self.kwargs = kwargs
@@ -73,7 +71,7 @@ class CSVView(RowContainer):
                 yield tuple(row)
 
 
-def tocsv(table, source=None, dialect=csv.excel, write_header=True, **kwargs):
+def tocsv(table, source=None, dialect='excel', write_header=True, **kwargs):
     """
     Write the table to a CSV file. E.g.::
 
@@ -129,7 +127,7 @@ def tocsv(table, source=None, dialect=csv.excel, write_header=True, **kwargs):
                 writer.writerow(row)
 
 
-def appendcsv(table, source=None, dialect=csv.excel, **kwargs):
+def appendcsv(table, source=None, dialect='excel', **kwargs):
     """
     Append data rows to an existing CSV file. E.g.::
 
@@ -199,7 +197,7 @@ def appendcsv(table, source=None, dialect=csv.excel, **kwargs):
             writer.writerow(row)
 
 
-def fromtsv(source=None, dialect=csv.excel_tab, **kwargs):
+def fromtsv(source=None, dialect='excel-tab', **kwargs):
     """
     Convenience function, as :func:`fromcsv` but with different default dialect
     (tab delimited).
@@ -213,7 +211,7 @@ def fromtsv(source=None, dialect=csv.excel_tab, **kwargs):
     return fromcsv(source, dialect=dialect, **kwargs)
 
 
-def totsv(table, source=None, dialect=csv.excel_tab, write_header=True,
+def totsv(table, source=None, dialect='excel-tab', write_header=True,
           **kwargs):
     """
     Convenience function, as :func:`tocsv` but with different default dialect
@@ -229,7 +227,7 @@ def totsv(table, source=None, dialect=csv.excel_tab, write_header=True,
                  write_header=write_header, **kwargs)
 
 
-def appendtsv(table, source=None, dialect=csv.excel_tab, **kwargs):
+def appendtsv(table, source=None, dialect='excel-tab', **kwargs):
     """
     Convenience function, as :func:`appendcsv` but with different default
     dialect (tab delimited).
@@ -260,7 +258,7 @@ class UTF8Recoder:
         return self
 
     def next(self):
-        return self.reader.next().encode("utf-8")
+        return self.reader.next().encode('utf-8')
 
 
 class UnicodeReader:
@@ -269,7 +267,7 @@ class UnicodeReader:
     which is encoded in the given encoding.
     """
 
-    def __init__(self, f, dialect=csv.excel, encoding="utf-8", **kwds):
+    def __init__(self, f, dialect='excel', encoding='utf-8', **kwds):
         f = UTF8Recoder(f, encoding)
         self.reader = csv.reader(f, dialect=dialect, **kwds)
 
@@ -287,7 +285,7 @@ class UnicodeWriter:
     which is encoded in the given encoding.
     """
 
-    def __init__(self, f, dialect=csv.excel, encoding="utf-8", **kwds):
+    def __init__(self, f, dialect='excel', encoding="utf-8", **kwds):
         # Redirect output to a queue
         self.queue = cStringIO.StringIO()
         self.writer = csv.writer(self.queue, dialect=dialect, **kwds)
@@ -311,7 +309,7 @@ class UnicodeWriter:
             self.writerow(row)
 
 
-def fromucsv(source=None, dialect=csv.excel, encoding='utf-8', **kwargs):
+def fromucsv(source=None, dialect='excel', encoding='utf-8', **kwargs):
     """
     Returns a table containing unicode data extracted from a delimited file via
     the given encoding. Like :func:`fromcsv` but accepts an additional
@@ -327,7 +325,7 @@ def fromucsv(source=None, dialect=csv.excel, encoding='utf-8', **kwargs):
 
 class UnicodeCSVView(RowContainer):
 
-    def __init__(self, source=None, dialect=csv.excel, encoding='utf-8',
+    def __init__(self, source=None, dialect='excel', encoding='utf-8',
                  **kwargs):
         self.source = source
         self.dialect = dialect
@@ -342,7 +340,7 @@ class UnicodeCSVView(RowContainer):
                 yield tuple(row)
 
 
-def toucsv(table, source=None, dialect=csv.excel, encoding='utf-8',
+def toucsv(table, source=None, dialect='excel', encoding='utf-8',
            write_header=True, **kwargs):
     """
     Write the table to a CSV file via the given encoding. Like :func:`tocsv` but
@@ -364,7 +362,7 @@ def toucsv(table, source=None, dialect=csv.excel, encoding='utf-8',
                 writer.writerow(row)
 
 
-def appenducsv(table, source=None, dialect=csv.excel, encoding='utf-8',
+def appenducsv(table, source=None, dialect='excel', encoding='utf-8',
                **kwargs):
     """
     Append the table to a CSV file via the given encoding. Like
@@ -380,7 +378,7 @@ def appenducsv(table, source=None, dialect=csv.excel, encoding='utf-8',
             writer.writerow(row)
 
 
-def fromutsv(source=None, dialect=csv.excel_tab, **kwargs):
+def fromutsv(source=None, dialect='excel-tab', **kwargs):
     """
     Convenience function, as :func:`fromucsv` but with different default dialect
     (tab delimited).
@@ -392,7 +390,7 @@ def fromutsv(source=None, dialect=csv.excel_tab, **kwargs):
     return fromucsv(source, dialect=dialect, **kwargs)
 
 
-def toutsv(table, source=None, dialect=csv.excel_tab, write_header=True,
+def toutsv(table, source=None, dialect='excel-tab', write_header=True,
            **kwargs):
     """
     Convenience function, as :func:`toucsv` but with different default dialect
@@ -406,7 +404,7 @@ def toutsv(table, source=None, dialect=csv.excel_tab, write_header=True,
                   write_header=write_header, **kwargs)
 
 
-def appendutsv(table, source=None, dialect=csv.excel_tab, **kwargs):
+def appendutsv(table, source=None, dialect='excel-tab', **kwargs):
     """
     Convenience function, as :func:`appenducsv` but with different default
     dialect (tab delimited).
@@ -418,7 +416,7 @@ def appendutsv(table, source=None, dialect=csv.excel_tab, **kwargs):
     return appenducsv(table, source=source, dialect=dialect, **kwargs)
 
 
-def teecsv(table, source=None, dialect=csv.excel, write_header=True, **kwargs):
+def teecsv(table, source=None, dialect='excel', write_header=True, **kwargs):
     """
     Return a table that writes rows to a CSV file as they are iterated over.
 
@@ -432,7 +430,7 @@ def teecsv(table, source=None, dialect=csv.excel, write_header=True, **kwargs):
 
 class TeeCSVContainer(RowContainer):
 
-    def __init__(self, table, source=None, dialect=csv.excel,
+    def __init__(self, table, source=None, dialect='excel',
                  write_header=True, **kwargs):
         self.table = table
         self.source = source
@@ -449,14 +447,14 @@ class TeeCSVContainer(RowContainer):
                 for row in data(self.table):
                     writer.writerow(row)
                     yield row
-           # Default behavior, write the header
+            # Default behavior, write the header
             else:
                 for row in self.table:
                     writer.writerow(row)
                     yield row
 
 
-def teetsv(table, source=None, dialect=csv.excel_tab, write_header=True,
+def teetsv(table, source=None, dialect='excel-tab', write_header=True,
            **kwargs):
     """
     Convenience function, as :func:`teecsv` but with different default dialect
@@ -470,7 +468,7 @@ def teetsv(table, source=None, dialect=csv.excel_tab, write_header=True,
                            write_header=write_header, **kwargs)
 
 
-def teeucsv(table, source=None, dialect=csv.excel, encoding='utf-8',
+def teeucsv(table, source=None, dialect='excel', encoding='utf-8',
             write_header=True, **kwargs):
     """
     Return a table that writes rows to a Unicode CSV file as they are iterated
@@ -487,7 +485,7 @@ def teeucsv(table, source=None, dialect=csv.excel, encoding='utf-8',
 
 class TeeUCSVContainer(RowContainer):
 
-    def __init__(self, table, source=None, dialect=csv.excel, encoding='utf-8',
+    def __init__(self, table, source=None, dialect='excel', encoding='utf-8',
                  write_header=True, **kwargs):
         self.table = table
         self.source = source
@@ -513,7 +511,7 @@ class TeeUCSVContainer(RowContainer):
                     yield row
 
 
-def teeutsv(table, source=None, dialect=csv.excel_tab,
+def teeutsv(table, source=None, dialect='excel-tab',
             encoding='utf-8', write_header=True, **kwargs):
     """
     Convenience function, as :func:`teeucsv` but with different default dialect
