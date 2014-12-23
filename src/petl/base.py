@@ -4,34 +4,17 @@ Base classes.
 """
 
 
-from __future__ import absolute_import, print_function, division
+from __future__ import absolute_import, print_function, division, \
+    unicode_literals
 
-
-# Python 2.6 compatibility
-try:
-    from collections import Counter, OrderedDict
-except ImportError:
-    from .compat import Counter, OrderedDict
-
-
-from petl.six.moves import map as imap
-from petl.six.moves import zip as izip
-from petl.six.moves import zip_longest as izip_longest
-import petl.six
-if petl.six.PY2:
-    from itertools import ifilter, ifilterfalse
-else:
-    ifilter = filter
-    from itertools import filterfalse as ifilterfalse
 
 from itertools import islice, chain, cycle, product,\
     permutations, combinations, takewhile, dropwhile, \
     starmap, groupby, tee
 
-try: 
-    from itertools import compress, combinations_with_replacement
-except ImportError:
-    from .compat import compress, combinations_with_replacement
+
+from .compat import imap, izip, izip_longest, ifilter, ifilterfalse, Counter,\
+    OrderedDict, compress, combinations_with_replacement, reduce
 
 
 class IterContainer(object):

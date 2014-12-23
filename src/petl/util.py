@@ -7,20 +7,14 @@ Utility functions.
 from __future__ import absolute_import, print_function, division
 
 
-from itertools import islice, groupby, chain, count
+from itertools import islice, groupby, chain
 from collections import defaultdict, namedtuple
 from operator import itemgetter
 import re
-import petl.six
-if petl.six.PY2:
-    from string import maketrans
-else:
-    maketrans = str.maketrans
 import random
 import time
 import datetime
 from functools import partial
-from petl.six.moves import zip_longest as izip_longest
 import heapq
 import sys
 import operator
@@ -32,24 +26,18 @@ info = logger.info
 debug = logger.debug
 
 
+from .compat import maketrans, string_types, number_types, \
+    sortable_types, Counter, OrderedDict, count, izip_longest, long, xrange
 from petl.base import IterContainer
 
 
-# Python 2.6 compatibility
-try:
-    from collections import Counter, OrderedDict
-except ImportError:
-    from .compat import count, Counter, OrderedDict
-
-
-SINGLETONS = set([None, False, True])
-SAFE_TYPES = set([complex, float, int, long, str, unicode])
+singletons = set([None, False, True])
 
 
 class RowContainer(IterContainer):
     
     def __getitem__(self, item):
-        if isinstance(item, basestring):
+        if isinstance(item, string_types):
             return ValuesContainer(self, item)
         else:
             return super(RowContainer, self).__getitem__(item)
@@ -520,7 +508,6 @@ class Look(object):
         else:
             return format_table_grid(self.table, self.vrepr, self.sliceargs)
     
-    
     def __str__(self):
         return repr(self)
 
@@ -589,14 +576,15 @@ def format_table_grid(table, vrepr, sliceargs):
         rowline = u'|'
         for i, w in enumerate(colwidths):
             vr = valsrepr[i]
-            if i < len(vals) and isinstance(vals[i], (int, long, float)) and not isinstance(vals[i], bool):
+            if i < len(vals) and isinstance(vals[i], number_types) \
+                    and not isinstance(vals[i], bool):
                 # left pad numbers
-                rowline += u' ' * (w + 1 - len(vr)) # padding
+                rowline += u' ' * (w + 1 - len(vr))  # padding
                 rowline += vr + u' |'
             else:      
                 # right pad everything else
                 rowline += u' ' + vr
-                rowline += u' ' * (w - len(vr)) # padding
+                rowline += u' ' * (w - len(vr))  # padding
                 rowline += u' |'
         rowline += u'\n'
         rowlines.append(rowline)
@@ -633,7 +621,7 @@ def format_table_simple(table, vrepr, sliceargs):
             valsrepr.extend([u''] * (maxrowlen - len(valsrepr)))
     
     # find longest representations so we know how wide to make cells
-    colwidths = [0] * maxrowlen # initialise to 0
+    colwidths = [0] * maxrowlen  # initialise to 0
     for i, fr in enumerate(fldsrepr):
         colwidths[i] = len(fr)
     for valsrepr in rowsrepr:
@@ -655,7 +643,8 @@ def format_table_simple(table, vrepr, sliceargs):
         rowline = u''
         for i, w in enumerate(colwidths):
             vr = valsrepr[i]
-            if i < len(vals) and isinstance(vals[i], (int, long, float)) and not isinstance(vals[i], bool):
+            if i < len(vals) and isinstance(vals[i], number_types) \
+                    and not isinstance(vals[i], bool):
                 # left pad numbers
                 rowline += vr.rjust(w)
             else:      
@@ -717,7 +706,8 @@ def format_table_minimal(table, vrepr, sliceargs):
         rowline = u''
         for i, w in enumerate(colwidths):
             vr = valsrepr[i]
-            if i < len(vals) and isinstance(vals[i], (int, long, float)) and not isinstance(vals[i], bool):
+            if i < len(vals) and isinstance(vals[i], number_types) \
+                    and not isinstance(vals[i], bool):
                 # left pad numbers
                 rowline += vr.rjust(w)
             else:      
@@ -1015,8 +1005,8 @@ def valuecounter(table, *field, **kwargs):
 def valuecounts(table, *field, **kwargs):
     """
     Find distinct values for the given field and count the number and relative
-    frequency of occurrences. Returns a table mapping values to counts, with most common 
-    values first. E.g.::
+    frequency of occurrences. Returns a table mapping values to counts, with
+    most common values first. E.g.::
 
         >>> from petl import look, valuecounts
         >>> look(table)
@@ -1630,7 +1620,7 @@ def asindices(flds, spec):
 
     names = [str(f) for f in flds]
     indices = list()
-    if isinstance(spec, basestring):
+    if isinstance(spec, string_types):
         spec = (spec,)
     if isinstance(spec, int):
         spec = (spec,)
@@ -1884,7 +1874,7 @@ def parsecounter(table, field, parsers={'int': int, 'float': float}):
         counter[n] = 0
         errors[n] = 0
     for v in itervalues(table, field):
-        if isinstance(v, basestring):
+        if isinstance(v, string_types):
             for name, parser in parsers.items():
                 try:
                     parser(v)
@@ -2307,11 +2297,11 @@ def parsenumber(v, strict=False):
 
     try:
         return int(v)
-    except:
+    except ValueError:
         pass
     try:
         return long(v)
-    except:
+    except ValueError:
         pass
     try:
         return float(v)
@@ -3256,31 +3246,39 @@ class SortableItem(object):
 
     """
     __slots__ = ['obj']
+
     def __new__(cls, obj):
-        if obj in SINGLETONS or obj.__class__ in SAFE_TYPES:
+        if obj in singletons or obj.__class__ in sortable_types:
             return obj
         if isinstance(obj, (list, tuple)):
             return tuple(cls(o) for o in obj)
         return object.__new__(cls)
+
     def __init__(self, obj):
         self.obj = obj
+
     def __eq__(self, other):
         if isinstance(other, SortableItem):
             return self.obj == other.obj
         return self.obj == other
+
     def __lt__(self, other):
         if isinstance(other, SortableItem):
             other = other.obj
         if other is None:
             return False
         return self.obj < other
+
     def __le__(self, other):
         return self < other or self == other
+
     def __gt__(self, other):
         return not (self < other or self == other)
+
     def __ge__(self, other):
         return not (self < other)
-SAFE_TYPES.add(SortableItem)
+
+sortable_types.add(SortableItem)
 
 
 def sortable_itemgetter(*items):
