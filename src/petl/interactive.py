@@ -11,7 +11,7 @@ from __future__ import absolute_import, print_function, division
 from itertools import islice
 import sys
 import inspect
-from petl.util import valueset, RowContainer
+from petl.util import RowContainer
 import petl.fluent
 from petl.io import tohtml, touhtml, StringSource
 import logging
@@ -91,7 +91,7 @@ class InteractiveWrapper(petl.fluent.FluentWrapper):
         object.__setattr__(self, '_cachecomplete', False)
         
     def clearcache(self):
-        object.__setattr__(self, '_cache', []) # reset cache
+        object.__setattr__(self, '_cache', [])  # reset cache
         object.__setattr__(self, '_cachecomplete', False)
         
     def __iter__(self):
@@ -145,53 +145,50 @@ def _wrap_function(f):
     wrapper.__doc__ = f.__doc__
     return wrapper
 
+
+def _wrap_function_tuple(f):
+    def wrapper(*args, **kwargs):
+        _innerresult = f(*args, **kwargs)
+        assert isinstance(_innerresult, tuple)
+        return tuple(InteractiveWrapper(x) for x in _innerresult)
+    wrapper.__name__ = f.__name__
+    wrapper.__doc__ = f.__doc__
+    return wrapper
+
+
+def _wrap_function_dict(f):
+    def wrapper(*args, **kwargs):
+        _innerresult = f(*args, **kwargs)
+        assert isinstance(_innerresult, dict)
+        for k, v in _innerresult.iteritems():
+            _innerresult[k] = InteractiveWrapper(v)
+        return _innerresult
+    wrapper.__name__ = f.__name__
+    wrapper.__doc__ = f.__doc__
+    return wrapper
+
         
 # import and wrap all functions from root petl module
 for n, c in petl.__dict__.items():
     if inspect.isfunction(c):
-        setattr(thismodule, n, _wrap_function(c))
+        if n in petl.fluent.WRAP_TUPLE:
+            setattr(thismodule, n, _wrap_function_tuple(c))
+        elif n in petl.fluent.WRAP_DICT:
+            setattr(thismodule, n, _wrap_function_dict(c))
+        else:
+            setattr(thismodule, n, _wrap_function(c))
     else:
         setattr(thismodule, n, c)
-        
+
         
 # add module functions as methods on the wrapper class
 for n, c in thismodule.__dict__.items():
     if inspect.isfunction(c):
-        if n.startswith('from') or n in petl.fluent.STATICMETHODS: 
-            setattr(InteractiveWrapper, n, staticmethod(c))
+        if n.startswith('from') or n in petl.fluent.NONMETHODS:
+            pass
         else:
             setattr(InteractiveWrapper, n, c) 
 
 
-# special case to act like static method if no inner
-def _catmethod(self, *args, **kwargs):
-    if self._inner is None:
-        return InteractiveWrapper(petl.cat(*args, **kwargs))
-    else:
-        return InteractiveWrapper(petl.cat(self, *args, **kwargs))
-setattr(InteractiveWrapper, 'cat', _catmethod)        
-
-        
-# need to manually override because it returns a dict 
-def facet(table, field):
-    fct = dict()
-    for v in valueset(table, field):
-        fct[v] = getattr(thismodule, 'selecteq')(table, field, v)
-    return fct
-
-
-# need to manually override because it returns a tuple 
-def diff(*args, **kwargs):
-    a, b = petl.diff(*args, **kwargs)
-    return InteractiveWrapper(a), InteractiveWrapper(b)
-
-
-# need to manually override because it returns a tuple 
-def unjoin(*args, **kwargs):
-    a, b = petl.unjoin(*args, **kwargs)
-    return InteractiveWrapper(a), InteractiveWrapper(b)
-
-
-# shorthand alias for wrapping tables 
-wrap = InteractiveWrapper    
-
+# shorthand alias for wrapping tables
+wrap = InteractiveWrapper

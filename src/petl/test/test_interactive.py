@@ -140,3 +140,16 @@ def test_repr_html_limit():
         eq_(l1, l2)
 
 
+def test_wrap_tuple_return():
+    tablea = etl.wrap((('foo', 'bar'),
+                       ('A', 1),
+                       ('C', 7)))
+    tableb = etl.wrap((('foo', 'bar'),
+                       ('B', 5),
+                       ('C', 7)))
+
+    added, removed = tablea.diff(tableb)
+    eq_(('foo', 'bar'), added.header())
+    eq_(('foo', 'bar'), removed.header())
+    ieq(petl.data(added), added.data())
+    ieq(petl.data(removed), removed.data())
