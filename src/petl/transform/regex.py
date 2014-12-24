@@ -1,13 +1,15 @@
-from __future__ import absolute_import, print_function, division
+from __future__ import absolute_import, print_function, division, \
+    unicode_literals
 
 
 import re
 import operator
+from ..compat import next, string_types
 
 
-from petl.util import RowContainer, asindices
-from petl.transform.basics import TransformError
-from petl.transform.conversions import convert
+from ..util import RowContainer, asindices
+from .basics import TransformError
+from .conversions import convert
 
 
 def capture(table, field, pattern, newfields=None, include_original=False,
@@ -66,9 +68,11 @@ def capture(table, field, pattern, newfields=None, include_original=False,
 
     .. versionchanged:: 0.18
 
-    The ``fill`` parameter can be used to provide a list or tuple of values to use if the regular expression does not
-    match. The ``fill`` parameter should contain as many values as there are capturing groups in the regular expression.
-    If ``fill`` is ``None`` (default) then a ``petl.transform.TransformError`` will be raised on the first non-matching
+    The ``fill`` parameter can be used to provide a list or tuple of values to
+    use if the regular expression does not match. The ``fill`` parameter
+    should contain as many values as there are capturing groups in the regular
+    expression. If ``fill`` is ``None`` (default) then a
+    ``petl.transform.TransformError`` will be raised on the first non-matching
     value.
 
     """
@@ -93,15 +97,17 @@ class CaptureView(RowContainer):
         self.fill = fill
 
     def __iter__(self):
-        return itercapture(self.source, self.field, self.pattern, self.newfields,
-                           self.include_original, self.flags, self.fill)
+        return itercapture(self.source, self.field, self.pattern,
+                           self.newfields, self.include_original, self.flags,
+                           self.fill)
 
 
-def itercapture(source, field, pattern, newfields, include_original, flags, fill):
+def itercapture(source, field, pattern, newfields, include_original, flags,
+                fill):
     it = iter(source)
     prog = re.compile(pattern, flags)
 
-    flds = it.next()
+    flds = next(it)
     if field in flds:
         field_index = flds.index(field)
     elif isinstance(field, int) and field < len(flds):
@@ -174,8 +180,8 @@ def split(table, field, pattern, newfields=None, include_original=False,
 
     """
 
-    return SplitView(table, field, pattern, newfields, include_original, maxsplit,
-                     flags)
+    return SplitView(table, field, pattern, newfields, include_original,
+                     maxsplit, flags)
 
 
 class SplitView(RowContainer):
@@ -201,7 +207,7 @@ def itersplit(source, field, pattern, newfields, include_original, maxsplit,
     it = iter(source)
     prog = re.compile(pattern, flags)
 
-    flds = it.next()
+    flds = next(it)
     if field in flds:
         field_index = flds.index(field)
     elif isinstance(field, int) and field < len(flds):
@@ -300,9 +306,6 @@ def search(table, *args, **kwargs):
 
     """
 
-    # kwarg, not exposed as interface to user
-    complement = kwargs.get("complement", False)
-
     if len(args) == 1:
         field = None
         pattern = args[0]
@@ -324,30 +327,31 @@ class SearchView(RowContainer):
         self.complement = complement
 
     def __iter__(self):
-        return itersearch(self.table, self.pattern, self.field, self.flags, self.complement)
+        return itersearch(self.table, self.pattern, self.field, self.flags,
+                          self.complement)
 
 
 def itersearch(table, pattern, field, flags, complement):
     prog = re.compile(pattern, flags)
     it = iter(table)
-    fields = [str(f) for f in it.next()]
+    fields = [str(f) for f in next(it)]
     yield tuple(fields)
 
     if field is None:
         # search whole row
-        test = lambda row: any(prog.search(str(v)) for v in row)
-    elif isinstance(field, basestring):
+        test = lambda r: any(prog.search(str(v)) for v in r)
+    elif isinstance(field, string_types):
         # search single field
         index = fields.index(field)
-        test = lambda row: prog.search(str(row[index]))
-    else: # list or tuple or ...
+        test = lambda r: prog.search(str(r[index]))
+    else:  # list or tuple or ...
         # search selection of fields
         indices = asindices(fields, field)
         getvals = operator.itemgetter(*indices)
-        test = lambda row: any(prog.search(str(v)) for v in getvals(row))
+        test = lambda r: any(prog.search(str(v)) for v in getvals(r))
 
     # complement==False, return rows that match
-    if complement == False:
+    if not complement:
         for row in it:
             if test(row):
                 yield tuple(row)
@@ -357,12 +361,12 @@ def itersearch(table, pattern, field, flags, complement):
             if not test(row):
                 yield tuple(row)
 
+
 def searchcomplement(table, *args, **kwargs):
     """
-    Perform a regular expression search, returning rows that **do not** match a given
-    pattern, either anywhere in the row or within a specific field. This returns the
-    complement of :func:`search`
-    E.g.::
+    Perform a regular expression search, returning rows that **do not** match a
+    given pattern, either anywhere in the row or within a specific field.
+    This returns the complement of :func:`search`. E.g.::
 
         >>> from petl import searchcomplement, look
         >>> look(table1)
@@ -401,4 +405,5 @@ def searchcomplement(table, *args, **kwargs):
     .. versionadded:: 0.25
 
     """
+
     return search(table, *args, complement=True, **kwargs)

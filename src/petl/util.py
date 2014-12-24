@@ -24,11 +24,12 @@ logger = logging.getLogger(__name__)
 warning = logger.warning
 info = logger.info
 debug = logger.debug
-
-
 from .compat import maketrans, string_types, number_types, \
-    sortable_types, Counter, OrderedDict, count, izip_longest, long, xrange
-from petl.base import IterContainer
+    sortable_types, Counter, OrderedDict, count, izip_longest, long, xrange, \
+    next
+
+
+from .base import IterContainer
 
 
 singletons = set([None, False, True])
@@ -57,7 +58,7 @@ def header(table):
     """
     
     it = iter(table)
-    return tuple(it.next())
+    return tuple(next(it))
 
 
 def fieldnames(table):
@@ -105,9 +106,9 @@ def iterdata(table, *sliceargs):
         >>> from petl import data
         >>> table = [['foo', 'bar'], ['a', 1], ['b', 2]]
         >>> it = iterdata(table)
-        >>> it.next()
+        >>> next(it)
         ['a', 1]
-        >>> it.next()
+        >>> next(it)
         ['b', 2]
         
     .. versionchanged:: 0.3
@@ -121,7 +122,7 @@ def iterdata(table, *sliceargs):
     
     """
 
-    it = islice(table, 1, None) # skip header row
+    it = islice(table, 1, None)  # skip header row
     if sliceargs:
         it = islice(it, *sliceargs)
     return it
@@ -171,11 +172,11 @@ def iterdicts(table, *sliceargs, **kwargs):
         >>> from petl import dicts
         >>> table = [['foo', 'bar'], ['a', 1], ['b', 2]]
         >>> it = dicts(table)
-        >>> it.next()
+        >>> next(it)
         {'foo': 'a', 'bar': 1}
-        >>> it.next()
+        >>> next(it)
         {'foo': 'b', 'bar': 2}
-        >>> it.next()
+        >>> next(it)
         Traceback (most recent call last):
           File "<stdin>", line 1, in <module>
         StopIteration
@@ -184,11 +185,11 @@ def iterdicts(table, *sliceargs, **kwargs):
     
         >>> table = [['foo', 'bar'], ['a', 1], ['b']]
         >>> it = dicts(table)
-        >>> it.next()
+        >>> next(it)
         {'foo': 'a', 'bar': 1}
-        >>> it.next()
+        >>> next(it)
         {'foo': 'b', 'bar': None}
-        >>> it.next()
+        >>> next(it)
         Traceback (most recent call last):
           File "<stdin>", line 1, in <module>
         StopIteration
@@ -199,7 +200,7 @@ def iterdicts(table, *sliceargs, **kwargs):
 
     missing = kwargs.get('missing', None)
     it = iter(table)
-    flds = it.next()
+    flds = next(it)
     if sliceargs:
         it = islice(it, *sliceargs)
     for row in it:
@@ -217,7 +218,7 @@ class DictsContainer(IterContainer):
         return iterdicts(self.table, *self.sliceargs, **self.kwargs)
     
     def __repr__(self):
-        vreprs = map(repr, islice(self, 6))
+        vreprs = list(map(repr, islice(self, 6)))
         r = '\n'.join(vreprs[:5])
         if len(vreprs) > 5:
             r += '\n...'
@@ -298,7 +299,7 @@ class NamedTuplesContainer(IterContainer):
         return iternamedtuples(self.table, *self.sliceargs, **self.kwargs)
     
     def __repr__(self):
-        vreprs = map(repr, islice(self, 6))
+        vreprs = list(map(repr, islice(self, 6)))
         r = '\n'.join(vreprs[:5])
         if len(vreprs) > 5:
             r += '\n...'
@@ -317,7 +318,7 @@ def iternamedtuples(table, *sliceargs, **kwargs):
     missing = kwargs.get('missing', None)
     name = kwargs.get('name', 'row')
     it = iter(table)
-    flds = it.next()
+    flds = next(it)
     nt = namedtuple(name, tuple(flds))
     if sliceargs:
         it = islice(it, *sliceargs)
@@ -343,7 +344,7 @@ def nrows(table):
     return sum(1 for _ in iterdata(table))
     
     
-rowcount = nrows # backwards compatibility
+rowcount = nrows  # backwards compatibility
 
     
 def look(table, *sliceargs, **kwargs):
@@ -383,7 +384,8 @@ def look(table, *sliceargs, **kwargs):
     .. versionchanged:: 0.8
     
     The properties `n` and `p` can be used to look at the next and previous rows
-    respectively. I.e., try ``>>> look(table)`` then ``>>> _.n`` then ``>>> _.p``. 
+    respectively. I.e., try ``>>> look(table)`` then ``>>> _.n`` then
+    ``>>> _.p``.
 
     .. versionchanged:: 0.13
     
@@ -519,7 +521,7 @@ def format_table_grid(table, vrepr, sliceargs):
     it = iter(table)
     
     # fields representation
-    flds = it.next()
+    flds = next(it)
     fldsrepr = [vrepr(f) for f in flds]
     
     # rows representations
@@ -539,7 +541,7 @@ def format_table_grid(table, vrepr, sliceargs):
             valsrepr.extend([u''] * (maxrowlen - len(valsrepr)))
     
     # find longest representations so we know how wide to make cells
-    colwidths = [0] * maxrowlen # initialise to 0
+    colwidths = [0] * maxrowlen  # initialise to 0
     for i, fr in enumerate(fldsrepr):
         colwidths[i] = len(fr)
     for valsrepr in rowsrepr:
@@ -566,7 +568,7 @@ def format_table_grid(table, vrepr, sliceargs):
     for i, w in enumerate(colwidths):
         f = fldsrepr[i]
         fldsline += u' ' + f
-        fldsline += u' ' * (w - len(f)) # padding
+        fldsline += u' ' * (w - len(f))  # padding
         fldsline += u' |'
     fldsline += u'\n'
     
@@ -601,7 +603,7 @@ def format_table_simple(table, vrepr, sliceargs):
     it = iter(table)
     
     # fields representation
-    flds = it.next()
+    flds = next(it)
     fldsrepr = [vrepr(f) for f in flds]
     
     # rows representations
@@ -668,7 +670,7 @@ def format_table_minimal(table, vrepr, sliceargs):
     it = iter(table)
     
     # fields representation
-    flds = it.next()
+    flds = next(it)
     fldsrepr = [vrepr(f) for f in flds]
     
     # rows representations
@@ -688,7 +690,7 @@ def format_table_minimal(table, vrepr, sliceargs):
             valsrepr.extend([u''] * (maxrowlen - len(valsrepr)))
     
     # find longest representations so we know how wide to make cells
-    colwidths = [0] * maxrowlen # initialise to 0
+    colwidths = [0] * maxrowlen  # initialise to 0
     for i, fr in enumerate(fldsrepr):
         colwidths[i] = len(fr)
     for valsrepr in rowsrepr:
@@ -784,7 +786,7 @@ class See(object):
         
     def __repr__(self):    
         it = iter(self.table)
-        flds = it.next()
+        flds = next(it)
         cols = defaultdict(list)
         for row in islice(it, *self.sliceargs):
             for i, f in enumerate(flds):
@@ -805,21 +807,21 @@ def itervalues(table, *field, **kwargs):
         >>> from petl import itervalues
         >>> table = [['foo', 'bar'], ['a', True], ['b'], ['b', True], ['c', False]]
         >>> foo = itervalues(table, 'foo')
-        >>> foo.next()
+        >>> next(foo)
         'a'
-        >>> foo.next()
+        >>> next(foo)
         'b'
-        >>> foo.next()
+        >>> next(foo)
         'b'
-        >>> foo.next()
+        >>> next(foo)
         'c'
-        >>> foo.next()
+        >>> next(foo)
         Traceback (most recent call last):
           File "<stdin>", line 1, in <module>
         StopIteration
 
-    The `field` argument can be a single field name or index (starting from zero)
-    or a tuple of field names and/or indexes.    
+    The `field` argument can be a single field name or index (starting from
+    zero) or a tuple of field names and/or indexes.
 
     If rows are uneven, the value of the keyword argument `missing` is returned.
         
@@ -830,13 +832,13 @@ def itervalues(table, *field, **kwargs):
         ...          [2, 'bb', True],
         ...          [3, 'd', False]]
         >>> foobaz = itervalues(table, 'foo', 'baz')
-        >>> foobaz.next()
+        >>> next(foobaz)
         (1, True)
-        >>> foobaz.next()
+        >>> next(foobaz)
         (2, True)
-        >>> foobaz.next()
+        >>> next(foobaz)
         (3, False)
-        >>> foobaz.next()
+        >>> next(foobaz)
         Traceback (most recent call last):
           File "<stdin>", line 1, in <module>
         StopIteration
@@ -848,10 +850,10 @@ def itervalues(table, *field, **kwargs):
     
     .. versionchanged:: 0.7 
     
-    In previous releases this function was known as 'values'. Also in this release
-    the behaviour with short rows is changed. Now for any value missing due to a 
-    short row, ``None`` is returned by default, or whatever is given by the
-    `missing` keyword argument.
+    In previous releases this function was known as 'values'. Also in this
+    release the behaviour with short rows is changed. Now for any value
+    missing due to a short row, ``None`` is returned by default, or whatever
+    is given by the `missing` keyword argument.
 
     .. versionchanged:: 0.24
 
@@ -863,7 +865,7 @@ def itervalues(table, *field, **kwargs):
 
     missing = kwargs.get('missing', None)
     it = iter(table)
-    srcflds = it.next()
+    srcflds = next(it)
 
     # deal with field arg in a backwards-compatible way
     if len(field) == 1:
@@ -924,7 +926,7 @@ class ValuesContainer(IterContainer):
         return itervalues(self.table, *self.field, **self.kwargs)
     
     def __repr__(self):
-        vreprs = map(repr, islice(self, 6))
+        vreprs = list(map(repr, islice(self, 6)))
         r = ', '.join(vreprs[:5])
         if len(vreprs) > 5:
             r += ', ...'
@@ -955,8 +957,8 @@ def valuecount(table, field, value, missing=None):
         >>> f
         0.6666666666666666
 
-    The `field` argument can be a single field name or index (starting from zero)
-    or a tuple of field names and/or indexes.    
+    The `field` argument can be a single field name or index (starting from
+    zero) or a tuple of field names and/or indexes.
 
     """
     
@@ -987,8 +989,8 @@ def valuecounter(table, *field, **kwargs):
         >>> c
         Counter({'b': 2, 'a': 1, 'c': 1})
     
-    The `field` argument can be a single field name or index (starting from zero)
-    or a tuple of field names and/or indexes.    
+    The `field` argument can be a single field name or index (starting from
+    zero) or a tuple of field names and/or indexes.
 
     """
 
@@ -998,7 +1000,7 @@ def valuecounter(table, *field, **kwargs):
         try:
             counter[v] += 1
         except IndexError:
-            pass # short row
+            pass  # short row
     return counter
             
 
@@ -1104,7 +1106,7 @@ def columns(table, missing=None):
     
     cols = dict()
     it = iter(table)
-    fields = [str(f) for f in it.next()]
+    fields = [str(f) for f in next(it)]
     for f in fields:
         cols[f] = list()
     for row in it:
@@ -1139,7 +1141,7 @@ def facetcolumns(table, key, missing=None):
     
     fct = dict()
     it = iter(table)
-    fields = [str(f) for f in it.next()]
+    fields = [str(f) for f in next(it)]
     indices = asindices(fields, key)
     assert len(indices) > 0, 'no key field selected'
     getkey = itemgetter(*indices)
@@ -1162,8 +1164,8 @@ def facetcolumns(table, key, missing=None):
     
 def isunique(table, field):
     """
-    Return True if there are no duplicate values for the given field(s), otherwise
-    False. E.g.::
+    Return True if there are no duplicate values for the given field(s),
+    otherwise False. E.g.::
 
         >>> from petl import isunique
         >>> table = [['foo', 'bar'], ['a', 1], ['b'], ['b', 2], ['c', 3, True]]
@@ -1172,8 +1174,8 @@ def isunique(table, field):
         >>> isunique(table, 'bar')
         True
     
-    The `field` argument can be a single field name or index (starting from zero)
-    or a tuple of field names and/or indexes.    
+    The `field` argument can be a single field name or index (starting from
+    zero) or a tuple of field names and/or indexes.
 
     .. versionchanged:: 0.10
     
@@ -1256,9 +1258,9 @@ def lookup(table, keyspec, valuespec=None, dictionary=None):
         dictionary = dict()
         
     it = iter(table)
-    flds = it.next()
+    flds = next(it)
     if valuespec is None:
-        valuespec = flds # default valuespec is complete row
+        valuespec = flds  # default valuespec is complete row
     keyindices = asindices(flds, keyspec)
     assert len(keyindices) > 0, 'no keyspec selected'
     valueindices = asindices(flds, valuespec)
@@ -1360,7 +1362,7 @@ def lookupone(table, keyspec, valuespec=None, dictionary=None, strict=False):
         dictionary = dict()
 
     it = iter(table)
-    flds = it.next()
+    flds = next(it)
     if valuespec is None:
         valuespec = flds
     keyindices = asindices(flds, keyspec)
@@ -1436,7 +1438,7 @@ def dictlookup(table, keyspec, dictionary=None):
         dictionary = dict()
 
     it = iter(table)
-    flds = it.next()
+    flds = next(it)
     keyindices = asindices(flds, keyspec)
     assert len(keyindices) > 0, 'no keyspec selected'
     getkey = itemgetter(*keyindices)
@@ -1465,7 +1467,7 @@ def recordlookup(table, keyspec, dictionary=None):
         dictionary = dict()
 
     it = iter(table)
-    flds = it.next()
+    flds = next(it)
     keyindices = asindices(flds, keyspec)
     assert len(keyindices) > 0, 'no keyspec selected'
     getkey = itemgetter(*keyindices)
@@ -1567,7 +1569,7 @@ def dictlookupone(table, keyspec, dictionary=None, strict=False):
         dictionary = dict()
 
     it = iter(table)
-    flds = it.next()
+    flds = next(it)
     keyindices = asindices(flds, keyspec)
     assert len(keyindices) > 0, 'no keyspec selected'
     getkey = itemgetter(*keyindices)
@@ -1594,7 +1596,7 @@ def recordlookupone(table, keyspec, dictionary=None, strict=False):
         dictionary = dict()
 
     it = iter(table)
-    flds = it.next()
+    flds = next(it)
     keyindices = asindices(flds, keyspec)
     assert len(keyindices) > 0, 'no keyspec selected'
     getkey = itemgetter(*keyindices)
@@ -1669,7 +1671,7 @@ def rowgetter(*indices):
     # value itself, so let's define a function
     if len(indices) == 1:
         index = indices[0]
-        return lambda row: (row[index],) # note comma - singleton tuple!
+        return lambda row: (row[index],)  # note comma - singleton tuple!
     # if more than one index, use itemgetter, it should be the most efficient
     else:
         return itemgetter(*indices)
@@ -1738,11 +1740,11 @@ def typecounter(table, field):
         try:
             counter[v.__class__.__name__] += 1
         except IndexError:
-            pass # ignore short rows
+            pass  # ignore short rows
     return counter
 
 
-def typecounts(table, field, **kwargs):    
+def typecounts(table, field):
     """
     Count the number of values found for each Python type and return a table
     mapping class names to counts and frequencies. E.g.::
@@ -1793,7 +1795,7 @@ def typecounts(table, field, **kwargs):
  
     """
     
-    return TypeCountsView(table, field, **kwargs)
+    return TypeCountsView(table, field)
 
 
 class TypeCountsView(RowContainer):
@@ -1813,9 +1815,9 @@ class TypeCountsView(RowContainer):
 
 def typeset(table, field):
     """
-    Return a set containing all Python types found for values in the given field.
-    E.g.::
-    
+    Return a set containing all Python types found for values in the given
+    field. E.g.::
+
         >>> from petl import typeset
         >>> table = [['foo', 'bar', 'baz'],
         ...          ['A', 1, '2'],
@@ -1839,17 +1841,17 @@ def typeset(table, field):
         try:
             s.add(v.__class__)
         except IndexError:
-            pass # ignore short rows
+            pass  # ignore short rows
     return s
     
 
-def parsecounter(table, field, parsers={'int': int, 'float': float}):    
+def parsecounter(table, field, parsers=(('int', int), ('float', float))):
     """
-    Count the number of `str` or `unicode` values under the given fields that can 
-    be parsed as ints, floats or via custom parser functions. Return a pair of 
-    `Counter` objects, the first mapping parser names to the number of strings 
-    successfully parsed, the second mapping parser names to the number of errors. 
-    E.g.::
+    Count the number of `str` or `unicode` values under the given fields that
+    can be parsed as ints, floats or via custom parser functions. Return a
+    pair of `Counter` objects, the first mapping parser names to the number of
+    strings successfully parsed, the second mapping parser names to the
+    number of errors. E.g.::
     
         >>> from petl import parsecounter
         >>> table = [['foo', 'bar', 'baz'],
@@ -1867,7 +1869,9 @@ def parsecounter(table, field, parsers={'int': int, 'float': float}):
     The `field` argument can be a field name or index (starting from zero).    
 
     """
-    
+
+    if isinstance(parsers, (list, tuple)):
+        parsers = dict(parsers)
     counter, errors = Counter(), Counter()
     # need to initialise
     for n in parsers.keys():
@@ -1885,7 +1889,7 @@ def parsecounter(table, field, parsers={'int': int, 'float': float}):
     return counter, errors
 
 
-def parsecounts(table, field, parsers={'int': int, 'float': float}):    
+def parsecounts(table, field, parsers=(('int', int), ('float', float))):
     """
     Count the number of `str` or `unicode` values that can be parsed as ints, 
     floats or via custom parser functions. Return a table mapping parser names
@@ -1916,22 +1920,24 @@ def parsecounts(table, field, parsers={'int': int, 'float': float}):
 
 class ParseCountsView(RowContainer):
     
-    def __init__(self, table, field, parsers={'int': int, 'float': float}):
+    def __init__(self, table, field, parsers=(('int', int), ('float', float))):
         self.table = table
         self.field = field
+        if isinstance(parsers, (list, tuple)):
+            parsers = dict(parsers)
         self.parsers = parsers
         
     def __iter__(self):
         counter, errors = parsecounter(self.table, self.field, self.parsers)
         yield ('type', 'count', 'errors')
-        for (item, count) in counter.most_common():
-            yield (item, count, errors[item])
+        for (item, n) in counter.most_common():
+            yield (item, n, errors[item])
 
 
 def datetimeparser(fmt, strict=True):
     """
-    Return a function to parse strings as :class:`datetime.datetime` objects using a given format.
-    E.g.::
+    Return a function to parse strings as :class:`datetime.datetime` objects
+    using a given format. E.g.::
 
         >>> from petl import datetimeparser
         >>> isodatetime = datetimeparser('%Y-%m-%dT%H:%M:%S')
@@ -1983,8 +1989,8 @@ def datetimeparser(fmt, strict=True):
 
 def dateparser(fmt, strict=True):
     """
-    Return a function to parse strings as :class:`datetime.date` objects using a given format.
-    E.g.::
+    Return a function to parse strings as :class:`datetime.date` objects using
+    a given format. E.g.::
     
         >>> from petl import dateparser
         >>> isodate = dateparser('%Y-%m-%d')
@@ -2098,13 +2104,13 @@ def timeparser(fmt, strict=True):
     return parser
     
 
-def boolparser(true_strings=['true', 't', 'yes', 'y', '1'], 
-               false_strings=['false', 'f', 'no', 'n', '0'],
+def boolparser(true_strings=('true', 't', 'yes', 'y', '1'),
+               false_strings=('false', 'f', 'no', 'n', '0'),
                case_sensitive=False, 
                strict=True):
     """
-    Return a function to parse strings as :class:`bool` objects using a given set of
-    string representations for `True` and `False`.
+    Return a function to parse strings as :class:`bool` objects using a given
+    set of string representations for `True` and `False`.
     E.g.::
 
         >>> from petl import boolparser    
@@ -2160,6 +2166,7 @@ def boolparser(true_strings=['true', 't', 'yes', 'y', '1'],
     if not case_sensitive:
         true_strings = [s.lower() for s in true_strings]
         false_strings = [s.lower() for s in false_strings]
+
     def parser(value):
         value = value.strip()
         if not case_sensitive:
@@ -2169,9 +2176,11 @@ def boolparser(true_strings=['true', 't', 'yes', 'y', '1'],
         elif value in false_strings:
             return False
         elif strict:
-            raise ValueError('value is not one of recognised boolean strings: %r' % value)
+            raise ValueError('value is not one of recognised boolean strings: '
+                             '%r' % value)
         else:
             return value
+
     return parser
     
 
@@ -2193,7 +2202,7 @@ def limits(table, field):
     
     vals = itervalues(table, field)
     try:
-        minv = maxv = vals.next()
+        minv = maxv = next(vals)
     except StopIteration:
         return None, None
     else:
@@ -2251,8 +2260,8 @@ def stats(table, field):
 
 def expr(s):
     """
-    Construct a function operating on a record (i.e., a dictionary representation
-    of a data row, indexed by field name).
+    Construct a function operating on a record (i.e., a dictionary
+    representation of a data row, indexed by field name).
     
     The expression string is converted into a lambda function by prepending
     the string with ``'lambda rec: '``, then replacing anything enclosed in 
@@ -2265,8 +2274,10 @@ def expr(s):
     """
     
     prog = re.compile('\{([^}]+)\}')
+
     def repl(matchobj):
         return "rec['%s']" % matchobj.group(1)
+
     return eval("lambda rec: " + prog.sub(repl, s))
     
     
@@ -2287,7 +2298,9 @@ def parsenumber(v, strict=False):
     
     .. versionadded:: 0.4
     
-    .. versionchanged:: 0.7 Set ``strict=True`` to get an exception if parsing fails.
+    .. versionchanged:: 0.7
+
+    Set ``strict=True`` to get an exception if parsing fails.
 
     .. deprecated:: 0.24
 
@@ -2297,11 +2310,11 @@ def parsenumber(v, strict=False):
 
     try:
         return int(v)
-    except ValueError:
+    except:
         pass
     try:
         return long(v)
-    except ValueError:
+    except:
         pass
     try:
         return float(v)
@@ -2309,9 +2322,9 @@ def parsenumber(v, strict=False):
         pass
     try:
         return complex(v)
-    except:
+    except Exception as e:
         if strict:
-            raise
+            raise e
     return v
 
 
@@ -2498,9 +2511,9 @@ class RandomTable(RowContainer):
                 
         
 def dummytable(numrows=100, 
-               fields=[('foo', partial(random.randint, 0, 100)), 
+               fields=(('foo', partial(random.randint, 0, 100)),
                        ('bar', partial(random.choice, ['apples', 'pears', 'bananas', 'oranges'])), 
-                       ('baz', random.random)], 
+                       ('baz', random.random)),
                wait=0):
     """
     Construct a table with dummy data. Use `numrows` to specify the number of 
@@ -2730,7 +2743,7 @@ def shortlistmergesorted(key=None, reverse=False, *iterables):
     for iterable in iterables:
         it = iter(iterable)
         try:
-            first = it.next()
+            first = next(it)
             iterators.append(it)
             shortlist.append(first)
         except StopIteration:
@@ -2741,7 +2754,7 @@ def shortlistmergesorted(key=None, reverse=False, *iterables):
         yield nxt
         nextidx = shortlist.index(nxt)
         try:
-            shortlist[nextidx] = iterators[nextidx].next()
+            shortlist[nextidx] = next(iterators[nextidx])
         except StopIteration:
             del shortlist[nextidx]
             del iterators[nextidx]
@@ -2750,7 +2763,7 @@ def shortlistmergesorted(key=None, reverse=False, *iterables):
 class Record(tuple):
     
     def __new__(cls, row, flds, missing=None):
-        t = super(HybridRow, cls).__new__(cls, row)
+        t = super(Record, cls).__new__(cls, row)
         return t
     
     def __init__(self, row, flds, missing=None):
@@ -2796,7 +2809,7 @@ def iterrecords(table, *sliceargs, **kwargs):
 
     missing = kwargs.get('missing', None)
     it = iter(table)
-    flds = it.next()
+    flds = next(it)
     if sliceargs:
         it = islice(it, *sliceargs)
     for row in it:
@@ -2967,7 +2980,7 @@ class ClockView(RowContainer):
         it = iter(self.wrapped)
         while True:
             before = time.clock()
-            row = it.next()
+            row = next(it)
             after = time.clock()
             self.time += (after - before)
             yield row
@@ -3011,16 +3024,16 @@ def isordered(table, key=None, reverse=False, strict=False):
         op = operator.ge
         
     it = iter(table)
-    fieldnames = [str(f) for f in it.next()]
+    fieldnames = [str(f) for f in next(it)]
     if key is None:
-        prev = it.next()
+        prev = next(it)
         for curr in it:
             if not op(curr, prev):
                 return False
             prev = curr
     else:
         getkey = itemgetter(*asindices(fieldnames, key))
-        prev = it.next()
+        prev = next(it)
         prevkey = getkey(prev)
         for curr in it:
             currkey = getkey(curr)
@@ -3066,7 +3079,7 @@ def rowgroupby(table, key, value=None):
     """
     
     it = iter(table)
-    fields = it.next()
+    fields = next(it)
     
     # wrap rows 
     it = hybridrows(fields, it)
@@ -3093,7 +3106,7 @@ def rowgroupby(table, key, value=None):
 def iterpeek(it, n=1):
     it = iter(it) # make sure it's an iterator
     if n == 1:
-        peek = it.next()
+        peek = next(it)
         return peek, chain([peek], it)
     else:
         peek = list(islice(it, n))
@@ -3107,7 +3120,7 @@ def rowgroupbybin(table, key, width, value=None, minv=None, maxv=None):
     """
 
     it = iter(table)
-    fields = it.next()
+    fields = next(it)
     
     # wrap rows 
     it = hybridrows(fields, it)
@@ -3141,15 +3154,15 @@ def rowgroupbybin(table, key, width, value=None, minv=None, maxv=None):
             binnedvals = []
             try:
                 while keyv < binminv: # advance until we're within the bin's range
-                    row = it.next()
+                    row = next(it)
                     keyv = getkey(row)
                 while binminv <= keyv < binmaxv: # within the bin
                     binnedvals.append(getval(row))
-                    row = it.next()
+                    row = next(it)
                     keyv = getkey(row)
                 while keyv == binmaxv == maxv: # possible floating point precision bug here?
                     binnedvals.append(getval(row)) # last bin is open if maxv is specified
-                    row = it.next()
+                    row = next(it)
                     keyv = getkey(row)
             except StopIteration:
                 pass
@@ -3159,7 +3172,7 @@ def rowgroupbybin(table, key, width, value=None, minv=None, maxv=None):
         
         # initialise minimum
         try:
-            row = it.next()
+            row = next(it)
         except StopIteration:
             pass
         else:
@@ -3178,15 +3191,15 @@ def rowgroupbybin(table, key, width, value=None, minv=None, maxv=None):
                         binmaxv = maxv # truncate final bin to specified maximum
                     binnedvals = []
                     while keyv < binminv: # advance until we're within the bin's range
-                        row = it.next()
+                        row = next(it)
                         keyv = getkey(row)
                     while binminv <= keyv < binmaxv: # within the bin
                         binnedvals.append(getval(row))
-                        row = it.next()
+                        row = next(it)
                         keyv = getkey(row)
                     while maxv is not None and keyv == binmaxv == maxv: # possible floating point precision bug here?
                         binnedvals.append(getval(row)) # last bin is open if maxv is specified
-                        row = it.next()
+                        row = next(it)
                         keyv = getkey(row)
                     yield (binminv, binmaxv), binnedvals
                     if maxv is not None and binmaxv == maxv: # possible floating point precision bug here?
@@ -3196,7 +3209,6 @@ def rowgroupbybin(table, key, width, value=None, minv=None, maxv=None):
                 yield (binminv, binmaxv), binnedvals
         
 
-        
 def nthword(n, sep=None):
     """
     Construct a function to return the nth word in a string. E.g.::
@@ -3265,8 +3277,21 @@ class SortableItem(object):
     def __lt__(self, other):
         if isinstance(other, SortableItem):
             other = other.obj
-        if other is None:
+
+        # None comes first
+        if self.obj is None and other is not None:
+            return True
+        if self.obj is not None and other is None:
             return False
+
+        # numbers come before strings
+        if (isinstance(self.obj, number_types)
+                and isinstance(other, string_types)):
+            return True
+        if (isinstance(self.obj, string_types)
+                and isinstance(other, number_types)):
+            return False
+
         return self.obj < other
 
     def __le__(self, other):
@@ -3277,6 +3302,7 @@ class SortableItem(object):
 
     def __ge__(self, other):
         return not (self < other)
+
 
 sortable_types.add(SortableItem)
 

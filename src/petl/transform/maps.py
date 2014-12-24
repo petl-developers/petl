@@ -1,17 +1,19 @@
-from __future__ import absolute_import, print_function, division
+from __future__ import absolute_import, print_function, division, \
+    unicode_literals
 
 
 import operator
+from ..compat import OrderedDict, next, string_types
 
 
-from petl.compat import OrderedDict
-from petl.util import RowContainer, hybridrows, expr, rowgroupby
-from petl.transform.sorts import sort
+from ..util import RowContainer, hybridrows, expr, rowgroupby
+from .sorts import sort
 
 
 def fieldmap(table, mappings=None, failonerror=False, errorvalue=None):
     """
-    Transform a table, mapping fields arbitrarily between input and output. E.g.::
+    Transform a table, mapping fields arbitrarily between input and output.
+    E.g.::
 
         >>> from petl import fieldmap, look
         >>> look(table1)
@@ -90,7 +92,8 @@ def fieldmap(table, mappings=None, failonerror=False, errorvalue=None):
 
 class FieldMapView(RowContainer):
 
-    def __init__(self, source, mappings=None, failonerror=False, errorvalue=None):
+    def __init__(self, source, mappings=None, failonerror=False,
+                 errorvalue=None):
         self.source = source
         if mappings is None:
             self.mappings = OrderedDict()
@@ -103,12 +106,13 @@ class FieldMapView(RowContainer):
         self.mappings[key] = value
 
     def __iter__(self):
-        return iterfieldmap(self.source, self.mappings, self.failonerror, self.errorvalue)
+        return iterfieldmap(self.source, self.mappings, self.failonerror,
+                            self.errorvalue)
 
 
 def iterfieldmap(source, mappings, failonerror, errorvalue):
     it = iter(source)
-    flds = it.next()
+    flds = next(it)
     outflds = mappings.keys()
     yield tuple(outflds)
 
@@ -118,7 +122,7 @@ def iterfieldmap(source, mappings, failonerror, errorvalue):
             mapfuns[outfld] = operator.itemgetter(m)
         elif isinstance(m, int) and m < len(flds):
             mapfuns[outfld] = operator.itemgetter(m)
-        elif isinstance(m, basestring):
+        elif isinstance(m, string_types):
             mapfuns[outfld] = expr(m)
         elif callable(m):
             mapfuns[outfld] = m
@@ -130,26 +134,21 @@ def iterfieldmap(source, mappings, failonerror, errorvalue):
             elif isinstance(fm, dict):
                 mapfuns[outfld] = composedict(fm, srcfld)
             else:
-                raise Exception('expected callable or dict') # TODO better error
+                raise Exception('expected callable or dict')
         else:
-            raise Exception('invalid mapping', outfld, m) # TODO better error
+            raise Exception('invalid mapping', outfld, m)
 
     for row in hybridrows(flds, it):
-        try:
-            # use list comprehension if possible
-            outrow = [mapfuns[outfld](row) for outfld in outflds]
-        except:
-            # fall back to doing it one field at a time
-            outrow = list()
-            for outfld in outflds:
-                try:
-                    val = mapfuns[outfld](row)
-                except:
-                    if failonerror:
-                        raise
-                    else:
-                        val = errorvalue
-                outrow.append(val)
+        outrow = list()
+        for outfld in outflds:
+            try:
+                val = mapfuns[outfld](row)
+            except Exception as e:
+                if failonerror:
+                    raise e
+                else:
+                    val = errorvalue
+            outrow.append(val)
         yield tuple(outrow)
 
 
@@ -227,7 +226,8 @@ def rowmap(table, rowmapper, fields, failonerror=False, missing=None):
 
 class RowMapView(RowContainer):
 
-    def __init__(self, source, rowmapper, fields, failonerror=False, missing=None):
+    def __init__(self, source, rowmapper, fields, failonerror=False,
+                 missing=None):
         self.source = source
         self.rowmapper = rowmapper
         self.fields = fields
@@ -235,21 +235,21 @@ class RowMapView(RowContainer):
         self.missing = missing
 
     def __iter__(self):
-        return iterrowmap(self.source, self.rowmapper, self.fields, self.failonerror,
-                          self.missing)
+        return iterrowmap(self.source, self.rowmapper, self.fields,
+                          self.failonerror, self.missing)
 
 
 def iterrowmap(source, rowmapper, fields, failonerror, missing):
     it = iter(source)
-    srcflds = it.next()
+    srcflds = next(it)
     yield tuple(fields)
     for row in hybridrows(srcflds, it, missing):
         try:
             outrow = rowmapper(row)
             yield tuple(outrow)
-        except:
+        except Exception as e:
             if failonerror:
-                raise
+                raise e
 
 
 def recordmap(table, recmapper, fields, failonerror=False):
@@ -333,7 +333,8 @@ def rowmapmany(table, rowgenerator, fields, failonerror=False, missing=None):
 
 class RowMapManyView(RowContainer):
 
-    def __init__(self, source, rowgenerator, fields, failonerror=False, missing=None):
+    def __init__(self, source, rowgenerator, fields, failonerror=False,
+                 missing=None):
         self.source = source
         self.rowgenerator = rowgenerator
         self.fields = fields
@@ -347,15 +348,15 @@ class RowMapManyView(RowContainer):
 
 def iterrowmapmany(source, rowgenerator, fields, failonerror, missing):
     it = iter(source)
-    srcflds = it.next()
+    srcflds = next(it)
     yield tuple(fields)
     for row in hybridrows(srcflds, it, missing):
         try:
             for outrow in rowgenerator(row):
                 yield tuple(outrow)
-        except:
+        except Exception as e:
             if failonerror:
-                raise
+                raise e
 
 
 def recordmapmany(table, rowgenerator, fields, failonerror=False):
@@ -372,7 +373,7 @@ def recordmapmany(table, rowgenerator, fields, failonerror=False):
     return rowmapmany(table, rowgenerator, fields, failonerror=failonerror)
 
 
-def rowgroupmap(table, key, mapper, fields=None, missing=None, presorted=False,
+def rowgroupmap(table, key, mapper, fields=None, presorted=False,
                 buffersize=None, tempdir=None, cache=True):
     """
     Group rows under the given key then apply `mapper` to yield zero or more
@@ -409,5 +410,3 @@ def iterrowgroupmap(source, key, mapper, fields):
     for key, rows in rowgroupby(source, key):
         for row in mapper(key, rows):
             yield row
-
-

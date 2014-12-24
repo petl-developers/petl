@@ -1,7 +1,11 @@
-from __future__ import absolute_import, print_function, division
+from __future__ import absolute_import, print_function, division, \
+    unicode_literals
 
 
-from petl.util import RowContainer, asindices
+from ..compat import next
+
+
+from ..util import RowContainer, asindices
 
 
 def filldown(table, *fields, **kwargs):
@@ -109,20 +113,20 @@ class FillDownView(RowContainer):
 
 def iterfilldown(table, fillfields, missing):
     it = iter(table)
-    fields = it.next()
+    fields = next(it)
     yield tuple(fields)
-    if not fillfields: # fill down all fields
+    if not fillfields:  # fill down all fields
         fillfields = fields
     fillindices = asindices(fields, fillfields)
-    fill = list(it.next()) # fill values
+    fill = list(next(it))  # fill values
     yield tuple(fill)
     for row in it:
         outrow = list(row)
         for idx in fillindices:
             if row[idx] == missing:
-                outrow[idx] = fill[idx] # fill down
+                outrow[idx] = fill[idx]  # fill down
             else:
-                fill[idx] = row[idx] # new fill value
+                fill[idx] = row[idx]  # new fill value
         yield tuple(outrow)
 
 
@@ -189,7 +193,7 @@ class FillRightView(RowContainer):
 
 def iterfillright(table, missing):
     it = iter(table)
-    fields = it.next()
+    fields = next(it)
     yield tuple(fields)
     for row in it:
         outrow = list(row)
@@ -262,7 +266,7 @@ class FillLeftView(RowContainer):
 
 def iterfillleft(table, missing):
     it = iter(table)
-    fields = it.next()
+    fields = next(it)
     yield tuple(fields)
     for row in it:
         outrow = list(reversed(row))
@@ -270,5 +274,3 @@ def iterfillleft(table, missing):
             if i > 0 and outrow[i] == missing and outrow[i-1] != missing:
                 outrow[i] = outrow[i-1]
         yield tuple(reversed(outrow))
-
-

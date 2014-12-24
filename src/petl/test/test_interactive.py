@@ -3,12 +3,15 @@ Tests for the petl.fluent module.
 
 """
 
-from __future__ import absolute_import, print_function, division
+
+from __future__ import absolute_import, print_function, division, \
+    unicode_literals
 
 
 from tempfile import NamedTemporaryFile
 import csv
 from nose.tools import eq_
+from petl.compat import PY3
 
 
 import petl
@@ -40,8 +43,12 @@ def test_basics():
     
     
 def test_staticmethods():
-    
-    f = NamedTemporaryFile(delete=False)
+
+    if PY3:
+        mode = 'w'
+    else:
+        mode = 'wb'
+    f = NamedTemporaryFile(mode=mode, delete=False)
     writer = csv.writer(f, delimiter='\t')
     table = (('foo', 'bar'),
              ('a', 1),
@@ -57,7 +64,7 @@ def test_staticmethods():
               ('b', '2'),
               ('c', '2'))
     ieq(expect, actual)
-    ieq(expect, actual) # verify can iterate twice
+    ieq(expect, actual)  # verify can iterate twice
     
     
 def test_container():
@@ -78,7 +85,7 @@ def test_repr_html():
              ('a', 1),
              ('b', 2),
              ('c', 2))
-    expect = u"""<table class='petl'>
+    expect = b"""<table class='petl'>
 <thead>
 <tr>
 <th>foo</th>
@@ -102,7 +109,7 @@ def test_repr_html():
 </table>
 """
     actual = etl.wrap(table)._repr_html_()
-    for l1, l2 in zip(expect.split('\n'), actual.split('\r\n')):
+    for l1, l2 in zip(expect.split(b'\n'), actual.split(b'\r\n')):
         eq_(l1, l2)
 
 
@@ -115,7 +122,7 @@ def test_repr_html_limit():
     # lower repr limit
     etl.repr_html_limit = 2
 
-    expect = u"""<table class='petl'>
+    expect = b"""<table class='petl'>
 <thead>
 <tr>
 <th>foo</th>
@@ -136,7 +143,7 @@ def test_repr_html_limit():
 <p><strong>...</strong></p>
 """
     actual = etl.wrap(table)._repr_html_()
-    for l1, l2 in zip(expect.split('\n'), actual.split('\r\n')):
+    for l1, l2 in zip(expect.split(b'\n'), actual.split(b'\r\n')):
         eq_(l1, l2)
 
 

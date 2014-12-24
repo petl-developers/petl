@@ -1,4 +1,5 @@
-from __future__ import absolute_import, print_function, division, unicode_literals
+from __future__ import absolute_import, print_function, division, \
+    unicode_literals
 
 
 from tempfile import NamedTemporaryFile
@@ -22,7 +23,7 @@ def test_tohtml():
     # check what it did
     with open(f.name, 'rb') as o:
         actual = o.read()
-        expect = """<table class='petl'>
+        expect = b"""<table class='petl'>
 <thead>
 <tr>
 <th>foo</th>
@@ -60,7 +61,7 @@ def test_tohtml_caption():
     # check what it did
     with open(f.name, 'rb') as o:
         actual = o.read()
-        expect = """<table class='petl'>
+        expect = b"""<table class='petl'>
 <caption>my table</caption>
 <thead>
 <tr>

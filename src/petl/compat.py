@@ -38,23 +38,46 @@ if PY3:
     maketrans = str.maketrans
     string_types = str,
     integer_types = int,
-    number_types = int, float, complex
+    number_types = int, float
     class_types = type,
     text_type = str
     binary_type = bytes
-    sortable_types = set([complex, float, int, str])
+    sortable_types = set()
     long = int
+    from urllib.request import urlopen
+    from io import StringIO, BytesIO
+    import pickle
+    maxint = sys.maxsize
 
 else:
     from itertools import ifilter, ifilterfalse, imap, izip, izip_longest
     from string import maketrans
     string_types = basestring,
     integer_types = int, long
-    number_types = int, long, float, complex
+    number_types = int, long, float
     class_types = type, types.ClassType
     text_type = unicode
     binary_type = str
     sortable_types = set([complex, float, int, long, str, unicode])
+    from urllib2 import urlopen
+    from cStringIO import StringIO
+    BytesIO = StringIO
+    import cPickle as pickle
+    maxint = sys.maxint
+
+try:
+    advance_iterator = next
+except NameError:
+    def advance_iterator(it):
+        return it.next()
+next = advance_iterator
+
+try:
+    callable = callable
+except NameError:
+    def callable(obj):
+        return any("__call__" in klass.__dict__ for klass in type(obj).__mro__)
+
 
 
 

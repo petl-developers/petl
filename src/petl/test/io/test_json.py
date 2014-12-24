@@ -13,17 +13,18 @@ from petl.io.json import fromjson, fromdicts, tojson, tojsonarrays
 def test_fromjson_1():
 
     f = NamedTemporaryFile(delete=False)
-    data = '[{"foo": "a", "bar": 1}, ' \
-           '{"foo": "b", "bar": 2}, ' \
-           '{"foo": "c", "bar": 2}]'
+    data = "[{'foo': 'a', 'bar': 1}, " \
+           "{'foo': 'b', 'bar': 2}, " \
+           "{'foo': 'c', 'bar': 2}]"
     f.write(data)
     f.close()
 
     actual = fromjson(f.name)
-    expect = (('foo', 'bar'),
-              ('a', 1),
-              ('b', 2),
-              ('c', 2))
+    # N.B., fields come out in sorted order
+    expect = (('bar', 'foo'),
+              (1, 'a'),
+              (2, 'b'),
+              (2, 'c'))
     ieq(expect, actual)
     ieq(expect, actual)  # verify can iterate twice
 
@@ -31,17 +32,18 @@ def test_fromjson_1():
 def test_fromjson_2():
 
     f = NamedTemporaryFile(delete=False)
-    data = '[{"foo": "a", "bar": 1}, ' \
-           '{"foo": "b"}, ' \
-           '{"foo": "c", "bar": 2, "baz": true}]'
+    data = "[{'foo': 'a', 'bar': 1}, " \
+           "{'foo': 'b'}, " \
+           "{'foo': 'c', 'bar': 2, 'baz': true}]"
     f.write(data)
     f.close()
 
     actual = fromjson(f.name)
-    expect = (('foo', 'bar', 'baz'),
-              ('a', 1, None),
-              ('b', None, None),
-              ('c', 2, True))
+    # N.B., fields come out in sorted order
+    expect = (('bar', 'baz', 'foo'),
+              (1, None, 'a'),
+              (None, None, 'b'),
+              (2, True, 'c'))
     ieq(expect, actual)
     ieq(expect, actual)  # verify can iterate twice
 
@@ -49,9 +51,9 @@ def test_fromjson_2():
 def test_fromjson_3():
 
     f = NamedTemporaryFile(delete=False)
-    data = '[{"foo": "a", "bar": 1}, ' \
-           '{"foo": "b"}, ' \
-           '{"foo": "c", "bar": 2, "baz": true}]'
+    data = "[{'foo': 'a', 'bar': 1}, " \
+           "{'foo': 'b'}, " \
+           "{'foo': 'c', 'bar': 2, 'baz': true}]"
     f.write(data)
     f.close()
 
@@ -66,37 +68,39 @@ def test_fromjson_3():
 
 def test_fromdicts_1():
 
-    data = [{"foo": "a", "bar": 1},
-            {"foo": "b", "bar": 2},
-            {"foo": "c", "bar": 2}]
+    data = [{'foo': 'a', 'bar': 1},
+            {'foo': 'b', 'bar': 2},
+            {'foo': 'c', 'bar': 2}]
     actual = fromdicts(data)
-    expect = (('foo', 'bar'),
-              ('a', 1),
-              ('b', 2),
-              ('c', 2))
+    # N.B., fields come out in sorted order
+    expect = (('bar', 'foo'),
+              (1, 'a'),
+              (2, 'b'),
+              (2, 'c'))
     ieq(expect, actual)
     ieq(expect, actual)  # verify can iterate twice
 
 
 def test_fromdicts_2():
 
-    data = [{"foo": "a", "bar": 1},
-            {"foo": "b"},
-            {"foo": "c", "bar": 2, "baz": True}]
+    data = [{'foo': 'a', 'bar': 1},
+            {'foo': 'b'},
+            {'foo': 'c', 'bar': 2, 'baz': True}]
     actual = fromdicts(data)
-    expect = (('foo', 'bar', 'baz'),
-              ('a', 1, None),
-              ('b', None, None),
-              ('c', 2, True))
+    # N.B., fields come out in sorted order
+    expect = (('bar', 'baz', 'foo'),
+              (1, None, 'a'),
+              (None, None, 'b'),
+              (2, True, 'c'))
     ieq(expect, actual)
     ieq(expect, actual)  # verify can iterate twice
 
 
 def test_fromdicts_3():
 
-    data = [{"foo": "a", "bar": 1},
-            {"foo": "b"},
-            {"foo": "c", "bar": 2, "baz": True}]
+    data = [{'foo': 'a', 'bar': 1},
+            {'foo': 'b'},
+            {'foo': 'c', 'bar': 2, 'baz': True}]
     actual = fromdicts(data, header=['foo', 'bar'])
     expect = (('foo', 'bar'),
               ('a', 1),

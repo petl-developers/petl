@@ -1,11 +1,12 @@
-from __future__ import absolute_import, print_function, division
+from __future__ import absolute_import, print_function, division, \
+    unicode_literals
 
 
 import operator
 
 
-from petl.util import RowContainer, asindices
-from petl.transform.sorts import sort
+from ..util import RowContainer, asindices
+from .sorts import sort
 
 
 def duplicates(table, key=None, presorted=False, buffersize=None, tempdir=None, 
@@ -85,7 +86,7 @@ class DuplicatesView(RowContainer):
         else:
             self.source = sort(source, key, buffersize=buffersize, 
                                tempdir=tempdir, cache=cache)
-        self.key = key # TODO property
+        self.key = key
         
     def __iter__(self):
         return iterduplicates(self.source, self.key)
@@ -96,7 +97,7 @@ def iterduplicates(source, key):
     # first need to sort the data
     it = iter(source)
 
-    flds = it.next()
+    flds = next(it)
     yield tuple(flds)
 
     # convert field selection into field indices
@@ -196,7 +197,7 @@ class UniqueView(RowContainer):
         else:
             self.source = sort(source, key, buffersize=buffersize,
                                tempdir=tempdir, cache=cache)
-        self.key = key  # TODO property
+        self.key = key
         
     def __iter__(self):
         return iterunique(self.source, self.key)
@@ -207,7 +208,7 @@ def iterunique(source, key):
     # first need to sort the data
     it = iter(source)
 
-    flds = it.next()
+    flds = next(it)
     yield tuple(flds)
 
     # convert field selection into field indices
@@ -221,7 +222,7 @@ def iterunique(source, key):
     # the field selection
     getkey = operator.itemgetter(*indices)
     
-    prev = it.next()
+    prev = next(it)
     prev_key = getkey(prev)
     prev_comp_ne = True
     
@@ -284,8 +285,9 @@ def conflicts(table, key, missing=None, include=None, exclude=None,
     argument.
 
     One or more fields can be ignored when determining conflicts by providing
-    the `exclude` keyword argument. Alternatively, fields to use when determining
-    conflicts can be specified explicitly with the `include` keyword argument. 
+    the `exclude` keyword argument. Alternatively, fields to use when
+    determining conflicts can be specified explicitly with the `include`
+    keyword argument.
 
     If `presorted` is True, it is assumed that the data are already sorted by
     the given key, and the `buffersize`, `tempdir` and `cache` arguments are
@@ -328,9 +330,9 @@ class ConflictsView(RowContainer):
 def iterconflicts(source, key, missing, exclude, include):
 
     # normalise arguments
-    if isinstance(exclude, basestring):
+    if exclude and not isinstance(exclude, (list, tuple)):
         exclude = (exclude,)
-    if isinstance(include, basestring):
+    if include and not isinstance(include, (list, tuple)):
         include = (include,)
 
     # exclude overrides include
@@ -338,7 +340,7 @@ def iterconflicts(source, key, missing, exclude, include):
         include = None
         
     it = iter(source)
-    flds = it.next()
+    flds = next(it)
     yield tuple(flds)
 
     # convert field selection into field indices
@@ -414,7 +416,7 @@ class DistinctView(RowContainer):
 
     def __iter__(self):
         it = iter(self.table)
-        flds = it.next()
+        flds = next(it)
 
         # convert field selection into field indices
         if self.key is None:

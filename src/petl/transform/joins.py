@@ -1,15 +1,17 @@
-from __future__ import absolute_import, print_function, division
+from __future__ import absolute_import, print_function, division, \
+    unicode_literals
 
 
 import itertools
 import operator
+from ..compat import next
 
 
-from petl.util import RowContainer, asindices, rowgetter, rowgroupby, header,\
+from ..util import RowContainer, asindices, rowgetter, rowgroupby, header,\
     data
-from petl.transform.sorts import sort
-from petl.transform.basics import cut, cutout
-from petl.transform.dedup import distinct
+from .sorts import sort
+from .basics import cut, cutout
+from .dedup import distinct
 
 
 def natural_key(left, right):
@@ -406,8 +408,8 @@ def iterjoin(left, right, lkey, rkey, leftouter=False, rightouter=False,
     lit = iter(left)
     rit = iter(right)
 
-    lflds = lit.next()
-    rflds = rit.next()
+    lflds = next(lit)
+    rflds = next(rit)
 
     # determine indices of the key fields in left and right tables
     lkind = asindices(lflds, lkey)
@@ -472,8 +474,8 @@ def iterjoin(left, right, lkey, rkey, leftouter=False, rightouter=False,
     try:
 
         # pick off initial row groups
-        lkval, lrowgrp = lgit.next()
-        rkval, rrowgrp = rgit.next()
+        lkval, lrowgrp = next(lgit)
+        rkval, rrowgrp = next(rgit)
 
         while True:
             if lkval < rkval:
@@ -481,19 +483,19 @@ def iterjoin(left, right, lkey, rkey, leftouter=False, rightouter=False,
                     for row in joinrows(lrowgrp, None):
                         yield tuple(row)
                 # advance left
-                lkval, lrowgrp = lgit.next()
+                lkval, lrowgrp = next(lgit)
             elif lkval > rkval:
                 if rightouter:
                     for row in joinrows(None, rrowgrp):
                         yield tuple(row)
                 # advance right
-                rkval, rrowgrp = rgit.next()
+                rkval, rrowgrp = next(rgit)
             else:
                 for row in joinrows(lrowgrp, rrowgrp):
                     yield tuple(row)
                 # advance both
-                lkval, lrowgrp = lgit.next()
-                rkval, rrowgrp = rgit.next()
+                lkval, lrowgrp = next(lgit)
+                rkval, rrowgrp = next(rgit)
 
     except StopIteration:
         pass
@@ -641,9 +643,10 @@ def antijoin(left, right, key=None, lkey=None, rkey=None, presorted=False,
         +------+----------+
 
     If `presorted` is True, it is assumed that the data are already sorted by
-    the given key, and the `buffersize`, `tempdir` and `cache` arguments are ignored. Otherwise, the data
-    are sorted, see also the discussion of the `buffersize`, `tempdir` and `cache` arguments under the
-    :func:`sort` function.
+    the given key, and the `buffersize`, `tempdir` and `cache` arguments are
+    ignored. Otherwise, the data are sorted, see also the discussion of the
+    `buffersize`, `tempdir` and `cache` arguments under the :func:`sort`
+    function.
 
     .. versionchanged:: 0.24
 
@@ -679,8 +682,8 @@ def iterantijoin(left, right, lkey, rkey):
     lit = iter(left)
     rit = iter(right)
 
-    lflds = lit.next()
-    rflds = rit.next()
+    lflds = next(lit)
+    rflds = next(rit)
     yield tuple(lflds)
 
     # determine indices of the key fields in left and right tables
@@ -700,22 +703,22 @@ def iterantijoin(left, right, lkey, rkey):
     try:
 
         # pick off initial row groups
-        lkval, lrowgrp = lgit.next()
-        rkval, _ = rgit.next()
+        lkval, lrowgrp = next(lgit)
+        rkval, _ = next(rgit)
 
         while True:
             if lkval < rkval:
                 for row in lrowgrp:
                     yield tuple(row)
                 # advance left
-                lkval, lrowgrp = lgit.next()
+                lkval, lrowgrp = next(lgit)
             elif lkval > rkval:
                 # advance right
-                rkval, _ = rgit.next()
+                rkval, _ = next(rgit)
             else:
                 # advance both
-                lkval, lrowgrp = lgit.next()
-                rkval, _ = rgit.next()
+                lkval, lrowgrp = next(lgit)
+                rkval, _ = next(rgit)
 
     except StopIteration:
         pass
@@ -827,8 +830,8 @@ def iterlookupjoin(left, right, lkey, rkey, missing=None, lprefix=None,
     lit = iter(left)
     rit = iter(right)
 
-    lflds = lit.next()
-    rflds = rit.next()
+    lflds = next(lit)
+    rflds = next(rit)
 
     # determine indices of the key fields in left and right tables
     lkind = asindices(lflds, lkey)
@@ -857,16 +860,16 @@ def iterlookupjoin(left, right, lkey, rkey, missing=None, lprefix=None,
     yield tuple(outflds)
 
     # define a function to join two groups of rows
-    def joinrows(lrowgrp, rrowgrp):
-        if rrowgrp is None:
-            for lrow in lrowgrp:
+    def joinrows(_lrowgrp, _rrowgrp):
+        if _rrowgrp is None:
+            for lrow in _lrowgrp:
                 outrow = list(lrow)  # start with the left row
                 # extend with missing values in place of the right row
                 outrow.extend([missing] * len(rvind))
                 yield tuple(outrow)
         else:
-            rrow = iter(rrowgrp).next()  # pick first arbitrarily
-            for lrow in lrowgrp:
+            rrow = next(iter(_rrowgrp))  # pick first arbitrarily
+            for lrow in _lrowgrp:
                 # start with the left row
                 outrow = list(lrow)
                 # extend with non-key values from the right row
@@ -882,24 +885,24 @@ def iterlookupjoin(left, right, lkey, rkey, missing=None, lprefix=None,
     try:
 
         # pick off initial row groups
-        lkval, lrowgrp = lgit.next()
-        rkval, rrowgrp = rgit.next()
+        lkval, lrowgrp = next(lgit)
+        rkval, rrowgrp = next(rgit)
 
         while True:
             if lkval < rkval:
                 for row in joinrows(lrowgrp, None):
                     yield tuple(row)
                 # advance left
-                lkval, lrowgrp = lgit.next()
+                lkval, lrowgrp = next(lgit)
             elif lkval > rkval:
                 # advance right
-                rkval, rrowgrp = rgit.next()
+                rkval, rrowgrp = next(rgit)
             else:
                 for row in joinrows(lrowgrp, rrowgrp):
                     yield tuple(row)
                 # advance both
-                lkval, lrowgrp = lgit.next()
-                rkval, rrowgrp = rgit.next()
+                lkval, lrowgrp = next(lgit)
+                rkval, rrowgrp = next(rgit)
 
     except StopIteration:
         pass
@@ -1026,7 +1029,7 @@ class ConvertToIncrementingCounterView(RowContainer):
 
     def __iter__(self):
         it = iter(self.table)
-        fields = it.next()
+        fields = next(it)
         table = itertools.chain([fields], it)
         value = self.value
         vidx = fields.index(value)

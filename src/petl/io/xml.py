@@ -8,8 +8,8 @@ import itertools
 
 
 # internal dependencies
-from petl.util import RowContainer
-from petl.io.sources import read_source_from_arg
+from ..util import RowContainer
+from .sources import read_source_from_arg
 
 
 def fromxml(source, *args, **kwargs):

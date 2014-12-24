@@ -4,7 +4,8 @@ A tentative module for pushing data through branching pipelines.
 """
 
 
-from __future__ import absolute_import, print_function, division
+from __future__ import absolute_import, print_function, division, \
+    unicode_literals
 
 
 import csv
@@ -12,9 +13,11 @@ from tempfile import NamedTemporaryFile
 from operator import itemgetter
 from itertools import islice
 from collections import defaultdict
-import cPickle as pickle
+from .compat import pickle, next, PY3
 
-from petl.util import asindices, HybridRow, shortlistmergesorted
+
+from .util import asindices, HybridRow, shortlistmergesorted, \
+    sortable_itemgetter
 import petl.transform
 
 
@@ -50,7 +53,7 @@ class PipelineComponent(object):
             
     def push(self, source, limit=None):
         it = iter(source)
-        fields = it.next()
+        fields = next(it)
         c = self.connect(fields)
         for row in islice(it, limit):
             c.accept(tuple(row))
@@ -84,7 +87,7 @@ class PipelineConnection(object):
                     c.accept(tuple(row))
 
 
-def tocsv(filename, dialect=csv.excel, **kwargs):
+def tocsv(filename, dialect='excel', **kwargs):
     """
     Push rows to a CSV file. E.g.::
 
@@ -97,7 +100,7 @@ def tocsv(filename, dialect=csv.excel, **kwargs):
     return ToCsvComponent(filename, dialect, **kwargs)
 
 
-def totsv(filename, dialect=csv.excel_tab, **kwargs):
+def totsv(filename, dialect='excel-tab', **kwargs):
     """
     Push rows to a tab-delimited file. E.g.::
 
@@ -126,9 +129,14 @@ class ToCsvComponent(PipelineComponent):
 
 class ToCsvConnection(PipelineConnection):
 
-    def __init__(self, default_connections, keyed_connections, fields, filename, dialect, kwargs):
-        super(ToCsvConnection, self).__init__(default_connections, keyed_connections, fields)
-        self.file = open(filename, 'wb')
+    def __init__(self, default_connections, keyed_connections, fields, filename, 
+                 dialect, kwargs):
+        super(ToCsvConnection, self).__init__(default_connections,
+                                              keyed_connections, fields)
+        if PY3:
+            self.file = open(filename, 'w', newline='')
+        else:
+            self.file = open(filename, 'wb')
         self.writer = csv.writer(self.file, dialect=dialect, **kwargs)
         self.writer.writerow(fields)
 
@@ -274,7 +282,7 @@ class SortConnection(PipelineConnection):
             indices = asindices(fields, key)
             # now use field indices to construct a _getkey function
             # N.B., this will probably raise an exception on short rows
-            self.getkey = itemgetter(*indices)
+            self.getkey = sortable_itemgetter(*indices)
 
         self.reverse = reverse
 
@@ -479,8 +487,8 @@ class DiffComponent(PipelineComponent):
     def push(self, ta, tb, limit=None):
         ita = iter(ta) 
         itb = iter(tb)
-        aflds = [str(f) for f in ita.next()]
-        itb.next() # ignore b fields
+        aflds = [str(f) for f in next(ita)]
+        next(itb) # ignore b fields
 
         default_connections, keyed_connections = self._connect_receivers(aflds)
         def _broadcast(*args):
@@ -494,14 +502,14 @@ class DiffComponent(PipelineComponent):
                         c.accept(row)
         
         try:
-            a = tuple(ita.next())
+            a = tuple(next(ita))
         except StopIteration:
             # a is empty, everything in b is added
             for b in itb:
                 _broadcast('+', b)
         else:
             try:
-                b = tuple(itb.next())
+                b = tuple(next(itb))
             except StopIteration:
                 # b is empty, everything in a is subtracted
                 _broadcast('-', a)
@@ -513,25 +521,25 @@ class DiffComponent(PipelineComponent):
                         _broadcast('-', a)
                         # advance a
                         try:
-                            a = tuple(ita.next())
+                            a = tuple(next(ita))
                         except StopIteration:
                             a = None
                     elif a == b:
                         _broadcast(a) # default channel
                         # advance both
                         try:
-                            a = tuple(ita.next())
+                            a = tuple(next(ita))
                         except StopIteration:
                             a = None
                         try:
-                            b = tuple(itb.next())
+                            b = tuple(next(itb))
                         except StopIteration:
                             b = None
                     else:
                         _broadcast('+', b)
                         # advance b
                         try:
-                            b = tuple(itb.next())
+                            b = tuple(next(itb))
                         except StopIteration:
                             b = None
 

@@ -7,12 +7,13 @@ usage.
 """
 
 
-from __future__ import absolute_import, print_function, division
+from __future__ import absolute_import, print_function, division, \
+    unicode_literals
 
 
 import sys
 import inspect
-from petl.util import RowContainer
+from .util import RowContainer
 
 
 petl = sys.modules['petl']

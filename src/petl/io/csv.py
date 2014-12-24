@@ -5,12 +5,12 @@ from __future__ import absolute_import, print_function, division, \
 # standard library dependencies
 import csv
 import codecs
-import cStringIO
+from ..compat import StringIO, text_type, next
 
 
 # internal dependencies
-from petl.util import RowContainer, data
-from petl.io.sources import read_source_from_arg, write_source_from_arg
+from ..util import RowContainer, data
+from .sources import read_source_from_arg, write_source_from_arg
 
 
 def fromcsv(source=None, dialect='excel', **kwargs):
@@ -273,7 +273,7 @@ class UnicodeReader:
 
     def next(self):
         row = self.reader.next()
-        return [unicode(s, "utf-8") for s in row]
+        return [text_type(s, "utf-8") for s in row]
 
     def __iter__(self):
         return self
@@ -287,13 +287,13 @@ class UnicodeWriter:
 
     def __init__(self, f, dialect='excel', encoding="utf-8", **kwds):
         # Redirect output to a queue
-        self.queue = cStringIO.StringIO()
+        self.queue = StringIO()
         self.writer = csv.writer(self.queue, dialect=dialect, **kwds)
         self.stream = f
         self.encoder = codecs.getincrementalencoder(encoding)()
 
     def writerow(self, row):
-        self.writer.writerow([unicode(s).encode("utf-8") for s in row])
+        self.writer.writerow([text_type(s).encode("utf-8") for s in row])
         # Fetch UTF-8 output from the queue ...
         data = self.queue.getvalue()
         data = data.decode("utf-8")

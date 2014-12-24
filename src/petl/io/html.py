@@ -1,16 +1,18 @@
-from __future__ import absolute_import, print_function, division, unicode_literals
+from __future__ import absolute_import, print_function, division, \
+    unicode_literals
 
 
 # standard library dependencies
 import codecs
+from ..compat import text_type, number_types, next
 
 
 # internal dependencies
-from petl.util import RowContainer
-from petl.io.sources import write_source_from_arg
+from ..util import RowContainer
+from .sources import write_source_from_arg
 
 
-def tohtml(table, source=None, caption=None, representation=str,
+def tohtml(table, source=None, caption=None, representation=text_type,
            lineterminator='\r\n'):
     """
     Write the table as HTML to a file. E.g.::
@@ -41,14 +43,14 @@ def tohtml(table, source=None, caption=None, representation=str,
     source = write_source_from_arg(source)
     with source.open_('w') as f:
         it = iter(table)
-        flds = it.next()
+        flds = next(it)
         _write_begin(f, flds, lineterminator, caption)
         for row in it:
             _write_row(f, row, lineterminator, representation)
         _write_end(f, lineterminator)
 
 
-def teehtml(table, source=None, caption=None, representation=str,
+def teehtml(table, source=None, caption=None, representation=text_type,
             lineterminator='\r\n'):
     """
     Return a table that writes rows to an HTML file as they are iterated over.
@@ -64,8 +66,8 @@ def teehtml(table, source=None, caption=None, representation=str,
 
 class TeeHTMLContainer(RowContainer):
 
-    def __init__(self, table, source=None, caption=None, representation=str,
-                 lineterminator='\r\n'):
+    def __init__(self, table, source=None, caption=None,
+                 representation=text_type, lineterminator='\r\n'):
         self.table = table
         self.source = source
         self.caption = caption
@@ -79,7 +81,7 @@ class TeeHTMLContainer(RowContainer):
         representation = self.representation
         with source.open_('w') as f:
             it = iter(self.table)
-            flds = it.next()
+            flds = next(it)
             _write_begin(f, flds, lineterminator, caption)
             yield flds
             for row in it:
@@ -105,7 +107,7 @@ def _write_row(f, row, lineterminator, representation):
     f.write('<tr>' + lineterminator)
     for v in row:
         r = representation(v)
-        if isinstance(v, (int, long, float)) and not isinstance(v, bool):
+        if isinstance(v, number_types) and not isinstance(v, bool):
             f.write(("<td style='text-align: right'>%s</td>" % r)
                     + lineterminator)
         else:
@@ -119,7 +121,7 @@ def _write_end(f, lineterminator):
 
 
 def touhtml(table, source=None, caption=None, encoding='utf-8',
-            representation=unicode, lineterminator=u'\r\n'):
+            representation=text_type, lineterminator='\r\n'):
     """
     Write the table as Unicode HTML to a file.
 
@@ -127,10 +129,10 @@ def touhtml(table, source=None, caption=None, encoding='utf-8',
     """
 
     source = write_source_from_arg(source)
-    with source.open_('w') as f:
+    with source.open_('wb') as f:
         f = codecs.getwriter(encoding)(f)
         it = iter(table)
-        flds = it.next()
+        flds = next(it)
         _write_begin_unicode(f, flds, lineterminator, caption)
         for row in it:
             _write_row_unicode(f, row, lineterminator, representation)
@@ -138,7 +140,7 @@ def touhtml(table, source=None, caption=None, encoding='utf-8',
 
 
 def teeuhtml(table, source=None, caption=None,
-             encoding='utf-8', representation=unicode, lineterminator='\r\n'):
+             encoding='utf-8', representation=text_type, lineterminator='\r\n'):
     """
     Return a table that writes rows to a Unicode HTML file as they are iterated
     over.
@@ -155,7 +157,7 @@ def teeuhtml(table, source=None, caption=None,
 class TeeUHTMLContainer(RowContainer):
 
     def __init__(self, table, source=None, caption=None,
-                 encoding='utf-8', representation=unicode,
+                 encoding='utf-8', representation=text_type,
                  lineterminator='\r\n'):
         self.table = table
         self.source = source
@@ -169,10 +171,10 @@ class TeeUHTMLContainer(RowContainer):
         lineterminator = self.lineterminator
         caption = self.caption
         representation = self.representation
-        with source.open_('w') as f:
+        with source.open_('wb') as f:
             f = codecs.getwriter(self.encoding)(f)
             it = iter(self.table)
-            flds = it.next()
+            flds = next(it)
             _write_begin_unicode(f, flds, lineterminator, caption)
             yield flds
             for row in it:
@@ -182,31 +184,31 @@ class TeeUHTMLContainer(RowContainer):
 
 
 def _write_begin_unicode(f, flds, lineterminator, caption):
-    f.write(u"<table class='petl'>" + lineterminator)
+    f.write("<table class='petl'>" + lineterminator)
     if caption is not None:
-        f.write((u'<caption>%s</caption>' % caption) + lineterminator)
-    f.write(u'<thead>' + lineterminator)
-    f.write(u'<tr>' + lineterminator)
+        f.write(('<caption>%s</caption>' % caption) + lineterminator)
+    f.write('<thead>' + lineterminator)
+    f.write('<tr>' + lineterminator)
     for h in flds:
-        f.write((u'<th>%s</th>' % h) + lineterminator)
-    f.write(u'</tr>' + lineterminator)
-    f.write(u'</thead>' + lineterminator)
-    f.write(u'<tbody>' + lineterminator)
+        f.write(('<th>%s</th>' % h) + lineterminator)
+    f.write('</tr>' + lineterminator)
+    f.write('</thead>' + lineterminator)
+    f.write('<tbody>' + lineterminator)
 
 
 def _write_row_unicode(f, row, lineterminator, representation):
-    f.write(u'<tr>' + lineterminator)
+    f.write('<tr>' + lineterminator)
     for v in row:
         r = representation(v)
-        if isinstance(v, (int, long, float)) \
+        if isinstance(v, number_types) \
                 and not isinstance(v, bool):
-            f.write((u"<td style='text-align: right'>%s</td>" % r)
+            f.write(("<td style='text-align: right'>%s</td>" % r)
                     + lineterminator)
         else:
-            f.write((u'<td>%s</td>' % r) + lineterminator)
-    f.write(u'</tr>' + lineterminator)
+            f.write(('<td>%s</td>' % r) + lineterminator)
+    f.write('</tr>' + lineterminator)
 
 
 def _write_end_unicode(f, lineterminator):
-    f.write(u'</tbody>' + lineterminator)
-    f.write(u'</table>' + lineterminator)
+    f.write('</tbody>' + lineterminator)
+    f.write('</table>' + lineterminator)

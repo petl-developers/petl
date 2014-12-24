@@ -6,7 +6,7 @@ import sqlite3
 
 
 # internal dependencies
-from petl.util import RowContainer
+from ..util import RowContainer
 
 
 quotechar = '"'

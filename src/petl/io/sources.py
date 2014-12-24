@@ -1,14 +1,16 @@
-from __future__ import absolute_import, print_function, division, unicode_literals
+from __future__ import absolute_import, print_function, division, \
+    unicode_literals
 
 
 import gzip
 import sys
 import bz2
 import zipfile
-import urllib2
 from contextlib import contextmanager
-import cStringIO
 import subprocess
+
+
+from ..compat import urlopen, StringIO, BytesIO, string_types
 
 
 class FileSource(object):
@@ -95,7 +97,7 @@ class URLSource(object):
     def open_(self, mode='r'):
         if not mode.startswith('r'):
             raise Exception('source is read-only')
-        f = urllib2.urlopen(*self.args, **self.kwargs)
+        f = urlopen(*self.args, **self.kwargs)
         try:
             yield f
         finally:
@@ -111,26 +113,35 @@ class StringSource(object):
     @contextmanager
     def open_(self, mode='r'):
         try:
-            if mode.startswith('r'):  # read
+            if 'r' in mode:  # read
                 if self.s is not None:
-                    self.buffer = cStringIO.StringIO(self.s)
+                    if 'b' in mode:
+                        self.buffer = BytesIO(self.s)
+                    else:
+                        self.buffer = StringIO(self.s)
                 else:
                     raise Exception('no string data supplied')
-            elif mode.startswith('w'):  # write
+            elif 'w' in mode:  # write
                 # drop existing buffer
                 if self.buffer is not None:
                     self.buffer.close()
                 # new buffer
-                self.buffer = cStringIO.StringIO()
-            elif mode.startswith('a'):  # append
+                if 'b' in mode:
+                    self.buffer = BytesIO()
+                else:
+                    self.buffer = StringIO()
+            elif 'a' in mode:  # append
                 # new buffer only if none already
                 if self.buffer is None:
-                    self.buffer = cStringIO.StringIO()
+                    if 'b' in self.buffer:
+                        self.buffer = BytesIO()
+                    else:
+                        self.buffer = StringIO()
             yield self.buffer
         except:
             raise
         finally:
-            pass # don't close the buffer
+            pass  # don't close the buffer
 
     def getvalue(self):
         if self.buffer:
@@ -162,7 +173,7 @@ _invalid_source_msg = 'invalid source argument, expected None or a string or ' \
 def read_source_from_arg(source):
     if source is None:
         return StdinSource()
-    elif isinstance(source, basestring):
+    elif isinstance(source, string_types):
         if any(map(source.startswith, ['http://', 'https://', 'ftp://'])):
             return URLSource(source)
         elif source.endswith('.gz') or source.endswith('.bgz'):
@@ -181,7 +192,7 @@ def read_source_from_arg(source):
 def write_source_from_arg(source):
     if source is None:
         return StdoutSource()
-    elif isinstance(source, basestring):
+    elif isinstance(source, string_types):
         if source.endswith('.gz') or source.endswith('.bgz'):
             return GzipSource(source)
         elif source.endswith('.bz2'):

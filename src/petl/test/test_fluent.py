@@ -3,12 +3,14 @@ Tests for the petl.fluent module.
 
 """
 
-from __future__ import absolute_import, print_function, division
+from __future__ import absolute_import, print_function, division, \
+    unicode_literals
 
 
 from tempfile import NamedTemporaryFile
 import csv
 from nose.tools import eq_
+from petl.compat import PY3
 
 
 import petl
@@ -41,7 +43,11 @@ def test_basics():
     
 def test_staticmethods():
     
-    f = NamedTemporaryFile(delete=False)
+    if PY3:
+        mode = 'w'
+    else:
+        mode = 'wb'
+    f = NamedTemporaryFile(mode=mode, delete=False)
     writer = csv.writer(f, delimiter='\t')
     table = (('foo', 'bar'),
              ('a', 1),

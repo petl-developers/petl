@@ -3,19 +3,19 @@ Functions for transforming tables.
 
 """
 
-from __future__ import absolute_import, print_function, division
+
+from __future__ import absolute_import, print_function, division, \
+    unicode_literals
 
 
-from itertools import islice, chain, izip_longest, izip
+# standard library dependencies
+from itertools import islice, chain
 from collections import deque
+from ..compat import izip, izip_longest, next
 
 
-from petl.util import asindices, rowgetter, valueset, limits, itervalues, \
-    hybridrows, OrderedDict, RowContainer, count
-
-
-from petl.transform.selects import selecteq, selectrangeopenleft, \
-    selectrangeopen
+# internal dependencies
+from ..util import asindices, rowgetter, hybridrows, RowContainer, count
 
 
 import logging
@@ -142,7 +142,7 @@ def itercut(source, spec, missing=None):
     spec = tuple(spec)  # make sure no-one can change midstream
     
     # convert field selection into field indices
-    flds = it.next()
+    flds = next(it)
     indices = asindices(flds, spec)
 
     # define a function to transform each row in the source data 
@@ -222,7 +222,7 @@ def itercutout(source, spec, missing=None):
     spec = tuple(spec) # make sure no-one can change midstream
     
     # convert field selection into field indices
-    flds = it.next()
+    flds = next(it)
     indicesout = asindices(flds, spec)
     indices = [i for i in range(len(flds)) if i not in indicesout]
     
@@ -399,7 +399,7 @@ class CatView(RowContainer):
 
 def itercat(sources, missing, header):
     its = [iter(t) for t in sources]
-    source_flds_lists = [it.next() for it in its]
+    source_flds_lists = [next(it) for it in its]
 
     if header is None:
         # determine output fields by gathering all fields found in the sources
@@ -516,7 +516,7 @@ class AddFieldView(RowContainer):
 
 def iteraddfield(source, field, value, index):
     it = iter(source)
-    flds = it.next()
+    flds = next(it)
     
     # determine index of new field
     if index is None:
@@ -620,7 +620,7 @@ class RowSliceView(RowContainer):
 
 def iterrowslice(source, sliceargs):    
     it = iter(source)
-    yield tuple(it.next()) # fields
+    yield tuple(next(it)) # fields
     for row in islice(it, *sliceargs):
         yield tuple(row)
 
@@ -735,7 +735,7 @@ class TailView(RowContainer):
 
 def itertail(source, n):
     it = iter(source)
-    yield tuple(it.next()) # fields
+    yield tuple(next(it)) # fields
     cache = deque()
     for row in it:
         cache.append(row)
@@ -820,7 +820,7 @@ class MoveFieldView(RowContainer):
         it = iter(self.table)
 
         # determine output fields
-        fields = list(it.next())
+        fields = list(next(it))
         newfields = [f for f in fields if f != self.field]
         newfields.insert(self.index, self.field)
         yield tuple(newfields)
@@ -895,7 +895,7 @@ class AnnexView(RowContainer):
 
 def iterannex(tables, missing):
     iters = [iter(t) for t in tables]
-    headers = [it.next() for it in iters]
+    headers = [next(it) for it in iters]
     outfields = tuple(chain(*headers))  
     yield outfields
     for rows in izip_longest(*iters):
@@ -963,7 +963,7 @@ class AddRowNumbersView(RowContainer):
 
 def iteraddrownumbers(table, start, step):
     it = iter(table)
-    flds = it.next()
+    flds = next(it)
     outflds = ['row']
     outflds.extend(flds)
     yield tuple(outflds)
@@ -1021,7 +1021,7 @@ class AddColumnView(RowContainer):
     
 def iteraddcolumn(table, field, col, index, missing):
     it = iter(table)
-    fields = [str(f) for f in it.next()]
+    fields = [str(f) for f in next(it)]
     
     # determine position of new column
     if index is None:
@@ -1113,11 +1113,11 @@ class AddFieldUsingContextView(RowContainer):
 
 def iteraddfieldusingcontext(table, field, query):
     it = iter(table)
-    fields = tuple(it.next())
+    fields = tuple(next(it))
     yield fields + (field,)
     it = hybridrows(fields, it)
     prv = None
-    cur = it.next()
+    cur = next(it)
     for nxt in it:
         v = query(prv, cur, nxt)
         yield tuple(cur) + (v,)

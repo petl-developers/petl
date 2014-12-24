@@ -1,4 +1,5 @@
-from __future__ import absolute_import, print_function, division
+from __future__ import absolute_import, print_function, division, \
+    unicode_literals
 
 
 import sys
@@ -14,6 +15,7 @@ from petl.util import header, fieldnames, data, records, rowcount, look, see, \
     rowgroupby, lookstr, namedtuples, dicts, recordlookup, recordlookupone, \
     nrows, progress
 from petl.testutils import ieq
+from petl.compat import PY3, next, maxint
 
 
 def test_header():
@@ -75,18 +77,18 @@ def test_records():
     actual = records(table)
     # access items
     it = iter(actual)
-    o = it.next()
+    o = next(it)
     eq_('a', o['foo'])
     eq_(1, o['bar'])
-    o = it.next()
+    o = next(it)
     eq_('b', o['foo'])
     eq_(2, o['bar'])
     # access attributes
     it = iter(actual)
-    o = it.next()
+    o = next(it)
     eq_('a', o.foo)
     eq_(1, o.bar)
-    o = it.next()
+    o = next(it)
     eq_('b', o.foo)
     eq_(2, o.bar)
     
@@ -96,18 +98,18 @@ def test_records_unevenrows():
     actual = records(table)
     # access items
     it = iter(actual)
-    o = it.next()
+    o = next(it)
     eq_('a', o['foo'])
     eq_(1, o['bar'])
-    o = it.next()
+    o = next(it)
     eq_('b', o['foo'])
     eq_(None, o['bar'])
     # access attributes
     it = iter(actual)
-    o = it.next()
+    o = next(it)
     eq_('a', o.foo)
     eq_(1, o.bar)
-    o = it.next()
+    o = next(it)
     eq_('b', o.foo)
     eq_(None, o.bar)
  
@@ -116,10 +118,10 @@ def test_namedtuples():
     table = (('foo', 'bar'), ('a', 1), ('b', 2))
     actual = namedtuples(table)
     it = iter(actual)
-    o = it.next()
+    o = next(it)
     eq_('a', o.foo)
     eq_(1, o.bar)
-    o = it.next()
+    o = next(it)
     eq_('b', o.foo)
     eq_(2, o.bar)
        
@@ -128,10 +130,10 @@ def test_namedtuples_unevenrows():
     table = (('foo', 'bar'), ('a', 1, True), ('b',))
     actual = namedtuples(table)
     it = iter(actual)
-    o = it.next()
+    o = next(it)
     eq_('a', o.foo)
     eq_(1, o.bar)
-    o = it.next()
+    o = next(it)
     eq_('b', o.foo)
     eq_(None, o.bar)
        
@@ -589,7 +591,7 @@ def test_rowlengths():
     table = (('foo', 'bar', 'baz'),
              ('A', 1, 2),
              ('B', '2', '3.4'),
-             (u'B', u'3', u'7.8', True),
+             ('B', '3', '7.8', True),
              ('D', 'xyz', 9.0),
              ('E', None),
              ('F', 9))
@@ -603,7 +605,7 @@ def test_stats():
     table = (('foo', 'bar', 'baz'),
              ('A', 1, 2),
              ('B', '2', '3.4'),
-             (u'B', u'3', u'7.8', True),
+             ('B', '3', '7.8', True),
              ('D', 'xyz', 9.0),
              ('E', None))
 
@@ -619,36 +621,55 @@ def test_stats():
 def test_typecounts():
 
     table = (('foo', 'bar', 'baz'),
-             ('A', 1, 2.),
-             ('B', u'2', 3.4),
-             (u'B', u'3', 7.8, True),
-             ('D', u'xyz', 9.0),
-             ('E', 42))
+             (b'A', 1, 2.),
+             (b'B', '2', 3.4),
+             ('B', '3', 7.8, True),
+             (b'D', 'xyz', 9.0),
+             (b'E', 42))
 
-    actual = typecounts(table, 'foo') 
-    expect = (('type', 'count', 'frequency'), ('str', 4, 4./5), ('unicode', 1, 1./5))
+    actual = typecounts(table, 'foo')
+    if PY3:
+        expect = (('type', 'count', 'frequency'),
+                  ('bytes', 4, 4./5),
+                  ('str', 1, 1./5))
+    else:
+        expect = (('type', 'count', 'frequency'),
+                  ('str', 4, 4./5),
+                  ('unicode', 1, 1./5))
     ieq(expect, actual)
 
-    actual = typecounts(table, 'bar') 
-    expect = (('type', 'count', 'frequency'), ('unicode', 3, 3./5), ('int', 2, 2./5))
+    actual = typecounts(table, 'bar')
+    if PY3:
+        expect = (('type', 'count', 'frequency'),
+                  ('str', 3, 3./5),
+                  ('int', 2, 2./5))
+    else:
+        expect = (('type', 'count', 'frequency'),
+                  ('unicode', 3, 3./5),
+                  ('int', 2, 2./5))
     ieq(expect, actual)
 
     actual = typecounts(table, 'baz') 
-    expect = (('type', 'count', 'frequency'), ('float', 4, 4./5), ('NoneType', 1, 1./5))
+    expect = (('type', 'count', 'frequency'), 
+              ('float', 4, 4./5), 
+              ('NoneType', 1, 1./5))
     ieq(expect, actual)
 
 
 def test_typeset():
 
     table = (('foo', 'bar', 'baz'),
-             ('A', 1, '2'),
-             ('B', u'2', '3.4'),
-             (u'B', u'3', '7.8', True),
-             ('D', u'xyz', 9.0),
-             ('E', 42))
+             (b'A', 1, '2'),
+             (b'B', '2', '3.4'),
+             (b'B', '3', '7.8', True),
+             ('D', 'xyz', 9.0),
+             (b'E', 42))
 
-    actual = typeset(table, 'foo') 
-    expect = set([str, unicode])
+    actual = typeset(table, 'foo')
+    if PY3:
+        expect = set([bytes, str])
+    else:
+        expect = set([str, unicode])
     eq_(expect, actual)
 
 
@@ -656,8 +677,8 @@ def test_parsecounts():
 
     table = (('foo', 'bar', 'baz'),
              ('A', 'aaa', 2),
-             ('B', u'2', '3.4'),
-             (u'B', u'3', u'7.8', True),
+             ('B', '2', '3.4'),
+             ('B', '3', '7.8', True),
              ('D', '3.7', 9.0),
              ('E', 42))
 
@@ -670,28 +691,28 @@ def test_parsenumber():
     
     assert parsenumber('1') == 1
     assert parsenumber('1.0') == 1.0
-    assert parsenumber(str(sys.maxint + 1)) == sys.maxint + 1
+    assert parsenumber(str(maxint + 1)) == maxint + 1
     assert parsenumber('3+4j') == 3 + 4j
     assert parsenumber('aaa') == 'aaa'
-    assert parsenumber(None) == None
+    assert parsenumber(None) is None
     
     
 def test_parsenumber_strict():
     
     assert parsenumber('1', strict=True) == 1
     assert parsenumber('1.0', strict=True) == 1.0
-    assert parsenumber(str(sys.maxint + 1), strict=True) == sys.maxint + 1
+    assert parsenumber(str(maxint + 1), strict=True) == maxint + 1
     assert parsenumber('3+4j', strict=True) == 3 + 4j
     try:
         parsenumber('aaa', strict=True)
     except:
-        pass # expected
+        pass  # expected
     else:
         assert False, 'expected exception'
     try:
         parsenumber(None, strict=True)
     except:
-        pass # expected
+        pass  # expected
     else:
         assert False, 'expected exception'
     
@@ -702,8 +723,8 @@ def test_stringpatterns():
              ('Mr. Foo', '123-1254'),
              ('Mrs. Bar', '234-1123'),
              ('Mr. Spo', '123-1254'),
-             (u'Mr. Baz', u'321 1434'),
-             (u'Mrs. Baz', u'321 1434'),
+             ('Mr. Baz', '321 1434'),
+             ('Mrs. Baz', '321 1434'),
              ('Mr. Quux', '123-1254-XX'))
     
     actual = stringpatterns(table, 'foo')
@@ -842,13 +863,13 @@ def test_rowgroupby():
 
     g = rowgroupby(table, 'foo')
 
-    key, vals = g.next()
+    key, vals = next(g)
     vals = list(vals)
     eq_('a', key)
     eq_(1, len(vals))
     eq_(('a', 1, True), vals[0])
 
-    key, vals = g.next()
+    key, vals = next(g)
     vals = list(vals)
     eq_('b', key)
     eq_(2, len(vals))
@@ -859,13 +880,13 @@ def test_rowgroupby():
     
     g = rowgroupby(table, 'foo', 'bar')
     
-    key, vals = g.next()
+    key, vals = next(g)
     vals = list(vals)
     eq_('a', key)
     eq_(1, len(vals))
     eq_(1, vals[0])
 
-    key, vals = g.next()
+    key, vals = next(g)
     vals = list(vals)
     eq_('b', key)
     eq_(2, len(vals))
@@ -876,13 +897,13 @@ def test_rowgroupby():
     
     g = rowgroupby(table, lambda r: r['foo'], lambda r: r['baz'])
     
-    key, vals = g.next()
+    key, vals = next(g)
     vals = list(vals)
     eq_('a', key)
     eq_(1, len(vals))
     eq_(True, vals[0])
 
-    key, vals = g.next()
+    key, vals = next(g)
     vals = list(vals)
     eq_('b', key)
     eq_(2, len(vals))

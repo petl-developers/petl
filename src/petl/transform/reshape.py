@@ -1,17 +1,20 @@
-from __future__ import absolute_import, print_function, division
+from __future__ import absolute_import, print_function, division, \
+    unicode_literals
 
 
 import itertools
 import collections
 import operator
+from ..compat import next
 
 
-from petl.util import RowContainer, rowgetter, sortable_itemgetter, values, \
+from ..util import RowContainer, rowgetter, sortable_itemgetter, values, \
     itervalues, header, data
-from petl.transform.sorts import sort
+from .sorts import sort
 
 
-def melt(table, key=None, variables=None, variablefield='variable', valuefield='value'):
+def melt(table, key=None, variables=None, variablefield='variable',
+         valuefield='value'):
     """
     Reshape a table, melting fields into data. E.g.::
 
@@ -116,12 +119,12 @@ def itermelt(source, key, variables, variablefield, valuefield):
     it = iter(source)
 
     # normalise some stuff
-    flds = it.next()
-    if isinstance(key, basestring):
-        key = (key,) # normalise to a tuple
-    if isinstance(variables, basestring):
+    flds = next(it)
+    if not isinstance(key, (list, tuple)):
+        key = (key,)  # normalise to a tuple
+    if not isinstance(variables, (list, tuple)):
         # shouldn't expect this, but ... ?
-        variables = (variables,) # normalise to a tuple
+        variables = (variables,)  # normalise to a tuple
     if not key:
         # assume key is fields not in variables
         key = [f for f in flds if f not in variables]
@@ -144,14 +147,13 @@ def itermelt(source, key, variables, variablefield, valuefield):
         k = getkey(row)
         for v, i in zip(variables, variables_indices):
             try:
-                o = list(k) # populate with key values initially
-                o.append(v) # add variable
-                o.append(row[i]) # add value
+                o = list(k)  # populate with key values initially
+                o.append(v)  # add variable
+                o.append(row[i])  # add value
                 yield tuple(o)
             except IndexError:
                 # row is missing this value, and melt() should yield no row
                 pass
-
 
 
 def recast(table, key=None, variablefield='variable', valuefield='value',
@@ -330,28 +332,37 @@ class RecastView(RowContainer):
 
 def iterrecast(source, key, variablefield, valuefield,
                samplesize, reducers, missing):
-    #
+
     # TODO implementing this by making two passes through the data is a bit
     # ugly, and could be costly if there are several upstream transformations
     # that would need to be re-executed each pass - better to make one pass,
     # caching the rows sampled to discover variables to be recast as fields?
-    #
-
 
     it = iter(source)
-    fields = it.next()
+    fields = next(it)
 
     # normalise some stuff
     keyfields = key
-    variablefields = variablefield # N.B., could be more than one
-    if isinstance(keyfields, basestring):
+    variablefields = variablefield  # N.B., could be more than one
+
+    # normalise key fields
+    if keyfields and not isinstance(keyfields, (list, tuple)):
         keyfields = (keyfields,)
-    if isinstance(variablefields, basestring):
-        variablefields = (variablefields,)
+
+    # normalise variable fields
+    if variablefields:
+        if isinstance(variablefields, dict):
+            pass  # handle this later
+        elif not isinstance(variablefields, (list, tuple)):
+            variablefields = (variablefields,)
+
+    # infer key fields
     if not keyfields:
         # assume keyfields is fields not in variables
         keyfields = [f for f in fields
                      if f not in variablefields and f != valuefield]
+
+    # infer key fields
     if not variablefields:
         # assume variables are fields not in keyfields
         variablefields = [f for f in fields
@@ -383,7 +394,8 @@ def iterrecast(source, key, variablefield, valuefield,
             for i, f in zip(variableindices, variablefields):
                 variables[f].add(row[i])
         for f in variables:
-            variables[f] = sorted(variables[f]) # turn from sets to sorted lists
+            # turn from sets to sorted lists
+            variables[f] = sorted(variables[f])
 
     # finished the first pass
 
@@ -396,7 +408,7 @@ def iterrecast(source, key, variablefield, valuefield,
     # output data
 
     source = sort(source, key=keyfields)
-    it = itertools.islice(source, 1, None) # skip header row
+    it = itertools.islice(source, 1, None)  # skip header row
     getsortablekey = sortable_itemgetter(*keyindices)
     getactualkey = operator.itemgetter(*keyindices)
 
@@ -415,18 +427,18 @@ def iterrecast(source, key, variablefield, valuefield,
         for f, i in zip(variablefields, variableindices):
             for variable in variables[f]:
                 # collect all values for the current variable
-                values = [r[valueindex] for r in group if r[i] == variable]
-                if len(values) == 0:
-                    value = missing
-                elif len(values) == 1:
-                    value = values[0]
+                vals = [r[valueindex] for r in group if r[i] == variable]
+                if len(vals) == 0:
+                    val = missing
+                elif len(vals) == 1:
+                    val = vals[0]
                 else:
                     if variable in reducers:
                         redu = reducers[variable]
                     else:
-                        redu = list # list all values
-                    value = redu(values)
-                out_row.append(value)
+                        redu = list  # list all values
+                    val = redu(vals)
+                out_row.append(val)
         yield tuple(out_row)
 
 
@@ -547,8 +559,8 @@ def pivot(table, f1, f2, f3, aggfun, missing=None,
     """
 
     return PivotView(table, f1, f2, f3, aggfun, missing=missing,
-                     presorted=presorted, buffersize=buffersize, tempdir=tempdir,
-                     cache=cache)
+                     presorted=presorted, buffersize=buffersize,
+                     tempdir=tempdir, cache=cache)
 
 
 class PivotView(RowContainer):
@@ -558,19 +570,21 @@ class PivotView(RowContainer):
         if presorted:
             self.source = source
         else:
-            self.source = sort(source, key=(f1, f2), buffersize=buffersize, tempdir=tempdir, cache=cache)
+            self.source = sort(source, key=(f1, f2), buffersize=buffersize,
+                               tempdir=tempdir, cache=cache)
         self.f1, self.f2, self.f3 = f1, f2, f3
         self.aggfun = aggfun
         self.missing = missing
 
     def __iter__(self):
-        return iterpivot(self.source, self.f1, self.f2, self.f3, self.aggfun, self.missing)
+        return iterpivot(self.source, self.f1, self.f2, self.f3, self.aggfun,
+                         self.missing)
 
 
 def iterpivot(source, f1, f2, f3, aggfun, missing):
 
     # first pass - collect fields
-    f2vals = set(itervalues(source, f2)) # TODO sampling
+    f2vals = set(itervalues(source, f2))  # TODO sampling
     f2vals = list(f2vals)
     f2vals.sort()
     outflds = [f1]
@@ -579,7 +593,7 @@ def iterpivot(source, f1, f2, f3, aggfun, missing):
 
     # second pass - generate output
     it = iter(source)
-    srcflds = it.next()
+    srcflds = next(it)
     f1i = srcflds.index(f1)
     f2i = srcflds.index(f2)
     f3i = srcflds.index(f3)
@@ -738,5 +752,3 @@ class UnflattenView(RowContainer):
             if len(row) < period:
                 row.extend([missing] * (period - len(row)))
             yield tuple(row)
-
-

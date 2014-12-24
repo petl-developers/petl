@@ -14,11 +14,11 @@ from petl.io.json import tojson, fromjson
 
 def test_json_unicode():
 
-    tbl = ((u'name', u'id'),
-           (u'Արամ Խաչատրյան', 1),
-           (u'Johann Strauß', 2),
-           (u'Вагиф Сәмәдоғлу', 3),
-           (u'章子怡', 4),
+    tbl = (('name', 'id'),
+           ('Արամ Խաչատրյան', 1),
+           ('Johann Strauß', 2),
+           ('Вагиф Сәмәдоғлу', 3),
+           ('章子怡', 4),
            )
     tojson(tbl, 'tmp/test_tojson_utf8.json')
 

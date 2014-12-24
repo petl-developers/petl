@@ -1,7 +1,5 @@
-from __future__ import absolute_import, print_function, division
-
-
-__author__ = 'Alistair Miles <alimanfoo@googlemail.com>'
+from __future__ import absolute_import, print_function, division, \
+    unicode_literals
 
 
 from nose.tools import eq_
@@ -300,7 +298,7 @@ def test_facet_2():
 def test_facet_empty():
     table = (('foo', 'bar'),)
     actual = facet(table, 'foo')
-    eq_(list(), actual.keys())
+    eq_(list(), list(actual.keys()))
 
 
 def test_rangefacet():
@@ -314,7 +312,7 @@ def test_rangefacet():
               ('c', 4),
               ('d', 3))
     rf = rangefacet(table1, 'bar', 2)
-    eq_([(1, 3), (3, 5), (5, 7), (7, 9)], rf.keys())
+    eq_([(1, 3), (3, 5), (5, 7), (7, 9)], list(rf.keys()))
     expect_13 = (('foo', 'bar'),
                  ('b', 2),
                  ('b', 1))  # N.B., it get's sorted

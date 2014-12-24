@@ -7,9 +7,8 @@ from json.encoder import JSONEncoder
 
 
 # internal dependencies
-from petl.util import data, RowContainer
-from petl.util import dicts as asdicts
-from petl.io.sources import read_source_from_arg, write_source_from_arg
+from ..util import data, RowContainer, dicts as asdicts
+from .sources import read_source_from_arg, write_source_from_arg
 
 
 def fromjson(source, *args, **kwargs):
@@ -63,10 +62,11 @@ class JsonView(RowContainer):
             result = json.load(f, *self.args, **self.kwargs)
             if self.header is None:
                 # determine fields
-                header = list()
+                header = set()
                 for o in result:
                     if hasattr(o, 'keys'):
-                        header.extend(k for k in o.keys() if k not in header)
+                        header.add(o.keys())
+                header = sorted(header)
             else:
                 header = self.header
             yield tuple(header)
@@ -113,10 +113,11 @@ class DictsView(RowContainer):
         result = self.dicts
         if self.header is None:
             # determine fields
-            header = list()
+            header = set()
             for o in result:
                 if hasattr(o, 'keys'):
-                    header.extend(k for k in o.keys() if k not in header)
+                    header.add(o.keys())
+            header = sorted(header)
         else:
             header = self.header
         yield tuple(header)

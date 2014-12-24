@@ -1,10 +1,12 @@
-from __future__ import absolute_import, print_function, division
+from __future__ import absolute_import, print_function, division, \
+    unicode_literals
 
 
 import itertools
+from ..compat import next
 
 
-from petl.util import RowContainer
+from ..util import RowContainer
 
 
 def rename(table, *args):
@@ -66,12 +68,13 @@ def rename(table, *args):
 
     .. versionchanged:: 0.4
 
-    Function signature changed to support the simple 2 argument form when renaming
-    a single field.
+    Function signature changed to support the simple 2 argument form when
+    renaming a single field.
 
     .. versionchanged:: 0.23
 
-    The field to rename can be specified as an index (i.e., integer representing field position).
+    The field to rename can be specified as an index (i.e., integer representing
+    field position).
 
     """
 
@@ -99,7 +102,7 @@ class RenameView(RowContainer):
 def iterrename(source, spec):
     it = iter(source)
     spec = spec.copy()  # make sure nobody can change this midstream
-    sourceflds = it.next()
+    sourceflds = next(it)
     newflds = [spec[f] if f in spec
                else spec[i] if i in spec
                else f
@@ -152,7 +155,7 @@ class SetHeaderView(RowContainer):
 
 def itersetheader(source, fields):
     it = iter(source)
-    it.next() # discard source fields
+    next(it)  # discard source fields
     yield tuple(fields)
     for row in it:
         yield tuple(row)
@@ -200,7 +203,7 @@ class ExtendHeaderView(RowContainer):
 
 def iterextendheader(source, fields):
     it = iter(source)
-    srcflds = it.next()
+    srcflds = next(it)
     outflds = list(srcflds)
     outflds.extend(fields)
     yield tuple(outflds)
@@ -261,9 +264,9 @@ class PushHeaderView(RowContainer):
         # otherwise,
         elif len(args) > 0:
             self.fields = []
-            self.fields.append(fields) # first argument is named fields
+            self.fields.append(fields)  # first argument is named fields
             for arg in args:
-                self.fields.append(arg) # add the other positional arguments
+                self.fields.append(arg)  # add the other positional arguments
         else:
             assert False, 'bad parameters'
 
@@ -348,7 +351,7 @@ class PrefixHeaderView(RowContainer):
 
     def __iter__(self):
         it = iter(self.table)
-        fields = it.next()
+        fields = next(it)
         outfields = tuple((str(self.prefix) + str(f)) for f in fields)
         yield outfields
         for row in it:
@@ -374,7 +377,7 @@ class SuffixHeaderView(RowContainer):
 
     def __iter__(self):
         it = iter(self.table)
-        fields = it.next()
+        fields = next(it)
         outfields = tuple((str(f) + str(self.suffix)) for f in fields)
         yield outfields
         for row in it:

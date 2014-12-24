@@ -1,20 +1,21 @@
-from __future__ import absolute_import, print_function, division
+from __future__ import absolute_import, print_function, division, \
+    unicode_literals
 
 
 import itertools
 import operator
 import math
+from ..compat import OrderedDict, next, string_types, xrange, reduce
 
 
-from petl.compat import OrderedDict
-from petl.util import RowContainer, iterpeek, rowgroupby, rowgroupbybin, \
+from ..util import RowContainer, iterpeek, rowgroupby, rowgroupbybin, \
     asindices, hybridrows, rowitemgetter, count
-from petl.transform.sorts import sort, mergesort
-from petl.transform.basics import cut
-from petl.transform.dedup import distinct
+from .sorts import sort, mergesort
+from .basics import cut
+from .dedup import distinct
 
 
-def rowreduce(table, key, reducer, fields=None, missing=None, presorted=False, 
+def rowreduce(table, key, reducer, fields=None, presorted=False,
               buffersize=None, tempdir=None, cache=True):
     """
     Group rows under the given key then apply `reducer` to produce a single 
@@ -62,8 +63,8 @@ def rowreduce(table, key, reducer, fields=None, missing=None, presorted=False,
     
     .. versionchanged:: 0.12
     
-    Was previously deprecated, now resurrected as it is a useful function in it's
-    own right.
+    Was previously deprecated, now resurrected as it is a useful function in 
+    it's own right.
     
     """
 
@@ -79,7 +80,8 @@ class RowReduceView(RowContainer):
         if presorted:
             self.source = source
         else:
-            self.source = sort(source, key, buffersize=buffersize, tempdir=tempdir, cache=cache)
+            self.source = sort(source, key, buffersize=buffersize, 
+                               tempdir=tempdir, cache=cache)
         self.key = key
         self.fields = fields
         self.reducer = reducer
@@ -97,7 +99,8 @@ def iterrowreduce(source, key, reducer, fields):
         yield tuple(reducer(key, rows))
         
 
-def recordreduce(table, key, reducer, fields=None, presorted=False, buffersize=None, tempdir=None, cache=True):
+def recordreduce(table, key, reducer, fields=None, presorted=False, 
+                 buffersize=None, tempdir=None, cache=True):
     """
     .. deprecated:: 0.9
     
@@ -237,9 +240,10 @@ def aggregate(table, key, aggregation=None, value=None, presorted=False,
         +-------+---------+----------+----------+----------+-----------+-------------------------------------+-----------+
 
     If `presorted` is True, it is assumed that the data are already sorted by
-    the given key, and the `buffersize`, `tempdir` and `cache` arguments are ignored. Otherwise, the data 
-    are sorted, see also the discussion of the `buffersize`, `tempdir` and `cache` arguments under the 
-    :func:`sort` function.
+    the given key, and the `buffersize`, `tempdir` and `cache` arguments are 
+    ignored. Otherwise, the data are sorted, see also the discussion of the 
+    `buffersize`, `tempdir` and `cache` arguments under the :func:`sort` 
+    function.
 
     .. versionchanged:: 0.24
 
@@ -249,30 +253,36 @@ def aggregate(table, key, aggregation=None, value=None, presorted=False,
     """
 
     if callable(aggregation):
-        return SimpleAggregateView(table, key, aggregation=aggregation, value=value, 
-                                   presorted=presorted, buffersize=buffersize, tempdir=tempdir, cache=cache)
+        return SimpleAggregateView(table, key, aggregation=aggregation, 
+                                   value=value, presorted=presorted, 
+                                   buffersize=buffersize, tempdir=tempdir, 
+                                   cache=cache)
     elif aggregation is None or isinstance(aggregation, (list, tuple, dict)):
         # ignore value arg
         return MultiAggregateView(table, key, aggregation=aggregation,  
-                                  presorted=presorted, buffersize=buffersize, tempdir=tempdir, cache=cache)
+                                  presorted=presorted, buffersize=buffersize, 
+                                  tempdir=tempdir, cache=cache)
     else:
-        raise Exception('expected aggregation is callable, list, tuple, dict or None')
+        raise Exception('expected aggregation is callable, list, tuple, dict '
+                        'or None')
 
 
 class SimpleAggregateView(RowContainer):
     
-    def __init__(self, table, key, aggregation=list, value=None, presorted=False,
-                 buffersize=None, tempdir=None, cache=True):
+    def __init__(self, table, key, aggregation=list, value=None, 
+                 presorted=False, buffersize=None, tempdir=None, cache=True):
         if presorted:
             self.table = table
         else:
-            self.table = sort(table, key, buffersize=buffersize, tempdir=tempdir, cache=cache)    
+            self.table = sort(table, key, buffersize=buffersize, 
+                              tempdir=tempdir, cache=cache)    
         self.key = key
         self.aggregation = aggregation
         self.value = value
         
     def __iter__(self):
-        return itersimpleaggregate(self.table, self.key, self.aggregation, self.value)
+        return itersimpleaggregate(self.table, self.key, self.aggregation, 
+                                   self.value)
 
 
 def itersimpleaggregate(table, key, aggregation, value):
@@ -306,7 +316,8 @@ class MultiAggregateView(RowContainer):
         if presorted:
             self.source = source
         else:
-            self.source = sort(source, key, buffersize=buffersize, tempdir=tempdir, cache=cache)
+            self.source = sort(source, key, buffersize=buffersize, 
+                               tempdir=tempdir, cache=cache)
         self.key = key
         if aggregation is None:
             self.aggregation = OrderedDict()
@@ -327,24 +338,25 @@ class MultiAggregateView(RowContainer):
 
     
 def itermultiaggregate(source, key, aggregation):
-    aggregation = OrderedDict(aggregation.items()) # take a copy
+    aggregation = OrderedDict(aggregation.items())  # take a copy
     it = iter(source)
-    srcflds = it.next()
-    it = itertools.chain([srcflds], it)  # push back header to ensure we iterate only once
+    srcflds = next(it)
+    # push back header to ensure we iterate only once
+    it = itertools.chain([srcflds], it)  
 
     # normalise aggregators
     for outfld in aggregation:
         agg = aggregation[outfld]
         if callable(agg):
             aggregation[outfld] = None, agg
-        elif isinstance(agg, basestring):
+        elif isinstance(agg, string_types):
             aggregation[outfld] = agg, list  # list is default
-        elif len(agg) == 1 and isinstance(agg[0], basestring):
+        elif len(agg) == 1 and isinstance(agg[0], string_types):
             aggregation[outfld] = agg[0], list  # list is default
         elif len(agg) == 1 and callable(agg[0]):
             aggregation[outfld] = None, agg[0]  # aggregate whole rows
         elif len(agg) == 2:
-            pass # no need to normalise
+            pass  # no need to normalise
         else:
             raise Exception('invalid aggregation: %r, %r' % (outfld, agg))
 
@@ -361,7 +373,7 @@ def itermultiaggregate(source, key, aggregation):
     
     # generate data
     for k, rows in rowgroupby(it, key):
-        rows = list(rows) # may need to iterate over these more than once
+        rows = list(rows)  # may need to iterate over these more than once
         # handle compound key
         if isinstance(key, (list, tuple)):
             outrow = list(k)
@@ -387,8 +399,9 @@ def itermultiaggregate(source, key, aggregation):
         yield tuple(outrow)
             
 
-def rangerowreduce(table, key, width, reducer, fields=None, minv=None, maxv=None, 
-                   presorted=False, buffersize=None, tempdir=None, cache=True):
+def rangerowreduce(table, key, width, reducer, fields=None, minv=None,
+                   maxv=None, presorted=False, buffersize=None, tempdir=None,
+                   cache=True):
     """
     Group rows into bins of a given `width` under the given numeric key then 
     apply `reducer` to produce a single output row for each input group of rows. 
@@ -440,23 +453,27 @@ def rangerowreduce(table, key, width, reducer, fields=None, minv=None, maxv=None
     
     .. versionchanged:: 0.12
     
-    Was previously deprecated, now resurrected as it is a useful function in it's
-    own right.
+    Was previously deprecated, now resurrected as it is a useful function in
+    it's own right.
     
     """
     
-    return RangeRowReduceView(table, key, width, reducer, fields=fields, minv=minv, 
-                              maxv=maxv, presorted=presorted, buffersize=buffersize, tempdir=tempdir, cache=cache)
+    return RangeRowReduceView(table, key, width, reducer, fields=fields,
+                              minv=minv, maxv=maxv, presorted=presorted,
+                              buffersize=buffersize, tempdir=tempdir,
+                              cache=cache)
         
 
 class RangeRowReduceView(RowContainer):
     
-    def __init__(self, source, key, width, reducer, fields=None, minv=None, maxv=None, 
-                  presorted=False, buffersize=None, tempdir=None, cache=True):
+    def __init__(self, source, key, width, reducer, fields=None, minv=None,
+                 maxv=None, presorted=False, buffersize=None, tempdir=None,
+                 cache=True):
         if presorted:
             self.source = source
         else:
-            self.source = sort(source, key, buffersize=buffersize, tempdir=tempdir, cache=cache)
+            self.source = sort(source, key, buffersize=buffersize,
+                               tempdir=tempdir, cache=cache)
         self.key = key
         self.width = width
         self.reducer = reducer
@@ -464,8 +481,9 @@ class RangeRowReduceView(RowContainer):
         self.minv, self.maxv = minv, maxv
 
     def __iter__(self):
-        return iterrangerowreduce(self.source, self.key, self.width, self.reducer,
-                                  self.fields, self.minv, self.maxv)
+        return iterrangerowreduce(self.source, self.key, self.width,
+                                  self.reducer, self.fields, self.minv,
+                                  self.maxv)
 
 
 def iterrangerowreduce(table, key, width, reducer, fields, minv, maxv):
@@ -474,10 +492,12 @@ def iterrangerowreduce(table, key, width, reducer, fields, minv, maxv):
         yield tuple(reducer(k, grp))
     
         
-def rangerecordreduce(table, key, width, reducer, fields=None, minv=None, maxv=None, 
-                      failonerror=False, presorted=False, buffersize=None, tempdir=None, cache=True):
+def rangerecordreduce(table, key, width, reducer, fields=None, minv=None,
+                      maxv=None, failonerror=False, presorted=False,
+                      buffersize=None, tempdir=None, cache=True):
     """
-    Reduce records grouped into bins under the given key via an arbitrary function. 
+    Reduce records grouped into bins under the given key via an arbitrary
+    function.
 
     .. deprecated:: 0.9
     
@@ -486,8 +506,9 @@ def rangerecordreduce(table, key, width, reducer, fields=None, minv=None, maxv=N
     """
     
     return rangerowreduce(table, key, width, reducer, fields=fields, minv=minv, 
-                                 maxv=maxv, failonerror=failonerror, 
-                                 presorted=presorted, buffersize=buffersize, tempdir=tempdir, cache=cache)
+                          maxv=maxv, failonerror=failonerror,
+                          presorted=presorted, buffersize=buffersize,
+                          tempdir=tempdir, cache=cache)
         
 
 def rangecounts(table, key, width, minv=None, maxv=None, presorted=False,
@@ -536,11 +557,13 @@ def rangecounts(table, key, width, minv=None, maxv=None, presorted=False,
     """
     
     return rangeaggregate(table, key, width, len, minv=minv, maxv=maxv,
-                          presorted=presorted, buffersize=buffersize, tempdir=tempdir, cache=cache)
+                          presorted=presorted, buffersize=buffersize,
+                          tempdir=tempdir, cache=cache)
     
     
 def rangeaggregate(table, key, width, aggregation=None, value=None, minv=None, 
-                   maxv=None, presorted=False, buffersize=None, tempdir=None, cache=True):
+                   maxv=None, presorted=False, buffersize=None, tempdir=None,
+                   cache=True):
     """
     Group rows into bins then apply aggregation functions. E.g.::
     
@@ -647,25 +670,32 @@ def rangeaggregate(table, key, width, aggregation=None, value=None, minv=None,
         return SimpleRangeAggregateView(table, key, width, 
                                         aggregation=aggregation, 
                                         value=value, minv=minv, maxv=maxv,
-                                        presorted=presorted, buffersize=buffersize, tempdir=tempdir, cache=cache)
+                                        presorted=presorted,
+                                        buffersize=buffersize, tempdir=tempdir,
+                                        cache=cache)
     elif aggregation is None or isinstance(aggregation, (list, tuple, dict)):
         # ignore value arg
         return MultiRangeAggregateView(table, key, width, 
                                        aggregation=aggregation, 
-                                       minv=minv, maxv=maxv, # ignore value
-                                       presorted=presorted, buffersize=buffersize, tempdir=tempdir, cache=cache)
+                                       minv=minv, maxv=maxv,  # ignore value
+                                       presorted=presorted,
+                                       buffersize=buffersize, tempdir=tempdir,
+                                       cache=cache)
     else:
-        raise Exception('expected aggregation is callable, list, tuple, dict or None')
+        raise Exception('expected aggregation is callable, list, tuple, dict '
+                        'or None')
     
     
 class SimpleRangeAggregateView(RowContainer):
     
     def __init__(self, table, key, width, aggregation=list, value=None, 
-                 minv=None, maxv=None, presorted=False, buffersize=None, tempdir=None, cache=True):
+                 minv=None, maxv=None, presorted=False, buffersize=None,
+                 tempdir=None, cache=True):
         if presorted:
             self.table = table
         else:
-            self.table = sort(table, key, buffersize=buffersize, tempdir=tempdir, cache=cache)    
+            self.table = sort(table, key, buffersize=buffersize,
+                              tempdir=tempdir, cache=cache)
         self.key = key
         self.width = width
         self.aggregation = aggregation
@@ -680,20 +710,24 @@ class SimpleRangeAggregateView(RowContainer):
 
 def itersimplerangeaggregate(table, key, width, aggregation, value, minv, maxv):
     if aggregation == len:
-        aggregation = lambda grp: sum(1 for _ in grp) # count length of iterable
+        # count length of iterable
+        aggregation = lambda g: sum(1 for _ in g)
     yield (key, 'value')
-    for k, grp in rowgroupbybin(table, key, width, value=value, minv=minv, maxv=maxv):
+    for k, grp in rowgroupbybin(table, key, width, value=value, minv=minv,
+                                maxv=maxv):
         yield k, aggregation(grp)
 
 
 class MultiRangeAggregateView(RowContainer):
     
     def __init__(self, source, key, width, aggregation=None, 
-                 minv=None, maxv=None, presorted=False, buffersize=None, tempdir=None, cache=True):
+                 minv=None, maxv=None, presorted=False, buffersize=None,
+                 tempdir=None, cache=True):
         if presorted:
             self.source = source
         else:
-            self.source = sort(source, key, buffersize=buffersize, tempdir=tempdir, cache=cache)
+            self.source = sort(source, key, buffersize=buffersize,
+                               tempdir=tempdir, cache=cache)
         self.key = key
         self.width = width
         if aggregation is None:
@@ -717,9 +751,9 @@ class MultiRangeAggregateView(RowContainer):
 
     
 def itermultirangeaggregate(source, key, width, aggregation, minv, maxv):
-    aggregation = OrderedDict(aggregation.items()) # take a copy
+    aggregation = OrderedDict(aggregation.items())  # take a copy
     it = iter(source)
-    srcflds = it.next()
+    srcflds = next(it)
     # push back header to ensure we iterate only once
     it = itertools.chain([srcflds], it)
 
@@ -728,14 +762,14 @@ def itermultirangeaggregate(source, key, width, aggregation, minv, maxv):
         agg = aggregation[outfld]
         if callable(agg):
             aggregation[outfld] = None, agg
-        elif isinstance(agg, basestring):
-            aggregation[outfld] = agg, list # list is default
-        elif len(agg) == 1 and isinstance(agg[0], basestring):
-            aggregation[outfld] = agg[0], list # list is default 
+        elif isinstance(agg, string_types):
+            aggregation[outfld] = agg, list  # list is default
+        elif len(agg) == 1 and isinstance(agg[0], string_types):
+            aggregation[outfld] = agg[0], list  # list is default
         elif len(agg) == 1 and callable(agg[0]):
-            aggregation[outfld] = None, agg[0] # aggregate whole rows
+            aggregation[outfld] = None, agg[0]  # aggregate whole rows
         elif len(agg) == 2:
-            pass # no need to normalise
+            pass  # no need to normalise
         else:
             raise Exception('invalid aggregation: %r, %r' % (outfld, agg))
         
@@ -783,7 +817,7 @@ def groupselectfirst(table, key):
 
     """
 
-    _reducer = lambda k, rows: rows.next()
+    _reducer = lambda k, rows: next(rows)
     return rowreduce(table, key, reducer=_reducer)
 
 
@@ -856,9 +890,10 @@ def mergeduplicates(table, key, missing=None, presorted=False, buffersize=None,
     reported as an instance of the Conflict class (sub-class of frozenset).
 
     If `presorted` is True, it is assumed that the data are already sorted by
-    the given key, and the `buffersize`, `tempdir` and `cache` arguments are ignored. Otherwise, the data
-    are sorted, see also the discussion of the `buffersize`, `tempdir` and `cache` arguments under the
-    :func:`sort` function.
+    the given key, and the `buffersize`, `tempdir` and `cache` arguments are
+    ignored. Otherwise, the data are sorted, see also the discussion of the
+    `buffersize`, `tempdir` and `cache` arguments under the :func:`sort`
+    function.
 
     .. versionchanged:: 0.3
 
@@ -873,16 +908,19 @@ def mergeduplicates(table, key, missing=None, presorted=False, buffersize=None,
     """
 
     return MergeDuplicatesView(table, key, missing=missing, presorted=presorted,
-                               buffersize=buffersize, tempdir=tempdir, cache=cache)
+                               buffersize=buffersize, tempdir=tempdir,
+                               cache=cache)
 
 
 class MergeDuplicatesView(RowContainer):
 
-    def __init__(self, table, key, missing=None, presorted=False, buffersize=None, tempdir=None, cache=True):
+    def __init__(self, table, key, missing=None, presorted=False,
+                 buffersize=None, tempdir=None, cache=True):
         if presorted:
             self.table = table
         else:
-            self.table = sort(table, key, buffersize=buffersize, tempdir=tempdir, cache=cache)
+            self.table = sort(table, key, buffersize=buffersize,
+                              tempdir=tempdir, cache=cache)
         self.key = key
         self.missing = missing
 
@@ -895,7 +933,7 @@ def itermergeduplicates(table, key, missing):
     fields, it = iterpeek(it)
 
     # determine output fields
-    if isinstance(key, basestring):
+    if isinstance(key, string_types):
         outflds = [key]
         keyflds = set([key])
     else:
@@ -909,7 +947,7 @@ def itermergeduplicates(table, key, missing):
     # do the work
     for k, grp in rowgroupby(it, key):
         grp = list(grp)
-        if isinstance(key, basestring):
+        if isinstance(key, string_types):
             outrow = [k]
         else:
             outrow = list(k)
@@ -924,7 +962,7 @@ def itermergeduplicates(table, key, missing):
         yield tuple(outrow)
 
 
-mergereduce = mergeduplicates # for backwards compatibility
+mergereduce = mergeduplicates  # for backwards compatibility
 
 
 def merge(*tables, **kwargs):
@@ -991,9 +1029,11 @@ class Conflict(frozenset):
         return s
 
 
-# N.B., there are issues with this function as it currently stands. The usability
-# may be dubious given the different behaviour with mins and maxs specified
-# vs not specified. The implementation itself may also be very innefficient.
+# N.B., there are issues with this function as it currently stands. The
+# usability may be dubious given the different behaviour with mins and maxs
+# specified vs not specified. The implementation itself may also be very
+# innefficient.
+
 
 def multirangeaggregate(table, keys, widths, aggregation, value=None,
                         mins=None, maxs=None):
@@ -1045,8 +1085,9 @@ def multirangeaggregate(table, keys, widths, aggregation, value=None,
 class SimpleMultiRangeAggregateView(RowContainer):
 
     def __init__(self, table, keys, widths, aggregation,
-                  value=None, mins=None, maxs=None):
-        assert len(keys) == len(widths), 'one width must be specified for each key field'
+                 value=None, mins=None, maxs=None):
+        assert len(keys) == len(widths), 'one width must be specified for ' \
+                                         'each key field'
         assert mins is None or len(keys) == len(mins), 'bad value for mins'
         assert maxs is None or len(keys) == len(maxs), 'bad value for maxs'
         self.table = table
@@ -1069,9 +1110,11 @@ class SimpleMultiRangeAggregateView(RowContainer):
                                              self.mins, self.maxs)
 
 
-def _recursive_bin(outerbin, level, bindef, fields, keys, widths, getval, mins, maxs):
+def _recursive_bin(outerbin, level, bindef, fields, keys, widths, getval, mins,
+                   maxs):
 
-    # TODO this is almost impossible to comprehend, needs to be tidied up!
+    # TODO this is almost impossible to comprehend, needs to be rewritten or
+    # dropped
 
     bindef = list(bindef) # take a copy
 
@@ -1088,38 +1131,44 @@ def _recursive_bin(outerbin, level, bindef, fields, keys, widths, getval, mins, 
         maxv = maxs[level]
 
         # initialise at this level
-        tbl = itertools.chain([fields], outerbin)  # reconstitute table with header
+        # reconstitute table with header
+        tbl = itertools.chain([fields], outerbin)
         tbl_sorted = sort(tbl, key)  # sort at this level
         it = iter(tbl_sorted)  # get an iterator
-        it.next()  # throw away header
+        next(it)  # throw away header
 
         if minv is not None and maxv is not None:
-            # use a different algorithm if minv and maxv are specified - fixed bins
+            # use a different algorithm if minv and maxv are specified -
+            # fixed bins
             numbins = int(math.ceil((maxv - minv) / width))
             keyv = None
             for n in xrange(0, numbins):
                 binminv = minv + n*width
                 binmaxv = binminv + width
-                if binmaxv >= maxv: # final bin
-                    binmaxv = maxv # truncate final bin to specified maximum
+                if binmaxv >= maxv:  # final bin
+                    binmaxv = maxv  # truncate final bin to specified maximum
                 thisbindef = list(bindef)
                 thisbindef.append((binminv, binmaxv))
                 binnedrows = []
                 try:
-                    while keyv < binminv: # advance until we're within the bin's range
-                        row = it.next()
+                    # advance until we're within the bin's range
+                    while keyv < binminv:
+                        row = next(it)
                         keyv = getkey(row)
-                    while binminv <= keyv < binmaxv: # within the bin
+                    while binminv <= keyv < binmaxv:  # within the bin
                         binnedrows.append(row)
-                        row = it.next()
+                        row = next(it)
                         keyv = getkey(row)
-                    while keyv == binmaxv == maxv: # possible floating point precision bug here?
-                        binnedrows.append(row) # last bin is open if maxv is specified
-                        row = it.next()
+                    # possible floating point precision bug here?
+                    while keyv == binmaxv == maxv:
+                        # last bin is open if maxv is specified
+                        binnedrows.append(row)
+                        row = next(it)
                         keyv = getkey(row)
                 except StopIteration:
                     pass
-                for r in _recursive_bin(binnedrows, level+1, thisbindef, fields, keys, widths, getval, mins, maxs):
+                for r in _recursive_bin(binnedrows, level+1, thisbindef, fields,
+                                        keys, widths, getval, mins, maxs):
                     yield r
 
         else:
@@ -1129,7 +1178,7 @@ def _recursive_bin(outerbin, level, bindef, fields, keys, widths, getval, mins, 
 
             # initialise minimum value
             try:
-                row = it.next() # what happens if this raises StopIteration?
+                row = next(it)  # what happens if this raises StopIteration?
             except StopIteration:
                 pass
             else:
@@ -1138,29 +1187,36 @@ def _recursive_bin(outerbin, level, bindef, fields, keys, widths, getval, mins, 
                     minv = keyv
 
                 # N.B., we need to account for two possible scenarios
-                # (1) maxv is not specified, so keep making bins until we run out of rows
+                # (1) maxv is not specified, so keep making bins until we run
+                # out of rows
                 # (2) maxv is specified, so iterate over bins up to maxv
                 try:
                     for binminv in count(minv, width):
                         binmaxv = binminv + width
                         if maxv is not None and binmaxv >= maxv:  # final bin
-                            binmaxv = maxv  # truncate final bin to specified maximum
+                            # truncate final bin to specified maximum
+                            binmaxv = maxv
                         thisbindef = list(bindef)
                         thisbindef.append((binminv, binmaxv))
                         binnedrows = []
-                        while keyv < binminv:  # advance until we're within the bin's range
-                            row = it.next()
+                        # advance until we're within the bin's range
+                        while keyv < binminv:
+                            row = next(it)
                             keyv = getkey(row)
                         while binminv <= keyv < binmaxv:  # within the bin
                             binnedrows.append(row)
-                            row = it.next()
+                            row = next(it)
                             keyv = getkey(row)
-                        while maxv is not None and keyv == binmaxv == maxv:  # possible floating point precision bug here?
-                            binnedrows.append(row)  # last bin is open if maxv is specified
-                            row = it.next()
+                        # possible floating point precision bug here?
+                        while maxv is not None and keyv == binmaxv == maxv:
+                            # last bin is open if maxv is specified
+                            binnedrows.append(row)
+                            row = next(it)
                             keyv = getkey(row)
 
-                        for r in _recursive_bin(binnedrows, level+1, thisbindef, fields, keys, widths, getval, mins, maxs):
+                        for r in _recursive_bin(binnedrows, level+1, thisbindef,
+                                                fields, keys, widths, getval,
+                                                mins, maxs):
                             yield r
 
                         # possible floating point precision bug here?
@@ -1175,17 +1231,18 @@ def _recursive_bin(outerbin, level, bindef, fields, keys, widths, getval, mins, 
 
 
 def itersimplemultirangeaggregate(table, keys, widths, aggregation, value,
-                                      mins, maxs):
+                                  mins, maxs):
 
     if aggregation == len:
-        aggregation = lambda grp: sum(1 for _ in grp) # count length of iterable
+        # count length of iterable
+        aggregation = lambda grp: sum(1 for _ in grp) 
     yield ('key', 'value')
 
     # we want a recursive grouping algorithm so we could cope with any number of
     # key fields
 
     it = iter(table)
-    fields = it.next()
+    fields = next(it)
 
     # wrap rows
     it = hybridrows(fields, it)
@@ -1208,7 +1265,8 @@ def itersimplemultirangeaggregate(table, keys, widths, aggregation, value,
 def fold(table, key, f, value=None, presorted=False, buffersize=None,
          tempdir=None, cache=True):
     """
-    Reduce rows recursively via the Python standard :func:`reduce` function. E.g.::
+    Reduce rows recursively via the Python standard :func:`reduce` function.
+    E.g.::
 
         >>> from petl import fold, look
         >>> look(table1)
@@ -1266,6 +1324,3 @@ def iterfold(table, key, f, value):
     yield ('key', 'value')
     for k, grp in rowgroupby(table, key, value):
         yield k, reduce(f, grp)
-
-
-

@@ -1,10 +1,12 @@
-from __future__ import absolute_import, print_function, division
+from __future__ import absolute_import, print_function, division, \
+    unicode_literals
 
 
 import itertools
+from ..compat import next
 
 
-from petl.util import RowContainer
+from ..util import RowContainer
 
 
 def unpack(table, field, newfields=None, include_original=False, missing=None):
@@ -82,7 +84,7 @@ class UnpackView(RowContainer):
 def iterunpack(source, field, newfields, include_original, missing):
     it = iter(source)
 
-    flds = it.next()
+    flds = next(it)
     if field in flds:
         field_index = flds.index(field)
     elif isinstance(field, int) and field < len(flds):
@@ -105,7 +107,8 @@ def iterunpack(source, field, newfields, include_original, missing):
     elif newfields is None:
         nunpack = 0
     else:
-        raise Exception('newfields argument must be list or tuple of field names, or int (number of values to unpack)')
+        raise Exception('newfields argument must be list or tuple of field '
+                        'names, or int (number of values to unpack)')
     yield tuple(out_flds)
 
     # construct the output data
@@ -184,7 +187,7 @@ def iterunpackdict(table, field, keys, includeoriginal, samplesize, missing):
 
     # set up
     it = iter(table)
-    fields = it.next()
+    fields = next(it)
     fidx = fields.index(field)
     outfields = list(fields)
     if not includeoriginal:
@@ -216,5 +219,3 @@ def iterunpackdict(table, field, keys, includeoriginal, samplesize, missing):
             except:
                 outrow.append(missing)
         yield tuple(outrow)
-
-

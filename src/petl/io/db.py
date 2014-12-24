@@ -6,7 +6,7 @@ import logging
 
 
 # internal dependencies
-from petl.util import RowContainer
+from ..util import RowContainer
 
 
 logger = logging.getLogger(__name__)

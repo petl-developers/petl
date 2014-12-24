@@ -1,21 +1,20 @@
-from __future__ import absolute_import, print_function, division
+from __future__ import absolute_import, print_function, division, \
+    unicode_literals
 
 
-import cPickle as pickle
 from tempfile import NamedTemporaryFile
 import operator
 import itertools
-
-
-from petl.util import RowContainer, asindices, shortlistmergesorted, \
-    heapqmergesorted, sortable_itemgetter
-
-
+from ..compat import pickle, next
 import logging
 logger = logging.getLogger(__name__)
 warning = logger.warning
 info = logger.info
 debug = logger.debug
+
+
+from ..util import RowContainer, asindices, shortlistmergesorted, \
+    heapqmergesorted, sortable_itemgetter
 
 
 def sort(table, key=None, reverse=False, buffersize=None, tempdir=None,
@@ -97,14 +96,15 @@ def sort(table, key=None, reverse=False, buffersize=None, tempdir=None,
     no more than `buffersize` rows, each chunk is written to a temporary file,
     and then a merge sort is performed on the temporary files.
 
-    If `buffersize` is `None`, the value of `petl.transform.sorts.defaultbuffersize`
-    will be used. By default this is set to 100000 rows, but can be changed, e.g.::
+    If `buffersize` is `None`, the value of
+    `petl.transform.sorts.defaultbuffersize` will be used. By default this is
+    set to 100000 rows, but can be changed, e.g.::
 
         >>> import petl.transform.sorts
         >>> petl.transform.sorts.defaultbuffersize = 500000
 
-    If `petl.transform.sorts.defaultbuffersize` is set to `None`, this forces all
-    sorting to be done entirely in memory.
+    If `petl.transform.sorts.defaultbuffersize` is set to `None`, this forces
+    all sorting to be done entirely in memory.
 
     .. versionchanged:: 0.16
 
@@ -127,25 +127,15 @@ def iterchunk(f):
         except EOFError:
             pass
 
-# non-independent version of iteration from file cache which doesn't depend
-# on named temporary files
-#def iterchunk(f):
-#    debug('seek(0): %r', f)
-#    f.seek(0)
-#    try:
-#        while True:
-#            yield pickle.load(f)
-#    except EOFError:
-#        pass
-
 
 def _mergesorted(key=None, reverse=False, *iterables):
 
-    # N.B., I've used heapq for normal merge sort and shortlist merge sort for reverse
-    # merge sort because I've assumed that heapq.merge is faster and so is preferable
-    # but it doesn't support reverse sorting so the shortlist merge sort has to
-    # be used for reverse sorting. Some casual profiling suggests there isn't much
-    # between the two in terms of speed, but might be worth profiling more carefully
+    # N.B., I've used heapq for normal merge sort and shortlist merge sort for
+    # reverse merge sort because I've assumed that heapq.merge is faster and
+    # so is preferable but it doesn't support reverse sorting so the shortlist
+    # merge sort has to be used for reverse sorting. Some casual profiling
+    # suggests there isn't much between the two in terms of speed, but might be
+    # worth profiling more carefully
 
     if reverse:
         return shortlistmergesorted(key, True, *iterables)
@@ -212,7 +202,7 @@ class SortView(RowContainer):
         self._clearcache()
         it = iter(source)
 
-        flds = it.next()
+        flds = next(it)
         yield tuple(flds)
 
         if key is not None:
@@ -235,7 +225,8 @@ class SortView(RowContainer):
                 debug('caching mem')
                 self._fldcache = flds
                 self._memcache = rows
-                self._getkey = getkey # actually not needed to iterate from memcache
+                # actually not needed to iterate from memcache
+                self._getkey = getkey
 
             for row in rows:
                 yield tuple(row)
@@ -332,21 +323,31 @@ def mergesort(*tables, **kwargs):
         | 'F'   | 4     |
         +-------+-------+
 
-    If the input tables are already sorted by the given key, give ``presorted=True``
-    as a keyword argument.
+    If the input tables are already sorted by the given key, give
+    ``presorted=True`` as a keyword argument.
 
-    This function is equivalent to concatenating the input tables using :func:`cat`
-    then sorting, however this function will typically be more efficient,
-    especially if the input tables are presorted.
+    This function is equivalent to concatenating the input tables using
+    :func:`cat` then sorting, however this function will typically be more
+    efficient, especially if the input tables are presorted.
 
     Keyword arguments:
 
-        - `key` - field name or tuple of fields to sort by (defaults to `None` - lexical sort)
-        - `reverse` - `True` if sort in reverse (descending) order (defaults to `False`)
-        - `presorted` - `True` if inputs are already sorted by the given key (defaults to `False`)
-        - `missing` - value to fill with when input tables have different fields (defaults to `None`)
-        - `header` - specify a fixed header for the output table
-        - `buffersize` - limit the number of rows in memory per input table when inputs are not presorted
+    key : string or tuple of strings, optional
+        Field name or tuple of fields to sort by (defaults to `None` lexical
+        sort)
+    reverse : bool, optional
+        `True` if sort in reverse (descending) order (defaults to `False`)
+    presorted : bool, optional
+        `True` if inputs are already sorted by the given key (defaults to
+        `False`)
+    missing : object
+        Value to fill with when input tables have different fields (defaults to
+        `None`)
+    header : sequence of strings, optional
+        Specify a fixed header for the output table
+    buffersize : int, optional
+        Limit the number of rows in memory per input table when inputs are not
+        presorted
 
     .. versionadded:: 0.9
 
@@ -358,18 +359,23 @@ def mergesort(*tables, **kwargs):
 class MergeSortView(RowContainer):
 
     def __init__(self, tables, key=None, reverse=False, presorted=False,
-                 missing=None, header=None, buffersize=None, tempdir=None, cache=True):
+                 missing=None, header=None, buffersize=None, tempdir=None,
+                 cache=True):
         self.key = key
         if presorted:
             self.tables = tables
         else:
-            self.tables = [sort(t, key=key, reverse=reverse, buffersize=buffersize, tempdir=tempdir, cache=cache) for t in tables]
+            self.tables = [sort(t, key=key, reverse=reverse,
+                                buffersize=buffersize, tempdir=tempdir,
+                                cache=cache)
+                           for t in tables]
         self.missing = missing
         self.header = header
         self.reverse = reverse
 
     def __iter__(self):
-        return itermergesort(self.tables, self.key, self.header, self.missing, self.reverse)
+        return itermergesort(self.tables, self.key, self.header, self.missing,
+                             self.reverse)
 
 
 def itermergesort(sources, key, header, missing, reverse):
@@ -378,7 +384,7 @@ def itermergesort(sources, key, header, missing, reverse):
     # borrow this from itercat - TODO remove code smells
 
     its = [iter(t) for t in sources]
-    source_flds_lists = [it.next() for it in its]
+    source_flds_lists = [next(it) for it in its]
 
     if header is None:
         # determine output fields by gathering all fields found in the sources
@@ -393,24 +399,26 @@ def itermergesort(sources, key, header, missing, reverse):
         outflds = header
     yield tuple(outflds)
 
-    def _standardisedata(it, flds, outflds):
+    def _standardisedata(it, flds, ofs):
         # now construct and yield the data rows
-        for row in it:
+        for _row in it:
             try:
                 # should be quickest to do this way
-                yield tuple(row[flds.index(f)] if f in flds else missing for f in outflds)
+                yield tuple(_row[flds.index(fo)] if fo in flds else missing
+                            for fo in ofs)
             except IndexError:
                 # handle short rows
-                outrow = [missing] * len(outflds)
-                for i, f in enumerate(flds):
+                outrow = [missing] * len(ofs)
+                for i, fi in enumerate(flds):
                     try:
-                        outrow[outflds.index(f)] = row[i]
+                        outrow[ofs.index(fi)] = _row[i]
                     except IndexError:
-                        pass # be relaxed about short rows
+                        pass  # be relaxed about short rows
                 yield tuple(outrow)
 
     # wrap all iterators to standardise fields
-    sits = [_standardisedata(it, flds, outflds) for flds, it in zip(source_flds_lists, its)]
+    sits = [_standardisedata(it, flds, outflds)
+            for flds, it in zip(source_flds_lists, its)]
 
     # now determine key function
     getkey = None
@@ -419,10 +427,8 @@ def itermergesort(sources, key, header, missing, reverse):
         indices = asindices(outflds, key)
         # now use field indices to construct a _getkey function
         # N.B., this will probably raise an exception on short rows
-        getkey = operator.itemgetter(*indices)
+        getkey = sortable_itemgetter(*indices)
 
     # OK, do the merge sort
     for row in shortlistmergesorted(getkey, reverse, *sits):
         yield row
-
-

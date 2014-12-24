@@ -5,20 +5,24 @@ session.
 """
 
 
-from __future__ import absolute_import, print_function, division
+from __future__ import absolute_import, print_function, division, \
+    unicode_literals
 
 
 from itertools import islice
 import sys
 import inspect
-from petl.util import RowContainer
-import petl.fluent
-from petl.io import tohtml, touhtml, StringSource
+from .compat import text_type
 import logging
 logger = logging.getLogger(__name__)
 warning = logger.warning
 info = logger.info
 debug = logger.debug
+
+
+from .util import RowContainer
+import petl.fluent
+from .io import tohtml, touhtml, StringSource
 
 
 petl = sys.modules['petl']
@@ -34,21 +38,22 @@ repr_index_header = False
 
 
 # set to str or repr for different behaviour
-repr_html_value = unicode
+repr_html_value = text_type
 
 
 # default limit for html table representation
 repr_html_limit = 5
 
 
-def repr_html(tbl, limit=None, index_header=None, representation=unicode,
+def repr_html(tbl, limit=None, index_header=None, representation=text_type,
               caption=None, encoding='utf-8'):
 
     # add column indices to header?
     if index_header is None:
         index_header = repr_index_header  # use default
     if index_header:
-        indexed_header = [u'%s|%s' % (i, f) for (i, f) in enumerate(petl.util.header(tbl))]
+        indexed_header = [u'%s|%s' % (i, f)
+                          for (i, f) in enumerate(petl.util.header(tbl))]
         target = petl.transform.setheader(tbl, indexed_header)
     else:
         target = tbl
@@ -72,15 +77,20 @@ def repr_html(tbl, limit=None, index_header=None, representation=unicode,
 
     # write to html string
     buf = StringSource()
-    if representation is unicode:
-        touhtml(target, buf, caption=caption, encoding=encoding)
-    else:
-        tohtml(target, buf, representation=representation, caption=caption)
+    if encoding:
+        petl.io.touhtml(target, buf, caption=caption, encoding=encoding)
+        s = buf.getvalue()
+        if overflow:
+            s += b'<p><strong>...</strong></p>'
 
-    if overflow:
-        return buf.getvalue() + u'<p><strong>...</strong></p>'
     else:
-        return buf.getvalue()
+        petl.io.tohtml(target, buf, representation=representation,
+                       caption=caption)
+        s = buf.getvalue()
+        if overflow:
+            s += '<p><strong>...</strong></p>'
+
+    return s
 
 
 class InteractiveWrapper(petl.fluent.FluentWrapper):
@@ -119,7 +129,8 @@ class InteractiveWrapper(petl.fluent.FluentWrapper):
         
     def __repr__(self):
         if repr_index_header:
-            indexed_header = ['%s|%s' % (i, f) for (i, f) in enumerate(petl.util.header(self))]
+            indexed_header = ['%s|%s' % (i, f)
+                              for (i, f) in enumerate(petl.util.header(self))]
             target = petl.transform.setheader(self, indexed_header)
         else:
             target = self

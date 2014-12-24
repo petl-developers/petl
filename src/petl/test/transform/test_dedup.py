@@ -1,7 +1,5 @@
-from __future__ import absolute_import, print_function, division
-
-
-__author__ = 'Alistair Miles <alimanfoo@googlemail.com>'
+from __future__ import absolute_import, print_function, division, \
+    unicode_literals
 
 
 from petl.testutils import ieq
@@ -149,6 +147,8 @@ def test_conflicts():
     expectation = (('foo', 'bar', 'baz'),
                    ('A', 1, 2),
                    ('A', 2, None))
+    print(expectation)
+    print(list(result))
     ieq(expectation, result)
     ieq(expectation, result)
 

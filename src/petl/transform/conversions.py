@@ -1,7 +1,11 @@
-from __future__ import absolute_import, print_function, division
+from __future__ import absolute_import, print_function, division, \
+    unicode_literals
 
 
-from petl.util import numparser, RowContainer, FieldSelectionError, hybridrows,\
+from ..compat import next, integer_types, string_types
+
+
+from ..util import numparser, RowContainer, FieldSelectionError, hybridrows,\
     expr, header
 
 
@@ -219,8 +223,9 @@ def convertall(table, *args, **kwargs):
 
     .. versionchanged:: 0.22
 
-    The ``where`` keyword argument can be given with a callable or expression which is evaluated on each row
-    and which should return True if the conversion should be applied on that row, else False.
+    The ``where`` keyword argument can be given with a callable or expression
+    which is evaluated on each row and which should return True if the
+    conversion should be applied on that row, else False.
 
     """
 
@@ -238,8 +243,9 @@ def replace(table, field, a, b, **kwargs):
 
     .. versionchanged:: 0.22
 
-    The ``where`` keyword argument can be given with a callable or expression which is evaluated on each row
-    and which should return True if the conversion should be applied on that row, else False.
+    The ``where`` keyword argument can be given with a callable or expression
+    which is evaluated on each row and which should return True if the
+    conversion should be applied on that row, else False.
 
     """
 
@@ -255,8 +261,9 @@ def replaceall(table, a, b, **kwargs):
 
     .. versionchanged:: 0.22
 
-    The ``where`` keyword argument can be given with a callable or expression which is evaluated on each row
-    and which should return True if the conversion should be applied on that row, else False.
+    The ``where`` keyword argument can be given with a callable or expression
+    which is evaluated on each row and which should return True if the
+    conversion should be applied on that row, else False.
 
     """
 
@@ -265,8 +272,8 @@ def replaceall(table, a, b, **kwargs):
 
 def update(table, field, value, **kwargs):
     """
-    Convenience function to convert a field to a fixed value. Accepts the ``where`` keyword argument. See also
-    :func:`convert`.
+    Convenience function to convert a field to a fixed value. Accepts the
+    ``where`` keyword argument. See also :func:`convert`.
 
     .. versionadded:: 0.23
 
@@ -307,7 +314,8 @@ def convertnumbers(table, strict=False, **kwargs):
     return convertall(table, numparser(strict), **kwargs)
 
 
-def fieldconvert(table, converters=None, failonerror=False, errorvalue=None, **kwargs):
+def fieldconvert(table, converters=None, failonerror=False, errorvalue=None,
+                 **kwargs):
     """
     Transform values in one or more fields via functions or method invocations.
 
@@ -317,7 +325,8 @@ def fieldconvert(table, converters=None, failonerror=False, errorvalue=None, **k
 
     """
 
-    return FieldConvertView(table, converters, failonerror, errorvalue, **kwargs)
+    return FieldConvertView(table, converters, failonerror, errorvalue,
+                            **kwargs)
 
 
 class FieldConvertView(RowContainer):
@@ -351,7 +360,7 @@ def iterfieldconvert(source, converters, failonerror, errorvalue, where,
 
     # grab the fields in the source table
     it = iter(source)
-    flds = it.next()
+    flds = next(it)
     yield tuple(flds)  # these are not modified
 
     # build converter functions
@@ -359,10 +368,10 @@ def iterfieldconvert(source, converters, failonerror, errorvalue, where,
     for k, c in converters.items():
 
         # turn field names into row indices
-        if isinstance(k, basestring):
+        if not isinstance(k, integer_types):
             try:
                 k = flds.index(k)
-            except ValueError: # not in list
+            except ValueError:  # not in list
                 raise FieldSelectionError(k)
         assert isinstance(k, int), 'expected integer, found %r' % k
 
@@ -371,11 +380,11 @@ def iterfieldconvert(source, converters, failonerror, errorvalue, where,
             converter_functions[k] = c
 
         # is converter a method name?
-        elif isinstance(c, basestring):
+        elif isinstance(c, string_types):
             converter_functions[k] = methodcaller(c)
 
         # is converter a method name with arguments?
-        elif isinstance(c, (tuple, list)) and isinstance(c[0], basestring):
+        elif isinstance(c, (tuple, list)) and isinstance(c[0], string_types):
             methnm = c[0]
             methargs = c[1:]
             converter_functions[k] = methodcaller(methnm, *methargs)
@@ -388,7 +397,8 @@ def iterfieldconvert(source, converters, failonerror, errorvalue, where,
         elif c is None:
             pass  # ignore
         else:
-            raise Exception('unexpected converter specification on field %r: %r' % (k, c))
+            raise Exception('unexpected converter specification on field %r: '
+                            '%r' % (k, c))
 
     # define a function to transform a value
     def transform_value(i, v, *args):
@@ -415,7 +425,7 @@ def iterfieldconvert(source, converters, failonerror, errorvalue, where,
                          for i, v in enumerate(_row))
 
     # prepare where function
-    if isinstance(where, basestring):
+    if isinstance(where, string_types):
         where = expr(where)
     elif where is not None:
         assert callable(where), 'expected callable for "where" argument, ' \

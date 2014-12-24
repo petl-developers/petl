@@ -1,12 +1,13 @@
-from __future__ import absolute_import, print_function, division
+from __future__ import absolute_import, print_function, division, \
+    unicode_literals
 
 
 import operator
 import re
+from ..compat import OrderedDict, next, xrange, string_types
 
 
-from petl.compat import OrderedDict
-from petl.util import asindices, expr, RowContainer, hybridrows, values, \
+from ..util import asindices, expr, RowContainer, hybridrows, values, \
     itervalues, limits
 
 
@@ -78,11 +79,12 @@ def select(table, *args, **kwargs):
         raise Exception('missing positional argument')
     elif len(args) == 1:
         where = args[0]
-        if isinstance(where, basestring):
+        if isinstance(where, string_types):
             where = expr(where)
         else:
             assert callable(where), 'second argument must be string or callable'
-        return RowSelectView(table, where, missing=missing, complement=complement)
+        return RowSelectView(table, where, missing=missing,
+                             complement=complement)
     else:
         field = args[0]
         where = args[1]
@@ -105,7 +107,7 @@ def recordselect(table, where, missing=None, complement=False):
     return rowselect(table, where, missing=missing, complement=complement)
 
 
-def rowselect(table, where, complement=False):
+def rowselect(table, where, missing=None, complement=False):
     """
     Select rows matching a condition. The `where` argument should be a function
     accepting a hybrid row object (supports accessing values either by
@@ -117,7 +119,7 @@ def rowselect(table, where, complement=False):
 
     """
 
-    return RowSelectView(table, where, complement=complement)
+    return RowSelectView(table, where, missing=missing, complement=complement)
 
 
 class RowSelectView(RowContainer):
@@ -129,16 +131,17 @@ class RowSelectView(RowContainer):
         self.complement = complement
 
     def __iter__(self):
-        return iterrowselect(self.source, self.where, self.missing, self.complement)
+        return iterrowselect(self.source, self.where, self.missing,
+                             self.complement)
 
 
 def iterrowselect(source, where, missing, complement):
     it = iter(source)
-    flds = it.next()
+    flds = next(it)
     yield tuple(flds)
-    for row in hybridrows(flds, it, missing): # convert to hybrid row/record
-        if where(row) != complement: # XOR
-            yield tuple(row) # need to convert back to tuple?
+    for row in hybridrows(flds, it, missing):  # convert to hybrid row/record
+        if where(row) != complement:  # XOR
+            yield tuple(row)  # need to convert back to tuple?
 
 
 def rowlenselect(table, n, complement=False):
@@ -179,18 +182,19 @@ class FieldSelectView(RowContainer):
         self.complement = complement
 
     def __iter__(self):
-        return iterfieldselect(self.source, self.field, self.where, self.complement)
+        return iterfieldselect(self.source, self.field, self.where,
+                               self.complement)
 
 
 def iterfieldselect(source, field, where, complement):
     it = iter(source)
-    flds = it.next()
+    flds = next(it)
     yield tuple(flds)
     indices = asindices(flds, field)
     getv = operator.itemgetter(*indices)
     for row in it:
         v = getv(row)
-        if where(v) != complement: # XOR
+        if where(v) != complement:  # XOR
             yield tuple(row)
 
 
@@ -206,7 +210,8 @@ def selectop(table, field, value, op, complement=False):
 
     """
 
-    return fieldselect(table, field, lambda v: op(v, value), complement=complement)
+    return fieldselect(table, field, lambda v: op(v, value),
+                       complement=complement)
 
 
 def selecteq(table, field, value, complement=False):
@@ -281,7 +286,8 @@ def selectgt(table, field, value, complement=False):
 
 def selectge(table, field, value, complement=False):
     """
-    Select rows where the given field is greater than or equal to the given value.
+    Select rows where the given field is greater than or equal to the given
+    value.
 
     .. versionchanged:: 0.4
 
@@ -301,7 +307,8 @@ def selectcontains(table, field, value, complement=False):
 
     """
 
-    return selectop(table, field, value, operator.contains, complement=complement)
+    return selectop(table, field, value, operator.contains,
+                    complement=complement)
 
 
 def selectin(table, field, value, complement=False):
@@ -315,7 +322,8 @@ def selectin(table, field, value, complement=False):
 
     """
 
-    return fieldselect(table, field, lambda v: v in value, complement=complement)
+    return fieldselect(table, field, lambda v: v in value,
+                       complement=complement)
 
 
 def selectnotin(table, field, value, complement=False):
@@ -329,7 +337,8 @@ def selectnotin(table, field, value, complement=False):
 
     """
 
-    return fieldselect(table, field, lambda v: v not in value, complement=complement)
+    return fieldselect(table, field, lambda v: v not in value,
+                       complement=complement)
 
 
 def selectis(table, field, value, complement=False):
@@ -386,7 +395,8 @@ def selectrangeopenleft(table, field, minv, maxv, complement=False):
 
     """
 
-    return fieldselect(table, field, lambda v: minv <= v < maxv, complement=complement)
+    return fieldselect(table, field, lambda v: minv <= v < maxv,
+                       complement=complement)
 
 
 def selectrangeopenright(table, field, minv, maxv, complement=False):
@@ -401,7 +411,8 @@ def selectrangeopenright(table, field, minv, maxv, complement=False):
 
     """
 
-    return fieldselect(table, field, lambda v: minv < v <= maxv, complement=complement)
+    return fieldselect(table, field, lambda v: minv < v <= maxv,
+                       complement=complement)
 
 
 def selectrangeopen(table, field, minv, maxv, complement=False):
@@ -416,7 +427,8 @@ def selectrangeopen(table, field, minv, maxv, complement=False):
 
     """
 
-    return fieldselect(table, field, lambda v: minv <= v <= maxv, complement=complement)
+    return fieldselect(table, field, lambda v: minv <= v <= maxv,
+                       complement=complement)
 
 
 def selectrangeclosed(table, field, minv, maxv, complement=False):
@@ -431,7 +443,8 @@ def selectrangeclosed(table, field, minv, maxv, complement=False):
 
     """
 
-    return fieldselect(table, field, lambda v: minv < v < maxv, complement=complement)
+    return fieldselect(table, field, lambda v: minv < v < maxv,
+                       complement=complement)
 
 
 def selectre(table, field, pattern, flags=0, complement=False):
@@ -498,7 +511,8 @@ def selectfalse(table, field, complement=False):
 
     """
 
-    return fieldselect(table, field, lambda v: not bool(v), complement=complement)
+    return fieldselect(table, field, lambda v: not bool(v),
+                       complement=complement)
 
 
 def selectnone(table, field, complement=False):
@@ -516,7 +530,8 @@ def selectnotnone(table, field, complement=False):
 
     """
 
-    return fieldselect(table, field, lambda v: v is not None, complement=complement)
+    return fieldselect(table, field, lambda v: v is not None,
+                       complement=complement)
 
 
 def selectusingcontext(table, query):
@@ -571,11 +586,11 @@ class SelectUsingContextView(RowContainer):
 
 def iterselectusingcontext(table, query):
     it = iter(table)
-    fields = tuple(it.next())
+    fields = next(tuple(it))
     yield fields
     it = hybridrows(fields, it)
     prv = None
-    cur = it.next()
+    cur = next(it)
     for nxt in it:
         if query(prv, cur, nxt):
             yield cur
@@ -702,11 +717,13 @@ def rangefacet(table, field, width, minv=None, maxv=None,
     fct = OrderedDict()
     for binminv in xrange(minv, maxv, width):
         binmaxv = binminv + width
-        if binmaxv >= maxv: # final bin
+        if binmaxv >= maxv:  # final bin
             binmaxv = maxv
             # final bin includes right edge
-            fct[(binminv, binmaxv)] = selectrangeopen(table, field, binminv, binmaxv)
+            fct[(binminv, binmaxv)] = selectrangeopen(table, field, binminv,
+                                                      binmaxv)
         else:
-            fct[(binminv, binmaxv)] = selectrangeopenleft(table, field, binminv, binmaxv)
+            fct[(binminv, binmaxv)] = selectrangeopenleft(table, field, binminv,
+                                                          binmaxv)
 
     return fct

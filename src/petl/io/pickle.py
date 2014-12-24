@@ -1,13 +1,14 @@
-from __future__ import absolute_import, print_function, division, unicode_literals
+from __future__ import absolute_import, print_function, division, \
+    unicode_literals
 
 
 # standard library dependencies
-import cPickle as pickle
+from ..compat import pickle
 
 
 # internal dependencies
-from petl.util import RowContainer, data
-from petl.io.sources import read_source_from_arg, write_source_from_arg
+from ..util import RowContainer, data
+from .sources import read_source_from_arg, write_source_from_arg
 
 
 def frompickle(source=None):

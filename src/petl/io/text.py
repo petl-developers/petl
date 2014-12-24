@@ -6,8 +6,8 @@ import codecs
 
 
 # internal dependencies
-from petl.util import RowContainer, asdict
-from petl.io.sources import read_source_from_arg, write_source_from_arg
+from ..util import RowContainer, asdict
+from .sources import read_source_from_arg, write_source_from_arg
 
 
 def fromtext(source=None, header=('lines',), strip=None):
