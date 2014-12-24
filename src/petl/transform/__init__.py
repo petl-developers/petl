@@ -31,13 +31,13 @@ from petl.transform.hashjoins import hashjoin, hashleftjoin, hashrightjoin, \
     hashantijoin, hashlookupjoin
 
 from petl.transform.reductions import rowreduce, recordreduce, mergeduplicates,\
-    aggregate, rangeaggregate, rangecounts, rangerecordreduce, rangerowreduce, \
-    groupcountdistinctvalues, groupselectfirst, groupselectmax, groupselectmin,\
-    mergereduce, merge, fold
+    aggregate, groupcountdistinctvalues, groupselectfirst, groupselectmax, \
+    groupselectmin, mergereduce, merge, fold
 
 from petl.transform.fills import filldown, fillright, fillleft
 
-from petl.transform.regex import capture, split, search, searchcomplement, sub, resub
+from petl.transform.regex import capture, split, search, searchcomplement, \
+    sub, resub
 
 from petl.transform.reshape import melt, recast, transpose, pivot, flatten, \
     unflatten

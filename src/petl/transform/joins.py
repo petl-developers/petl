@@ -8,7 +8,7 @@ from ..compat import next
 
 
 from ..util import RowContainer, asindices, rowgetter, rowgroupby, header,\
-    data
+    data, comparable_itemgetter, Comparable
 from .sorts import sort
 from .basics import cut, cutout
 from .dedup import distinct
@@ -416,8 +416,8 @@ def iterjoin(left, right, lkey, rkey, leftouter=False, rightouter=False,
     rkind = asindices(rflds, rkey)
 
     # construct functions to extract key values from both tables
-    lgetk = operator.itemgetter(*lkind)
-    rgetk = operator.itemgetter(*rkind)
+    lgetk = comparable_itemgetter(*lkind)
+    rgetk = comparable_itemgetter(*rkind)
 
     # determine indices of non-key fields in the right table
     # (in the output, we only include key fields from the left table - we
@@ -470,7 +470,8 @@ def iterjoin(left, right, lkey, rkey, leftouter=False, rightouter=False,
     rgit = itertools.groupby(rit, key=rgetk)
 
     # loop until *either* of the iterators is exhausted
-    lkval, rkval = None, None  # initialise here to handle empty tables
+    # initialise here to handle empty tables
+    lkval, rkval = Comparable(None), Comparable(None)
     try:
 
         # pick off initial row groups
@@ -691,15 +692,15 @@ def iterantijoin(left, right, lkey, rkey):
     rkind = asindices(rflds, rkey)
 
     # construct functions to extract key values from both tables
-    lgetk = operator.itemgetter(*lkind)
-    rgetk = operator.itemgetter(*rkind)
+    lgetk = comparable_itemgetter(*lkind)
+    rgetk = comparable_itemgetter(*rkind)
 
     # construct group iterators for both tables
     lgit = itertools.groupby(lit, key=lgetk)
     rgit = itertools.groupby(rit, key=rgetk)
 
     # loop until *either* of the iterators is exhausted
-    lkval, rkval = None, None  # initialise here to handle empty tables
+    lkval, rkval = Comparable(None), Comparable(None)
     try:
 
         # pick off initial row groups
