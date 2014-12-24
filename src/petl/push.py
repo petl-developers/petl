@@ -17,7 +17,7 @@ from .compat import pickle, next, PY3
 
 
 from .util import asindices, HybridRow, shortlistmergesorted, \
-    sortable_itemgetter
+    comparable_itemgetter
 import petl.transform
 
 
@@ -282,7 +282,7 @@ class SortConnection(PipelineConnection):
             indices = asindices(fields, key)
             # now use field indices to construct a _getkey function
             # N.B., this will probably raise an exception on short rows
-            self.getkey = sortable_itemgetter(*indices)
+            self.getkey = comparable_itemgetter(*indices)
 
         self.reverse = reverse
 

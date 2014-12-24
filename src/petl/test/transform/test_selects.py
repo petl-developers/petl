@@ -6,6 +6,7 @@ from nose.tools import eq_
 
 
 from petl.testutils import ieq
+from petl.util import Comparable
 from petl.transform.selects import select, selectin, selectcontains, \
     rowselect, rowlenselect, selectre, selectusingcontext, facet, rangefacet
 
@@ -84,7 +85,7 @@ def test_select():
     ieq(expect, actual)
 
     # check error handling on short rows
-    actual = select(table, lambda rec: rec['baz'] > 88.1)
+    actual = select(table, lambda rec: Comparable(rec['baz']) > 88.1)
     expect = (('foo', 'bar', 'baz'),
               ('a', 2, 88.2),
               ('d', 7, 100.9))

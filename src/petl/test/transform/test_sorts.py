@@ -4,6 +4,7 @@ from __future__ import absolute_import, print_function, division, \
 
 from datetime import datetime
 from nose.tools import eq_
+from petl.compat import next
 
 
 from petl.testutils import ieq
@@ -234,12 +235,12 @@ def test_sort_buffered_independent():
     # from one does not affect the other
     it1 = iter(result)
     it2 = iter(result)
-    eq_(expectation[0], it1.next())
-    eq_(expectation[1], it1.next())
-    eq_(expectation[0], it2.next())
-    eq_(expectation[1], it2.next())
-    eq_(expectation[2], it2.next())
-    eq_(expectation[2], it1.next())
+    eq_(expectation[0], next(it1))
+    eq_(expectation[1], next(it1))
+    eq_(expectation[0], next(it2))
+    eq_(expectation[1], next(it2))
+    eq_(expectation[2], next(it2))
+    eq_(expectation[2], next(it1))
 
 
 def test_sort_empty():
@@ -259,6 +260,7 @@ def test_sort_none():
             ('D', 10))
 
     result = sort(table, 'bar')
+    print(list(result))
     expectation = (('foo', 'bar'),
                    ('A', None),
                    ('F', 1),

@@ -10,7 +10,7 @@ info = logger.info
 debug = logger.debug
 
 
-from ..util import header, RowContainer, SortableItem
+from ..util import header, RowContainer, Comparable
 from .sorts import sort
 from .basics import cut
 
@@ -125,7 +125,7 @@ def itercomplement(ta, tb):
             # we want the elements in a that are not in b
             while True:
                 debug('current rows: %r %r', a, b)
-                if b is None or SortableItem(a) < SortableItem(b):
+                if b is None or Comparable(a) < Comparable(b):
                     yield a
                     debug('advance a')
                     try:

@@ -25,14 +25,14 @@ warning = logger.warning
 info = logger.info
 debug = logger.debug
 from .compat import maketrans, string_types, number_types, \
-    sortable_types, Counter, OrderedDict, count, izip_longest, long, xrange, \
+    comparable_types, Counter, OrderedDict, count, izip_longest, long, xrange, \
     next
 
 
 from .base import IterContainer
 
 
-singletons = set([None, False, True])
+singletons = set([False, True])
 
 
 class RowContainer(IterContainer):
@@ -1653,7 +1653,7 @@ class FieldSelectionError(Exception):
     
 def rowitemgetter(fields, spec):
     indices = asindices(fields, spec)
-    getter = itemgetter(*indices)
+    getter = comparable_itemgetter(*indices)
     return getter
 
     
@@ -2776,19 +2776,21 @@ class Record(tuple):
         elif f in self.flds:
             try:
                 return super(HybridRow, self).__getitem__(self.flds.index(f))
-            except IndexError: # handle short rows
+            except IndexError:  # handle short rows
                 return self.missing
         else:
-            raise Exception('item ' + str(f) + ' not in fields ' + str(self.flds))
+            raise Exception('item ' + str(f) +
+                            ' not in fields ' + str(self.flds))
 
     def __getattr__(self, f):
         if f in self.flds:
             try:
                 return super(HybridRow, self).__getitem__(self.flds.index(f))
-            except IndexError: # handle short rows
+            except IndexError:  # handle short rows
                 return self.missing
         else:
-            raise Exception('item ' + str(f) + ' not in fields ' + str(self.flds))
+            raise Exception('item ' + str(f) +
+                            ' not in fields ' + str(self.flds))
 
 
 # backwards compatibility
@@ -3130,7 +3132,7 @@ def rowgroupbybin(table, key, width, value=None, minv=None, maxv=None):
         getkey = key
     else:
         kindices = asindices(fields, key)
-        getkey = itemgetter(*kindices)
+        getkey = comparable_itemgetter(*kindices)
     
     # determine value function
     if value is None:
@@ -3149,19 +3151,22 @@ def rowgroupbybin(table, key, width, value=None, minv=None, maxv=None):
         for n in xrange(0, numbins):
             binminv = minv + n*width
             binmaxv = binminv + width
-            if binmaxv >= maxv: # final bin
-                binmaxv = maxv # truncate final bin to specified maximum
+            if binmaxv >= maxv:  # final bin
+                binmaxv = maxv  # truncate final bin to specified maximum
             binnedvals = []
             try:
-                while keyv < binminv: # advance until we're within the bin's range
+                # advance until we're within the bin's range
+                while keyv < binminv:
                     row = next(it)
                     keyv = getkey(row)
-                while binminv <= keyv < binmaxv: # within the bin
+                while binminv <= keyv < binmaxv:  # within the bin
                     binnedvals.append(getval(row))
                     row = next(it)
                     keyv = getkey(row)
-                while keyv == binmaxv == maxv: # possible floating point precision bug here?
-                    binnedvals.append(getval(row)) # last bin is open if maxv is specified
+                # possible floating point precision bug here?
+                while keyv == binmaxv == maxv:
+                    # last bin is open if maxv is specified
+                    binnedvals.append(getval(row))
                     row = next(it)
                     keyv = getkey(row)
             except StopIteration:
@@ -3178,31 +3183,37 @@ def rowgroupbybin(table, key, width, value=None, minv=None, maxv=None):
         else:
             keyv = getkey(row)
             if minv is None:
-                minv = keyv # initialise minimum to first key value found
+                minv = keyv  # initialise minimum to first key value found
         
             # N.B., we need to account for two possible scenarios
-            # (1) maxv is not specified, so keep making bins until we run out of rows
+            # (1) maxv is not specified, so keep making bins until we run out
+            # of rows
             # (2) maxv is specified, so iterate over bins up to maxv
             try:
         
                 for binminv in count(minv, width):
                     binmaxv = binminv + width
-                    if maxv is not None and binmaxv >= maxv: # final bin
-                        binmaxv = maxv # truncate final bin to specified maximum
+                    if maxv is not None and binmaxv >= maxv:  # final bin
+                        # truncate final bin to specified maximum
+                        binmaxv = maxv
                     binnedvals = []
-                    while keyv < binminv: # advance until we're within the bin's range
+                    # advance until we're within the bin's range
+                    while keyv < binminv:
                         row = next(it)
                         keyv = getkey(row)
-                    while binminv <= keyv < binmaxv: # within the bin
+                    while binminv <= keyv < binmaxv:  # within the bin
                         binnedvals.append(getval(row))
                         row = next(it)
                         keyv = getkey(row)
-                    while maxv is not None and keyv == binmaxv == maxv: # possible floating point precision bug here?
-                        binnedvals.append(getval(row)) # last bin is open if maxv is specified
+                    # possible floating point precision bug here?
+                    while maxv is not None and keyv == binmaxv == maxv:
+                        # last bin is open if maxv is specified
+                        binnedvals.append(getval(row))
                         row = next(it)
                         keyv = getkey(row)
                     yield (binminv, binmaxv), binnedvals
-                    if maxv is not None and binmaxv == maxv: # possible floating point precision bug here?
+                    # possible floating point precision bug here?
+                    if maxv is not None and binmaxv == maxv:
                         break
             except StopIteration:
                 # don't forget to handle the last bin
@@ -3229,7 +3240,7 @@ def nthword(n, sep=None):
     return lambda s: s.split(sep)[n] 
 
 
-class SortableItem(object):
+class Comparable(object):
     """
     Wrapper to allow comparison with :const:`None` for objects
     which support only comparison with same-type objects.
@@ -3238,15 +3249,15 @@ class SortableItem(object):
     cannot be compared with `None`.
 
         >>> from datetime import datetime
-        >>> from petl.util import SortableItem
+        >>> from petl.util import Comparable
         >>> dateobj = datetime(2012, 11, 10)
-        >>> SortableItem(42) is 42
+        >>> Comparable(42) is 42
         True
-        >>> SortableItem(None) is None
+        >>> Comparable(None) is None
         True
-        >>> SortableItem(dateobj) is dateobj
+        >>> Comparable(dateobj) is dateobj
         False
-        >>> SortableItem(dateobj) > None
+        >>> Comparable(dateobj) > None
         True
         >>> dateobj > None
         Traceback (most recent call last):
@@ -3260,7 +3271,7 @@ class SortableItem(object):
     __slots__ = ['obj']
 
     def __new__(cls, obj):
-        if obj in singletons or obj.__class__ in sortable_types:
+        if obj in singletons or obj.__class__ in comparable_types:
             return obj
         if isinstance(obj, (list, tuple)):
             return tuple(cls(o) for o in obj)
@@ -3270,29 +3281,18 @@ class SortableItem(object):
         self.obj = obj
 
     def __eq__(self, other):
-        if isinstance(other, SortableItem):
+        if isinstance(other, Comparable):
             return self.obj == other.obj
         return self.obj == other
 
     def __lt__(self, other):
-        if isinstance(other, SortableItem):
+        if isinstance(other, Comparable):
             other = other.obj
 
-        # None comes first
-        if self.obj is None and other is not None:
-            return True
-        if self.obj is not None and other is None:
-            return False
-
-        # numbers come before strings
-        if (isinstance(self.obj, number_types)
-                and isinstance(other, string_types)):
-            return True
-        if (isinstance(self.obj, string_types)
-                and isinstance(other, number_types)):
-            return False
-
-        return self.obj < other
+        try:
+            return self.obj < other
+        except TypeError:
+            return str(type(self.obj)) < str(type(other))
 
     def __le__(self, other):
         return self < other or self == other
@@ -3304,10 +3304,10 @@ class SortableItem(object):
         return not (self < other)
 
 
-sortable_types.add(SortableItem)
+comparable_types.add(Comparable)
 
 
-def sortable_itemgetter(*items):
+def comparable_itemgetter(*items):
     """
     Derivate of :func:`itertools.itemgetter` which can be safely
     used as key for sort functions.
@@ -3318,10 +3318,10 @@ def sortable_itemgetter(*items):
     ig = itemgetter(*items)
     if len(items) == 1:
         def g(obj):
-            return SortableItem(ig(obj))
+            return Comparable(ig(obj))
     else:
         def g(obj):
-            return tuple(SortableItem(item) for item in ig(obj))
+            return tuple(Comparable(item) for item in ig(obj))
     return g
 
 

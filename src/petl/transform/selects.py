@@ -586,7 +586,7 @@ class SelectUsingContextView(RowContainer):
 
 def iterselectusingcontext(table, query):
     it = iter(table)
-    fields = next(tuple(it))
+    fields = tuple(next(it))
     yield fields
     it = hybridrows(fields, it)
     prv = None

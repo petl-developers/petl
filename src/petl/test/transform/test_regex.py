@@ -3,6 +3,7 @@ from __future__ import absolute_import, print_function, division, \
 
 
 from nose.tools import eq_
+from petl.compat import next
 
 
 from petl.testutils import ieq
@@ -73,12 +74,12 @@ def test_capture_nonmatching():
     # default behaviour, raise exception
     result = capture(table, 'variable', r'([A-B])(\d+)', ('treat', 'time'))
     it = iter(result)
-    eq_(expectation[0], it.next())  # header
-    eq_(expectation[1], it.next())
-    eq_(expectation[2], it.next())
-    eq_(expectation[3], it.next())
+    eq_(expectation[0], next(it))  # header
+    eq_(expectation[1], next(it))
+    eq_(expectation[2], next(it))
+    eq_(expectation[3], next(it))
     try:
-        it.next()  # doesn't match
+        next(it)  # doesn't match
     except TransformError:
         pass  # expected
     else:
@@ -88,11 +89,11 @@ def test_capture_nonmatching():
     result = capture(table, 'variable', r'([A-B])(\d+)',
                      newfields=('treat', 'time'), fill=['', 0])
     it = iter(result)
-    eq_(expectation[0], it.next())  # header
-    eq_(expectation[1], it.next())
-    eq_(expectation[2], it.next())
-    eq_(expectation[3], it.next())
-    eq_(('4', '19', '', 0), it.next())
+    eq_(expectation[0], next(it))  # header
+    eq_(expectation[1], next(it))
+    eq_(expectation[2], next(it))
+    eq_(expectation[3], next(it))
+    eq_(('4', '19', '', 0), next(it))
 
 
 def test_split():

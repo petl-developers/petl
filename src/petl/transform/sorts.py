@@ -14,7 +14,7 @@ debug = logger.debug
 
 
 from ..util import RowContainer, asindices, shortlistmergesorted, \
-    heapqmergesorted, sortable_itemgetter
+    heapqmergesorted, comparable_itemgetter
 
 
 def sort(table, key=None, reverse=False, buffersize=None, tempdir=None,
@@ -212,10 +212,14 @@ class SortView(RowContainer):
             indices = range(len(flds))
         # now use field indices to construct a _getkey function
         # N.B., this will probably raise an exception on short rows
-        getkey = sortable_itemgetter(*indices)
+        getkey = comparable_itemgetter(*indices)
 
         # initialise the first chunk
         rows = list(itertools.islice(it, 0, self.buffersize))
+        # print(repr(getkey))
+        # print(rows)
+        # for row in rows:
+        #     print(row, getkey(row))
         rows.sort(key=getkey, reverse=reverse)
 
         # have we exhausted the source iterator?
@@ -427,7 +431,7 @@ def itermergesort(sources, key, header, missing, reverse):
         indices = asindices(outflds, key)
         # now use field indices to construct a _getkey function
         # N.B., this will probably raise an exception on short rows
-        getkey = sortable_itemgetter(*indices)
+        getkey = comparable_itemgetter(*indices)
 
     # OK, do the merge sort
     for row in shortlistmergesorted(getkey, reverse, *sits):

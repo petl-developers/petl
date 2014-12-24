@@ -8,7 +8,7 @@ import operator
 from ..compat import next
 
 
-from ..util import RowContainer, rowgetter, sortable_itemgetter, values, \
+from ..util import RowContainer, rowgetter, comparable_itemgetter, values, \
     itervalues, header, data
 from .sorts import sort
 
@@ -120,11 +120,13 @@ def itermelt(source, key, variables, variablefield, valuefield):
 
     # normalise some stuff
     flds = next(it)
-    if not isinstance(key, (list, tuple)):
+
+    if key and not isinstance(key, (list, tuple)):
         key = (key,)  # normalise to a tuple
-    if not isinstance(variables, (list, tuple)):
+    if variables and not isinstance(variables, (list, tuple)):
         # shouldn't expect this, but ... ?
         variables = (variables,)  # normalise to a tuple
+
     if not key:
         # assume key is fields not in variables
         key = [f for f in flds if f not in variables]
@@ -409,7 +411,7 @@ def iterrecast(source, key, variablefield, valuefield,
 
     source = sort(source, key=keyfields)
     it = itertools.islice(source, 1, None)  # skip header row
-    getsortablekey = sortable_itemgetter(*keyindices)
+    getsortablekey = comparable_itemgetter(*keyindices)
     getactualkey = operator.itemgetter(*keyindices)
 
     # process sorted data in newfields

@@ -33,7 +33,7 @@ from petl.transform.hashjoins import hashjoin, hashleftjoin, hashrightjoin, \
 from petl.transform.reductions import rowreduce, recordreduce, mergeduplicates,\
     aggregate, rangeaggregate, rangecounts, rangerecordreduce, rangerowreduce, \
     groupcountdistinctvalues, groupselectfirst, groupselectmax, groupselectmin,\
-    mergereduce, merge, multirangeaggregate, fold
+    mergereduce, merge, fold
 
 from petl.transform.fills import filldown, fillright, fillleft
 

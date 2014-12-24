@@ -42,7 +42,7 @@ if PY3:
     class_types = type,
     text_type = str
     binary_type = bytes
-    sortable_types = set()
+    comparable_types = set()
     long = int
     from urllib.request import urlopen
     from io import StringIO, BytesIO
@@ -58,7 +58,7 @@ else:
     class_types = type, types.ClassType
     text_type = unicode
     binary_type = str
-    sortable_types = set([complex, float, int, long, str, unicode])
+    comparable_types = set([complex, float, int, long, str, unicode])
     from urllib2 import urlopen
     from cStringIO import StringIO
     BytesIO = StringIO
