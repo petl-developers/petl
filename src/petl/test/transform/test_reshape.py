@@ -64,6 +64,7 @@ def test_melt_empty():
     actual = melt(table, key='foo')
     ieq(expect, actual)
 
+
 def test_melt_1_shortrow():
 
     table = (('id', 'gender', 'age'),
@@ -109,6 +110,7 @@ def test_melt_2_shortrow():
                    (3, 12, 'height', 34.5))
     result = melt(table, key=('id', 'time'), variables='height')
     ieq(expectation, result)
+
 
 def test_recast_1():
 
@@ -301,8 +303,8 @@ def test_melt_and_capture():
 def test_melt_and_split():
 
     table = (('id', 'parad0', 'parad1', 'parad2', 'tempd0', 'tempd1', 'tempd2'),
-            ('1', '12', '34', '56', '37.2', '37.4', '37.9'),
-            ('2', '23', '45', '67', '37.1', '37.8', '36.9'))
+             ('1', '12', '34', '56', '37.2', '37.4', '37.9'),
+             ('2', '23', '45', '67', '37.1', '37.8', '36.9'))
 
     expectation = (('id', 'value', 'variable', 'day'),
                    ('1', '12', 'para', '0'),

@@ -7,8 +7,9 @@ import operator
 from ..compat import next
 
 
+from ..comparison import comparable_itemgetter, Comparable
 from ..util import RowContainer, asindices, rowgetter, rowgroupby, header,\
-    data, comparable_itemgetter, Comparable
+    data
 from .sorts import sort
 from .basics import cut, cutout
 from .dedup import distinct
@@ -561,7 +562,8 @@ def crossjoin(*tables, **kwargs):
         | 2    | 'red'    | 3    | 'square' |
         +------+----------+------+----------+
 
-    See also :func:`join`, :func:`leftjoin`, :func:`rightjoint`, :func:`outerjoin`.
+    See also :func:`join`, :func:`leftjoin`, :func:`rightjoint`,
+    :func:`outerjoin`.
 
     """
 
@@ -1057,6 +1059,3 @@ class EnumerateDistinctView(RowContainer):
         yield ('id', self.value)
         for n, (v, _) in enumerate(rowgroupby(self.table, self.value)):
             yield ((n * multiplier) + offset, v)
-
-
-

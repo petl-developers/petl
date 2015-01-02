@@ -5,7 +5,7 @@ from __future__ import absolute_import, print_function, division, \
 from petl.testutils import ieq
 from petl import join, leftjoin, rightjoin, outerjoin, crossjoin, antijoin, \
     lookupjoin, hashjoin, hashleftjoin, hashrightjoin, hashantijoin, \
-    hashlookupjoin, unjoin, sort, lookall
+    hashlookupjoin, unjoin, sort
 
 
 def _test_join_basic(join_impl):

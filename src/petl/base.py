@@ -162,4 +162,3 @@ class IterContainer(object):
     
     def __iadd__(self, other):
         return chain(self, other)
-

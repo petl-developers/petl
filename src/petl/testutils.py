@@ -4,14 +4,12 @@ Common test functions.
 """
 
 
-from __future__ import absolute_import, print_function, division
+from __future__ import absolute_import, print_function, division, \
+    unicode_literals
 
 
 from .compat import izip_longest
 from nose.tools import eq_
-
-
-assertequal = eq_  # backwards compatibility
 
 
 def ieq(expect, actual, cast=None):
@@ -23,24 +21,18 @@ def ieq(expect, actual, cast=None):
         eq_(e, a)
         
     
-iassertequal = ieq  # backwards compatibility
-
-
 def test_iassertequal():
     x = ['a', 'b']
     y = ['a', 'b', 'c']
     try:
-        iassertequal(x, y)
+        ieq(x, y)
     except AssertionError:
         pass
     else:
         assert False, 'did not catch actual item left over'
     try:
-        iassertequal(y, x)
+        ieq(y, x)
     except AssertionError:
         pass
     else:
         assert False, 'did not catch expected item left over'
-    
-    
-

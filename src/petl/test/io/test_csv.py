@@ -6,49 +6,47 @@ from tempfile import NamedTemporaryFile
 import csv
 import gzip
 import os
+from petl.compat import PY2
 
 
-from petl.testutils import ieq
+from petl.testutils import ieq, eq_
 from petl.io.csv import fromcsv, fromtsv, tocsv, appendcsv, totsv, appendtsv
 
 
 def test_fromcsv():
 
-    f = NamedTemporaryFile(delete=False)
-    writer = csv.writer(f, delimiter=b'\t')
-    table = (('foo', 'bar'),
-             ('a', 1),
-             ('b', 2),
-             ('c', 2))
-    for row in table:
-        writer.writerow(row)
+    data = [b'foo,bar',
+            b'a,1',
+            b'b,2',
+            b'c,2']
+    f = NamedTemporaryFile(mode='wb', delete=False)
+    f.write(b'\n'.join(data))
     f.close()
 
-    actual = fromcsv(f.name, delimiter=b'\t')
     expect = (('foo', 'bar'),
               ('a', '1'),
               ('b', '2'),
               ('c', '2'))
+    actual = fromcsv(f.name)
     ieq(expect, actual)
     ieq(expect, actual)  # verify can iterate twice
 
 
 def test_fromcsv_lineterminators():
 
-    table = (('foo', 'bar'),
-             ('a', 1),
-             ('b', 2),
-             ('c', 2))
+    data = [b'foo,bar',
+            b'a,1',
+            b'b,2',
+            b'c,2']
+
     expect = (('foo', 'bar'),
               ('a', '1'),
               ('b', '2'),
               ('c', '2'))
 
     for lt in b'\r', b'\n', b'\r\n':
-        f = NamedTemporaryFile(delete=False)
-        writer = csv.writer(f, lineterminator=lt)
-        for row in table:
-            writer.writerow(row)
+        f = NamedTemporaryFile(mode='wb', delete=False)
+        f.write(lt.join(data))
         f.close()
         actual = fromcsv(f.name)
         ieq(expect, actual)
@@ -56,23 +54,52 @@ def test_fromcsv_lineterminators():
 
 def test_fromtsv():
 
-    f = NamedTemporaryFile(delete=False)
-    writer = csv.writer(f, delimiter=b'\t')
-    table = (('foo', 'bar'),
-             ('a', 1),
-             ('b', 2),
-             ('c', 2))
-    for row in table:
-        writer.writerow(row)
+    data = [b'foo\tbar',
+            b'a\t1',
+            b'b\t2',
+            b'c\t2']
+    f = NamedTemporaryFile(mode='wb', delete=False)
+    f.write(b'\n'.join(data))
     f.close()
 
-    actual = fromtsv(f.name)
     expect = (('foo', 'bar'),
               ('a', '1'),
               ('b', '2'),
               ('c', '2'))
+    actual = fromtsv(f.name)
     ieq(expect, actual)
     ieq(expect, actual)  # verify can iterate twice
+
+
+def test_fromcsv_gz():
+
+    data = [b'foo,bar',
+            b'a,1',
+            b'b,2',
+            b'c,2']
+
+    expect = (('foo', 'bar'),
+              ('a', '1'),
+              ('b', '2'),
+              ('c', '2'))
+
+    # '\r' not supported in PY2 because universal newline mode is
+    # not supported by gzip module
+    if PY2:
+        lts = b'\n', b'\r\n'
+    else:
+        lts = b'\r', b'\n', b'\r\n'
+    for lt in lts:
+        f = NamedTemporaryFile(delete=False)
+        f.close()
+        fn = f.name + '.gz'
+        os.rename(f.name, fn)
+        fz = gzip.open(fn, 'wb')
+        fz.write(lt.join(data))
+        fz.close()
+        actual = fromcsv(fn)
+        ieq(expect, actual)
+        ieq(expect, actual)  # verify can iterate twice
 
 
 def test_tocsv_appendcsv():
@@ -83,35 +110,43 @@ def test_tocsv_appendcsv():
              ('b', 2),
              ('c', 2))
     f = NamedTemporaryFile(delete=False)
-    tocsv(table, f.name, delimiter=b'\t')
+    f.close()
+    tocsv(table, f.name, lineterminator='\n')
 
     # check what it did
     with open(f.name, 'rb') as o:
-        actual = csv.reader(o, delimiter=b'\t')
-        expect = [['foo', 'bar'],
-                  ['a', '1'],
-                  ['b', '2'],
-                  ['c', '2']]
-        ieq(expect, actual)
+        data = [b'foo,bar',
+                b'a,1',
+                b'b,2',
+                b'c,2']
+        # don't forget final terminator
+        expect = b'\n'.join(data) + b'\n'
+        actual = o.read()
+        eq_(expect, actual)
 
     # check appending
     table2 = (('foo', 'bar'),
               ('d', 7),
               ('e', 9),
               ('f', 1))
-    appendcsv(table2, f.name, delimiter=b'\t')
+    appendcsv(table2, f.name, lineterminator='\n')
 
     # check what it did
     with open(f.name, 'rb') as o:
-        actual = csv.reader(o, delimiter=b'\t')
-        expect = [['foo', 'bar'],
-                  ['a', '1'],
-                  ['b', '2'],
-                  ['c', '2'],
-                  ['d', '7'],
-                  ['e', '9'],
-                  ['f', '1']]
-        ieq(expect, actual)
+        data = [b'foo,bar',
+                b'a,1',
+                b'b,2',
+                b'c,2',
+                b'd,7',
+                b'e,9',
+                b'f,1']
+        # don't forget final terminator
+        expect = b'\n'.join(data) + b'\n'
+        actual = o.read()
+        eq_(expect, actual)
+
+
+def test_tocsv_noheader():
 
     # check explicit no header
     table = (('foo', 'bar'),
@@ -119,15 +154,17 @@ def test_tocsv_appendcsv():
              ('b', 2),
              ('c', 2))
     f = NamedTemporaryFile(delete=False)
-    tocsv(table, f.name, delimiter=b'\t', write_header=False)
+    tocsv(table, f.name, lineterminator='\n', write_header=False)
 
     # check what it did
     with open(f.name, 'rb') as o:
-        actual = csv.reader(o, delimiter=b'\t')
-        expect = [['a', '1'],
-                  ['b', '2'],
-                  ['c', '2']]
-        ieq(expect, actual)
+        data = [b'a,1',
+                b'b,2',
+                b'c,2']
+        # don't forget final terminator
+        expect = b'\n'.join(data) + b'\n'
+        actual = o.read()
+        eq_(expect, actual)
 
 
 def test_totsv_appendtsv():
@@ -138,79 +175,40 @@ def test_totsv_appendtsv():
              ('b', 2),
              ('c', 2))
     f = NamedTemporaryFile(delete=False)
-    totsv(table, f.name)
+    f.close()
+    totsv(table, f.name, lineterminator='\n')
 
     # check what it did
     with open(f.name, 'rb') as o:
-        actual = csv.reader(o, delimiter=b'\t')
-        expect = [['foo', 'bar'],
-                  ['a', '1'],
-                  ['b', '2'],
-                  ['c', '2']]
-        ieq(expect, actual)
+        data = [b'foo\tbar',
+                b'a\t1',
+                b'b\t2',
+                b'c\t2']
+        # don't forget final terminator
+        expect = b'\n'.join(data) + b'\n'
+        actual = o.read()
+        eq_(expect, actual)
 
     # check appending
     table2 = (('foo', 'bar'),
               ('d', 7),
               ('e', 9),
               ('f', 1))
-    appendtsv(table2, f.name)
+    appendtsv(table2, f.name, lineterminator='\n')
 
     # check what it did
     with open(f.name, 'rb') as o:
-        actual = csv.reader(o, delimiter=b'\t')
-        expect = [['foo', 'bar'],
-                  ['a', '1'],
-                  ['b', '2'],
-                  ['c', '2'],
-                  ['d', '7'],
-                  ['e', '9'],
-                  ['f', '1']]
-        ieq(expect, actual)
-
-    # check explicit no header
-    table = (('foo', 'bar'),
-             ('a', 1),
-             ('b', 2),
-             ('c', 2))
-    f = NamedTemporaryFile(delete=False)
-    tocsv(table, f.name, delimiter=b'\t', write_header=False)
-
-    # check what it did
-    with open(f.name, 'rb') as o:
-        actual = csv.reader(o, delimiter=b'\t')
-        expect = [['a', '1'],
-                  ['b', '2'],
-                  ['c', '2']]
-        ieq(expect, actual)
-
-
-def test_fromcsv_gz():
-
-    table = (('foo', 'bar'),
-             ('a', 1),
-             ('b', 2),
-             ('c', 2))
-    expect = (('foo', 'bar'),
-              ('a', '1'),
-              ('b', '2'),
-              ('c', '2'))
-
-    for lt in b'\n', b'\r\n':
-        # N.B., '\r' not supported because universal newline mode is
-        # not supported by gzip module
-        f = NamedTemporaryFile(delete=False)
-        f.close()
-        fn = f.name + '.gz'
-        os.rename(f.name, fn)
-        fz = gzip.open(fn, 'wb')
-        writer = csv.writer(fz, delimiter=b'\t', lineterminator=lt)
-        for row in table:
-            writer.writerow(row)
-        fz.close()
-        actual = fromcsv(fn, delimiter=b'\t')
-        ieq(expect, actual)
-        ieq(expect, actual)  # verify can iterate twice
+        data = [b'foo\tbar',
+                b'a\t1',
+                b'b\t2',
+                b'c\t2',
+                b'd\t7',
+                b'e\t9',
+                b'f\t1']
+        # don't forget final terminator
+        expect = b'\n'.join(data) + b'\n'
+        actual = o.read()
+        eq_(expect, actual)
 
 
 def test_tocsv_appendcsv_gz():
@@ -223,17 +221,19 @@ def test_tocsv_appendcsv_gz():
     f = NamedTemporaryFile(delete=False)
     fn = f.name + '.gz'
     f.close()
-    tocsv(table, fn, delimiter=b'\t')
+    tocsv(table, fn, lineterminator='\n')
 
     # check what it did
     o = gzip.open(fn, 'rb')
     try:
-        actual = csv.reader(o, delimiter=b'\t')
-        expect = [['foo', 'bar'],
-                  ['a', '1'],
-                  ['b', '2'],
-                  ['c', '2']]
-        ieq(expect, actual)
+        data = [b'foo,bar',
+                b'a,1',
+                b'b,2',
+                b'c,2']
+        # don't forget final terminator
+        expect = b'\n'.join(data) + b'\n'
+        actual = o.read()
+        eq_(expect, actual)
     finally:
         o.close()
 
@@ -242,19 +242,21 @@ def test_tocsv_appendcsv_gz():
               ('d', 7),
               ('e', 9),
               ('f', 1))
-    appendcsv(table2, fn, delimiter=b'\t')
+    appendcsv(table2, fn, lineterminator='\n')
 
     # check what it did
     o = gzip.open(fn, 'rb')
     try:
-        actual = csv.reader(o, delimiter=b'\t')
-        expect = [['foo', 'bar'],
-                  ['a', '1'],
-                  ['b', '2'],
-                  ['c', '2'],
-                  ['d', '7'],
-                  ['e', '9'],
-                  ['f', '1']]
-        ieq(expect, actual)
+        data = [b'foo,bar',
+                b'a,1',
+                b'b,2',
+                b'c,2',
+                b'd,7',
+                b'e,9',
+                b'f,1']
+        # don't forget final terminator
+        expect = b'\n'.join(data) + b'\n'
+        actual = o.read()
+        eq_(expect, actual)
     finally:
         o.close()

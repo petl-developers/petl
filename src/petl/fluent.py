@@ -77,11 +77,13 @@ def _wrap_function_dict(f):
     return wrapper
 
 
-# these functions return a tuple of RowContainers and need to be wrapped accordingly
+# these functions return a tuple of RowContainers and need to be wrapped
+# accordingly
 WRAP_TUPLE = 'diff', 'unjoin'
 
 
-# these functions return a dict of RowContainers and need to be wrapped accordingly
+# these functions return a dict of RowContainers and need to be wrapped
+# accordingly
 WRAP_DICT = 'facet'
 
 

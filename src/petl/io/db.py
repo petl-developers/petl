@@ -1,4 +1,5 @@
-from __future__ import absolute_import, print_function, division, unicode_literals
+from __future__ import absolute_import, print_function, division, \
+    unicode_literals
 
 
 # standard library dependencies
@@ -18,7 +19,7 @@ debug = logger.debug
 def fromdb(dbo, query, *args, **kwargs):
     """
     Provides access to data from any DB-API 2.0 connection via a given query.
-    E.g., using `sqlite3`::
+    E.g., using :mod:`sqlite3`::
 
         >>> import sqlite3
         >>> from petl import look, fromdb
@@ -26,7 +27,7 @@ def fromdb(dbo, query, *args, **kwargs):
         >>> table = fromdb(connection, 'select * from foobar')
         >>> look(table)
 
-    E.g., using `psycopg2` (assuming you've installed it first)::
+    E.g., using :mod:`psycopg2` (assuming you've installed it first)::
 
         >>> import psycopg2
         >>> from petl import look, fromdb
@@ -34,15 +35,13 @@ def fromdb(dbo, query, *args, **kwargs):
         >>> table = fromdb(connection, 'select * from test')
         >>> look(table)
 
-    E.g., using `MySQLdb` (assuming you've installed it first)::
+    E.g., using :mod:`mysql` (assuming you've installed it first)::
 
-        >>> import MySQLdb
+        >>> import mysql.connector
         >>> from petl import look, fromdb
-        >>> connection = MySQLdb.connect(passwd="moonpie", db="thangs")
+        >>> connection = mysql.connector.connect(password="moonpie", database="thangs")
         >>> table = fromdb(connection, 'select * from test')
         >>> look(table)
-
-    .. versionchanged:: 0.10.2
 
     The first argument may also be a function that creates a cursor. E.g.::
 
@@ -54,10 +53,6 @@ def fromdb(dbo, query, *args, **kwargs):
         >>> look(table)
 
     N.B., each call to the function should return a new cursor.
-
-    .. versionchanged:: 0.18
-
-    Added support for server-side cursors.
 
     Note that the default behaviour of most database servers and clients is for
     the entire result set for each query to be sent from the server to the
@@ -72,14 +67,6 @@ def fromdb(dbo, query, *args, **kwargs):
         >>> from petl import look, fromdb
         >>> connection = psycopg2.connect("dbname=test user=postgres")
         >>> table = fromdb(lambda: connection.cursor(name='arbitrary'), 'select * from test')
-        >>> look(table)
-
-    To use a server-side cursor with a MySQL database, e.g.::
-
-        >>> import MySQLdb
-        >>> from petl import look, fromdb
-        >>> connection = MySQLdb.connect(passwd="moonpie", db="thangs")
-        >>> table = fromdb(lambda: connection.cursor(MySQLdb.cursors.SSCursor), 'select * from test')
         >>> look(table)
 
     For more information on server-side cursors see the following links:
@@ -198,7 +185,7 @@ def _iter_dbapi_cursor(cursor, query, *args, **kwargs):
         raise StopIteration
     yield first_row
     for row in cursor:
-        yield row # don't wrap, return whatever the database engine returns
+        yield row  # don't wrap, return whatever the database engine returns
 
 
 def _iter_sqlalchemy_engine(engine, query, *args, **kwargs):
@@ -258,8 +245,8 @@ def todb(table, dbo, tablename, schema=None, commit=True):
 
     ... using :mod:`MySQLdb`::
 
-        >>> import MySQLdb
-        >>> connection = MySQLdb.connect(passwd="moonpie", db="thangs")
+        >>> import mysql.connector
+        >>> connection = mysql.connector.connect(password="moonpie", database="thangs")
         >>> # tell MySQL to use standard quote character
         ... connection.cursor().execute('SET SQL_MODE=ANSI_QUOTES')
         >>> # load data, assuming table "foobar" already exists in the database
@@ -340,8 +327,8 @@ def _todb(table, dbo, tablename, schema=None, commit=True, truncate=False):
         raise Exception('unsupported database object type: %r' % dbo)
 
 
-SQL_TRUNCATE_QUERY = u'DELETE FROM %s'
-SQL_INSERT_QUERY = u'INSERT INTO %s (%s) VALUES (%s)'
+SQL_TRUNCATE_QUERY = 'DELETE FROM %s'
+SQL_INSERT_QUERY = 'INSERT INTO %s (%s) VALUES (%s)'
 
 
 def _todb_dbapi_connection(table, connection, tablename, schema=None,
@@ -429,7 +416,6 @@ def _todb_dbapi_mkcurs(table, mkcurs, tablename, schema=None, commit=True,
         cursor.close()
         cursor = mkcurs()
 
-#    insertquery = 'INSERT INTO %s VALUES (%s)' % (tablename, placeholders)
     insertcolnames = ', '.join(colnames)
     insertquery = SQL_INSERT_QUERY % (tablename, insertcolnames, placeholders)
     debug('insert data via query %r' % insertquery)
@@ -474,7 +460,6 @@ def _todb_dbapi_cursor(table, cursor, tablename, schema=None, commit=True,
         debug('truncate the table via query %r', truncatequery)
         cursor.execute(truncatequery)
 
-#    insertquery = 'INSERT INTO %s VALUES (%s)' % (tablename, placeholders)
     insertcolnames = ', '.join(colnames)
     insertquery = SQL_INSERT_QUERY % (tablename, insertcolnames, placeholders)
     debug('insert data via query %r' % insertquery)
@@ -589,10 +574,10 @@ def appenddb(table, dbo, tablename, schema=None, commit=True):
         >>> # assuming table "foobar" already exists in the database
         ... appenddb(table, connection, 'foobar')
 
-    ... using :mod:`MySQLdb`::
+    ... using :mod:`mysql`::
 
-        >>> import MySQLdb
-        >>> connection = MySQLdb.connect(passwd="moonpie", db="thangs")
+        >>> import mysql.connector
+        >>> connection = mysql.connector.connect(password="moonpie", database="thangs")
         >>> # tell MySQL to use standard quote character
         ... connection.cursor().execute('SET SQL_MODE=ANSI_QUOTES')
         >>> # load data, appending rows to table "foobar"
@@ -636,7 +621,7 @@ def _placeholders(connection, names):
 
         if not hasattr(mod, 'paramstyle'):
             debug('module %r from connection %r has no attribute paramstyle, '
-                  'defaulting to qmark' , mod, connection)
+                  'defaulting to qmark', mod, connection)
             # default to using question mark
             placeholders = ', '.join(['?'] * len(names))
 
@@ -659,6 +644,3 @@ def _placeholders(connection, names):
             placeholders = ', '.join(['?'] * len(names))
 
     return placeholders
-
-
-

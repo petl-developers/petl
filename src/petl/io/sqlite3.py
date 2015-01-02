@@ -1,8 +1,10 @@
-from __future__ import absolute_import, print_function, division, unicode_literals
+from __future__ import absolute_import, print_function, division, \
+    unicode_literals
 
 
 # standard library dependencies
 import sqlite3
+from ..compat import string_types
 
 
 # internal dependencies
@@ -73,7 +75,7 @@ class Sqlite3View(RowContainer):
         self.args = args
         self.kwargs = kwargs
         # setup the connection
-        if isinstance(self.source, basestring):
+        if isinstance(self.source, string_types):
             self.connection = sqlite3.connect(self.source)
             self.connection.row_factory = sqlite3.Row
         elif isinstance(self.source, sqlite3.Connection):
@@ -89,7 +91,7 @@ class Sqlite3View(RowContainer):
         fields = [d[0] for d in cursor.description]
         yield tuple(fields)
         for row in cursor:
-            yield row # don't wrap
+            yield row  # don't wrap
 
         # tidy up
         cursor.close()
@@ -153,7 +155,7 @@ def tosqlite3(table, filename_or_connection, tablename, create=False,
 def _tosqlite3(table, filename_or_connection, tablename, create=False,
                commit=True, truncate=False):
 
-    if isinstance(filename_or_connection, basestring):
+    if isinstance(filename_or_connection, string_types):
         conn = sqlite3.connect(filename_or_connection)
     elif isinstance(filename_or_connection, sqlite3.Connection):
         conn = filename_or_connection
@@ -239,4 +241,3 @@ def appendsqlite3(table, filename_or_connection, tablename, commit=True):
 
     return _tosqlite3(table, filename_or_connection, tablename, create=False,
                       commit=commit, truncate=False)
-

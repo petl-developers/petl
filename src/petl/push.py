@@ -16,7 +16,7 @@ from collections import defaultdict
 from .compat import pickle, next, PY3
 
 
-from .util import asindices, HybridRow, shortlistmergesorted, \
+from .util import asindices, Record, shortlistmergesorted, \
     comparable_itemgetter
 import petl.transform
 
@@ -45,10 +45,12 @@ class PipelineComponent(object):
             return self.pipe(other)
 
     def _connect_receivers(self, fields):
-        default_connections = [r.connect(fields) for r in self.default_receivers]
+        default_connections = [r.connect(fields)
+                               for r in self.default_receivers]
         keyed_connections = dict()
         for k in self.keyed_receivers:
-            keyed_connections[k] = [r.connect(fields) for r in self.keyed_receivers[k]]
+            keyed_connections[k] = [r.connect(fields)
+                                    for r in self.keyed_receivers[k]]
         return default_connections, keyed_connections
             
     def push(self, source, limit=None):
@@ -58,6 +60,9 @@ class PipelineComponent(object):
         for row in islice(it, limit):
             c.accept(tuple(row))
         c.close()
+
+    def connect(self, fields):
+        pass
 
 
 class PipelineConnection(object):
@@ -173,14 +178,16 @@ class ToPickleComponent(PipelineComponent):
 
     def connect(self, fields):
         default_connections, keyed_connections = self._connect_receivers(fields)
-        return ToPickleConnection(default_connections, keyed_connections, fields, 
-                                  self.filename, self.protocol)
+        return ToPickleConnection(default_connections, keyed_connections,
+                                  fields, self.filename, self.protocol)
 
 
 class ToPickleConnection(PipelineConnection):
 
-    def __init__(self, default_connections, keyed_connections, fields, filename, protocol):
-        super(ToPickleConnection, self).__init__(default_connections, keyed_connections, fields)
+    def __init__(self, default_connections, keyed_connections, fields,
+                 filename, protocol):
+        super(ToPickleConnection, self).__init__(default_connections,
+                                                 keyed_connections, fields)
         self.file = open(filename, 'wb')
         self.protocol = protocol
         pickle.dump(fields, self.file, self.protocol)
@@ -225,20 +232,23 @@ class PartitionComponent(PipelineComponent):
 
     def connect(self, fields):
         default_connections, keyed_connections = self._connect_receivers(fields)
-        return PartitionConnection(default_connections, keyed_connections, fields, self.discriminator)
+        return PartitionConnection(default_connections, keyed_connections,
+                                   fields, self.discriminator)
 
 
 class PartitionConnection(PipelineConnection):
 
-    def __init__(self, default_connections, keyed_connections, fields, discriminator):
-        super(PartitionConnection, self).__init__(default_connections, keyed_connections, fields)
+    def __init__(self, default_connections, keyed_connections, fields,
+                 discriminator):
+        super(PartitionConnection, self).__init__(default_connections,
+                                                  keyed_connections, fields)
         if callable(discriminator):
             self.discriminator = discriminator
         else: # assume field or fields
             self.discriminator = itemgetter(*asindices(fields, discriminator))
 
     def accept(self, row):
-        row = HybridRow(row, self.fields)
+        row = Record(row, self.fields)
         key = self.discriminator(row)
         self.broadcast(key, row)
 
@@ -273,8 +283,10 @@ class SortComponent(PipelineComponent):
 
 class SortConnection(PipelineConnection):
 
-    def __init__(self, default_connections, keyed_connections, fields, key, reverse, buffersize):
-        super(SortConnection, self).__init__(default_connections, keyed_connections, fields)
+    def __init__(self, default_connections, keyed_connections, fields, key,
+                 reverse, buffersize):
+        super(SortConnection, self).__init__(default_connections,
+                                             keyed_connections, fields)
 
         self.getkey = None
         if key is not None:
@@ -301,7 +313,7 @@ class SortConnection(PipelineConnection):
         else:
             # sort and dump the chunk
             self.cache.sort(key=self.getkey, reverse=self.reverse)
-            f = NamedTemporaryFile() # TODO need not be named
+            f = NamedTemporaryFile()  # TODO need not be named
             for r in self.cache:
                 pickle.dump(r, f, protocol=-1)
             f.flush()
@@ -314,8 +326,10 @@ class SortConnection(PipelineConnection):
         self.cache.sort(key=self.getkey, reverse=self.reverse)
         if self.chunkfiles:
             chunkiters = [iterchunk(f) for f in self.chunkfiles]
-            chunkiters.append(self.cache) # make sure any left in cache are included
-            for row in shortlistmergesorted(self.getkey, self.reverse, *chunkiters):
+            # make sure any left in cache are included
+            chunkiters.append(self.cache)
+            for row in shortlistmergesorted(self.getkey, self.reverse,
+                                            *chunkiters):
                 self.broadcast(row)
         else:
             for row in self.cache:
@@ -356,13 +370,15 @@ class DuplicatesComponent(PipelineComponent):
 
     def connect(self, fields):
         default_connections, keyed_connections = self._connect_receivers(fields)
-        return DuplicatesConnection(default_connections, keyed_connections, fields, self.key)
+        return DuplicatesConnection(default_connections, keyed_connections,
+                                    fields, self.key)
 
 
 class DuplicatesConnection(PipelineConnection):
 
     def __init__(self, default_connections, keyed_connections, fields, key):
-        super(DuplicatesConnection, self).__init__(default_connections, keyed_connections, fields)
+        super(DuplicatesConnection, self).__init__(default_connections,
+                                                   keyed_connections, fields)
 
         # convert field selection into field indices
         indices = asindices(fields, key)
@@ -448,19 +464,21 @@ class UniqueComponent(DuplicatesComponent):
 
     def connect(self, fields):
         default_connections, keyed_connections = self._connect_receivers(fields)
-        return UniqueConnection(default_connections, keyed_connections, fields, self.key)
+        return UniqueConnection(default_connections, keyed_connections,
+                                fields, self.key)
 
 
 class UniqueConnection(DuplicatesConnection):
 
     def __init__(self, default_connections, keyed_connections, fields, key):
-        super(UniqueConnection, self).__init__(default_connections, keyed_connections, fields, key)
+        super(UniqueConnection, self).__init__(default_connections,
+                                               keyed_connections, fields, key)
 
     def _broadcast_duplicate(self, row):
         self.broadcast('remainder', row)
 
     def _broadcast_unique(self, row):
-        self.broadcast(row) # unique on default pipe
+        self.broadcast(row)  # unique on default pipe
 
 
 def diff():
@@ -488,9 +506,10 @@ class DiffComponent(PipelineComponent):
         ita = iter(ta) 
         itb = iter(tb)
         aflds = [str(f) for f in next(ita)]
-        next(itb) # ignore b fields
+        next(itb)  # ignore b fields
 
         default_connections, keyed_connections = self._connect_receivers(aflds)
+
         def _broadcast(*args):
             if len(args) == 1:
                 for c in default_connections:
@@ -525,7 +544,7 @@ class DiffComponent(PipelineComponent):
                         except StopIteration:
                             a = None
                     elif a == b:
-                        _broadcast(a) # default channel
+                        _broadcast(a)  # default channel
                         # advance both
                         try:
                             a = tuple(next(ita))
@@ -542,7 +561,6 @@ class DiffComponent(PipelineComponent):
                             b = tuple(next(itb))
                         except StopIteration:
                             b = None
-
 
 
 # TODO standard components (one in, one out)...
@@ -609,8 +627,7 @@ class DiffComponent(PipelineComponent):
 # recast
 # transpose
 # pivot
-# 
-
+#
 
 # TODO branching components (one in, many out)...
 # conflicts (default pipe is conflicts, 'remainder' is the rest)

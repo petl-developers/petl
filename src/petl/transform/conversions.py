@@ -5,8 +5,8 @@ from __future__ import absolute_import, print_function, division, \
 from ..compat import next, integer_types, string_types
 
 
-from ..util import numparser, RowContainer, FieldSelectionError, hybridrows,\
-    expr, header
+from ..util import numparser, RowContainer, FieldSelectionError, \
+    expr, header, Record
 
 
 def convert(table, *args, **kwargs):
@@ -408,9 +408,9 @@ def iterfieldconvert(source, converters, failonerror, errorvalue, where,
         else:
             try:
                 return converter_functions[i](v, *args)
-            except:
+            except Exception as e:
                 if failonerror:
-                    raise
+                    raise e
                 else:
                     return errorvalue
 
@@ -433,8 +433,8 @@ def iterfieldconvert(source, converters, failonerror, errorvalue, where,
 
     # prepare iterator
     if pass_row or where:
-        # use hybrid rows as more user-friendly, but N.B. has performance cost
-        it = hybridrows(flds, it)
+        # wrap rows as records
+        it = (Record(row, flds) for row in it)
 
     # construct the data rows
     if where is None:

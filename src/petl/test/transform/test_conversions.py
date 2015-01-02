@@ -2,7 +2,6 @@ from __future__ import absolute_import, print_function, division, \
     unicode_literals
 
 
-import string
 from petl.testutils import ieq
 from petl.transform.conversions import convert, convertall, convertnumbers, \
     replace, update
@@ -110,7 +109,7 @@ def test_convert_indexes():
     table5a = convert(table1, (1, 2), str)
     table5b = convert(table1, (1, 'baz'), str)
     table5c = convert(table1, ('bar', 2), str)
-    table5d = convert(table1, range(1, 3), str)
+    table5d = convert(table1, list(range(1, 3)), str)
     expect5 = (('foo', 'bar', 'baz'),
                ('A', '1', '2'),
                ('B', '2', '3.4'),
@@ -142,15 +141,16 @@ def test_fieldconvert():
               ('D', 'xyz', 9.0),
               ('E', None))
 
-    # test the style where the converters functions are passed in as a dictionary
+    # test the style where the converters functions are passed in as a
+    # dictionary
     converters = {'foo': str, 'bar': int, 'baz': float}
     table5 = convert(table1, converters, errorvalue='error')
     expect5 = (('foo', 'bar', 'baz'),
                ('A', 1, 2.0),
                ('B', 2, 3.4),
-               ('B', 3, 7.8, True), # N.B., long rows are preserved
+               ('B', 3, 7.8, True),  # N.B., long rows are preserved
                ('D', 'error', 9.0),
-               ('E', 'error')) # N.B., short rows are preserved
+               ('E', 'error'))  # N.B., short rows are preserved
     ieq(expect5, table5)
 
     # test the style where the converters functions are added one at a time
@@ -183,9 +183,9 @@ def test_fieldconvert():
     expect8 = (('foo', 'bar', 'baz'),
                ('A', 1, 2.0),
                ('B', 2, 3.4),
-               ('B', 3, 7.8, True), # N.B., long rows are preserved
+               ('B', 3, 7.8, True),  # N.B., long rows are preserved
                ('D', 'error', 9.0),
-               ('E', 'error')) # N.B., short rows are preserved
+               ('E', 'error'))  # N.B., short rows are preserved
     ieq(expect8, table8)
 
     # test the style where the converters functions are passed in as a list
@@ -194,9 +194,9 @@ def test_fieldconvert():
     expect9 = (('foo', 'bar', 'baz'),
                ('A', 1, 2.0),
                ('B', '2', 3.4),
-               ('B', u'3', 7.8, True), # N.B., long rows are preserved
+               ('B', u'3', 7.8, True),  # N.B., long rows are preserved
                ('D', 'xyz', 9.0),
-               ('E', None)) # N.B., short rows are preserved
+               ('E', None))  # N.B., short rows are preserved
     ieq(expect9, table9)
 
 
@@ -249,8 +249,8 @@ def test_convert_with_row():
              ('b', 2))
 
     expect = (('foo', 'bar'),
-             ('a', 'A'),
-             ('b', 'B'))
+              ('a', 'A'),
+              ('b', 'B'))
 
     actual = convert(table, 'bar',
                      lambda v, row: row.foo.upper(),
@@ -265,10 +265,10 @@ def test_convert_with_row_backwards_compat():
              (' b ', 2))
 
     expect = (('foo', 'bar'),
-             ('a', 1),
-             ('b', 2))
+              ('a', 1),
+              ('b', 2))
 
-    actual = convert(table, 'foo', string.strip)
+    actual = convert(table, 'foo', 'strip')
     ieq(expect, actual)
 
 
@@ -334,4 +334,3 @@ def test_replace_unhashable():
     expect = (('foo', 'bar'), ('a', ['b']), ('c', []))
     actual = replace(table1, 'bar', None, [])
     ieq(expect, actual)
-

@@ -187,5 +187,3 @@ def test_teeuhtml():
 
     ieq(t1, etl.fromxml(f1.name, './/tr', ('th', 'td')).convertnumbers())
     ieq(etl.wrap(t1).selectgt('bar', 1), etl.frompickle(f2.name))
-
-

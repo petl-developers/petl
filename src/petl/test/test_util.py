@@ -2,20 +2,16 @@ from __future__ import absolute_import, print_function, division, \
     unicode_literals
 
 
-import sys
-from nose.tools import eq_
-
-
-from petl.util import header, fieldnames, data, records, rowcount, look, see, \
-    itervalues, valuecounter, valuecounts, \
-    valueset, isunique, lookup, lookupone, dictlookup, dictlookupone, \
+from petl.util import header, fieldnames, data, records, look, see, \
+    itervalues, valuecounter, valuecounts, isunique, lookup, lookupone, \
+    dictlookup, dictlookupone, numparser, \
     DuplicateKeyError, rowlengths, stats, typecounts, parsecounts, typeset, \
-    valuecount, parsenumber, stringpatterns, diffheaders, diffvalues, \
+    valuecount, stringpatterns, diffheaders, diffvalues, \
     datetimeparser, values, columns, facetcolumns, isordered, \
     rowgroupby, lookstr, namedtuples, dicts, recordlookup, recordlookupone, \
     nrows, progress
-from petl.testutils import ieq
-from petl.compat import PY3, next, maxint
+from petl.testutils import ieq, eq_
+from petl.compat import PY2, next, maxint
 
 
 def test_header():
@@ -35,15 +31,19 @@ def test_fieldnames():
     eq_(expect, actual)
     
     class CustomField(object):
+
         def __init__(self, key, description):
             self.key = key
             self.description = description
+
         def __str__(self):
             return self.key
+
         def __repr__(self):
             return 'CustomField(%r, %r)' % (self.key, self.description)
         
-    table = ((CustomField('foo', 'Get some foo.'), CustomField('bar', 'A lot of bar.')), 
+    table = ((CustomField('foo', 'Get some foo.'),
+              CustomField('bar', 'A lot of bar.')),
              ('a', 1), 
              ('b', 2))
     actual = fieldnames(table)
@@ -138,9 +138,9 @@ def test_namedtuples_unevenrows():
     eq_(None, o.bar)
        
     
-def test_rowcount():
+def test_nrows():
     table = (('foo', 'bar'), ('a', 1), ('b',))
-    actual = rowcount(table)
+    actual = nrows(table)
     expect = 2
     eq_(expect, actual)
     
@@ -230,6 +230,7 @@ def test_see():
 """
     eq_(expect, actual)
 
+
 def test_see_duplicateheader():
 
     table = (('foo', 'bar', 'foo'), ('a', 1, 'a_prime'), ('b', 2, 'b_prime'))
@@ -239,8 +240,6 @@ def test_see_duplicateheader():
 'foo': 'a_prime', 'b_prime'
 """
     eq_(expect, actual)
-
-
 
 
 def test_lookstr():
@@ -402,30 +401,10 @@ def test_valuecounts_multifields():
     ieq(expect, actual) 
 
     
-def test_valueset():
-    """Test the valueset function."""
-
-    table = (('foo', 'bar'), 
-             ('a', True), 
-             ('x', True), 
-             ('b',), 
-             ('b', True), 
-             ('c', False), 
-             ('z', False))
-
-    actual = valueset(table, 'foo')
-    expect = set(['a', 'b', 'c', 'x', 'z'])
-    eq_(expect, actual)
-
-    actual = valueset(table, 'bar')
-    expect = set([True, False, None])
-    eq_(expect, actual)
-
-
 def test_isunique():
     """Test the isunique function."""
     
-    table = (('foo', 'bar'), ('a', 1), ('b'), ('b', 2), ('c', 3, True))
+    table = (('foo', 'bar'), ('a', 1), ('b',), ('b', 2), ('c', 3, True))
     assert not isunique(table, 'foo')
     assert isunique(table, 'bar')
     
@@ -441,7 +420,7 @@ def test_lookup():
     eq_(expect, actual)
 
     # test default value - tuple of whole row
-    actual = lookup(t1, 'foo') # no value selector
+    actual = lookup(t1, 'foo')  # no value selector
     expect = {'a': [('a', 1)], 'b': [('b', 2), ('b', 3)]}
     eq_(expect, actual)
     
@@ -471,18 +450,18 @@ def test_lookupone():
     try:
         lookupone(t1, 'foo', 'bar', strict=True)
     except DuplicateKeyError:
-        pass # expected
+        pass  # expected
     else:
         assert False, 'expected error'
         
     # lookup one column on another under, not strict 
     actual = lookupone(t1, 'foo', 'bar', strict=False)
-    expect = {'a': 1, 'b': 2} # first value wins
+    expect = {'a': 1, 'b': 2}  # first value wins
     eq_(expect, actual)
 
     # test default value - tuple of whole row
-    actual = lookupone(t1, 'foo', strict=False) # no value selector
-    expect = {'a': ('a', 1), 'b': ('b', 2)} # first wins
+    actual = lookupone(t1, 'foo', strict=False)  # no value selector
+    expect = {'a': ('a', 1), 'b': ('b', 2)}  # first wins
     eq_(expect, actual)
     
     t2 = (('foo', 'bar', 'baz'),
@@ -498,7 +477,7 @@ def test_lookupone():
     
     # test compound key
     actual = lookupone(t2, ('foo', 'bar'), 'baz', strict=False)
-    expect = {('a', 1): True, ('b', 2): False, ('b', 3): True} # first wins
+    expect = {('a', 1): True, ('b', 2): False, ('b', 3): True}  # first wins
     eq_(expect, actual)
     
 
@@ -508,7 +487,8 @@ def test_dictlookup():
     t1 = (('foo', 'bar'), ('a', 1), ('b', 2), ('b', 3))
     
     actual = dictlookup(t1, 'foo')
-    expect = {'a': [{'foo': 'a', 'bar': 1}], 'b': [{'foo': 'b', 'bar': 2}, {'foo': 'b', 'bar': 3}]}
+    expect = {'a': [{'foo': 'a', 'bar': 1}],
+              'b': [{'foo': 'b', 'bar': 2}, {'foo': 'b', 'bar': 3}]}
     eq_(expect, actual)
     
     t2 = (('foo', 'bar', 'baz'),
@@ -534,13 +514,14 @@ def test_dictlookupone():
     try:
         dictlookupone(t1, 'foo', strict=True)
     except DuplicateKeyError:
-        pass # expected
+        pass  # expected
     else:
         assert False, 'expected error'
         
     # relax 
     actual = dictlookupone(t1, 'foo', strict=False)
-    expect = {'a': {'foo': 'a', 'bar': 1}, 'b': {'foo': 'b', 'bar': 2}} # first wins
+    # first wins
+    expect = {'a': {'foo': 'a', 'bar': 1}, 'b': {'foo': 'b', 'bar': 2}}
     eq_(expect, actual)
 
     t2 = (('foo', 'bar', 'baz'),
@@ -553,7 +534,7 @@ def test_dictlookupone():
     actual = dictlookupone(t2, ('foo', 'bar'), strict=False)
     expect = {('a', 1): {'foo': 'a', 'bar': 1, 'baz': True}, 
               ('b', 2): {'foo': 'b', 'bar': 2, 'baz': False}, 
-              ('b', 3): {'foo': 'b', 'bar': 3, 'baz': True}} # first wins
+              ('b', 3): {'foo': 'b', 'bar': 3, 'baz': True}}  # first wins
     eq_(expect, actual)
     
 
@@ -575,7 +556,7 @@ def test_recordlookupone():
     try:
         recordlookupone(t1, 'foo', strict=True)
     except DuplicateKeyError:
-        pass # expected
+        pass  # expected
     else:
         assert False, 'expected error'
 
@@ -628,24 +609,24 @@ def test_typecounts():
              (b'E', 42))
 
     actual = typecounts(table, 'foo')
-    if PY3:
-        expect = (('type', 'count', 'frequency'),
-                  ('bytes', 4, 4./5),
-                  ('str', 1, 1./5))
-    else:
+    if PY2:
         expect = (('type', 'count', 'frequency'),
                   ('str', 4, 4./5),
                   ('unicode', 1, 1./5))
+    else:
+        expect = (('type', 'count', 'frequency'),
+                  ('bytes', 4, 4./5),
+                  ('str', 1, 1./5))
     ieq(expect, actual)
 
     actual = typecounts(table, 'bar')
-    if PY3:
+    if PY2:
         expect = (('type', 'count', 'frequency'),
-                  ('str', 3, 3./5),
+                  ('unicode', 3, 3./5),
                   ('int', 2, 2./5))
     else:
         expect = (('type', 'count', 'frequency'),
-                  ('unicode', 3, 3./5),
+                  ('str', 3, 3./5),
                   ('int', 2, 2./5))
     ieq(expect, actual)
 
@@ -666,10 +647,10 @@ def test_typeset():
              (b'E', 42))
 
     actual = typeset(table, 'foo')
-    if PY3:
-        expect = set([bytes, str])
-    else:
+    if PY2:
         expect = set([str, unicode])
+    else:
+        expect = set([bytes, str])
     eq_(expect, actual)
 
 
@@ -687,8 +668,9 @@ def test_parsecounts():
     ieq(expect, actual)
     
     
-def test_parsenumber():
-    
+def test_numparser():
+
+    parsenumber = numparser()
     assert parsenumber('1') == 1
     assert parsenumber('1.0') == 1.0
     assert parsenumber(str(maxint + 1)) == maxint + 1
@@ -697,21 +679,22 @@ def test_parsenumber():
     assert parsenumber(None) is None
     
     
-def test_parsenumber_strict():
-    
-    assert parsenumber('1', strict=True) == 1
-    assert parsenumber('1.0', strict=True) == 1.0
-    assert parsenumber(str(maxint + 1), strict=True) == maxint + 1
-    assert parsenumber('3+4j', strict=True) == 3 + 4j
+def test_numparser_strict():
+
+    parsenumber = numparser(strict=True)
+    assert parsenumber('1') == 1
+    assert parsenumber('1.0') == 1.0
+    assert parsenumber(str(maxint + 1)) == maxint + 1
+    assert parsenumber('3+4j') == 3 + 4j
     try:
-        parsenumber('aaa', strict=True)
-    except:
+        parsenumber('aaa')
+    except ValueError:
         pass  # expected
     else:
         assert False, 'expected exception'
     try:
-        parsenumber(None, strict=True)
-    except:
+        parsenumber(None)
+    except TypeError:
         pass  # expected
     else:
         assert False, 'expected exception'
@@ -774,8 +757,8 @@ def test_laxparsers():
     
     p1 = datetimeparser('%Y-%m-%dT%H:%M:%S')
     try:
-        v = p1('2002-12-25 00:00:00')
-    except:
+        p1('2002-12-25 00:00:00')
+    except ValueError:
         pass
     else:
         assert False, 'expected exception'
@@ -783,7 +766,7 @@ def test_laxparsers():
     p2 = datetimeparser('%Y-%m-%dT%H:%M:%S', strict=False)
     try:
         v = p2('2002-12-25 00:00:00')
-    except:
+    except ValueError:
         assert False, 'did not expect exception'
     else:
         eq_('2002-12-25 00:00:00', v)
@@ -908,7 +891,7 @@ def test_rowgroupby():
     eq_('b', key)
     eq_(2, len(vals))
     eq_(True, vals[0])
-    eq_(None, vals[1]) # gets padded
+    eq_(None, vals[1])  # gets padded
 
 
 def test_progress():

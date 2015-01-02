@@ -1,10 +1,12 @@
-from __future__ import absolute_import, print_function, division, unicode_literals
+from __future__ import absolute_import, print_function, division, \
+    unicode_literals
 
 
 # standard library dependencies
 from xml.etree import ElementTree
 from operator import attrgetter
 import itertools
+from ..compat import string_types
 
 
 # internal dependencies
@@ -139,7 +141,7 @@ class XmlView(RowContainer):
     def __init__(self, source, *args, **kwargs):
         self.source = source
         self.args = args
-        if len(args) == 2 and isinstance(args[1], (basestring, tuple, list)):
+        if len(args) == 2 and isinstance(args[1], (string_types, tuple, list)):
             self.rmatch = args[0]
             self.vmatch = args[1]
             self.vdict = None
@@ -176,7 +178,7 @@ class XmlView(RowContainer):
                         getv = attrgetter('text')
                     else:
                         getv = lambda e: e.get(self.attr)
-                    if isinstance(vmatch, basestring):
+                    if isinstance(vmatch, string_types):
                         # match only one path
                         velms = rowelm.findall(vmatch)
                     else:
@@ -190,7 +192,7 @@ class XmlView(RowContainer):
                 # difficult case, deal with different paths for each field
 
                 # determine output header
-                fields = tuple(vdict.keys())
+                fields = tuple(sorted(vdict.keys()))
                 yield fields
 
                 # setup value getters
@@ -198,7 +200,7 @@ class XmlView(RowContainer):
                 vgetters = dict()
                 for f in fields:
                     vmatch = self.vdict[f]
-                    if isinstance(vmatch, basestring):
+                    if isinstance(vmatch, string_types):
                         # match element path
                         vmatches[f] = vmatch
                         vgetters[f] = element_text_getter(self.missing)

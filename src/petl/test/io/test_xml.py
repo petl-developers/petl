@@ -14,7 +14,7 @@ def test_fromxml():
 
     # initial data
     f = NamedTemporaryFile(delete=False)
-    data = """<table>
+    data = b"""<table>
     <tr>
         <td>foo</td><td>bar</td>
     </tr>
@@ -44,7 +44,7 @@ def test_fromxml_2():
 
     # initial data
     f = NamedTemporaryFile(delete=False)
-    data = """<table>
+    data = b"""<table>
     <tr>
         <td v='foo'/><td v='bar'/>
     </tr>
@@ -74,7 +74,7 @@ def test_fromxml_3():
 
     # initial data
     f = NamedTemporaryFile(delete=False)
-    data = """<table>
+    data = b"""<table>
     <row>
         <foo>a</foo><baz><bar v='1'/></baz>
     </row>
@@ -89,10 +89,11 @@ def test_fromxml_3():
     f.close()
 
     actual = fromxml(f.name, 'row', {'foo': 'foo', 'bar': ('baz/bar', 'v')})
-    expect = (('foo', 'bar'),
-              ('a', '1'),
-              ('b', '2'),
-              ('c', '2'))
+    # N.B., requested fields come out in name sorted order
+    expect = (('bar', 'foo'),
+              ('1', 'a'),
+              ('2', 'b'),
+              ('2', 'c'))
     ieq(expect, actual)
     ieq(expect, actual)  # verify can iterate twice
 
@@ -101,7 +102,7 @@ def test_fromxml_4():
 
     # initial data
     f = NamedTemporaryFile(delete=False)
-    data = """<table>
+    data = b"""<table>
     <row>
         <foo>a</foo><baz><bar>1</bar><bar>3</bar></baz>
     </row>
@@ -116,10 +117,11 @@ def test_fromxml_4():
     f.close()
 
     actual = fromxml(f.name, 'row', {'foo': 'foo', 'bar': './/bar'})
-    expect = (('foo', 'bar'),
-              ('a', ('1', '3')),
-              ('b', '2'),
-              ('c', '2'))
+    # N.B., requested fields come out in name sorted order
+    expect = (('bar', 'foo'),
+              (('1', '3'), 'a'),
+              ('2', 'b'),
+              ('2', 'c'))
     ieq(expect, actual)
     ieq(expect, actual)  # verify can iterate twice
 
@@ -128,7 +130,7 @@ def test_fromxml_5():
 
     # initial data
     f = NamedTemporaryFile(delete=False)
-    data = """<table>
+    data = b"""<table>
     <row>
         <foo>a</foo><baz><bar v='1'/><bar v='3'/></baz>
     </row>
@@ -143,17 +145,18 @@ def test_fromxml_5():
     f.close()
 
     actual = fromxml(f.name, 'row', {'foo': 'foo', 'bar': ('baz/bar', 'v')})
-    expect = (('foo', 'bar'),
-              ('a', ('1', '3')),
-              ('b', '2'),
-              ('c', '2'))
+    # N.B., requested fields come out in name sorted order
+    expect = (('bar', 'foo'),
+              (('1', '3'), 'a'),
+              ('2', 'b'),
+              ('2', 'c'))
     ieq(expect, actual)
     ieq(expect, actual)  # verify can iterate twice
 
 
 def test_fromxml_6():
 
-    data = """<table class='petl'>
+    data = b"""<table class='petl'>
 <thead>
 <tr>
 <th>foo</th>
@@ -187,7 +190,6 @@ def test_fromxml_6():
               ('c', '3'))
     ieq(expect, actual)
     ieq(expect, actual)  # verify can iterate twice
-
 
 
 def test_fromxml_url():

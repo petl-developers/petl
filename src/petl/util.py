@@ -4,7 +4,8 @@ Utility functions.
 """
 
 
-from __future__ import absolute_import, print_function, division
+from __future__ import absolute_import, print_function, division, \
+    unicode_literals
 
 
 from itertools import islice, groupby, chain
@@ -18,21 +19,18 @@ from functools import partial
 import heapq
 import sys
 import operator
-from math import ceil
 import logging
 logger = logging.getLogger(__name__)
 warning = logger.warning
 info = logger.info
 debug = logger.debug
-from .compat import maketrans, string_types, number_types, \
-    comparable_types, Counter, OrderedDict, count, izip_longest, long, xrange, \
+from .compat import maketrans, string_types, numeric_types, \
+    Counter, OrderedDict, izip_longest, long, xrange, \
     next
 
 
 from .base import IterContainer
-
-
-singletons = set([False, True])
+from .comparison import comparable_itemgetter
 
 
 class RowContainer(IterContainer):
@@ -153,17 +151,6 @@ class DataContainer(RowContainer):
         return iterdata(self.table, *self.sliceargs) 
         
            
-def dataslice(table, *args):
-    """
-    .. deprecated:: 0.3
-    
-    Use :func:`data` instead, it supports slice arguments.
-    
-    """
-    
-    return islice(data(table), *args)
-
-    
 def iterdicts(table, *sliceargs, **kwargs):
     """
     Return an iterator over the data in the table, yielding each row as a 
@@ -343,9 +330,6 @@ def nrows(table):
     
     return sum(1 for _ in iterdata(table))
     
-    
-rowcount = nrows  # backwards compatibility
-
     
 def look(table, *sliceargs, **kwargs):
     """
@@ -535,10 +519,10 @@ def format_table_grid(table, vrepr, sliceargs):
     
     # pad short fields and rows
     if len(flds) < maxrowlen:
-        fldsrepr.extend([u''] * (maxrowlen - len(flds)))
+        fldsrepr.extend([''] * (maxrowlen - len(flds)))
     for valsrepr in rowsrepr:
         if len(valsrepr) < maxrowlen:
-            valsrepr.extend([u''] * (maxrowlen - len(valsrepr)))
+            valsrepr.extend([''] * (maxrowlen - len(valsrepr)))
     
     # find longest representations so we know how wide to make cells
     colwidths = [0] * maxrowlen  # initialise to 0
@@ -550,45 +534,45 @@ def format_table_grid(table, vrepr, sliceargs):
                 colwidths[i] = len(vr)
                 
     # construct a line separator
-    sep = u'+'
+    sep = '+'
     for w in colwidths:
-        sep += u'-' * (w + 2)
-        sep += u'+'
-    sep += u'\n'
+        sep += '-' * (w + 2)
+        sep += '+'
+    sep += '\n'
     
     # construct a header separator
-    hedsep = u'+'
+    hedsep = '+'
     for w in colwidths:
-        hedsep += u'=' * (w + 2)
-        hedsep += u'+'
-    hedsep += u'\n'
+        hedsep += '=' * (w + 2)
+        hedsep += '+'
+    hedsep += '\n'
     
     # construct a line for the header row
-    fldsline = u'|'
+    fldsline = '|'
     for i, w in enumerate(colwidths):
         f = fldsrepr[i]
-        fldsline += u' ' + f
-        fldsline += u' ' * (w - len(f))  # padding
-        fldsline += u' |'
-    fldsline += u'\n'
+        fldsline += ' ' + f
+        fldsline += ' ' * (w - len(f))  # padding
+        fldsline += ' |'
+    fldsline += '\n'
     
     # construct a line for each data row
     rowlines = list()
     for vals, valsrepr in zip(rows, rowsrepr):
-        rowline = u'|'
+        rowline = '|'
         for i, w in enumerate(colwidths):
             vr = valsrepr[i]
-            if i < len(vals) and isinstance(vals[i], number_types) \
+            if i < len(vals) and isinstance(vals[i], numeric_types) \
                     and not isinstance(vals[i], bool):
                 # left pad numbers
-                rowline += u' ' * (w + 1 - len(vr))  # padding
-                rowline += vr + u' |'
+                rowline += ' ' * (w + 1 - len(vr))  # padding
+                rowline += vr + ' |'
             else:      
                 # right pad everything else
-                rowline += u' ' + vr
-                rowline += u' ' * (w - len(vr))  # padding
-                rowline += u' |'
-        rowline += u'\n'
+                rowline += ' ' + vr
+                rowline += ' ' * (w - len(vr))  # padding
+                rowline += ' |'
+        rowline += '\n'
         rowlines.append(rowline)
         
     # put it all together
@@ -617,10 +601,10 @@ def format_table_simple(table, vrepr, sliceargs):
     
     # pad short fields and rows
     if len(flds) < maxrowlen:
-        fldsrepr.extend([u''] * (maxrowlen - len(flds)))
+        fldsrepr.extend([''] * (maxrowlen - len(flds)))
     for valsrepr in rowsrepr:
         if len(valsrepr) < maxrowlen:
-            valsrepr.extend([u''] * (maxrowlen - len(valsrepr)))
+            valsrepr.extend([''] * (maxrowlen - len(valsrepr)))
     
     # find longest representations so we know how wide to make cells
     colwidths = [0] * maxrowlen  # initialise to 0
@@ -632,20 +616,20 @@ def format_table_simple(table, vrepr, sliceargs):
                 colwidths[i] = len(vr)
                 
     # construct a header separator
-    hedsep = u'  '.join(u'=' * w for w in colwidths)
-    hedsep += u'\n'
+    hedsep = '  '.join('=' * w for w in colwidths)
+    hedsep += '\n'
     
     # construct a line for the header row
-    fldsline = u'  '.join(f.ljust(w) for f, w in zip(fldsrepr, colwidths))
-    fldsline += u'\n'
+    fldsline = '  '.join(f.ljust(w) for f, w in zip(fldsrepr, colwidths))
+    fldsline += '\n'
     
     # construct a line for each data row
     rowlines = list()
     for vals, valsrepr in zip(rows, rowsrepr):
-        rowline = u''
+        rowline = ''
         for i, w in enumerate(colwidths):
             vr = valsrepr[i]
-            if i < len(vals) and isinstance(vals[i], number_types) \
+            if i < len(vals) and isinstance(vals[i], numeric_types) \
                     and not isinstance(vals[i], bool):
                 # left pad numbers
                 rowline += vr.rjust(w)
@@ -654,7 +638,7 @@ def format_table_simple(table, vrepr, sliceargs):
                 rowline += vr.ljust(w)
             if i < len(colwidths) - 1:
                 rowline += '  '
-        rowline += u'\n'
+        rowline += '\n'
         rowlines.append(rowline)
         
     # put it all together
@@ -684,10 +668,10 @@ def format_table_minimal(table, vrepr, sliceargs):
     
     # pad short fields and rows
     if len(flds) < maxrowlen:
-        fldsrepr.extend([u''] * (maxrowlen - len(flds)))
+        fldsrepr.extend([''] * (maxrowlen - len(flds)))
     for valsrepr in rowsrepr:
         if len(valsrepr) < maxrowlen:
-            valsrepr.extend([u''] * (maxrowlen - len(valsrepr)))
+            valsrepr.extend([''] * (maxrowlen - len(valsrepr)))
     
     # find longest representations so we know how wide to make cells
     colwidths = [0] * maxrowlen  # initialise to 0
@@ -699,16 +683,16 @@ def format_table_minimal(table, vrepr, sliceargs):
                 colwidths[i] = len(vr)
                 
     # construct a line for the header row
-    fldsline = u'  '.join(f.ljust(w) for f, w in zip(fldsrepr, colwidths))
-    fldsline += u'\n'
+    fldsline = '  '.join(f.ljust(w) for f, w in zip(fldsrepr, colwidths))
+    fldsline += '\n'
     
     # construct a line for each data row
     rowlines = list()
     for vals, valsrepr in zip(rows, rowsrepr):
-        rowline = u''
+        rowline = ''
         for i, w in enumerate(colwidths):
             vr = valsrepr[i]
-            if i < len(vals) and isinstance(vals[i], number_types) \
+            if i < len(vals) and isinstance(vals[i], numeric_types) \
                     and not isinstance(vals[i], bool):
                 # left pad numbers
                 rowline += vr.rjust(w)
@@ -717,7 +701,7 @@ def format_table_minimal(table, vrepr, sliceargs):
                 rowline += vr.ljust(w)
             if i < len(colwidths) - 1:
                 rowline += '  '
-        rowline += u'\n'
+        rowline += '\n'
         rowlines.append(rowline)
         
     # put it all together
@@ -794,9 +778,9 @@ class See(object):
                     cols[str(i)].append(repr(row[i]))
                 except IndexError:
                     cols[str(f)].append('')
-        output = u''
+        output = ''
         for i, f in enumerate(flds):
-            output += u'%r: %s\n' % (f, u', '.join(cols[str(i)]))
+            output += '%r: %s\n' % (f, ', '.join(cols[str(i)]))
         return output
         
     
@@ -933,17 +917,6 @@ class ValuesContainer(IterContainer):
         return r
     
         
-def valueset(table, field, missing=None):
-    """
-    .. deprecated:: 0.3
-    
-    Use ``set(values(table, *fields))`` instead, see also :func:`values`.
-        
-    """
-
-    return set(itervalues(table, field, missing=missing))
-
-
 def valuecount(table, field, value, missing=None):
     """
     Count the number of occurrences of `value` under the given field. Returns
@@ -1615,9 +1588,8 @@ class DuplicateKeyError(Exception):
 
 
 def asindices(flds, spec):
-    """
-    TODO doc me
-    
+    """Convert the given field `spec` into a list of field indices.
+
     """
 
     names = [str(f) for f in flds]
@@ -1639,11 +1611,7 @@ def asindices(flds, spec):
         
         
 class FieldSelectionError(Exception):
-    """
-    TODO doc me
-    
-    """
-    
+
     def __init__(self, value):
         self.value = value
         
@@ -1658,11 +1626,7 @@ def rowitemgetter(fields, spec):
 
     
 def rowgetter(*indices):
-    """
-    TODO doc me
-    
-    """
-    
+
     # guard condition
     assert len(indices) > 0, 'indices is empty'
 
@@ -1979,9 +1943,9 @@ def datetimeparser(fmt, strict=True):
     def parser(value):
         try:
             return datetime.datetime.strptime(value.strip(), fmt)
-        except:
+        except Exception as e:
             if strict:
-                raise
+                raise e
             else:
                 return value
     return parser
@@ -2033,9 +1997,9 @@ def dateparser(fmt, strict=True):
     def parser(value):
         try:
             return datetime.datetime.strptime(value.strip(), fmt).date()
-        except:
+        except Exception as e:
             if strict:
-                raise
+                raise e
             else:
                 return value
     return parser
@@ -2043,8 +2007,8 @@ def dateparser(fmt, strict=True):
 
 def timeparser(fmt, strict=True):
     """
-    Return a function to parse strings as :class:`datetime.time` objects using a given format.
-    E.g.::
+    Return a function to parse strings as :class:`datetime.time` objects using
+    a given format. E.g.::
     
         >>> from petl import timeparser
         >>> isotime = timeparser('%H:%M:%S')
@@ -2096,9 +2060,9 @@ def timeparser(fmt, strict=True):
     def parser(value):
         try:
             return datetime.datetime.strptime(value.strip(), fmt).time()
-        except:
+        except Exception as e:
             if strict:
-                raise
+                raise e
             else:
                 return value
     return parser
@@ -2241,7 +2205,7 @@ def stats(table, field):
     for v in itervalues(table, field):
         try:
             v = float(v)
-        except:
+        except (ValueError, TypeError):
             output['errors'] += 1
         else:
             if output['min'] is None or v < output['min']:
@@ -2290,44 +2254,6 @@ def strjoin(s):
     return lambda l: s.join(map(str, l))
 
 
-def parsenumber(v, strict=False):
-    """
-    Attempt to parse the value as a number, trying :func:`int`, :func:`long`,
-    :func:`float` and :func:`complex` in that order. If all fail, return the
-    value as-is.
-    
-    .. versionadded:: 0.4
-    
-    .. versionchanged:: 0.7
-
-    Set ``strict=True`` to get an exception if parsing fails.
-
-    .. deprecated:: 0.24
-
-    Use :func:`numparser` instead.
-    
-    """
-
-    try:
-        return int(v)
-    except:
-        pass
-    try:
-        return long(v)
-    except:
-        pass
-    try:
-        return float(v)
-    except:
-        pass
-    try:
-        return complex(v)
-    except Exception as e:
-        if strict:
-            raise e
-    return v
-
-
 def numparser(strict=False):
     """
     Return a function that will attempt to parse the value as a number, trying
@@ -2342,21 +2268,21 @@ def numparser(strict=False):
     def f(v):
         try:
             return int(v)
-        except:
+        except (ValueError, TypeError):
             pass
         try:
             return long(v)
-        except:
+        except (ValueError, TypeError):
             pass
         try:
             return float(v)
-        except:
+        except (ValueError, TypeError):
             pass
         try:
             return complex(v)
-        except:
+        except (ValueError, TypeError) as e:
             if strict:
-                raise
+                raise e
         return v
 
     return f
@@ -2512,7 +2438,8 @@ class RandomTable(RowContainer):
         
 def dummytable(numrows=100, 
                fields=(('foo', partial(random.randint, 0, 100)),
-                       ('bar', partial(random.choice, ['apples', 'pears', 'bananas', 'oranges'])), 
+                       ('bar', partial(random.choice, ('apples', 'pears',
+                                                       'bananas', 'oranges'))),
                        ('baz', random.random)),
                wait=0):
     """
@@ -2550,8 +2477,8 @@ def dummytable(numrows=100,
     Note that the data are generated on the fly and are not stored in memory,
     so this function can be used to simulate very large tables.
     
-    Data generation functions can be specified via the `fields` keyword argument,
-    or set on the table via the suffix notation, e.g.::
+    Data generation functions can be specified via the `fields` keyword
+    argument, or set on the table via the suffix notation, e.g.::
     
         >>> import random
         >>> from functools import partial
@@ -2615,8 +2542,8 @@ class DummyTable(RowContainer):
         random.seed(seed)
         
         # construct header row
-        header = tuple(str(f) for f in fields.keys())
-        yield header
+        hdr = tuple(str(f) for f in fields.keys())
+        yield hdr
 
         # construct data rows
         for _ in xrange(nr):
@@ -2676,31 +2603,21 @@ def diffvalues(t1, t2, f):
     
     """
 
-#from petl import diffvalues
-#table1 = [['foo', 'bar'],
-#          ['a', 1],
-#          ['b', 3]]
-#table2 = [['bar', 'foo'],
-#          [1, 'a'],
-#          [3, 'c']]
-#add, sub = diffvalues(table1, table2, 'foo')
-#add
-#sub
-    
     t1v = set(itervalues(t1, f))
     t2v = set(itervalues(t2, f))
     return t2v - t1v, t1v - t2v
 
 
-Keyed = namedtuple('Keyed', ['key', 'obj'])
+_Keyed = namedtuple('Keyed', ['key', 'obj'])
     
     
 def heapqmergesorted(key=None, *iterables):            
     """
     Return a single iterator over the given iterables, sorted by the given `key`
-    function, assuming the input iterables are already sorted by the same function. 
-    (I.e., the merge part of a general merge sort.) Uses :func:`heapq.merge` for
-    the underlying implementation. See also :func:`shortlistmergesorted`.
+    function, assuming the input iterables are already sorted by the same
+    function. (I.e., the merge part of a general merge sort.) Uses
+    :func:`heapq.merge` for the underlying implementation. See also
+    :func:`shortlistmergesorted`.
     
     .. versionadded:: 0.9
         
@@ -2711,7 +2628,8 @@ def heapqmergesorted(key=None, *iterables):
         for element in heapq.merge(*keyed_iterables):
             yield element
     else:
-        keyed_iterables = [(Keyed(key(obj), obj) for obj in iterable) for iterable in iterables]
+        keyed_iterables = [(_Keyed(key(obj), obj) for obj in iterable)
+                           for iterable in iterables]
         for element in heapq.merge(*keyed_iterables):
             yield element.obj
 
@@ -2719,10 +2637,10 @@ def heapqmergesorted(key=None, *iterables):
 def shortlistmergesorted(key=None, reverse=False, *iterables):
     """
     Return a single iterator over the given iterables, sorted by the given `key`
-    function, assuming the input iterables are already sorted by the same function. 
-    (I.e., the merge part of a general merge sort.) Uses :func:`min` (or :func:`max` 
-    if ``reverse=True``) for the underlying implementation. See also 
-    :func:`heapqmergesorted`.
+    function, assuming the input iterables are already sorted by the same
+    function. (I.e., the merge part of a general merge sort.) Uses :func:`min`
+    (or :func:`max` if ``reverse=True``) for the underlying implementation. See
+    also :func:`heapqmergesorted`.
     
     .. versionadded:: 0.9
         
@@ -2772,10 +2690,10 @@ class Record(tuple):
         
     def __getitem__(self, f):
         if isinstance(f, int):
-            return super(HybridRow, self).__getitem__(f)
+            return super(Record, self).__getitem__(f)
         elif f in self.flds:
             try:
-                return super(HybridRow, self).__getitem__(self.flds.index(f))
+                return super(Record, self).__getitem__(self.flds.index(f))
             except IndexError:  # handle short rows
                 return self.missing
         else:
@@ -2785,16 +2703,12 @@ class Record(tuple):
     def __getattr__(self, f):
         if f in self.flds:
             try:
-                return super(HybridRow, self).__getitem__(self.flds.index(f))
+                return super(Record, self).__getitem__(self.flds.index(f))
             except IndexError:  # handle short rows
                 return self.missing
         else:
             raise Exception('item ' + str(f) +
                             ' not in fields ' + str(self.flds))
-
-
-# backwards compatibility
-HybridRow = Record
 
 
 def iterrecords(table, *sliceargs, **kwargs):
@@ -2852,11 +2766,6 @@ def records(table, *sliceargs, **kwargs):
     return RecordsContainer(table, *sliceargs, **kwargs)
     
     
-# retain for backwards compatibility
-def hybridrows(flds, it, missing=None):
-    return (HybridRow(row, flds, missing) for row in it)
-    
-    
 def progress(table, batchsize=1000, prefix="", out=sys.stderr):
     """
     Report progress on rows passing through. E.g.::
@@ -2911,7 +2820,9 @@ class ProgressView(RowContainer):
                 except ZeroDivisionError:
                     batchrate = 0
                 v = (n, elapsedtime, rate, batchtime, batchrate)
-                message = self.prefix + '%s rows in %.2fs (%s row/s); batch in %.2fs (%s row/s)' % v
+                message = self.prefix + \
+                    '%s rows in %.2fs (%s row/s); ' \
+                    'batch in %.2fs (%s row/s)' % v
                 print(message, file=self.out)
                 if hasattr(self.out, 'flush'):
                     self.out.flush()
@@ -3026,7 +2937,7 @@ def isordered(table, key=None, reverse=False, strict=False):
         op = operator.ge
         
     it = iter(table)
-    fieldnames = [str(f) for f in next(it)]
+    fnms = [str(f) for f in next(it)]
     if key is None:
         prev = next(it)
         for curr in it:
@@ -3034,7 +2945,7 @@ def isordered(table, key=None, reverse=False, strict=False):
                 return False
             prev = curr
     else:
-        getkey = itemgetter(*asindices(fieldnames, key))
+        getkey = itemgetter(*asindices(fnms, key))
         prev = next(it)
         prevkey = getkey(prev)
         for curr in it:
@@ -3082,27 +2993,36 @@ def rowgroupby(table, key, value=None):
     
     it = iter(table)
     fields = next(it)
-    
-    # wrap rows 
-    it = hybridrows(fields, it)
-        
+    # wrap rows as records
+    it = (Record(row, fields) for row in it)
+
     # determine key function
     if callable(key):
         getkey = key
+        native_key = True
     else:
         kindices = asindices(fields, key)
-        getkey = itemgetter(*kindices)
+        getkey = comparable_itemgetter(*kindices)
+        native_key = False
     
-    # determine value function
+    git = groupby(it, key=getkey)
     if value is None:
-        return groupby(it, key=getkey)
+        if native_key:
+            return git
+        else:
+            return ((k.obj, vals) for (k, vals) in git)
     else:
         if callable(value):
             getval = value
         else:
             vindices = asindices(fields, value)
             getval = itemgetter(*vindices)
-        return ((k, (getval(v) for v in vals)) for k, vals in groupby(it, key=getkey))
+        if native_key:
+            return ((k, (getval(v) for v in vals))
+                    for (k, vals) in git)
+        else:
+            return ((k.obj, (getval(v) for v in vals))
+                    for (k, vals) in git)
 
 
 def iterpeek(it, n=1):
@@ -3113,112 +3033,7 @@ def iterpeek(it, n=1):
     else:
         peek = list(islice(it, n))
         return peek, chain(peek, it)
-    
 
-def rowgroupbybin(table, key, width, value=None, minv=None, maxv=None):
-    """
-    Group rows into bins of a given width.
-    
-    """
-
-    it = iter(table)
-    fields = next(it)
-    
-    # wrap rows 
-    it = hybridrows(fields, it)
-
-    # determine key function
-    if callable(key):
-        getkey = key
-    else:
-        kindices = asindices(fields, key)
-        getkey = comparable_itemgetter(*kindices)
-    
-    # determine value function
-    if value is None:
-        getval = lambda v: v # identity function - i.e., whole row
-    else:
-        if callable(value):
-            getval = value
-        else:
-            vindices = asindices(fields, value)
-            getval = itemgetter(*vindices)
-            
-    # use a different algorithm if minv and maxv are specified - fixed bins
-    if minv is not None and maxv is not None:
-        numbins = int(ceil((maxv - minv) / width))
-        keyv = None
-        for n in xrange(0, numbins):
-            binminv = minv + n*width
-            binmaxv = binminv + width
-            if binmaxv >= maxv:  # final bin
-                binmaxv = maxv  # truncate final bin to specified maximum
-            binnedvals = []
-            try:
-                # advance until we're within the bin's range
-                while keyv < binminv:
-                    row = next(it)
-                    keyv = getkey(row)
-                while binminv <= keyv < binmaxv:  # within the bin
-                    binnedvals.append(getval(row))
-                    row = next(it)
-                    keyv = getkey(row)
-                # possible floating point precision bug here?
-                while keyv == binmaxv == maxv:
-                    # last bin is open if maxv is specified
-                    binnedvals.append(getval(row))
-                    row = next(it)
-                    keyv = getkey(row)
-            except StopIteration:
-                pass
-            yield (binminv, binmaxv), binnedvals
-
-    else:
-        
-        # initialise minimum
-        try:
-            row = next(it)
-        except StopIteration:
-            pass
-        else:
-            keyv = getkey(row)
-            if minv is None:
-                minv = keyv  # initialise minimum to first key value found
-        
-            # N.B., we need to account for two possible scenarios
-            # (1) maxv is not specified, so keep making bins until we run out
-            # of rows
-            # (2) maxv is specified, so iterate over bins up to maxv
-            try:
-        
-                for binminv in count(minv, width):
-                    binmaxv = binminv + width
-                    if maxv is not None and binmaxv >= maxv:  # final bin
-                        # truncate final bin to specified maximum
-                        binmaxv = maxv
-                    binnedvals = []
-                    # advance until we're within the bin's range
-                    while keyv < binminv:
-                        row = next(it)
-                        keyv = getkey(row)
-                    while binminv <= keyv < binmaxv:  # within the bin
-                        binnedvals.append(getval(row))
-                        row = next(it)
-                        keyv = getkey(row)
-                    # possible floating point precision bug here?
-                    while maxv is not None and keyv == binmaxv == maxv:
-                        # last bin is open if maxv is specified
-                        binnedvals.append(getval(row))
-                        row = next(it)
-                        keyv = getkey(row)
-                    yield (binminv, binmaxv), binnedvals
-                    # possible floating point precision bug here?
-                    if maxv is not None and binmaxv == maxv:
-                        break
-            except StopIteration:
-                # don't forget to handle the last bin
-                yield (binminv, binmaxv), binnedvals
-        
 
 def nthword(n, sep=None):
     """
@@ -3240,105 +3055,23 @@ def nthword(n, sep=None):
     return lambda s: s.split(sep)[n] 
 
 
-class Comparable(object):
-    """
-    Wrapper to allow comparison with :const:`None` for objects
-    which support only comparison with same-type objects.
-
-    For example, the date and time objects from the standard library
-    cannot be compared with `None`.
-
-        >>> from datetime import datetime
-        >>> from petl.util import Comparable
-        >>> dateobj = datetime(2012, 11, 10)
-        >>> Comparable(42) is 42
-        True
-        >>> Comparable(None) is None
-        True
-        >>> Comparable(dateobj) is dateobj
-        False
-        >>> Comparable(dateobj) > None
-        True
-        >>> dateobj > None
-        Traceback (most recent call last):
-        ...
-        TypeError: can't compare datetime.datetime to NoneType
-
-
-    .. versionadded:: 0.11
-
-    """
-    __slots__ = ['obj']
-
-    def __new__(cls, obj):
-        if obj in singletons or obj.__class__ in comparable_types:
-            return obj
-        if isinstance(obj, (list, tuple)):
-            return tuple(cls(o) for o in obj)
-        return object.__new__(cls)
-
-    def __init__(self, obj):
-        self.obj = obj
-
-    def __eq__(self, other):
-        if isinstance(other, Comparable):
-            return self.obj == other.obj
-        return self.obj == other
-
-    def __lt__(self, other):
-        if isinstance(other, Comparable):
-            other = other.obj
-
-        try:
-            return self.obj < other
-        except TypeError:
-            return str(type(self.obj)) < str(type(other))
-
-    def __le__(self, other):
-        return self < other or self == other
-
-    def __gt__(self, other):
-        return not (self < other or self == other)
-
-    def __ge__(self, other):
-        return not (self < other)
-
-
-comparable_types.add(Comparable)
-
-
-def comparable_itemgetter(*items):
-    """
-    Derivate of :func:`itertools.itemgetter` which can be safely
-    used as key for sort functions.
-
-    .. versionadded:: 0.11
-
-    """
-    ig = itemgetter(*items)
-    if len(items) == 1:
-        def g(obj):
-            return Comparable(ig(obj))
-    else:
-        def g(obj):
-            return tuple(Comparable(item) for item in ig(obj))
-    return g
-
-
 def listoflists(tbl):
     return [list(row) for row in tbl]
 
 lol = listoflists
+
 
 def tupleoftuples(tbl):
     return tuple(tuple(row) for row in tbl)
 
 tot = tupleoftuples
 
+
 def listoftuples(tbl):
     return [tuple(row) for row in tbl]
 
 lot = listoftuples
+
 
 def tupleoflists(tbl):
     return tuple(list(row) for row in tbl)

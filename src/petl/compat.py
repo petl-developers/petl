@@ -27,7 +27,24 @@ except ImportError:
 PY2 = sys.version_info[0] == 2
 PY3 = sys.version_info[0] == 3
 
-if PY3:
+if PY2:
+    from itertools import ifilter, ifilterfalse, imap, izip, izip_longest
+    from string import maketrans
+    string_types = basestring,
+    integer_types = int, long
+    numeric_types = bool, int, long, float
+    text_type = unicode
+    binary_type = str
+    from urllib2 import urlopen
+    from cStringIO import StringIO
+    BytesIO = StringIO
+    import cPickle as pickle
+    maxint = sys.maxint
+    long = long
+    xrange = xrange
+    reduce = reduce
+
+else:
     ifilter = filter
     imap = map
     izip = zip
@@ -38,32 +55,15 @@ if PY3:
     maketrans = str.maketrans
     string_types = str,
     integer_types = int,
-    number_types = int, float
+    numeric_types = bool, int, float
     class_types = type,
     text_type = str
     binary_type = bytes
-    comparable_types = set()
     long = int
     from urllib.request import urlopen
     from io import StringIO, BytesIO
     import pickle
     maxint = sys.maxsize
-
-else:
-    from itertools import ifilter, ifilterfalse, imap, izip, izip_longest
-    from string import maketrans
-    string_types = basestring,
-    integer_types = int, long
-    number_types = int, long, float
-    class_types = type, types.ClassType
-    text_type = unicode
-    binary_type = str
-    comparable_types = set([complex, float, int, long, str, unicode])
-    from urllib2 import urlopen
-    from cStringIO import StringIO
-    BytesIO = StringIO
-    import cPickle as pickle
-    maxint = sys.maxint
 
 try:
     advance_iterator = next
@@ -77,9 +77,3 @@ try:
 except NameError:
     def callable(obj):
         return any("__call__" in klass.__dict__ for klass in type(obj).__mro__)
-
-
-
-
-
-

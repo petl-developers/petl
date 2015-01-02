@@ -1,8 +1,10 @@
-from __future__ import absolute_import, print_function, division, unicode_literals
+from __future__ import absolute_import, print_function, division, \
+    unicode_literals
 
 
 # standard library dependencies
 import codecs
+from ..compat import text_type, next
 
 
 # internal dependencies
@@ -59,24 +61,26 @@ def fromtext(source=None, header=('lines',), strip=None):
 
     """
 
-    source = read_source_from_arg(source)
-    return TextView(source, header, strip=strip)
+    return fromutext(source=source, header=header, encoding='ascii',
+                     strip=strip)
+    # source = read_source_from_arg(source)
+    # return TextView(source, header, strip=strip)
 
 
-class TextView(RowContainer):
-
-    def __init__(self, source, header=('lines',), strip=None):
-        self.source = source
-        self.header = header
-        self.strip = strip
-
-    def __iter__(self):
-        with self.source.open_('r') as f:
-            if self.header is not None:
-                yield tuple(self.header)
-            s = self.strip
-            for line in f:
-                yield (line.strip(s),)
+# class TextView(RowContainer):
+#
+#     def __init__(self, source, header=('lines',), strip=None):
+#         self.source = source
+#         self.header = header
+#         self.strip = strip
+#
+#     def __iter__(self):
+#         with self.source.open_('rb') as f:
+#             if self.header is not None:
+#                 yield tuple(self.header)
+#             s = self.strip
+#             for line in f:
+#                 yield (line.strip(s),)
 
 
 def fromutext(source=None, header=(u'lines',), encoding='utf-8', strip=None):
@@ -103,7 +107,7 @@ class UnicodeTextView(RowContainer):
         self.strip = strip
 
     def __iter__(self):
-        with self.source.open_('r') as f:
+        with self.source.open_('rb') as f:
             f = codecs.getreader(self.encoding)(f)
             if self.header is not None:
                 yield tuple(self.header)
@@ -166,10 +170,12 @@ def totext(table, source=None, template=None, prologue=None, epilogue=None):
 
     """
 
-    assert template is not None, 'template is required'
-    source = write_source_from_arg(source)
-    with source.open_('w') as f:
-        _writetext(table, f, prologue, template, epilogue)
+    toutext(table, source=source, template=template, prologue=prologue,
+            epilogue=epilogue, encoding='ascii')
+    # assert template is not None, 'template is required'
+    # source = write_source_from_arg(source)
+    # with source.open_('wb') as f:
+    #     _writetext(table, f, prologue, template, epilogue)
 
 
 def appendtext(table, source=None, template=None, prologue=None, epilogue=None):
@@ -179,10 +185,12 @@ def appendtext(table, source=None, template=None, prologue=None, epilogue=None):
     .. versionadded:: 0.19
     """
 
-    assert template is not None, 'template is required'
-    source = write_source_from_arg(source)
-    with source.open_('a') as f:
-        _writetext(table, f, prologue, template, epilogue)
+    appendutext(table, source=source, template=template, prologue=prologue,
+                epilogue=epilogue, encoding='ascii')
+    # assert template is not None, 'template is required'
+    # source = write_source_from_arg(source)
+    # with source.open_('ab') as f:
+    #     _writetext(table, f, prologue, template, epilogue)
 
 
 def toutext(table, source=None, encoding='utf-8', template=None, prologue=None,
@@ -197,12 +205,12 @@ def toutext(table, source=None, encoding='utf-8', template=None, prologue=None,
 
     assert template is not None, 'template is required'
     if prologue is not None:
-        prologue = unicode(prologue)
-    template = unicode(template)
+        prologue = text_type(prologue)
+    template = text_type(template)
     if epilogue is not None:
-        epilogue = unicode(epilogue)
+        epilogue = text_type(epilogue)
     source = write_source_from_arg(source)
-    with source.open_('w') as f:
+    with source.open_('wb') as f:
         f = codecs.getwriter(encoding)(f)
         _writetext(table, f, prologue, template, epilogue)
 
@@ -219,12 +227,12 @@ def appendutext(table, source=None, encoding='utf-8', template=None,
 
     assert template is not None, 'template is required'
     if prologue is not None:
-        prologue = unicode(prologue)
-    template = unicode(template)
+        prologue = text_type(prologue)
+    template = text_type(template)
     if epilogue is not None:
-        epilogue = unicode(epilogue)
+        epilogue = text_type(epilogue)
     source = write_source_from_arg(source)
-    with source.open_('a') as f:
+    with source.open_('ab') as f:
         f = codecs.getwriter(encoding)(f)
         _writetext(table, f, prologue, template, epilogue)
 
@@ -233,7 +241,7 @@ def _writetext(table, f, prologue, template, epilogue):
     if prologue is not None:
         f.write(prologue)
     it = iter(table)
-    flds = it.next()
+    flds = next(it)
     for row in it:
         rec = asdict(flds, row)
         s = template.format(**rec)
@@ -246,7 +254,7 @@ def _teetext(table, f, prologue, template, epilogue):
     if prologue is not None:
         f.write(prologue)
     it = iter(table)
-    flds = it.next()
+    flds = next(it)
     yield flds
     for row in it:
         rec = asdict(flds, row)
@@ -265,27 +273,29 @@ def teetext(table, source=None, template=None, prologue=None, epilogue=None):
 
     """
 
-    assert template is not None, 'template is required'
-    return TeeTextContainer(table, source=source, template=template,
-                            prologue=prologue, epilogue=epilogue)
+    return teeutext(table, source=source, template=template, prologue=prologue,
+                    epilogue=epilogue, encoding='ascii')
+    # assert template is not None, 'template is required'
+    # return TeeTextContainer(table, source=source, template=template,
+    #                         prologue=prologue, epilogue=epilogue)
 
 
-class TeeTextContainer(RowContainer):
-
-    def __init__(self, table, source=None, template=None, prologue=None,
-                 epilogue=None):
-        self.table = table
-        self.source = source
-        self.template = template
-        self.prologue = prologue
-        self.epilogue = epilogue
-
-    def __iter__(self):
-        source = write_source_from_arg(self.source)
-        with source.open_('w') as f:
-            for row in _teetext(self.table, f, self.prologue, self.template,
-                                self.epilogue):
-                yield row
+# class TeeTextContainer(RowContainer):
+#
+#     def __init__(self, table, source=None, template=None, prologue=None,
+#                  epilogue=None):
+#         self.table = table
+#         self.source = source
+#         self.template = template
+#         self.prologue = prologue
+#         self.epilogue = epilogue
+#
+#     def __iter__(self):
+#         source = write_source_from_arg(self.source)
+#         with source.open_('wb') as f:
+#             for row in _teetext(self.table, f, self.prologue, self.template,
+#                                 self.epilogue):
+#                 yield row
 
 
 def teeutext(table, source=None, encoding='utf-8', template=None,
@@ -319,12 +329,12 @@ class TeeUTextContainer(RowContainer):
         source = write_source_from_arg(self.source)
         prologue = self.prologue
         if prologue is not None:
-            prologue = unicode(prologue)
-        template = unicode(self.template)
+            prologue = text_type(prologue)
+        template = text_type(self.template)
         epilogue = self.epilogue
         if epilogue is not None:
-            epilogue = unicode(epilogue)
-        with source.open_('w') as f:
+            epilogue = text_type(epilogue)
+        with source.open_('wb') as f:
             f = codecs.getwriter(self.encoding)(f)
             for row in _teetext(self.table, f, prologue, template,
                                 epilogue):

@@ -1,5 +1,5 @@
-from __future__ import print_function, absolute_import, division, \
-    unicode_literals
+from __future__ import print_function, absolute_import, division
+
 
 from ast import literal_eval
 from distutils.core import setup

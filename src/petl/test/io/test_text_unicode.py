@@ -6,8 +6,7 @@ from __future__ import absolute_import, print_function, division, \
 
 
 import codecs
-from nose.tools import eq_
-from petl.testutils import ieq
+from petl.testutils import ieq, eq_
 
 
 from petl.io.text import fromutext, toutext
@@ -56,7 +55,8 @@ def test_toutext():
 | {id}
 """
     epilogue = "|}"
-    toutext(tbl, 'tmp/test_toutext.txt', template=template, prologue=prologue, epilogue=epilogue)
+    toutext(tbl, 'tmp/test_toutext.txt', template=template, prologue=prologue,
+            epilogue=epilogue)
 
     # check what it did
     f = codecs.open('tmp/test_toutext.txt', encoding='utf-8', mode='r')

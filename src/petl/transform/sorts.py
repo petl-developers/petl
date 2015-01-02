@@ -3,7 +3,6 @@ from __future__ import absolute_import, print_function, division, \
 
 
 from tempfile import NamedTemporaryFile
-import operator
 import itertools
 from ..compat import pickle, next
 import logging
@@ -13,8 +12,9 @@ info = logger.info
 debug = logger.debug
 
 
+from ..comparison import comparable_itemgetter
 from ..util import RowContainer, asindices, shortlistmergesorted, \
-    heapqmergesorted, comparable_itemgetter
+    heapqmergesorted
 
 
 def sort(table, key=None, reverse=False, buffersize=None, tempdir=None,
@@ -213,6 +213,8 @@ class SortView(RowContainer):
         # now use field indices to construct a _getkey function
         # N.B., this will probably raise an exception on short rows
         getkey = comparable_itemgetter(*indices)
+
+        # TODO support native comparison
 
         # initialise the first chunk
         rows = list(itertools.islice(it, 0, self.buffersize))

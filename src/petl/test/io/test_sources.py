@@ -3,10 +3,9 @@ from __future__ import absolute_import, print_function, division, \
 
 
 import zipfile
-from nose.tools import eq_
 
 
-from petl.testutils import ieq
+from petl.testutils import ieq, eq_
 from petl.io.csv import fromcsv, tocsv, appendcsv, fromtsv, totsv
 from petl.io.sources import StringSource, PopenSource, ZipSource
 
@@ -14,9 +13,9 @@ from petl.io.sources import StringSource, PopenSource, ZipSource
 def test_stringsource():
 
     table1 = (('foo', 'bar'),
-             ('a', '1'),
-             ('b', '2'),
-             ('c', '2'))
+              ('a', '1'),
+              ('b', '2'),
+              ('c', '2'))
 
     # test writing to a string buffer
     ss = StringSource()

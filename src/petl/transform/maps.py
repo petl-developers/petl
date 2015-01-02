@@ -6,7 +6,7 @@ import operator
 from ..compat import OrderedDict, next, string_types
 
 
-from ..util import RowContainer, hybridrows, expr, rowgroupby
+from ..util import RowContainer, expr, rowgroupby, Record
 from .sorts import sort
 
 
@@ -138,7 +138,9 @@ def iterfieldmap(source, mappings, failonerror, errorvalue):
         else:
             raise Exception('invalid mapping', outfld, m)
 
-    for row in hybridrows(flds, it):
+    # wrap rows as records
+    it = (Record(row, flds) for row in it)
+    for row in it:
         outrow = list()
         for outfld in outflds:
             try:
@@ -168,9 +170,8 @@ def composedict(d, srcfld):
     return g
 
 
-def rowmap(table, rowmapper, fields, failonerror=False, missing=None):
-    """
-    Transform rows via an arbitrary function. E.g.::
+def rowmap(table, rowmapper, fields, failonerror=False):
+    """Transform rows via an arbitrary function. E.g.::
 
         >>> from petl import rowmap, look
         >>> look(table1)
@@ -220,30 +221,28 @@ def rowmap(table, rowmapper, fields, failonerror=False, missing=None):
 
     """
 
-    return RowMapView(table, rowmapper, fields, failonerror=failonerror,
-                      missing=missing)
+    return RowMapView(table, rowmapper, fields, failonerror=failonerror)
 
 
 class RowMapView(RowContainer):
 
-    def __init__(self, source, rowmapper, fields, failonerror=False,
-                 missing=None):
+    def __init__(self, source, rowmapper, fields, failonerror=False):
         self.source = source
         self.rowmapper = rowmapper
         self.fields = fields
         self.failonerror = failonerror
-        self.missing = missing
 
     def __iter__(self):
         return iterrowmap(self.source, self.rowmapper, self.fields,
-                          self.failonerror, self.missing)
+                          self.failonerror)
 
 
-def iterrowmap(source, rowmapper, fields, failonerror, missing):
+def iterrowmap(source, rowmapper, fields, failonerror):
     it = iter(source)
     srcflds = next(it)
     yield tuple(fields)
-    for row in hybridrows(srcflds, it, missing):
+    it = (Record(row, srcflds) for row in it)
+    for row in it:
         try:
             outrow = rowmapper(row)
             yield tuple(outrow)
@@ -265,7 +264,7 @@ def recordmap(table, recmapper, fields, failonerror=False):
     return rowmap(table, recmapper, fields, failonerror=failonerror)
 
 
-def rowmapmany(table, rowgenerator, fields, failonerror=False, missing=None):
+def rowmapmany(table, rowgenerator, fields, failonerror=False):
     """
     Map each input row to any number of output rows via an arbitrary function.
     E.g.::
@@ -316,47 +315,48 @@ def rowmapmany(table, rowgenerator, fields, failonerror=False, missing=None):
         | 4            | 'gender'     | 'M'                |
         +--------------+--------------+--------------------+
 
-    The `rowgenerator` function should yield zero or more rows (lists or tuples).
+    The `rowgenerator` function should yield zero or more rows (lists or
+    tuples).
 
     See also the :func:`melt` function.
 
     .. versionchanged:: 0.9
 
-    Hybrid row objects supporting data value access by either position or by
+    Record objects supporting data value access by either position or by
     field name are now passed to the `rowgenerator` function.
 
     """
 
-    return RowMapManyView(table, rowgenerator, fields, failonerror=failonerror,
-                          missing=missing)
+    return RowMapManyView(table, rowgenerator, fields, failonerror=failonerror)
 
 
 class RowMapManyView(RowContainer):
 
-    def __init__(self, source, rowgenerator, fields, failonerror=False,
-                 missing=None):
+    def __init__(self, source, rowgenerator, fields, failonerror=False):
         self.source = source
         self.rowgenerator = rowgenerator
         self.fields = fields
         self.failonerror = failonerror
-        self.missing = missing
 
     def __iter__(self):
         return iterrowmapmany(self.source, self.rowgenerator, self.fields,
-                              self.failonerror, self.missing)
+                              self.failonerror)
 
 
-def iterrowmapmany(source, rowgenerator, fields, failonerror, missing):
+def iterrowmapmany(source, rowgenerator, fields, failonerror):
     it = iter(source)
     srcflds = next(it)
     yield tuple(fields)
-    for row in hybridrows(srcflds, it, missing):
+    it = (Record(row, srcflds) for row in it)
+    for row in it:
         try:
             for outrow in rowgenerator(row):
                 yield tuple(outrow)
         except Exception as e:
             if failonerror:
                 raise e
+            else:
+                pass
 
 
 def recordmapmany(table, rowgenerator, fields, failonerror=False):

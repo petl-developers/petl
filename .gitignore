@@ -12,3 +12,4 @@ sandbox.*
 .ipynb_checkpoints/
 .idea
 tmp/*.*
+.tox/

@@ -3,7 +3,7 @@ from __future__ import absolute_import, print_function, division, \
 
 
 from tempfile import NamedTemporaryFile
-from nose.tools import eq_
+from petl.testutils import eq_
 
 
 from petl.io.html import tohtml

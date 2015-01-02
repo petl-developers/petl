@@ -3,7 +3,7 @@ from __future__ import absolute_import, print_function, division, \
 
 
 from tempfile import NamedTemporaryFile
-import cPickle as pickle
+from petl.compat import pickle
 
 
 from petl.testutils import ieq
@@ -24,7 +24,7 @@ def test_frompickle():
 
     actual = frompickle(f.name)
     ieq(table, actual)
-    ieq(table, actual) # verify can iterate twice
+    ieq(table, actual)  # verify can iterate twice
 
 
 def test_topickle_appendpickle():
@@ -68,4 +68,3 @@ def test_topickle_appendpickle():
                   ('e', 9),
                   ('f', 1))
         ieq(expect, actual)
-

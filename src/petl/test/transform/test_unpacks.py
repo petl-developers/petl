@@ -39,9 +39,9 @@ def test_unpack():
     # check include original
     table5 = unpack(table1, 'bar', ['baz'], include_original=True)
     expect5 = (('foo', 'bar', 'baz'),
-              (1, ['a', 'b'], 'a'),
-              (2, ['c', 'd'], 'c'),
-              (3, ['e', 'f'], 'e'))
+               (1, ['a', 'b'], 'a'),
+               (2, ['c', 'd'], 'c'),
+               (3, ['e', 'f'], 'e'))
     ieq(expect5, table5)
 
     # check specify number to unpack

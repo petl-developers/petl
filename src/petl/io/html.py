@@ -4,7 +4,7 @@ from __future__ import absolute_import, print_function, division, \
 
 # standard library dependencies
 import codecs
-from ..compat import text_type, number_types, next
+from ..compat import text_type, numeric_types, next
 
 
 # internal dependencies
@@ -107,7 +107,7 @@ def _write_row(f, row, lineterminator, representation):
     f.write('<tr>' + lineterminator)
     for v in row:
         r = representation(v)
-        if isinstance(v, number_types) and not isinstance(v, bool):
+        if isinstance(v, numeric_types) and not isinstance(v, bool):
             f.write(("<td style='text-align: right'>%s</td>" % r)
                     + lineterminator)
         else:
@@ -200,7 +200,7 @@ def _write_row_unicode(f, row, lineterminator, representation):
     f.write('<tr>' + lineterminator)
     for v in row:
         r = representation(v)
-        if isinstance(v, number_types) \
+        if isinstance(v, numeric_types) \
                 and not isinstance(v, bool):
             f.write(("<td style='text-align: right'>%s</td>" % r)
                     + lineterminator)

@@ -161,13 +161,12 @@ def test_partition():
 
 
 def test_sort():
-
     table = (('foo', 'bar'),
-            ('C', '2'),
-            ('A', '9'),
-            ('A', '6'),
-            ('F', '1'),
-            ('D', '10'))
+             ('C', '2'),
+             ('A', '9'),
+             ('A', '6'),
+             ('F', '1'),
+             ('D', '10'))
     
     f = NamedTemporaryFile(delete=False)
     p = sort('foo')
@@ -184,13 +183,12 @@ def test_sort():
 
 
 def test_sort_buffered():
-
     table = (('foo', 'bar'),
-            ('C', '2'),
-            ('A', '9'),
-            ('A', '6'),
-            ('F', '1'),
-            ('D', '10'))
+             ('C', '2'),
+             ('A', '9'),
+             ('A', '6'),
+             ('F', '1'),
+             ('D', '10'))
     
     f = NamedTemporaryFile(delete=False)
     p = sort('foo', buffersize=2)
@@ -341,8 +339,8 @@ def test_diff():
                ('B', 3, True))
 
     both = (('foo', 'bar', 'baz'),
-           ('B', 2, False),
-           ('C', 9, True))
+            ('B', 2, False),
+            ('C', 9, True))
 
     f1 = NamedTemporaryFile(delete=False)
     f2 = NamedTemporaryFile(delete=False)
@@ -353,7 +351,8 @@ def test_diff():
     p.pipe(topickle(f3.name))
     p.push(tablea, tableb)
 
-    added, subtracted, common = frompickle(f1.name), frompickle(f2.name), frompickle(f3.name)
+    added, subtracted, common = (frompickle(f1.name), frompickle(f2.name),
+                                 frompickle(f3.name))
     ieq(bminusa, added)
     ieq(aminusb, subtracted)
     ieq(both, common)

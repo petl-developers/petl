@@ -10,7 +10,8 @@ info = logger.info
 debug = logger.debug
 
 
-from ..util import header, RowContainer, Comparable
+from ..comparison import Comparable
+from ..util import header, RowContainer
 from .sorts import sort
 from .basics import cut
 
@@ -344,8 +345,9 @@ def recorddiff(a, b, buffersize=None, tempdir=None, cache=True):
         | 'C'   | 7     | False |
         +-------+-------+-------+
 
-    Convenient shorthand for ``(recordcomplement(b, a), recordcomplement(a, b))``.
-    See also :func:`recordcomplement`.
+    Convenient shorthand for
+    ``(recordcomplement(b, a), recordcomplement(a, b))``. See also
+    :func:`recordcomplement`.
 
     See also the discussion of the `buffersize`, `tempdir` and `cache`
     arguments under the :func:`sort` function.

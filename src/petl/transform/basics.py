@@ -11,11 +11,11 @@ from __future__ import absolute_import, print_function, division, \
 # standard library dependencies
 from itertools import islice, chain
 from collections import deque
-from ..compat import izip, izip_longest, next
+from ..compat import izip, izip_longest, next, count, string_types
 
 
 # internal dependencies
-from ..util import asindices, rowgetter, hybridrows, RowContainer, count
+from ..util import asindices, rowgetter, Record, RowContainer
 
 
 import logging
@@ -26,25 +26,17 @@ debug = logger.debug
 
 
 def cut(table, *args, **kwargs):
-    """
-    Choose and/or re-order columns. E.g.::
+    """Choose and/or re-order fields. E.g.::
 
-        >>> from petl import look, cut    
-        >>> look(table1)
-        +-------+-------+-------+
-        | 'foo' | 'bar' | 'baz' |
-        +=======+=======+=======+
-        | 'A'   | 1     | 2.7   |
-        +-------+-------+-------+
-        | 'B'   | 2     | 3.4   |
-        +-------+-------+-------+
-        | 'B'   | 3     | 7.8   |
-        +-------+-------+-------+
-        | 'D'   | 42    | 9.0   |
-        +-------+-------+-------+
-        | 'E'   | 12    |       |
-        +-------+-------+-------+
-        
+        >>> from petl import look, cut
+        >>> table1 = [
+        ...     ['foo', 'bar', 'baz'],
+        ...     ['A', 1, 2.7],
+        ...     ['B', 2, 3.4],
+        ...     ['B', 3, 7.8],
+        ...     ['D', 42, 9.0],
+        ...     ['E', 12]
+        ... ]
         >>> table2 = cut(table1, 'foo', 'baz')
         >>> look(table2)
         +-------+-------+
@@ -162,25 +154,17 @@ def itercut(source, spec, missing=None):
 
     
 def cutout(table, *args, **kwargs):
-    """
-    Remove fields. E.g.::
+    """Remove fields. E.g.::
 
         >>> from petl import cutout, look
-        >>> look(table1)
-        +-------+-------+-------+
-        | 'foo' | 'bar' | 'baz' |
-        +=======+=======+=======+
-        | 'A'   | 1     | 2.7   |
-        +-------+-------+-------+
-        | 'B'   | 2     | 3.4   |
-        +-------+-------+-------+
-        | 'B'   | 3     | 7.8   |
-        +-------+-------+-------+
-        | 'D'   | 42    | 9.0   |
-        +-------+-------+-------+
-        | 'E'   | 12    |       |
-        +-------+-------+-------+
-        
+        >>> table1 = [
+        ...     ['foo', 'bar', 'baz'],
+        ...     ['A', 1, 2.7],
+        ...     ['B', 2, 3.4],
+        ...     ['B', 3, 7.8],
+        ...     ['D', 42, 9.0],
+        ...     ['E', 12]
+        ... ]
         >>> table2 = cutout(table1, 'bar')
         >>> look(table2)
         +-------+-------+
@@ -219,7 +203,7 @@ class CutOutView(RowContainer):
         
 def itercutout(source, spec, missing=None):
     it = iter(source)
-    spec = tuple(spec) # make sure no-one can change midstream
+    spec = tuple(spec)  # make sure no-one can change midstream
     
     # convert field selection into field indices
     flds = next(it)
@@ -243,125 +227,98 @@ def itercutout(source, spec, missing=None):
 
     
 def cat(*tables, **kwargs):
-    """
-    Concatenate data from two or more tables. E.g.::
+    """Concatenate data from two or more tables. E.g.::
     
         >>> from petl import look, cat
-        >>> look(table1)
-        +-------+-------+
-        | 'foo' | 'bar' |
-        +=======+=======+
-        | 1     | 'A'   |
-        +-------+-------+
-        | 2     | 'B'   |
-        +-------+-------+
-        
-        >>> look(table2)
-        +-------+-------+
-        | 'bar' | 'baz' |
-        +=======+=======+
-        | 'C'   | True  |
-        +-------+-------+
-        | 'D'   | False |
-        +-------+-------+
-        
+        >>> table1 = [
+        ...     ['foo', 'bar'],
+        ...     [1, 'A'],
+        ...     [2, 'B']
+        ... ]
+        >>> table2 = [
+        ...     ['bar', 'baz'],
+        ...     ['C', True],
+        ...     ['D', False]
+        ... ]
         >>> table3 = cat(table1, table2)
         >>> look(table3)
         +-------+-------+-------+
         | 'foo' | 'bar' | 'baz' |
         +=======+=======+=======+
-        | 1     | 'A'   | None  |
+        |     1 | 'A'   | None  |
         +-------+-------+-------+
-        | 2     | 'B'   | None  |
+        |     2 | 'B'   | None  |
         +-------+-------+-------+
         | None  | 'C'   | True  |
         +-------+-------+-------+
         | None  | 'D'   | False |
         +-------+-------+-------+
-        
+
         >>> # can also be used to square up a single table with uneven rows
-        ... look(table4)
-        +-------+-------+--------+------+
-        | 'foo' | 'bar' | 'baz'  |      |
-        +=======+=======+========+======+
-        | 'A'   | 1     | 2      |      |
-        +-------+-------+--------+------+
-        | 'B'   | '2'   | '3.4'  |      |
-        +-------+-------+--------+------+
-        | u'B'  | u'3'  | u'7.8' | True |
-        +-------+-------+--------+------+
-        | 'D'   | 'xyz' | 9.0    |      |
-        +-------+-------+--------+------+
-        | 'E'   | None  |        |      |
-        +-------+-------+--------+------+
-        
-        >>> look(cat(table4))
+        ... table4 = [
+        ...     ['foo', 'bar', 'baz'],
+        ...     ['A', 1, 2],
+        ...     ['B', '2', '3.4'],
+        ...     [u'B', u'3', u'7.8', True],
+        ...     ['D', 'xyz', 9.0],
+        ...     ['E', None]
+        ... ]
+        >>> table5 = cat(table4)
+        >>> look(table5)
         +-------+-------+--------+
         | 'foo' | 'bar' | 'baz'  |
         +=======+=======+========+
-        | 'A'   | 1     | 2      |
+        | 'A'   |     1 |      2 |
         +-------+-------+--------+
         | 'B'   | '2'   | '3.4'  |
         +-------+-------+--------+
         | u'B'  | u'3'  | u'7.8' |
         +-------+-------+--------+
-        | 'D'   | 'xyz' | 9.0    |
+        | 'D'   | 'xyz' |    9.0 |
         +-------+-------+--------+
         | 'E'   | None  | None   |
         +-------+-------+--------+
-        
-        >>> # use the header keyword argument to specify a fixed set of fields 
-        ... look(table5)
-        +-------+-------+
-        | 'bar' | 'foo' |
-        +=======+=======+
-        | 'A'   | 1     |
-        +-------+-------+
-        | 'B'   | 2     |
-        +-------+-------+
-        
-        >>> table6 = cat(table5, header=['A', 'foo', 'B', 'bar', 'C'])
-        >>> look(table6)
+
+        >>> # use the header keyword argument to specify a fixed set of fields
+        ... table6 = [
+        ...     ['bar', 'foo'],
+        ...     ['A', 1],
+        ...     ['B', 2]
+        ... ]
+        >>> table7 = cat(table6, header=['A', 'foo', 'B', 'bar', 'C'])
+        >>> look(table7)
         +------+-------+------+-------+------+
         | 'A'  | 'foo' | 'B'  | 'bar' | 'C'  |
         +======+=======+======+=======+======+
-        | None | 1     | None | 'A'   | None |
+        | None |     1 | None | 'A'   | None |
         +------+-------+------+-------+------+
-        | None | 2     | None | 'B'   | None |
+        | None |     2 | None | 'B'   | None |
         +------+-------+------+-------+------+
-        
+
         >>> # using the header keyword argument with two input tables
-        ... look(table7)
-        +-------+-------+
-        | 'bar' | 'foo' |
-        +=======+=======+
-        | 'A'   | 1     |
-        +-------+-------+
-        | 'B'   | 2     |
-        +-------+-------+
-        
-        >>> look(table8)
-        +-------+-------+
-        | 'bar' | 'baz' |
-        +=======+=======+
-        | 'C'   | True  |
-        +-------+-------+
-        | 'D'   | False |
-        +-------+-------+
-        
-        >>> table9 = cat(table7, table8, header=['A', 'foo', 'B', 'bar', 'C'])
-        >>> look(table9)
+        ... table8 = [
+        ...     ['bar', 'foo'],
+        ...     ['A', 1],
+        ...     ['B', 2]
+        ... ]
+        >>> table9 = [
+        ...     ['bar', 'baz'],
+        ...     ['C', True],
+        ...     ['D', False]
+        ... ]
+        >>> table10 = cat(table8, table9, header=['A', 'foo', 'B', 'bar', 'C'])
+        >>> look(table10)
         +------+-------+------+-------+------+
         | 'A'  | 'foo' | 'B'  | 'bar' | 'C'  |
         +======+=======+======+=======+======+
-        | None | 1     | None | 'A'   | None |
+        | None |     1 | None | 'A'   | None |
         +------+-------+------+-------+------+
-        | None | 2     | None | 'B'   | None |
+        | None |     2 | None | 'B'   | None |
         +------+-------+------+-------+------+
         | None | None  | None | 'C'   | None |
         +------+-------+------+-------+------+
         | None | None  | None | 'D'   | None |
-        +------+-------+------+-------+------+    
+        +------+-------+------+-------+------+
     
     Note that the tables do not need to share exactly the same fields, any 
     missing fields will be padded with `None` or whatever is provided via the 
@@ -390,7 +347,7 @@ class CatView(RowContainer):
         self.sources = sources
         self.missing = missing
         if header is not None:
-            header = tuple(header) # ensure hashable
+            header = tuple(header)  # ensure hashable
         self.header = header
 
     def __iter__(self):
@@ -423,7 +380,8 @@ def itercat(sources, missing, header):
         for row in it:
             try:
                 # should be quickest to do this way
-                yield tuple(row[flds.index(f)] if f in flds else missing for f in outflds)
+                yield tuple(row[flds.index(f)] if f in flds else missing
+                            for f in outflds)
             except IndexError:
                 # handle short rows
                 outrow = [missing] * len(outflds)
@@ -431,52 +389,44 @@ def itercat(sources, missing, header):
                     try:
                         outrow[outflds.index(f)] = row[i]
                     except IndexError:
-                        pass # be relaxed about short rows
+                        pass  # be relaxed about short rows
                 yield tuple(outrow)
 
 
 def addfield(table, field, value=None, index=None, missing=None):
-    """
-    Add a field with a fixed or calculated value. E.g.::
+    """Add a field with a fixed or calculated value. E.g.::
     
         >>> from petl import addfield, look
-        >>> look(table1)
-        +-------+-------+
-        | 'foo' | 'bar' |
-        +=======+=======+
-        | 'M'   | 12    |
-        +-------+-------+
-        | 'F'   | 34    |
-        +-------+-------+
-        | '-'   | 56    |
-        +-------+-------+
-        
+        >>> table1 = [['foo', 'bar'],
+        ...           ['M', 12],
+        ...           ['F', 34],
+        ...           ['-', 56]]
         >>> # using a fixed value
         ... table2 = addfield(table1, 'baz', 42)
         >>> look(table2)
         +-------+-------+-------+
         | 'foo' | 'bar' | 'baz' |
         +=======+=======+=======+
-        | 'M'   | 12    | 42    |
+        | 'M'   |    12 |    42 |
         +-------+-------+-------+
-        | 'F'   | 34    | 42    |
+        | 'F'   |    34 |    42 |
         +-------+-------+-------+
-        | '-'   | 56    | 42    |
+        | '-'   |    56 |    42 |
         +-------+-------+-------+
-        
+
         >>> # calculating the value
         ... table2 = addfield(table1, 'baz', lambda rec: rec['bar'] * 2)
         >>> look(table2)
         +-------+-------+-------+
         | 'foo' | 'bar' | 'baz' |
         +=======+=======+=======+
-        | 'M'   | 12    | 24    |
+        | 'M'   |    12 |    24 |
         +-------+-------+-------+
-        | 'F'   | 34    | 68    |
+        | 'F'   |    34 |    68 |
         +-------+-------+-------+
-        | '-'   | 56    | 112   |
+        | '-'   |    56 |   112 |
         +-------+-------+-------+
-        
+
         >>> # an expression string can also be used via expr
         ... from petl import expr
         >>> table3 = addfield(table1, 'baz', expr('{bar} * 2'))
@@ -484,11 +434,11 @@ def addfield(table, field, value=None, index=None, missing=None):
         +-------+-------+-------+
         | 'foo' | 'bar' | 'baz' |
         +=======+=======+=======+
-        | 'M'   | 12    | 24    |
+        | 'M'   |    12 |    24 |
         +-------+-------+-------+
-        | 'F'   | 34    | 68    |
+        | 'F'   |    34 |    68 |
         +-------+-------+-------+
-        | '-'   | 56    | 112   |
+        | '-'   |    56 |   112 |
         +-------+-------+-------+
         
     .. versionchanged:: 0.10
@@ -527,9 +477,10 @@ def iteraddfield(source, field, value, index):
     outflds.insert(index, field)
     yield tuple(outflds)
 
-    # hybridise rows if using calculated value
     if callable(value):
-        for row in hybridrows(flds, it):
+        # wrap rows as records if using calculated value
+        it = (Record(row, flds) for row in it)
+        for row in it:
             outrow = list(row)
             v = value(row)
             outrow.insert(index, v)
@@ -542,57 +493,47 @@ def iteraddfield(source, field, value, index):
         
     
 def rowslice(table, *sliceargs):
-    """
-    Choose a subsequence of data rows. E.g.::
+    """Choose a subsequence of data rows. E.g.::
     
         >>> from petl import rowslice, look
-        >>> look(table1)
-        +-------+-------+
-        | 'foo' | 'bar' |
-        +=======+=======+
-        | 'a'   | 1     |
-        +-------+-------+
-        | 'b'   | 2     |
-        +-------+-------+
-        | 'c'   | 5     |
-        +-------+-------+
-        | 'd'   | 7     |
-        +-------+-------+
-        | 'f'   | 42    |
-        +-------+-------+
-        
+        >>> table1 = [['foo', 'bar'],
+        ...           ['a', 1],
+        ...           ['b', 2],
+        ...           ['c', 5],
+        ...           ['d', 7],
+        ...           ['f', 42]]
         >>> table2 = rowslice(table1, 2)
         >>> look(table2)
         +-------+-------+
         | 'foo' | 'bar' |
         +=======+=======+
-        | 'a'   | 1     |
+        | 'a'   |     1 |
         +-------+-------+
-        | 'b'   | 2     |
+        | 'b'   |     2 |
         +-------+-------+
-        
+
         >>> table3 = rowslice(table1, 1, 4)
         >>> look(table3)
         +-------+-------+
         | 'foo' | 'bar' |
         +=======+=======+
-        | 'b'   | 2     |
+        | 'b'   |     2 |
         +-------+-------+
-        | 'c'   | 5     |
+        | 'c'   |     5 |
         +-------+-------+
-        | 'd'   | 7     |
+        | 'd'   |     7 |
         +-------+-------+
-        
+
         >>> table4 = rowslice(table1, 0, 5, 2)
         >>> look(table4)
         +-------+-------+
         | 'foo' | 'bar' |
         +=======+=======+
-        | 'a'   | 1     |
+        | 'a'   |     1 |
         +-------+-------+
-        | 'c'   | 5     |
+        | 'c'   |     5 |
         +-------+-------+
-        | 'f'   | 42    |
+        | 'f'   |    42 |
         +-------+-------+
         
     .. versionchanged:: 0.3
@@ -620,50 +561,38 @@ class RowSliceView(RowContainer):
 
 def iterrowslice(source, sliceargs):    
     it = iter(source)
-    yield tuple(next(it)) # fields
+    yield tuple(next(it))  # fields
     for row in islice(it, *sliceargs):
         yield tuple(row)
 
 
 def head(table, n=5):
-    """
-    Choose the first n data rows. E.g.::
+    """Choose the first n data rows. E.g.::
 
         >>> from petl import head, look
-        >>> look(table1)
-        +-------+-------+
-        | 'foo' | 'bar' |
-        +=======+=======+
-        | 'a'   | 1     |
-        +-------+-------+
-        | 'b'   | 2     |
-        +-------+-------+
-        | 'c'   | 5     |
-        +-------+-------+
-        | 'd'   | 7     |
-        +-------+-------+
-        | 'f'   | 42    |
-        +-------+-------+
-        | 'f'   | 3     |
-        +-------+-------+
-        | 'h'   | 90    |
-        +-------+-------+
-        
+        >>> table1 = [['foo', 'bar'],
+        ...           ['a', 1],
+        ...           ['b', 2],
+        ...           ['c', 5],
+        ...           ['d', 7],
+        ...           ['f', 42],
+        ...           ['f', 3],
+        ...           ['h', 90]]
         >>> table2 = head(table1, 4)
-        >>> look(table2)    
+        >>> look(table2)
         +-------+-------+
         | 'foo' | 'bar' |
         +=======+=======+
-        | 'a'   | 1     |
+        | 'a'   |     1 |
         +-------+-------+
-        | 'b'   | 2     |
+        | 'b'   |     2 |
         +-------+-------+
-        | 'c'   | 5     |
+        | 'c'   |     5 |
         +-------+-------+
-        | 'd'   | 7     |
+        | 'd'   |     7 |
         +-------+-------+
 
-    Syntactic sugar, equivalent to ``rowslice(table, n)``.
+    Equivalent to ``rowslice(table, n)``.
     
     """
 
@@ -671,49 +600,32 @@ def head(table, n=5):
 
         
 def tail(table, n=5):
-    """
-    Choose the last n data rows. 
-    
-    E.g.::
+    """Choose the last n data rows. E.g.::
 
         >>> from petl import tail, look
-        >>> look(table1)
-        +-------+-------+
-        | 'foo' | 'bar' |
-        +=======+=======+
-        | 'a'   | 1     |
-        +-------+-------+
-        | 'b'   | 2     |
-        +-------+-------+
-        | 'c'   | 5     |
-        +-------+-------+
-        | 'd'   | 7     |
-        +-------+-------+
-        | 'f'   | 42    |
-        +-------+-------+
-        | 'f'   | 3     |
-        +-------+-------+
-        | 'h'   | 90    |
-        +-------+-------+
-        | 'k'   | 12    |
-        +-------+-------+
-        | 'l'   | 77    |
-        +-------+-------+
-        | 'q'   | 2     |
-        +-------+-------+
-        
+        >>> table1 = [['foo', 'bar'],
+        ...           ['a', 1],
+        ...           ['b', 2],
+        ...           ['c', 5],
+        ...           ['d', 7],
+        ...           ['f', 42],
+        ...           ['f', 3],
+        ...           ['h', 90],
+        ...           ['k', 12],
+        ...           ['l', 77],
+        ...           ['q', 2]]
         >>> table2 = tail(table1, 4)
-        >>> look(table2)    
+        >>> look(table2)
         +-------+-------+
         | 'foo' | 'bar' |
         +=======+=======+
-        | 'h'   | 90    |
+        | 'h'   |    90 |
         +-------+-------+
-        | 'k'   | 12    |
+        | 'k'   |    12 |
         +-------+-------+
-        | 'l'   | 77    |
+        | 'l'   |    77 |
         +-------+-------+
-        | 'q'   | 2     |
+        | 'q'   |     2 |
         +-------+-------+
         
     See also :func:`head`, :func:`rowslice`.
@@ -735,7 +647,7 @@ class TailView(RowContainer):
 
 def itertail(source, n):
     it = iter(source)
-    yield tuple(next(it)) # fields
+    yield tuple(next(it))  # fields
     cache = deque()
     for row in it:
         cache.append(row)
@@ -746,34 +658,24 @@ def itertail(source, n):
 
 
 def skipcomments(table, prefix):
-    """
-    Skip any row where the first value is a string and starts with 
+    """Skip any row where the first value is a string and starts with
     `prefix`. E.g.::
     
         >>> from petl import skipcomments, look
-        >>> look(table1)
-        +---------+-------+-------+
-        | '##aaa' | 'bbb' | 'ccc' |
-        +=========+=======+=======+
-        | '##mmm' |       |       |
-        +---------+-------+-------+
-        | '#foo'  | 'bar' |       |
-        +---------+-------+-------+
-        | '##nnn' | 1     |       |
-        +---------+-------+-------+
-        | 'a'     | 1     |       |
-        +---------+-------+-------+
-        | 'b'     | 2     |       |
-        +---------+-------+-------+
-        
+        >>> table1 = [['##aaa', 'bbb', 'ccc'],
+        ...           ['##mmm',],
+        ...           ['#foo', 'bar'],
+        ...           ['##nnn', 1],
+        ...           ['a', 1],
+        ...           ['b', 2]]
         >>> table2 = skipcomments(table1, '##')
         >>> look(table2)
         +--------+-------+
         | '#foo' | 'bar' |
         +========+=======+
-        | 'a'    | 1     |
+        | 'a'    |     1 |
         +--------+-------+
-        | 'b'    | 2     |
+        | 'b'    |     2 |
         +--------+-------+
         
     .. versionadded:: 0.4
@@ -794,12 +696,14 @@ class SkipCommentsView(RowContainer):
 
 
 def iterskipcomments(source, prefix):
-    return (row for row in source if len(row) > 0 and not(isinstance(row[0], basestring) and row[0].startswith(prefix)))
+    return (row for row in source
+            if (len(row) > 0
+                and not(isinstance(row[0], string_types)
+                and row[0].startswith(prefix))))
 
 
 def movefield(table, field, index):
-    """
-    Move a field to a new position.
+    """Move a field to a new position.
 
     .. versionadded:: 0.24
 
@@ -836,44 +740,31 @@ class MoveFieldView(RowContainer):
                 yield transform(row)
             except IndexError:
                 # row is short, let's be kind and fill in any missing fields
-                yield tuple(row[i] if i < len(row) else self.missing for i in indices)
+                yield tuple(row[i] if i < len(row) else self.missing
+                            for i in indices)
 
 
 def annex(*tables, **kwargs):
-    """
-    Join two or more tables by row order. E.g.::
+    """Join two or more tables by row order. E.g.::
 
         >>> from petl import annex, look
-        >>> look(table1)
-        +-------+-------+
-        | 'foo' | 'bar' |
-        +=======+=======+
-        | 'A'   | 9     |
-        +-------+-------+
-        | 'C'   | 2     |
-        +-------+-------+
-        | 'F'   | 1     |
-        +-------+-------+
-        
-        >>> look(table2)
-        +-------+-------+
-        | 'foo' | 'baz' |
-        +=======+=======+
-        | 'B'   | 3     |
-        +-------+-------+
-        | 'D'   | 10    |
-        +-------+-------+
-        
+        >>> table1 = [['foo', 'bar'],
+        ...           ['A', 9],
+        ...           ['C', 2],
+        ...           ['F', 1]]
+        >>> table2 = [['foo', 'baz'],
+        ...           ['B', 3],
+        ...           ['D', 10]]
         >>> table3 = annex(table1, table2)
-        >>> look(table3)    
+        >>> look(table3)
         +-------+-------+-------+-------+
         | 'foo' | 'bar' | 'foo' | 'baz' |
         +=======+=======+=======+=======+
-        | 'A'   | 9     | 'B'   | 3     |
+        | 'A'   |     9 | 'B'   |     3 |
         +-------+-------+-------+-------+
-        | 'C'   | 2     | 'D'   | 10    |
+        | 'C'   |     2 | 'D'   |    10 |
         +-------+-------+-------+-------+
-        | 'F'   | 1     | None  | None  |
+        | 'F'   |     1 | None  | None  |
         +-------+-------+-------+-------+
 
     .. versionadded:: 0.10
@@ -902,45 +793,37 @@ def iterannex(tables, missing):
         outrow = list()
         for i, row in enumerate(rows):
             lh = len(headers[i])
-            if row is None: # handle uneven length tables
+            if row is None:  # handle uneven length tables
                 row = [missing] * len(headers[i])
             else:
                 lr = len(row)
-                if lr < lh: # handle short rows
+                if lr < lh:  # handle short rows
                     row = list(row)
                     row.extend([missing] * (lh-lr))
-                elif lr > lh: # handle long rows
+                elif lr > lh:  # handle long rows
                     row = row[:lh]
             outrow.extend(row)
         yield tuple(outrow)
           
     
 def addrownumbers(table, start=1, step=1):
-    """
-    Add a field of row numbers. E.g.::
+    """Add a field of row numbers. E.g.::
 
         >>> from petl import addrownumbers, look
-        >>> look(table1)
-        +-------+-------+
-        | 'foo' | 'bar' |
-        +=======+=======+
-        | 'A'   | 9     |
-        +-------+-------+
-        | 'C'   | 2     |
-        +-------+-------+
-        | 'F'   | 1     |
-        +-------+-------+
-        
+        >>> table1 = [['foo', 'bar'],
+        ...           ['A', 9],
+        ...           ['C', 2],
+        ...           ['F', 1]]
         >>> table2 = addrownumbers(table1)
         >>> look(table2)
         +-------+-------+-------+
         | 'row' | 'foo' | 'bar' |
         +=======+=======+=======+
-        | 1     | 'A'   | 9     |
+        |     1 | 'A'   |     9 |
         +-------+-------+-------+
-        | 2     | 'C'   | 2     |
+        |     2 | 'C'   |     2 |
         +-------+-------+-------+
-        | 3     | 'F'   | 1     |
+        |     3 | 'F'   |     1 |
         +-------+-------+-------+
 
     .. versionadded:: 0.10
@@ -974,28 +857,21 @@ def iteraddrownumbers(table, start, step):
         
 
 def addcolumn(table, field, col, index=None, missing=None):
-    """
-    Add a column of data to the table. E.g.::
+    """Add a column of data to the table. E.g.::
     
         >>> from petl import addcolumn, look
-        >>> look(table1)
-        +-------+-------+
-        | 'foo' | 'bar' |
-        +=======+=======+
-        | 'A'   | 1     |
-        +-------+-------+
-        | 'B'   | 2     |
-        +-------+-------+
-        
+        >>> table1 = [['foo', 'bar'],
+        ...           ['A', 1],
+        ...           ['B', 2]]
         >>> col = [True, False]
         >>> table2 = addcolumn(table1, 'baz', col)
         >>> look(table2)
         +-------+-------+-------+
         | 'foo' | 'bar' | 'baz' |
         +=======+=======+=======+
-        | 'A'   | 1     | True  |
+        | 'A'   |     1 | True  |
         +-------+-------+-------+
-        | 'B'   | 2     | False |
+        | 'B'   |     2 | False |
         +-------+-------+-------+
     
     .. versionadded:: 0.10
@@ -1047,25 +923,16 @@ class TransformError(Exception):
 
 
 def addfieldusingcontext(table, field, query):
-    """
-    Like :func:`addfield` but the `query` function is passed the previous,
+    """Like :func:`addfield` but the `query` function is passed the previous,
     current and next rows, so values may be calculated based on data in adjacent
-    rows.
+    rows. E.g.::
 
         >>> from petl import look, addfieldusingcontext
-        >>> look(table1)
-        +-------+-------+
-        | 'foo' | 'bar' |
-        +=======+=======+
-        | 'A'   |     1 |
-        +-------+-------+
-        | 'B'   |     4 |
-        +-------+-------+
-        | 'C'   |     5 |
-        +-------+-------+
-        | 'D'   |     9 |
-        +-------+-------+
-
+        >>> table1 = [['foo', 'bar'],
+        ...           ['A', 1],
+        ...           ['B', 4],
+        ...           ['C', 5],
+        ...           ['D', 9]]
         >>> def upstream(prv, cur, nxt):
         ...     if prv is None:
         ...         return None
@@ -1115,7 +982,7 @@ def iteraddfieldusingcontext(table, field, query):
     it = iter(table)
     fields = tuple(next(it))
     yield fields + (field,)
-    it = hybridrows(fields, it)
+    it = (Record(row, fields) for row in it)
     prv = None
     cur = next(it)
     for nxt in it:
@@ -1126,4 +993,3 @@ def iteraddfieldusingcontext(table, field, query):
     # handle last row
     v = query(prv, cur, None)
     yield tuple(cur) + (v,)
-

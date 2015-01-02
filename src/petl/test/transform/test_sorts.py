@@ -3,11 +3,10 @@ from __future__ import absolute_import, print_function, division, \
 
 
 from datetime import datetime
-from nose.tools import eq_
 from petl.compat import next
 
 
-from petl.testutils import ieq
+from petl.testutils import ieq, eq_
 from petl.util import nrows
 from petl.transform.basics import cat
 from petl.transform.sorts import sort, mergesort
@@ -16,11 +15,11 @@ from petl.transform.sorts import sort, mergesort
 def test_sort_1():
 
     table = (('foo', 'bar'),
-            ('C', '2'),
-            ('A', '9'),
-            ('A', '6'),
-            ('F', '1'),
-            ('D', '10'))
+             ('C', '2'),
+             ('A', '9'),
+             ('A', '6'),
+             ('F', '1'),
+             ('D', '10'))
 
     result = sort(table, 'foo')
     expectation = (('foo', 'bar'),
@@ -35,11 +34,11 @@ def test_sort_1():
 def test_sort_2():
 
     table = (('foo', 'bar'),
-            ('C', '2'),
-            ('A', '9'),
-            ('A', '6'),
-            ('F', '1'),
-            ('D', '10'))
+             ('C', '2'),
+             ('A', '9'),
+             ('A', '6'),
+             ('F', '1'),
+             ('D', '10'))
 
     result = sort(table, key=('foo', 'bar'))
     expectation = (('foo', 'bar'),
@@ -63,11 +62,11 @@ def test_sort_2():
 def test_sort_3():
 
     table = (('foo', 'bar'),
-            ('C', '2'),
-            ('A', '9'),
-            ('A', '6'),
-            ('F', '1'),
-            ('D', '10'))
+             ('C', '2'),
+             ('A', '9'),
+             ('A', '6'),
+             ('F', '1'),
+             ('D', '10'))
 
     result = sort(table, 'bar')
     expectation = (('foo', 'bar'),
@@ -82,11 +81,11 @@ def test_sort_3():
 def test_sort_4():
 
     table = (('foo', 'bar'),
-            ('C', 2),
-            ('A', 9),
-            ('A', 6),
-            ('F', 1),
-            ('D', 10))
+             ('C', 2),
+             ('A', 9),
+             ('A', 6),
+             ('F', 1),
+             ('D', 10))
 
     result = sort(table, 'bar')
     expectation = (('foo', 'bar'),
@@ -101,11 +100,11 @@ def test_sort_4():
 def test_sort_5():
 
     table = (('foo', 'bar'),
-            (2.3, 2),
-            (1.2, 9),
-            (2.3, 6),
-            (3.2, 1),
-            (1.2, 10))
+             (2.3, 2),
+             (1.2, 9),
+             (2.3, 6),
+             (3.2, 1),
+             (1.2, 10))
 
     expectation = (('foo', 'bar'),
                    (1.2, 9),
@@ -128,11 +127,11 @@ def test_sort_5():
 def test_sort_6():
 
     table = (('foo', 'bar'),
-            (2.3, 2),
-            (1.2, 9),
-            (2.3, 6),
-            (3.2, 1),
-            (1.2, 10))
+             (2.3, 2),
+             (1.2, 9),
+             (2.3, 6),
+             (3.2, 1),
+             (1.2, 10))
 
     expectation = (('foo', 'bar'),
                    (3.2, 1),
@@ -163,7 +162,7 @@ def test_sort_buffered():
                    ('D', 10))
     result = sort(table, 'bar')
     ieq(expectation, result)
-    result = sort(table, 'bar', buffersize=2)  #    print list(result)
+    result = sort(table, 'bar', buffersize=2)
     ieq(expectation, result)
 
     # sort in reverse
@@ -253,11 +252,11 @@ def test_sort_empty():
 def test_sort_none():
 
     table = (('foo', 'bar'),
-            ('C', 2),
-            ('A', 9),
-            ('A', None),
-            ('F', 1),
-            ('D', 10))
+             ('C', 2),
+             ('A', 9),
+             ('A', None),
+             ('F', 1),
+             ('D', 10))
 
     result = sort(table, 'bar')
     print(list(result))
@@ -272,11 +271,11 @@ def test_sort_none():
     dt = datetime.now().replace
 
     table = (('foo', 'bar'),
-            ('C', dt(hour=5)),
-            ('A', dt(hour=1)),
-            ('A', None),
-            ('F', dt(hour=9)),
-            ('D', dt(hour=17)))
+             ('C', dt(hour=5)),
+             ('A', dt(hour=1)),
+             ('A', None),
+             ('F', dt(hour=9)),
+             ('D', dt(hour=17)))
 
     result = sort(table, 'bar')
     expectation = (('foo', 'bar'),
@@ -286,6 +285,9 @@ def test_sort_none():
                    ('F', dt(hour=9)),
                    ('D', dt(hour=17)))
     ieq(expectation, result)
+
+
+# TODO test sort with native comparison
 
 
 def test_mergesort_1():
@@ -339,7 +341,8 @@ def test_mergesort_2():
     ieq(expect, actual)
     ieq(expect, actual)
 
-    actual = mergesort(sort(table1, key='foo'), sort(table2, key='foo'), key='foo', presorted=True)
+    actual = mergesort(sort(table1, key='foo'), sort(table2, key='foo'),
+                       key='foo', presorted=True)
     ieq(expect, actual)
     ieq(expect, actual)
 

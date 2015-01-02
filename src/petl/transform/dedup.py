@@ -11,63 +11,52 @@ from .sorts import sort
 
 def duplicates(table, key=None, presorted=False, buffersize=None, tempdir=None, 
                cache=True):
-    """
-    Select rows with duplicate values under a given key (or duplicate
+    """Select rows with duplicate values under a given key (or duplicate
     rows where no key is given). E.g.::
 
-        >>> from petl import duplicates, look    
-        >>> look(table1)
-        +-------+-------+-------+
-        | 'foo' | 'bar' | 'baz' |
-        +=======+=======+=======+
-        | 'A'   | 1     | 2.0   |
-        +-------+-------+-------+
-        | 'B'   | 2     | 3.4   |
-        +-------+-------+-------+
-        | 'D'   | 6     | 9.3   |
-        +-------+-------+-------+
-        | 'B'   | 3     | 7.8   |
-        +-------+-------+-------+
-        | 'B'   | 2     | 12.3  |
-        +-------+-------+-------+
-        | 'E'   | None  | 1.3   |
-        +-------+-------+-------+
-        | 'D'   | 4     | 14.5  |
-        +-------+-------+-------+
-        
+        >>> from petl import duplicates, look
+        >>> table1 = [
+        ...     ['foo', 'bar', 'baz'],
+        ...     ['A', 1, 2.0],
+        ...     ['B', 2, 3.4],
+        ...     ['D', 6, 9.3],
+        ...     ['B', 3, 7.8],
+        ...     ['B', 2, 12.3],
+        ...     ['E', None, 1.3],
+        ...     ['D', 4, 14.5]
+        ... ]
         >>> table2 = duplicates(table1, 'foo')
         >>> look(table2)
         +-------+-------+-------+
         | 'foo' | 'bar' | 'baz' |
         +=======+=======+=======+
-        | 'B'   | 2     | 3.4   |
+        | 'B'   |     2 |   3.4 |
         +-------+-------+-------+
-        | 'B'   | 3     | 7.8   |
+        | 'B'   |     3 |   7.8 |
         +-------+-------+-------+
-        | 'B'   | 2     | 12.3  |
+        | 'B'   |     2 |  12.3 |
         +-------+-------+-------+
-        | 'D'   | 6     | 9.3   |
+        | 'D'   |     6 |   9.3 |
         +-------+-------+-------+
-        | 'D'   | 4     | 14.5  |
+        | 'D'   |     4 |  14.5 |
         +-------+-------+-------+
-        
+
         >>> # compound keys are supported
         ... table3 = duplicates(table1, key=['foo', 'bar'])
         >>> look(table3)
         +-------+-------+-------+
         | 'foo' | 'bar' | 'baz' |
         +=======+=======+=======+
-        | 'B'   | 2     | 3.4   |
+        | 'B'   |     2 |   3.4 |
         +-------+-------+-------+
-        | 'B'   | 2     | 12.3  |
+        | 'B'   |     2 |  12.3 |
         +-------+-------+-------+
         
     If `presorted` is True, it is assumed that the data are already sorted by
     the given key, and the `buffersize`, `tempdir` and `cache` arguments are 
-    ignored. Otherwise, the data 
-    are sorted, see also the discussion of the `buffersize`, `tempdir` and 
-    `cache` arguments under the 
-    :func:`sort` function.
+    ignored. Otherwise, the data are sorted, see also the discussion of the
+    `buffersize`, `tempdir` and `cache` arguments under the :func:`sort`
+    function.
     
     See also :func:`unique` and :func:`distinct`.
     
@@ -133,42 +122,31 @@ def iterduplicates(source, key):
     
 def unique(table, key=None, presorted=False, buffersize=None, tempdir=None,
            cache=True):
-    """
-    Select rows with unique values under a given key (or unique rows
+    """Select rows with unique values under a given key (or unique rows
     if no key is given). E.g.::
 
         >>> from petl import unique, look
-        >>> look(table1)
-        +-------+-------+--------+
-        | 'foo' | 'bar' | 'baz'  |
-        +=======+=======+========+
-        | 'A'   | 1     | 2      |
-        +-------+-------+--------+
-        | 'B'   | '2'   | '3.4'  |
-        +-------+-------+--------+
-        | 'D'   | 'xyz' | 9.0    |
-        +-------+-------+--------+
-        | 'B'   | u'3'  | u'7.8' |
-        +-------+-------+--------+
-        | 'B'   | '2'   | 42     |
-        +-------+-------+--------+
-        | 'E'   | None  | None   |
-        +-------+-------+--------+
-        | 'D'   | 4     | 12.3   |
-        +-------+-------+--------+
-        | 'F'   | 7     | 2.3    |
-        +-------+-------+--------+
-        
+        >>> table1 = [
+        ...     ['foo', 'bar', 'baz'],
+        ...     ['A', 1, 2],
+        ...     ['B', '2', '3.4'],
+        ...     ['D', 'xyz', 9.0],
+        ...     ['B', u'3', u'7.8'],
+        ...     ['B', '2', 42],
+        ...     ['E', None, None],
+        ...     ['D', 4, 12.3],
+        ...     ['F', 7, 2.3]
+        ... ]
         >>> table2 = unique(table1, 'foo')
         >>> look(table2)
         +-------+-------+-------+
         | 'foo' | 'bar' | 'baz' |
         +=======+=======+=======+
-        | 'A'   | 1     | 2     |
+        | 'A'   |     1 |     2 |
         +-------+-------+-------+
         | 'E'   | None  | None  |
         +-------+-------+-------+
-        | 'F'   | 7     | 2.3   |
+        | 'F'   |     7 |   2.3 |
         +-------+-------+-------+
         
     If `presorted` is True, it is assumed that the data are already sorted by
@@ -242,42 +220,32 @@ def iterunique(source, key):
     
 def conflicts(table, key, missing=None, include=None, exclude=None, 
               presorted=False, buffersize=None, tempdir=None, cache=True):
-    """
-    Select rows with the same key value but differing in some other field.
+    """Select rows with the same key value but differing in some other field.
     E.g.::
 
-        >>> from petl import conflicts, look    
-        >>> look(table1)
-        +-------+-------+-------+
-        | 'foo' | 'bar' | 'baz' |
-        +=======+=======+=======+
-        | 'A'   | 1     | 2.7   |
-        +-------+-------+-------+
-        | 'B'   | 2     | None  |
-        +-------+-------+-------+
-        | 'D'   | 3     | 9.4   |
-        +-------+-------+-------+
-        | 'B'   | None  | 7.8   |
-        +-------+-------+-------+
-        | 'E'   | None  |       |
-        +-------+-------+-------+
-        | 'D'   | 3     | 12.3  |
-        +-------+-------+-------+
-        | 'A'   | 2     | None  |
-        +-------+-------+-------+
-        
+        >>> from petl import conflicts, look
+        >>> table1 = [
+        ...     ['foo', 'bar', 'baz'],
+        ...     ['A', 1, 2.7],
+        ...     ['B', 2, None],
+        ...     ['D', 3, 9.4],
+        ...     ['B', None, 7.8],
+        ...     ['E', None],
+        ...     ['D', 3, 12.3],
+        ...     ['A', 2, None]
+        ... ]
         >>> table2 = conflicts(table1, 'foo')
         >>> look(table2)
         +-------+-------+-------+
         | 'foo' | 'bar' | 'baz' |
         +=======+=======+=======+
-        | 'A'   | 1     | 2.7   |
+        | 'A'   |     1 |   2.7 |
         +-------+-------+-------+
-        | 'A'   | 2     | None  |
+        | 'A'   |     2 | None  |
         +-------+-------+-------+
-        | 'D'   | 3     | 9.4   |
+        | 'D'   |     3 |   9.4 |
         +-------+-------+-------+
-        | 'D'   | 3     | 12.3  |
+        | 'D'   |     3 |  12.3 |
         +-------+-------+-------+
         
     Missing values are not considered conflicts. By default, `None` is treated
@@ -295,11 +263,6 @@ def conflicts(table, key, missing=None, include=None, exclude=None,
     are sorted, see also the discussion of the `buffersize`, `tempdir` and
     `cache` arguments under the
     :func:`sort` function.
-    
-    .. versionchanged:: 0.8
-    
-    Added the `include` and `exclude` keyword arguments. The `exclude` keyword 
-    argument replaces the `ignore` keyword argument in previous versions.
     
     """
     
@@ -387,18 +350,15 @@ def distinct(table, key=None, count=None, presorted=False, buffersize=None,
     Return only distinct rows in the table. See also :func:`duplicates` and
     :func:`unique`.
 
-    .. versionadded:: 0.12
-
-    .. versionchanged:: 0.25
-
-    The `count` keyword argument has been added. If this argument is not
-    None, it will be used as the name for an additional field, and the values
-    of the field will be the number of duplicate rows.
+    If the `count` argument is not None, it will be used as the name for an
+    additional field, and the values of the field will be the number of
+    duplicate rows.
 
     If the `key` keyword argument is passed, the comparison is done on the
     given key instead of the full row
 
     """
+
     return DistinctView(table, key=key, count=count, presorted=presorted,
                         buffersize=buffersize, tempdir=tempdir, cache=cache)
 

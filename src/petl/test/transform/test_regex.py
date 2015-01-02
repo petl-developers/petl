@@ -2,11 +2,10 @@ from __future__ import absolute_import, print_function, division, \
     unicode_literals
 
 
-from nose.tools import eq_
 from petl.compat import next
 
 
-from petl.testutils import ieq
+from petl.testutils import ieq, eq_
 from petl.transform.regex import capture, split, search, searchcomplement
 from petl.transform.basics import TransformError
 
@@ -14,10 +13,10 @@ from petl.transform.basics import TransformError
 def test_capture():
 
     table = (('id', 'variable', 'value'),
-            ('1', 'A1', '12'),
-            ('2', 'A2', '15'),
-            ('3', 'B1', '18'),
-            ('4', 'C12', '19'))
+             ('1', 'A1', '12'),
+             ('2', 'A2', '15'),
+             ('3', 'B1', '18'),
+             ('4', 'C12', '19'))
 
     expectation = (('id', 'value', 'treat', 'time'),
                    ('1', '12', 'A', '1'),
@@ -173,6 +172,7 @@ def test_search():
                ('mango', 42, 'I like them'))
     ieq(expect3, table3)
     ieq(expect3, table3)
+
 
 def test_searchcomplement():
 

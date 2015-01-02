@@ -6,7 +6,7 @@ from nose.tools import eq_
 
 
 from petl.testutils import ieq
-from petl.util import Comparable
+from petl.comparison import Comparable
 from petl.transform.selects import select, selectin, selectcontains, \
     rowselect, rowlenselect, selectre, selectusingcontext, facet, rangefacet
 

@@ -4,12 +4,10 @@ from __future__ import absolute_import, print_function, division, \
 
 import itertools
 import operator
-import math
-from ..compat import OrderedDict, next, string_types, xrange, reduce
+from ..compat import OrderedDict, next, string_types, reduce
 
 
-from ..util import RowContainer, iterpeek, rowgroupby, rowgroupbybin, \
-    asindices, hybridrows, rowitemgetter, count, Comparable
+from ..util import RowContainer, iterpeek, rowgroupby
 from .sorts import sort, mergesort
 from .basics import cut
 from .dedup import distinct

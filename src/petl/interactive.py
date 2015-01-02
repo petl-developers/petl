@@ -22,7 +22,7 @@ debug = logger.debug
 
 from .util import RowContainer
 import petl.fluent
-from .io import tohtml, touhtml, StringSource
+from .io import StringSource
 
 
 petl = sys.modules['petl']

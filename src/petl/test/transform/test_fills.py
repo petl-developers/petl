@@ -100,5 +100,3 @@ def test_fillleft():
               ('c', 'c', .72))
     ieq(expect, actual)
     ieq(expect, actual)
-
-

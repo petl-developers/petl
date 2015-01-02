@@ -6,7 +6,7 @@ from __future__ import absolute_import, print_function, division, \
 
 
 import codecs
-from nose.tools import eq_
+from petl.testutils import eq_
 
 
 from petl.io.html import touhtml

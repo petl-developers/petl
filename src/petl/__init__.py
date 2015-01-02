@@ -6,14 +6,12 @@ The `petl` module.
 
 from __future__ import absolute_import, print_function, division
 
-
-from petl.util import header, fieldnames, data, records, rowcount, look, see, \
+from petl.util import header, fieldnames, data, records, look, see, \
     itervalues, values, iterdata, valuecounter, valuecounts, \
-    valueset, isunique, lookup, lookupone, recordlookup, recordlookupone, \
+    isunique, lookup, lookupone, recordlookup, recordlookupone, \
     typecounter, typecounts, typeset, parsecounter, parsecounts, \
     stats, rowlengths, DuplicateKeyError, datetimeparser, dateparser, \
-    timeparser, boolparser, \
-    expr, limits, strjoin, valuecount, lookall, dataslice, parsenumber, \
+    timeparser, boolparser, expr, limits, strjoin, valuecount, lookall, \
     stringpatterns, stringpatterncounter, randomtable, dummytable, \
     diffheaders, diffvalues, columns, facetcolumns, heapqmergesorted, \
     shortlistmergesorted, progress, clock, isordered, rowgroupby, nrows, \
@@ -26,7 +24,7 @@ from petl.io import *
 from petl.transform import *
 
 
-__version__ = VERSION = '0.27-SNAPSHOT'
+__version__ = VERSION = '1.0a1.dev0'
 
 
 def lenstats(table, field):

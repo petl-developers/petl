@@ -7,7 +7,7 @@ import re
 from ..compat import OrderedDict, next, xrange, string_types
 
 
-from ..util import asindices, expr, RowContainer, hybridrows, values, \
+from ..util import asindices, expr, RowContainer, values, Record, \
     itervalues, limits
 
 
@@ -139,7 +139,8 @@ def iterrowselect(source, where, missing, complement):
     it = iter(source)
     flds = next(it)
     yield tuple(flds)
-    for row in hybridrows(flds, it, missing):  # convert to hybrid row/record
+    it = (Record(row, flds, missing=missing) for row in it)
+    for row in it:
         if where(row) != complement:  # XOR
             yield tuple(row)  # need to convert back to tuple?
 
@@ -588,7 +589,7 @@ def iterselectusingcontext(table, query):
     it = iter(table)
     fields = tuple(next(it))
     yield fields
-    it = hybridrows(fields, it)
+    it = (Record(row, fields) for row in it)
     prv = None
     cur = next(it)
     for nxt in it:

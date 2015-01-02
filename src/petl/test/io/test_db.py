@@ -10,10 +10,9 @@ from __future__ import absolute_import, print_function, division, \
 
 import sqlite3
 from tempfile import NamedTemporaryFile
-from nose.tools import eq_
 
 
-from petl.testutils import ieq
+from petl.testutils import ieq, eq_
 from petl.io.db import fromdb, todb, appenddb
 
 

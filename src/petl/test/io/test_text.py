@@ -5,10 +5,9 @@ from __future__ import absolute_import, print_function, division, \
 from tempfile import NamedTemporaryFile
 import gzip
 import os
-from nose.tools import eq_
 
 
-from petl.testutils import ieq
+from petl.testutils import ieq, eq_
 from petl.io.text import fromtext, totext
 
 
@@ -16,10 +15,10 @@ def test_fromtext():
 
     # initial data
     f = NamedTemporaryFile(delete=False)
-    f.write('foo\tbar\n')
-    f.write('a\t1\n')
-    f.write('b\t2\n')
-    f.write('c\t3\n')
+    f.write(b'foo\tbar\n')
+    f.write(b'a\t1\n')
+    f.write(b'b\t2\n')
+    f.write(b'c\t3\n')
     f.close()
 
     actual = fromtext(f.name)
@@ -55,7 +54,7 @@ def test_totext():
     # check what it did
     with open(f.name, 'rb') as o:
         actual = o.read()
-        expect = """{| class="wikitable"
+        expect = b"""{| class="wikitable"
 |-
 ! foo
 ! bar
@@ -81,10 +80,10 @@ def test_fromtext_gz():
     os.rename(f.name, fn)
     f = gzip.open(fn, 'wb')
     try:
-        f.write('foo\tbar\n')
-        f.write('a\t1\n')
-        f.write('b\t2\n')
-        f.write('c\t3\n')
+        f.write(b'foo\tbar\n')
+        f.write(b'a\t1\n')
+        f.write(b'b\t2\n')
+        f.write(b'c\t3\n')
     finally:
         f.close()
 
@@ -95,7 +94,7 @@ def test_fromtext_gz():
               ('b\t2',),
               ('c\t3',))
     ieq(expect, actual)
-    ieq(expect, actual) # verify can iterate twice
+    ieq(expect, actual)  # verify can iterate twice
 
 
 def test_totext_gz():
@@ -125,7 +124,7 @@ def test_totext_gz():
     o = gzip.open(fn, 'rb')
     try:
         actual = o.read()
-        expect = """{| class="wikitable"
+        expect = b"""{| class="wikitable"
 |-
 ! foo
 ! bar

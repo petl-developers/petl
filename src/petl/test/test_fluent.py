@@ -9,13 +9,12 @@ from __future__ import absolute_import, print_function, division, \
 
 from tempfile import NamedTemporaryFile
 import csv
-from nose.tools import eq_
 from petl.compat import PY3
 
 
 import petl
 import petl.fluent as etl
-from petl.testutils import ieq
+from petl.testutils import ieq, eq_
 
 
 def test_basics():
