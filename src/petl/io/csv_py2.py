@@ -29,22 +29,20 @@ class CSVView(RowContainer):
                 yield tuple(row)
 
 
-def tocsv_impl(table, source=None, dialect='excel', write_header=True,
-               **kwargs):
-    writecsv(table, source=source, mode='wb', write_header=write_header,
-             dialect=dialect, **kwargs)
+def tocsv_impl(table, source, write_header=True, **csvargs):
+    _writecsv(table, source=source, mode='wb', write_header=write_header,
+              **csvargs)
 
 
-def appendcsv_impl(table, source=None, dialect='excel', write_header=False,
-              **kwargs):
-    writecsv(table, source=source, mode='ab', write_header=write_header,
-             dialect=dialect, **kwargs)
+def appendcsv_impl(table, source, write_header=False, **csvargs):
+    _writecsv(table, source=source, mode='ab', write_header=write_header,
+              **csvargs)
 
 
-def writecsv(table, source, mode, write_header, **kwargs):
+def _writecsv(table, source, mode, write_header, **csvargs):
     rows = table if write_header else data(table)
     with source.open_(mode) as csvfile:
-        writer = csv.writer(csvfile, **kwargs)
+        writer = csv.writer(csvfile, **csvargs)
         for row in rows:
             writer.writerow(row)
 
@@ -100,7 +98,7 @@ class UnicodeWriter:
         self.encoder = codecs.getincrementalencoder(encoding)()
 
     def writerow(self, row):
-        self.writer.writerow([s.encode("utf-8") for s in row])
+        self.writer.writerow([unicode(s).encode("utf-8") for s in row])
         # Fetch UTF-8 output from the queue ...
         data = self.queue.getvalue()
         data = data.decode("utf-8")
@@ -133,59 +131,58 @@ class UnicodeCSVView(RowContainer):
                 yield tuple(row)
 
 
-def toucsv_impl(table, source=None, dialect='excel', encoding='utf-8',
-                write_header=True, **kwargs):
-    writeucsv(table, source=source, mode='wb', encoding=encoding,
-              write_header=write_header, dialect=dialect, **kwargs)
+def toucsv_impl(table, source, encoding='utf-8', write_header=True,
+                **csvargs):
+    _writeucsv(table, source=source, mode='wb', encoding=encoding,
+               write_header=write_header, **csvargs)
 
 
-def appenducsv_impl(table, source=None, dialect='excel', encoding='utf-8',
-                    write_header=False, **kwargs):
-    writeucsv(table, source=source, mode='ab', encoding=encoding,
-              write_header=write_header, dialect=dialect, **kwargs)
+def appenducsv_impl(table, source, encoding='utf-8', write_header=False,
+                    **csvargs):
+    _writeucsv(table, source=source, mode='ab', encoding=encoding,
+               write_header=write_header, **csvargs)
 
 
-def writeucsv(table, source, mode, write_header, encoding, **kwargs):
+def _writeucsv(table, source, mode, write_header, encoding, **csvargs):
     rows = table if write_header else data(table)
     with source.open_(mode) as f:
-        writer = UnicodeWriter(f, encoding=encoding, **kwargs)
+        writer = UnicodeWriter(f, encoding=encoding, **csvargs)
         for row in rows:
             writer.writerow(row)
 
 
+def teecsv_impl(table, source, **csvargs):
+    return TeeCSVContainer(table, source=source, **csvargs)
+
+
 class TeeCSVContainer(RowContainer):
-    def __init__(self, table, source=None, dialect='excel',
-                 write_header=True, **kwargs):
+    def __init__(self, table, source=None, **csvargs):
         self.table = table
         self.source = source
-        self.dialect = dialect
-        self.write_header = write_header
-        self.kwargs = kwargs
+        self.csvargs = csvargs
 
     def __iter__(self):
-        rows = self.table if self.write_header else data(self.table)
         with self.source.open_('wb') as f:
-            writer = csv.writer(f, dialect=self.dialect, **self.kwargs)
-            for row in rows:
+            writer = csv.writer(f, **self.csvargs)
+            for row in self.table:
                 writer.writerow(row)
                 yield row
 
 
+def teeucsv_impl(table, source, encoding='utf-8', **csvargs):
+    return TeeUCSVContainer(table, source=source, encoding=encoding, **csvargs)
+
+
 class TeeUCSVContainer(RowContainer):
-    def __init__(self, table, source=None, dialect='excel', encoding='utf-8',
-                 write_header=True, **kwargs):
+    def __init__(self, table, source=None, encoding='utf-8', **csvargs):
         self.table = table
         self.source = source
-        self.dialect = dialect
         self.encoding = encoding
-        self.write_header = write_header
-        self.kwargs = kwargs
+        self.csvargs = csvargs
 
     def __iter__(self):
-        rows = self.table if self.write_header else data(self.table)
         with self.source.open_('wb') as f:
-            writer = UnicodeWriter(f, dialect=self.dialect,
-                                   encoding=self.encoding, **self.kwargs)
-            for row in rows:
+            writer = UnicodeWriter(f, encoding=self.encoding, **self.csvargs)
+            for row in self.table:
                 writer.writerow(row)
                 yield row

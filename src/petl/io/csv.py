@@ -11,10 +11,10 @@ from .sources import read_source_from_arg, write_source_from_arg
 
 if PY2:
     from .csv_py2 import fromcsv_impl, fromucsv_impl, tocsv_impl, \
-        toucsv_impl, appendcsv_impl, appenducsv_impl
+        toucsv_impl, appendcsv_impl, appenducsv_impl, teecsv_impl, teeucsv_impl
 else:
     from .csv_py3 import fromcsv_impl, fromucsv_impl, tocsv_impl, \
-        toucsv_impl, appendcsv_impl, appenducsv_impl
+        toucsv_impl, appendcsv_impl, appenducsv_impl, teecsv_impl, teeucsv_impl
 
 
 def fromcsv(source=None, dialect='excel', **kwargs):
@@ -55,7 +55,7 @@ def fromucsv(source=None, encoding='utf-8', dialect='excel', **kwargs):
 
     """
     source = read_source_from_arg(source)
-    fromucsv_impl(source, encoding=encoding, dialect=dialect, **kwargs)
+    return fromucsv_impl(source, encoding=encoding, dialect=dialect, **kwargs)
 
 
 def fromutsv(source=None, encoding='utf-8', dialect='excel-tab', **kwargs):
@@ -157,9 +157,8 @@ def appenducsv(table, source=None, dialect='excel', encoding='utf-8',
 
 
 def toutsv(table, source=None, dialect='excel-tab', **kwargs):
-    """
-    Convenience function, as :func:`toucsv` but with different default dialect
-    (tab delimited).
+    """Convenience function, as :func:`toucsv` but with different default
+    dialect (tab delimited).
 
     .. versionadded:: 0.19
 
@@ -169,8 +168,7 @@ def toutsv(table, source=None, dialect='excel-tab', **kwargs):
 
 
 def appendutsv(table, source=None, dialect='excel-tab', **kwargs):
-    """
-    Convenience function, as :func:`appenducsv` but with different default
+    """Convenience function, as :func:`appenducsv` but with different default
     dialect (tab delimited).
 
     .. versionadded:: 0.19
@@ -180,110 +178,44 @@ def appendutsv(table, source=None, dialect='excel-tab', **kwargs):
     return appenducsv(table, source=source, dialect=dialect, **kwargs)
 
 
-# # def teecsv(table, source=None, dialect='excel', write_header=True, **kwargs):
-# #     """
-# #     Return a table that writes rows to a CSV file as they are iterated over.
-# #
-# #     .. versionadded:: 0.25
-# #
-# #     """
-# #
-# #     return teeucsv(table, source=source, dialect=dialect,
-# #                    write_header=write_header, encoding='ascii', **kwargs)
-# #     # return TeeCSVContainer(table, source=source, dialect=dialect,
-# #     #                        write_header=write_header, **kwargs)
-# #
-# #
-# # # class TeeCSVContainer(RowContainer):
-# # #     def __init__(self, table, source=None, dialect='excel',
-# # #                  write_header=True, **kwargs):
-# # #         self.table = table
-# # #         self.source = source
-# # #         self.dialect = dialect
-# # #         self.write_header = write_header
-# # #         self.kwargs = kwargs
-# # #
-# # #     def __iter__(self):
-# # #         source = write_source_from_arg(self.source)
-# # #         with source.open_('wb') as f:
-# # #             writer = csv.writer(f, dialect=self.dialect, **self.kwargs)
-# # #             # User specified no header
-# # #             if not self.write_header:
-# # #                 for row in data(self.table):
-# # #                     writer.writerow(row)
-# # #                     yield row
-# # #             # Default behavior, write the header
-# # #             else:
-# # #                 for row in self.table:
-# # #                     writer.writerow(row)
-# # #                     yield row
-# #
-# #
-# # def teetsv(table, source=None, dialect='excel-tab', write_header=True,
-# #            **kwargs):
-# #     """
-# #     Convenience function, as :func:`teecsv` but with different default dialect
-# #     (tab delimited).
-# #
-# #     .. versionadded:: 0.25
-# #
-# #     """
-# #
-# #     return teecsv(table, source=source, dialect=dialect,
-# #                   write_header=write_header, **kwargs)
-# #
-# #
-# # def teeucsv(table, source=None, dialect='excel', encoding='utf-8',
-# #             write_header=True, **kwargs):
-# #     """
-# #     Return a table that writes rows to a Unicode CSV file as they are iterated
-# #     over.
-# #
-# #     .. versionadded:: 0.25
-# #
-# #     """
-# #
-# #     return TeeUCSVContainer(table, source=source, dialect=dialect,
-# #                             encoding=encoding, write_header=write_header,
-# #                             **kwargs)
-# #
-# #
-# # class TeeUCSVContainer(RowContainer):
-# #     def __init__(self, table, source=None, dialect='excel', encoding='utf-8',
-# #                  write_header=True, **kwargs):
-# #         self.table = table
-# #         self.source = source
-# #         self.dialect = dialect
-# #         self.encoding = encoding
-# #         self.write_header = write_header
-# #         self.kwargs = kwargs
-# #
-# #     def __iter__(self):
-# #         source = write_source_from_arg(self.source)
-# #         with source.open_('wb') as f:
-# #             writer = UnicodeWriter(f, dialect=self.dialect,
-# #                                    encoding=self.encoding, **self.kwargs)
-# #             # User specified no header
-# #             if not self.write_header:
-# #                 for row in data(self.table):
-# #                     writer.writerow(row)
-# #                     yield row
-# #             # Default behavior, write the header
-# #             else:
-# #                 for row in self.table:
-# #                     writer.writerow(row)
-# #                     yield row
-# #
-# #
-# # def teeutsv(table, source=None, dialect='excel-tab',
-# #             encoding='utf-8', write_header=True, **kwargs):
-# #     """
-# #     Convenience function, as :func:`teeucsv` but with different default dialect
-# #     (tab delimited).
-# #
-# #     .. versionadded:: 0.25
-# #
-# #     """
-# #
-# #     return teeucsv(table, source=source, dialect=dialect, encoding=encoding,
-# #                    write_header=write_header, **kwargs)
+def teecsv(table, source=None, dialect='excel', **kwargs):
+    """Return a table that writes rows to a CSV file as they are iterated over.
+
+    .. versionadded:: 0.25
+
+    """
+
+    source = write_source_from_arg(source)
+    return teecsv_impl(table, source=source, dialect=dialect, **kwargs)
+
+
+def teetsv(table, source=None, dialect='excel-tab', **kwargs):
+    """Convenience function, as :func:`teecsv` but with different default
+    dialect (tab delimited).
+
+    """
+
+    return teecsv(table, source=source, dialect=dialect, **kwargs)
+
+
+def teeucsv(table, source=None, dialect='excel', encoding='utf-8',
+            **kwargs):
+    """Return a table that writes rows to a Unicode CSV file as they are iterated
+    over.
+
+    """
+
+    source = write_source_from_arg(source)
+    return teecsv_impl(table, source=source, encoding=encoding,
+                       dialect=dialect, **kwargs)
+
+
+def teeutsv(table, source=None, dialect='excel-tab',
+            encoding='utf-8', **kwargs):
+    """Convenience function, as :func:`teeucsv` but with different default
+    dialect (tab delimited).
+
+    """
+
+    return teeucsv(table, source=source, dialect=dialect, encoding=encoding,
+                   **kwargs)

@@ -65,3 +65,29 @@ def _writecsv(table, source, mode, write_header, encoding, **csvargs):
         writer = csv.writer(csvfile, **csvargs)
         for row in rows:
             writer.writerow(row)
+
+
+def teecsv_impl(table, source, **csvargs):
+    return TeeCSVContainer(table, source=source, encoding='ascii', **csvargs)
+
+
+def teeucsv_impl(table, source, encoding='utf-8', **csvargs):
+    return TeeCSVContainer(table, source=source, encoding=encoding, **csvargs)
+
+
+class TeeCSVContainer(RowContainer):
+    def __init__(self, table, source=None, encoding='utf-8', **csvargs):
+        self.table = table
+        self.source = source
+        self.encoding = encoding
+        self.csvargs = csvargs
+
+    def __iter__(self):
+        with self.source.open_('wb') as buffer:
+            # wrap buffer for text IO
+            csvfile = io.TextIOWrapper(buffer, encoding=self.encoding,
+                                       newline='', write_through=True)
+            writer = csv.writer(csvfile, **self.csvargs)
+            for row in self.table:
+                writer.writerow(row)
+                yield row
