@@ -3,10 +3,9 @@ from __future__ import absolute_import, print_function, division
 from petl.io.sources import FileSource, GzipSource, BZ2Source, ZipSource, \
     StdinSource, StdoutSource, URLSource, StringSource, PopenSource
 
-from petl.io.csv import fromcsv, fromtsv, tocsv, appendcsv#, totsv,
-# appendtsv, \
-    # fromucsv, toucsv, appenducsv, fromutsv, toutsv, appendutsv, teecsv, \
-    # teetsv, teeucsv, teeutsv
+from petl.io.csv import fromcsv, fromtsv, fromucsv, fromutsv, tocsv, \
+    appendcsv, totsv, appendtsv, toucsv, appenducsv, toutsv, appendutsv
+    #, teecsv, teetsv, teeucsv, teeutsv
 
 from petl.io.pickle import frompickle, topickle, appendpickle, teepickle
 
