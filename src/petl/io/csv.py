@@ -8,7 +8,6 @@ from ..compat import PY2
 
 # internal dependencies
 from .sources import read_source_from_arg, write_source_from_arg
-
 if PY2:
     from .csv_py2 import fromcsv_impl, fromucsv_impl, tocsv_impl, \
         toucsv_impl, appendcsv_impl, appenducsv_impl, teecsv_impl, teeucsv_impl
@@ -18,8 +17,7 @@ else:
 
 
 def fromcsv(source=None, dialect='excel', **kwargs):
-    """Wrapper for the standard :func:`csv.reader` function. Returns a table
-    providing access to the data in the given delimited file. E.g.::
+    """Extract a table from a delimited file. E.g.::
 
         >>> TODO
 
@@ -30,6 +28,9 @@ def fromcsv(source=None, dialect='excel', **kwargs):
 
     Note that all data values are strings, and any intended numeric values will
     need to be converted, see also :func:`convert`.
+
+    Note that under Python 3 this function is equivalent to :func:`fromucsv`
+    with ``encoding='ascii'``.
 
     """
 
@@ -160,8 +161,6 @@ def toutsv(table, source=None, dialect='excel-tab', **kwargs):
     """Convenience function, as :func:`toucsv` but with different default
     dialect (tab delimited).
 
-    .. versionadded:: 0.19
-
     """
 
     return toucsv(table, source=source, dialect=dialect, **kwargs)
@@ -171,8 +170,6 @@ def appendutsv(table, source=None, dialect='excel-tab', **kwargs):
     """Convenience function, as :func:`appenducsv` but with different default
     dialect (tab delimited).
 
-    .. versionadded:: 0.19
-
     """
 
     return appenducsv(table, source=source, dialect=dialect, **kwargs)
@@ -180,8 +177,6 @@ def appendutsv(table, source=None, dialect='excel-tab', **kwargs):
 
 def teecsv(table, source=None, dialect='excel', **kwargs):
     """Return a table that writes rows to a CSV file as they are iterated over.
-
-    .. versionadded:: 0.25
 
     """
 
@@ -206,8 +201,8 @@ def teeucsv(table, source=None, dialect='excel', encoding='utf-8',
     """
 
     source = write_source_from_arg(source)
-    return teecsv_impl(table, source=source, encoding=encoding,
-                       dialect=dialect, **kwargs)
+    return teeucsv_impl(table, source=source, encoding=encoding,
+                        dialect=dialect, **kwargs)
 
 
 def teeutsv(table, source=None, dialect='excel-tab',
@@ -219,3 +214,6 @@ def teeutsv(table, source=None, dialect='excel-tab',
 
     return teeucsv(table, source=source, dialect=dialect, encoding=encoding,
                    **kwargs)
+
+
+# TODO support write_header argument in tees

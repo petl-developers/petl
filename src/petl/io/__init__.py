@@ -4,8 +4,8 @@ from petl.io.sources import FileSource, GzipSource, BZ2Source, ZipSource, \
     StdinSource, StdoutSource, URLSource, StringSource, PopenSource
 
 from petl.io.csv import fromcsv, fromtsv, fromucsv, fromutsv, tocsv, \
-    appendcsv, totsv, appendtsv, toucsv, appenducsv, toutsv, appendutsv
-    #, teecsv, teetsv, teeucsv, teeutsv
+    appendcsv, totsv, appendtsv, toucsv, appenducsv, toutsv, appendutsv, \
+    teecsv, teetsv, teeucsv, teeutsv
 
 from petl.io.pickle import frompickle, topickle, appendpickle, teepickle
 
