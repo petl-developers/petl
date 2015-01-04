@@ -4,7 +4,8 @@ from __future__ import absolute_import, print_function, division, \
 
 # standard library dependencies
 import codecs
-from ..compat import text_type, next
+import io
+from ..compat import next, PY2
 
 
 # internal dependencies
@@ -13,8 +14,7 @@ from .sources import read_source_from_arg, write_source_from_arg
 
 
 def fromtext(source=None, header=('lines',), strip=None):
-    """
-    Construct a table from lines in the given text file. E.g.::
+    """Extract a table from lines in the given text file. E.g.::
 
         >>> # example data
         ... with open('test.txt', 'w') as f:
@@ -51,74 +51,90 @@ def fromtext(source=None, header=('lines',), strip=None):
         | 'c'   | '3'   |
         +-------+-------+
 
-    Supports transparent reading from URLs, ``.gz`` and ``.bz2`` files.
-
-    .. versionchanged:: 0.4
-
-    The strip() function is called on each line, which by default will remove
-    leading and trailing whitespace, including the end-of-line character - use
-    the `strip` keyword argument to specify alternative characters to strip.
+    Note that the strip() function is called on each line, which by default
+    will remove leading and trailing whitespace, including the end-of-line
+    character - use the `strip` keyword argument to specify alternative
+    characters to strip.
 
     """
 
-    return fromutext(source=source, header=header, encoding='ascii',
-                     strip=strip)
-    # source = read_source_from_arg(source)
-    # return TextView(source, header, strip=strip)
-
-
-# class TextView(RowContainer):
-#
-#     def __init__(self, source, header=('lines',), strip=None):
-#         self.source = source
-#         self.header = header
-#         self.strip = strip
-#
-#     def __iter__(self):
-#         with self.source.open_('rb') as f:
-#             if self.header is not None:
-#                 yield tuple(self.header)
-#             s = self.strip
-#             for line in f:
-#                 yield (line.strip(s),)
+    source = read_source_from_arg(source)
+    return TextView(source, header=header, strip=strip)
 
 
 def fromutext(source=None, header=(u'lines',), encoding='utf-8', strip=None):
-    """
-    Construct a table from lines in the given text file via the given encoding.
-    Like :func:`fromtext` but accepts an additional ``encoding`` argument
-    which should be one of the Python supported encodings. See also
-    :mod:`codecs`.
-
-    .. versionadded:: 0.19
+    """Extract a table from lines in the given text file using the given
+    encoding. Like :func:`fromtext` but accepts an additional ``encoding``
+    argument which should be one of the Python supported encodings.
 
     """
+
     source = read_source_from_arg(source)
-    return UnicodeTextView(source, header, encoding=encoding, strip=strip)
+    return UnicodeTextView(source, header=header, encoding=encoding,
+                           strip=strip)
 
 
-class UnicodeTextView(RowContainer):
+if PY2:
 
-    def __init__(self, source, header=(u'lines',), encoding='utf-8',
-                 strip=None):
-        self.source = source
-        self.header = header
-        self.encoding = encoding
-        self.strip = strip
+    class TextView(RowContainer):
 
-    def __iter__(self):
-        with self.source.open_('rb') as f:
-            f = codecs.getreader(self.encoding)(f)
-            if self.header is not None:
-                yield tuple(self.header)
-            s = self.strip
-            for line in f:
-                yield (line.strip(s),)
+        def __init__(self, source, header=('lines',), strip=None):
+            self.source = source
+            self.header = header
+            self.strip = strip
+
+        def __iter__(self):
+            with self.source.open_('rU') as f:
+                if self.header is not None:
+                    yield tuple(self.header)
+                s = self.strip
+                for line in f:
+                    yield (line.strip(s),)
+
+    class UnicodeTextView(RowContainer):
+
+        def __init__(self, source, header=(u'lines',), encoding='utf-8',
+                     strip=None):
+            self.source = source
+            self.header = header
+            self.encoding = encoding
+            self.strip = strip
+
+        def __iter__(self):
+            with self.source.open_('rb') as f:
+                f = codecs.getreader(self.encoding)(f)
+                if self.header is not None:
+                    yield tuple(self.header)
+                s = self.strip
+                for line in f:
+                    yield (line.strip(s),)
+
+
+else:
+
+    class TextView(RowContainer):
+
+        def __init__(self, source, encoding='ascii', header=('lines',),
+                     strip=None):
+            self.source = source
+            self.encoding = encoding
+            self.header = header
+            self.strip = strip
+
+        def __iter__(self):
+            with self.source.open_('rb') as buffer:
+                f = io.TextIOWrapper(buffer, encoding=self.encoding, newline='')
+                if self.header is not None:
+                    yield tuple(self.header)
+                s = self.strip
+                for line in f:
+                    yield (line.strip(s),)
+
+    UnicodeTextView = TextView
 
 
 def totext(table, source=None, template=None, prologue=None, epilogue=None):
-    """
-    Write the table to a text file. E.g.::
+    """Write the table to a text file. E.g.::
 
         >>> from petl import totext, look
         >>> look(table)
@@ -166,74 +182,74 @@ def totext(table, source=None, template=None, prologue=None, epilogue=None):
     The `template` will be used to format each row via
     `str.format <http://docs.python.org/library/stdtypes.html#str.format>`_.
 
-    Supports transparent writing to ``.gz`` and ``.bz2`` files.
-
     """
 
-    toutext(table, source=source, template=template, prologue=prologue,
-            epilogue=epilogue, encoding='ascii')
-    # assert template is not None, 'template is required'
-    # source = write_source_from_arg(source)
-    # with source.open_('wb') as f:
-    #     _writetext(table, f, prologue, template, epilogue)
+    assert template is not None, 'template is required'
+    source = write_source_from_arg(source)
+    with source.open_('wb') as f:
+        if PY2:
+            # write direct to buffer
+            pass
+        else:
+            # wrap buffer for text encoding
+            f = io.TextIOWrapper(f, encoding='ascii', newline='',
+                                 write_through=True)
+        _writetext(table, f, prologue, template, epilogue)
 
 
 def appendtext(table, source=None, template=None, prologue=None, epilogue=None):
-    """
-    Append the table to a text file.
+    """Append the table to a text file.
 
-    .. versionadded:: 0.19
     """
 
-    appendutext(table, source=source, template=template, prologue=prologue,
-                epilogue=epilogue, encoding='ascii')
-    # assert template is not None, 'template is required'
-    # source = write_source_from_arg(source)
-    # with source.open_('ab') as f:
-    #     _writetext(table, f, prologue, template, epilogue)
+    assert template is not None, 'template is required'
+    source = write_source_from_arg(source)
+    with source.open_('ab') as f:
+        if PY2:
+            # write direct to buffer
+            pass
+        else:
+            # wrap buffer for text encoding
+            f = io.TextIOWrapper(f, encoding='ascii', newline='',
+                                 write_through=True)
+        _writetext(table, f, prologue, template, epilogue)
 
 
 def toutext(table, source=None, encoding='utf-8', template=None, prologue=None,
             epilogue=None):
-    """
-    Write the table to a text file via the given encoding. Like :func:`totext`
-    but accepts an additional ``encoding`` argument which should be one of
-    the Python supported encodings. See also :mod:`codecs`.
+    """Write the table to a text file via the given encoding. Like
+    :func:`totext` but accepts an additional ``encoding`` argument which
+    should be one of the Python supported encodings.
 
-    .. versionadded:: 0.19
     """
 
     assert template is not None, 'template is required'
-    if prologue is not None:
-        prologue = text_type(prologue)
-    template = text_type(template)
-    if epilogue is not None:
-        epilogue = text_type(epilogue)
     source = write_source_from_arg(source)
     with source.open_('wb') as f:
-        f = codecs.getwriter(encoding)(f)
+        if PY2:
+            f = codecs.getwriter(encoding)(f)
+        else:
+            f = io.TextIOWrapper(f, encoding=encoding, newline='',
+                                 write_through=True)
         _writetext(table, f, prologue, template, epilogue)
 
 
 def appendutext(table, source=None, encoding='utf-8', template=None,
                 prologue=None, epilogue=None):
-    """
-    Append the table to a text file via the given encoding. Like
+    """Append the table to a text file via the given encoding. Like
     :func:`appendtext` but accepts an additional ``encoding`` argument which
-    should be one of the Python supported encodings. See also :mod:`codecs`.
+    should be one of the Python supported encodings.
 
-    .. versionadded:: 0.19
     """
 
     assert template is not None, 'template is required'
-    if prologue is not None:
-        prologue = text_type(prologue)
-    template = text_type(template)
-    if epilogue is not None:
-        epilogue = text_type(epilogue)
     source = write_source_from_arg(source)
     with source.open_('ab') as f:
-        f = codecs.getwriter(encoding)(f)
+        if PY2:
+            f = codecs.getwriter(encoding)(f)
+        else:
+            f = io.TextIOWrapper(f, encoding=encoding, newline='',
+                                 write_through=True)
         _writetext(table, f, prologue, template, epilogue)
 
 
@@ -266,45 +282,44 @@ def _teetext(table, f, prologue, template, epilogue):
 
 
 def teetext(table, source=None, template=None, prologue=None, epilogue=None):
-    """
-    Return a table that writes rows to a text file as they are iterated over.
-
-    .. versionadded:: 0.25
+    """Return a table that writes rows to a text file as they are iterated over.
 
     """
 
-    return teeutext(table, source=source, template=template, prologue=prologue,
-                    epilogue=epilogue, encoding='ascii')
-    # assert template is not None, 'template is required'
-    # return TeeTextContainer(table, source=source, template=template,
-    #                         prologue=prologue, epilogue=epilogue)
+    assert template is not None, 'template is required'
+    return TeeTextContainer(table, source=source, template=template,
+                            prologue=prologue, epilogue=epilogue)
 
 
-# class TeeTextContainer(RowContainer):
-#
-#     def __init__(self, table, source=None, template=None, prologue=None,
-#                  epilogue=None):
-#         self.table = table
-#         self.source = source
-#         self.template = template
-#         self.prologue = prologue
-#         self.epilogue = epilogue
-#
-#     def __iter__(self):
-#         source = write_source_from_arg(self.source)
-#         with source.open_('wb') as f:
-#             for row in _teetext(self.table, f, self.prologue, self.template,
-#                                 self.epilogue):
-#                 yield row
+class TeeTextContainer(RowContainer):
+
+    def __init__(self, table, source=None, template=None, prologue=None,
+                 epilogue=None):
+        self.table = table
+        self.source = source
+        self.template = template
+        self.prologue = prologue
+        self.epilogue = epilogue
+
+    def __iter__(self):
+        source = write_source_from_arg(self.source)
+        with source.open_('wb') as f:
+            if PY2:
+                # write direct to buffer
+                pass
+            else:
+                # wrap buffer for text encoding
+                f = io.TextIOWrapper(f, encoding='ascii', newline='',
+                                     write_through=True)
+            for row in _teetext(self.table, f, self.prologue, self.template,
+                                self.epilogue):
+                yield row
 
 
 def teeutext(table, source=None, encoding='utf-8', template=None,
              prologue=None, epilogue=None):
-    """
-    Return a table that writes rows to a Unicode text file as they are
+    """Return a table that writes rows to a Unicode text file as they are
     iterated over.
-
-    .. versionadded:: 0.25
 
     """
 
@@ -327,15 +342,12 @@ class TeeUTextContainer(RowContainer):
 
     def __iter__(self):
         source = write_source_from_arg(self.source)
-        prologue = self.prologue
-        if prologue is not None:
-            prologue = text_type(prologue)
-        template = text_type(self.template)
-        epilogue = self.epilogue
-        if epilogue is not None:
-            epilogue = text_type(epilogue)
         with source.open_('wb') as f:
-            f = codecs.getwriter(self.encoding)(f)
-            for row in _teetext(self.table, f, prologue, template,
-                                epilogue):
+            if PY2:
+                f = codecs.getwriter(self.encoding)(f)
+            else:
+                f = io.TextIOWrapper(f, encoding=self.encoding, newline='',
+                                     write_through=True)
+            for row in _teetext(self.table, f, self.prologue, self.template,
+                                self.epilogue):
                 yield row
