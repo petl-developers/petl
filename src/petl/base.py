@@ -13,8 +13,8 @@ from itertools import islice, chain, cycle, product,\
     starmap, groupby, tee
 
 
-from .compat import imap, izip, izip_longest, ifilter, ifilterfalse, Counter,\
-    OrderedDict, compress, combinations_with_replacement, reduce, next
+from petl.compat import imap, izip, izip_longest, ifilter, ifilterfalse, \
+    Counter, OrderedDict, compress, combinations_with_replacement, reduce, next
 
 
 class IterContainer(object):

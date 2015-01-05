@@ -4,10 +4,11 @@ from __future__ import absolute_import, print_function, division, \
 
 import operator
 import re
-from ..compat import OrderedDict, next, xrange, string_types
+from petl.compat import next, string_types
+from petl.comparison import Comparable
 
 
-from ..util import asindices, expr, RowContainer, values, Record, \
+from petl.util import asindices, expr, RowContainer, values, Record, \
     itervalues, limits
 
 
@@ -65,8 +66,6 @@ def select(table, *args, **kwargs):
         | 'a'   | 2     | 88.2  |
         +-------+-------+-------+
 
-    .. versionchanged:: 0.4
-
     The complement of the selection can be returned (i.e., the query can be
     inverted) by providing `complement=True` as a keyword argument.
 
@@ -92,36 +91,6 @@ def select(table, *args, **kwargs):
         return FieldSelectView(table, field, where, complement=complement)
 
 
-def recordselect(table, where, missing=None, complement=False):
-    """
-    Select rows matching a condition. The `where` argument should be a function
-    accepting a record (row as dictionary of values indexed by field name) as
-    argument and returning True or False.
-
-    .. deprecated:: 0.9
-
-    Use :func:`select` instead.
-
-    """
-
-    return rowselect(table, where, missing=missing, complement=complement)
-
-
-def rowselect(table, where, missing=None, complement=False):
-    """
-    Select rows matching a condition. The `where` argument should be a function
-    accepting a hybrid row object (supports accessing values either by
-    position or by field name) as argument and returning True or False.
-
-    .. deprecated:: 0.10
-
-    Use :func:`select` instead, it supports the same signature.
-
-    """
-
-    return RowSelectView(table, where, missing=missing, complement=complement)
-
-
 class RowSelectView(RowContainer):
 
     def __init__(self, source, where, missing=None, complement=False):
@@ -133,45 +102,6 @@ class RowSelectView(RowContainer):
     def __iter__(self):
         return iterrowselect(self.source, self.where, self.missing,
                              self.complement)
-
-
-def iterrowselect(source, where, missing, complement):
-    it = iter(source)
-    flds = next(it)
-    yield tuple(flds)
-    it = (Record(row, flds, missing=missing) for row in it)
-    for row in it:
-        if where(row) != complement:  # XOR
-            yield tuple(row)  # need to convert back to tuple?
-
-
-def rowlenselect(table, n, complement=False):
-    """
-    Select rows of length `n`.
-
-    .. versionchanged:: 0.4
-
-    The complement of the selection can be returned (i.e., the query can be
-    inverted) by providing `complement=True` as a keyword argument.
-
-    """
-
-    where = lambda row: len(row) == n
-    return rowselect(table, where, complement=complement)
-
-
-def fieldselect(table, field, where, complement=False):
-    """
-    Select rows matching a condition. The `where` argument should be a function
-    accepting a single data value as argument and returning True or False.
-
-    .. deprecated:: 0.10
-
-    Use :func:`select` instead, it supports the same signature.
-
-    """
-
-    return FieldSelectView(table, field, where, complement=complement)
 
 
 class FieldSelectView(RowContainer):
@@ -199,30 +129,40 @@ def iterfieldselect(source, field, where, complement):
             yield tuple(row)
 
 
+def iterrowselect(source, where, missing, complement):
+    it = iter(source)
+    flds = next(it)
+    yield tuple(flds)
+    it = (Record(row, flds, missing=missing) for row in it)
+    for row in it:
+        if where(row) != complement:  # XOR
+            yield tuple(row)  # need to convert back to tuple?
+
+
+def rowlenselect(table, n, complement=False):
+    """
+    Select rows of length `n`.
+
+    """
+
+    where = lambda row: len(row) == n
+    return select(table, where, complement=complement)
+
+
 def selectop(table, field, value, op, complement=False):
     """
     Select rows where the function `op` applied to the given field and the given
     value returns true.
 
-    .. versionchanged:: 0.4
-
-    The complement of the selection can be returned (i.e., the query can be
-    inverted) by providing `complement=True` as a keyword argument.
-
     """
 
-    return fieldselect(table, field, lambda v: op(v, value),
-                       complement=complement)
+    return select(table, field, lambda v: op(v, value),
+                  complement=complement)
 
 
 def selecteq(table, field, value, complement=False):
     """
     Select rows where the given field equals the given value.
-
-    .. versionchanged:: 0.4
-
-    The complement of the selection can be returned (i.e., the query can be
-    inverted) by providing `complement=True` as a keyword argument.
 
     """
 
@@ -233,11 +173,6 @@ def selectne(table, field, value, complement=False):
     """
     Select rows where the given field does not equal the given value.
 
-    .. versionchanged:: 0.4
-
-    The complement of the selection can be returned (i.e., the query can be
-    inverted) by providing `complement=True` as a keyword argument.
-
     """
 
     return selectop(table, field, value, operator.ne, complement=complement)
@@ -246,11 +181,6 @@ def selectne(table, field, value, complement=False):
 def selectlt(table, field, value, complement=False):
     """
     Select rows where the given field is less than the given value.
-
-    .. versionchanged:: 0.4
-
-    The complement of the selection can be returned (i.e., the query can be
-    inverted) by providing `complement=True` as a keyword argument.
 
     """
 
@@ -261,11 +191,6 @@ def selectle(table, field, value, complement=False):
     """
     Select rows where the given field is less than or equal to the given value.
 
-    .. versionchanged:: 0.4
-
-    The complement of the selection can be returned (i.e., the query can be
-    inverted) by providing `complement=True` as a keyword argument.
-
     """
 
     return selectop(table, field, value, operator.le, complement=complement)
@@ -274,11 +199,6 @@ def selectle(table, field, value, complement=False):
 def selectgt(table, field, value, complement=False):
     """
     Select rows where the given field is greater than the given value.
-
-    .. versionchanged:: 0.4
-
-    The complement of the selection can be returned (i.e., the query can be
-    inverted) by providing `complement=True` as a keyword argument.
 
     """
 
@@ -290,11 +210,6 @@ def selectge(table, field, value, complement=False):
     Select rows where the given field is greater than or equal to the given
     value.
 
-    .. versionchanged:: 0.4
-
-    The complement of the selection can be returned (i.e., the query can be
-    inverted) by providing `complement=True` as a keyword argument.
-
     """
 
     return selectop(table, field, value, operator.ge, complement=complement)
@@ -303,8 +218,6 @@ def selectge(table, field, value, complement=False):
 def selectcontains(table, field, value, complement=False):
     """
     Select rows where the given field contains the given value.
-
-    .. versionadded:: 0.10
 
     """
 
@@ -316,40 +229,25 @@ def selectin(table, field, value, complement=False):
     """
     Select rows where the given field is a member of the given value.
 
-    .. versionchanged:: 0.4
-
-    The complement of the selection can be returned (i.e., the query can be
-    inverted) by providing `complement=True` as a keyword argument.
-
     """
 
-    return fieldselect(table, field, lambda v: v in value,
-                       complement=complement)
+    return select(table, field, lambda v: v in value,
+                  complement=complement)
 
 
 def selectnotin(table, field, value, complement=False):
     """
     Select rows where the given field is not a member of the given value.
 
-    .. versionchanged:: 0.4
-
-    The complement of the selection can be returned (i.e., the query can be
-    inverted) by providing `complement=True` as a keyword argument.
-
     """
 
-    return fieldselect(table, field, lambda v: v not in value,
-                       complement=complement)
+    return select(table, field, lambda v: v not in value,
+                  complement=complement)
 
 
 def selectis(table, field, value, complement=False):
     """
     Select rows where the given field `is` the given value.
-
-    .. versionchanged:: 0.4
-
-    The complement of the selection can be returned (i.e., the query can be
-    inverted) by providing `complement=True` as a keyword argument.
 
     """
 
@@ -360,11 +258,6 @@ def selectisnot(table, field, value, complement=False):
     """
     Select rows where the given field `is not` the given value.
 
-    .. versionchanged:: 0.4
-
-    The complement of the selection can be returned (i.e., the query can be
-    inverted) by providing `complement=True` as a keyword argument.
-
     """
 
     return selectop(table, field, value, operator.is_not, complement=complement)
@@ -373,11 +266,6 @@ def selectisnot(table, field, value, complement=False):
 def selectisinstance(table, field, value, complement=False):
     """
     Select rows where the given field is an instance of the given type.
-
-    .. versionchanged:: 0.4
-
-    The complement of the selection can be returned (i.e., the query can be
-    inverted) by providing `complement=True` as a keyword argument.
 
     """
 
@@ -389,15 +277,10 @@ def selectrangeopenleft(table, field, minv, maxv, complement=False):
     Select rows where the given field is greater than or equal to `minv` and
     less than `maxv`.
 
-    .. versionchanged:: 0.4
-
-    The complement of the selection can be returned (i.e., the query can be
-    inverted) by providing `complement=True` as a keyword argument.
-
     """
 
-    return fieldselect(table, field, lambda v: minv <= v < maxv,
-                       complement=complement)
+    return select(table, field, lambda v: minv <= v < maxv,
+                  complement=complement)
 
 
 def selectrangeopenright(table, field, minv, maxv, complement=False):
@@ -405,15 +288,10 @@ def selectrangeopenright(table, field, minv, maxv, complement=False):
     Select rows where the given field is greater than `minv` and
     less than or equal to `maxv`.
 
-    .. versionchanged:: 0.4
-
-    The complement of the selection can be returned (i.e., the query can be
-    inverted) by providing `complement=True` as a keyword argument.
-
     """
 
-    return fieldselect(table, field, lambda v: minv < v <= maxv,
-                       complement=complement)
+    return select(table, field, lambda v: minv < v <= maxv,
+                  complement=complement)
 
 
 def selectrangeopen(table, field, minv, maxv, complement=False):
@@ -421,15 +299,10 @@ def selectrangeopen(table, field, minv, maxv, complement=False):
     Select rows where the given field is greater than or equal to `minv` and
     less than or equal to `maxv`.
 
-    .. versionchanged:: 0.4
-
-    The complement of the selection can be returned (i.e., the query can be
-    inverted) by providing `complement=True` as a keyword argument.
-
     """
 
-    return fieldselect(table, field, lambda v: minv <= v <= maxv,
-                       complement=complement)
+    return select(table, field, lambda v: minv <= v <= maxv,
+                  complement=complement)
 
 
 def selectrangeclosed(table, field, minv, maxv, complement=False):
@@ -437,15 +310,10 @@ def selectrangeclosed(table, field, minv, maxv, complement=False):
     Select rows where the given field is greater than `minv` and
     less than `maxv`.
 
-    .. versionchanged:: 0.4
-
-    The complement of the selection can be returned (i.e., the query can be
-    inverted) by providing `complement=True` as a keyword argument.
-
     """
 
-    return fieldselect(table, field, lambda v: minv < v < maxv,
-                       complement=complement)
+    return select(table, field, lambda v: minv < Comparable(v) < maxv,
+                  complement=complement)
 
 
 def selectre(table, field, pattern, flags=0, complement=False):
@@ -485,16 +353,11 @@ def selectre(table, field, pattern, flags=0, complement=False):
 
     See also :func:`re.search`.
 
-    .. versionchanged:: 0.4
-
-    The complement of the selection can be returned (i.e., the query can be
-    inverted) by providing `complement=True` as a keyword argument.
-
     """
 
     prog = re.compile(pattern, flags)
     test = lambda v: prog.search(v) is not None
-    return fieldselect(table, field, test, complement=complement)
+    return select(table, field, test, complement=complement)
 
 
 def selecttrue(table, field, complement=False):
@@ -503,7 +366,7 @@ def selecttrue(table, field, complement=False):
 
     """
 
-    return fieldselect(table, field, lambda v: bool(v), complement=complement)
+    return select(table, field, lambda v: bool(v), complement=complement)
 
 
 def selectfalse(table, field, complement=False):
@@ -512,8 +375,8 @@ def selectfalse(table, field, complement=False):
 
     """
 
-    return fieldselect(table, field, lambda v: not bool(v),
-                       complement=complement)
+    return select(table, field, lambda v: not bool(v),
+                  complement=complement)
 
 
 def selectnone(table, field, complement=False):
@@ -522,7 +385,7 @@ def selectnone(table, field, complement=False):
 
     """
 
-    return fieldselect(table, field, lambda v: v is None, complement=complement)
+    return select(table, field, lambda v: v is None, complement=complement)
 
 
 def selectnotnone(table, field, complement=False):
@@ -531,8 +394,8 @@ def selectnotnone(table, field, complement=False):
 
     """
 
-    return fieldselect(table, field, lambda v: v is not None,
-                       complement=complement)
+    return select(table, field, lambda v: v is not None,
+                  complement=complement)
 
 
 def selectusingcontext(table, query):
@@ -567,8 +430,6 @@ def selectusingcontext(table, query):
         +-------+-------+
         | 'C'   |     5 |
         +-------+-------+
-
-    .. versionadded:: 0.24
 
     """
 
@@ -654,77 +515,4 @@ def facet(table, field):
     fct = dict()
     for v in set(values(table, field)):
         fct[v] = selecteq(table, field, v)
-    return fct
-
-
-def rangefacet(table, field, width, minv=None, maxv=None,
-               presorted=False, buffersize=None, tempdir=None, cache=True):
-    """
-    Return a dictionary mapping ranges to tables. E.g.::
-
-        >>> from petl import rangefacet, look
-        >>> look(table1)
-        +-------+-------+
-        | 'foo' | 'bar' |
-        +=======+=======+
-        | 'a'   | 3     |
-        +-------+-------+
-        | 'a'   | 7     |
-        +-------+-------+
-        | 'b'   | 2     |
-        +-------+-------+
-        | 'b'   | 1     |
-        +-------+-------+
-        | 'b'   | 9     |
-        +-------+-------+
-        | 'c'   | 4     |
-        +-------+-------+
-        | 'd'   | 3     |
-        +-------+-------+
-
-        >>> rf = rangefacet(table1, 'bar', 2)
-        >>> rf.keys()
-        [(1, 3), (3, 5), (5, 7), (7, 9)]
-        >>> look(rf[(1, 3)])
-        +-------+-------+
-        | 'foo' | 'bar' |
-        +=======+=======+
-        | 'b'   | 2     |
-        +-------+-------+
-        | 'b'   | 1     |
-        +-------+-------+
-
-        >>> look(rf[(7, 9)])
-        +-------+-------+
-        | 'foo' | 'bar' |
-        +=======+=======+
-        | 'a'   | 7     |
-        +-------+-------+
-        | 'b'   | 9     |
-        +-------+-------+
-
-    Note that the last bin includes both edges.
-
-    """
-
-    # determine minimum and maximum values
-    if minv is None and maxv is None:
-        minv, maxv = limits(table, field)
-    elif minv is None:
-        minv = min(itervalues(table, field))
-    elif max is None:
-        maxv = max(itervalues(table, field))
-
-    fct = OrderedDict()
-    for binminv in xrange(minv, maxv, width):
-        binmaxv = binminv + width
-        if binmaxv >= maxv:  # final bin
-            binmaxv = maxv
-            # final bin includes right edge
-            fct[(binminv, binmaxv)] = selectrangeopen(table, field, binminv,
-                                                      binmaxv)
-        else:
-            fct[(binminv, binmaxv)] = selectrangeopenleft(table, field, binminv,
-                                                          binmaxv)
-
     return fct

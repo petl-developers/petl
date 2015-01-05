@@ -3,11 +3,11 @@ from __future__ import absolute_import, print_function, division, \
 
 
 import operator
-from ..compat import next
+from petl.compat import next
 
 
-from ..util import RowContainer, lookup, asindices, rowgetter, iterpeek
-from .joins import keys_from_args
+from petl.util import RowContainer, lookup, asindices, rowgetter, iterpeek
+from petl.transform.joins import keys_from_args
 
 
 def hashjoin(left, right, key=None, lkey=None, rkey=None, cache=True,

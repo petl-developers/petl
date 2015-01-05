@@ -2,13 +2,10 @@ from __future__ import absolute_import, print_function, division
 # N.B., do not import unicode_literals in tests
 
 
-from nose.tools import eq_
-
-
-from petl.testutils import ieq
+from petl.testutils import ieq, eq_
 from petl.comparison import Comparable
 from petl.transform.selects import select, selectin, selectcontains, \
-    rowselect, rowlenselect, selectre, selectusingcontext, facet, rangefacet
+    rowlenselect, selectre, selectusingcontext, facet
 
 
 def test_select():
@@ -164,7 +161,7 @@ def test_rowselect():
              ('d', 7, 100.9),
              ('c', 2))
 
-    actual = rowselect(table, lambda row: row[0] == 'a')
+    actual = select(table, lambda row: row[0] == 'a')
     expect = (('foo', 'bar', 'baz'),
               ('a', 4, 9.3),
               ('a', 2, 88.2))
@@ -203,7 +200,7 @@ def test_recordselect():
              ('d', 7, 100.9),
              ('c', 2))
 
-    actual = rowselect(table, lambda rec: rec['foo'] == 'a')
+    actual = select(table, lambda rec: rec['foo'] == 'a')
     expect = (('foo', 'bar', 'baz'),
               ('a', 4, 9.3),
               ('a', 2, 88.2))
@@ -222,9 +219,9 @@ def test_selectre():
              ('c', 2))
     actual = selectre(table, 'foo', '[ab]{2}')
     expect = (('foo', 'bar', 'baz'),
-             ('aa', 4, 9.3),
-             ('aaa', 2, 88.2),
-             ('bb', 7, 100.9))
+              ('aa', 4, 9.3),
+              ('aaa', 2, 88.2),
+              ('bb', 7, 100.9))
     ieq(expect, actual)
     ieq(expect, actual)
 
@@ -300,26 +297,3 @@ def test_facet_empty():
     table = (('foo', 'bar'),)
     actual = facet(table, 'foo')
     eq_(list(), list(actual.keys()))
-
-
-def test_rangefacet():
-
-    table1 = (('foo', 'bar'),
-              ('a', 3),
-              ('a', 7),
-              ('b', 2),
-              ('b', 1),
-              ('b', 9),
-              ('c', 4),
-              ('d', 3))
-    rf = rangefacet(table1, 'bar', 2)
-    eq_([(1, 3), (3, 5), (5, 7), (7, 9)], list(rf.keys()))
-    expect_13 = (('foo', 'bar'),
-                 ('b', 2),
-                 ('b', 1))  # N.B., it get's sorted
-    ieq(expect_13, rf[(1, 3)])
-    ieq(expect_13, rf[(1, 3)])
-    expect_79 = (('foo', 'bar'),
-                 ('a', 7),
-                 ('b', 9))
-    ieq(expect_79, rf[(7, 9)])

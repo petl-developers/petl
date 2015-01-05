@@ -5,12 +5,12 @@ from __future__ import absolute_import, print_function, division, \
 # standard library dependencies
 import codecs
 import io
-from ..compat import next, PY2
+from petl.compat import next, PY2
 
 
 # internal dependencies
-from ..util import RowContainer, asdict
-from .sources import read_source_from_arg, write_source_from_arg
+from petl.util import RowContainer, asdict
+from petl.io.sources import read_source_from_arg, write_source_from_arg
 
 
 def fromtext(source=None, header=('lines',), strip=None):

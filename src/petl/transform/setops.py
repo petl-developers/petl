@@ -2,7 +2,7 @@ from __future__ import absolute_import, print_function, division, \
     unicode_literals
 
 
-from ..compat import Counter, next
+from petl.compat import Counter, next
 import logging
 logger = logging.getLogger(__name__)
 warning = logger.warning
@@ -10,10 +10,10 @@ info = logger.info
 debug = logger.debug
 
 
-from ..comparison import Comparable
-from ..util import header, RowContainer
-from .sorts import sort
-from .basics import cut
+from petl.comparison import Comparable
+from petl.util import header, RowContainer
+from petl.transform.sorts import sort
+from petl.transform.basics import cut
 
 
 def complement(a, b, presorted=False, buffersize=None, tempdir=None,

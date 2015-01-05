@@ -22,7 +22,7 @@ from petl.transform.selects import select, selectop, selectcontains, selecteq, \
     selectisnot, selectle, selectlt, selectne, selectnone, selectnotin, \
     selectnotnone, selectrangeclosed, selectrangeopen, selectrangeopenleft, \
     selectrangeopenright, selectre, selecttrue, selectusingcontext, \
-    recordselect, rowselect, rowlenselect, fieldselect, facet, rangefacet
+    rowlenselect, facet
 
 from petl.transform.joins import join, leftjoin, rightjoin, outerjoin, \
     crossjoin, antijoin, lookupjoin, unjoin

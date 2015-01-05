@@ -3,10 +3,10 @@ from __future__ import absolute_import, print_function, division, \
 
 
 import itertools
-from ..compat import next
+from petl.compat import next
 
 
-from ..util import RowContainer
+from petl.util import RowContainer
 
 
 def unpack(table, field, newfields=None, include_original=False, missing=None):

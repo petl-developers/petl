@@ -11,7 +11,6 @@ from petl.io.pickle import frompickle, topickle, appendpickle
 
 
 def test_frompickle():
-    """Test the frompickle function."""
 
     f = NamedTemporaryFile(delete=False)
     table = (('foo', 'bar'),
@@ -28,7 +27,6 @@ def test_frompickle():
 
 
 def test_topickle_appendpickle():
-    """Test the topickle and appendpickle functions."""
 
     # exercise function
     table = (('foo', 'bar'),

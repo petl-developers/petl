@@ -3,11 +3,11 @@ from __future__ import absolute_import, print_function, division, \
 
 
 import operator
-from ..compat import OrderedDict, next, string_types
+from petl.compat import OrderedDict, next, string_types
 
 
-from ..util import RowContainer, expr, rowgroupby, Record
-from .sorts import sort
+from petl.util import RowContainer, expr, rowgroupby, Record
+from petl.transform.sorts import sort
 
 
 def fieldmap(table, mappings=None, failonerror=False, errorvalue=None):

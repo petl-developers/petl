@@ -4,13 +4,13 @@ from __future__ import absolute_import, print_function, division, \
 
 import itertools
 import operator
-from ..compat import OrderedDict, next, string_types, reduce
+from petl.compat import OrderedDict, next, string_types, reduce
 
 
-from ..util import RowContainer, iterpeek, rowgroupby
-from .sorts import sort, mergesort
-from .basics import cut
-from .dedup import distinct
+from petl.util import RowContainer, iterpeek, rowgroupby
+from petl.transform.sorts import sort, mergesort
+from petl.transform.basics import cut
+from petl.transform.dedup import distinct
 
 
 def rowreduce(table, key, reducer, fields=None, presorted=False,

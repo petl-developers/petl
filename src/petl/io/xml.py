@@ -6,12 +6,12 @@ from __future__ import absolute_import, print_function, division, \
 from xml.etree import ElementTree
 from operator import attrgetter
 import itertools
-from ..compat import string_types
+from petl.compat import string_types
 
 
 # internal dependencies
-from ..util import RowContainer
-from .sources import read_source_from_arg
+from petl.util import RowContainer
+from petl.io.sources import read_source_from_arg
 
 
 def fromxml(source, *args, **kwargs):

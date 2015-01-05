@@ -6,6 +6,8 @@ The `petl` module.
 
 from __future__ import absolute_import, print_function, division
 
+from petl.comparison import Comparable
+
 from petl.util import header, fieldnames, data, records, look, see, \
     itervalues, values, iterdata, valuecounter, valuecounts, \
     isunique, lookup, lookupone, recordlookup, recordlookupone, \
@@ -25,26 +27,6 @@ from petl.transform import *
 
 
 __version__ = VERSION = '1.0a1.dev0'
-
-
-def lenstats(table, field):
-    """
-    Convenience function to report statistics on value lengths under the given
-    field. E.g.::
-
-        >>> from petl import lenstats    
-        >>> table1 = [['foo', 'bar'],
-        ...           [1, 'a'],
-        ...           [2, 'aaa'],
-        ...           [3, 'aa'],
-        ...           [4, 'aaa'],
-        ...           [5, 'aaaaaaaaaaa']]
-        >>> lenstats(table1, 'bar')
-        {'count': 5, 'errors': 0, 'min': 1.0, 'max': 11.0, 'sum': 20.0, 'mean': 4.0}
-
-    """
-
-    return stats(convert(table, field, lambda v: len(v)), field)
 
 
 # convenience aliases

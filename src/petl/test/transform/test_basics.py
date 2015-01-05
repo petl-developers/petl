@@ -283,8 +283,7 @@ def test_addfield_uneven_rows():
 
 
 def test_rowslice():
-    """Test the rowslice function."""
-    
+
     table = (('foo', 'bar', 'baz'),
              ('A', 1, 2),
              ('B', '2', '3.4'),
@@ -318,8 +317,7 @@ def test_rowslice_empty():
         
 
 def test_head():
-    """Test the head function."""
-    
+
     table1 = (('foo', 'bar'),
               ('a', 1),
               ('b', 2),
@@ -342,8 +340,7 @@ def test_head():
 
 
 def test_tail():
-    """Test the tail function."""
-    
+
     table1 = (('foo', 'bar'),
               ('a', 1),
               ('b', 2),

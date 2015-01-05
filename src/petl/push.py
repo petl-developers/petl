@@ -13,10 +13,10 @@ from tempfile import NamedTemporaryFile
 from operator import itemgetter
 from itertools import islice
 from collections import defaultdict
-from .compat import pickle, next, PY3
+from petl.compat import pickle, next, PY3
 
 
-from .util import asindices, Record, shortlistmergesorted, \
+from petl.util import asindices, Record, shortlistmergesorted, \
     comparable_itemgetter
 import petl.transform
 

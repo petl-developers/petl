@@ -3,12 +3,12 @@ from __future__ import absolute_import, print_function, division, \
 
 
 # standard library dependencies
-from ..compat import pickle
+from petl.compat import pickle
 
 
 # internal dependencies
-from ..util import RowContainer, data
-from .sources import read_source_from_arg, write_source_from_arg
+from petl.util import RowContainer, data
+from petl.io.sources import read_source_from_arg, write_source_from_arg
 
 
 def frompickle(source=None):

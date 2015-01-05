@@ -1,5 +1,4 @@
-.. module:: petl
-.. moduleauthor:: Alistair Miles <alimanfoo@googlemail.com>
+.. module:: petl.io
 
 Extract/Load - reading/writing tables from files, databases and other sources
 =============================================================================
@@ -43,74 +42,74 @@ the section on I/O helper classes below for more information.
 Delimited files
 ---------------
 
-.. autofunction:: petl.fromcsv
-.. autofunction:: petl.tocsv
-.. autofunction:: petl.appendcsv
-.. autofunction:: petl.teecsv
-.. autofunction:: petl.fromtsv
-.. autofunction:: petl.totsv
-.. autofunction:: petl.appendtsv
-.. autofunction:: petl.teetsv
-.. autofunction:: petl.fromucsv
-.. autofunction:: petl.toucsv
-.. autofunction:: petl.appenducsv
-.. autofunction:: petl.teeucsv
-.. autofunction:: petl.fromutsv
-.. autofunction:: petl.toutsv
-.. autofunction:: petl.appendutsv
-.. autofunction:: petl.teeutsv
+.. autofunction:: petl.io.csv.fromcsv
+.. autofunction:: petl.io.csv.tocsv
+.. autofunction:: petl.io.csv.appendcsv
+.. autofunction:: petl.io.csv.teecsv
+.. autofunction:: petl.io.csv.fromtsv
+.. autofunction:: petl.io.csv.totsv
+.. autofunction:: petl.io.csv.appendtsv
+.. autofunction:: petl.io.csv.teetsv
+.. autofunction:: petl.io.csv.fromucsv
+.. autofunction:: petl.io.csv.toucsv
+.. autofunction:: petl.io.csv.appenducsv
+.. autofunction:: petl.io.csv.teeucsv
+.. autofunction:: petl.io.csv.fromutsv
+.. autofunction:: petl.io.csv.toutsv
+.. autofunction:: petl.io.csv.appendutsv
+.. autofunction:: petl.io.csv.teeutsv
 
 Pickle files
 ------------
 
-.. autofunction:: petl.frompickle
-.. autofunction:: petl.topickle
-.. autofunction:: petl.appendpickle
-.. autofunction:: petl.teepickle
+.. autofunction:: petl.io.pickle.frompickle
+.. autofunction:: petl.io.pickle.topickle
+.. autofunction:: petl.io.pickle.appendpickle
+.. autofunction:: petl.io.pickle.teepickle
 
 Text files
 ----------
 
-.. autofunction:: petl.fromtext
-.. autofunction:: petl.totext
-.. autofunction:: petl.appendtext
-.. autofunction:: petl.teetext
-.. autofunction:: petl.fromutext
-.. autofunction:: petl.toutext
-.. autofunction:: petl.appendutext
-.. autofunction:: petl.teeutext
+.. autofunction:: petl.io.text.fromtext
+.. autofunction:: petl.io.text.totext
+.. autofunction:: petl.io.text.appendtext
+.. autofunction:: petl.io.text.teetext
+.. autofunction:: petl.io.text.fromutext
+.. autofunction:: petl.io.text.toutext
+.. autofunction:: petl.io.text.appendutext
+.. autofunction:: petl.io.text.teeutext
 
 XML files
 ---------
 
-.. autofunction:: petl.fromxml
+.. autofunction:: petl.io.xml.fromxml
 
-For writing to an XML file, see :func:`petl.totext`.
+For writing to an XML file, see :func:`petl.io.text.totext`.
 
 HTML files
 ----------
 
-.. autofunction:: petl.tohtml
-.. autofunction:: petl.teehtml
-.. autofunction:: petl.touhtml
-.. autofunction:: petl.teeuhtml
+.. autofunction:: petl.io.html.tohtml
+.. autofunction:: petl.io.html.teehtml
+.. autofunction:: petl.io.html.touhtml
+.. autofunction:: petl.io.html.teeuhtml
 
 JSON files
 ----------
 
-.. autofunction:: petl.fromjson
-.. autofunction:: petl.fromdicts
-.. autofunction:: petl.tojson
-.. autofunction:: petl.tojsonarrays
+.. autofunction:: petl.io.json.fromjson
+.. autofunction:: petl.io.json.fromdicts
+.. autofunction:: petl.io.json.tojson
+.. autofunction:: petl.io.json.tojsonarrays
 
 Databases
 ---------
-.. autofunction:: petl.fromsqlite3
-.. autofunction:: petl.tosqlite3
-.. autofunction:: petl.appendsqlite3
-.. autofunction:: petl.fromdb
-.. autofunction:: petl.todb
-.. autofunction:: petl.appenddb
+.. autofunction:: petl.io.sqlite3.fromsqlite3
+.. autofunction:: petl.io.sqlite3.tosqlite3
+.. autofunction:: petl.io.sqlite3.appendsqlite3
+.. autofunction:: petl.io.db.fromdb
+.. autofunction:: petl.io.db.todb
+.. autofunction:: petl.io.db.appenddb
 
 I/O helper classes
 ------------------
@@ -125,17 +124,17 @@ argument to data loading functions like :func:`tocsv` etc., with the
 exception of :class:`StdinSource`, :class:`URLSource` and
 :class:`PopenSource` which are read-only. The behaviour of each source
 can usually be configured by passing arguments to the constructor, see
-the source code of the :mod:`petl.io` module for full details.
+the source code of the :mod:`petl.io.sources` module for full details.
 
-.. autoclass:: petl.FileSource
-.. autoclass:: petl.GzipSource
-.. autoclass:: petl.BZ2Source
-.. autoclass:: petl.ZipSource
-.. autoclass:: petl.StdinSource
-.. autoclass:: petl.StdoutSource
-.. autoclass:: petl.URLSource
-.. autoclass:: petl.StringSource
-.. autoclass:: petl.PopenSource
+.. autoclass:: petl.io.sources.FileSource
+.. autoclass:: petl.io.sources.GzipSource
+.. autoclass:: petl.io.sources.BZ2Source
+.. autoclass:: petl.io.sources.ZipSource
+.. autoclass:: petl.io.sources.StdinSource
+.. autoclass:: petl.io.sources.StdoutSource
+.. autoclass:: petl.io.sources.URLSource
+.. autoclass:: petl.io.sources.StringSource
+.. autoclass:: petl.io.sources.PopenSource
 
 
 

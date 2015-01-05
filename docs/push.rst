@@ -1,10 +1,7 @@
 .. module:: petl.push
-.. moduleauthor:: Alistair Miles <alimanfoo@googlemail.com>
 
 petl.push - Branching Pipelines
 ===============================
-
-.. versionadded:: 0.10
 
 Introduction
 ------------

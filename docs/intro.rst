@@ -193,7 +193,3 @@ turn on or off the caching of sorted data.
 
 There is also an explicit :func:`cache` function, which can be used to
 cache in memory up to a configurable number of rows from a table.
-
-.. versionchanged:: 0.16
-
-Use of the cachetag() method is now deprecated. 

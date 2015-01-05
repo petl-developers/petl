@@ -11,7 +11,6 @@ from petl.io.sqlite3 import fromsqlite3, tosqlite3, appendsqlite3
 
 
 def test_fromsqlite3():
-    """Test the fromsqlite3 function."""
 
     # initial data
     f = NamedTemporaryFile(delete=False)
@@ -39,7 +38,6 @@ def test_fromsqlite3():
 
 
 def test_fromsqlite3_connection():
-    """Test the fromsqlite3 function."""
 
     # initial data
     data = (('a', 1),
@@ -92,7 +90,6 @@ def test_fromsqlite3_withargs():
 
 
 def test_tosqlite3_appendsqlite3():
-    """Test the tosqlite3 and appendsqlite3 functions."""
 
     # exercise function
     table = (('foo', 'bar'),

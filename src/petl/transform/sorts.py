@@ -4,7 +4,7 @@ from __future__ import absolute_import, print_function, division, \
 
 from tempfile import NamedTemporaryFile
 import itertools
-from ..compat import pickle, next
+from petl.compat import pickle, next
 import logging
 logger = logging.getLogger(__name__)
 warning = logger.warning
@@ -12,8 +12,8 @@ info = logger.info
 debug = logger.debug
 
 
-from ..comparison import comparable_itemgetter
-from ..util import RowContainer, asindices, shortlistmergesorted, \
+from petl.comparison import comparable_itemgetter
+from petl.util import RowContainer, asindices, shortlistmergesorted, \
     heapqmergesorted
 
 

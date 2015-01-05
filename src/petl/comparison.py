@@ -5,7 +5,7 @@ from __future__ import absolute_import, print_function, division, \
 import operator
 
 
-from .compat import text_type, binary_type, numeric_types
+from petl.compat import text_type, binary_type, numeric_types
 
 
 class Comparable(object):

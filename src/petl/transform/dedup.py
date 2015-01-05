@@ -5,8 +5,8 @@ from __future__ import absolute_import, print_function, division, \
 import operator
 
 
-from ..util import RowContainer, asindices
-from .sorts import sort
+from petl.util import RowContainer, asindices
+from petl.transform.sorts import sort
 
 
 def duplicates(table, key=None, presorted=False, buffersize=None, tempdir=None, 

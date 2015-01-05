@@ -4,12 +4,12 @@ from __future__ import absolute_import, print_function, division, \
 
 import re
 import operator
-from ..compat import next, string_types
+from petl.compat import next, string_types
 
 
-from ..util import RowContainer, asindices
-from .basics import TransformError
-from .conversions import convert
+from petl.util import RowContainer, asindices
+from petl.transform.basics import TransformError
+from petl.transform.conversions import convert
 
 
 def capture(table, field, pattern, newfields=None, include_original=False,

@@ -7,7 +7,7 @@ import csv
 import logging
 
 
-from ..util import RowContainer, data
+from petl.util import RowContainer, data
 
 
 logger = logging.getLogger(__name__)

@@ -5,12 +5,12 @@ from __future__ import absolute_import, print_function, division, \
 import itertools
 import collections
 import operator
-from ..compat import next
+from petl.compat import next
 
 
-from ..util import RowContainer, rowgetter, comparable_itemgetter, values, \
+from petl.util import RowContainer, rowgetter, comparable_itemgetter, values, \
     itervalues, header, data
-from .sorts import sort
+from petl.transform.sorts import sort
 
 
 def melt(table, key=None, variables=None, variablefield='variable',

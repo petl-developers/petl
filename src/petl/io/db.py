@@ -4,11 +4,11 @@ from __future__ import absolute_import, print_function, division, \
 
 # standard library dependencies
 import logging
-from ..compat import next
+from petl.compat import next
 
 
 # internal dependencies
-from ..util import RowContainer
+from petl.util import RowContainer
 
 
 logger = logging.getLogger(__name__)

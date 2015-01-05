@@ -2,10 +2,10 @@ from __future__ import absolute_import, print_function, division, \
     unicode_literals
 
 
-from ..compat import next
+from petl.compat import next
 
 
-from ..util import RowContainer, asindices
+from petl.util import RowContainer, asindices
 
 
 def filldown(table, *fields, **kwargs):

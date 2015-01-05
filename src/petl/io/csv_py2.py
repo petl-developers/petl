@@ -9,7 +9,7 @@ import cStringIO
 
 
 # internal dependencies
-from ..util import RowContainer, data
+from petl.util import RowContainer, data
 
 
 def fromcsv_impl(source, **csvargs):

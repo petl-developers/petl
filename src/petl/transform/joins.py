@@ -4,15 +4,15 @@ from __future__ import absolute_import, print_function, division, \
 
 import itertools
 import operator
-from ..compat import next
+from petl.compat import next
 
 
-from ..comparison import comparable_itemgetter, Comparable
-from ..util import RowContainer, asindices, rowgetter, rowgroupby, header,\
+from petl.comparison import comparable_itemgetter, Comparable
+from petl.util import RowContainer, asindices, rowgetter, rowgroupby, header,\
     data
-from .sorts import sort
-from .basics import cut, cutout
-from .dedup import distinct
+from petl.transform.sorts import sort
+from petl.transform.basics import cut, cutout
+from petl.transform.dedup import distinct
 
 
 def natural_key(left, right):

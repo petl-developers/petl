@@ -3,16 +3,16 @@ from __future__ import absolute_import, print_function, division, \
 
 
 # standard library dependencies
-from ..compat import PY2
+from petl.compat import PY2
 
 
 # internal dependencies
-from .sources import read_source_from_arg, write_source_from_arg
+from petl.io.sources import read_source_from_arg, write_source_from_arg
 if PY2:
-    from .csv_py2 import fromcsv_impl, fromucsv_impl, tocsv_impl, \
+    from petl.io.csv_py2 import fromcsv_impl, fromucsv_impl, tocsv_impl, \
         toucsv_impl, appendcsv_impl, appenducsv_impl, teecsv_impl, teeucsv_impl
 else:
-    from .csv_py3 import fromcsv_impl, fromucsv_impl, tocsv_impl, \
+    from petl.io.csv_py3 import fromcsv_impl, fromucsv_impl, tocsv_impl, \
         toucsv_impl, appendcsv_impl, appenducsv_impl, teecsv_impl, teeucsv_impl
 
 
@@ -104,6 +104,7 @@ def tocsv(table, source=None, dialect='excel', write_header=True, **kwargs):
         a,1
         b,2
         c,2
+
 
     The `source` argument is the path of the delimited file, and the optional
     `write_header` argument specifies whether to include the field names in the

@@ -18,7 +18,6 @@ from petl.io.db import fromdb, todb, appenddb
 
 
 def test_fromdb():
-    """Test the fromdb function."""
 
     # initial data
     data = (('a', 1),

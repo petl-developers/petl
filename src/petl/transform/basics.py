@@ -11,11 +11,11 @@ from __future__ import absolute_import, print_function, division, \
 # standard library dependencies
 from itertools import islice, chain
 from collections import deque
-from ..compat import izip, izip_longest, next, count, string_types
+from petl.compat import izip, izip_longest, next, count, string_types
 
 
 # internal dependencies
-from ..util import asindices, rowgetter, Record, RowContainer
+from petl.util import asindices, rowgetter, Record, RowContainer
 
 
 import logging

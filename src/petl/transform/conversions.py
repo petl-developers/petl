@@ -2,10 +2,10 @@ from __future__ import absolute_import, print_function, division, \
     unicode_literals
 
 
-from ..compat import next, integer_types, string_types
+from petl.compat import next, integer_types, string_types
 
 
-from ..util import numparser, RowContainer, FieldSelectionError, \
+from petl.util import numparser, RowContainer, FieldSelectionError, \
     expr, header, Record
 
 

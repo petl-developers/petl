@@ -1,8 +1,56 @@
-"""
-As the root :mod:`petl` module but with modifications to allow for fluent style
-usage.
+"""The module :mod:`petl.fluent` provides all of the functions present in
+the root :mod:`petl` module, but with modifications to allow them to
+be used in a fluent style. E.g.::
 
-.. versionadded:: 0.6
+    >>> import petl.fluent as etl
+    >>> table1 = etl.dummytable()
+    >>> table1.look()
+    +-------+-----------+---------------------+
+    | 'foo' | 'bar'     | 'baz'               |
+    +=======+===========+=====================+
+    |    10 | 'bananas' | 0.12052295100118093 |
+    +-------+-----------+---------------------+
+    |    59 | 'pears'   |  0.4904888339449809 |
+    +-------+-----------+---------------------+
+    |    59 | 'pears'   |  0.3461519333108145 |
+    +-------+-----------+---------------------+
+    |    56 | 'oranges' |  0.7165741327339168 |
+    +-------+-----------+---------------------+
+    |    44 | 'bananas' |  0.8398037085602236 |
+    +-------+-----------+---------------------+
+
+Use the :func:`wrap` function to wrap table-like objects, e.g.::
+
+    >>> import petl.fluent as etl
+    >>> l = [['foo', 'bar'], ['a', 1], ['b', 3]]
+    >>> table2 = etl.wrap(l)
+    >>> table2.look()
+    +-------+-------+
+    | 'foo' | 'bar' |
+    +=======+=======+
+    | 'a'   |     1 |
+    +-------+-------+
+    | 'b'   |     3 |
+    +-------+-------+
+
+    >>> table2.cut('foo').look()
+    +-------+
+    | 'foo' |
+    +=======+
+    | 'a'   |
+    +-------+
+    | 'b'   |
+    +-------+
+
+    >>> table2.tocsv('test.csv')
+    >>> etl.fromcsv('test.csv').look()
+    +-------+-------+
+    | 'foo' | 'bar' |
+    +=======+=======+
+    | 'a'   | '1'   |
+    +-------+-------+
+    | 'b'   | '3'   |
+    +-------+-------+
 
 """
 
@@ -13,7 +61,7 @@ from __future__ import absolute_import, print_function, division, \
 
 import sys
 import inspect
-from .util import RowContainer
+from petl.util import RowContainer
 
 
 petl = sys.modules['petl']
@@ -96,8 +144,6 @@ for n, c in petl.__dict__.items():
             setattr(thismodule, n, _wrap_function_dict(c))
         else:
             setattr(thismodule, n, _wrap_function(c))
-    else:
-        setattr(thismodule, n, c)
 
 
 NONMETHODS = ['dummytable', 'randomtable', 'dateparser', 'timeparser',

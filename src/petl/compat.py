@@ -12,12 +12,13 @@ import sys
 try:
     from collections import Counter, OrderedDict
 except ImportError:
-    from .py26_backports import Counter, OrderedDict
+    from petl.py26_backports import Counter, OrderedDict
 
 try:
     from itertools import count, compress, combinations_with_replacement
 except ImportError:
-    from .py26_backports import count, compress, combinations_with_replacement
+    from petl.py26_backports import count, compress, \
+        combinations_with_replacement
 
 
 ##########################

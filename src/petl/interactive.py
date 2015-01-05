@@ -1,6 +1,65 @@
-"""
-As the root :mod:`petl` module but with optimisations for use in an interactive
-session.
+"""The module :mod:`petl.interactive` provides all of the functions
+present in the root :mod:`petl` module, but with a couple of
+optimisations for use within an interactive session.
+
+The main optimisation is that some caching is done by default,
+such that the first 100 rows of any table are cached in
+memory the first time they are requested. This usually provides a
+better experience when building up a transformation pipeline one step
+at a time, where you are examining the outputs of each intermediate
+step as its written via :func:`look` or :func:`see`. I.e., as each new
+step is added and the output examined, as long as less than 100 rows
+are requested, only that new step will actually be executed, and none
+of the upstream transformations will be repeated, because the outputs
+from previous steps will have been cached.
+
+The default cache size can be changed by setting
+``petl.interactive.cachesize`` to an integer value.
+
+Also, by default, the :func:`look` function is used to generate a
+representation of tables. So you don't need to type, e.g., ``>>>
+look(mytable)``, you can just type ``>>> mytable``. The default
+representation function can be changed by setting
+``petl.interactive.representation``, e.g.,
+``petl.interactive.representation = petl.see``, or
+``petl.interactive.representation = None`` to disable this behaviour.
+
+If used within an IPython notebook, tables will automatically be formatted as
+HTML.
+
+Finally, this module extends :mod:`petl.fluent` so you can use the
+fluent style if you wish, e.g.::
+
+    >>> import petl.interactive as etl
+    >>> l = [['foo', 'bar'], ['a', 1], ['b', 3]]
+    >>> table1 = etl.wrap(l)
+    >>> table1.look()
+    +-------+-------+
+    | 'foo' | 'bar' |
+    +=======+=======+
+    | 'a'   |     1 |
+    +-------+-------+
+    | 'b'   |     3 |
+    +-------+-------+
+
+    >>> table1.cut('foo').look()
+    +-------+
+    | 'foo' |
+    +=======+
+    | 'a'   |
+    +-------+
+    | 'b'   |
+    +-------+
+
+    >>> table1.tocsv('test.csv')
+    >>> etl.fromcsv('test.csv').look()
+    +-------+-------+
+    | 'foo' | 'bar' |
+    +=======+=======+
+    | 'a'   | '1'   |
+    +-------+-------+
+    | 'b'   | '3'   |
+    +-------+-------+
 
 """
 
@@ -20,9 +79,9 @@ info = logger.info
 debug = logger.debug
 
 
-from .util import RowContainer
+from petl.util import RowContainer
 import petl.fluent
-from .io import StringSource
+from petl.io import StringSource
 
 
 petl = sys.modules['petl']
@@ -188,8 +247,6 @@ for n, c in petl.__dict__.items():
             setattr(thismodule, n, _wrap_function_dict(c))
         else:
             setattr(thismodule, n, _wrap_function(c))
-    else:
-        setattr(thismodule, n, c)
 
         
 # add module functions as methods on the wrapper class

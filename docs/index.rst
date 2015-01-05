@@ -1,5 +1,4 @@
 .. module:: petl
-.. moduleauthor:: Alistair Miles <alimanfoo@googlemail.com>
 
 petl - Extract, Transform and Load (Tables of Data)
 ===================================================

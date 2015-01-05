@@ -20,17 +20,19 @@ import heapq
 import sys
 import operator
 import logging
-logger = logging.getLogger(__name__)
-warning = logger.warning
-info = logger.info
-debug = logger.debug
-from .compat import maketrans, string_types, numeric_types, \
+from petl.compat import maketrans, string_types, numeric_types, \
     Counter, OrderedDict, izip_longest, long, xrange, \
     next
 
 
 from .base import IterContainer
 from .comparison import comparable_itemgetter
+
+
+logger = logging.getLogger(__name__)
+warning = logger.warning
+info = logger.info
+debug = logger.debug
 
 
 class RowContainer(IterContainer):

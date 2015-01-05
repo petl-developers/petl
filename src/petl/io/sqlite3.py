@@ -4,11 +4,11 @@ from __future__ import absolute_import, print_function, division, \
 
 # standard library dependencies
 import sqlite3
-from ..compat import string_types, next
+from petl.compat import string_types, next
 
 
 # internal dependencies
-from ..util import RowContainer
+from petl.util import RowContainer
 
 
 quotechar = '"'

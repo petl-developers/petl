@@ -11,7 +11,7 @@ import subprocess
 import logging
 
 
-from ..compat import urlopen, StringIO, BytesIO, string_types
+from petl.compat import urlopen, StringIO, BytesIO, string_types
 
 
 logger = logging.getLogger(__name__)

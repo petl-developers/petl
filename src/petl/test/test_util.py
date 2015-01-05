@@ -258,8 +258,7 @@ def test_lookstr():
 
         
 def test_itervalues():
-    """Test the itervalues function."""
-    
+
     table = (('foo', 'bar', 'baz'), 
              ('a', 1, True), 
              ('b', 2), 
@@ -287,8 +286,7 @@ def test_itervalues():
 
 
 def test_values():
-    """Test the values function."""
-    
+
     table = (('foo', 'bar', 'baz'), 
              ('a', 1, True), 
              ('b', 2), 
@@ -323,8 +321,7 @@ def test_values():
 
 
 def test_valuecount():
-    """Test the valuecount function."""
-    
+
     table = (('foo', 'bar'), ('a', 1), ('b', 2), ('b', 7))
     n, f = valuecount(table, 'foo', 'b')
     eq_(2, n)
@@ -332,8 +329,7 @@ def test_valuecount():
     
         
 def test_valuecounter():
-    """Test the valuecounter function."""
-    
+
     table = (('foo', 'bar'), ('a', 1), ('b', 2), ('b', 7))
     actual = valuecounter(table, 'foo')
     expect = {'b': 2, 'a': 1}
@@ -341,7 +337,6 @@ def test_valuecounter():
     
         
 def test_valuecounter_shortrows():
-    """Test the valuecounter function."""
 
     table = (('foo', 'bar'), ('a', 7), ('b',), ('b', 7))
     actual = valuecounter(table, 'foo')
@@ -356,8 +351,7 @@ def test_valuecounter_shortrows():
 
 
 def test_valuecounts():
-    """Test the valuecounts function."""
-    
+
     table = (('foo', 'bar'), ('a', 1), ('b', 2), ('b', 7))
     actual = valuecounts(table, 'foo')
     expect = (('foo', 'count', 'frequency'), ('b', 2, 2./3), ('a', 1, 1./3))
@@ -402,15 +396,13 @@ def test_valuecounts_multifields():
 
     
 def test_isunique():
-    """Test the isunique function."""
-    
+
     table = (('foo', 'bar'), ('a', 1), ('b',), ('b', 2), ('c', 3, True))
     assert not isunique(table, 'foo')
     assert isunique(table, 'bar')
     
 
 def test_lookup():
-    """Test the lookup function."""
 
     t1 = (('foo', 'bar'), ('a', 1), ('b', 2), ('b', 3))
     
@@ -442,8 +434,7 @@ def test_lookup():
     
     
 def test_lookupone():
-    """Test the lookupone function."""
-    
+
     t1 = (('foo', 'bar'), ('a', 1), ('b', 2), ('b', 3))
     
     # lookup one column on another under strict mode
@@ -482,8 +473,7 @@ def test_lookupone():
     
 
 def test_dictlookup():
-    """Test the dictlookup function."""
-    
+
     t1 = (('foo', 'bar'), ('a', 1), ('b', 2), ('b', 3))
     
     actual = dictlookup(t1, 'foo')
@@ -507,8 +497,7 @@ def test_dictlookup():
     
     
 def test_dictlookupone():
-    """Test the dictlookupone function."""
-    
+
     t1 = (('foo', 'bar'), ('a', 1), ('b', 2), ('b', 3))
     
     try:
@@ -539,7 +528,6 @@ def test_dictlookupone():
     
 
 def test_recordlookup():
-    """Test the recordlookup function."""
 
     t1 = (('foo', 'bar'), ('a', 1), ('b', 2), ('b', 3))
 
@@ -549,7 +537,6 @@ def test_recordlookup():
 
 
 def test_recordlookupone():
-    """Test the recordlookupone function."""
 
     t1 = (('foo', 'bar'), ('a', 1), ('b', 2), ('b', 3))
 
@@ -567,7 +554,6 @@ def test_recordlookupone():
 
 
 def test_rowlengths():
-    """Test the rowlengths function."""
 
     table = (('foo', 'bar', 'baz'),
              ('A', 1, 2),

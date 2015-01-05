@@ -6,12 +6,12 @@ from __future__ import absolute_import, print_function, division, \
 import io
 import json
 from json.encoder import JSONEncoder
-from ..compat import PY2
+from petl.compat import PY2
 
 
 # internal dependencies
-from ..util import data, RowContainer, dicts as asdicts
-from .sources import read_source_from_arg, write_source_from_arg
+from petl.util import data, RowContainer, dicts as asdicts
+from petl.io.sources import read_source_from_arg, write_source_from_arg
 
 
 def fromjson(source, *args, **kwargs):
@@ -19,22 +19,24 @@ def fromjson(source, *args, **kwargs):
     the top level object, and each member of the array will be treated as a
     row of data. E.g.::
 
-        >>> from petl import fromjson, look
-        >>> data = '[{"foo": "a", "bar": 1}, {"foo": "b", "bar": 2}, {"foo": "c", "bar": 2}]'
+        >>> data = '''[{"foo": "a", "bar": 1},
+        ... {"foo": "b", "bar": 2},
+        ... {"foo": "c", "bar": 2}]'''
         >>> with open('example1.json', 'w') as f:
-        ...     f.write(data)
+        ...     _ = f.write(data)
         ...
+        >>> from petl import fromjson, look
         >>> table1 = fromjson('example1.json')
         >>> look(table1)
-        +--------+--------+
-        | u'foo' | u'bar' |
-        +========+========+
-        | u'a'   | 1      |
-        +--------+--------+
-        | u'b'   | 2      |
-        +--------+--------+
-        | u'c'   | 2      |
-        +--------+--------+
+        +-------+-------+
+        | 'bar' | 'foo' |
+        +=======+=======+
+        |     1 | 'a'   |
+        +-------+-------+
+        |     2 | 'b'   |
+        +-------+-------+
+        |     2 | 'c'   |
+        +-------+-------+
 
     If your JSON file does not fit this structure, you will need to parse it
     via :func:`json.load` and select the array to treat as the data, see also
@@ -85,18 +87,20 @@ class JsonView(RowContainer):
 def fromdicts(dicts, header=None):
     """View a sequence of Python :class:`dict` as a table. E.g.::
 
+        >>> dicts = [{"foo": "a", "bar": 1},
+        ...          {"foo": "b", "bar": 2},
+        ...          {"foo": "c", "bar": 2}]
         >>> from petl import fromdicts, look
-        >>> dicts = [{"foo": "a", "bar": 1}, {"foo": "b", "bar": 2}, {"foo": "c", "bar": 2}]
         >>> table = fromdicts(dicts)
         >>> look(table)
         +-------+-------+
-        | 'foo' | 'bar' |
+        | 'bar' | 'foo' |
         +=======+=======+
-        | 'a'   | 1     |
+        |     1 | 'a'   |
         +-------+-------+
-        | 'b'   | 2     |
+        |     2 | 'b'   |
         +-------+-------+
-        | 'c'   | 2     |
+        |     2 | 'c'   |
         +-------+-------+
 
     See also :func:`fromjson`.
@@ -133,24 +137,15 @@ class DictsView(RowContainer):
 def tojson(table, source=None, prefix=None, suffix=None, *args, **kwargs):
     """Write a table in JSON format, with rows output as JSON objects. E.g.::
 
-        >>> from petl import tojson, look
-        >>> look(table)
-        +-------+-------+
-        | 'foo' | 'bar' |
-        +=======+=======+
-        | 'a'   | 1     |
-        +-------+-------+
-        | 'b'   | 2     |
-        +-------+-------+
-        | 'c'   | 2     |
-        +-------+-------+
-
-        >>> tojson(table, 'example.json')
+        >>> table1 = [['foo', 'bar'],
+        ...           ['a', 1],
+        ...           ['b', 2],
+        ...           ['c', 2]]
+        >>> from petl import tojson
+        >>> tojson(table1, 'example.json', sort_keys=True)
         >>> # check what it did
-        ... with open('example.json') as f:
-        ...     print f.read()
-        ...
-        [{"foo": "a", "bar": 1}, {"foo": "b", "bar": 2}, {"foo": "c", "bar": 2}]
+        ... print(open('example.json').read())
+        [{"bar": 1, "foo": "a"}, {"bar": 2, "foo": "b"}, {"bar": 2, "foo": "c"}]
 
     Note that this is currently not streaming, all data is loaded into memory
     before being written to the file.
@@ -165,23 +160,14 @@ def tojsonarrays(table, source=None, prefix=None, suffix=None,
                  output_header=False, *args, **kwargs):
     """Write a table in JSON format, with rows output as JSON arrays. E.g.::
 
-        >>> from petl import tojsonarrays, look
-        >>> look(table)
-        +-------+-------+
-        | 'foo' | 'bar' |
-        +=======+=======+
-        | 'a'   | 1     |
-        +-------+-------+
-        | 'b'   | 2     |
-        +-------+-------+
-        | 'c'   | 2     |
-        +-------+-------+
-
-        >>> tojsonarrays(table, 'example.json')
+        >>> table1 = [['foo', 'bar'],
+        ...           ['a', 1],
+        ...           ['b', 2],
+        ...           ['c', 2]]
+        >>> from petl import tojsonarrays
+        >>> tojsonarrays(table1, 'example.json')
         >>> # check what it did
-        ... with open('example.json') as f:
-        ...     print f.read()
-        ...
+        ... print(open('example.json').read())
         [["a", 1], ["b", 2], ["c", 2]]
 
     Note that this is currently not streaming, all data is loaded into memory
