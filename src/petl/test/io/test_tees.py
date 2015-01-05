@@ -61,6 +61,28 @@ def test_teetsv():
         etl.fromtsv(f2.name).convertnumbers())
 
 
+def test_teecsv_write_header():
+
+    t1 = (('foo', 'bar'),
+          ('a', '2'),
+          ('b', '1'),
+          ('c', '3'))
+
+    f1 = NamedTemporaryFile(delete=False)
+    f2 = NamedTemporaryFile(delete=False)
+
+    (etl
+     .wrap(t1)
+     .convertnumbers()
+     .teecsv(f1.name, write_header=False)
+     .selectgt('bar', 1).tocsv(f2.name))
+
+    ieq(t1[1:],
+        etl.fromcsv(f1.name))
+    ieq(etl.wrap(t1).convertnumbers().selectgt('bar', 1),
+        etl.fromcsv(f2.name).convertnumbers())
+
+
 def test_teeucsv():
 
     t1 = ((u'name', u'id'),
@@ -78,6 +100,30 @@ def test_teeucsv():
     ieq(t1,
         etl.fromucsv(f1.name).convertnumbers())
     ieq(etl.wrap(t1).selectgt('id', 1),
+        etl.fromucsv(f2.name).convertnumbers())
+
+
+def test_teeucsv_write_header():
+
+    t1 = ((u'name', u'id'),
+          (u'Արամ Խաչատրյան', u'1'),
+          (u'Johann Strauß', u'2'),
+          (u'Вагиф Сәмәдоғлу', u'3'),
+          (u'章子怡', u'4'),
+          )
+
+    f1 = NamedTemporaryFile(delete=False)
+    f2 = NamedTemporaryFile(delete=False)
+
+    (etl
+     .wrap(t1)
+     .convertnumbers()
+     .teeucsv(f1.name, write_header=False)
+     .selectgt('id', 1).toucsv(f2.name))
+
+    ieq(t1[1:],
+        etl.fromucsv(f1.name))
+    ieq(etl.wrap(t1).convertnumbers().selectgt('id', 1),
         etl.fromucsv(f2.name).convertnumbers())
 
 

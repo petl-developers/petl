@@ -151,38 +151,53 @@ def _writeucsv(table, source, mode, write_header, encoding, **csvargs):
             writer.writerow(row)
 
 
-def teecsv_impl(table, source, **csvargs):
-    return TeeCSVContainer(table, source=source, **csvargs)
+def teecsv_impl(table, source, write_header, **csvargs):
+    return TeeCSVContainer(table, source=source, write_header=write_header,
+                           **csvargs)
 
 
 class TeeCSVContainer(RowContainer):
-    def __init__(self, table, source=None, **csvargs):
+    def __init__(self, table, source=None, write_header=True, **csvargs):
         self.table = table
         self.source = source
+        self.write_header = write_header
         self.csvargs = csvargs
 
     def __iter__(self):
         with self.source.open_('wb') as f:
             writer = csv.writer(f, **self.csvargs)
-            for row in self.table:
+            it = iter(self.table)
+            hdr = next(it)
+            if self.write_header:
+                writer.writerow(hdr)
+            yield hdr
+            for row in it:
                 writer.writerow(row)
                 yield row
 
 
-def teeucsv_impl(table, source, encoding='utf-8', **csvargs):
-    return TeeUCSVContainer(table, source=source, encoding=encoding, **csvargs)
+def teeucsv_impl(table, source, write_header, encoding='utf-8', **csvargs):
+    return TeeUCSVContainer(table, source=source, write_header=write_header,
+                            encoding=encoding, **csvargs)
 
 
 class TeeUCSVContainer(RowContainer):
-    def __init__(self, table, source=None, encoding='utf-8', **csvargs):
+    def __init__(self, table, source=None, write_header=True, encoding='utf-8',
+                 **csvargs):
         self.table = table
         self.source = source
+        self.write_header = write_header
         self.encoding = encoding
         self.csvargs = csvargs
 
     def __iter__(self):
         with self.source.open_('wb') as f:
             writer = UnicodeWriter(f, encoding=self.encoding, **self.csvargs)
-            for row in self.table:
+            it = iter(self.table)
+            hdr = next(it)
+            if self.write_header:
+                writer.writerow(hdr)
+            yield hdr
+            for row in it:
                 writer.writerow(row)
                 yield row
