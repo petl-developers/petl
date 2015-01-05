@@ -3,22 +3,21 @@ from __future__ import absolute_import, print_function, division, \
 
 
 # standard library dependencies
-from petl.compat import pickle
+from petl.compat import pickle, next
 
 
 # internal dependencies
-from petl.util import RowContainer, data
+from petl.util import RowContainer
 from petl.io.sources import read_source_from_arg, write_source_from_arg
 
 
 def frompickle(source=None):
-    """
-    Returns a table providing access to the data pickled in the given file. The
-    rows in the table should have been pickled to the file one at a time. E.g.::
+    """Extract a table From data pickled in the given file. The rows in the
+    table should have been pickled to the file one at a time. E.g.::
 
-        >>> import pickle
         >>> # set up a file to demonstrate with
-        ... with open('test.dat', 'wb') as f:
+        ... import pickle
+        >>> with open('test.dat', 'wb') as f:
         ...     pickle.dump(['foo', 'bar'], f)
         ...     pickle.dump(['a', 1], f)
         ...     pickle.dump(['b', 2], f)
@@ -26,19 +25,17 @@ def frompickle(source=None):
         ...
         >>> # now demonstrate the use of petl.frompickle
         ... from petl import frompickle, look
-        >>> testdat = frompickle('test.dat')
-        >>> look(testdat)
+        >>> table1 = frompickle('test.dat')
+        >>> look(table1)
         +-------+-------+
         | 'foo' | 'bar' |
         +=======+=======+
-        | 'a'   | 1     |
+        | 'a'   |     1 |
         +-------+-------+
-        | 'b'   | 2     |
+        | 'b'   |     2 |
         +-------+-------+
-        | 'c'   | 2.5   |
+        | 'c'   |   2.5 |
         +-------+-------+
-
-    Supports transparent reading from URLs, ``.gz`` and ``.bz2`` files.
 
     """
 
@@ -60,34 +57,27 @@ class PickleView(RowContainer):
                 pass
 
 
-def topickle(table, source=None, protocol=-1):
-    """
-    Write the table to a pickle file. E.g.::
+def topickle(table, source=None, protocol=-1, write_header=True):
+    """Write the table to a pickle file. E.g.::
 
+        >>> table1 = [['foo', 'bar'],
+        ...           ['a', 1],
+        ...           ['b', 2],
+        ...           ['c', 2]]
         >>> from petl import topickle, look
-        >>> look(table)
-        +-------+-------+
-        | 'foo' | 'bar' |
-        +=======+=======+
-        | 'a'   | 1     |
-        +-------+-------+
-        | 'b'   | 2     |
-        +-------+-------+
-        | 'c'   | 2     |
-        +-------+-------+
-
-        >>> topickle(table, 'test.dat')
+        >>> topickle(table1, 'test.dat')
         >>> # look what it did
         ... from petl import frompickle
-        >>> look(frompickle('test.dat'))
+        >>> table2 = frompickle('test.dat')
+        >>> look(table2)
         +-------+-------+
         | 'foo' | 'bar' |
         +=======+=======+
-        | 'a'   | 1     |
+        | 'a'   |     1 |
         +-------+-------+
-        | 'b'   | 2     |
+        | 'b'   |     2 |
         +-------+-------+
-        | 'c'   | 2     |
+        | 'c'   |     2 |
         +-------+-------+
 
     Note that if a file already exists at the given location, it will be
@@ -96,102 +86,64 @@ def topickle(table, source=None, protocol=-1):
     The pickle file format preserves type information, i.e., reading and writing
     is round-trippable.
 
-    Supports transparent writing to ``.gz`` and ``.bz2`` files.
-
     """
 
-    source = write_source_from_arg(source)
-    with source.open_('wb') as f:
-        for row in table:
-            pickle.dump(row, f, protocol)
+    _writepickle(table, source=source, mode='wb', protocol=protocol,
+                 write_header=write_header)
 
 
-def appendpickle(table, source=None, protocol=-1):
-    """
-    Append data to an existing pickle file. E.g.::
-
-        >>> from petl import look, frompickle
-        >>> # inspect an existing pickle file
-        ... testdat = frompickle('test.dat')
-        >>> look(testdat)
-        +-------+-------+
-        | 'foo' | 'bar' |
-        +=======+=======+
-        | 'a'   | 1     |
-        +-------+-------+
-        | 'b'   | 2     |
-        +-------+-------+
-        | 'c'   | 2     |
-        +-------+-------+
-
-        >>> # append some data
-        ... from petl import appendpickle
-        >>> look(table)
-        +-------+-------+
-        | 'foo' | 'bar' |
-        +=======+=======+
-        | 'd'   | 7     |
-        +-------+-------+
-        | 'e'   | 42    |
-        +-------+-------+
-        | 'f'   | 12    |
-        +-------+-------+
-
-        >>> appendpickle(table, 'test.dat')
-        >>> # look what it did
-        ... look(testdat)
-        +-------+-------+
-        | 'foo' | 'bar' |
-        +=======+=======+
-        | 'a'   | 1     |
-        +-------+-------+
-        | 'b'   | 2     |
-        +-------+-------+
-        | 'c'   | 2     |
-        +-------+-------+
-        | 'd'   | 7     |
-        +-------+-------+
-        | 'e'   | 42    |
-        +-------+-------+
-        | 'f'   | 12    |
-        +-------+-------+
+def appendpickle(table, source=None, protocol=-1, write_header=False):
+    """Append data to an existing pickle file. I.e., as :func:`topickle`
+    but the file is opened in append mode.
 
     Note that no attempt is made to check that the fields or row lengths are
     consistent with the existing data, the data rows from the table are simply
-    appended to the file. See also the :func:`cat` function.
-
-    Supports transparent writing to ``.gz`` and ``.bz2`` files.
+    appended to the file.
 
     """
 
+    _writepickle(table, source=source, mode='ab', protocol=protocol,
+                 write_header=write_header)
+
+
+def _writepickle(table, source, mode, protocol, write_header):
     source = write_source_from_arg(source)
-    with source.open_('ab') as f:
-        for row in data(table):
+    with source.open_(mode) as f:
+        it = iter(table)
+        hdr = next(it)
+        if write_header:
+            pickle.dump(hdr, f, protocol)
+        for row in it:
             pickle.dump(row, f, protocol)
 
 
-def teepickle(table, source=None, protocol=-1):
-    """
-    Return a table that writes rows to a pickle file as they are iterated over.
-
-    .. versionadded:: 0.25
+def teepickle(table, source=None, protocol=-1, write_header=True):
+    """Return a table that writes rows to a pickle file as they are iterated
+    over.
 
     """
 
-    return TeePickleContainer(table, source=source, protocol=protocol)
+    return TeePickleContainer(table, source=source, protocol=protocol,
+                              write_header=write_header)
 
 
 class TeePickleContainer(RowContainer):
 
-    def __init__(self, table, source=None, protocol=-1):
+    def __init__(self, table, source=None, protocol=-1, write_header=True):
         self.table = table
         self.source = source
         self.protocol = protocol
+        self.write_header = write_header
 
     def __iter__(self):
         protocol = self.protocol
         source = write_source_from_arg(self.source)
         with source.open_('wb') as f:
-            for row in self.table:
+            it = iter(self.table)
+            hdr = next(it)
+            if self.write_header:
+                pickle.dump(hdr, f, protocol)
+            yield hdr
+            for row in it:
                 pickle.dump(row, f, protocol)
                 yield row

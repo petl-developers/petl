@@ -1,6 +1,4 @@
-*.txt~
-*.py~
-*.html~
+*~
 *.pyc
 docs/_build
 build
@@ -13,3 +11,6 @@ sandbox.*
 .idea
 tmp/*.*
 .tox/
+*.json
+*.dat
+*.csv
