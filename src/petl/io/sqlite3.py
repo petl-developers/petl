@@ -21,43 +21,36 @@ def _quote(s):
 
 
 def fromsqlite3(source, query, *args, **kwargs):
-    """
-    Provides access to data from an :mod:`sqlite3` database file via a given
+    """Provides access to data from an :mod:`sqlite3` database file via a given
     query. E.g.::
 
         >>> import sqlite3
-        >>> from petl import look, fromsqlite3
         >>> # set up a database to demonstrate with
-        >>> data = [['a', 1],
+        ... data = [['a', 1],
         ...         ['b', 2],
         ...         ['c', 2.0]]
         >>> connection = sqlite3.connect('test.db')
         >>> c = connection.cursor()
-        >>> c.execute('create table foobar (foo, bar)')
-        <sqlite3.Cursor object at 0x2240b90>
+        >>> _ = c.execute('drop table if exists foobar')
+        >>> _ = c.execute('create table foobar (foo, bar)')
         >>> for row in data:
-        ...     c.execute('insert into foobar values (?, ?)', row)
+        ...     _ = c.execute('insert into foobar values (?, ?)', row)
         ...
-        <sqlite3.Cursor object at 0x2240b90>
-        <sqlite3.Cursor object at 0x2240b90>
-        <sqlite3.Cursor object at 0x2240b90>
         >>> connection.commit()
         >>> c.close()
-        >>>
         >>> # now demonstrate the petl.fromsqlite3 function
-        ... foobar = fromsqlite3('test.db', 'select * from foobar')
+        ... from petl import look, fromsqlite3
+        >>> foobar = fromsqlite3('test.db', 'select * from foobar')
         >>> look(foobar)
         +-------+-------+
         | 'foo' | 'bar' |
         +=======+=======+
-        | u'a'  | 1     |
+        | 'a'   |     1 |
         +-------+-------+
-        | u'b'  | 2     |
+        | 'b'   |     2 |
         +-------+-------+
-        | u'c'  | 2.0   |
+        | 'c'   |   2.0 |
         +-------+-------+
-
-    .. versionchanged:: 0.10.2
 
     Either a database file name or a connection object can be given as the
     first argument.
@@ -99,37 +92,29 @@ class Sqlite3View(RowContainer):
 
 def tosqlite3(table, filename_or_connection, tablename, create=False,
               commit=True):
-    """
-    Load data into a table in an :mod:`sqlite3` database. Note that if
+    """Load data into a table in an :mod:`sqlite3` database. Note that if
     the database table exists, it will be truncated, i.e., all
     existing rows will be deleted prior to inserting the new
     data. E.g.::
 
+        >>> table1 = [['foo', 'bar'],
+        ...           ['a', 1],
+        ...           ['b', 2],
+        ...           ['c', 2]]
         >>> from petl import tosqlite3, look
-        >>> look(table)
-        +-------+-------+
-        | 'foo' | 'bar' |
-        +=======+=======+
-        | 'a'   | 1     |
-        +-------+-------+
-        | 'b'   | 2     |
-        +-------+-------+
-        | 'c'   | 2     |
-        +-------+-------+
-
-        >>> # by default, if the table does not already exist, it will be created
-        ... tosqlite3(table, 'test.db', 'foobar')
+        >>> _ = tosqlite3(table1, 'test.db', 'foobar', create=True)
         >>> # look what it did
         ... from petl import fromsqlite3
-        >>> look(fromsqlite3('test.db', 'select * from foobar'))
+        >>> table2 = fromsqlite3('test.db', 'select * from foobar')
+        >>> look(table2)
         +-------+-------+
         | 'foo' | 'bar' |
         +=======+=======+
-        | u'a'  | 1     |
+        | 'a'   |     1 |
         +-------+-------+
-        | u'b'  | 2     |
+        | 'b'   |     2 |
         +-------+-------+
-        | u'c'  | 2     |
+        | 'c'   |     2 |
         +-------+-------+
 
     If the table does not exist and ``create=True`` then a table will be created
@@ -137,14 +122,8 @@ def tosqlite3(table, filename_or_connection, tablename, create=False,
     specifications will be included in the table creation statement and so
     column type affinities may be inappropriate.
 
-    .. versionchanged:: 0.10.2
-
     Either a database file name or a connection object can be given as the
     second argument.
-
-    .. versionchanged:: 0.21
-
-    Default value for ``create`` argument changed to ``False``.
 
     """
 
@@ -194,45 +173,9 @@ def _tosqlite3(table, filename_or_connection, tablename, create=False,
 
 
 def appendsqlite3(table, filename_or_connection, tablename, commit=True):
-    """
-    Load data into an existing table in an :mod:`sqlite3`
-    database. Note that the database table will be appended, i.e., the
-    new data will be inserted into the table, and any existing rows
-    will remain. E.g.::
-
-        >>> from petl import appendsqlite3, look
-        >>> look(moredata)
-        +-------+-------+
-        | 'foo' | 'bar' |
-        +=======+=======+
-        | 'd'   | 7     |
-        +-------+-------+
-        | 'e'   | 9     |
-        +-------+-------+
-        | 'f'   | 1     |
-        +-------+-------+
-
-        >>> appendsqlite3(moredata, 'test.db', 'foobar')
-        >>> # look what it did
-        ... from petl import look, fromsqlite3
-        >>> look(fromsqlite3('test.db', 'select * from foobar'))
-        +-------+-------+
-        | 'foo' | 'bar' |
-        +=======+=======+
-        | u'a'  | 1     |
-        +-------+-------+
-        | u'b'  | 2     |
-        +-------+-------+
-        | u'c'  | 2     |
-        +-------+-------+
-        | u'd'  | 7     |
-        +-------+-------+
-        | u'e'  | 9     |
-        +-------+-------+
-        | u'f'  | 1     |
-        +-------+-------+
-
-    .. versionchanged:: 0.10.2
+    """Load data into a table in an :mod:`sqlite3` database. As
+    :func:`tosqlite3` except the table must exist and is not truncated before
+    loading.
 
     Either a database file name or a connection object can be given as the
     second argument.

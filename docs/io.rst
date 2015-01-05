@@ -133,7 +133,7 @@ the source code of the :mod:`petl.io.sources` module for full details.
 .. autoclass:: petl.io.sources.StdinSource
 .. autoclass:: petl.io.sources.StdoutSource
 .. autoclass:: petl.io.sources.URLSource
-.. autoclass:: petl.io.sources.StringSource
+.. autoclass:: petl.io.sources.MemorySource
 .. autoclass:: petl.io.sources.PopenSource
 
 

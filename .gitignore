@@ -14,3 +14,4 @@ tmp/*.*
 *.json
 *.dat
 *.csv
+*.db

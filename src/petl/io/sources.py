@@ -111,14 +111,14 @@ class URLSource(object):
             f.close()
 
 
-class StringSource(object):
+class MemorySource(object):
 
     def __init__(self, s=None):
         self.s = s
         self.buffer = None
 
     @contextmanager
-    def open_(self, mode='r'):
+    def open_(self, mode='rb'):
         try:
             if 'r' in mode:
                 if self.s is not None:
@@ -150,6 +150,10 @@ class StringSource(object):
     def getvalue(self):
         if self.buffer:
             return self.buffer.getvalue()
+
+
+# backwards compatibility
+StringSource = MemorySource
 
 
 class PopenSource(object):
