@@ -4,9 +4,16 @@ from __future__ import division, print_function, absolute_import, \
 
 import io
 import csv
+import logging
 
 
 from ..util import RowContainer, data
+
+
+logger = logging.getLogger(__name__)
+warning = logger.warning
+info = logger.info
+debug = logger.debug
 
 
 def fromcsv_impl(source, **csvargs):
@@ -28,9 +35,12 @@ class CSVView(RowContainer):
         with self.source.open_('rb') as buffer:
             csvfile = io.TextIOWrapper(buffer, encoding=self.encoding,
                                        newline='')
-            reader = csv.reader(csvfile, **self.csvargs)
-            for row in reader:
-                yield tuple(row)
+            try:
+                reader = csv.reader(csvfile, **self.csvargs)
+                for row in reader:
+                    yield tuple(row)
+            finally:
+                csvfile.detach()
 
 
 def tocsv_impl(table, source, write_header=True, **csvargs):
@@ -62,9 +72,12 @@ def _writecsv(table, source, mode, write_header, encoding, **csvargs):
         # wrap buffer for text IO
         csvfile = io.TextIOWrapper(buffer, encoding=encoding,
                                    newline='', write_through=True)
-        writer = csv.writer(csvfile, **csvargs)
-        for row in rows:
-            writer.writerow(row)
+        try:
+            writer = csv.writer(csvfile, **csvargs)
+            for row in rows:
+                writer.writerow(row)
+        finally:
+            csvfile.detach()
 
 
 def teecsv_impl(table, source, **csvargs):
@@ -87,7 +100,10 @@ class TeeCSVContainer(RowContainer):
             # wrap buffer for text IO
             csvfile = io.TextIOWrapper(buffer, encoding=self.encoding,
                                        newline='', write_through=True)
-            writer = csv.writer(csvfile, **self.csvargs)
-            for row in self.table:
-                writer.writerow(row)
-                yield row
+            try:
+                writer = csv.writer(csvfile, **self.csvargs)
+                for row in self.table:
+                    writer.writerow(row)
+                    yield row
+            finally:
+                csvfile.detach()

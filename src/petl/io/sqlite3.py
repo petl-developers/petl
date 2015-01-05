@@ -4,7 +4,7 @@ from __future__ import absolute_import, print_function, division, \
 
 # standard library dependencies
 import sqlite3
-from ..compat import string_types
+from ..compat import string_types, next
 
 
 # internal dependencies
@@ -165,7 +165,7 @@ def _tosqlite3(table, filename_or_connection, tablename, create=False,
 
     tablename = _quote(tablename)
     it = iter(table)
-    fields = it.next()
+    fields = next(it)
     fieldnames = map(str, fields)
     colnames = [_quote(n) for n in fieldnames]
 

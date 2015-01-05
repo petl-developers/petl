@@ -124,11 +124,14 @@ else:
         def __iter__(self):
             with self.source.open_('rb') as buffer:
                 f = io.TextIOWrapper(buffer, encoding=self.encoding, newline='')
-                if self.header is not None:
-                    yield tuple(self.header)
-                s = self.strip
-                for line in f:
-                    yield (line.strip(s),)
+                try:
+                    if self.header is not None:
+                        yield tuple(self.header)
+                    s = self.strip
+                    for line in f:
+                        yield (line.strip(s),)
+                finally:
+                    f.detach()
 
     UnicodeTextView = TextView
 
@@ -189,12 +192,15 @@ def totext(table, source=None, template=None, prologue=None, epilogue=None):
     with source.open_('wb') as f:
         if PY2:
             # write direct to buffer
-            pass
+            _writetext(table, f, prologue, template, epilogue)
         else:
             # wrap buffer for text encoding
             f = io.TextIOWrapper(f, encoding='ascii', newline='',
                                  write_through=True)
-        _writetext(table, f, prologue, template, epilogue)
+            try:
+                _writetext(table, f, prologue, template, epilogue)
+            finally:
+                f.detach()
 
 
 def appendtext(table, source=None, template=None, prologue=None, epilogue=None):
@@ -207,12 +213,15 @@ def appendtext(table, source=None, template=None, prologue=None, epilogue=None):
     with source.open_('ab') as f:
         if PY2:
             # write direct to buffer
-            pass
+            _writetext(table, f, prologue, template, epilogue)
         else:
             # wrap buffer for text encoding
             f = io.TextIOWrapper(f, encoding='ascii', newline='',
                                  write_through=True)
-        _writetext(table, f, prologue, template, epilogue)
+            try:
+                _writetext(table, f, prologue, template, epilogue)
+            finally:
+                f.detach()
 
 
 def toutext(table, source=None, encoding='utf-8', template=None, prologue=None,
@@ -228,10 +237,14 @@ def toutext(table, source=None, encoding='utf-8', template=None, prologue=None,
     with source.open_('wb') as f:
         if PY2:
             f = codecs.getwriter(encoding)(f)
+            _writetext(table, f, prologue, template, epilogue)
         else:
             f = io.TextIOWrapper(f, encoding=encoding, newline='',
                                  write_through=True)
-        _writetext(table, f, prologue, template, epilogue)
+            try:
+                _writetext(table, f, prologue, template, epilogue)
+            finally:
+                f.detach()
 
 
 def appendutext(table, source=None, encoding='utf-8', template=None,
@@ -247,10 +260,14 @@ def appendutext(table, source=None, encoding='utf-8', template=None,
     with source.open_('ab') as f:
         if PY2:
             f = codecs.getwriter(encoding)(f)
+            _writetext(table, f, prologue, template, epilogue)
         else:
             f = io.TextIOWrapper(f, encoding=encoding, newline='',
                                  write_through=True)
-        _writetext(table, f, prologue, template, epilogue)
+            try:
+                _writetext(table, f, prologue, template, epilogue)
+            finally:
+                f.detach()
 
 
 def _writetext(table, f, prologue, template, epilogue):
@@ -306,14 +323,19 @@ class TeeTextContainer(RowContainer):
         with source.open_('wb') as f:
             if PY2:
                 # write direct to buffer
-                pass
+                for row in _teetext(self.table, f, self.prologue, self.template,
+                                    self.epilogue):
+                    yield row
             else:
                 # wrap buffer for text encoding
                 f = io.TextIOWrapper(f, encoding='ascii', newline='',
                                      write_through=True)
-            for row in _teetext(self.table, f, self.prologue, self.template,
-                                self.epilogue):
-                yield row
+                try:
+                    for row in _teetext(self.table, f, self.prologue,
+                                        self.template, self.epilogue):
+                        yield row
+                finally:
+                    f.detach()
 
 
 def teeutext(table, source=None, encoding='utf-8', template=None,
@@ -345,9 +367,15 @@ class TeeUTextContainer(RowContainer):
         with source.open_('wb') as f:
             if PY2:
                 f = codecs.getwriter(self.encoding)(f)
+                for row in _teetext(self.table, f, self.prologue, self.template,
+                                    self.epilogue):
+                    yield row
             else:
                 f = io.TextIOWrapper(f, encoding=self.encoding, newline='',
                                      write_through=True)
-            for row in _teetext(self.table, f, self.prologue, self.template,
-                                self.epilogue):
-                yield row
+                try:
+                    for row in _teetext(self.table, f, self.prologue,
+                                        self.template, self.epilogue):
+                        yield row
+                finally:
+                    f.detach()

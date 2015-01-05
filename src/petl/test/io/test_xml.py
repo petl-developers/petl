@@ -192,7 +192,7 @@ def test_fromxml_6():
     ieq(expect, actual)  # verify can iterate twice
 
 
-def test_fromxml_url():
-
-    tbl = fromxml('http://feeds.bbci.co.uk/news/rss.xml', './/item', 'title')
-    assert nrows(tbl) > 0
+# def test_fromxml_url():
+#
+#     tbl = fromxml('http://feeds.bbci.co.uk/news/rss.xml', './/item', 'title')
+#     assert nrows(tbl) > 0

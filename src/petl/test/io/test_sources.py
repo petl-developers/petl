@@ -3,6 +3,7 @@ from __future__ import absolute_import, print_function, division, \
 
 
 import zipfile
+from petl.compat import PY2
 
 
 from petl.testutils import ieq, eq_
@@ -20,7 +21,7 @@ def test_stringsource():
     # test writing to a string buffer
     ss = StringSource()
     tocsv(table1, ss)
-    expect = "foo,bar\r\na,1\r\nb,2\r\nc,2\r\n"
+    expect = b"foo,bar\r\na,1\r\nb,2\r\nc,2\r\n"
     actual = ss.getvalue()
     eq_(expect, actual)
 
@@ -32,7 +33,7 @@ def test_stringsource():
     # test appending
     appendcsv(table1, ss)
     actual = ss.getvalue()
-    expect = "foo,bar\r\na,1\r\nb,2\r\nc,2\r\na,1\r\nb,2\r\nc,2\r\n"
+    expect = b"foo,bar\r\na,1\r\nb,2\r\nc,2\r\na,1\r\nb,2\r\nc,2\r\n"
     eq_(expect, actual)
 
 
@@ -40,10 +41,14 @@ def test_popensource():
 
     expect = (('foo', 'bar'),
               ('a', '1'))
+    if PY2:
+        delimiter = b' '
+    else:
+        delimiter = ' '
     actual = fromcsv(PopenSource(r'echo -e foo bar\\na 1',
                                  shell=True,
                                  executable='/bin/bash'),
-                     delimiter=b' ')
+                     delimiter=delimiter)
     ieq(expect, actual)
 
 

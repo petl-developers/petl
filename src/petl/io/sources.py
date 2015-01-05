@@ -8,9 +8,16 @@ import bz2
 import zipfile
 from contextlib import contextmanager
 import subprocess
+import logging
 
 
 from ..compat import urlopen, StringIO, BytesIO, string_types
+
+
+logger = logging.getLogger(__name__)
+warning = logger.warning
+info = logger.info
+debug = logger.debug
 
 
 class FileSource(object):
@@ -58,8 +65,8 @@ class ZipSource(object):
 
     @contextmanager
     def open_(self, mode):
-        outer_mode = mode.translate({ord('b'): None, ord('U'): None})
-        zf = zipfile.ZipFile(self.filename, outer_mode, **self.kwargs)
+        mode = mode.translate({ord('b'): None, ord('U'): None})
+        zf = zipfile.ZipFile(self.filename, mode, **self.kwargs)
         try:
             if self.pwd is not None:
                 yield zf.open(self.membername, mode, self.pwd)
@@ -113,7 +120,7 @@ class StringSource(object):
     @contextmanager
     def open_(self, mode='r'):
         try:
-            if 'r' in mode:  # read
+            if 'r' in mode:
                 if self.s is not None:
                     if 'b' in mode:
                         self.buffer = BytesIO(self.s)
@@ -121,17 +128,14 @@ class StringSource(object):
                         self.buffer = StringIO(self.s)
                 else:
                     raise Exception('no string data supplied')
-            elif 'w' in mode:  # write
-                # drop existing buffer
+            elif 'w' in mode:
                 if self.buffer is not None:
                     self.buffer.close()
-                # new buffer
                 if 'b' in mode:
                     self.buffer = BytesIO()
                 else:
                     self.buffer = StringIO()
-            elif 'a' in mode:  # append
-                # new buffer only if none already
+            elif 'a' in mode:
                 if self.buffer is None:
                     if 'b' in self.buffer:
                         self.buffer = BytesIO()
