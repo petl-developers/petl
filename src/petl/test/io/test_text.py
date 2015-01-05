@@ -1,5 +1,5 @@
-from __future__ import absolute_import, print_function, division, \
-    unicode_literals
+from __future__ import absolute_import, print_function, division
+# N.B., do not import unicode_literals in tests
 
 
 from tempfile import NamedTemporaryFile
@@ -14,11 +14,11 @@ from petl.io.text import fromtext, totext
 def test_fromtext():
 
     # initial data
-    f = NamedTemporaryFile(delete=False, mode='wb')
-    f.write(b'foo\tbar\n')
-    f.write(b'a\t1\n')
-    f.write(b'b\t2\n')
-    f.write(b'c\t3\n')
+    f = NamedTemporaryFile(delete=False, mode='wt')
+    f.write('foo\tbar\n')
+    f.write('a\t1\n')
+    f.write('b\t2\n')
+    f.write('c\t3\n')
     f.close()
 
     actual = fromtext(f.name)
@@ -33,10 +33,10 @@ def test_fromtext():
 
 def test_fromtext_lineterminators():
 
-    data = [b'foo,bar',
-            b'a,1',
-            b'b,2',
-            b'c,2']
+    data = ['foo,bar',
+            'a,1',
+            'b,2',
+            'c,2']
 
     expect = (('lines',),
               ('foo,bar',),
@@ -44,8 +44,8 @@ def test_fromtext_lineterminators():
               ('b,2',),
               ('c,2',))
 
-    for lt in b'\r', b'\n', b'\r\n':
-        f = NamedTemporaryFile(mode='wb', delete=False)
+    for lt in '\r', '\n', '\r\n':
+        f = NamedTemporaryFile(mode='wt', delete=False)
         f.write(lt.join(data))
         f.close()
         actual = fromtext(f.name)
@@ -73,9 +73,9 @@ def test_totext():
     totext(table, f.name, template, prologue, epilogue)
 
     # check what it did
-    with open(f.name, 'rb') as o:
+    with open(f.name, 'r') as o:
         actual = o.read()
-        expect = b"""{| class="wikitable"
+        expect = """{| class="wikitable"
 |-
 ! foo
 ! bar
@@ -99,12 +99,12 @@ def test_fromtext_gz():
     f.close()
     fn = f.name + '.gz'
     os.rename(f.name, fn)
-    f = gzip.open(fn, 'wb')
+    f = gzip.open(fn, 'wt')
     try:
-        f.write(b'foo\tbar\n')
-        f.write(b'a\t1\n')
-        f.write(b'b\t2\n')
-        f.write(b'c\t3\n')
+        f.write('foo\tbar\n')
+        f.write('a\t1\n')
+        f.write('b\t2\n')
+        f.write('c\t3\n')
     finally:
         f.close()
 
@@ -142,10 +142,10 @@ def test_totext_gz():
     totext(table, fn, template, prologue, epilogue)
 
     # check what it did
-    o = gzip.open(fn, 'rb')
+    o = gzip.open(fn, 'rt')
     try:
         actual = o.read()
-        expect = b"""{| class="wikitable"
+        expect = """{| class="wikitable"
 |-
 ! foo
 ! bar

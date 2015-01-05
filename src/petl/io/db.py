@@ -4,6 +4,7 @@ from __future__ import absolute_import, print_function, division, \
 
 # standard library dependencies
 import logging
+from ..compat import next
 
 
 # internal dependencies
@@ -342,7 +343,7 @@ def _todb_dbapi_connection(table, connection, tablename, schema=None,
 
     # sanitise field names
     it = iter(table)
-    fields = it.next()
+    fields = next(it)
     fieldnames = map(str, fields)
     colnames = [_quote(n) for n in fieldnames]
     debug('column names: %r', colnames)
@@ -390,7 +391,7 @@ def _todb_dbapi_mkcurs(table, mkcurs, tablename, schema=None, commit=True,
 
     # sanitise field names
     it = iter(table)
-    fields = it.next()
+    fields = next(it)
     fieldnames = map(str, fields)
     colnames = [_quote(n) for n in fieldnames]
     debug('column names: %r', colnames)
@@ -438,7 +439,7 @@ def _todb_dbapi_cursor(table, cursor, tablename, schema=None, commit=True,
 
     # sanitise field names
     it = iter(table)
-    fields = it.next()
+    fields = next(it)
     fieldnames = map(str, fields)
     colnames = [_quote(n) for n in fieldnames]
     debug('column names: %r', colnames)
@@ -492,7 +493,7 @@ def _todb_sqlalchemy_connection(table, connection, tablename, schema=None,
 
     # sanitise field names
     it = iter(table)
-    fields = it.next()
+    fields = next(it)
     fieldnames = map(str, fields)
     colnames = [_quote(n) for n in fieldnames]
     debug('column names: %r', colnames)

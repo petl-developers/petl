@@ -3,8 +3,10 @@ from __future__ import absolute_import, print_function, division, \
 
 
 # standard library dependencies
+import io
 import json
 from json.encoder import JSONEncoder
+from ..compat import PY2
 
 
 # internal dependencies
@@ -13,10 +15,9 @@ from .sources import read_source_from_arg, write_source_from_arg
 
 
 def fromjson(source, *args, **kwargs):
-    """
-    Extract data from a JSON file. The file must contain a JSON array as the top
-    level object, and each member of the array will be treated as a row of data.
-    E.g.::
+    """Extract data from a JSON file. The file must contain a JSON array as
+    the top level object, and each member of the array will be treated as a
+    row of data. E.g.::
 
         >>> from petl import fromjson, look
         >>> data = '[{"foo": "a", "bar": 1}, {"foo": "b", "bar": 2}, {"foo": "c", "bar": 2}]'
@@ -39,10 +40,6 @@ def fromjson(source, *args, **kwargs):
     via :func:`json.load` and select the array to treat as the data, see also
     :func:`fromdicts`.
 
-    Supports transparent reading from URLs, ``.gz`` and ``.bz2`` files.
-
-    .. versionadded:: 0.5
-
     """
 
     source = read_source_from_arg(source)
@@ -60,26 +57,33 @@ class JsonView(RowContainer):
 
     def __iter__(self):
         with self.source.open_('rb') as f:
-            result = json.load(f, *self.args, **self.kwargs)
-            if self.header is None:
-                # determine fields
-                header = set()
+            if not PY2:
+                # wrap buffer for text IO
+                f = io.TextIOWrapper(f, encoding='utf-8', newline='',
+                                     write_through=True)
+            try:
+                result = json.load(f, *self.args, **self.kwargs)
+                if self.header is None:
+                    # determine fields
+                    header = set()
+                    for o in result:
+                        if hasattr(o, 'keys'):
+                            header |= set(o.keys())
+                    header = sorted(header)
+                else:
+                    header = self.header
+                yield tuple(header)
+                # output data rows
                 for o in result:
-                    if hasattr(o, 'keys'):
-                        header.add(o.keys())
-                header = sorted(header)
-            else:
-                header = self.header
-            yield tuple(header)
-            # output data rows
-            for o in result:
-                row = tuple(o[f] if f in o else None for f in header)
-                yield row
+                    row = tuple(o[f] if f in o else None for f in header)
+                    yield row
+            finally:
+                if not PY2:
+                    f.detach()
 
 
 def fromdicts(dicts, header=None):
-    """
-    View a sequence of Python :class:`dict` as a table. E.g.::
+    """View a sequence of Python :class:`dict` as a table. E.g.::
 
         >>> from petl import fromdicts, look
         >>> dicts = [{"foo": "a", "bar": 1}, {"foo": "b", "bar": 2}, {"foo": "c", "bar": 2}]
@@ -96,8 +100,6 @@ def fromdicts(dicts, header=None):
         +-------+-------+
 
     See also :func:`fromjson`.
-
-    .. versionadded:: 0.5
 
     """
 
@@ -117,7 +119,7 @@ class DictsView(RowContainer):
             header = set()
             for o in result:
                 if hasattr(o, 'keys'):
-                    header.add(o.keys())
+                    header |= set(o.keys())
             header = sorted(header)
         else:
             header = self.header
@@ -129,8 +131,7 @@ class DictsView(RowContainer):
 
 
 def tojson(table, source=None, prefix=None, suffix=None, *args, **kwargs):
-    """
-    Write a table in JSON format, with rows output as JSON objects. E.g.::
+    """Write a table in JSON format, with rows output as JSON objects. E.g.::
 
         >>> from petl import tojson, look
         >>> look(table)
@@ -154,27 +155,15 @@ def tojson(table, source=None, prefix=None, suffix=None, *args, **kwargs):
     Note that this is currently not streaming, all data is loaded into memory
     before being written to the file.
 
-    Supports transparent writing to ``.gz`` and ``.bz2`` files.
-
-    .. versionadded:: 0.5
-
     """
 
-    encoder = JSONEncoder(*args, **kwargs)
-    source = write_source_from_arg(source)
-    with source.open_('wb') as f:
-        if prefix is not None:
-            f.write(prefix)
-        for chunk in encoder.iterencode(list(asdicts(table))):
-            f.write(chunk)
-        if suffix is not None:
-            f.write(suffix)
+    obj = list(asdicts(table))
+    _writejson(source, obj, prefix, suffix, *args, **kwargs)
 
 
 def tojsonarrays(table, source=None, prefix=None, suffix=None,
                  output_header=False, *args, **kwargs):
-    """
-    Write a table in JSON format, with rows output as JSON arrays. E.g.::
+    """Write a table in JSON format, with rows output as JSON arrays. E.g.::
 
         >>> from petl import tojsonarrays, look
         >>> look(table)
@@ -198,22 +187,36 @@ def tojsonarrays(table, source=None, prefix=None, suffix=None,
     Note that this is currently not streaming, all data is loaded into memory
     before being written to the file.
 
-    Supports transparent writing to ``.gz`` and ``.bz2`` files.
-
-    .. versionadded:: 0.11
-
     """
 
-    encoder = JSONEncoder(*args, **kwargs)
-    source = write_source_from_arg(source)
     if output_header:
         obj = list(table)
     else:
         obj = list(data(table))
+    _writejson(source, obj, prefix, suffix, *args, **kwargs)
+
+
+def _writejson(source, obj, prefix, suffix, *args, **kwargs):
+    encoder = JSONEncoder(*args, **kwargs)
+    source = write_source_from_arg(source)
     with source.open_('wb') as f:
-        if prefix is not None:
-            f.write(prefix)
-        for chunk in encoder.iterencode(obj):
-            f.write(chunk)
-        if suffix is not None:
-            f.write(suffix)
+        if PY2:
+            # write directly to buffer
+            _writeobj(encoder, obj, f, prefix, suffix)
+        else:
+            # wrap buffer for text IO
+            f = io.TextIOWrapper(f, encoding='utf-8', newline='',
+                                 write_through=True)
+            try:
+                _writeobj(encoder, obj, f, prefix, suffix)
+            finally:
+                f.detach()
+
+
+def _writeobj(encoder, obj, f, prefix, suffix):
+    if prefix is not None:
+        f.write(prefix)
+    for chunk in encoder.iterencode(obj):
+        f.write(chunk)
+    if suffix is not None:
+        f.write(suffix)

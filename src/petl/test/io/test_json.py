@@ -1,5 +1,5 @@
-from __future__ import absolute_import, print_function, division, \
-    unicode_literals
+from __future__ import absolute_import, print_function, division
+# N.B., do not import unicode_literals in tests
 
 
 from tempfile import NamedTemporaryFile
@@ -12,10 +12,10 @@ from petl.io.json import fromjson, fromdicts, tojson, tojsonarrays
 
 def test_fromjson_1():
 
-    f = NamedTemporaryFile(delete=False)
-    data = "[{'foo': 'a', 'bar': 1}, " \
-           "{'foo': 'b', 'bar': 2}, " \
-           "{'foo': 'c', 'bar': 2}]"
+    f = NamedTemporaryFile(delete=False, mode='w')
+    data = '[{"foo": "a", "bar": 1}, ' \
+           '{"foo": "b", "bar": 2}, ' \
+           '{"foo": "c", "bar": 2}]'
     f.write(data)
     f.close()
 
@@ -31,10 +31,10 @@ def test_fromjson_1():
 
 def test_fromjson_2():
 
-    f = NamedTemporaryFile(delete=False)
-    data = "[{'foo': 'a', 'bar': 1}, " \
-           "{'foo': 'b'}, " \
-           "{'foo': 'c', 'bar': 2, 'baz': true}]"
+    f = NamedTemporaryFile(delete=False, mode='w')
+    data = '[{"foo": "a", "bar": 1}, ' \
+           '{"foo": "b"}, ' \
+           '{"foo": "c", "bar": 2, "baz": true}]'
     f.write(data)
     f.close()
 
@@ -50,10 +50,10 @@ def test_fromjson_2():
 
 def test_fromjson_3():
 
-    f = NamedTemporaryFile(delete=False)
-    data = "[{'foo': 'a', 'bar': 1}, " \
-           "{'foo': 'b'}, " \
-           "{'foo': 'c', 'bar': 2, 'baz': true}]"
+    f = NamedTemporaryFile(delete=False, mode='w')
+    data = '[{"foo": "a", "bar": 1}, ' \
+           '{"foo": "b"}, ' \
+           '{"foo": "c", "bar": 2, "baz": true}]'
     f.write(data)
     f.close()
 
@@ -117,7 +117,7 @@ def test_tojson():
              ('a', 1),
              ('b', 2),
              ('c', 2))
-    f = NamedTemporaryFile(delete=False)
+    f = NamedTemporaryFile(delete=False, mode='r')
     tojson(table, f.name)
     result = json.load(f)
     assert len(result) == 3
@@ -136,7 +136,7 @@ def test_tojsonarrays():
              ('a', 1),
              ('b', 2),
              ('c', 2))
-    f = NamedTemporaryFile(delete=False)
+    f = NamedTemporaryFile(delete=False, mode='r')
     tojsonarrays(table, f.name)
     result = json.load(f)
     assert len(result) == 3

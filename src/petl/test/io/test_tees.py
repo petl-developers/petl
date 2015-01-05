@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
-
-
-from __future__ import absolute_import, print_function, division, \
-    unicode_literals
+from __future__ import absolute_import, print_function, division
+# N.B., do not import unicode_literals in tests
 
 
 from tempfile import NamedTemporaryFile

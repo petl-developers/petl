@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
-
-
-from __future__ import absolute_import, print_function, division, \
-    unicode_literals
+from __future__ import absolute_import, print_function, division
+# N.B., do not import unicode_literals in tests
 
 
 import codecs
@@ -15,18 +13,18 @@ from petl.io.html import touhtml
 def test_touhtml():
 
     # exercise function
-    tbl = (('name', 'id'),
-           ('Արամ Խաչատրյան', 1),
-           ('Johann Strauß', 2),
-           ('Вагиф Сәмәдоғлу', 3),
-           ('章子怡', 4),
+    tbl = ((u'name', u'id'),
+           (u'Արամ Խաչատրյան', 1),
+           (u'Johann Strauß', 2),
+           (u'Вагиф Сәмәдоғлу', 3),
+           (u'章子怡', 4),
            )
     touhtml(tbl, 'tmp/test_touhtml.html', lineterminator='\n')
 
     # check what it did
     f = codecs.open('tmp/test_touhtml.html', mode='r', encoding='utf-8')
     actual = f.read()
-    expect = """<table class='petl'>
+    expect = u"""<table class='petl'>
 <thead>
 <tr>
 <th>name</th>

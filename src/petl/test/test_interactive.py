@@ -1,17 +1,11 @@
-"""
-Tests for the petl.fluent module.
-
-"""
-
-
-from __future__ import absolute_import, print_function, division, \
-    unicode_literals
+from __future__ import absolute_import, print_function, division
+# N.B., do not import unicode_literals in tests
 
 
 from tempfile import NamedTemporaryFile
 import csv
 from petl.testutils import eq_
-from petl.compat import PY3
+from petl.compat import PY2
 
 
 import petl
@@ -44,12 +38,16 @@ def test_basics():
     
 def test_staticmethods():
 
-    if PY3:
-        mode = 'w'
-    else:
+    if PY2:
         mode = 'wb'
+    else:
+        mode = 'w'
     f = NamedTemporaryFile(mode=mode, delete=False)
-    writer = csv.writer(f, delimiter='\t')
+    if PY2:
+        delimiter = b'\t'
+    else:
+        delimiter = '\t'
+    writer = csv.writer(f, delimiter=delimiter)
     table = (('foo', 'bar'),
              ('a', 1),
              ('b', 2),
@@ -57,15 +55,15 @@ def test_staticmethods():
     for row in table:
         writer.writerow(row)
     f.close()
-    
-    actual = etl.fromcsv(f.name, delimiter='\t')
+
+    actual = etl.fromcsv(f.name, delimiter=delimiter)
     expect = (('foo', 'bar'),
               ('a', '1'),
               ('b', '2'),
               ('c', '2'))
     ieq(expect, actual)
     ieq(expect, actual)  # verify can iterate twice
-    
+
     
 def test_container():
     table = (('foo', 'bar'),

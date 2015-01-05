@@ -1,5 +1,5 @@
-from __future__ import absolute_import, print_function, division, \
-    unicode_literals
+from __future__ import absolute_import, print_function, division
+# N.B., do not import unicode_literals in tests
 
 
 import zipfile
@@ -21,7 +21,9 @@ def test_stringsource():
     # test writing to a string buffer
     ss = StringSource()
     tocsv(table1, ss)
-    expect = b"foo,bar\r\na,1\r\nb,2\r\nc,2\r\n"
+    expect = "foo,bar\r\na,1\r\nb,2\r\nc,2\r\n"
+    if not PY2:
+        expect = expect.encode('ascii')
     actual = ss.getvalue()
     eq_(expect, actual)
 
@@ -33,7 +35,9 @@ def test_stringsource():
     # test appending
     appendcsv(table1, ss)
     actual = ss.getvalue()
-    expect = b"foo,bar\r\na,1\r\nb,2\r\nc,2\r\na,1\r\nb,2\r\nc,2\r\n"
+    expect = "foo,bar\r\na,1\r\nb,2\r\nc,2\r\na,1\r\nb,2\r\nc,2\r\n"
+    if not PY2:
+        expect = expect.encode('ascii')
     eq_(expect, actual)
 
 
@@ -41,10 +45,7 @@ def test_popensource():
 
     expect = (('foo', 'bar'),
               ('a', '1'))
-    if PY2:
-        delimiter = b' '
-    else:
-        delimiter = ' '
+    delimiter = ' '
     actual = fromcsv(PopenSource(r'echo -e foo bar\\na 1',
                                  shell=True,
                                  executable='/bin/bash'),

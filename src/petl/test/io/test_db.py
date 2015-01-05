@@ -1,5 +1,5 @@
-from __future__ import absolute_import, print_function, division, \
-    unicode_literals
+from __future__ import absolute_import, print_function, division
+# N.B., do not import unicode_literals in tests
 
 
 # N.B., this file only tests the DB-related functions using sqlite3,
@@ -10,6 +10,7 @@ from __future__ import absolute_import, print_function, division, \
 
 import sqlite3
 from tempfile import NamedTemporaryFile
+from petl.compat import next
 
 
 from petl.testutils import ieq, eq_
@@ -43,10 +44,10 @@ def test_fromdb():
     # test iterators are isolated
     i1 = iter(actual)
     i2 = iter(actual)
-    eq_(('foo', 'bar'), i1.next())
-    eq_(('a', 1), i1.next())
-    eq_(('foo', 'bar'), i2.next())
-    eq_(('b', 2), i1.next())
+    eq_(('foo', 'bar'), next(i1))
+    eq_(('a', 1), next(i1))
+    eq_(('foo', 'bar'), next(i2))
+    eq_(('b', 2), next(i1))
 
 
 def test_fromdb_mkcursor():
@@ -76,10 +77,10 @@ def test_fromdb_mkcursor():
     # test iterators are isolated
     i1 = iter(actual)
     i2 = iter(actual)
-    eq_(('foo', 'bar'), i1.next())
-    eq_(('a', 1), i1.next())
-    eq_(('foo', 'bar'), i2.next())
-    eq_(('b', 2), i1.next())
+    eq_(('foo', 'bar'), next(i1))
+    eq_(('a', 1), next(i1))
+    eq_(('foo', 'bar'), next(i2))
+    eq_(('b', 2), next(i1))
 
 
 def test_fromdb_withargs():

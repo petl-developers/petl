@@ -1,5 +1,5 @@
-from __future__ import absolute_import, print_function, division, \
-    unicode_literals
+from __future__ import absolute_import, print_function, division
+# N.B., do not import unicode_literals in tests
 
 
 from petl.util import header, fieldnames, data, records, look, see, \
@@ -603,9 +603,9 @@ def test_typecounts():
 
     table = (('foo', 'bar', 'baz'),
              (b'A', 1, 2.),
-             (b'B', '2', 3.4),
-             ('B', '3', 7.8, True),
-             (b'D', 'xyz', 9.0),
+             (b'B', u'2', 3.4),
+             (u'B', u'3', 7.8, True),
+             (b'D', u'xyz', 9.0),
              (b'E', 42))
 
     actual = typecounts(table, 'foo')
@@ -640,10 +640,10 @@ def test_typecounts():
 def test_typeset():
 
     table = (('foo', 'bar', 'baz'),
-             (b'A', 1, '2'),
-             (b'B', '2', '3.4'),
-             (b'B', '3', '7.8', True),
-             ('D', 'xyz', 9.0),
+             (b'A', 1, u'2'),
+             (b'B', '2', u'3.4'),
+             (b'B', '3', u'7.8', True),
+             (u'D', u'xyz', 9.0),
              (b'E', 42))
 
     actual = typeset(table, 'foo')

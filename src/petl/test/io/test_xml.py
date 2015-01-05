@@ -1,5 +1,5 @@
-from __future__ import absolute_import, print_function, division, \
-    unicode_literals
+from __future__ import absolute_import, print_function, division
+# N.B., do not import unicode_literals in tests
 
 
 from tempfile import NamedTemporaryFile
@@ -13,8 +13,8 @@ from petl.io.xml import fromxml
 def test_fromxml():
 
     # initial data
-    f = NamedTemporaryFile(delete=False)
-    data = b"""<table>
+    f = NamedTemporaryFile(delete=False, mode='wt')
+    data = """<table>
     <tr>
         <td>foo</td><td>bar</td>
     </tr>
@@ -43,8 +43,8 @@ def test_fromxml():
 def test_fromxml_2():
 
     # initial data
-    f = NamedTemporaryFile(delete=False)
-    data = b"""<table>
+    f = NamedTemporaryFile(delete=False, mode='wt')
+    data = """<table>
     <tr>
         <td v='foo'/><td v='bar'/>
     </tr>
@@ -73,8 +73,8 @@ def test_fromxml_2():
 def test_fromxml_3():
 
     # initial data
-    f = NamedTemporaryFile(delete=False)
-    data = b"""<table>
+    f = NamedTemporaryFile(delete=False, mode='wt')
+    data = """<table>
     <row>
         <foo>a</foo><baz><bar v='1'/></baz>
     </row>
@@ -101,8 +101,8 @@ def test_fromxml_3():
 def test_fromxml_4():
 
     # initial data
-    f = NamedTemporaryFile(delete=False)
-    data = b"""<table>
+    f = NamedTemporaryFile(delete=False, mode='wt')
+    data = """<table>
     <row>
         <foo>a</foo><baz><bar>1</bar><bar>3</bar></baz>
     </row>
@@ -129,8 +129,8 @@ def test_fromxml_4():
 def test_fromxml_5():
 
     # initial data
-    f = NamedTemporaryFile(delete=False)
-    data = b"""<table>
+    f = NamedTemporaryFile(delete=False, mode='wt')
+    data = """<table>
     <row>
         <foo>a</foo><baz><bar v='1'/><bar v='3'/></baz>
     </row>
@@ -156,7 +156,7 @@ def test_fromxml_5():
 
 def test_fromxml_6():
 
-    data = b"""<table class='petl'>
+    data = """<table class='petl'>
 <thead>
 <tr>
 <th>foo</th>
@@ -178,7 +178,7 @@ def test_fromxml_6():
 </tr>
 </tbody>
 </table>"""
-    f = NamedTemporaryFile(delete=False)
+    f = NamedTemporaryFile(delete=False, mode='wt')
     f.write(data)
     f.close()
 
@@ -192,7 +192,7 @@ def test_fromxml_6():
     ieq(expect, actual)  # verify can iterate twice
 
 
-# def test_fromxml_url():
-#
-#     tbl = fromxml('http://feeds.bbci.co.uk/news/rss.xml', './/item', 'title')
-#     assert nrows(tbl) > 0
+def test_fromxml_url():
+
+    tbl = fromxml('http://feeds.bbci.co.uk/news/rss.xml', './/item', 'title')
+    assert nrows(tbl) > 0
