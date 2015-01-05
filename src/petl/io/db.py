@@ -18,8 +18,7 @@ debug = logger.debug
 
 
 def fromdb(dbo, query, *args, **kwargs):
-    """
-    Provides access to data from any DB-API 2.0 connection via a given query.
+    """Provides access to data from any DB-API 2.0 connection via a given query.
     E.g., using :mod:`sqlite3`::
 
         >>> import sqlite3
@@ -36,11 +35,11 @@ def fromdb(dbo, query, *args, **kwargs):
         >>> table = fromdb(connection, 'select * from test')
         >>> look(table)
 
-    E.g., using :mod:`mysql` (assuming you've installed it first)::
+    E.g., using :mod:`pymysql` (assuming you've installed it first)::
 
-        >>> import mysql.connector
+        >>> import pymysql
         >>> from petl import look, fromdb
-        >>> connection = mysql.connector.connect(password="moonpie", database="thangs")
+        >>> connection = pymysql.connect(password="moonpie", database="thangs")
         >>> table = fromdb(connection, 'select * from test')
         >>> look(table)
 
@@ -212,8 +211,7 @@ def _iter_sqlalchemy_session(session, query, *args, **kwargs):
 
 
 def todb(table, dbo, tablename, schema=None, commit=True):
-    """
-    Load data into an existing database table via a DB-API 2.0
+    """Load data into an existing database table via a DB-API 2.0
     connection or cursor. Note that the database table will be truncated,
     i.e., all existing rows will be deleted prior to inserting the new data.
     E.g.::
@@ -246,8 +244,8 @@ def todb(table, dbo, tablename, schema=None, commit=True):
 
     ... using :mod:`MySQLdb`::
 
-        >>> import mysql.connector
-        >>> connection = mysql.connector.connect(password="moonpie", database="thangs")
+        >>> import pymysql
+        >>> connection = pymysql.connect(password="moonpie", database="thangs")
         >>> # tell MySQL to use standard quote character
         ... connection.cursor().execute('SET SQL_MODE=ANSI_QUOTES')
         >>> # load data, assuming table "foobar" already exists in the database
@@ -255,8 +253,6 @@ def todb(table, dbo, tablename, schema=None, commit=True):
 
     N.B., for MySQL the statement ``SET SQL_MODE=ANSI_QUOTES`` is required to
     ensure MySQL uses SQL-92 standard quote characters.
-
-    .. versionchanged:: 0.10.2
 
     A cursor can also be provided instead of a connection, e.g.::
 
@@ -577,8 +573,8 @@ def appenddb(table, dbo, tablename, schema=None, commit=True):
 
     ... using :mod:`mysql`::
 
-        >>> import mysql.connector
-        >>> connection = mysql.connector.connect(password="moonpie", database="thangs")
+        >>> import pymysql
+        >>> connection = pymysql.connect(password="moonpie", database="thangs")
         >>> # tell MySQL to use standard quote character
         ... connection.cursor().execute('SET SQL_MODE=ANSI_QUOTES')
         >>> # load data, appending rows to table "foobar"
@@ -586,8 +582,6 @@ def appenddb(table, dbo, tablename, schema=None, commit=True):
 
     N.B., for MySQL the statement ``SET SQL_MODE=ANSI_QUOTES`` is required to
     ensure MySQL uses SQL-92 standard quote characters.
-
-    .. versionchanged:: 0.10.2
 
     A cursor can also be provided instead of a connection, e.g.::
 
