@@ -5,7 +5,7 @@ from ast import literal_eval
 from distutils.core import setup
 
 
-def get_version(source='src/petl/__init__.py'):
+def get_version(source='petl/__init__.py'):
     with open(source) as f:
         for line in f:
             if line.startswith('__version__'):
@@ -18,8 +18,9 @@ setup(
     version=get_version(),
     author='Alistair Miles',
     author_email='alimanfoo@googlemail.com',
-    package_dir={'': 'src'},
-    packages=['petl', 'petl.transform', 'petl.io'],
+    package_dir={'': '.'},
+    packages=['petl', 'petl.io', 'petl.transform',
+              'petl.test', 'petl.test.io', 'petl.test.transform'],
     scripts=['bin/petl'],
     url='https://github.com/alimanfoo/petl',
     license='MIT License',

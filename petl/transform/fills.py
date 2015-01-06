@@ -1,0 +1,242 @@
+from __future__ import absolute_import, print_function, division, \
+    unicode_literals
+
+
+from petl.compat import next
+
+
+from petl.util import RowContainer, asindices
+
+
+def filldown(table, *fields, **kwargs):
+    """Replace missing values with non-missing values from the row above. E.g.::
+
+        >>> table1 = [['foo', 'bar', 'baz'],
+        ...           [1, 'a', None],
+        ...           [1, None, .23],
+        ...           [1, 'b', None],
+        ...           [2, None, None],
+        ...           [2, None, .56],
+        ...           [2, 'c', None],
+        ...           [None, 'c', .72]]
+        >>> from petl import filldown, lookall
+        >>> table2 = filldown(table1)
+        >>> lookall(table2)
+        +-------+-------+-------+
+        | 'foo' | 'bar' | 'baz' |
+        +=======+=======+=======+
+        |     1 | 'a'   | None  |
+        +-------+-------+-------+
+        |     1 | 'a'   |  0.23 |
+        +-------+-------+-------+
+        |     1 | 'b'   |  0.23 |
+        +-------+-------+-------+
+        |     2 | 'b'   |  0.23 |
+        +-------+-------+-------+
+        |     2 | 'b'   |  0.56 |
+        +-------+-------+-------+
+        |     2 | 'c'   |  0.56 |
+        +-------+-------+-------+
+        |     2 | 'c'   |  0.72 |
+        +-------+-------+-------+
+
+        >>> table3 = filldown(table1, 'bar')
+        >>> lookall(table3)
+        +-------+-------+-------+
+        | 'foo' | 'bar' | 'baz' |
+        +=======+=======+=======+
+        |     1 | 'a'   | None  |
+        +-------+-------+-------+
+        |     1 | 'a'   |  0.23 |
+        +-------+-------+-------+
+        |     1 | 'b'   | None  |
+        +-------+-------+-------+
+        |     2 | 'b'   | None  |
+        +-------+-------+-------+
+        |     2 | 'b'   |  0.56 |
+        +-------+-------+-------+
+        |     2 | 'c'   | None  |
+        +-------+-------+-------+
+        | None  | 'c'   |  0.72 |
+        +-------+-------+-------+
+
+        >>> table4 = filldown(table1, 'bar', 'baz')
+        >>> lookall(table4)
+        +-------+-------+-------+
+        | 'foo' | 'bar' | 'baz' |
+        +=======+=======+=======+
+        |     1 | 'a'   | None  |
+        +-------+-------+-------+
+        |     1 | 'a'   |  0.23 |
+        +-------+-------+-------+
+        |     1 | 'b'   |  0.23 |
+        +-------+-------+-------+
+        |     2 | 'b'   |  0.23 |
+        +-------+-------+-------+
+        |     2 | 'b'   |  0.56 |
+        +-------+-------+-------+
+        |     2 | 'c'   |  0.56 |
+        +-------+-------+-------+
+        | None  | 'c'   |  0.72 |
+        +-------+-------+-------+
+
+    Use the `missing` keyword argument to control which value is treated as
+    missing (`None` by default).
+
+    """
+
+    return FillDownView(table, fields, **kwargs)
+
+
+class FillDownView(RowContainer):
+
+    def __init__(self, table, fields, missing=None):
+        self.table = table
+        self.fields = fields
+        self.missing = missing
+
+    def __iter__(self):
+        return iterfilldown(self.table, self.fields, self.missing)
+
+
+def iterfilldown(table, fillfields, missing):
+    it = iter(table)
+    fields = next(it)
+    yield tuple(fields)
+    if not fillfields:  # fill down all fields
+        fillfields = fields
+    fillindices = asindices(fields, fillfields)
+    fill = list(next(it))  # fill values
+    yield tuple(fill)
+    for row in it:
+        outrow = list(row)
+        for idx in fillindices:
+            if row[idx] == missing:
+                outrow[idx] = fill[idx]  # fill down
+            else:
+                fill[idx] = row[idx]  # new fill value
+        yield tuple(outrow)
+
+
+def fillright(table, missing=None):
+    """Replace missing values with preceding non-missing values. E.g.::
+
+        >>> table1 = [['foo', 'bar', 'baz'],
+        ...           [1, 'a', None],
+        ...           [1, None, .23],
+        ...           [1, 'b', None],
+        ...           [2, None, None],
+        ...           [2, None, .56],
+        ...           [2, 'c', None],
+        ...           [None, 'c', .72]]
+        >>> from petl import fillright, lookall
+        >>> table2 = fillright(table1)
+        >>> lookall(table2)
+        +-------+-------+-------+
+        | 'foo' | 'bar' | 'baz' |
+        +=======+=======+=======+
+        |     1 | 'a'   | 'a'   |
+        +-------+-------+-------+
+        |     1 |     1 |  0.23 |
+        +-------+-------+-------+
+        |     1 | 'b'   | 'b'   |
+        +-------+-------+-------+
+        |     2 |     2 |     2 |
+        +-------+-------+-------+
+        |     2 |     2 |  0.56 |
+        +-------+-------+-------+
+        |     2 | 'c'   | 'c'   |
+        +-------+-------+-------+
+        | None  | 'c'   |  0.72 |
+        +-------+-------+-------+
+
+    Use the `missing` keyword argument to control which value is treated as
+    missing (`None` by default).
+
+    """
+
+    return FillRightView(table, missing=missing)
+
+
+class FillRightView(RowContainer):
+
+    def __init__(self, table, missing=None):
+        self.table = table
+        self.missing = missing
+
+    def __iter__(self):
+        return iterfillright(self.table, self.missing)
+
+
+def iterfillright(table, missing):
+    it = iter(table)
+    fields = next(it)
+    yield tuple(fields)
+    for row in it:
+        outrow = list(row)
+        for i, _ in enumerate(outrow):
+            if i > 0 and outrow[i] == missing and outrow[i-1] != missing:
+                outrow[i] = outrow[i-1]
+        yield tuple(outrow)
+
+
+def fillleft(table, missing=None):
+    """Replace missing values with following non-missing values. E.g.::
+
+        >>> table1 = [['foo', 'bar', 'baz'],
+        ...           [1, 'a', None],
+        ...           [1, None, .23],
+        ...           [1, 'b', None],
+        ...           [2, None, None],
+        ...           [2, None, .56],
+        ...           [2, 'c', None],
+        ...           [None, 'c', .72]]
+        >>> from petl import fillleft, lookall
+        >>> table2 = fillleft(table1)
+        >>> lookall(table2)
+        +-------+-------+-------+
+        | 'foo' | 'bar' | 'baz' |
+        +=======+=======+=======+
+        |     1 | 'a'   | None  |
+        +-------+-------+-------+
+        |     1 |  0.23 |  0.23 |
+        +-------+-------+-------+
+        |     1 | 'b'   | None  |
+        +-------+-------+-------+
+        |     2 | None  | None  |
+        +-------+-------+-------+
+        |     2 |  0.56 |  0.56 |
+        +-------+-------+-------+
+        |     2 | 'c'   | None  |
+        +-------+-------+-------+
+        | 'c'   | 'c'   |  0.72 |
+        +-------+-------+-------+
+
+    Use the `missing` keyword argument to control which value is treated as
+    missing (`None` by default).
+
+    """
+
+    return FillLeftView(table, missing=missing)
+
+
+class FillLeftView(RowContainer):
+
+    def __init__(self, table, missing=None):
+        self.table = table
+        self.missing = missing
+
+    def __iter__(self):
+        return iterfillleft(self.table, self.missing)
+
+
+def iterfillleft(table, missing):
+    it = iter(table)
+    fields = next(it)
+    yield tuple(fields)
+    for row in it:
+        outrow = list(reversed(row))
+        for i, _ in enumerate(outrow):
+            if i > 0 and outrow[i] == missing and outrow[i-1] != missing:
+                outrow[i] = outrow[i-1]
+        yield tuple(reversed(outrow))
