@@ -7,23 +7,35 @@ from itertools import islice
 from petl.compat import izip_longest
 
 
-from petl.util.base import asindices, RowContainer
+from petl.util.base import asindices, Table
 
 
 def listoflists(tbl):
     return [list(row) for row in tbl]
 
 
+Table.listoflists = listoflists
+
+
 def tupleoftuples(tbl):
     return tuple(tuple(row) for row in tbl)
+
+
+Table.tupleoftuples = tupleoftuples
 
 
 def listoftuples(tbl):
     return [tuple(row) for row in tbl]
 
 
+Table.listoftuples = listoftuples
+
+
 def tupleoflists(tbl):
     return tuple(list(row) for row in tbl)
+
+
+Table.tupleoflists = tupleoflists
 
 
 def columns(table, missing=None):
@@ -52,6 +64,9 @@ def columns(table, missing=None):
             if f in cols:
                 cols[f].append(v)
     return cols
+
+
+Table.columns = columns
 
 
 def facetcolumns(table, key, missing=None):
@@ -100,6 +115,9 @@ def facetcolumns(table, key, missing=None):
     return fct
 
 
+Table.facetcolumns = facetcolumns
+
+
 def cache(table, n=10000):
     """
     Wrap the table with a cache that caches up to `n` rows as they are initially
@@ -109,10 +127,13 @@ def cache(table, n=10000):
 
     """
 
-    return CacheContainer(table, n=n)
+    return CacheView(table, n=n)
 
 
-class CacheContainer(RowContainer):
+Table.cache = cache
+
+
+class CacheView(Table):
 
     def __init__(self, inner, n=10000):
         self._inner = inner

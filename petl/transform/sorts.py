@@ -12,7 +12,7 @@ from petl.compat import pickle, next
 
 
 from petl.comparison import comparable_itemgetter
-from petl.util.base import RowContainer, asindices
+from petl.util.base import Table, asindices
 
 
 logger = logging.getLogger(__name__)
@@ -110,6 +110,9 @@ def sort(table, key=None, reverse=False, buffersize=None, tempdir=None,
                     tempdir=tempdir, cache=cache)
 
 
+Table.sort = sort
+
+
 def iterchunk(f):
     # reopen so iterators from file cache are independent
     with open(f.name, 'rb') as f:
@@ -196,7 +199,7 @@ def _mergesorted(key=None, reverse=False, *iterables):
 defaultbuffersize = 100000
 
 
-class SortView(RowContainer):
+class SortView(Table):
     def __init__(self, source, key=None, reverse=False, buffersize=None,
                  tempdir=None, cache=True):
         self.source = source
@@ -383,7 +386,10 @@ def mergesort(*tables, **kwargs):
     return MergeSortView(tables, **kwargs)
 
 
-class MergeSortView(RowContainer):
+Table.mergesort = mergesort
+
+
+class MergeSortView(Table):
     def __init__(self, tables, key=None, reverse=False, presorted=False,
                  missing=None, header=None, buffersize=None, tempdir=None,
                  cache=True):
@@ -459,11 +465,11 @@ def itermergesort(sources, key, header, missing, reverse):
         yield row
 
 
-def isordered(table, key=None, reverse=False, strict=False):
+def issorted(table, key=None, reverse=False, strict=False):
     """
     Return True if the table is ordered (i.e., sorted) by the given key. E.g.::
 
-        >>> from petl import isordered, look
+        >>> from petl import issorted, look
         >>> look(table)
         +-------+-------+-------+
         | 'foo' | 'bar' | 'baz' |
@@ -475,14 +481,12 @@ def isordered(table, key=None, reverse=False, strict=False):
         | 'b'   | 2     |       |
         +-------+-------+-------+
 
-        >>> isordered(table, key='foo')
+        >>> issorted(table, key='foo')
         True
-        >>> isordered(table, key='foo', strict=True)
+        >>> issorted(table, key='foo', strict=True)
         False
-        >>> isordered(table, key='foo', reverse=True)
+        >>> issorted(table, key='foo', reverse=True)
         False
-
-    .. versionadded:: 0.10
 
     """
 
@@ -514,3 +518,6 @@ def isordered(table, key=None, reverse=False, strict=False):
                 return False
             prevkey = currkey
     return True
+
+
+Table.issorted = issorted

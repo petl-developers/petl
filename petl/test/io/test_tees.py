@@ -7,7 +7,7 @@ from tempfile import NamedTemporaryFile
 
 
 from petl.test.helpers import ieq
-import petl.fluent as etl
+import petl as etl
 
 
 def test_teepickle():
@@ -17,8 +17,8 @@ def test_teepickle():
           ('b', 1),
           ('c', 3))
 
-    f1 = NamedTemporaryFile(delete=False)
-    f2 = NamedTemporaryFile(delete=False)
+    f1 = NamedTemporaryFile()
+    f2 = NamedTemporaryFile()
     etl.wrap(t1).teepickle(f1.name).selectgt('bar', 1).topickle(f2.name)
 
     ieq(t1, etl.frompickle(f1.name))
@@ -32,8 +32,8 @@ def test_teecsv():
           ('b', 1),
           ('c', 3))
 
-    f1 = NamedTemporaryFile(delete=False)
-    f2 = NamedTemporaryFile(delete=False)
+    f1 = NamedTemporaryFile()
+    f2 = NamedTemporaryFile()
 
     etl.wrap(t1).teecsv(f1.name).selectgt('bar', 1).tocsv(f2.name)
 
@@ -50,8 +50,8 @@ def test_teetsv():
           ('b', 1),
           ('c', 3))
 
-    f1 = NamedTemporaryFile(delete=False)
-    f2 = NamedTemporaryFile(delete=False)
+    f1 = NamedTemporaryFile()
+    f2 = NamedTemporaryFile()
 
     etl.wrap(t1).teetsv(f1.name).selectgt('bar', 1).totsv(f2.name)
 
@@ -68,8 +68,8 @@ def test_teecsv_write_header():
           ('b', '1'),
           ('c', '3'))
 
-    f1 = NamedTemporaryFile(delete=False)
-    f2 = NamedTemporaryFile(delete=False)
+    f1 = NamedTemporaryFile()
+    f2 = NamedTemporaryFile()
 
     (etl
      .wrap(t1)
@@ -89,11 +89,10 @@ def test_teeucsv():
           (u'Արամ Խաչատրյան', 1),
           (u'Johann Strauß', 2),
           (u'Вагиф Сәмәдоғлу', 3),
-          (u'章子怡', 4),
-          )
+          (u'章子怡', 4))
 
-    f1 = NamedTemporaryFile(delete=False)
-    f2 = NamedTemporaryFile(delete=False)
+    f1 = NamedTemporaryFile()
+    f2 = NamedTemporaryFile()
 
     etl.wrap(t1).teeucsv(f1.name).selectgt('id', 1).toucsv(f2.name)
 
@@ -109,11 +108,10 @@ def test_teeucsv_write_header():
           (u'Արամ Խաչատրյան', u'1'),
           (u'Johann Strauß', u'2'),
           (u'Вагиф Сәмәдоғлу', u'3'),
-          (u'章子怡', u'4'),
-          )
+          (u'章子怡', u'4'))
 
-    f1 = NamedTemporaryFile(delete=False)
-    f2 = NamedTemporaryFile(delete=False)
+    f1 = NamedTemporaryFile()
+    f2 = NamedTemporaryFile()
 
     (etl
      .wrap(t1)
@@ -133,11 +131,10 @@ def test_teeutsv():
           (u'Արամ Խաչատրյան', 1),
           (u'Johann Strauß', 2),
           (u'Вагиф Сәмәдоғлу', 3),
-          (u'章子怡', 4),
-          )
+          (u'章子怡', 4),)
 
-    f1 = NamedTemporaryFile(delete=False)
-    f2 = NamedTemporaryFile(delete=False)
+    f1 = NamedTemporaryFile()
+    f2 = NamedTemporaryFile()
 
     etl.wrap(t1).teeutsv(f1.name).selectgt('id', 1).toutsv(f2.name)
 
@@ -154,8 +151,8 @@ def test_teetext():
           ('b', 1),
           ('c', 3))
 
-    f1 = NamedTemporaryFile(delete=False)
-    f2 = NamedTemporaryFile(delete=False)
+    f1 = NamedTemporaryFile()
+    f2 = NamedTemporaryFile()
 
     prologue = 'foo,bar\n'
     template = '{foo},{bar}\n'
@@ -182,8 +179,8 @@ def test_teeutext():
           (u'Johann Strauß', 1),
           (u'Вагиф Сәмәдоғлу', 3))
 
-    f1 = NamedTemporaryFile(delete=False)
-    f2 = NamedTemporaryFile(delete=False)
+    f1 = NamedTemporaryFile()
+    f2 = NamedTemporaryFile()
 
     prologue = u'foo,bar\n'
     template = u'{foo},{bar}\n'
@@ -210,8 +207,8 @@ def test_teehtml():
           ('b', 1),
           ('c', 3))
 
-    f1 = NamedTemporaryFile(delete=False)
-    f2 = NamedTemporaryFile(delete=False)
+    f1 = NamedTemporaryFile()
+    f2 = NamedTemporaryFile()
     etl.wrap(t1).teehtml(f1.name).selectgt('bar', 1).topickle(f2.name)
 
     ieq(t1, etl.fromxml(f1.name, './/tr', ('th', 'td')).convertnumbers())
@@ -225,8 +222,8 @@ def test_teeuhtml():
           (u'Johann Strauß', 1),
           (u'Вагиф Сәмәдоғлу', 3))
 
-    f1 = NamedTemporaryFile(delete=False)
-    f2 = NamedTemporaryFile(delete=False)
+    f1 = NamedTemporaryFile()
+    f2 = NamedTemporaryFile()
     etl.wrap(t1).teeuhtml(f1.name).selectgt('bar', 1).topickle(f2.name)
 
     ieq(t1, etl.fromxml(f1.name, './/tr', ('th', 'td')).convertnumbers())

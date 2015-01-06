@@ -7,7 +7,7 @@ import operator
 from petl.compat import next, string_types
 
 
-from petl.util.base import RowContainer, asindices
+from petl.util.base import Table, asindices
 from petl.transform.basics import TransformError
 from petl.transform.conversions import convert
 
@@ -74,7 +74,10 @@ def capture(table, field, pattern, newfields=None, include_original=False,
                        fill=fill)
 
 
-class CaptureView(RowContainer):
+Table.capture = capture
+
+
+class CaptureView(Table):
 
     def __init__(self, source, field, pattern, newfields=None,
                  include_original=False, flags=0, fill=None):
@@ -165,7 +168,10 @@ def split(table, field, pattern, newfields=None, include_original=False,
                      maxsplit, flags)
 
 
-class SplitView(RowContainer):
+Table.split = split
+
+
+class SplitView(Table):
 
     def __init__(self, source, field, pattern, newfields=None,
                  include_original=False, maxsplit=0, flags=0):
@@ -227,7 +233,7 @@ def sub(table, field, pattern, repl, count=0, flags=0):
     return convert(table, field, conv)
 
 
-resub = sub  # backwards compatibility
+Table.sub = sub
 
 
 def search(table, *args, **kwargs):
@@ -280,7 +286,10 @@ def search(table, *args, **kwargs):
     return SearchView(table, pattern, field=field, **kwargs)
 
 
-class SearchView(RowContainer):
+Table.search = search
+
+
+class SearchView(Table):
 
     def __init__(self, table, pattern, field=None, flags=0, complement=False):
         self.table = table
@@ -361,3 +370,6 @@ def searchcomplement(table, *args, **kwargs):
     """
 
     return search(table, *args, complement=True, **kwargs)
+
+
+Table.searchcomplement = searchcomplement

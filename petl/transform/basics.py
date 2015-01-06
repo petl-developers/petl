@@ -9,7 +9,7 @@ from petl.compat import izip, izip_longest, next, count, string_types
 
 
 # internal dependencies
-from petl.util.base import asindices, rowgetter, Record, RowContainer
+from petl.util.base import asindices, rowgetter, Record, Table
 
 
 import logging
@@ -110,7 +110,10 @@ def cut(table, *args, **kwargs):
     return CutView(table, args, **kwargs)
 
 
-class CutView(RowContainer):
+Table.cut = cut
+
+
+class CutView(Table):
     
     def __init__(self, source, spec, missing=None):
         self.source = source
@@ -178,7 +181,10 @@ def cutout(table, *args, **kwargs):
     return CutOutView(table, args, **kwargs)
 
 
-class CutOutView(RowContainer):
+Table.cutout = cutout
+
+
+class CutOutView(Table):
     
     def __init__(self, source, spec, missing=None):
         self.source = source
@@ -313,9 +319,12 @@ def cat(*tables, **kwargs):
     """
     
     return CatView(tables, **kwargs)
+
+
+Table.cat = cat
+
     
-    
-class CatView(RowContainer):
+class CatView(Table):
     
     def __init__(self, sources, missing=None, header=None):
         self.sources = sources
@@ -409,7 +418,10 @@ def addfield(table, field, value=None, index=None, missing=None):
                         missing=missing)
 
 
-class AddFieldView(RowContainer):
+Table.addfield = addfield
+
+
+class AddFieldView(Table):
     
     def __init__(self, source, field, value=None, index=None, missing=None):
         # ensure rows are all the same length
@@ -504,7 +516,10 @@ def rowslice(table, *sliceargs):
     return RowSliceView(table, *sliceargs)
 
 
-class RowSliceView(RowContainer):
+Table.rowslice = rowslice
+
+
+class RowSliceView(Table):
     
     def __init__(self, source, *sliceargs):
         self.source = source
@@ -557,6 +572,9 @@ def head(table, n=5):
 
     return rowslice(table, n)
 
+
+Table.head = head
+
         
 def tail(table, n=5):
     """Choose the last n data rows. E.g.::
@@ -595,7 +613,10 @@ def tail(table, n=5):
     return TailView(table, n)
 
 
-class TailView(RowContainer):
+Table.tail = tail
+
+
+class TailView(Table):
     
     def __init__(self, source, n):
         self.source = source
@@ -646,7 +667,10 @@ def skipcomments(table, prefix):
     return SkipCommentsView(table, prefix)
 
 
-class SkipCommentsView(RowContainer):
+Table.skipcomments = skipcomments
+
+
+class SkipCommentsView(Table):
     
     def __init__(self, source, prefix):
         self.source = source
@@ -671,7 +695,10 @@ def movefield(table, field, index):
     return MoveFieldView(table, field, index)
 
 
-class MoveFieldView(RowContainer):
+Table.movefield = movefield
+
+
+class MoveFieldView(Table):
 
     def __init__(self, table, field, index, missing=None):
         self.table = table
@@ -733,7 +760,10 @@ def annex(*tables, **kwargs):
     return AnnexView(tables, **kwargs)
 
 
-class AnnexView(RowContainer):
+Table.annex = annex
+
+
+class AnnexView(Table):
     
     def __init__(self, tables, missing=None):
         self.tables = tables
@@ -792,7 +822,10 @@ def addrownumbers(table, start=1, step=1):
     return AddRowNumbersView(table, start, step)
 
 
-class AddRowNumbersView(RowContainer):
+Table.addrownumbers = addrownumbers
+
+
+class AddRowNumbersView(Table):
     
     def __init__(self, table, start=1, step=1):
         self.table = table
@@ -840,7 +873,10 @@ def addcolumn(table, field, col, index=None, missing=None):
     return AddColumnView(table, field, col, index=index, missing=missing)
 
 
-class AddColumnView(RowContainer):
+Table.addcolumn = addcolumn
+
+
+class AddColumnView(Table):
     
     def __init__(self, table, field, col, index=None, missing=None):
         self._table = table
@@ -928,7 +964,10 @@ def addfieldusingcontext(table, field, query):
     return AddFieldUsingContextView(table, field, query)
 
 
-class AddFieldUsingContextView(RowContainer):
+Table.addfieldusingcontext = addfieldusingcontext
+
+
+class AddFieldUsingContextView(Table):
 
     def __init__(self, table, field, query):
         self.table = table

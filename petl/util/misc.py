@@ -2,7 +2,7 @@ from __future__ import absolute_import, print_function, division, \
     unicode_literals
 
 
-from petl.util.base import itervalues, header
+from petl.util.base import itervalues, header, Table
 
 
 def typeset(table, field):
@@ -37,6 +37,9 @@ def typeset(table, field):
     return s
 
 
+Table.typeset = typeset
+
+
 def diffheaders(t1, t2):
     """
     Return the difference between the headers of the two tables as a pair of
@@ -60,6 +63,9 @@ def diffheaders(t1, t2):
     t1h = set(header(t1))
     t2h = set(header(t2))
     return t2h - t1h, t1h - t2h
+
+
+Table.diffheaders = diffheaders
 
 
 def diffvalues(t1, t2, f):
@@ -87,6 +93,9 @@ def diffvalues(t1, t2, f):
     t1v = set(itervalues(t1, f))
     t2v = set(itervalues(t2, f))
     return t2v - t1v, t1v - t2v
+
+
+Table.diffvalues = diffvalues
 
 
 def strjoin(s):

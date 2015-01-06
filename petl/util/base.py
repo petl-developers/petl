@@ -164,15 +164,27 @@ class IterContainer(object):
         return chain(self, other)
 
 
+class Table(IterContainer):
+
+    def __getitem__(self, item):
+        if isinstance(item, string_types):
+            return ValuesView(self, item)
+        else:
+            return super(Table, self).__getitem__(item)
+
+
 def values(table, *field, **kwargs):
     """TODO
 
     """
 
-    return ValuesContainer(table, *field, **kwargs)
+    return ValuesView(table, *field, **kwargs)
 
 
-class ValuesContainer(IterContainer):
+Table.values = values
+
+
+class ValuesView(IterContainer):
 
     def __init__(self, table, *field, **kwargs):
         self.table = table
@@ -221,13 +233,17 @@ def itervalues(table, *field, **kwargs):
                 yield missing
 
 
-class RowContainer(IterContainer):
+class TableWrapper(Table):
 
-    def __getitem__(self, item):
-        if isinstance(item, string_types):
-            return ValuesContainer(self, item)
-        else:
-            return super(RowContainer, self).__getitem__(item)
+    def __init__(self, inner):
+        # avoid infinite recursion
+        object.__setattr__(self, 'inner', inner)
+
+    def __iter__(self):
+        return iter(self.inner)
+
+
+wrap = TableWrapper
 
 
 def asindices(flds, spec):
@@ -282,6 +298,9 @@ def header(table):
     return tuple(next(it))
 
 
+Table.header = header
+
+
 def fieldnames(table):
     """TODO
 
@@ -290,15 +309,21 @@ def fieldnames(table):
     return [str(f) for f in header(table)]
 
 
+Table.fieldnames = fieldnames
+
+
 def data(table, *sliceargs):
     """TODO
 
     """
 
-    return DataContainer(table, *sliceargs)
+    return DataView(table, *sliceargs)
 
 
-class DataContainer(RowContainer):
+Table.data = data
+
+
+class DataView(Table):
 
     def __init__(self, table, *sliceargs):
         self.table = table
@@ -321,10 +346,13 @@ def dicts(table, *sliceargs, **kwargs):
 
     """
 
-    return DictsContainer(table, *sliceargs, **kwargs)
+    return DictsView(table, *sliceargs, **kwargs)
 
 
-class DictsContainer(IterContainer):
+Table.dicts = dicts
+
+
+class DictsView(IterContainer):
 
     def __init__(self, table, *sliceargs, **kwargs):
         self.table = table
@@ -375,10 +403,13 @@ def namedtuples(table, *sliceargs, **kwargs):
 
     """
 
-    return NamedTuplesContainer(table, *sliceargs, **kwargs)
+    return NamedTuplesView(table, *sliceargs, **kwargs)
 
 
-class NamedTuplesContainer(IterContainer):
+Table.namedtuples = namedtuples
+
+
+class NamedTuplesView(IterContainer):
 
     def __init__(self, table, *sliceargs, **kwargs):
         self.table = table
@@ -468,10 +499,13 @@ def records(table, *sliceargs, **kwargs):
 
     """
 
-    return RecordsContainer(table, *sliceargs, **kwargs)
+    return RecordsView(table, *sliceargs, **kwargs)
 
 
-class RecordsContainer(IterContainer):
+Table.records = records
+
+
+class RecordsView(IterContainer):
 
     def __init__(self, table, *sliceargs, **kwargs):
         self.table = table
@@ -568,6 +602,9 @@ def rowgroupby(table, key, value=None):
                     for (k, vals) in git)
 
 
+Table.rowgroupby = rowgroupby
+
+
 def iterpeek(it, n=1):
     it = iter(it)  # make sure it's an iterator
     if n == 1:
@@ -596,10 +633,10 @@ def empty():
 
     """
 
-    return EmptyContainer()
+    return EmptyTable()
 
 
-class EmptyContainer(RowContainer):
+class EmptyTable(Table):
 
     def __iter__(self):
         # empty header row

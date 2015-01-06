@@ -9,7 +9,7 @@ from petl.compat import next
 
 
 from petl.comparison import comparable_itemgetter
-from petl.util.base import RowContainer, rowgetter, values, itervalues, \
+from petl.util.base import Table, rowgetter, values, itervalues, \
     header, data
 from petl.transform.sorts import sort
 
@@ -88,7 +88,10 @@ def melt(table, key=None, variables=None, variablefield='variable',
                     valuefield=valuefield)
 
 
-class MeltView(RowContainer):
+Table.melt = melt
+
+
+class MeltView(Table):
 
     def __init__(self, source, key=None, variables=None,
                  variablefield='variable', valuefield='value'):
@@ -259,7 +262,10 @@ def recast(table, key=None, variablefield='variable', valuefield='value',
                       reducers=reducers, missing=missing)
 
 
-class RecastView(RowContainer):
+Table.recast = recast
+
+
+class RecastView(Table):
 
     def __init__(self, source, key=None, variablefield='variable',
                  valuefield='value', samplesize=1000, reducers=None,
@@ -418,7 +424,10 @@ def transpose(table):
     return TransposeView(table)
 
 
-class TransposeView(RowContainer):
+Table.transpose = transpose
+
+
+class TransposeView(Table):
 
     def __init__(self, source):
         self.source = source
@@ -491,7 +500,10 @@ def pivot(table, f1, f2, f3, aggfun, missing=None,
                      tempdir=tempdir, cache=cache)
 
 
-class PivotView(RowContainer):
+Table.pivot = pivot
+
+
+class PivotView(Table):
 
     def __init__(self, source, f1, f2, f3, aggfun, missing=None,
                  presorted=False, buffersize=None, tempdir=None, cache=True):
@@ -553,7 +565,10 @@ def flatten(table):
     return FlattenView(table)
 
 
-class FlattenView(RowContainer):
+Table.flatten = flatten
+
+
+class FlattenView(Table):
 
     def __init__(self, table):
         self.table = table
@@ -617,7 +632,10 @@ def unflatten(*args, **kwargs):
     return UnflattenView(*args, **kwargs)
 
 
-class UnflattenView(RowContainer):
+Table.unflatten = unflatten
+
+
+class UnflattenView(Table):
 
     def __init__(self, *args, **kwargs):
         if len(args) == 2:

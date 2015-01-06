@@ -5,7 +5,7 @@ from __future__ import absolute_import, print_function, division, \
 import operator
 
 
-from petl.util.base import RowContainer, asindices, itervalues
+from petl.util.base import Table, asindices, itervalues
 from petl.transform.sorts import sort
 
 
@@ -64,7 +64,10 @@ def duplicates(table, key=None, presorted=False, buffersize=None, tempdir=None,
                           buffersize=buffersize, tempdir=tempdir, cache=cache)
 
 
-class DuplicatesView(RowContainer):
+Table.duplicates = duplicates
+
+
+class DuplicatesView(Table):
     
     def __init__(self, source, key=None, presorted=False, buffersize=None, 
                  tempdir=None, cache=True):
@@ -159,7 +162,10 @@ def unique(table, key=None, presorted=False, buffersize=None, tempdir=None,
                       buffersize=buffersize, tempdir=tempdir, cache=cache)
 
 
-class UniqueView(RowContainer):
+Table.unique = unique
+
+
+class UniqueView(Table):
     
     def __init__(self, source, key=None, presorted=False, buffersize=None,
                  tempdir=None, cache=True):
@@ -261,7 +267,10 @@ def conflicts(table, key, missing=None, include=None, exclude=None,
                          buffersize=buffersize, tempdir=tempdir, cache=cache)
 
 
-class ConflictsView(RowContainer):
+Table.conflicts = conflicts
+
+
+class ConflictsView(Table):
     
     def __init__(self, source, key, missing=None, exclude=None, include=None, 
                  presorted=False, buffersize=None, tempdir=None, cache=True):
@@ -352,7 +361,10 @@ def distinct(table, key=None, count=None, presorted=False, buffersize=None,
                         buffersize=buffersize, tempdir=tempdir, cache=cache)
 
 
-class DistinctView(RowContainer):
+Table.distinct = distinct
+
+
+class DistinctView(Table):
     def __init__(self, table, key=None, count=None, presorted=False,
                  buffersize=None, tempdir=None, cache=True):
         if presorted:
@@ -422,10 +434,6 @@ def isunique(table, field):
     The `field` argument can be a single field name or index (starting from
     zero) or a tuple of field names and/or indexes.
 
-    .. versionchanged:: 0.10
-
-    Renamed from "unique". See also :func:`petl.unique`.
-
     """
 
     vals = set()
@@ -435,3 +443,6 @@ def isunique(table, field):
         else:
             vals.add(v)
     return True
+
+
+Table.isunique = isunique

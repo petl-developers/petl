@@ -10,7 +10,7 @@ from petl.transform.headers import rename, setheader, extendheader, \
 from petl.transform.conversions import convert, convertall, replace, \
     replaceall, update, convertnumbers
 
-from petl.transform.sorts import sort, mergesort, isordered
+from petl.transform.sorts import sort, mergesort, issorted
 
 from petl.transform.selects import select, selectop, selectcontains, selecteq, \
     selectfalse, selectge, selectgt, selectin, selectis, selectisinstance, \
@@ -27,12 +27,12 @@ from petl.transform.hashjoins import hashjoin, hashleftjoin, hashrightjoin, \
 
 from petl.transform.reductions import rowreduce, mergeduplicates,\
     aggregate, groupcountdistinctvalues, groupselectfirst, groupselectmax, \
-    groupselectmin, mergereduce, merge, fold
+    groupselectmin, merge, fold
 
 from petl.transform.fills import filldown, fillright, fillleft
 
 from petl.transform.regex import capture, split, search, searchcomplement, \
-    sub, resub
+    sub
 
 from petl.transform.reshape import melt, recast, transpose, pivot, flatten, \
     unflatten

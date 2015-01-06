@@ -7,7 +7,7 @@ import operator
 from petl.compat import OrderedDict, next, string_types, reduce
 
 
-from petl.util.base import RowContainer, iterpeek, rowgroupby
+from petl.util.base import Table, iterpeek, rowgroupby
 from petl.transform.sorts import sort, mergesort
 from petl.transform.basics import cut
 from petl.transform.dedup import distinct
@@ -57,7 +57,10 @@ def rowreduce(table, key, reducer, fields=None, presorted=False,
                          buffersize=buffersize, tempdir=tempdir, cache=cache)
 
 
-class RowReduceView(RowContainer):
+Table.rowreduce = rowreduce
+
+
+class RowReduceView(Table):
     
     def __init__(self, source, key, reducer, fields=None, 
                  presorted=False, buffersize=None, tempdir=None, cache=True):
@@ -187,7 +190,10 @@ def aggregate(table, key, aggregation=None, value=None, presorted=False,
                         'or None')
 
 
-class SimpleAggregateView(RowContainer):
+Table.aggregate = aggregate
+
+
+class SimpleAggregateView(Table):
     
     def __init__(self, table, key, aggregation=list, value=None, 
                  presorted=False, buffersize=None, tempdir=None, cache=True):
@@ -229,7 +235,7 @@ def itersimpleaggregate(table, key, aggregation, value):
             yield k, aggregation(grp)
 
 
-class MultiAggregateView(RowContainer):
+class MultiAggregateView(Table):
     
     def __init__(self, source, key, aggregation=None, presorted=False, 
                  buffersize=None, tempdir=None, cache=True):
@@ -329,11 +335,17 @@ def groupcountdistinctvalues(table, key, value):
     return s3
 
 
+Table.groupcountdistinctvalues = groupcountdistinctvalues
+
+
 def groupselectfirst(table, key):
     """Group by the `key` field then return the first row within each group."""
 
     _reducer = lambda k, rows: next(rows)
     return rowreduce(table, key, reducer=_reducer)
+
+
+Table.groupselectfirst = groupselectfirst
 
 
 def groupselectmin(table, key, value):
@@ -342,7 +354,10 @@ def groupselectmin(table, key, value):
     group, even if multiple rows have the same (maximum) value."""
 
     return groupselectfirst(sort(table, value, reverse=False), key)
-    
+
+
+Table.groupselectmin = groupselectmin
+
     
 def groupselectmax(table, key, value):
     """Group by the `key` field then return the row with the minimum of the
@@ -350,7 +365,10 @@ def groupselectmax(table, key, value):
     group, even if multiple rows have the same (maximum) value."""
 
     return groupselectfirst(sort(table, value, reverse=True), key)
-    
+
+
+Table.groupselectmax = groupselectmax
+
 
 def mergeduplicates(table, key, missing=None, presorted=False, buffersize=None,
                     tempdir=None, cache=True):
@@ -395,7 +413,10 @@ def mergeduplicates(table, key, missing=None, presorted=False, buffersize=None,
                                cache=cache)
 
 
-class MergeDuplicatesView(RowContainer):
+Table.mergeduplicates = mergeduplicates
+
+
+class MergeDuplicatesView(Table):
 
     def __init__(self, table, key, missing=None, presorted=False,
                  buffersize=None, tempdir=None, cache=True):
@@ -445,9 +466,6 @@ def itermergeduplicates(table, key, missing):
         yield tuple(outrow)
 
 
-mergereduce = mergeduplicates  # for backwards compatibility
-
-
 def merge(*tables, **kwargs):
     """Convenience function to combine multiple tables (via
     :func:`petl.transform.sorts.mergesort`) then combine duplicate rows by
@@ -485,6 +503,9 @@ def merge(*tables, **kwargs):
     t1 = mergesort(*tables, **kwargs)
     t2 = mergeduplicates(t1, key=key, presorted=True)
     return t2
+
+
+Table.merge = merge
 
 
 class Conflict(frozenset):
@@ -526,7 +547,10 @@ def fold(table, key, f, value=None, presorted=False, buffersize=None,
                     buffersize=buffersize, tempdir=tempdir, cache=cache)
 
 
-class FoldView(RowContainer):
+Table.fold = fold
+
+
+class FoldView(Table):
 
     def __init__(self, table, key, f, value=None, presorted=False,
                  buffersize=None, tempdir=None, cache=True):

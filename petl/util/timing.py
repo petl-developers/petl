@@ -6,7 +6,7 @@ import sys
 import time
 
 
-from petl.util.base import RowContainer
+from petl.util.base import Table
 
 
 def progress(table, batchsize=1000, prefix="", out=sys.stderr):
@@ -38,7 +38,10 @@ def progress(table, batchsize=1000, prefix="", out=sys.stderr):
     return ProgressView(table, batchsize, prefix, out)
 
 
-class ProgressView(RowContainer):
+Table.progress = progress
+
+
+class ProgressView(Table):
 
     def __init__(self, wrapped, batchsize, prefix, out):
         self.wrapped = wrapped
@@ -126,7 +129,10 @@ def clock(table):
     return ClockView(table)
 
 
-class ClockView(RowContainer):
+Table.clock = clock
+
+
+class ClockView(Table):
 
     def __init__(self, wrapped):
         self.wrapped = wrapped

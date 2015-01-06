@@ -8,7 +8,7 @@ from petl.compat import string_types, next
 
 
 # internal dependencies
-from petl.util.base import RowContainer
+from petl.util.base import Table
 
 
 quotechar = '"'
@@ -60,7 +60,7 @@ def fromsqlite3(source, query, *args, **kwargs):
     return Sqlite3View(source, query, *args, **kwargs)
 
 
-class Sqlite3View(RowContainer):
+class Sqlite3View(Table):
 
     def __init__(self, source, query, *args, **kwargs):
         self.source = source
@@ -131,6 +131,9 @@ def tosqlite3(table, filename_or_connection, tablename, create=False,
                       commit=commit, truncate=True)
 
 
+Table.tosqlite3 = tosqlite3
+
+
 def _tosqlite3(table, filename_or_connection, tablename, create=False,
                commit=True, truncate=False):
 
@@ -184,3 +187,6 @@ def appendsqlite3(table, filename_or_connection, tablename, commit=True):
 
     return _tosqlite3(table, filename_or_connection, tablename, create=False,
                       commit=commit, truncate=False)
+
+
+Table.appendsqlite3 = appendsqlite3

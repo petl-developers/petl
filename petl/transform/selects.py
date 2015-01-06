@@ -8,7 +8,7 @@ from petl.compat import next, string_types, callable
 from petl.comparison import Comparable
 
 
-from petl.util.base import asindices, expr, RowContainer, values, Record
+from petl.util.base import asindices, expr, Table, values, Record
 
 
 def select(table, *args, **kwargs):
@@ -80,7 +80,10 @@ def select(table, *args, **kwargs):
                                missing=missing)
 
 
-class RowSelectView(RowContainer):
+Table.select = select
+
+
+class RowSelectView(Table):
 
     def __init__(self, source, where, missing=None, complement=False):
         self.source = source
@@ -93,7 +96,7 @@ class RowSelectView(RowContainer):
                              self.complement)
 
 
-class FieldSelectView(RowContainer):
+class FieldSelectView(Table):
 
     def __init__(self, source, field, where, complement=False, missing=None):
         self.source = source
@@ -139,6 +142,9 @@ def rowlenselect(table, n, complement=False):
     return select(table, where, complement=complement)
 
 
+Table.rowlenselect = rowlenselect
+
+
 def selectop(table, field, value, op, complement=False):
     """Select rows where the function `op` applied to the given field and
     the given value returns `True`."""
@@ -147,10 +153,17 @@ def selectop(table, field, value, op, complement=False):
                   complement=complement)
 
 
+Table.selectop = selectop
+
+
 def selecteq(table, field, value, complement=False):
     """Select rows where the given field equals the given value."""
 
     return selectop(table, field, value, operator.eq, complement=complement)
+
+
+Table.selecteq = selecteq
+Table.eq = selecteq
 
 
 def selectne(table, field, value, complement=False):
@@ -159,11 +172,19 @@ def selectne(table, field, value, complement=False):
     return selectop(table, field, value, operator.ne, complement=complement)
 
 
+Table.selectne = selectne
+Table.ne = selectne
+
+
 def selectlt(table, field, value, complement=False):
     """Select rows where the given field is less than the given value."""
 
     value = Comparable(value)
     return selectop(table, field, value, operator.lt, complement=complement)
+
+
+Table.selectlt = selectlt
+Table.lt = selectlt
 
 
 def selectle(table, field, value, complement=False):
@@ -174,11 +195,19 @@ def selectle(table, field, value, complement=False):
     return selectop(table, field, value, operator.le, complement=complement)
 
 
+Table.selectle = selectle
+Table.le = selectle
+
+
 def selectgt(table, field, value, complement=False):
     """Select rows where the given field is greater than the given value."""
 
     value = Comparable(value)
     return selectop(table, field, value, operator.gt, complement=complement)
+
+
+Table.selectgt = selectgt
+Table.gt = selectgt
 
 
 def selectge(table, field, value, complement=False):
@@ -189,11 +218,18 @@ def selectge(table, field, value, complement=False):
     return selectop(table, field, value, operator.ge, complement=complement)
 
 
+Table.selectge = selectge
+Table.ge = selectge
+
+
 def selectcontains(table, field, value, complement=False):
     """Select rows where the given field contains the given value."""
 
     return selectop(table, field, value, operator.contains,
                     complement=complement)
+
+
+Table.selectcontains = selectcontains
 
 
 def selectin(table, field, value, complement=False):
@@ -203,11 +239,17 @@ def selectin(table, field, value, complement=False):
                   complement=complement)
 
 
+Table.selectin = selectin
+
+
 def selectnotin(table, field, value, complement=False):
     """Select rows where the given field is not a member of the given value."""
 
     return select(table, field, lambda v: v not in value,
                   complement=complement)
+
+
+Table.selectnotin = selectnotin
 
 
 def selectis(table, field, value, complement=False):
@@ -216,16 +258,25 @@ def selectis(table, field, value, complement=False):
     return selectop(table, field, value, operator.is_, complement=complement)
 
 
+Table.selectis = selectis
+
+
 def selectisnot(table, field, value, complement=False):
     """Select rows where the given field `is not` the given value."""
 
     return selectop(table, field, value, operator.is_not, complement=complement)
 
 
+Table.selectisnot = selectisnot
+
+
 def selectisinstance(table, field, value, complement=False):
     """Select rows where the given field is an instance of the given type."""
 
     return selectop(table, field, value, isinstance, complement=complement)
+
+
+Table.selectisinstance = selectisinstance
 
 
 def selectrangeopenleft(table, field, minv, maxv, complement=False):
@@ -238,6 +289,9 @@ def selectrangeopenleft(table, field, minv, maxv, complement=False):
                   complement=complement)
 
 
+Table.selectrangeopenleft = selectrangeopenleft
+
+
 def selectrangeopenright(table, field, minv, maxv, complement=False):
     """Select rows where the given field is greater than `minv` and
     less than or equal to `maxv`."""
@@ -246,6 +300,9 @@ def selectrangeopenright(table, field, minv, maxv, complement=False):
     maxv = Comparable(maxv)
     return select(table, field, lambda v: minv < v <= maxv,
                   complement=complement)
+
+
+Table.selectrangeopenright = selectrangeopenright
 
 
 def selectrangeopen(table, field, minv, maxv, complement=False):
@@ -258,6 +315,9 @@ def selectrangeopen(table, field, minv, maxv, complement=False):
                   complement=complement)
 
 
+Table.selectrangeopen = selectrangeopen
+
+
 def selectrangeclosed(table, field, minv, maxv, complement=False):
     """Select rows where the given field is greater than `minv` and
     less than `maxv`."""
@@ -266,6 +326,9 @@ def selectrangeclosed(table, field, minv, maxv, complement=False):
     maxv = Comparable(maxv)
     return select(table, field, lambda v: minv < Comparable(v) < maxv,
                   complement=complement)
+
+
+Table.selectrangeclosed = selectrangeclosed
 
 
 def selectre(table, field, pattern, flags=0, complement=False):
@@ -301,10 +364,17 @@ def selectre(table, field, pattern, flags=0, complement=False):
     return select(table, field, test, complement=complement)
 
 
+Table.selectre = selectre
+
+
 def selecttrue(table, field, complement=False):
     """Select rows where the given field evaluates `True`."""
 
     return select(table, field, lambda v: bool(v), complement=complement)
+
+
+Table.selecttrue = selecttrue
+Table.true = selecttrue
 
 
 def selectfalse(table, field, complement=False):
@@ -314,10 +384,18 @@ def selectfalse(table, field, complement=False):
                   complement=complement)
 
 
+Table.selectfalse = selectfalse
+Table.false = selectfalse
+
+
 def selectnone(table, field, complement=False):
     """Select rows where the given field is `None`."""
 
     return select(table, field, lambda v: v is None, complement=complement)
+
+
+Table.selectnone = selectnone
+Table.none = selectnone
 
 
 def selectnotnone(table, field, complement=False):
@@ -325,6 +403,10 @@ def selectnotnone(table, field, complement=False):
 
     return select(table, field, lambda v: v is not None,
                   complement=complement)
+
+
+Table.selectnotnone = selectnotnone
+Table.notnone = selectnotnone
 
 
 def selectusingcontext(table, query):
@@ -358,7 +440,10 @@ def selectusingcontext(table, query):
     return SelectUsingContextView(table, query)
 
 
-class SelectUsingContextView(RowContainer):
+Table.selectusingcontext = selectusingcontext
+
+
+class SelectUsingContextView(Table):
 
     def __init__(self, table, query):
         self.table = table
@@ -425,3 +510,6 @@ def facet(table, field):
     for v in set(values(table, field)):
         fct[v] = selecteq(table, field, v)
     return fct
+
+
+Table.facet = facet

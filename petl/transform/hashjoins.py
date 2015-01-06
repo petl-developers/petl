@@ -6,7 +6,7 @@ import operator
 from petl.compat import next
 
 
-from petl.util.base import RowContainer, asindices, rowgetter, iterpeek
+from petl.util.base import Table, asindices, rowgetter, iterpeek
 from petl.util.lookups import lookup
 from petl.transform.joins import keys_from_args
 
@@ -33,7 +33,10 @@ def hashjoin(left, right, key=None, lkey=None, rkey=None, cache=True,
                         lprefix=lprefix, rprefix=rprefix)
 
 
-class HashJoinView(RowContainer):
+Table.hashjoin = hashjoin
+
+
+class HashJoinView(Table):
     
     def __init__(self, left, right, lkey, rkey, cache=True, lprefix=None,
                  rprefix=None):
@@ -124,7 +127,10 @@ def hashleftjoin(left, right, key=None, lkey=None, rkey=None, missing=None,
                             cache=cache, lprefix=lprefix, rprefix=rprefix)
 
 
-class HashLeftJoinView(RowContainer):
+Table.hashleftjoin = hashleftjoin
+
+
+class HashLeftJoinView(Table):
     
     def __init__(self, left, right, lkey, rkey, missing=None, cache=True,
                  lprefix=None, rprefix=None):
@@ -223,7 +229,10 @@ def hashrightjoin(left, right, key=None, lkey=None, rkey=None, missing=None,
                              cache=cache, lprefix=lprefix, rprefix=rprefix)
 
 
-class HashRightJoinView(RowContainer):
+Table.hashrightjoin = hashrightjoin
+
+
+class HashRightJoinView(Table):
     
     def __init__(self, left, right, lkey, rkey, missing=None, cache=True,
                  lprefix=None, rprefix=None):
@@ -322,7 +331,10 @@ def hashantijoin(left, right, key=None, lkey=None, rkey=None):
     return HashAntiJoinView(left, right, lkey, rkey)
 
 
-class HashAntiJoinView(RowContainer):
+Table.hashantijoin = hashantijoin
+
+
+class HashAntiJoinView(Table):
     
     def __init__(self, left, right, lkey, rkey):
         self.left = left
@@ -380,7 +392,10 @@ def hashlookupjoin(left, right, key=None, lkey=None, rkey=None, missing=None,
                               lprefix=lprefix, rprefix=rprefix)
 
 
-class HashLookupJoinView(RowContainer):
+Table.hashlookupjoin = hashlookupjoin
+
+
+class HashLookupJoinView(Table):
 
     def __init__(self, left, right, lkey, rkey, missing=None, lprefix=None,
                  rprefix=None):

@@ -7,6 +7,7 @@ from petl.compat import PY2
 
 
 # internal dependencies
+from petl.util.base import Table
 from petl.io.sources import read_source_from_arg, write_source_from_arg
 if PY2:
     from petl.io.csv_py2 import fromcsv_impl, fromucsv_impl, tocsv_impl, \
@@ -122,6 +123,9 @@ def tocsv(table, source=None, dialect='excel', write_header=True, **kwargs):
                write_header=write_header, **kwargs)
 
 
+Table.tocsv = tocsv
+
+
 def appendcsv(table, source=None, dialect='excel', write_header=False,
               **kwargs):
     """Append data rows to an existing CSV file. As :func:`tocsv` but the
@@ -139,6 +143,9 @@ def appendcsv(table, source=None, dialect='excel', write_header=False,
                    write_header=write_header, **kwargs)
 
 
+Table.appendcsv = appendcsv
+
+
 def totsv(table, source=None, dialect='excel-tab', **kwargs):
     """Convenience function, as :func:`tocsv` but with different default dialect
     (tab delimited).
@@ -148,6 +155,9 @@ def totsv(table, source=None, dialect='excel-tab', **kwargs):
     return tocsv(table, source=source, dialect=dialect, **kwargs)
 
 
+Table.totsv = totsv
+
+
 def appendtsv(table, source=None, dialect='excel-tab', **kwargs):
     """Convenience function, as :func:`appendcsv` but with different default
     dialect (tab delimited).
@@ -155,6 +165,9 @@ def appendtsv(table, source=None, dialect='excel-tab', **kwargs):
     """
 
     return appendcsv(table, source=source, dialect=dialect, **kwargs)
+
+
+Table.appendtsv = appendtsv
 
 
 def toucsv(table, source=None, dialect='excel', encoding='utf-8',
@@ -170,6 +183,9 @@ def toucsv(table, source=None, dialect='excel', encoding='utf-8',
                 write_header=write_header, **kwargs)
 
 
+Table.toucsv = toucsv
+
+
 def appenducsv(table, source=None, dialect='excel', encoding='utf-8',
                write_header=False, **kwargs):
     """Append the table to a delimited file using the given text encoding. Like
@@ -183,6 +199,9 @@ def appenducsv(table, source=None, dialect='excel', encoding='utf-8',
                     write_header=write_header, **kwargs)
 
 
+Table.appenducsv = appenducsv
+
+
 def toutsv(table, source=None, dialect='excel-tab', **kwargs):
     """Convenience function, as :func:`toucsv` but with different default
     dialect (tab delimited).
@@ -192,6 +211,9 @@ def toutsv(table, source=None, dialect='excel-tab', **kwargs):
     return toucsv(table, source=source, dialect=dialect, **kwargs)
 
 
+Table.toutsv = toutsv
+
+
 def appendutsv(table, source=None, dialect='excel-tab', **kwargs):
     """Convenience function, as :func:`appenducsv` but with different default
     dialect (tab delimited).
@@ -199,6 +221,9 @@ def appendutsv(table, source=None, dialect='excel-tab', **kwargs):
     """
 
     return appenducsv(table, source=source, dialect=dialect, **kwargs)
+
+
+Table.appendutsv = appendutsv
 
 
 def teecsv(table, source=None, write_header=True, dialect='excel', **kwargs):
@@ -211,6 +236,9 @@ def teecsv(table, source=None, write_header=True, dialect='excel', **kwargs):
                        dialect=dialect, **kwargs)
 
 
+Table.teecsv = teecsv
+
+
 def teetsv(table, source=None, write_header=True, dialect='excel-tab',
            **kwargs):
     """Convenience function, as :func:`teecsv` but with different default
@@ -220,6 +248,9 @@ def teetsv(table, source=None, write_header=True, dialect='excel-tab',
 
     return teecsv(table, source=source, write_header=write_header,
                   dialect=dialect, **kwargs)
+
+
+Table.teetsv = teetsv
 
 
 def teeucsv(table, source=None, write_header=True, dialect='excel',
@@ -234,6 +265,9 @@ def teeucsv(table, source=None, write_header=True, dialect='excel',
                         write_header=write_header, dialect=dialect, **kwargs)
 
 
+Table.teeucsv = teeucsv
+
+
 def teeutsv(table, source=None, write_header=True, dialect='excel-tab',
             encoding='utf-8', **kwargs):
     """Convenience function, as :func:`teeucsv` but with different default
@@ -243,3 +277,6 @@ def teeutsv(table, source=None, write_header=True, dialect='excel-tab',
 
     return teeucsv(table, source=source, write_header=write_header,
                    dialect=dialect, encoding=encoding, **kwargs)
+
+
+Table.teeutsv = teeutsv

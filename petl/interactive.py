@@ -79,7 +79,7 @@ info = logger.info
 debug = logger.debug
 
 
-from petl.util.base import RowContainer
+from petl.util.base import Table
 import petl.fluent
 from petl.io import StringSource
 
@@ -207,7 +207,7 @@ class InteractiveWrapper(petl.fluent.FluentWrapper):
 def _wrap_function(f):
     def wrapper(*args, **kwargs):
         _innerresult = f(*args, **kwargs)
-        if isinstance(_innerresult, RowContainer):
+        if isinstance(_innerresult, Table):
             return InteractiveWrapper(_innerresult)
         else:
             return _innerresult

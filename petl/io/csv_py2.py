@@ -9,14 +9,14 @@ import cStringIO
 
 
 # internal dependencies
-from petl.util.base import RowContainer, data
+from petl.util.base import Table, data
 
 
 def fromcsv_impl(source, **csvargs):
     return CSVView(source, **csvargs)
 
 
-class CSVView(RowContainer):
+class CSVView(Table):
 
     def __init__(self, source=None, **csvargs):
             self.source = source
@@ -118,7 +118,7 @@ def fromucsv_impl(source, encoding='utf-8', **csvargs):
     return UnicodeCSVView(source, encoding=encoding, **csvargs)
 
 
-class UnicodeCSVView(RowContainer):
+class UnicodeCSVView(Table):
     def __init__(self, source, encoding, **csvargs):
         self.source = source
         self.encoding = encoding
@@ -152,11 +152,11 @@ def _writeucsv(table, source, mode, write_header, encoding, **csvargs):
 
 
 def teecsv_impl(table, source, write_header, **csvargs):
-    return TeeCSVContainer(table, source=source, write_header=write_header,
+    return TeeCSVView(table, source=source, write_header=write_header,
                            **csvargs)
 
 
-class TeeCSVContainer(RowContainer):
+class TeeCSVView(Table):
     def __init__(self, table, source=None, write_header=True, **csvargs):
         self.table = table
         self.source = source
@@ -177,11 +177,11 @@ class TeeCSVContainer(RowContainer):
 
 
 def teeucsv_impl(table, source, write_header, encoding='utf-8', **csvargs):
-    return TeeUCSVContainer(table, source=source, write_header=write_header,
+    return TeeUnicodeCSVView(table, source=source, write_header=write_header,
                             encoding=encoding, **csvargs)
 
 
-class TeeUCSVContainer(RowContainer):
+class TeeUnicodeCSVView(Table):
     def __init__(self, table, source=None, write_header=True, encoding='utf-8',
                  **csvargs):
         self.table = table

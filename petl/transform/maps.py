@@ -6,7 +6,7 @@ import operator
 from petl.compat import OrderedDict, next, string_types
 
 
-from petl.util.base import RowContainer, expr, rowgroupby, Record
+from petl.util.base import Table, expr, rowgroupby, Record
 from petl.transform.sorts import sort
 
 
@@ -57,7 +57,10 @@ def fieldmap(table, mappings=None, failonerror=False, errorvalue=None):
                         errorvalue=errorvalue)
 
 
-class FieldMapView(RowContainer):
+Table.fieldmap = fieldmap
+
+
+class FieldMapView(Table):
 
     def __init__(self, source, mappings=None, failonerror=False,
                  errorvalue=None):
@@ -180,7 +183,10 @@ def rowmap(table, rowmapper, fields, failonerror=False):
     return RowMapView(table, rowmapper, fields, failonerror=failonerror)
 
 
-class RowMapView(RowContainer):
+Table.rowmap = rowmap
+
+
+class RowMapView(Table):
 
     def __init__(self, source, rowmapper, fields, failonerror=False):
         self.source = source
@@ -263,7 +269,10 @@ def rowmapmany(table, rowgenerator, fields, failonerror=False):
     return RowMapManyView(table, rowgenerator, fields, failonerror=failonerror)
 
 
-class RowMapManyView(RowContainer):
+Table.rowmapmany = rowmapmany
+
+
+class RowMapManyView(Table):
 
     def __init__(self, source, rowgenerator, fields, failonerror=False):
         self.source = source
@@ -304,7 +313,10 @@ def rowgroupmap(table, key, mapper, fields=None, presorted=False,
                            buffersize=buffersize, tempdir=tempdir, cache=cache)
 
 
-class RowGroupMapView(RowContainer):
+Table.rowgroupmap = rowgroupmap
+
+
+class RowGroupMapView(Table):
 
     def __init__(self, source, key, mapper, fields=None,
                  presorted=False, buffersize=None, tempdir=None, cache=True):

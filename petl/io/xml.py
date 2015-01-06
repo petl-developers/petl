@@ -10,7 +10,7 @@ from petl.compat import string_types
 
 
 # internal dependencies
-from petl.util.base import RowContainer
+from petl.util.base import Table
 from petl.io.sources import read_source_from_arg
 
 
@@ -127,7 +127,7 @@ def fromxml(source, *args, **kwargs):
     return XmlView(source, *args, **kwargs)
 
 
-class XmlView(RowContainer):
+class XmlView(Table):
 
     def __init__(self, source, *args, **kwargs):
         self.source = source

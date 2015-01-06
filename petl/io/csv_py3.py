@@ -7,7 +7,7 @@ import csv
 import logging
 
 
-from petl.util.base import RowContainer, data
+from petl.util.base import Table, data
 
 
 logger = logging.getLogger(__name__)
@@ -24,7 +24,7 @@ def fromucsv_impl(source, encoding='utf-8', **csvargs):
     return CSVView(source, encoding=encoding, **csvargs)
 
 
-class CSVView(RowContainer):
+class CSVView(Table):
 
     def __init__(self, source, encoding, **csvargs):
             self.source = source
@@ -81,16 +81,17 @@ def _writecsv(table, source, mode, write_header, encoding, **csvargs):
 
 
 def teecsv_impl(table, source, write_header, **csvargs):
-    return TeeCSVContainer(table, source=source, write_header=write_header,
+    return TeeCSVView(table, source=source, write_header=write_header,
                            encoding='ascii', **csvargs)
 
 
 def teeucsv_impl(table, source, write_header, encoding='utf-8', **csvargs):
-    return TeeCSVContainer(table, source=source, write_header=write_header,
+    return TeeCSVView(table, source=source, write_header=write_header,
                            encoding=encoding, **csvargs)
 
 
-class TeeCSVContainer(RowContainer):
+class TeeCSVView(Table):
+
     def __init__(self, table, source=None, write_header=True, encoding='utf-8',
                  **csvargs):
         self.table = table

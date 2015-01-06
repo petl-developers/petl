@@ -2,8 +2,8 @@ from __future__ import absolute_import, print_function, division, \
     unicode_literals
 
 
-from petl.util.base import RowContainer, Record, values, header, data, \
-    fieldnames, records, dicts, namedtuples, expr, rowgroupby, empty
+from petl.util.base import Table, Record, values, header, data, \
+    fieldnames, records, dicts, namedtuples, expr, rowgroupby, empty, wrap
 
 from petl.util.lookups import lookup, lookupone, dictlookup, dictlookupone, \
     recordlookup, recordlookupone

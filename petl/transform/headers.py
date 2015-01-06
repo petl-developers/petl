@@ -6,7 +6,7 @@ import itertools
 from petl.compat import next
 
 
-from petl.util.base import RowContainer
+from petl.util.base import Table
 
 
 def rename(table, *args):
@@ -51,7 +51,10 @@ def rename(table, *args):
     return RenameView(table, *args)
 
 
-class RenameView(RowContainer):
+Table.rename = rename
+
+
+class RenameView(Table):
 
     def __init__(self, table, *args):
         self.source = table
@@ -107,7 +110,10 @@ def setheader(table, fields):
     return SetHeaderView(table, fields)
 
 
-class SetHeaderView(RowContainer):
+Table.setheader = setheader
+
+
+class SetHeaderView(Table):
 
     def __init__(self, source, fields):
         self.source = source
@@ -150,7 +156,10 @@ def extendheader(table, fields):
     return ExtendHeaderView(table, fields)
 
 
-class ExtendHeaderView(RowContainer):
+Table.extendheader = extendheader
+
+
+class ExtendHeaderView(Table):
 
     def __init__(self, source, fields):
         self.source = source
@@ -193,7 +202,10 @@ def pushheader(table, fields, *args):
     return PushHeaderView(table, fields, *args)
 
 
-class PushHeaderView(RowContainer):
+Table.pushheader = pushheader
+
+
+class PushHeaderView(Table):
 
     def __init__(self, source, fields, *args):
         self.source = source
@@ -247,7 +259,10 @@ def skip(table, n):
     return SkipView(table, n)
 
 
-class SkipView(RowContainer):
+Table.skip = skip
+
+
+class SkipView(Table):
 
     def __init__(self, source, n):
         self.source = source
@@ -267,7 +282,10 @@ def prefixheader(table, prefix):
     return PrefixHeaderView(table, prefix)
 
 
-class PrefixHeaderView(RowContainer):
+Table.prefixheader = prefixheader
+
+
+class PrefixHeaderView(Table):
 
     def __init__(self, table, prefix):
         self.table = table
@@ -288,7 +306,10 @@ def suffixheader(table, suffix):
     return SuffixHeaderView(table, suffix)
 
 
-class SuffixHeaderView(RowContainer):
+Table.suffixheader = suffixheader
+
+
+class SuffixHeaderView(Table):
 
     def __init__(self, table, suffix):
         self.table = table

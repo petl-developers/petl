@@ -9,7 +9,7 @@ from petl.compat import next, PY2
 
 
 # internal dependencies
-from petl.util.base import RowContainer, asdict
+from petl.util.base import Table, asdict
 from petl.io.sources import read_source_from_arg, write_source_from_arg
 
 
@@ -74,7 +74,7 @@ def fromutext(source=None, header=(u'lines',), encoding='utf-8', strip=None):
 
 if PY2:
 
-    class TextView(RowContainer):
+    class TextView(Table):
 
         def __init__(self, source, header=('lines',), strip=None):
             self.source = source
@@ -89,7 +89,7 @@ if PY2:
                 for line in f:
                     yield (line.strip(s),)
 
-    class UnicodeTextView(RowContainer):
+    class UnicodeTextView(Table):
 
         def __init__(self, source, header=(u'lines',), encoding='utf-8',
                      strip=None):
@@ -110,7 +110,7 @@ if PY2:
 
 else:
 
-    class TextView(RowContainer):
+    class TextView(Table):
 
         def __init__(self, source, encoding='ascii', header=('lines',),
                      strip=None):
@@ -191,6 +191,9 @@ def totext(table, source=None, template=None, prologue=None, epilogue=None):
                 f.detach()
 
 
+Table.totext = totext
+
+
 def appendtext(table, source=None, template=None, prologue=None, epilogue=None):
     """Append the table to a text file.
 
@@ -210,6 +213,9 @@ def appendtext(table, source=None, template=None, prologue=None, epilogue=None):
                 _writetext(table, f, prologue, template, epilogue)
             finally:
                 f.detach()
+
+
+Table.appendtext = appendtext
 
 
 def toutext(table, source=None, encoding='utf-8', template=None, prologue=None,
@@ -235,6 +241,9 @@ def toutext(table, source=None, encoding='utf-8', template=None, prologue=None,
                 f.detach()
 
 
+Table.toutext = toutext
+
+
 def appendutext(table, source=None, encoding='utf-8', template=None,
                 prologue=None, epilogue=None):
     """Append the table to a text file via the given encoding. Like
@@ -256,6 +265,9 @@ def appendutext(table, source=None, encoding='utf-8', template=None,
                 _writetext(table, f, prologue, template, epilogue)
             finally:
                 f.detach()
+
+
+Table.appendutext = appendutext
 
 
 def _writetext(table, f, prologue, template, epilogue):
@@ -292,11 +304,14 @@ def teetext(table, source=None, template=None, prologue=None, epilogue=None):
     """
 
     assert template is not None, 'template is required'
-    return TeeTextContainer(table, source=source, template=template,
+    return TeeTextView(table, source=source, template=template,
                             prologue=prologue, epilogue=epilogue)
 
 
-class TeeTextContainer(RowContainer):
+Table.teetext = teetext
+
+
+class TeeTextView(Table):
 
     def __init__(self, table, source=None, template=None, prologue=None,
                  epilogue=None):
@@ -334,12 +349,15 @@ def teeutext(table, source=None, encoding='utf-8', template=None,
     """
 
     assert template is not None, 'template is required'
-    return TeeUTextContainer(table, source=source,
+    return TeeUnicodeTextView(table, source=source,
                              encoding=encoding, template=template,
                              prologue=prologue, epilogue=epilogue)
 
 
-class TeeUTextContainer(RowContainer):
+Table.teeutext = teeutext
+
+
+class TeeUnicodeTextView(Table):
 
     def __init__(self, table, source=None, encoding='utf-8', template=None,
                  prologue=None, epilogue=None):

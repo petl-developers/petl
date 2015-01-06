@@ -8,7 +8,7 @@ from petl.compat import next
 
 
 # internal dependencies
-from petl.util.base import RowContainer
+from petl.util.base import Table
 
 
 logger = logging.getLogger(__name__)
@@ -103,7 +103,7 @@ def _is_sqlalchemy_connection(dbo):
     return _hasmethod(dbo, 'execute') and _hasprop(dbo, 'connection')
 
 
-class DbView(RowContainer):
+class DbView(Table):
 
     def __init__(self, dbo, query, *args, **kwargs):
         self.dbo = dbo
@@ -264,6 +264,9 @@ def todb(table, dbo, tablename, schema=None, commit=True):
     """
 
     _todb(table, dbo, tablename, schema=schema, commit=commit, truncate=True)
+
+
+Table.todb = todb
 
 
 def _hasmethod(o, n):
@@ -593,6 +596,9 @@ def appenddb(table, dbo, tablename, schema=None, commit=True):
     """
 
     _todb(table, dbo, tablename, schema=schema, commit=commit, truncate=False)
+
+
+Table.appenddb = appenddb
 
 
 # default DB quote char per SQL-92

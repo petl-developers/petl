@@ -11,7 +11,7 @@ debug = logger.debug
 
 
 from petl.comparison import Comparable
-from petl.util.base import header, RowContainer
+from petl.util.base import header, Table
 from petl.transform.sorts import sort
 from petl.transform.basics import cut
 
@@ -67,7 +67,10 @@ def complement(a, b, presorted=False, buffersize=None, tempdir=None,
                           tempdir=tempdir, cache=cache)
 
 
-class ComplementView(RowContainer):
+Table.complement = complement
+
+
+class ComplementView(Table):
 
     def __init__(self, a, b, presorted=False, buffersize=None, tempdir=None,
                  cache=True):
@@ -186,6 +189,9 @@ def recordcomplement(a, b, buffersize=None, tempdir=None, cache=True):
                       cache=cache)
 
 
+Table.recordcomplement = recordcomplement
+
+
 def diff(a, b, presorted=False, buffersize=None, tempdir=None, cache=True):
     """Find the difference between rows in two tables. Returns a pair of tables.
     E.g.::
@@ -244,6 +250,9 @@ def diff(a, b, presorted=False, buffersize=None, tempdir=None, cache=True):
     return added, subtracted
 
 
+Table.diff = diff
+
+
 def recorddiff(a, b, buffersize=None, tempdir=None, cache=True):
     """Find the difference between records in two tables. E.g.::
 
@@ -293,6 +302,9 @@ def recorddiff(a, b, buffersize=None, tempdir=None, cache=True):
     return added, subtracted
 
 
+Table.recorddiff = recorddiff
+
+
 def intersection(a, b, presorted=False, buffersize=None, tempdir=None,
                  cache=True):
     """Return rows in `a` that are also in `b`. E.g.::
@@ -330,7 +342,10 @@ def intersection(a, b, presorted=False, buffersize=None, tempdir=None,
                             tempdir=tempdir, cache=cache)
 
 
-class IntersectionView(RowContainer):
+Table.intersection = intersection
+
+
+class IntersectionView(Table):
 
     def __init__(self, a, b, presorted=False, buffersize=None, tempdir=None,
                  cache=True):
@@ -383,7 +398,10 @@ def hashcomplement(a, b):
     return HashComplementView(a, b)
 
 
-class HashComplementView(RowContainer):
+Table.hashcomplement = hashcomplement
+
+
+class HashComplementView(Table):
 
     def __init__(self, a, b):
         self.a = a
@@ -424,7 +442,10 @@ def hashintersection(a, b):
     return HashIntersectionView(a, b)
 
 
-class HashIntersectionView(RowContainer):
+Table.hashintersection = hashintersection
+
+
+class HashIntersectionView(Table):
 
     def __init__(self, a, b):
         self.a = a

@@ -7,8 +7,7 @@ import csv
 from petl.compat import PY2
 
 
-import petl
-import petl.fluent as etl
+import petl as etl
 from petl.test.helpers import ieq, eq_
 
 
@@ -20,16 +19,16 @@ def test_basics():
     w1 = etl.wrap(t1)
     
     eq_(('foo', 'bar'), w1.header())
-    eq_(petl.header(w1), w1.header())
+    eq_(etl.header(w1), w1.header())
     ieq((('A', 1), ('B', 2)), w1.data())
-    ieq(petl.data(w1), w1.data())
+    ieq(etl.data(w1), w1.data())
     
     w2 = w1.cut('bar', 'foo')
     expect2 = (('bar', 'foo'),
                (1, 'A'),
                (2, 'B'))
     ieq(expect2, w2)
-    ieq(petl.cut(w1, 'bar', 'foo'), w2)
+    ieq(etl.cut(w1, 'bar', 'foo'), w2)
     
     w3 = w1.cut('bar', 'foo').cut('foo', 'bar')
     ieq(t1, w3)
@@ -41,11 +40,11 @@ def test_staticmethods():
         mode = 'wb'
     else:
         mode = 'w'
-    f = NamedTemporaryFile(mode=mode, delete=False)
     if PY2:
         delimiter = b'\t'
     else:
         delimiter = '\t'
+    f = NamedTemporaryFile(mode=mode, delete=False)
     writer = csv.writer(f, delimiter=delimiter)
     table = (('foo', 'bar'),
              ('a', 1),
@@ -134,5 +133,5 @@ def test_wrap_tuple_return():
     added, removed = tablea.diff(tableb)
     eq_(('foo', 'bar'), added.header())
     eq_(('foo', 'bar'), removed.header())
-    ieq(petl.data(added), added.data())
-    ieq(petl.data(removed), removed.data())
+    ieq(etl.data(added), added.data())
+    ieq(etl.data(removed), removed.data())

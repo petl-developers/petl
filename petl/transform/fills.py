@@ -5,7 +5,7 @@ from __future__ import absolute_import, print_function, division, \
 from petl.compat import next
 
 
-from petl.util.base import RowContainer, asindices
+from petl.util.base import Table, asindices
 
 
 def filldown(table, *fields, **kwargs):
@@ -88,7 +88,10 @@ def filldown(table, *fields, **kwargs):
     return FillDownView(table, fields, **kwargs)
 
 
-class FillDownView(RowContainer):
+Table.filldown = filldown
+
+
+class FillDownView(Table):
 
     def __init__(self, table, fields, missing=None):
         self.table = table
@@ -158,7 +161,10 @@ def fillright(table, missing=None):
     return FillRightView(table, missing=missing)
 
 
-class FillRightView(RowContainer):
+Table.fillright = fillright
+
+
+class FillRightView(Table):
 
     def __init__(self, table, missing=None):
         self.table = table
@@ -220,7 +226,10 @@ def fillleft(table, missing=None):
     return FillLeftView(table, missing=missing)
 
 
-class FillLeftView(RowContainer):
+Table.fillleft = fillleft
+
+
+class FillLeftView(Table):
 
     def __init__(self, table, missing=None):
         self.table = table

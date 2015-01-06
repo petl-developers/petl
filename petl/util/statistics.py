@@ -2,7 +2,7 @@ from __future__ import absolute_import, print_function, division, \
     unicode_literals
 
 
-from petl.util.base import itervalues
+from petl.util.base import itervalues, Table
 
 
 def limits(table, field):
@@ -33,6 +33,9 @@ def limits(table, field):
             if v > maxv:
                 maxv = v
         return minv, maxv
+
+
+Table.limits = limits
 
 
 def stats(table, field):
@@ -77,3 +80,6 @@ def stats(table, field):
     if output['count'] > 0:
         output['mean'] = output['sum'] / output['count']
     return output
+
+
+Table.stats = stats

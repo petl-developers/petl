@@ -5,7 +5,7 @@ from __future__ import absolute_import, print_function, division, \
 from petl.compat import Counter, string_types, maketrans
 
 
-from petl.util.base import itervalues, RowContainer, iterdata
+from petl.util.base import itervalues, Table, iterdata
 
 
 def nrows(table):
@@ -21,6 +21,9 @@ def nrows(table):
     """
 
     return sum(1 for _ in iterdata(table))
+
+
+Table.nrows = nrows
 
 
 def valuecount(table, field, value, missing=None):
@@ -49,6 +52,9 @@ def valuecount(table, field, value, missing=None):
         if v == value:
             vs += 1
     return vs, float(vs)/total
+
+
+Table.valuecount = valuecount
 
 
 def valuecounter(table, *field, **kwargs):
@@ -81,6 +87,9 @@ def valuecounter(table, *field, **kwargs):
         except IndexError:
             pass  # short row
     return counter
+
+
+Table.valuecounter = valuecounter
 
 
 def valuecounts(table, *field, **kwargs):
@@ -138,7 +147,10 @@ def valuecounts(table, *field, **kwargs):
     return ValueCountsView(table, field, **kwargs)
 
 
-class ValueCountsView(RowContainer):
+Table.valuecounts = valuecounts
+
+
+class ValueCountsView(Table):
 
     def __init__(self, table, field, missing=None):
         self.table = table
@@ -211,6 +223,9 @@ def parsecounter(table, field, parsers=(('int', int), ('float', float))):
     return counter, errors
 
 
+Table.parsecounter = parsecounter
+
+
 def parsecounts(table, field, parsers=(('int', int), ('float', float))):
     """
     Count the number of `str` or `unicode` values that can be parsed as ints,
@@ -240,7 +255,10 @@ def parsecounts(table, field, parsers=(('int', int), ('float', float))):
     return ParseCountsView(table, field, parsers=parsers)
 
 
-class ParseCountsView(RowContainer):
+Table.parsecounts = parsecounts
+
+
+class ParseCountsView(Table):
 
     def __init__(self, table, field, parsers=(('int', int), ('float', float))):
         self.table = table
@@ -285,6 +303,9 @@ def typecounter(table, field):
         except IndexError:
             pass  # ignore short rows
     return counter
+
+
+Table.typecounter = typecounter
 
 
 def typecounts(table, field):
@@ -341,7 +362,10 @@ def typecounts(table, field):
     return TypeCountsView(table, field)
 
 
-class TypeCountsView(RowContainer):
+Table.typecounts = typecounts
+
+
+class TypeCountsView(Table):
 
     def __init__(self, table, field):
         self.table = table
@@ -374,6 +398,9 @@ def stringpatterncounter(table, field):
         p = str(v).translate(trans)
         counter[p] += 1
     return counter
+
+
+Table.stringpatterncounter = stringpatterncounter
 
 
 def stringpatterns(table, field):
@@ -426,6 +453,9 @@ def stringpatterns(table, field):
     return output
 
 
+Table.stringpatterns = stringpatterns
+
+
 def rowlengths(table):
     """
     Report on row lengths found in the table. E.g.::
@@ -460,3 +490,6 @@ def rowlengths(table):
     output = [('length', 'count')]
     output.extend(counter.most_common())
     return output
+
+
+Table.rowlengths = rowlengths

@@ -7,7 +7,7 @@ from petl.compat import pickle, next
 
 
 # internal dependencies
-from petl.util.base import RowContainer
+from petl.util.base import Table
 from petl.io.sources import read_source_from_arg, write_source_from_arg
 
 
@@ -43,7 +43,7 @@ def frompickle(source=None):
     return PickleView(source)
 
 
-class PickleView(RowContainer):
+class PickleView(Table):
 
     def __init__(self, source):
         self.source = source
@@ -92,6 +92,9 @@ def topickle(table, source=None, protocol=-1, write_header=True):
                  write_header=write_header)
 
 
+Table.topickle = topickle
+
+
 def appendpickle(table, source=None, protocol=-1, write_header=False):
     """Append data to an existing pickle file. I.e., as :func:`topickle`
     but the file is opened in append mode.
@@ -104,6 +107,9 @@ def appendpickle(table, source=None, protocol=-1, write_header=False):
 
     _writepickle(table, source=source, mode='ab', protocol=protocol,
                  write_header=write_header)
+
+
+Table.appendpickle = appendpickle
 
 
 def _writepickle(table, source, mode, protocol, write_header):
@@ -123,11 +129,14 @@ def teepickle(table, source=None, protocol=-1, write_header=True):
 
     """
 
-    return TeePickleContainer(table, source=source, protocol=protocol,
+    return TeePickleView(table, source=source, protocol=protocol,
                               write_header=write_header)
 
 
-class TeePickleContainer(RowContainer):
+Table.teepickle = teepickle
+
+
+class TeePickleView(Table):
 
     def __init__(self, table, source=None, protocol=-1, write_header=True):
         self.table = table

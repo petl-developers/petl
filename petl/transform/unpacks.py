@@ -6,7 +6,7 @@ import itertools
 from petl.compat import next
 
 
-from petl.util.base import RowContainer
+from petl.util.base import Table
 
 
 def unpack(table, field, newfields=None, include_original=False, missing=None):
@@ -42,7 +42,10 @@ def unpack(table, field, newfields=None, include_original=False, missing=None):
                       include_original=include_original, missing=missing)
 
 
-class UnpackView(RowContainer):
+Table.unpack = unpack
+
+
+class UnpackView(Table):
 
     def __init__(self, source, field, newfields=None, include_original=False,
                  missing=None):
@@ -134,7 +137,10 @@ def unpackdict(table, field, keys=None, includeoriginal=False,
                           samplesize=samplesize, missing=missing)
 
 
-class UnpackDictView(RowContainer):
+Table.unpackdict = unpackdict
+
+
+class UnpackDictView(Table):
 
     def __init__(self, table, field, keys=None, includeoriginal=False,
                  samplesize=1000, missing=None):

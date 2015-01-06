@@ -9,7 +9,7 @@ from petl.compat import text_type, numeric_types, next, PY2
 
 
 # internal dependencies
-from petl.util.base import RowContainer
+from petl.util.base import Table
 from petl.io.sources import write_source_from_arg
 
 
@@ -58,6 +58,9 @@ def tohtml(table, source=None, caption=None, representation=text_type,
             encoding='ascii')
 
 
+Table.tohtml = tohtml
+
+
 def touhtml(table, source=None, caption=None, encoding='utf-8',
             representation=text_type, lineterminator='\r\n'):
     """Write the table as HTML to a text file using the given encoding.
@@ -82,6 +85,9 @@ def touhtml(table, source=None, caption=None, encoding='utf-8',
                 f.detach()
 
 
+Table.touhtml = touhtml
+
+
 def teeuhtml(table, source=None, caption=None,
              encoding='utf-8', representation=text_type, lineterminator='\r\n'):
     """Return a table that writes rows to a Unicode HTML file as they are
@@ -89,12 +95,15 @@ def teeuhtml(table, source=None, caption=None,
 
     """
 
-    return TeeUHTMLContainer(table, source=source, caption=caption,
+    return TeeUnicodeHTMLView(table, source=source, caption=caption,
                              encoding=encoding, representation=representation,
                              lineterminator=lineterminator)
 
 
-class TeeUHTMLContainer(RowContainer):
+Table.teeuhtml = teeuhtml
+
+
+class TeeUnicodeHTMLView(Table):
 
     def __init__(self, table, source=None, caption=None,
                  encoding='utf-8', representation=text_type,
@@ -137,9 +146,12 @@ def teehtml(table, source=None, caption=None, representation=text_type,
 
     """
 
-    return TeeUHTMLContainer(table, source=source, caption=caption,
+    return TeeUnicodeHTMLView(table, source=source, caption=caption,
                              representation=representation,
                              lineterminator=lineterminator, encoding='ascii')
+
+
+Table.teehtml = teehtml
 
 
 def _write_begin(f, flds, lineterminator, caption):

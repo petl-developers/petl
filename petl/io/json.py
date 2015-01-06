@@ -10,7 +10,7 @@ from petl.compat import PY2
 
 
 # internal dependencies
-from petl.util.base import data, RowContainer, dicts as _dicts
+from petl.util.base import data, Table, dicts as _dicts
 from petl.io.sources import read_source_from_arg, write_source_from_arg
 
 
@@ -48,7 +48,7 @@ def fromjson(source, *args, **kwargs):
     return JsonView(source, *args, **kwargs)
 
 
-class JsonView(RowContainer):
+class JsonView(Table):
 
     def __init__(self, source, *args, **kwargs):
         self.source = source
@@ -110,7 +110,7 @@ def fromdicts(dicts, header=None):
     return DictsView(dicts, header=header)
 
 
-class DictsView(RowContainer):
+class DictsView(Table):
 
     def __init__(self, dicts, header=None):
         self.dicts = dicts
@@ -156,6 +156,9 @@ def tojson(table, source=None, prefix=None, suffix=None, *args, **kwargs):
     _writejson(source, obj, prefix, suffix, *args, **kwargs)
 
 
+Table.tojson = tojson
+
+
 def tojsonarrays(table, source=None, prefix=None, suffix=None,
                  output_header=False, *args, **kwargs):
     """Write a table in JSON format, with rows output as JSON arrays. E.g.::
@@ -180,6 +183,9 @@ def tojsonarrays(table, source=None, prefix=None, suffix=None,
     else:
         obj = list(data(table))
     _writejson(source, obj, prefix, suffix, *args, **kwargs)
+
+
+Table.tojsonarrays = tojsonarrays
 
 
 def _writejson(source, obj, prefix, suffix, *args, **kwargs):

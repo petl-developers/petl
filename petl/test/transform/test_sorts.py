@@ -9,7 +9,7 @@ from petl.compat import next
 from petl.test.helpers import ieq, eq_
 from petl.util import nrows
 from petl.transform.basics import cat
-from petl.transform.sorts import sort, mergesort, isordered
+from petl.transform.sorts import sort, mergesort, issorted
 
 
 def test_sort_1():
@@ -411,40 +411,40 @@ def test_mergesort_empty():
     ieq(expect, actual)
 
 
-def test_isordered():
+def test_issorted():
 
     table1 = (('foo', 'bar', 'baz'),
               ('a', 1, True),
               ('b', 3, True),
               ('b', 2))
-    assert isordered(table1, key='foo')
-    assert not isordered(table1, key='foo', reverse=True)
-    assert not isordered(table1, key='foo', strict=True)
+    assert issorted(table1, key='foo')
+    assert not issorted(table1, key='foo', reverse=True)
+    assert not issorted(table1, key='foo', strict=True)
 
     table2 = (('foo', 'bar', 'baz'),
               ('b', 2, True),
               ('a', 1, True),
               ('b', 3))
-    assert not isordered(table2, key='foo')
+    assert not issorted(table2, key='foo')
 
     table3 = (('foo', 'bar', 'baz'),
               ('a', 1, True),
               ('b', 2, True),
               ('b', 3))
-    assert isordered(table3, key=('foo', 'bar'))
-    assert isordered(table3)
+    assert issorted(table3, key=('foo', 'bar'))
+    assert issorted(table3)
 
     table4 = (('foo', 'bar', 'baz'),
               ('a', 1, True),
               ('b', 3, True),
               ('b', 2))
-    assert not isordered(table4, key=('foo', 'bar'))
-    assert not isordered(table4)
+    assert not issorted(table4, key=('foo', 'bar'))
+    assert not issorted(table4)
 
     table5 = (('foo', 'bar', 'baz'),
               ('b', 3, True),
               ('b', 2),
               ('a', 1, True))
-    assert not isordered(table5, key='foo')
-    assert isordered(table5, key='foo', reverse=True)
-    assert not isordered(table5, key='foo', reverse=True, strict=True)
+    assert not issorted(table5, key='foo')
+    assert issorted(table5, key='foo', reverse=True)
+    assert not issorted(table5, key='foo', reverse=True, strict=True)

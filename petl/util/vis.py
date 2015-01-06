@@ -7,6 +7,9 @@ from collections import defaultdict
 from petl.compat import numeric_types
 
 
+from petl.util.base import Table
+
+
 def look(table, *sliceargs, **kwargs):
     """
     Format a portion of the table as text for inspection in an interactive
@@ -95,6 +98,33 @@ def look(table, *sliceargs, **kwargs):
     return Look(table, *sliceargs, **kwargs)
 
 
+Table.look = look
+
+
+# default limit for table representation
+table_repr_limit = 5
+
+
+# set True to display field indices
+table_repr_index_header = False
+
+
+# set to str or repr for different behaviour
+table_repr_html_value = str
+
+
+def repr_look(self):
+    return repr(look(self, table_repr_limit, vrepr=repr))
+
+
+def str_look(self):
+    return str(look(self, table_repr_limit, vrepr=str))
+
+
+Table.__repr__ = repr_look
+Table.__str__ = str_look
+
+
 def lookall(table, **kwargs):
     """
     Format the entire table as text for inspection in an interactive session.
@@ -103,6 +133,9 @@ def lookall(table, **kwargs):
     """
 
     return look(table, 0, None, **kwargs)
+
+
+Table.lookall = lookall
 
 
 class Look(object):
@@ -400,6 +433,9 @@ def lookstr(table, *sliceargs):
     return Look(table, *sliceargs, vrepr=str)
 
 
+Table.lookstr = lookstr
+
+
 def lookallstr(table):
     """
     Like :func:`lookall` but use str() rather than repr() for cell
@@ -410,6 +446,9 @@ def lookallstr(table):
     """
 
     return lookstr(table, 0, None)
+
+
+Table.lookallstr = lookallstr
 
 
 def see(table, *sliceargs):
@@ -433,6 +472,9 @@ def see(table, *sliceargs):
     """
 
     return See(table, *sliceargs)
+
+
+Table.see = see
 
 
 class See(object):

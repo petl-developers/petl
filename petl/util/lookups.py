@@ -6,7 +6,7 @@ import operator
 
 
 from petl.errors import DuplicateKeyError
-from petl.util.base import asindices, asdict, Record
+from petl.util.base import Table, asindices, asdict, Record
 
 
 def lookup(table, keyspec, valuespec=None, dictionary=None):
@@ -92,6 +92,9 @@ def lookup(table, keyspec, valuespec=None, dictionary=None):
         else:
             dictionary[k] = [v]
     return dictionary
+
+
+Table.lookup = lookup
 
 
 def lookupone(table, keyspec, valuespec=None, dictionary=None, strict=False):
@@ -195,6 +198,9 @@ def lookupone(table, keyspec, valuespec=None, dictionary=None, strict=False):
     return dictionary
 
 
+Table.lookupone = lookupone
+
+
 def dictlookup(table, keyspec, dictionary=None):
     """
     Load a dictionary with data from the given table, mapping to dicts. E.g.::
@@ -269,6 +275,9 @@ def dictlookup(table, keyspec, dictionary=None):
     return dictionary
 
 
+Table.dictlookup = dictlookup
+
+
 def recordlookup(table, keyspec, dictionary=None):
     """
     Load a dictionary with data from the given table, mapping to record objects.
@@ -296,6 +305,9 @@ def recordlookup(table, keyspec, dictionary=None):
         else:
             dictionary[k] = [rec]
     return dictionary
+
+
+Table.recordlookup = recordlookup
 
 
 def dictlookupone(table, keyspec, dictionary=None, strict=False):
@@ -397,6 +409,9 @@ def dictlookupone(table, keyspec, dictionary=None, strict=False):
     return dictionary
 
 
+Table.dictlookupone = dictlookupone
+
+
 def recordlookupone(table, keyspec, dictionary=None, strict=False):
     """
     Load a dictionary with data from the given table, mapping to record objects,
@@ -424,3 +439,4 @@ def recordlookupone(table, keyspec, dictionary=None, strict=False):
     return dictionary
 
 
+Table.recordlookupone = recordlookupone

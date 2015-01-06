@@ -1,7 +1,8 @@
 from __future__ import absolute_import, print_function, division
 
 from petl.io.sources import FileSource, GzipSource, BZ2Source, ZipSource, \
-    StdinSource, StdoutSource, URLSource, StringSource, PopenSource
+    StdinSource, StdoutSource, URLSource, StringSource, PopenSource, \
+    MemorySource
 
 from petl.io.csv import fromcsv, fromtsv, fromucsv, fromutsv, tocsv, \
     appendcsv, totsv, appendtsv, toucsv, appenducsv, toutsv, appendutsv, \

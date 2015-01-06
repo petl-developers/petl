@@ -8,7 +8,7 @@ from petl.compat import next
 
 
 from petl.comparison import comparable_itemgetter, Comparable
-from petl.util.base import RowContainer, asindices, rowgetter, rowgroupby, \
+from petl.util.base import Table, asindices, rowgetter, rowgroupby, \
     header, data
 from petl.transform.sorts import sort
 from petl.transform.basics import cut, cutout
@@ -140,7 +140,10 @@ def join(left, right, key=None, lkey=None, rkey=None, presorted=False,
                     cache=cache, lprefix=lprefix, rprefix=rprefix)
 
 
-class JoinView(RowContainer):
+Table.join = join
+
+
+class JoinView(Table):
 
     def __init__(self, left, right, lkey, rkey,
                  presorted=False, leftouter=False, rightouter=False,
@@ -213,6 +216,9 @@ def leftjoin(left, right, key=None, lkey=None, rkey=None, missing=None,
                     cache=cache, lprefix=lprefix, rprefix=rprefix)
 
 
+Table.leftjoin = leftjoin
+
+
 def rightjoin(left, right, key=None, lkey=None, rkey=None, missing=None,
               presorted=False, buffersize=None, tempdir=None, cache=True,
               lprefix=None, rprefix=None):
@@ -256,6 +262,9 @@ def rightjoin(left, right, key=None, lkey=None, rkey=None, missing=None,
                     missing=missing, buffersize=buffersize,
                     tempdir=tempdir, cache=cache, lprefix=lprefix,
                     rprefix=rprefix)
+
+
+Table.rightjoin = rightjoin
 
 
 def outerjoin(left, right, key=None, lkey=None, rkey=None, missing=None,
@@ -302,6 +311,9 @@ def outerjoin(left, right, key=None, lkey=None, rkey=None, missing=None,
                     presorted=presorted, leftouter=True, rightouter=True,
                     missing=missing, buffersize=buffersize, tempdir=tempdir,
                     cache=cache, lprefix=lprefix, rprefix=rprefix)
+
+
+Table.outerjoin = outerjoin
 
 
 def iterjoin(left, right, lkey, rkey, leftouter=False, rightouter=False,
@@ -457,7 +469,10 @@ def crossjoin(*tables, **kwargs):
     return CrossJoinView(*tables, **kwargs)
 
 
-class CrossJoinView(RowContainer):
+Table.crossjoin = crossjoin
+
+
+class CrossJoinView(Table):
 
     def __init__(self, *sources, **kwargs):
         self.sources = sources
@@ -531,7 +546,10 @@ def antijoin(left, right, key=None, lkey=None, rkey=None, presorted=False,
     return AntiJoinView(left, right, lkey, rkey, presorted, buffersize)
 
 
-class AntiJoinView(RowContainer):
+Table.antijoin = antijoin
+
+
+class AntiJoinView(Table):
 
     def __init__(self, left, right, lkey, rkey, presorted=False,
                  buffersize=None, tempdir=None, cache=True):
@@ -647,7 +665,10 @@ def lookupjoin(left, right, key=None, lkey=None, rkey=None, missing=None,
                           lprefix=lprefix, rprefix=rprefix)
 
 
-class LookupJoinView(RowContainer):
+Table.lookupjoin = lookupjoin
+
+
+class LookupJoinView(Table):
 
     def __init__(self, left, right, lkey, rkey, presorted=False, missing=None,
                  buffersize=None, tempdir=None, cache=True,
@@ -851,7 +872,7 @@ def unjoin(table, value, key=None, autoincrement=(1, 1), presorted=False,
     return left, right
 
 
-class ConvertToIncrementingCounterView(RowContainer):
+class ConvertToIncrementingCounterView(Table):
 
     def __init__(self, tbl, value, autoincrement):
         self.table = tbl
@@ -875,7 +896,10 @@ class ConvertToIncrementingCounterView(RowContainer):
                 yield tuple(outrow)
 
 
-class EnumerateDistinctView(RowContainer):
+Table.unjoin = unjoin
+
+
+class EnumerateDistinctView(Table):
 
     def __init__(self, tbl, value, autoincrement):
         self.table = tbl

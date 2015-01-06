@@ -9,7 +9,7 @@ from functools import partial
 from petl.compat import xrange, OrderedDict
 
 
-from petl.util.base import RowContainer
+from petl.util.base import Table
 
 
 def randomtable(numflds=5, numrows=100, wait=0):
@@ -54,7 +54,7 @@ def randomtable(numflds=5, numrows=100, wait=0):
     return RandomTable(numflds, numrows, wait=wait)
 
 
-class RandomTable(RowContainer):
+class RandomTable(Table):
 
     def __init__(self, numflds=5, numrows=100, wait=0):
         self.numflds = numflds
@@ -169,7 +169,7 @@ def dummytable(numrows=100,
     return DummyTable(numrows=numrows, fields=fields, wait=wait)
 
 
-class DummyTable(RowContainer):
+class DummyTable(Table):
 
     def __init__(self, numrows=100, fields=None, wait=0):
         self.numrows = numrows

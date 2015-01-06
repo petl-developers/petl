@@ -6,7 +6,7 @@ from petl.compat import next, integer_types, string_types
 
 
 from petl.errors import FieldSelectionError
-from petl.util.base import RowContainer, expr, header, Record
+from petl.util.base import Table, expr, header, Record
 from petl.util.parsers import numparser
 
 
@@ -189,6 +189,9 @@ def convert(table, *args, **kwargs):
     return FieldConvertView(table, converters, **kwargs)
 
 
+Table.convert = convert
+
+
 def convertall(table, *args, **kwargs):
     """Convenience function to convert all fields in the table using a common
     function or mapping. See also :func:`convert`.
@@ -201,6 +204,9 @@ def convertall(table, *args, **kwargs):
 
     # TODO don't read the data twice!
     return convert(table, header(table), *args, **kwargs)
+
+
+Table.convertall = convertall
 
 
 def replace(table, field, a, b, **kwargs):
@@ -216,6 +222,9 @@ def replace(table, field, a, b, **kwargs):
     return convert(table, field, {a: b}, **kwargs)
 
 
+Table.replace = replace
+
+
 def replaceall(table, a, b, **kwargs):
     """Convenience function to replace all instances of `a` with `b` under all
     fields. See also :func:`convertall`.
@@ -229,6 +238,9 @@ def replaceall(table, a, b, **kwargs):
     return convertall(table, {a: b}, **kwargs)
 
 
+Table.replaceall = replaceall
+
+
 def update(table, field, value, **kwargs):
     """Convenience function to convert a field to a fixed value. Accepts the
     ``where`` keyword argument. See also :func:`convert`.
@@ -236,6 +248,9 @@ def update(table, field, value, **kwargs):
     """
 
     return convert(table, field, lambda v: value, **kwargs)
+
+
+Table.update = update
 
 
 def convertnumbers(table, strict=False, **kwargs):
@@ -261,7 +276,10 @@ def convertnumbers(table, strict=False, **kwargs):
     return convertall(table, numparser(strict), **kwargs)
 
 
-class FieldConvertView(RowContainer):
+Table.convertnumbers = convertnumbers
+
+
+class FieldConvertView(Table):
 
     def __init__(self, source, converters=None, failonerror=False,
                  errorvalue=None, where=None, pass_row=False):
