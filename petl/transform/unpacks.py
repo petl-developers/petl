@@ -10,55 +10,31 @@ from petl.util import RowContainer
 
 
 def unpack(table, field, newfields=None, include_original=False, missing=None):
-    """
-    Unpack data values that are lists or tuples. E.g.::
+    """Unpack data values that are lists or tuples. E.g.::
 
         >>> from petl import unpack, look
-        >>> look(table1)
-        +-------+------------+
-        | 'foo' | 'bar'      |
-        +=======+============+
-        | 1     | ['a', 'b'] |
-        +-------+------------+
-        | 2     | ['c', 'd'] |
-        +-------+------------+
-        | 3     | ['e', 'f'] |
-        +-------+------------+
-
+        >>> table1 = [['foo', 'bar'],
+        ...           [1, ['a', 'b']],
+        ...           [2, ['c', 'd']],
+        ...           [3, ['e', 'f']]]
         >>> table2 = unpack(table1, 'bar', ['baz', 'quux'])
         >>> look(table2)
         +-------+-------+--------+
         | 'foo' | 'baz' | 'quux' |
         +=======+=======+========+
-        | 1     | 'a'   | 'b'    |
+        |     1 | 'a'   | 'b'    |
         +-------+-------+--------+
-        | 2     | 'c'   | 'd'    |
+        |     2 | 'c'   | 'd'    |
         +-------+-------+--------+
-        | 3     | 'e'   | 'f'    |
+        |     3 | 'e'   | 'f'    |
         +-------+-------+--------+
-
-        >>> table3 = unpack(table1, 'bar', 2)
-        >>> look(table3)
-        +-------+--------+--------+
-        | 'foo' | 'bar1' | 'bar2' |
-        +=======+========+========+
-        | 1     | 'a'    | 'b'    |
-        +-------+--------+--------+
-        | 2     | 'c'    | 'd'    |
-        +-------+--------+--------+
-        | 3     | 'e'    | 'f'    |
-        +-------+--------+--------+
-
-
-    See also :func:`unpackdict`.
-
-    .. versionchanged:: 0.23
 
     This function will attempt to unpack exactly the number of values as
-    given by the number of new fields specified. If
-    there are more values than new fields, remaining values will not be
-    unpacked. If there are less values than new
-    fields, missing values will be added.
+    given by the number of new fields specified. If there are more values
+    than new fields, remaining values will not be unpacked. If there are less
+    values than new fields, `missing` values will be added.
+
+    See also :func:`petl.transform.unpacks.unpackdict`.
 
     """
 
@@ -130,34 +106,26 @@ def iterunpack(source, field, newfields, include_original, missing):
 
 def unpackdict(table, field, keys=None, includeoriginal=False,
                samplesize=1000, missing=None):
-    """
-    Unpack dictionary values into separate fields. E.g.::
+    """Unpack dictionary values into separate fields. E.g.::
 
         >>> from petl import unpackdict, look
-        >>> look(table1)
-        +-------+---------------------------+
-        | 'foo' | 'bar'                     |
-        +=======+===========================+
-        | 1     | {'quux': 'b', 'baz': 'a'} |
-        +-------+---------------------------+
-        | 2     | {'quux': 'd', 'baz': 'c'} |
-        +-------+---------------------------+
-        | 3     | {'quux': 'f', 'baz': 'e'} |
-        +-------+---------------------------+
-
+        >>> table1 = [['foo', 'bar'],
+        ...           [1, {'baz': 'a', 'quux': 'b'}],
+        ...           [2, {'baz': 'c', 'quux': 'd'}],
+        ...           [3, {'baz': 'e', 'quux': 'f'}]]
         >>> table2 = unpackdict(table1, 'bar')
         >>> look(table2)
         +-------+-------+--------+
         | 'foo' | 'baz' | 'quux' |
         +=======+=======+========+
-        | 1     | 'a'   | 'b'    |
+        |     1 | 'a'   | 'b'    |
         +-------+-------+--------+
-        | 2     | 'c'   | 'd'    |
+        |     2 | 'c'   | 'd'    |
         +-------+-------+--------+
-        | 3     | 'e'   | 'f'    |
+        |     3 | 'e'   | 'f'    |
         +-------+-------+--------+
 
-    .. versionadded:: 0.10
+    See also :func:`petl.transform.unpacks.unpack`.
 
     """
 

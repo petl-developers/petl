@@ -38,104 +38,6 @@ fc['b']['bar']
 fc['b']['baz']
 fc['c']
 
-# sort
-
-table1 = [['foo', 'bar'],
-          ['C', 2],
-          ['A', 9],
-          ['A', 6],
-          ['F', 1],
-          ['D', 10]]
-
-from petl import sort, look
-look(table1)
-table2 = sort(table1, 'foo')
-look(table2)
-# sorting by compound key is supported
-table3 = sort(table1, key=['foo', 'bar'])
-look(table3)
-# if no key is specified, the default is a lexical sort
-table4 = sort(table1)
-look(table4)
-
-
-# unpack
-
-table1 = [['foo', 'bar'],
-          [1, ['a', 'b']],
-          [2, ['c', 'd']],
-          [3, ['e', 'f']]]
-
-from petl import unpack, look    
-look(table1)
-table2 = unpack(table1, 'bar', ['baz', 'quux'])
-look(table2)
-
-
-# mergesort
-
-table1 = (('foo', 'bar'),
-          ('A', 9),
-          ('C', 2),
-          ('D', 10),
-          ('A', 6),
-          ('F', 1))
-table2 = (('foo', 'bar'),
-          ('B', 3),
-          ('D', 10),
-          ('A', 10),
-          ('F', 4))
-
-from petl import mergesort, look
-look(table1)
-look(table2)
-table3 = mergesort(table1, table2, key='foo')
-look(table3)
-
-
-# mergesort - heterogeneous tables
-
-table4 = (('foo', 'bar'),
-          ('A', 9),
-          ('C', 2),
-          ('D', 10),
-          ('A', 6),
-          ('F', 1))
-
-table5 = (('foo', 'baz'),
-          ('B', 3),
-          ('D', 10),
-          ('A', 10),
-          ('F', 4))
-
-from petl import mergesort, look
-table6 = mergesort(table4, table5, key='foo')
-look(table6)
-
-
-# mergesort - heterogeneous tables, reverse sorting
-
-table1 = (('foo', 'bar'),
-          ('A', 9),
-          ('C', 2),
-          ('D', 10),
-          ('A', 6),
-          ('F', 1))
-
-table2 = (('foo', 'baz'),
-          ('B', 3),
-          ('D', 10),
-          ('A', 10),
-          ('F', 4))
-
-from petl import mergesort, sort, cat, look
-expect = sort(cat(table1, table2), key='foo', reverse=True) 
-look(expect)
-actual = mergesort(table1, table2, key='foo', reverse=True)
-look(actual)
-actual = mergesort(sort(table1, key='foo'), reverse=True, sort(table2, key='foo', reverse=True), key='foo', reverse=True, presorted=True)
-look(actual)
-
 
 # progress
 
@@ -160,20 +62,6 @@ c1.time
 c2.time
 # actual time consumed by the convert step
 c2.time - c1.time 
-
-
-# unpackdict
-
-table1 = (('foo', 'bar'),
-          (1, {'baz': 'a', 'quux': 'b'}),
-          (2, {'baz': 'c', 'quux': 'd'}),
-          (3, {'baz': 'e', 'quux': 'f'}))
-
-from petl import unpackdict, look
-look(table1)
-table2 = unpackdict(table1, 'bar')
-look(table2)
-
 
 
 # isordered

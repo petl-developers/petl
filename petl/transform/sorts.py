@@ -1,16 +1,15 @@
 from __future__ import absolute_import, print_function, division, \
     unicode_literals
 
-
 from tempfile import NamedTemporaryFile
 import itertools
 from petl.compat import pickle, next
 import logging
+
 logger = logging.getLogger(__name__)
 warning = logger.warning
 info = logger.info
 debug = logger.debug
-
 
 from petl.comparison import comparable_itemgetter
 from petl.util import RowContainer, asindices, shortlistmergesorted, \
@@ -19,40 +18,30 @@ from petl.util import RowContainer, asindices, shortlistmergesorted, \
 
 def sort(table, key=None, reverse=False, buffersize=None, tempdir=None,
          cache=True):
-    """
-    Sort the table. Field names or indices (from zero) can be used to specify
+    """Sort the table. Field names or indices (from zero) can be used to specify
     the key. E.g.::
 
         >>> from petl import sort, look
-        >>> look(table1)
-        +-------+-------+
-        | 'foo' | 'bar' |
-        +=======+=======+
-        | 'C'   | 2     |
-        +-------+-------+
-        | 'A'   | 9     |
-        +-------+-------+
-        | 'A'   | 6     |
-        +-------+-------+
-        | 'F'   | 1     |
-        +-------+-------+
-        | 'D'   | 10    |
-        +-------+-------+
-
+        >>> table1 = [['foo', 'bar'],
+        ...           ['C', 2],
+        ...           ['A', 9],
+        ...           ['A', 6],
+        ...           ['F', 1],
+        ...           ['D', 10]]
         >>> table2 = sort(table1, 'foo')
         >>> look(table2)
         +-------+-------+
         | 'foo' | 'bar' |
         +=======+=======+
-        | 'A'   | 9     |
+        | 'A'   |     9 |
         +-------+-------+
-        | 'A'   | 6     |
+        | 'A'   |     6 |
         +-------+-------+
-        | 'C'   | 2     |
+        | 'C'   |     2 |
         +-------+-------+
-        | 'D'   | 10    |
+        | 'D'   |    10 |
         +-------+-------+
-        | 'F'   | 1     |
+        | 'F'   |     1 |
         +-------+-------+
 
         >>> # sorting by compound key is supported
@@ -61,15 +50,15 @@ def sort(table, key=None, reverse=False, buffersize=None, tempdir=None,
         +-------+-------+
         | 'foo' | 'bar' |
         +=======+=======+
-        | 'A'   | 6     |
+        | 'A'   |     6 |
         +-------+-------+
-        | 'A'   | 9     |
+        | 'A'   |     9 |
         +-------+-------+
-        | 'C'   | 2     |
+        | 'C'   |     2 |
         +-------+-------+
-        | 'D'   | 10    |
+        | 'D'   |    10 |
         +-------+-------+
-        | 'F'   | 1     |
+        | 'F'   |     1 |
         +-------+-------+
 
         >>> # if no key is specified, the default is a lexical sort
@@ -78,15 +67,15 @@ def sort(table, key=None, reverse=False, buffersize=None, tempdir=None,
         +-------+-------+
         | 'foo' | 'bar' |
         +=======+=======+
-        | 'A'   | 6     |
+        | 'A'   |     6 |
         +-------+-------+
-        | 'A'   | 9     |
+        | 'A'   |     9 |
         +-------+-------+
-        | 'C'   | 2     |
+        | 'C'   |     2 |
         +-------+-------+
-        | 'D'   | 10    |
+        | 'D'   |    10 |
         +-------+-------+
-        | 'F'   | 1     |
+        | 'F'   |     1 |
         +-------+-------+
 
     The `buffersize` argument should be an `int` or `None`.
@@ -105,8 +94,6 @@ def sort(table, key=None, reverse=False, buffersize=None, tempdir=None,
 
     If `petl.transform.sorts.defaultbuffersize` is set to `None`, this forces
     all sorting to be done entirely in memory.
-
-    .. versionchanged:: 0.16
 
     By default the results of the sort will be cached, and so a second pass over
     the sorted table will yield rows from the cache and will not repeat the
@@ -129,7 +116,6 @@ def iterchunk(f):
 
 
 def _mergesorted(key=None, reverse=False, *iterables):
-
     # N.B., I've used heapq for normal merge sort and shortlist merge sort for
     # reverse merge sort because I've assumed that heapq.merge is faster and
     # so is preferable but it doesn't support reverse sorting so the shortlist
@@ -147,7 +133,6 @@ defaultbuffersize = 100000
 
 
 class SortView(RowContainer):
-
     def __init__(self, source, key=None, reverse=False, buffersize=None,
                  tempdir=None, cache=True):
         self.source = source
@@ -221,7 +206,7 @@ class SortView(RowContainer):
         # print(repr(getkey))
         # print(rows)
         # for row in rows:
-        #     print(row, getkey(row))
+        # print(row, getkey(row))
         rows.sort(key=getkey, reverse=reverse)
 
         # have we exhausted the source iterator?
@@ -273,60 +258,34 @@ class SortView(RowContainer):
 
 
 def mergesort(*tables, **kwargs):
-    """
-    Combine multiple input tables into one sorted output table. E.g.::
+    """Combine multiple input tables into one sorted output table. E.g.::
 
         >>> from petl import mergesort, look
-        >>> look(table1)
-        +-------+-------+
-        | 'foo' | 'bar' |
-        +=======+=======+
-        | 'A'   | 9     |
-        +-------+-------+
-        | 'C'   | 2     |
-        +-------+-------+
-        | 'D'   | 10    |
-        +-------+-------+
-        | 'A'   | 6     |
-        +-------+-------+
-        | 'F'   | 1     |
-        +-------+-------+
-
-        >>> look(table2)
-        +-------+-------+
-        | 'foo' | 'bar' |
-        +=======+=======+
-        | 'B'   | 3     |
-        +-------+-------+
-        | 'D'   | 10    |
-        +-------+-------+
-        | 'A'   | 10    |
-        +-------+-------+
-        | 'F'   | 4     |
-        +-------+-------+
-
+        >>> table1 = [['foo', 'bar'],
+        ...           ['A', 9],
+        ...           ['C', 2],
+        ...           ['D', 10],
+        ...           ['A', 6],
+        ...           ['F', 1]]
+        >>> table2 = [['foo', 'bar'],
+        ...           ['B', 3],
+        ...           ['D', 10],
+        ...           ['A', 10],
+        ...           ['F', 4]]
         >>> table3 = mergesort(table1, table2, key='foo')
         >>> look(table3)
         +-------+-------+
         | 'foo' | 'bar' |
         +=======+=======+
-        | 'A'   | 9     |
+        | 'A'   |     9 |
         +-------+-------+
-        | 'A'   | 6     |
+        | 'A'   |     6 |
         +-------+-------+
-        | 'A'   | 10    |
+        | 'A'   |    10 |
         +-------+-------+
-        | 'B'   | 3     |
+        | 'B'   |     3 |
         +-------+-------+
-        | 'C'   | 2     |
-        +-------+-------+
-        | 'D'   | 10    |
-        +-------+-------+
-        | 'D'   | 10    |
-        +-------+-------+
-        | 'F'   | 1     |
-        +-------+-------+
-        | 'F'   | 4     |
+        | 'C'   |     2 |
         +-------+-------+
 
     If the input tables are already sorted by the given key, give
@@ -355,15 +314,12 @@ def mergesort(*tables, **kwargs):
         Limit the number of rows in memory per input table when inputs are not
         presorted
 
-    .. versionadded:: 0.9
-
     """
 
     return MergeSortView(tables, **kwargs)
 
 
 class MergeSortView(RowContainer):
-
     def __init__(self, tables, key=None, reverse=False, presorted=False,
                  missing=None, header=None, buffersize=None, tempdir=None,
                  cache=True):
@@ -385,7 +341,6 @@ class MergeSortView(RowContainer):
 
 
 def itermergesort(sources, key, header, missing, reverse):
-
     # first need to standardise headers of all input tables
     # borrow this from itercat - TODO remove code smells
 

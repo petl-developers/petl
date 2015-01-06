@@ -12,9 +12,9 @@ from petl.transform.joins import keys_from_args
 
 def hashjoin(left, right, key=None, lkey=None, rkey=None, cache=True,
              lprefix=None, rprefix=None):
-    """Alternative implementation of :func:`join`, where the join is executed
-    by constructing an in-memory lookup for the right hand table, then iterating
-    over rows from the left hand table.
+    """Alternative implementation of :func:`petl.transform.joins.join`, where
+    the join is executed by constructing an in-memory lookup for the right
+    hand table, then iterating over rows from the left hand table.
     
     May be faster and/or more resource efficient where the right table is small
     and the left table is large.
@@ -103,9 +103,9 @@ def iterhashjoin(left, right, lkey, rkey, rlookup, lprefix, rprefix):
         
 def hashleftjoin(left, right, key=None, lkey=None, rkey=None, missing=None,
                  cache=True, lprefix=None, rprefix=None):
-    """Alternative implementation of :func:`leftjoin`, where the join is
-    executed by constructing an in-memory lookup for the right hand table,
-    then iterating over rows from the left hand table.
+    """Alternative implementation of :func:`petl.transform.joins.leftjoin`,
+    where the join is executed by constructing an in-memory lookup for the
+    right hand table, then iterating over rows from the left hand table.
     
     May be faster and/or more resource efficient where the right table is small
     and the left table is large.
@@ -202,9 +202,9 @@ def iterhashleftjoin(left, right, lkey, rkey, missing, rlookup, lprefix,
         
 def hashrightjoin(left, right, key=None, lkey=None, rkey=None, missing=None,
                   cache=True, lprefix=None, rprefix=None):
-    """Alternative implementation of :func:`rightjoin`, where the join is
-    executed by constructing an in-memory lookup for the left hand table,
-    then iterating over rows from the right hand table.
+    """Alternative implementation of :func:`petl.transform.joins.rightjoin`,
+    where the join is executed by constructing an in-memory lookup for the
+    left hand table, then iterating over rows from the right hand table.
     
     May be faster and/or more resource efficient where the left table is small
     and the right table is large.
@@ -304,9 +304,10 @@ def iterhashrightjoin(left, right, lkey, rkey, missing, llookup, lprefix,
         
         
 def hashantijoin(left, right, key=None, lkey=None, rkey=None):
-    """Alternative implementation of :func:`antijoin`, where the join is
-    executed by constructing an in-memory set for all keys found in the right
-    hand table, then iterating over rows from the left hand table.
+    """Alternative implementation of :func:`petl.transform.joins.antijoin`,
+    where the join is executed by constructing an in-memory set for all keys
+    found in the right hand table, then iterating over rows from the left
+    hand table.
     
     May be faster and/or more resource efficient where the right table is small
     and the left table is large.
@@ -361,9 +362,9 @@ def iterhashantijoin(left, right, lkey, rkey):
 
 def hashlookupjoin(left, right, key=None, lkey=None, rkey=None, missing=None,
                    lprefix=None, rprefix=None):
-    """Alternative implementation of :func:`lookupjoin`, where the join is
-    executed by constructing an in-memory lookup for the right hand table,
-    then iterating over rows from the left hand table.
+    """Alternative implementation of :func:`petl.transform.joins.lookupjoin`,
+    where the join is executed by constructing an in-memory lookup for the
+    right hand table, then iterating over rows from the left hand table.
 
     May be faster and/or more resource efficient where the right table is small
     and the left table is large.

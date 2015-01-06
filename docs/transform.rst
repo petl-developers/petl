@@ -140,7 +140,6 @@ Reducing rows
 
 .. autofunction:: petl.transform.reductions.aggregate
 .. autofunction:: petl.transform.reductions.rowreduce
-.. autofunction:: petl.transform.reductions.recordreduce
 .. autofunction:: petl.transform.reductions.mergeduplicates
 .. autofunction:: petl.transform.reductions.merge
 .. autofunction:: petl.transform.reductions.fold
