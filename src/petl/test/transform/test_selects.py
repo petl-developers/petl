@@ -5,7 +5,7 @@ from __future__ import absolute_import, print_function, division
 from petl.testutils import ieq, eq_
 from petl.comparison import Comparable
 from petl.transform.selects import select, selectin, selectcontains, \
-    rowlenselect, selectre, selectusingcontext, facet
+    rowlenselect, selectre, selectusingcontext, facet, selectgt, selectlt
 
 
 def test_select():
@@ -111,6 +111,42 @@ def test_select_empty():
     table = (('foo', 'bar'),)
     expect = (('foo', 'bar'),)
     actual = select(table, lambda r: r['foo'] == r['bar'])
+    ieq(expect, actual)
+
+
+def test_selectgt():
+
+    table = (('foo', 'bar', 'baz'),
+             ('a', 4, 9.3),
+             ('a', 2, 88.2),
+             ('b', 1, None),
+             ('c', 8, 42.0),
+             ('d', 7, 100.9),
+             ('c', 2))
+    actual = selectgt(table, 'baz', 50)
+    expect = (('foo', 'bar', 'baz'),
+              ('a', 2, 88.2),
+              ('d', 7, 100.9))
+    ieq(expect, actual)
+    ieq(expect, actual)
+
+
+def test_selectlt():
+
+    table = (('foo', 'bar', 'baz'),
+             ('a', 4, 9.3),
+             ('a', 2, 88.2),
+             ('b', 1, None),
+             ('c', 8, 42.0),
+             ('d', 7, 100.9),
+             ('c', 2))
+    actual = selectlt(table, 'baz', 50)
+    expect = (('foo', 'bar', 'baz'),
+              ('a', 4, 9.3),
+              ('b', 1, None),
+              ('c', 8, 42.0),
+              ('c', 2))
+    ieq(expect, actual)
     ieq(expect, actual)
 
 

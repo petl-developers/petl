@@ -2692,15 +2692,16 @@ class Record(tuple):
         
     def __getitem__(self, f):
         if isinstance(f, int):
-            return super(Record, self).__getitem__(f)
+            idx = f
         elif f in self.flds:
-            try:
-                return super(Record, self).__getitem__(self.flds.index(f))
-            except IndexError:  # handle short rows
-                return self.missing
+            idx = self.flds.index(f)
         else:
-            raise Exception('item ' + str(f) +
-                            ' not in fields ' + str(self.flds))
+            raise Exception('item ' + repr(f) +
+                            ' not in fields ' + repr(self.flds))
+        try:
+            return super(Record, self).__getitem__(idx)
+        except IndexError:  # handle short rows
+            return self.missing
 
     def __getattr__(self, f):
         if f in self.flds:
@@ -2709,8 +2710,8 @@ class Record(tuple):
             except IndexError:  # handle short rows
                 return self.missing
         else:
-            raise Exception('item ' + str(f) +
-                            ' not in fields ' + str(self.flds))
+            raise Exception('item ' + repr(f) +
+                            ' not in fields ' + repr(self.flds))
 
 
 def iterrecords(table, *sliceargs, **kwargs):

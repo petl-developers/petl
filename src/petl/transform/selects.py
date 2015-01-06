@@ -4,12 +4,11 @@ from __future__ import absolute_import, print_function, division, \
 
 import operator
 import re
-from petl.compat import next, string_types
+from petl.compat import next, string_types, callable
 from petl.comparison import Comparable
 
 
-from petl.util import asindices, expr, RowContainer, values, Record, \
-    itervalues, limits
+from petl.util import asindices, expr, RowContainer, values, Record
 
 
 def select(table, *args, **kwargs):
@@ -88,7 +87,8 @@ def select(table, *args, **kwargs):
         field = args[0]
         where = args[1]
         assert callable(where), 'third argument must be callable'
-        return FieldSelectView(table, field, where, complement=complement)
+        return FieldSelectView(table, field, where, complement=complement,
+                               missing=missing)
 
 
 class RowSelectView(RowContainer):
@@ -106,25 +106,29 @@ class RowSelectView(RowContainer):
 
 class FieldSelectView(RowContainer):
 
-    def __init__(self, source, field, where, complement=False):
+    def __init__(self, source, field, where, complement=False, missing=None):
         self.source = source
         self.field = field
         self.where = where
         self.complement = complement
+        self.missing = missing
 
     def __iter__(self):
         return iterfieldselect(self.source, self.field, self.where,
-                               self.complement)
+                               self.complement, self.missing)
 
 
-def iterfieldselect(source, field, where, complement):
+def iterfieldselect(source, field, where, complement, missing):
     it = iter(source)
     flds = next(it)
     yield tuple(flds)
     indices = asindices(flds, field)
     getv = operator.itemgetter(*indices)
     for row in it:
-        v = getv(row)
+        try:
+            v = getv(row)
+        except IndexError:
+            v = missing
         if where(v) != complement:  # XOR
             yield tuple(row)
 
@@ -184,6 +188,7 @@ def selectlt(table, field, value, complement=False):
 
     """
 
+    value = Comparable(value)
     return selectop(table, field, value, operator.lt, complement=complement)
 
 
@@ -193,6 +198,7 @@ def selectle(table, field, value, complement=False):
 
     """
 
+    value = Comparable(value)
     return selectop(table, field, value, operator.le, complement=complement)
 
 
@@ -202,6 +208,7 @@ def selectgt(table, field, value, complement=False):
 
     """
 
+    value = Comparable(value)
     return selectop(table, field, value, operator.gt, complement=complement)
 
 
@@ -212,6 +219,7 @@ def selectge(table, field, value, complement=False):
 
     """
 
+    value = Comparable(value)
     return selectop(table, field, value, operator.ge, complement=complement)
 
 
@@ -279,6 +287,8 @@ def selectrangeopenleft(table, field, minv, maxv, complement=False):
 
     """
 
+    minv = Comparable(minv)
+    maxv = Comparable(maxv)
     return select(table, field, lambda v: minv <= v < maxv,
                   complement=complement)
 
@@ -290,6 +300,8 @@ def selectrangeopenright(table, field, minv, maxv, complement=False):
 
     """
 
+    minv = Comparable(minv)
+    maxv = Comparable(maxv)
     return select(table, field, lambda v: minv < v <= maxv,
                   complement=complement)
 
@@ -301,6 +313,8 @@ def selectrangeopen(table, field, minv, maxv, complement=False):
 
     """
 
+    minv = Comparable(minv)
+    maxv = Comparable(maxv)
     return select(table, field, lambda v: minv <= v <= maxv,
                   complement=complement)
 
@@ -312,6 +326,8 @@ def selectrangeclosed(table, field, minv, maxv, complement=False):
 
     """
 
+    minv = Comparable(minv)
+    maxv = Comparable(maxv)
     return select(table, field, lambda v: minv < Comparable(v) < maxv,
                   complement=complement)
 
