@@ -17,9 +17,12 @@ class Comparable(object):
 
     """
 
-    __slots__ = ['obj']
+    __slots__ = ['obj', 'inner']
 
     def __init__(self, obj):
+        # store wrapped object unchanged
+        self.inner = obj
+        # handle lists and tuples
         if isinstance(obj, (list, tuple)):
             obj = tuple(Comparable(o) for o in obj)
         self.obj = obj

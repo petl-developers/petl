@@ -15,41 +15,31 @@ from petl.transform.dedup import distinct
 
 def rowreduce(table, key, reducer, fields=None, presorted=False,
               buffersize=None, tempdir=None, cache=True):
-    """
-    Group rows under the given key then apply `reducer` to produce a single 
+    """Group rows under the given key then apply `reducer` to produce a single
     output row for each input group of rows. E.g.::
     
-        >>> from petl import rowreduce, look    
-        >>> look(table1)
-        +-------+-------+
-        | 'foo' | 'bar' |
-        +=======+=======+
-        | 'a'   | 3     |
-        +-------+-------+
-        | 'a'   | 7     |
-        +-------+-------+
-        | 'b'   | 2     |
-        +-------+-------+
-        | 'b'   | 1     |
-        +-------+-------+
-        | 'b'   | 9     |
-        +-------+-------+
-        | 'c'   | 4     |
-        +-------+-------+
-        
-        >>> def reducer(key, rows):
+        >>> from petl import rowreduce, look
+        >>> table1 = [['foo', 'bar'],
+        ...           ['a', 3],
+        ...           ['a', 7],
+        ...           ['b', 2],
+        ...           ['b', 1],
+        ...           ['b', 9],
+        ...           ['c', 4]]
+        >>> def sumbar(key, rows):
         ...     return [key, sum(row[1] for row in rows)]
-        ... 
-        >>> table2 = rowreduce(table1, key='foo', reducer=reducer, fields=['foo', 'barsum'])
+        ...
+        >>> table2 = rowreduce(table1, key='foo', reducer=sumbar,
+        ...                    fields=['foo', 'barsum'])
         >>> look(table2)
         +-------+----------+
         | 'foo' | 'barsum' |
         +=======+==========+
-        | 'a'   | 10       |
+        | 'a'   |       10 |
         +-------+----------+
-        | 'b'   | 12       |
+        | 'b'   |       12 |
         +-------+----------+
-        | 'c'   | 4        |
+        | 'c'   |        4 |
         +-------+----------+
     
     N.B., this is not strictly a "reduce" in the sense of the standard Python
@@ -57,12 +47,8 @@ def rowreduce(table, key, reducer, fields=None, presorted=False,
     recursively to values within a group, rather it is applied once to each row 
     group as a whole.
     
-    See also :func:`aggregate` and :func:`fold`.
-    
-    .. versionchanged:: 0.12
-    
-    Was previously deprecated, now resurrected as it is a useful function in 
-    it's own right.
+    See also :func:`petl.transform.reductions.aggregate` and
+    :func:`petl.transform.reductions.fold`.
     
     """
 
@@ -97,40 +83,19 @@ def iterrowreduce(source, key, reducer, fields):
         yield tuple(reducer(key, rows))
         
 
-def recordreduce(table, key, reducer, fields=None, presorted=False, 
-                 buffersize=None, tempdir=None, cache=True):
-    """
-    .. deprecated:: 0.9
-    
-    Use :func:`rowreduce` instead.
-    
-    """
-
-    return rowreduce(table, key, reducer, fields=fields, presorted=presorted, 
-                     buffersize=buffersize, tempdir=tempdir, cache=cache)
-
-
 def aggregate(table, key, aggregation=None, value=None, presorted=False,
               buffersize=None, tempdir=None, cache=True):
-    """
-    Group rows under the given key then apply aggregation functions. E.g.::
+    """Group rows under the given key then apply aggregation functions.
+    E.g.::
 
         >>> from petl import aggregate, look
-        >>> look(table1)
-        +-------+-------+-------+
-        | 'foo' | 'bar' | 'baz' |
-        +=======+=======+=======+
-        | 'a'   |     3 |  True |
-        +-------+-------+-------+
-        | 'a'   |     7 | False |
-        +-------+-------+-------+
-        | 'b'   |     2 |  True |
-        +-------+-------+-------+
-        | 'b'   |     2 | False |
-        +-------+-------+-------+
-        | 'b'   |     9 | False |
-        +-------+-------+-------+
-
+        >>> table1 = [['foo', 'bar', 'baz'],
+        ...           ['a', 3, True],
+        ...           ['a', 7, False],
+        ...           ['b', 2, True],
+        ...           ['b', 2, False],
+        ...           ['b', 9, False],
+        ...           ['c', 4, True]]
         >>> # aggregate whole rows
         ... table2 = aggregate(table1, 'foo', len)
         >>> look(table2)
@@ -157,8 +122,9 @@ def aggregate(table, key, aggregation=None, value=None, presorted=False,
         | 'c'   |       4 |
         +-------+---------+
 
-        >>> # alternative signature for single field aggregation using keyword args
-        ... table4 = aggregate(table1, key=('foo', 'bar'), aggregation=list, value=('bar', 'baz'))
+        >>> # alternative signature using keyword args
+        ... table4 = aggregate(table1, key=('foo', 'bar'),
+        ...                    aggregation=list, value=('bar', 'baz'))
         >>> look(table4)
         +-------+-------+-------------------------+
         | 'foo' | 'bar' | 'value'                 |
@@ -182,7 +148,8 @@ def aggregate(table, key, aggregation=None, value=None, presorted=False,
         >>> aggregation['minbar'] = 'bar', min
         >>> aggregation['maxbar'] = 'bar', max
         >>> aggregation['sumbar'] = 'bar', sum
-        >>> aggregation['listbar'] = 'bar' # default aggregation function is list
+        >>> # default aggregation function is list
+        ... aggregation['listbar'] = 'bar'
         >>> aggregation['listbarbaz'] = ('bar', 'baz'), list
         >>> aggregation['bars'] = 'bar', strjoin(', ')
         >>> table5 = aggregate(table1, 'foo', aggregation)
@@ -197,57 +164,12 @@ def aggregate(table, key, aggregation=None, value=None, presorted=False,
         | 'c'   |       1 |        4 |        4 |        4 | [4]       | [(4, True)]                         | '4'       |
         +-------+---------+----------+----------+----------+-----------+-------------------------------------+-----------+
 
-        >>> # can also use list or tuple to specify multiple field aggregation
-        ... aggregation = [('count', len),
-        ...                ('minbar', 'bar', min),
-        ...                ('maxbar', 'bar', max),
-        ...                ('sumbar', 'bar', sum),
-        ...                ('listbar', 'bar'), # default aggregation function is list
-        ...                ('listbarbaz', ('bar', 'baz'), list),
-        ...                ('bars', 'bar', strjoin(', '))]
-        >>> table6 = aggregate(table1, 'foo', aggregation)
-        >>> look(table6)
-        +-------+---------+----------+----------+----------+-----------+-------------------------------------+-----------+
-        | 'foo' | 'count' | 'minbar' | 'maxbar' | 'sumbar' | 'listbar' | 'listbarbaz'                        | 'bars'    |
-        +=======+=========+==========+==========+==========+===========+=====================================+===========+
-        | 'a'   |       2 |        3 |        7 |       10 | [3, 7]    | [(3, True), (7, False)]             | '3, 7'    |
-        +-------+---------+----------+----------+----------+-----------+-------------------------------------+-----------+
-        | 'b'   |       3 |        2 |        9 |       13 | [2, 2, 9] | [(2, True), (2, False), (9, False)] | '2, 2, 9' |
-        +-------+---------+----------+----------+----------+-----------+-------------------------------------+-----------+
-        | 'c'   |       1 |        4 |        4 |        4 | [4]       | [(4, True)]                         | '4'       |
-        +-------+---------+----------+----------+----------+-----------+-------------------------------------+-----------+
-
-        >>> # can also use suffix notation
-        ... table7 = aggregate(table1, 'foo')
-        >>> table7['count'] = len
-        >>> table7['minbar'] = 'bar', min
-        >>> table7['maxbar'] = 'bar', max
-        >>> table7['sumbar'] = 'bar', sum
-        >>> table7['listbar'] = 'bar' # default aggregation function is list
-        >>> table7['listbarbaz'] = ('bar', 'baz'), list
-        >>> table7['bars'] = 'bar', strjoin(', ')
-        >>> look(table7)
-        +-------+---------+----------+----------+----------+-----------+-------------------------------------+-----------+
-        | 'foo' | 'count' | 'minbar' | 'maxbar' | 'sumbar' | 'listbar' | 'listbarbaz'                        | 'bars'    |
-        +=======+=========+==========+==========+==========+===========+=====================================+===========+
-        | 'a'   |       2 |        3 |        7 |       10 | [3, 7]    | [(3, True), (7, False)]             | '3, 7'    |
-        +-------+---------+----------+----------+----------+-----------+-------------------------------------+-----------+
-        | 'b'   |       3 |        2 |        9 |       13 | [2, 2, 9] | [(2, True), (2, False), (9, False)] | '2, 2, 9' |
-        +-------+---------+----------+----------+----------+-----------+-------------------------------------+-----------+
-        | 'c'   |       1 |        4 |        4 |        4 | [4]       | [(4, True)]                         | '4'       |
-        +-------+---------+----------+----------+----------+-----------+-------------------------------------+-----------+
-
     If `presorted` is True, it is assumed that the data are already sorted by
     the given key, and the `buffersize`, `tempdir` and `cache` arguments are 
     ignored. Otherwise, the data are sorted, see also the discussion of the 
-    `buffersize`, `tempdir` and `cache` arguments under the :func:`sort` 
-    function.
+    `buffersize`, `tempdir` and `cache` arguments under the
+    :func:`petl.transform.sorts.sort` function.
 
-    .. versionchanged:: 0.24
-
-    The provided key field is used in the output header instead of 'key'. Also
-    compound keys are output as separate columns.
-    
     """
 
     if callable(aggregation):
@@ -398,13 +320,8 @@ def itermultiaggregate(source, key, aggregation):
             
 
 def groupcountdistinctvalues(table, key, value):
-    """
-    Group by the `key` field then count the number of distinct values in the 
-    `value` field.
-    
-    .. versionadded:: 0.14
-    
-    """
+    """Group by the `key` field then count the number of distinct values in the
+    `value` field."""
     
     s1 = cut(table, key, value)
     s2 = distinct(s1)
@@ -413,80 +330,53 @@ def groupcountdistinctvalues(table, key, value):
 
 
 def groupselectfirst(table, key):
-    """
-    Group by the `key` field then return the first row within each group.
-    
-    .. versionadded:: 0.14
-
-    """
+    """Group by the `key` field then return the first row within each group."""
 
     _reducer = lambda k, rows: next(rows)
     return rowreduce(table, key, reducer=_reducer)
 
 
 def groupselectmin(table, key, value):
-    """
-    Group by the `key` field then return the row with the maximum of the `value`
-    field within each group. N.B., will only return one row for each group,
-    even if multiple rows have the same (maximum) value.
-
-    .. versionadded:: 0.14
-    
-    """
+    """Group by the `key` field then return the row with the maximum of the
+    `value` field within each group. N.B., will only return one row for each
+    group, even if multiple rows have the same (maximum) value."""
 
     return groupselectfirst(sort(table, value, reverse=False), key)
     
     
 def groupselectmax(table, key, value):
-    """
-    Group by the `key` field then return the row with the minimum of the `value`
-    field within each group. N.B., will only return one row for each group,
-    even if multiple rows have the same (maximum) value.
-
-    .. versionadded:: 0.14
-    
-    """
+    """Group by the `key` field then return the row with the minimum of the
+    `value` field within each group. N.B., will only return one row for each
+    group, even if multiple rows have the same (maximum) value."""
 
     return groupselectfirst(sort(table, value, reverse=True), key)
     
 
 def mergeduplicates(table, key, missing=None, presorted=False, buffersize=None,
                     tempdir=None, cache=True):
-    """
-    Merge duplicate rows under the given key. E.g.::
+    """Merge duplicate rows under the given key. E.g.::
 
         >>> from petl import mergeduplicates, look
-        >>> look(table1)
-        +-------+-------+-------+
-        | 'foo' | 'bar' | 'baz' |
-        +=======+=======+=======+
-        | 'A'   | 1     | 2.7   |
-        +-------+-------+-------+
-        | 'B'   | 2     | None  |
-        +-------+-------+-------+
-        | 'D'   | 3     | 9.4   |
-        +-------+-------+-------+
-        | 'B'   | None  | 7.8   |
-        +-------+-------+-------+
-        | 'E'   | None  | 42.0  |
-        +-------+-------+-------+
-        | 'D'   | 3     | 12.3  |
-        +-------+-------+-------+
-        | 'A'   | 2     | None  |
-        +-------+-------+-------+
-
+        >>> table1 = [['foo', 'bar', 'baz'],
+        ...           ['A', 1, 2.7],
+        ...           ['B', 2, None],
+        ...           ['D', 3, 9.4],
+        ...           ['B', None, 7.8],
+        ...           ['E', None, 42.],
+        ...           ['D', 3, 12.3],
+        ...           ['A', 2, None]]
         >>> table2 = mergeduplicates(table1, 'foo')
         >>> look(table2)
         +-------+------------------+-----------------------+
         | 'foo' | 'bar'            | 'baz'                 |
         +=======+==================+=======================+
-        | 'A'   | Conflict([1, 2]) | 2.7                   |
+        | 'A'   | Conflict({1, 2}) |                   2.7 |
         +-------+------------------+-----------------------+
-        | 'B'   | 2                | 7.8                   |
+        | 'B'   |                2 |                   7.8 |
         +-------+------------------+-----------------------+
-        | 'D'   | 3                | Conflict([9.4, 12.3]) |
+        | 'D'   |                3 | Conflict({9.4, 12.3}) |
         +-------+------------------+-----------------------+
-        | 'E'   | None             | 42.0                  |
+        | 'E'   | None             |                  42.0 |
         +-------+------------------+-----------------------+
 
     Missing values are overridden by non-missing values. Conflicting values are
@@ -495,18 +385,8 @@ def mergeduplicates(table, key, missing=None, presorted=False, buffersize=None,
     If `presorted` is True, it is assumed that the data are already sorted by
     the given key, and the `buffersize`, `tempdir` and `cache` arguments are
     ignored. Otherwise, the data are sorted, see also the discussion of the
-    `buffersize`, `tempdir` and `cache` arguments under the :func:`sort`
-    function.
-
-    .. versionchanged:: 0.3
-
-    Previously conflicts were reported as a list, this is changed to a tuple in
-    version 0.3.
-
-    .. versionchanged:: 0.10
-
-    Renamed from 'mergereduce' to 'mergeduplicates'. Conflicts now reported as
-    instance of Conflict.
+    `buffersize`, `tempdir` and `cache` arguments under the
+    :func:`petl.transform.sorts.sort` function.
 
     """
 
@@ -569,52 +449,34 @@ mergereduce = mergeduplicates  # for backwards compatibility
 
 
 def merge(*tables, **kwargs):
-    """
-    Convenience function to combine multiple tables (via :func:`mergesort`) then
-    combine duplicate rows by merging under the given key (via
-    :func:`mergeduplicates`). E.g.::
+    """Convenience function to combine multiple tables (via
+    :func:`petl.transform.sorts.mergesort`) then combine duplicate rows by
+    merging under the given key (via
+    :func:`petl.transform.reductions.mergeduplicates`). E.g.::
 
         >>> from petl import look, merge
-        >>> look(table1)
-        +-------+-------+-------+
-        | 'foo' | 'bar' | 'baz' |
-        +=======+=======+=======+
-        | 1     | 'A'   | True  |
-        +-------+-------+-------+
-        | 2     | 'B'   | None  |
-        +-------+-------+-------+
-        | 4     | 'C'   | True  |
-        +-------+-------+-------+
-
-        >>> look(table2)
-        +-------+-------+--------+
-        | 'bar' | 'baz' | 'quux' |
-        +=======+=======+========+
-        | 'A'   | True  | 42.0   |
-        +-------+-------+--------+
-        | 'B'   | False | 79.3   |
-        +-------+-------+--------+
-        | 'C'   | False | 12.4   |
-        +-------+-------+--------+
-
+        >>> table1 = [['foo', 'bar', 'baz'],
+        ...           [1, 'A', True],
+        ...           [2, 'B', None],
+        ...           [4, 'C', True]]
+        >>> table2 = [['bar', 'baz', 'quux'],
+        ...           ['A', True, 42.0],
+        ...           ['B', False, 79.3],
+        ...           ['C', False, 12.4]]
         >>> table3 = merge(table1, table2, key='bar')
         >>> look(table3)
         +-------+-------+-------------------------+--------+
         | 'bar' | 'foo' | 'baz'                   | 'quux' |
         +=======+=======+=========================+========+
-        | 'A'   | 1     | True                    | 42.0   |
+        | 'A'   |     1 | True                    |   42.0 |
         +-------+-------+-------------------------+--------+
-        | 'B'   | 2     | False                   | 79.3   |
+        | 'B'   |     2 | False                   |   79.3 |
         +-------+-------+-------------------------+--------+
-        | 'C'   | 4     | Conflict([False, True]) | 12.4   |
+        | 'C'   |     4 | Conflict({False, True}) |   12.4 |
         +-------+-------+-------------------------+--------+
 
     Keyword arguments are the same as for :func:`mergesort`, except `key` is
     required.
-
-    .. versionchanged:: 0.9
-
-    Now uses :func:`mergesort`, should be more efficient for presorted inputs.
 
     """
 
@@ -634,38 +496,29 @@ class Conflict(frozenset):
 
 def fold(table, key, f, value=None, presorted=False, buffersize=None,
          tempdir=None, cache=True):
-    """
-    Reduce rows recursively via the Python standard :func:`reduce` function.
+    """Reduce rows recursively via the Python standard :func:`reduce` function.
     E.g.::
 
         >>> from petl import fold, look
-        >>> look(table1)
-        +------+---------+
-        | 'id' | 'count' |
-        +======+=========+
-        | 1    | 3       |
-        +------+---------+
-        | 1    | 5       |
-        +------+---------+
-        | 2    | 4       |
-        +------+---------+
-        | 2    | 8       |
-        +------+---------+
-
+        >>> table1 = [['id', 'count'],
+        ...           [1, 3],
+        ...           [1, 5],
+        ...           [2, 4],
+        ...           [2, 8]]
         >>> import operator
-        >>> table2 = fold(table1, 'id', operator.add, 'count', presorted=True)
+        >>> table2 = fold(table1, 'id', operator.add, 'count',
+        ...               presorted=True)
         >>> look(table2)
         +-------+---------+
         | 'key' | 'value' |
         +=======+=========+
-        | 1     | 8       |
+        |     1 |       8 |
         +-------+---------+
-        | 2     | 12      |
+        |     2 |      12 |
         +-------+---------+
 
-    See also :func:`aggregate`, :func:`rowreduce`.
-
-    .. versionadded:: 0.10
+    See also :func:`petl.transform.reductions.aggregate`,
+    :func:`petl.transform.reductions.rowreduce`.
 
     """
 

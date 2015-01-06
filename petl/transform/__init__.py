@@ -1,8 +1,3 @@
-"""
-Functions for transforming tables.
-
-"""
-
 from __future__ import absolute_import, print_function, division
 
 from petl.transform.basics import cut, cutout, movefield, cat, annex, \
@@ -30,7 +25,7 @@ from petl.transform.joins import join, leftjoin, rightjoin, outerjoin, \
 from petl.transform.hashjoins import hashjoin, hashleftjoin, hashrightjoin, \
     hashantijoin, hashlookupjoin
 
-from petl.transform.reductions import rowreduce, recordreduce, mergeduplicates,\
+from petl.transform.reductions import rowreduce, mergeduplicates,\
     aggregate, groupcountdistinctvalues, groupselectfirst, groupselectmax, \
     groupselectmin, mergereduce, merge, fold
 

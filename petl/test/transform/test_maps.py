@@ -4,11 +4,10 @@ from __future__ import absolute_import, print_function, division
 
 from petl.compat import OrderedDict
 from petl.test.util import ieq
-from petl.transform.maps import fieldmap, rowmap, recordmap, rowmapmany
+from petl.transform.maps import fieldmap, rowmap, rowmapmany
 
 
 def test_fieldmap():
-
     table = (('id', 'sex', 'age', 'height', 'weight'),
              (1, 'male', 16, 1.45, 62.0),
              (2, 'female', 19, 1.34, 55.4),
@@ -20,14 +19,14 @@ def test_fieldmap():
     mappings['subject_id'] = 'id'
     mappings['gender'] = 'sex', {'male': 'M', 'female': 'F'}
     mappings['age_months'] = 'age', lambda v: v * 12
-    mappings['bmi'] = lambda rec: rec['weight'] / rec['height']**2
+    mappings['bmi'] = lambda rec: rec['weight'] / rec['height'] ** 2
     actual = fieldmap(table, mappings)
     expect = (('subject_id', 'gender', 'age_months', 'bmi'),
-              (1, 'M', 16*12, 62.0/1.45**2),
-              (2, 'F', 19*12, 55.4/1.34**2),
-              (3, 'F', 17*12, 74.4/1.78**2),
-              (4, 'M', 21*12, 45.2/1.33**2),
-              (5, '-', 25*12, 51.9/1.65**2))
+              (1, 'M', 16 * 12, 62.0 / 1.45 ** 2),
+              (2, 'F', 19 * 12, 55.4 / 1.34 ** 2),
+              (3, 'F', 17 * 12, 74.4 / 1.78 ** 2),
+              (4, 'M', 21 * 12, 45.2 / 1.33 ** 2),
+              (5, '-', 25 * 12, 51.9 / 1.65 ** 2))
     ieq(expect, actual)
     ieq(expect, actual)  # can iteratate twice?
 
@@ -47,17 +46,16 @@ def test_fieldmap():
               (4, 'male', 21, 1.33, 45.2),
               (5, '-', 25, 1.65))
     expect = (('subject_id', 'gender', 'age_months', 'bmi'),
-              (1, 'M', 16*12, 62.0/1.45**2),
-              (2, 'F', 19*12, 55.4/1.34**2),
-              (3, 'F', 17*12, 74.4/1.78**2),
-              (4, 'M', 21*12, 45.2/1.33**2),
-              (5, '-', 25*12, None))
+              (1, 'M', 16 * 12, 62.0 / 1.45 ** 2),
+              (2, 'F', 19 * 12, 55.4 / 1.34 ** 2),
+              (3, 'F', 17 * 12, 74.4 / 1.78 ** 2),
+              (4, 'M', 21 * 12, 45.2 / 1.33 ** 2),
+              (5, '-', 25 * 12, None))
     actual = fieldmap(table2, mappings)
     ieq(expect, actual)
 
 
 def test_fieldmap_record_access():
-
     table = (('id', 'sex', 'age', 'height', 'weight'),
              (1, 'male', 16, 1.45, 62.0),
              (2, 'female', 19, 1.34, 55.4),
@@ -69,31 +67,29 @@ def test_fieldmap_record_access():
     mappings['subject_id'] = 'id'
     mappings['gender'] = 'sex', {'male': 'M', 'female': 'F'}
     mappings['age_months'] = 'age', lambda v: v * 12
-    mappings['bmi'] = lambda rec: rec.weight / rec.height**2
+    mappings['bmi'] = lambda rec: rec.weight / rec.height ** 2
     actual = fieldmap(table, mappings)
     expect = (('subject_id', 'gender', 'age_months', 'bmi'),
-              (1, 'M', 16*12, 62.0/1.45**2),
-              (2, 'F', 19*12, 55.4/1.34**2),
-              (3, 'F', 17*12, 74.4/1.78**2),
-              (4, 'M', 21*12, 45.2/1.33**2),
-              (5, '-', 25*12, 51.9/1.65**2))
+              (1, 'M', 16 * 12, 62.0 / 1.45 ** 2),
+              (2, 'F', 19 * 12, 55.4 / 1.34 ** 2),
+              (3, 'F', 17 * 12, 74.4 / 1.78 ** 2),
+              (4, 'M', 21 * 12, 45.2 / 1.33 ** 2),
+              (5, '-', 25 * 12, 51.9 / 1.65 ** 2))
     ieq(expect, actual)
     ieq(expect, actual)  # can iteratate twice?
 
 
 def test_fieldmap_empty():
-
     table = (('foo', 'bar'),)
     expect = (('foo', 'baz'),)
     mappings = OrderedDict()
     mappings['foo'] = 'foo'
-    mappings['baz'] = 'bar', lambda v: v*2
+    mappings['baz'] = 'bar', lambda v: v * 2
     actual = fieldmap(table, mappings)
     ieq(expect, actual)
 
 
 def test_rowmap():
-
     table = (('id', 'sex', 'age', 'height', 'weight'),
              (1, 'male', 16, 1.45, 62.0),
              (2, 'female', 19, 1.34, 55.4),
@@ -107,14 +103,15 @@ def test_rowmap():
                 transmf[row[1]] if row[1] in transmf else row[1],
                 row[2] * 12,
                 row[4] / row[3] ** 2]
+
     actual = rowmap(table, rowmapper, fields=['subject_id', 'gender',
                                               'age_months', 'bmi'])
     expect = (('subject_id', 'gender', 'age_months', 'bmi'),
-              (1, 'M', 16*12, 62.0/1.45**2),
-              (2, 'F', 19*12, 55.4/1.34**2),
-              (3, 'F', 17*12, 74.4/1.78**2),
-              (4, 'M', 21*12, 45.2/1.33**2),
-              (5, '-', 25*12, 51.9/1.65**2))
+              (1, 'M', 16 * 12, 62.0 / 1.45 ** 2),
+              (2, 'F', 19 * 12, 55.4 / 1.34 ** 2),
+              (3, 'F', 17 * 12, 74.4 / 1.78 ** 2),
+              (4, 'M', 21 * 12, 45.2 / 1.33 ** 2),
+              (5, '-', 25 * 12, 51.9 / 1.65 ** 2))
     ieq(expect, actual)
     ieq(expect, actual)  # can iteratate twice?
 
@@ -126,17 +123,16 @@ def test_rowmap():
               (4, 'male', 21, 1.33, 45.2),
               (5, '-', 25, 1.65))
     expect = (('subject_id', 'gender', 'age_months', 'bmi'),
-              (1, 'M', 16*12, 62.0/1.45**2),
-              (2, 'F', 19*12, 55.4/1.34**2),
-              (3, 'F', 17*12, 74.4/1.78**2),
-              (4, 'M', 21*12, 45.2/1.33**2))
+              (1, 'M', 16 * 12, 62.0 / 1.45 ** 2),
+              (2, 'F', 19 * 12, 55.4 / 1.34 ** 2),
+              (3, 'F', 17 * 12, 74.4 / 1.78 ** 2),
+              (4, 'M', 21 * 12, 45.2 / 1.33 ** 2))
     actual = rowmap(table2, rowmapper, fields=['subject_id', 'gender',
                                                'age_months', 'bmi'])
     ieq(expect, actual)
 
 
 def test_rowmap_empty():
-
     table = (('id', 'sex', 'age', 'height', 'weight'),)
 
     def rowmapper(row):
@@ -145,6 +141,7 @@ def test_rowmap_empty():
                 transmf[row[1]] if row[1] in transmf else row[1],
                 row[2] * 12,
                 row[4] / row[3] ** 2]
+
     actual = rowmap(table, rowmapper, fields=['subject_id', 'gender',
                                               'age_months', 'bmi'])
     expect = (('subject_id', 'gender', 'age_months', 'bmi'),)
@@ -152,7 +149,6 @@ def test_rowmap_empty():
 
 
 def test_recordmap():
-
     table = (('id', 'sex', 'age', 'height', 'weight'),
              (1, 'male', 16, 1.45, 62.0),
              (2, 'female', 19, 1.34, 55.4),
@@ -166,14 +162,15 @@ def test_recordmap():
                 transmf[rec['sex']] if rec['sex'] in transmf else rec['sex'],
                 rec['age'] * 12,
                 rec['weight'] / rec['height'] ** 2]
+
     actual = rowmap(table, recmapper, fields=['subject_id', 'gender',
                                               'age_months', 'bmi'])
     expect = (('subject_id', 'gender', 'age_months', 'bmi'),
-              (1, 'M', 16*12, 62.0/1.45**2),
-              (2, 'F', 19*12, 55.4/1.34**2),
-              (3, 'F', 17*12, 74.4/1.78**2),
-              (4, 'M', 21*12, 45.2/1.33**2),
-              (5, '-', 25*12, 51.9/1.65**2))
+              (1, 'M', 16 * 12, 62.0 / 1.45 ** 2),
+              (2, 'F', 19 * 12, 55.4 / 1.34 ** 2),
+              (3, 'F', 17 * 12, 74.4 / 1.78 ** 2),
+              (4, 'M', 21 * 12, 45.2 / 1.33 ** 2),
+              (5, '-', 25 * 12, 51.9 / 1.65 ** 2))
     ieq(expect, actual)
     ieq(expect, actual)  # can iteratate twice?
 
@@ -185,17 +182,16 @@ def test_recordmap():
               (4, 'male', 21, 1.33, 45.2),
               (5, '-', 25, 1.65))
     expect = (('subject_id', 'gender', 'age_months', 'bmi'),
-              (1, 'M', 16*12, 62.0/1.45**2),
-              (2, 'F', 19*12, 55.4/1.34**2),
-              (3, 'F', 17*12, 74.4/1.78**2),
-              (4, 'M', 21*12, 45.2/1.33**2))
-    actual = recordmap(table2, recmapper, fields=['subject_id', 'gender',
-                                                  'age_months', 'bmi'])
+              (1, 'M', 16 * 12, 62.0 / 1.45 ** 2),
+              (2, 'F', 19 * 12, 55.4 / 1.34 ** 2),
+              (3, 'F', 17 * 12, 74.4 / 1.78 ** 2),
+              (4, 'M', 21 * 12, 45.2 / 1.33 ** 2))
+    actual = rowmap(table2, recmapper, fields=['subject_id', 'gender',
+                                               'age_months', 'bmi'])
     ieq(expect, actual)
 
 
 def test_rowmapmany():
-
     table = (('id', 'sex', 'age', 'height', 'weight'),
              (1, 'male', 16, 1.45, 62.0),
              (2, 'female', 19, 1.34, 55.4),
@@ -213,22 +209,21 @@ def test_rowmapmany():
                                                      'value'])
     expect = (('subject_id', 'variable', 'value'),
               (1, 'gender', 'M'),
-              (1, 'age_months', 16*12),
-              (1, 'bmi', 62.0/1.45**2),
+              (1, 'age_months', 16 * 12),
+              (1, 'bmi', 62.0 / 1.45 ** 2),
               (2, 'gender', 'F'),
-              (2, 'age_months', 19*12),
-              (2, 'bmi', 55.4/1.34**2),
+              (2, 'age_months', 19 * 12),
+              (2, 'bmi', 55.4 / 1.34 ** 2),
               (3, 'gender', '-'),
-              (3, 'age_months', 17*12),
-              (3, 'bmi', 74.4/1.78**2),
+              (3, 'age_months', 17 * 12),
+              (3, 'bmi', 74.4 / 1.78 ** 2),
               (4, 'gender', 'M'),
-              (4, 'age_months', 21*12))
+              (4, 'age_months', 21 * 12))
     ieq(expect, actual)
     ieq(expect, actual)  # can iteratate twice?
 
 
 def test_recordmapmany():
-
     table = (('id', 'sex', 'age', 'height', 'weight'),
              (1, 'male', 16, 1.45, 62.0),
              (2, 'female', 19, 1.34, 55.4),
@@ -246,15 +241,15 @@ def test_recordmapmany():
                                                      'value'])
     expect = (('subject_id', 'variable', 'value'),
               (1, 'gender', 'M'),
-              (1, 'age_months', 16*12),
-              (1, 'bmi', 62.0/1.45**2),
+              (1, 'age_months', 16 * 12),
+              (1, 'bmi', 62.0 / 1.45 ** 2),
               (2, 'gender', 'F'),
-              (2, 'age_months', 19*12),
-              (2, 'bmi', 55.4/1.34**2),
+              (2, 'age_months', 19 * 12),
+              (2, 'bmi', 55.4 / 1.34 ** 2),
               (3, 'gender', '-'),
-              (3, 'age_months', 17*12),
-              (3, 'bmi', 74.4/1.78**2),
+              (3, 'age_months', 17 * 12),
+              (3, 'bmi', 74.4 / 1.78 ** 2),
               (4, 'gender', 'M'),
-              (4, 'age_months', 21*12))
+              (4, 'age_months', 21 * 12))
     ieq(expect, actual)
     ieq(expect, actual)  # can iteratate twice?

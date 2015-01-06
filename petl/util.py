@@ -3013,7 +3013,7 @@ def rowgroupby(table, key, value=None):
         if native_key:
             return git
         else:
-            return ((k.obj, vals) for (k, vals) in git)
+            return ((k.inner, vals) for (k, vals) in git)
     else:
         if callable(value):
             getval = value
@@ -3024,12 +3024,12 @@ def rowgroupby(table, key, value=None):
             return ((k, (getval(v) for v in vals))
                     for (k, vals) in git)
         else:
-            return ((k.obj, (getval(v) for v in vals))
+            return ((k.inner, (getval(v) for v in vals))
                     for (k, vals) in git)
 
 
 def iterpeek(it, n=1):
-    it = iter(it) # make sure it's an iterator
+    it = iter(it)  # make sure it's an iterator
     if n == 1:
         peek = next(it)
         return peek, chain([peek], it)
