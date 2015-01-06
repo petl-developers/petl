@@ -15,11 +15,10 @@ from petl.io.sources import read_source_from_arg
 
 
 def fromxml(source, *args, **kwargs):
-    """
-    Access data in an XML file. E.g.::
+    """Extract data from an XML file. E.g.::
 
-        >>> from petl import fromxml, look
-        >>> data = \"""<table>
+        >>> # setup a file to demonstrate with
+        ... d = '''<table>
         ...     <tr>
         ...         <td>foo</td><td>bar</td>
         ...     </tr>
@@ -32,11 +31,12 @@ def fromxml(source, *args, **kwargs):
         ...     <tr>
         ...         <td>c</td><td>2</td>
         ...     </tr>
-        ... </table>\"""
+        ... </table>'''
         >>> with open('example1.xml', 'w') as f:
-        ...     f.write(data)
-        ...     f.close()
+        ...     f.write(d)
         ...
+        212
+        >>> from petl import fromxml, look
         >>> table1 = fromxml('example1.xml', 'tr', 'td')
         >>> look(table1)
         +-------+-------+
@@ -49,10 +49,9 @@ def fromxml(source, *args, **kwargs):
         | 'c'   | '2'   |
         +-------+-------+
 
-    If the data values are stored in an attribute, provide the attribute name
-    as an extra positional argument, e.g.:
-
-        >>> data = \"""<table>
+        >>> # if the data values are stored in an attribute, provide the
+        ... # attribute name as an extra positional argument
+        ... d = '''<table>
         ...     <tr>
         ...         <td v='foo'/><td v='bar'/>
         ...     </tr>
@@ -65,11 +64,11 @@ def fromxml(source, *args, **kwargs):
         ...     <tr>
         ...         <td v='c'/><td v='2'/>
         ...     </tr>
-        ... </table>\"""
+        ... </table>'''
         >>> with open('example2.xml', 'w') as f:
-        ...     f.write(data)
-        ...     f.close()
+        ...     f.write(d)
         ...
+        220
         >>> table2 = fromxml('example2.xml', 'tr', 'td', 'v')
         >>> look(table2)
         +-------+-------+
@@ -82,10 +81,9 @@ def fromxml(source, *args, **kwargs):
         | 'c'   | '2'   |
         +-------+-------+
 
-    Data values can also be extracted by providing a mapping of field names
-    to element paths, e.g.::
-
-        >>> data = \"""<table>
+        >>> # data values can also be extracted by providing a mapping of field
+        ... # names to element paths
+        ... d = '''<table>
         ...     <row>
         ...         <foo>a</foo><baz><bar v='1'/><bar v='3'/></baz>
         ...     </row>
@@ -95,36 +93,29 @@ def fromxml(source, *args, **kwargs):
         ...     <row>
         ...         <foo>c</foo><baz><bar v='2'/></baz>
         ...     </row>
-        ... </table>\"""
+        ... </table>'''
         >>> with open('example3.xml', 'w') as f:
-        ...     f.write(data)
-        ...     f.close()
+        ...     f.write(d)
         ...
-        >>> table3 = fromxml('example3.xml', 'row', {'foo': 'foo', 'bar': ('baz/bar', 'v')})
+        223
+        >>> table3 = fromxml('example3.xml', 'row',
+        ...                  {'foo': 'foo', 'bar': ('baz/bar', 'v')})
         >>> look(table3)
-        +-------+------------+
-        | 'foo' | 'bar'      |
-        +=======+============+
-        | 'a'   | ('1', '3') |
-        +-------+------------+
-        | 'b'   | '2'        |
-        +-------+------------+
-        | 'c'   | '2'        |
-        +-------+------------+
+        +------------+-------+
+        | 'bar'      | 'foo' |
+        +============+=======+
+        | ('1', '3') | 'a'   |
+        +------------+-------+
+        | '2'        | 'b'   |
+        +------------+-------+
+        | '2'        | 'c'   |
+        +------------+-------+
 
     Note that the implementation is currently *not*
     streaming, i.e., the whole document is loaded into memory.
 
-    Supports transparent reading from URLs, ``.gz`` and ``.bz2`` files.
-
-    .. versionadded:: 0.4
-
-    .. versionchanged:: 0.6
-
     If multiple elements match a given field, all values are reported as a
     tuple.
-
-    .. versionchanged:: 0.25
 
     If there is more than one element name used for row values, a tuple
     or list of paths can be provided, e.g.,

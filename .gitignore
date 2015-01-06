@@ -16,3 +16,4 @@ tmp/*.*
 *.csv
 *.db
 test.txt
+*.xml
