@@ -11,26 +11,16 @@ from petl.transform.sorts import sort
 
 
 def fieldmap(table, mappings=None, failonerror=False, errorvalue=None):
-    """
-    Transform a table, mapping fields arbitrarily between input and output.
+    """Transform a table, mapping fields arbitrarily between input and output.
     E.g.::
 
         >>> from petl import fieldmap, look
-        >>> look(table1)
-        +------+----------+-------+----------+----------+
-        | 'id' | 'sex'    | 'age' | 'height' | 'weight' |
-        +======+==========+=======+==========+==========+
-        | 1    | 'male'   | 16    | 1.45     | 62.0     |
-        +------+----------+-------+----------+----------+
-        | 2    | 'female' | 19    | 1.34     | 55.4     |
-        +------+----------+-------+----------+----------+
-        | 3    | 'female' | 17    | 1.78     | 74.4     |
-        +------+----------+-------+----------+----------+
-        | 4    | 'male'   | 21    | 1.33     | 45.2     |
-        +------+----------+-------+----------+----------+
-        | 5    | '-'      | 25    | 1.65     | 51.9     |
-        +------+----------+-------+----------+----------+
-
+        >>> table1 = [['id', 'sex', 'age', 'height', 'weight'],
+        ...           [1, 'male', 16, 1.45, 62.0],
+        ...           [2, 'female', 19, 1.34, 55.4],
+        ...           [3, 'female', 17, 1.78, 74.4],
+        ...           [4, 'male', 21, 1.33, 45.2],
+        ...           [5, '-', 25, 1.65, 51.9]]
         >>> from collections import OrderedDict
         >>> mappings = OrderedDict()
         >>> # rename a field
@@ -47,42 +37,19 @@ def fieldmap(table, mappings=None, failonerror=False, errorvalue=None):
         +--------------+----------+--------------+--------------------+
         | 'subject_id' | 'gender' | 'age_months' | 'bmi'              |
         +==============+==========+==============+====================+
-        | 1            | 'M'      | 192          | 29.48870392390012  |
+        |            1 | 'M'      |          192 |  29.48870392390012 |
         +--------------+----------+--------------+--------------------+
-        | 2            | 'F'      | 228          | 30.8531967030519   |
+        |            2 | 'F'      |          228 |   30.8531967030519 |
         +--------------+----------+--------------+--------------------+
-        | 3            | 'F'      | 204          | 23.481883600555488 |
+        |            3 | 'F'      |          204 | 23.481883600555488 |
         +--------------+----------+--------------+--------------------+
-        | 4            | 'M'      | 252          | 25.55260331279326  |
+        |            4 | 'M'      |          252 |  25.55260331279326 |
         +--------------+----------+--------------+--------------------+
-        | 5            | '-'      | 300          | 19.0633608815427   |
-        +--------------+----------+--------------+--------------------+
-
-        >>> # field mappings can also be added and/or updated after the table is created
-        ... # via the suffix notation
-        ... table3 = fieldmap(table1)
-        >>> table3['subject_id'] = 'id'
-        >>> table3['gender'] = 'sex', {'male': 'M', 'female': 'F'}
-        >>> table3['age_months'] = 'age', lambda v: v * 12
-        >>> # use an expression string this time
-        ... table3['bmi'] = '{weight} / {height}**2'
-        >>> look(table3)
-        +--------------+----------+--------------+--------------------+
-        | 'subject_id' | 'gender' | 'age_months' | 'bmi'              |
-        +==============+==========+==============+====================+
-        | 1            | 'M'      | 192          | 29.48870392390012  |
-        +--------------+----------+--------------+--------------------+
-        | 2            | 'F'      | 228          | 30.8531967030519   |
-        +--------------+----------+--------------+--------------------+
-        | 3            | 'F'      | 204          | 23.481883600555488 |
-        +--------------+----------+--------------+--------------------+
-        | 4            | 'M'      | 252          | 25.55260331279326  |
-        +--------------+----------+--------------+--------------------+
-        | 5            | '-'      | 300          | 19.0633608815427   |
+        |            5 | '-'      |          300 |   19.0633608815427 |
         +--------------+----------+--------------+--------------------+
 
     Note also that the mapping value can be an expression string, which will be
-    converted to a lambda function via :func:`expr`.
+    converted to a lambda function via :func:`petl.util.expr`.
 
     """
 
@@ -174,50 +141,39 @@ def rowmap(table, rowmapper, fields, failonerror=False):
     """Transform rows via an arbitrary function. E.g.::
 
         >>> from petl import rowmap, look
-        >>> look(table1)
-        +------+----------+-------+----------+----------+
-        | 'id' | 'sex'    | 'age' | 'height' | 'weight' |
-        +======+==========+=======+==========+==========+
-        | 1    | 'male'   | 16    | 1.45     | 62.0     |
-        +------+----------+-------+----------+----------+
-        | 2    | 'female' | 19    | 1.34     | 55.4     |
-        +------+----------+-------+----------+----------+
-        | 3    | 'female' | 17    | 1.78     | 74.4     |
-        +------+----------+-------+----------+----------+
-        | 4    | 'male'   | 21    | 1.33     | 45.2     |
-        +------+----------+-------+----------+----------+
-        | 5    | '-'      | 25    | 1.65     | 51.9     |
-        +------+----------+-------+----------+----------+
-
+        >>> table1 = [['id', 'sex', 'age', 'height', 'weight'],
+        ...           [1, 'male', 16, 1.45, 62.0],
+        ...           [2, 'female', 19, 1.34, 55.4],
+        ...           [3, 'female', 17, 1.78, 74.4],
+        ...           [4, 'male', 21, 1.33, 45.2],
+        ...           [5, '-', 25, 1.65, 51.9]]
         >>> def rowmapper(row):
         ...     transmf = {'male': 'M', 'female': 'F'}
         ...     return [row[0],
-        ...             transmf[row[1]] if row[1] in transmf else row[1],
-        ...             row[2] * 12,
-        ...             row[4] / row[3] ** 2]
+        ...             transmf[row['sex']] if row['sex'] in transmf else None,
+        ...             row.age * 12,
+        ...             row.height / row.weight ** 2]
         ...
-        >>> table2 = rowmap(table1, rowmapper, fields=['subject_id', 'gender', 'age_months', 'bmi'])
+        >>> table2 = rowmap(table1, rowmapper,
+        ...                 fields=['subject_id', 'gender', 'age_months',
+        ...                         'bmi'])
         >>> look(table2)
-        +--------------+----------+--------------+--------------------+
-        | 'subject_id' | 'gender' | 'age_months' | 'bmi'              |
-        +==============+==========+==============+====================+
-        | 1            | 'M'      | 192          | 29.48870392390012  |
-        +--------------+----------+--------------+--------------------+
-        | 2            | 'F'      | 228          | 30.8531967030519   |
-        +--------------+----------+--------------+--------------------+
-        | 3            | 'F'      | 204          | 23.481883600555488 |
-        +--------------+----------+--------------+--------------------+
-        | 4            | 'M'      | 252          | 25.55260331279326  |
-        +--------------+----------+--------------+--------------------+
-        | 5            | '-'      | 300          | 19.0633608815427   |
-        +--------------+----------+--------------+--------------------+
+        +--------------+----------+--------------+-----------------------+
+        | 'subject_id' | 'gender' | 'age_months' | 'bmi'                 |
+        +==============+==========+==============+=======================+
+        |            1 | 'M'      |          192 | 0.0003772112382934443 |
+        +--------------+----------+--------------+-----------------------+
+        |            2 | 'F'      |          228 | 0.0004366015456998006 |
+        +--------------+----------+--------------+-----------------------+
+        |            3 | 'F'      |          204 | 0.0003215689675106949 |
+        +--------------+----------+--------------+-----------------------+
+        |            4 | 'M'      |          252 | 0.0006509906805544679 |
+        +--------------+----------+--------------+-----------------------+
+        |            5 | None     |          300 | 0.0006125608384287258 |
+        +--------------+----------+--------------+-----------------------+
 
-    The `rowmapper` function should return a single row (list or tuple).
-
-    .. versionchanged:: 0.9
-
-    Hybrid row objects supporting data value access by either position or by
-    field name are now passed to the `rowmapper` function.
+    The `rowmapper` function should accept a single row and return a single
+    row (list or tuple).
 
     """
 
@@ -251,79 +207,56 @@ def iterrowmap(source, rowmapper, fields, failonerror):
                 raise e
 
 
-def recordmap(table, recmapper, fields, failonerror=False):
-    """
-    Transform records via an arbitrary function.
-
-    .. deprecated:: 0.9
-
-    Use :func:`rowmap` insteand.
-
-    """
-
-    return rowmap(table, recmapper, fields, failonerror=failonerror)
-
-
 def rowmapmany(table, rowgenerator, fields, failonerror=False):
-    """
-    Map each input row to any number of output rows via an arbitrary function.
-    E.g.::
+    """Map each input row to any number of output rows via an arbitrary
+    function. E.g.::
 
-        >>> from petl import rowmapmany, look
-        >>> look(table1)
-        +------+----------+-------+----------+----------+
-        | 'id' | 'sex'    | 'age' | 'height' | 'weight' |
-        +======+==========+=======+==========+==========+
-        | 1    | 'male'   | 16    | 1.45     | 62.0     |
-        +------+----------+-------+----------+----------+
-        | 2    | 'female' | 19    | 1.34     | 55.4     |
-        +------+----------+-------+----------+----------+
-        | 3    | '-'      | 17    | 1.78     | 74.4     |
-        +------+----------+-------+----------+----------+
-        | 4    | 'male'   | 21    | 1.33     |          |
-        +------+----------+-------+----------+----------+
-
+        >>> from petl import rowmapmany, lookall
+        >>> table1 = [['id', 'sex', 'age', 'height', 'weight'],
+        ...           [1, 'male', 16, 1.45, 62.0],
+        ...           [2, 'female', 19, 1.34, 55.4],
+        ...           [3, '-', 17, 1.78, 74.4],
+        ...           [4, 'male', 21, 1.33]]
         >>> def rowgenerator(row):
         ...     transmf = {'male': 'M', 'female': 'F'}
-        ...     yield [row[0], 'gender', transmf[row[1]] if row[1] in transmf else row[1]]
-        ...     yield [row[0], 'age_months', row[2] * 12]
-        ...     yield [row[0], 'bmi', row[4] / row[3] ** 2]
+        ...     yield [row[0], 'gender',
+        ...            transmf[row['sex']] if row['sex'] in transmf else None]
+        ...     yield [row[0], 'age_months', row.age * 12]
+        ...     yield [row[0], 'bmi', row.height / row.weight ** 2]
         ...
-        >>> table2 = rowmapmany(table1, rowgenerator, fields=['subject_id', 'variable', 'value'])
-        >>> look(table2)
-        +--------------+--------------+--------------------+
-        | 'subject_id' | 'variable'   | 'value'            |
-        +==============+==============+====================+
-        | 1            | 'gender'     | 'M'                |
-        +--------------+--------------+--------------------+
-        | 1            | 'age_months' | 192                |
-        +--------------+--------------+--------------------+
-        | 1            | 'bmi'        | 29.48870392390012  |
-        +--------------+--------------+--------------------+
-        | 2            | 'gender'     | 'F'                |
-        +--------------+--------------+--------------------+
-        | 2            | 'age_months' | 228                |
-        +--------------+--------------+--------------------+
-        | 2            | 'bmi'        | 30.8531967030519   |
-        +--------------+--------------+--------------------+
-        | 3            | 'gender'     | '-'                |
-        +--------------+--------------+--------------------+
-        | 3            | 'age_months' | 204                |
-        +--------------+--------------+--------------------+
-        | 3            | 'bmi'        | 23.481883600555488 |
-        +--------------+--------------+--------------------+
-        | 4            | 'gender'     | 'M'                |
-        +--------------+--------------+--------------------+
+        >>> table2 = rowmapmany(table1, rowgenerator,
+        ...                     fields=['subject_id', 'variable', 'value'])
+        >>> lookall(table2)
+        +--------------+--------------+-----------------------+
+        | 'subject_id' | 'variable'   | 'value'               |
+        +==============+==============+=======================+
+        |            1 | 'gender'     | 'M'                   |
+        +--------------+--------------+-----------------------+
+        |            1 | 'age_months' |                   192 |
+        +--------------+--------------+-----------------------+
+        |            1 | 'bmi'        | 0.0003772112382934443 |
+        +--------------+--------------+-----------------------+
+        |            2 | 'gender'     | 'F'                   |
+        +--------------+--------------+-----------------------+
+        |            2 | 'age_months' |                   228 |
+        +--------------+--------------+-----------------------+
+        |            2 | 'bmi'        | 0.0004366015456998006 |
+        +--------------+--------------+-----------------------+
+        |            3 | 'gender'     | None                  |
+        +--------------+--------------+-----------------------+
+        |            3 | 'age_months' |                   204 |
+        +--------------+--------------+-----------------------+
+        |            3 | 'bmi'        | 0.0003215689675106949 |
+        +--------------+--------------+-----------------------+
+        |            4 | 'gender'     | 'M'                   |
+        +--------------+--------------+-----------------------+
+        |            4 | 'age_months' |                   252 |
+        +--------------+--------------+-----------------------+
 
-    The `rowgenerator` function should yield zero or more rows (lists or
-    tuples).
+    The `rowgenerator` function should accept a single row and yield zero or
+    more rows (lists or tuples).
 
-    See also the :func:`melt` function.
-
-    .. versionchanged:: 0.9
-
-    Record objects supporting data value access by either position or by
-    field name are now passed to the `rowgenerator` function.
+    See also the :func:`petl.transform.reshape.melt` function.
 
     """
 
@@ -359,27 +292,10 @@ def iterrowmapmany(source, rowgenerator, fields, failonerror):
                 pass
 
 
-def recordmapmany(table, rowgenerator, fields, failonerror=False):
-    """
-    Map each input row (as a record) to any number of output rows via an
-    arbitrary function.
-
-    .. deprecated:: 0.9
-
-    Use :func:`rowmapmany` instead.
-
-    """
-
-    return rowmapmany(table, rowgenerator, fields, failonerror=failonerror)
-
-
 def rowgroupmap(table, key, mapper, fields=None, presorted=False,
                 buffersize=None, tempdir=None, cache=True):
-    """
-    Group rows under the given key then apply `mapper` to yield zero or more
+    """Group rows under the given key then apply `mapper` to yield zero or more
     output rows for each input group of rows.
-
-    .. versionadded:: 0.12
 
     """
 

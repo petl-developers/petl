@@ -98,9 +98,7 @@ Transforming rows
 
 .. autofunction:: petl.transform.maps.fieldmap
 .. autofunction:: petl.transform.maps.rowmap
-.. autofunction:: petl.transform.maps.recordmap
 .. autofunction:: petl.transform.maps.rowmapmany
-.. autofunction:: petl.transform.maps.recordmapmany
 .. autofunction:: petl.transform.maps.rowgroupmap
 
 Sorting

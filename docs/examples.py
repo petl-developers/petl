@@ -282,41 +282,6 @@ table4 = select(table1, 'foo', lambda v: v == 'a')
 look(table4)
 
 
-# fieldmap
-
-table1 = [['id', 'sex', 'age', 'height', 'weight'],
-          [1, 'male', 16, 1.45, 62.0],
-          [2, 'female', 19, 1.34, 55.4],
-          [3, 'female', 17, 1.78, 74.4],
-          [4, 'male', 21, 1.33, 45.2],
-          [5, '-', 25, 1.65, 51.9]]
-
-from petl import fieldmap, look
-look(table1)
-from collections import OrderedDict
-mappings = OrderedDict()
-# rename a field
-mappings['subject_id'] = 'id'
-# translate a field
-mappings['gender'] = 'sex', {'male': 'M', 'female': 'F'}
-# apply a calculation to a field
-mappings['age_months'] = 'age', lambda v: v * 12
-# apply a calculation to a combination of fields
-mappings['bmi'] = lambda rec: rec['weight'] / rec['height']**2 
-# transform and inspect the output
-table2 = fieldmap(table1, mappings)
-look(table2)
-# field mappings can also be added and/or updated after the table is created 
-# via the suffix notation
-table3 = fieldmap(table1)
-table3['subject_id'] = 'id'
-table3['gender'] = 'sex', {'male': 'M', 'female': 'F'}
-table3['age_months'] = 'age', lambda v: v * 12
-# use an expression string this time
-table3['bmi'] = '{weight} / {height}**2'
-look(table3)
-
-
 # facet
 
 table1 = [['foo', 'bar', 'baz'],
@@ -563,93 +528,6 @@ aggregation['foojoin'] = 'foo', strjoin('')
 aggregation['foolist'] = 'foo' # default is list
 table5 = rangeaggregate(table1, 'bar', 2, aggregation)
 look(table5)
-
-
-# rowmap
-
-table1 = [['id', 'sex', 'age', 'height', 'weight'],
-          [1, 'male', 16, 1.45, 62.0],
-          [2, 'female', 19, 1.34, 55.4],
-          [3, 'female', 17, 1.78, 74.4],
-          [4, 'male', 21, 1.33, 45.2],
-          [5, '-', 25, 1.65, 51.9]]
-
-from petl import rowmap, look
-look(table1)
-def rowmapper(row):
-    transmf = {'male': 'M', 'female': 'F'}
-    return [row[0],
-            transmf[row[1]] if row[1] in transmf else row[1],
-            row[2] * 12,
-            row[4] / row[3] ** 2]
-
-table2 = rowmap(table1, rowmapper, fields=['subject_id', 'gender', 'age_months', 'bmi'])  
-look(table2)    
-
-
-# recordmap
-
-table1 = [['id', 'sex', 'age', 'height', 'weight'],
-          [1, 'male', 16, 1.45, 62.0],
-          [2, 'female', 19, 1.34, 55.4],
-          [3, 'female', 17, 1.78, 74.4],
-          [4, 'male', 21, 1.33, 45.2],
-          [5, '-', 25, 1.65, 51.9]]
-
-from petl import recordmap, look
-look(table1)
-def recmapper(rec):
-    transmf = {'male': 'M', 'female': 'F'}
-    return [rec['id'],
-            transmf[rec['sex']] if rec['sex'] in transmf else rec['sex'],
-            rec['age'] * 12,
-            rec['weight'] / rec['height'] ** 2]
-
-table2 = recordmap(table1, recmapper, fields=['subject_id', 'gender', 'age_months', 'bmi'])  
-look(table2)
-
-
-# rowmapmany
-
-table1 = [['id', 'sex', 'age', 'height', 'weight'],
-          [1, 'male', 16, 1.45, 62.0],
-          [2, 'female', 19, 1.34, 55.4],
-          [3, '-', 17, 1.78, 74.4],
-          [4, 'male', 21, 1.33]]
-
-from petl import rowmapmany, look    
-look(table1)
-def rowgenerator(row):
-    transmf = {'male': 'M', 'female': 'F'}
-    yield [row[0], 'gender', transmf[row[1]] if row[1] in transmf else row[1]]
-    yield [row[0], 'age_months', row[2] * 12]
-    yield [row[0], 'bmi', row[4] / row[3] ** 2]
-
-table2 = rowmapmany(table1, rowgenerator, fields=['subject_id', 'variable', 'value'])  
-look(table2)
-
-
-# recordmapmany
-
-table1 = [['id', 'sex', 'age', 'height', 'weight'],
-          [1, 'male', 16, 1.45, 62.0],
-          [2, 'female', 19, 1.34, 55.4],
-          [3, '-', 17, 1.78, 74.4],
-          [4, 'male', 21, 1.33]]
-
-from petl import recordmapmany, look    
-look(table1)
-def rowgenerator(rec):
-    transmf = {'male': 'M', 'female': 'F'}
-    yield [rec['id'], 'gender', transmf[rec['sex']] if rec['sex'] in transmf else rec['sex']]
-    yield [rec['id'], 'age_months', rec['age'] * 12]
-    yield [rec['id'], 'bmi', rec['weight'] / rec['height'] ** 2]
-
-table2 = recordmapmany(table1, rowgenerator, fields=['subject_id', 'variable', 'value'])  
-look(table2)
-
-
-
 
 
 # unpack
