@@ -13,7 +13,7 @@ from petl.transform.headers import rename, setheader, extendheader, \
     pushheader, skip, prefixheader, suffixheader
 
 from petl.transform.conversions import convert, convertall, replace, \
-    replaceall, update, convertnumbers, fieldconvert
+    replaceall, update, convertnumbers
 
 from petl.transform.sorts import sort, mergesort
 

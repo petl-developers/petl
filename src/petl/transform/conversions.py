@@ -10,23 +10,15 @@ from petl.util import numparser, RowContainer, FieldSelectionError, \
 
 
 def convert(table, *args, **kwargs):
-    """
-    Transform values under one or more fields via arbitrary functions, method
+    """Transform values under one or more fields via arbitrary functions, method
     invocations or dictionary translations. E.g.::
 
+        >>> table1 = [['foo', 'bar', 'baz'],
+        ...           ['A', '2.4', 12],
+        ...           ['B', '5.7', 34],
+        ...           ['C', '1.2', 56]]
         >>> from petl import convert, look
-        >>> look(table1)
-        +-------+-------+-------+
-        | 'foo' | 'bar' | 'baz' |
-        +=======+=======+=======+
-        | 'A'   | '2.4' |    12 |
-        +-------+-------+-------+
-        | 'B'   | '5.7' |    34 |
-        +-------+-------+-------+
-        | 'C'   | '1.2' |    56 |
-        +-------+-------+-------+
-
-        >>> # using the built-in float function:
+        >>> # using a built-in function:
         ... table2 = convert(table1, 'bar', float)
         >>> look(table2)
         +-------+-------+-------+
@@ -52,7 +44,8 @@ def convert(table, *args, **kwargs):
         | 'C'   | '1.2' |   112 |
         +-------+-------+-------+
 
-        >>> # a method of the data value can also be invoked by passing the method name
+        >>> # a method of the data value can also be invoked by passing
+        ... # the method name
         ... table4 = convert(table1, 'foo', 'lower')
         >>> look(table4)
         +-------+-------+-------+
@@ -92,20 +85,22 @@ def convert(table, *args, **kwargs):
         +-------+-------+-------+
 
         >>> # the same conversion can be applied to multiple fields
-        ... table8 = convert(table1, ('foo', 'bar', 'baz'), unicode)
+        ... table8 = convert(table1, ('foo', 'bar', 'baz'), str)
         >>> look(table8)
-        +-------+--------+-------+
-        | 'foo' | 'bar'  | 'baz' |
-        +=======+========+=======+
-        | u'A'  | u'2.4' | u'12' |
-        +-------+--------+-------+
-        | u'B'  | u'5.7' | u'34' |
-        +-------+--------+-------+
-        | u'C'  | u'1.2' | u'56' |
-        +-------+--------+-------+
+        +-------+-------+-------+
+        | 'foo' | 'bar' | 'baz' |
+        +=======+=======+=======+
+        | 'A'   | '2.4' | '12'  |
+        +-------+-------+-------+
+        | 'B'   | '5.7' | '34'  |
+        +-------+-------+-------+
+        | 'C'   | '1.2' | '56'  |
+        +-------+-------+-------+
 
         >>> # multiple conversions can be specified at the same time
-        ... table9 = convert(table1, {'foo': 'lower', 'bar': float, 'baz': lambda v: v*2})
+        ... table9 = convert(table1, {'foo': 'lower',
+        ...                           'bar': float,
+        ...                           'baz': lambda v: v*2})
         >>> look(table9)
         +-------+-------+-------+
         | 'foo' | 'bar' | 'baz' |
@@ -130,25 +125,10 @@ def convert(table, *args, **kwargs):
         | 'c'   |   1.2 |   112 |
         +-------+-------+-------+
 
-        >>> # ...or alternatively via suffix notation on the returned table object
-        ... table11 = convert(table1)
-        >>> table11['foo'] = 'lower'
-        >>> table11['bar'] = float
-        >>> table11['baz'] = lambda v: v*2
-        >>> look(table11)
-        +-------+-------+-------+
-        | 'foo' | 'bar' | 'baz' |
-        +=======+=======+=======+
-        | 'a'   |   2.4 |    24 |
-        +-------+-------+-------+
-        | 'b'   |   5.7 |    68 |
-        +-------+-------+-------+
-        | 'c'   |   1.2 |   112 |
-        +-------+-------+-------+
-
         >>> # conversion can be conditional
-        ... table12 = convert(table1, 'baz', lambda v: v*2, where=lambda r: r.foo == 'B')
-        >>> look(table12)
+        ... table11 = convert(table1, 'baz', lambda v: v*2,
+        ...                   where=lambda r: r.foo == 'B')
+        >>> look(table11)
         +-------+-------+-------+
         | 'foo' | 'bar' | 'baz' |
         +=======+=======+=======+
@@ -160,8 +140,9 @@ def convert(table, *args, **kwargs):
         +-------+-------+-------+
 
         >>> # conversion can access other values from the same row
-        ... table14 = convert(table1, 'baz', lambda v, row: v * float(row.bar), pass_row=True)
-        >>> look(table14)
+        ... table12 = convert(table1, 'baz', lambda v, row: v * float(row.bar),
+        ...                   pass_row=True)
+        >>> look(table12)
         +-------+-------+--------------------+
         | 'foo' | 'bar' | 'baz'              |
         +=======+=======+====================+
@@ -174,17 +155,9 @@ def convert(table, *args, **kwargs):
 
     Note that either field names or indexes can be given.
 
-    .. versionchanged:: 0.11
-
-    Now supports multiple field conversions.
-
-    .. versionchanged:: 0.22
-
     The ``where`` keyword argument can be given with a callable or expression
     which is evaluated on each row and which should return True if the
     conversion should be applied on that row, else False.
-
-    .. versionchanged:: 0.25
 
     The ``pass_row`` keyword argument can be given, which if True will mean
     that both the value and the containing row will be passed as
@@ -215,13 +188,8 @@ def convert(table, *args, **kwargs):
 
 
 def convertall(table, *args, **kwargs):
-    """
-    Convenience function to convert all fields in the table using a common
+    """Convenience function to convert all fields in the table using a common
     function or mapping. See also :func:`convert`.
-
-    .. versionadded:: 0.4
-
-    .. versionchanged:: 0.22
 
     The ``where`` keyword argument can be given with a callable or expression
     which is evaluated on each row and which should return True if the
@@ -235,13 +203,8 @@ def convertall(table, *args, **kwargs):
 
 
 def replace(table, field, a, b, **kwargs):
-    """
-    Convenience function to replace all occurrences of `a` with `b` under the
+    """Convenience function to replace all occurrences of `a` with `b` under the
     given field. See also :func:`convert`.
-
-    .. versionadded:: 0.5
-
-    .. versionchanged:: 0.22
 
     The ``where`` keyword argument can be given with a callable or expression
     which is evaluated on each row and which should return True if the
@@ -253,13 +216,8 @@ def replace(table, field, a, b, **kwargs):
 
 
 def replaceall(table, a, b, **kwargs):
-    """
-    Convenience function to replace all instances of `a` with `b` under all
+    """Convenience function to replace all instances of `a` with `b` under all
     fields. See also :func:`convertall`.
-
-    .. versionadded:: 0.5
-
-    .. versionchanged:: 0.22
 
     The ``where`` keyword argument can be given with a callable or expression
     which is evaluated on each row and which should return True if the
@@ -271,11 +229,8 @@ def replaceall(table, a, b, **kwargs):
 
 
 def update(table, field, value, **kwargs):
-    """
-    Convenience function to convert a field to a fixed value. Accepts the
+    """Convenience function to convert a field to a fixed value. Accepts the
     ``where`` keyword argument. See also :func:`convert`.
-
-    .. versionadded:: 0.23
 
     """
 
@@ -283,50 +238,26 @@ def update(table, field, value, **kwargs):
 
 
 def convertnumbers(table, strict=False, **kwargs):
-    """
-    Convenience function to convert all field values to numbers where possible.
-    E.g.::
+    """Convenience function to convert all field values to numbers where
+    possible. E.g.::
 
+        >>> table1 = [['foo', 'bar', 'baz', 'quux'],
+        ...           ['1', '3.0', '9+3j', 'aaa'],
+        ...           ['2', '1.3', '7+2j', None]]
         >>> from petl import convertnumbers, look
-        >>> look(table1)
-        +-------+-------+--------+--------+
-        | 'foo' | 'bar' | 'baz'  | 'quux' |
-        +=======+=======+========+========+
-        | '1'   | '3.0' | '9+3j' | 'aaa'  |
-        +-------+-------+--------+--------+
-        | '2'   | '1.3' | '7+2j' | None   |
-        +-------+-------+--------+--------+
-
         >>> table2 = convertnumbers(table1)
         >>> look(table2)
         +-------+-------+--------+--------+
         | 'foo' | 'bar' | 'baz'  | 'quux' |
         +=======+=======+========+========+
-        | 1     | 3.0   | (9+3j) | 'aaa'  |
+        |     1 |   3.0 | (9+3j) | 'aaa'  |
         +-------+-------+--------+--------+
-        | 2     | 1.3   | (7+2j) | None   |
+        |     2 |   1.3 | (7+2j) | None   |
         +-------+-------+--------+--------+
-
-    .. versionadded:: 0.4
 
     """
 
     return convertall(table, numparser(strict), **kwargs)
-
-
-def fieldconvert(table, converters=None, failonerror=False, errorvalue=None,
-                 **kwargs):
-    """
-    Transform values in one or more fields via functions or method invocations.
-
-    .. deprecated:: 0.11
-
-    Use :func:`convert` instead.
-
-    """
-
-    return FieldConvertView(table, converters, failonerror, errorvalue,
-                            **kwargs)
 
 
 class FieldConvertView(RowContainer):

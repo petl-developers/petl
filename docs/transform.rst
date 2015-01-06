@@ -40,7 +40,6 @@ Converting values
 .. autofunction:: petl.transform.conversions.replace
 .. autofunction:: petl.transform.conversions.replaceall
 .. autofunction:: petl.transform.conversions.update
-.. autofunction:: petl.transform.conversions.fieldconvert
 
 Selecting rows
 --------------
