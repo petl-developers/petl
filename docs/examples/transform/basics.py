@@ -5,14 +5,12 @@ from __future__ import division, print_function, absolute_import
 #######
 
 from petl import look, cut
-table1 = [
-    ['foo', 'bar', 'baz'],
-    ['A', 1, 2.7],
-    ['B', 2, 3.4],
-    ['B', 3, 7.8],
-    ['D', 42, 9.0],
-    ['E', 12]
-]
+table1 = [['foo', 'bar', 'baz'],
+          ['A', 1, 2.7],
+          ['B', 2, 3.4],
+          ['B', 3, 7.8],
+          ['D', 42, 9.0],
+          ['E', 12]]
 table2 = cut(table1, 'foo', 'baz')
 look(table2)
 # fields can also be specified by index, starting from zero
@@ -30,14 +28,12 @@ look(table5)
 ##########
 
 from petl import cutout, look
-table1 = [
-    ['foo', 'bar', 'baz'],
-    ['A', 1, 2.7],
-    ['B', 2, 3.4],
-    ['B', 3, 7.8],
-    ['D', 42, 9.0],
-    ['E', 12]
-]
+table1 = [['foo', 'bar', 'baz'],
+          ['A', 1, 2.7],
+          ['B', 2, 3.4],
+          ['B', 3, 7.8],
+          ['D', 42, 9.0],
+          ['E', 12]]
 table2 = cutout(table1, 'bar')
 look(table2)
 
@@ -46,48 +42,36 @@ look(table2)
 #######
 
 from petl import look, cat
-table1 = [
-    ['foo', 'bar'],
-    [1, 'A'],
-    [2, 'B']
-]
-table2 = [
-    ['bar', 'baz'],
-    ['C', True],
-    ['D', False]
-]
+table1 = [['foo', 'bar'],
+          [1, 'A'],
+          [2, 'B']]
+table2 = [['bar', 'baz'],
+          ['C', True],
+          ['D', False]]
 table3 = cat(table1, table2)
 look(table3)
 # can also be used to square up a single table with uneven rows
-table4 = [
-    ['foo', 'bar', 'baz'],
-    ['A', 1, 2],
-    ['B', '2', '3.4'],
-    [u'B', u'3', u'7.8', True],
-    ['D', 'xyz', 9.0],
-    ['E', None]
-]
+table4 = [['foo', 'bar', 'baz'],
+          ['A', 1, 2],
+          ['B', '2', '3.4'],
+          [u'B', u'3', u'7.8', True],
+          ['D', 'xyz', 9.0],
+          ['E', None]]
 table5 = cat(table4)
 look(table5)
 # use the header keyword argument to specify a fixed set of fields
-table6 = [
-    ['bar', 'foo'],
-    ['A', 1],
-    ['B', 2]
-]
+table6 = [['bar', 'foo'],
+          ['A', 1],
+          ['B', 2]]
 table7 = cat(table6, header=['A', 'foo', 'B', 'bar', 'C'])
 look(table7)
 # using the header keyword argument with two input tables
-table8 = [
-    ['bar', 'foo'],
-    ['A', 1],
-    ['B', 2]
-]
-table9 = [
-    ['bar', 'baz'],
-    ['C', True],
-    ['D', False]
-]
+table8 = [['bar', 'foo'],
+          ['A', 1],
+          ['B', 2]]
+table9 = [['bar', 'baz'],
+          ['C', True],
+          ['D', False]]
 table10 = cat(table8, table9, header=['A', 'foo', 'B', 'bar', 'C'])
 look(table10)
 
@@ -106,10 +90,6 @@ look(table2)
 # calculating the value
 table2 = addfield(table1, 'baz', lambda rec: rec['bar'] * 2)
 look(table2)
-# an expression string can also be used via expr
-from petl import expr
-table3 = addfield(table1, 'baz', expr('{bar} * 2'))
-look(table3)
 
 
 # rowslice()

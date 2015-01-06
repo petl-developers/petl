@@ -29,79 +29,77 @@ def cut(table, *args, **kwargs):
     """Choose and/or re-order fields. E.g.::
 
         >>> from petl import look, cut
-        >>> table1 = [
-        ...     ['foo', 'bar', 'baz'],
-        ...     ['A', 1, 2.7],
-        ...     ['B', 2, 3.4],
-        ...     ['B', 3, 7.8],
-        ...     ['D', 42, 9.0],
-        ...     ['E', 12]
-        ... ]
+        >>> table1 = [['foo', 'bar', 'baz'],
+        ...           ['A', 1, 2.7],
+        ...           ['B', 2, 3.4],
+        ...           ['B', 3, 7.8],
+        ...           ['D', 42, 9.0],
+        ...           ['E', 12]]
         >>> table2 = cut(table1, 'foo', 'baz')
         >>> look(table2)
         +-------+-------+
         | 'foo' | 'baz' |
         +=======+=======+
-        | 'A'   | 2.7   |
+        | 'A'   |   2.7 |
         +-------+-------+
-        | 'B'   | 3.4   |
+        | 'B'   |   3.4 |
         +-------+-------+
-        | 'B'   | 7.8   |
+        | 'B'   |   7.8 |
         +-------+-------+
-        | 'D'   | 9.0   |
+        | 'D'   |   9.0 |
         +-------+-------+
         | 'E'   | None  |
         +-------+-------+
-        
+
         >>> # fields can also be specified by index, starting from zero
         ... table3 = cut(table1, 0, 2)
         >>> look(table3)
         +-------+-------+
         | 'foo' | 'baz' |
         +=======+=======+
-        | 'A'   | 2.7   |
+        | 'A'   |   2.7 |
         +-------+-------+
-        | 'B'   | 3.4   |
+        | 'B'   |   3.4 |
         +-------+-------+
-        | 'B'   | 7.8   |
+        | 'B'   |   7.8 |
         +-------+-------+
-        | 'D'   | 9.0   |
+        | 'D'   |   9.0 |
         +-------+-------+
         | 'E'   | None  |
         +-------+-------+
-        
+
         >>> # field names and indices can be mixed
         ... table4 = cut(table1, 'bar', 0)
         >>> look(table4)
         +-------+-------+
         | 'bar' | 'foo' |
         +=======+=======+
-        | 1     | 'A'   |
+        |     1 | 'A'   |
         +-------+-------+
-        | 2     | 'B'   |
+        |     2 | 'B'   |
         +-------+-------+
-        | 3     | 'B'   |
+        |     3 | 'B'   |
         +-------+-------+
-        | 42    | 'D'   |
+        |    42 | 'D'   |
         +-------+-------+
-        | 12    | 'E'   |
+        |    12 | 'E'   |
         +-------+-------+
-        
+
         >>> # select a range of fields
         ... table5 = cut(table1, *range(0, 2))
-        >>> look(table5)    
+        >>> look(table5)
         +-------+-------+
         | 'foo' | 'bar' |
         +=======+=======+
-        | 'A'   | 1     |
+        | 'A'   |     1 |
         +-------+-------+
-        | 'B'   | 2     |
+        | 'B'   |     2 |
         +-------+-------+
-        | 'B'   | 3     |
+        | 'B'   |     3 |
         +-------+-------+
-        | 'D'   | 42    |
+        | 'D'   |    42 |
         +-------+-------+
-        | 'E'   | 12    |
+        | 'E'   |    12 |
         +-------+-------+
 
     Note that any short rows will be padded with `None` values (or whatever is
@@ -157,33 +155,29 @@ def cutout(table, *args, **kwargs):
     """Remove fields. E.g.::
 
         >>> from petl import cutout, look
-        >>> table1 = [
-        ...     ['foo', 'bar', 'baz'],
-        ...     ['A', 1, 2.7],
-        ...     ['B', 2, 3.4],
-        ...     ['B', 3, 7.8],
-        ...     ['D', 42, 9.0],
-        ...     ['E', 12]
-        ... ]
+        >>> table1 = [['foo', 'bar', 'baz'],
+        ...           ['A', 1, 2.7],
+        ...           ['B', 2, 3.4],
+        ...           ['B', 3, 7.8],
+        ...           ['D', 42, 9.0],
+        ...           ['E', 12]]
         >>> table2 = cutout(table1, 'bar')
         >>> look(table2)
         +-------+-------+
         | 'foo' | 'baz' |
         +=======+=======+
-        | 'A'   | 2.7   |
+        | 'A'   |   2.7 |
         +-------+-------+
-        | 'B'   | 3.4   |
+        | 'B'   |   3.4 |
         +-------+-------+
-        | 'B'   | 7.8   |
+        | 'B'   |   7.8 |
         +-------+-------+
-        | 'D'   | 9.0   |
+        | 'D'   |   9.0 |
         +-------+-------+
         | 'E'   | None  |
         +-------+-------+
         
     See also :func:`cut`.
-    
-    .. versionadded:: 0.3
     
     """
 
@@ -230,16 +224,12 @@ def cat(*tables, **kwargs):
     """Concatenate data from two or more tables. E.g.::
     
         >>> from petl import look, cat
-        >>> table1 = [
-        ...     ['foo', 'bar'],
-        ...     [1, 'A'],
-        ...     [2, 'B']
-        ... ]
-        >>> table2 = [
-        ...     ['bar', 'baz'],
-        ...     ['C', True],
-        ...     ['D', False]
-        ... ]
+        >>> table1 = [['foo', 'bar'],
+        ...           [1, 'A'],
+        ...           [2, 'B']]
+        >>> table2 = [['bar', 'baz'],
+        ...           ['C', True],
+        ...           ['D', False]]
         >>> table3 = cat(table1, table2)
         >>> look(table3)
         +-------+-------+-------+
@@ -255,36 +245,32 @@ def cat(*tables, **kwargs):
         +-------+-------+-------+
 
         >>> # can also be used to square up a single table with uneven rows
-        ... table4 = [
-        ...     ['foo', 'bar', 'baz'],
-        ...     ['A', 1, 2],
-        ...     ['B', '2', '3.4'],
-        ...     [u'B', u'3', u'7.8', True],
-        ...     ['D', 'xyz', 9.0],
-        ...     ['E', None]
-        ... ]
+        ... table4 = [['foo', 'bar', 'baz'],
+        ...           ['A', 1, 2],
+        ...           ['B', '2', '3.4'],
+        ...           [u'B', u'3', u'7.8', True],
+        ...           ['D', 'xyz', 9.0],
+        ...           ['E', None]]
         >>> table5 = cat(table4)
         >>> look(table5)
-        +-------+-------+--------+
-        | 'foo' | 'bar' | 'baz'  |
-        +=======+=======+========+
-        | 'A'   |     1 |      2 |
-        +-------+-------+--------+
-        | 'B'   | '2'   | '3.4'  |
-        +-------+-------+--------+
-        | u'B'  | u'3'  | u'7.8' |
-        +-------+-------+--------+
-        | 'D'   | 'xyz' |    9.0 |
-        +-------+-------+--------+
-        | 'E'   | None  | None   |
-        +-------+-------+--------+
+        +-------+-------+-------+
+        | 'foo' | 'bar' | 'baz' |
+        +=======+=======+=======+
+        | 'A'   |     1 |     2 |
+        +-------+-------+-------+
+        | 'B'   | '2'   | '3.4' |
+        +-------+-------+-------+
+        | 'B'   | '3'   | '7.8' |
+        +-------+-------+-------+
+        | 'D'   | 'xyz' |   9.0 |
+        +-------+-------+-------+
+        | 'E'   | None  | None  |
+        +-------+-------+-------+
 
         >>> # use the header keyword argument to specify a fixed set of fields
-        ... table6 = [
-        ...     ['bar', 'foo'],
-        ...     ['A', 1],
-        ...     ['B', 2]
-        ... ]
+        ... table6 = [['bar', 'foo'],
+        ...           ['A', 1],
+        ...           ['B', 2]]
         >>> table7 = cat(table6, header=['A', 'foo', 'B', 'bar', 'C'])
         >>> look(table7)
         +------+-------+------+-------+------+
@@ -296,16 +282,12 @@ def cat(*tables, **kwargs):
         +------+-------+------+-------+------+
 
         >>> # using the header keyword argument with two input tables
-        ... table8 = [
-        ...     ['bar', 'foo'],
-        ...     ['A', 1],
-        ...     ['B', 2]
-        ... ]
-        >>> table9 = [
-        ...     ['bar', 'baz'],
-        ...     ['C', True],
-        ...     ['D', False]
-        ... ]
+        ... table8 = [['bar', 'foo'],
+        ...           ['A', 1],
+        ...           ['B', 2]]
+        >>> table9 = [['bar', 'baz'],
+        ...           ['C', True],
+        ...           ['D', False]]
         >>> table10 = cat(table8, table9, header=['A', 'foo', 'B', 'bar', 'C'])
         >>> look(table10)
         +------+-------+------+-------+------+
@@ -329,9 +311,7 @@ def cat(*tables, **kwargs):
     the header row, truncating any long rows and padding any short rows with
     the value of the `missing` keyword argument.
 
-    .. versionchanged:: 0.5
-    
-    By default, the fields for the output table will be determined as the 
+    By default, the fields for the output table will be determined as the
     union of all fields found in the input tables. Use the `header` keyword 
     argument to override this behaviour and specify a fixed set of fields for 
     the output table. 
@@ -427,24 +407,6 @@ def addfield(table, field, value=None, index=None, missing=None):
         | '-'   |    56 |   112 |
         +-------+-------+-------+
 
-        >>> # an expression string can also be used via expr
-        ... from petl import expr
-        >>> table3 = addfield(table1, 'baz', expr('{bar} * 2'))
-        >>> look(table3)
-        +-------+-------+-------+
-        | 'foo' | 'bar' | 'baz' |
-        +=======+=======+=======+
-        | 'M'   |    12 |    24 |
-        +-------+-------+-------+
-        | 'F'   |    34 |    68 |
-        +-------+-------+-------+
-        | '-'   |    56 |   112 |
-        +-------+-------+-------+
-        
-    .. versionchanged:: 0.10
-    
-    Renamed 'extend' to 'addfield'.
-    
     """
 
     return AddFieldView(table, field, value=value, index=index,
@@ -536,10 +498,10 @@ def rowslice(table, *sliceargs):
         | 'f'   |    42 |
         +-------+-------+
         
-    .. versionchanged:: 0.3
-    
-    Positional arguments can be used to slice the data rows. The `sliceargs` are 
-    passed to :func:`itertools.islice`.
+    Positional arguments are used to slice the data rows. The `sliceargs` are
+    passed through to :func:`itertools.islice`.
+
+    See also :func:`head`, :func:`tail`.
 
     """
 
@@ -592,7 +554,7 @@ def head(table, n=5):
         | 'd'   |     7 |
         +-------+-------+
 
-    Equivalent to ``rowslice(table, n)``.
+    See also :func:`tail`, :func:`rowslice`.
     
     """
 
@@ -678,9 +640,7 @@ def skipcomments(table, prefix):
         | 'b'    |     2 |
         +--------+-------+
         
-    .. versionadded:: 0.4
-
-    """ 
+    """
 
     return SkipCommentsView(table, prefix)
 
@@ -704,8 +664,6 @@ def iterskipcomments(source, prefix):
 
 def movefield(table, field, index):
     """Move a field to a new position.
-
-    .. versionadded:: 0.24
 
     """
 
@@ -767,8 +725,6 @@ def annex(*tables, **kwargs):
         | 'F'   |     1 | None  | None  |
         +-------+-------+-------+-------+
 
-    .. versionadded:: 0.10
-    
     """
     
     return AnnexView(tables, **kwargs)
@@ -826,8 +782,6 @@ def addrownumbers(table, start=1, step=1):
         |     3 | 'F'   |     1 |
         +-------+-------+-------+
 
-    .. versionadded:: 0.10
-    
     """
     
     return AddRowNumbersView(table, start, step)
@@ -873,8 +827,6 @@ def addcolumn(table, field, col, index=None, missing=None):
         +-------+-------+-------+
         | 'B'   |     2 | False |
         +-------+-------+-------+
-    
-    .. versionadded:: 0.10
     
     """
     
@@ -959,8 +911,6 @@ def addfieldusingcontext(table, field, query):
         +-------+-------+-------+--------+
         | 'D'   |     9 |     4 | None   |
         +-------+-------+-------+--------+
-
-    .. versionadded:: 0.24
 
     """
 
