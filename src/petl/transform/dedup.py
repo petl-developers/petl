@@ -15,16 +15,14 @@ def duplicates(table, key=None, presorted=False, buffersize=None, tempdir=None,
     rows where no key is given). E.g.::
 
         >>> from petl import duplicates, look
-        >>> table1 = [
-        ...     ['foo', 'bar', 'baz'],
-        ...     ['A', 1, 2.0],
-        ...     ['B', 2, 3.4],
-        ...     ['D', 6, 9.3],
-        ...     ['B', 3, 7.8],
-        ...     ['B', 2, 12.3],
-        ...     ['E', None, 1.3],
-        ...     ['D', 4, 14.5]
-        ... ]
+        >>> table1 = [['foo', 'bar', 'baz'],
+        ...           ['A', 1, 2.0],
+        ...           ['B', 2, 3.4],
+        ...           ['D', 6, 9.3],
+        ...           ['B', 3, 7.8],
+        ...           ['B', 2, 12.3],
+        ...           ['E', None, 1.3],
+        ...           ['D', 4, 14.5]]
         >>> table2 = duplicates(table1, 'foo')
         >>> look(table2)
         +-------+-------+-------+
@@ -126,17 +124,15 @@ def unique(table, key=None, presorted=False, buffersize=None, tempdir=None,
     if no key is given). E.g.::
 
         >>> from petl import unique, look
-        >>> table1 = [
-        ...     ['foo', 'bar', 'baz'],
-        ...     ['A', 1, 2],
-        ...     ['B', '2', '3.4'],
-        ...     ['D', 'xyz', 9.0],
-        ...     ['B', u'3', u'7.8'],
-        ...     ['B', '2', 42],
-        ...     ['E', None, None],
-        ...     ['D', 4, 12.3],
-        ...     ['F', 7, 2.3]
-        ... ]
+        >>> table1 = [['foo', 'bar', 'baz'],
+        ...           ['A', 1, 2],
+        ...           ['B', '2', '3.4'],
+        ...           ['D', 'xyz', 9.0],
+        ...           ['B', u'3', u'7.8'],
+        ...           ['B', '2', 42],
+        ...           ['E', None, None],
+        ...           ['D', 4, 12.3],
+        ...           ['F', 7, 2.3]]
         >>> table2 = unique(table1, 'foo')
         >>> look(table2)
         +-------+-------+-------+
@@ -151,12 +147,9 @@ def unique(table, key=None, presorted=False, buffersize=None, tempdir=None,
         
     If `presorted` is True, it is assumed that the data are already sorted by
     the given key, and the `buffersize`, `tempdir` and `cache` arguments are
-    ignored. Otherwise, the data
-    are sorted, see also the discussion of the `buffersize`, `tempdir` and
-    `cache` arguments under the
-    :func:`sort` function.
-
-    .. versionadded:: 0.10
+    ignored. Otherwise, the data are sorted, see also the discussion of the
+    `buffersize`, `tempdir` and `cache` arguments under the :func:`sort`
+    function.
 
     See also :func:`duplicates` and :func:`distinct`.
     
@@ -224,16 +217,14 @@ def conflicts(table, key, missing=None, include=None, exclude=None,
     E.g.::
 
         >>> from petl import conflicts, look
-        >>> table1 = [
-        ...     ['foo', 'bar', 'baz'],
-        ...     ['A', 1, 2.7],
-        ...     ['B', 2, None],
-        ...     ['D', 3, 9.4],
-        ...     ['B', None, 7.8],
-        ...     ['E', None],
-        ...     ['D', 3, 12.3],
-        ...     ['A', 2, None]
-        ... ]
+        >>> table1 = [['foo', 'bar', 'baz'],
+        ...           ['A', 1, 2.7],
+        ...           ['B', 2, None],
+        ...           ['D', 3, 9.4],
+        ...           ['B', None, 7.8],
+        ...           ['E', None],
+        ...           ['D', 3, 12.3],
+        ...           ['A', 2, None]]
         >>> table2 = conflicts(table1, 'foo')
         >>> look(table2)
         +-------+-------+-------+
@@ -259,10 +250,9 @@ def conflicts(table, key, missing=None, include=None, exclude=None,
 
     If `presorted` is True, it is assumed that the data are already sorted by
     the given key, and the `buffersize`, `tempdir` and `cache` arguments are
-    ignored. Otherwise, the data
-    are sorted, see also the discussion of the `buffersize`, `tempdir` and
-    `cache` arguments under the
-    :func:`sort` function.
+    ignored. Otherwise, the data are sorted, see also the discussion of the
+    `buffersize`, `tempdir` and `cache` arguments under the :func:`sort`
+    function.
     
     """
     
@@ -346,8 +336,7 @@ def iterconflicts(source, key, missing, exclude, include):
 
 def distinct(table, key=None, count=None, presorted=False, buffersize=None,
              tempdir=None, cache=True):
-    """
-    Return only distinct rows in the table. See also :func:`duplicates` and
+    """Return only distinct rows in the table. See also :func:`duplicates` and
     :func:`unique`.
 
     If the `count` argument is not None, it will be used as the name for an
