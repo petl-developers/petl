@@ -8,6 +8,21 @@ from petl.compat import Counter, string_types, maketrans
 from petl.util.base import itervalues, RowContainer, iterdata
 
 
+def nrows(table):
+    """
+    Count the number of data rows in a table. E.g.::
+
+        >>> from petl import nrows
+        >>> table = [['foo', 'bar'], ['a', 1], ['b', 2]]
+        >>> nrows(table)
+        2
+
+
+    """
+
+    return sum(1 for _ in iterdata(table))
+
+
 def valuecount(table, field, value, missing=None):
     """
     Count the number of occurrences of `value` under the given field. Returns

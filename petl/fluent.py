@@ -42,8 +42,8 @@ Use the :func:`wrap` function to wrap table-like objects, e.g.::
     | 'b'   |
     +-------+
 
-    >>> table2.tocsv('test.csv')
-    >>> etl.fromcsv('test.csv').look()
+    >>> table2.tocsv('example.csv')
+    >>> etl.fromcsv('example.csv').look()
     +-------+-------+
     | 'foo' | 'bar' |
     +=======+=======+

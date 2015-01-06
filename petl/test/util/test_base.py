@@ -4,7 +4,7 @@ from __future__ import absolute_import, print_function, division
 from petl.test.helpers import ieq, eq_
 from petl.compat import next
 from petl.util.base import header, fieldnames, data, dicts, records, \
-    namedtuples, nrows, itervalues, values, rowgroupby
+    namedtuples, itervalues, values, rowgroupby
 
 
 def test_header():
@@ -129,13 +129,6 @@ def test_namedtuples_unevenrows():
     o = next(it)
     eq_('b', o.foo)
     eq_(None, o.bar)
-
-
-def test_nrows():
-    table = (('foo', 'bar'), ('a', 1), ('b',))
-    actual = nrows(table)
-    expect = 2
-    eq_(expect, actual)
 
 
 def test_itervalues():

@@ -51,8 +51,8 @@ fluent style if you wish, e.g.::
     | 'b'   |
     +-------+
 
-    >>> table1.tocsv('test.csv')
-    >>> etl.fromcsv('test.csv').look()
+    >>> table1.tocsv('example.csv')
+    >>> etl.fromcsv('example.csv').look()
     +-------+-------+
     | 'foo' | 'bar' |
     +=======+=======+

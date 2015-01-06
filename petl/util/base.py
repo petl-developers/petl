@@ -1,9 +1,3 @@
-"""
-Base classes.
-
-"""
-
-
 from __future__ import absolute_import, print_function, division, \
     unicode_literals
 
@@ -507,19 +501,6 @@ def iterrecords(table, *sliceargs, **kwargs):
         it = islice(it, *sliceargs)
     for row in it:
         yield Record(row, flds, missing=missing)
-
-
-def nrows(table):
-    """Count the number of data rows in a table. E.g.::
-
-        >>> from petl import nrows
-        >>> table = [['foo', 'bar'], ['a', 1], ['b', 2]]
-        >>> nrows(table)
-        2
-
-    """
-
-    return sum(1 for _ in iterdata(table))
 
 
 def expr(s):

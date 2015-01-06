@@ -4,7 +4,14 @@ from __future__ import absolute_import, print_function, division
 from petl.compat import PY2
 from petl.test.helpers import ieq, eq_
 from petl.util.counting import valuecount, valuecounter, valuecounts, \
-    rowlengths, typecounts, parsecounts, stringpatterns
+    rowlengths, typecounts, parsecounts, stringpatterns, nrows
+
+
+def test_nrows():
+    table = (('foo', 'bar'), ('a', 1), ('b',))
+    actual = nrows(table)
+    expect = 2
+    eq_(expect, actual)
 
 
 def test_valuecount():

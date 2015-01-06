@@ -7,5 +7,5 @@ dist
 .ipynb_checkpoints/
 .idea
 .tox/
-example.*
+example*.*
 .coverage

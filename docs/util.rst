@@ -9,7 +9,6 @@ Basic utilities
 .. autofunction:: petl.util.base.header
 .. autofunction:: petl.util.base.data
 .. autofunction:: petl.util.base.fieldnames
-.. autofunction:: petl.util.base.nrows
 .. autofunction:: petl.util.base.values
 .. autofunction:: petl.util.base.dicts
 .. autofunction:: petl.util.base.namedtuples
@@ -47,6 +46,7 @@ Lookup data structures
 Counting
 --------
 
+.. autofunction:: petl.util.counting.nrows
 .. autofunction:: petl.util.counting.valuecount
 .. autofunction:: petl.util.counting.valuecounts
 .. autofunction:: petl.util.counting.valuecounter
@@ -75,6 +75,10 @@ Materialising tables
 
 .. autofunction:: petl.util.materialise.columns
 .. autofunction:: petl.util.materialise.facetcolumns
+.. autofunction:: petl.util.materialise.listoflists
+.. autofunction:: petl.util.materialise.listoftuples
+.. autofunction:: petl.util.materialise.tupleoflists
+.. autofunction:: petl.util.materialise.tupleoftuples
 .. autofunction:: petl.util.materialise.cache
 
 Randomly generated tables

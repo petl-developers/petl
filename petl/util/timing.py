@@ -16,7 +16,7 @@ def progress(table, batchsize=1000, prefix="", out=sys.stderr):
         >>> from petl import dummytable, progress, tocsv
         >>> d = dummytable(100500)
         >>> p = progress(d, 10000)
-        >>> tocsv(p, 'output.csv')
+        >>> tocsv(p, 'example.csv')
         10000 rows in 0.57s (17574 rows/second); batch in 0.57s (17574 rows/second)
         20000 rows in 1.13s (17723 rows/second); batch in 0.56s (17876 rows/second)
         30000 rows in 1.69s (17732 rows/second); batch in 0.56s (17749 rows/second)
@@ -95,7 +95,7 @@ def clock(table):
         >>> t2 = convert(c1, 'foo', lambda v: v**2)
         >>> c2 = clock(t2)
         >>> p = progress(c2, 10000)
-        >>> tocsv(p, 'dummy.csv')
+        >>> tocsv(p, 'example.csv')
         10000 rows in 1.17s (8559 rows/second); batch in 1.17s (8559 rows/second)
         20000 rows in 2.34s (8548 rows/second); batch in 1.17s (8537 rows/second)
         30000 rows in 3.51s (8547 rows/second); batch in 1.17s (8546 rows/second)

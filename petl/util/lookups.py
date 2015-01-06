@@ -51,7 +51,7 @@ def lookup(table, keyspec, valuespec=None, dictionary=None):
 
         >>> import shelve
         >>> table = [['foo', 'bar'], ['a', 1], ['b', 2], ['b', 3]]
-        >>> lkp = shelve.open('mylookup.dat')
+        >>> lkp = shelve.open('example.dat')
         >>> lkp = lookup(table, 'foo', 'bar', lkp)
         >>> lkp.close()
         >>> exit()
@@ -60,7 +60,7 @@ def lookup(table, keyspec, valuespec=None, dictionary=None):
         [GCC 4.5.2] on linux2
         Type "help", "copyright", "credits" or "license" for more information.
         >>> import shelve
-        >>> lkp = shelve.open('mylookup.dat')
+        >>> lkp = shelve.open('example.dat')
         >>> lkp['a']
         [1]
         >>> lkp['b']
@@ -149,7 +149,7 @@ def lookupone(table, keyspec, valuespec=None, dictionary=None, strict=False):
         >>> from petl import lookupone
         >>> import shelve
         >>> table = [['foo', 'bar'], ['a', 1], ['b', 2], ['c', 2]]
-        >>> lkp = shelve.open('mylookupone.dat')
+        >>> lkp = shelve.open('example.dat')
         >>> lkp = lookupone(table, 'foo', 'bar', dictionary=lkp)
         >>> lkp.close()
         >>> exit()
@@ -158,7 +158,7 @@ def lookupone(table, keyspec, valuespec=None, dictionary=None, strict=False):
         [GCC 4.5.2] on linux2
         Type "help", "copyright", "credits" or "license" for more information.
         >>> import shelve
-        >>> lkp = shelve.open('mylookupone.dat')
+        >>> lkp = shelve.open('example.dat')
         >>> lkp['a']
         1
         >>> lkp['b']
@@ -227,7 +227,7 @@ def dictlookup(table, keyspec, dictionary=None):
 
         >>> import shelve
         >>> table = [['foo', 'bar'], ['a', 1], ['b', 2], ['b', 3]]
-        >>> lkp = shelve.open('mydictlookup.dat')
+        >>> lkp = shelve.open('example.dat')
         >>> lkp = dictlookup(table, 'foo', dictionary=lkp)
         >>> lkp.close()
         >>> exit()
@@ -236,7 +236,7 @@ def dictlookup(table, keyspec, dictionary=None):
         [GCC 4.5.2] on linux2
         Type "help", "copyright", "credits" or "license" for more information.
         >>> import shelve
-        >>> lkp = shelve.open('mydictlookup.dat')
+        >>> lkp = shelve.open('example.dat')
         >>> lkp['a']
         [{'foo': 'a', 'bar': 1}]
         >>> lkp['b']
@@ -351,7 +351,7 @@ def dictlookupone(table, keyspec, dictionary=None, strict=False):
     persistent dictionaries created via the :mod:`shelve` module, e.g.::
 
         >>> import shelve
-        >>> lkp = shelve.open('mydictlookupone.dat')
+        >>> lkp = shelve.open('example.dat')
         >>> table = [['foo', 'bar'], ['a', 1], ['b', 2], ['c', 2]]
         >>> lkp = dictlookupone(table, 'foo', dictionary=lkp)
         >>> lkp.close()
@@ -361,7 +361,7 @@ def dictlookupone(table, keyspec, dictionary=None, strict=False):
         [GCC 4.5.2] on linux2
         Type "help", "copyright", "credits" or "license" for more information.
         >>> import shelve
-        >>> lkp = shelve.open('mydictlookupone.dat')
+        >>> lkp = shelve.open('example.dat')
         >>> lkp['a']
         {'foo': 'a', 'bar': 1}
         >>> lkp['b']
