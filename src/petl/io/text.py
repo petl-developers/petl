@@ -17,29 +17,27 @@ def fromtext(source=None, header=('lines',), strip=None):
     """Extract a table from lines in the given text file. E.g.::
 
         >>> # example data
-        ... with open('test.txt', 'w') as f:
-        ...     f.write('a\\t1\\n')
-        ...     f.write('b\\t2\\n')
-        ...     f.write('c\\t3\\n')
+        ... text = 'a,1\\nb,2\\nc,2\\n'
+        >>> with open('test.txt', 'w') as f:
+        ...     f.write(text)
         ...
+        12
         >>> from petl import fromtext, look
         >>> table1 = fromtext('test.txt')
         >>> look(table1)
-        +--------------+
-        | 'lines'      |
-        +==============+
-        | 'a\\t1'      |
-        +--------------+
-        | 'b\\t2'      |
-        +--------------+
-        | 'c\\t3'      |
-        +--------------+
+        +---------+
+        | 'lines' |
+        +=========+
+        | 'a,1'   |
+        +---------+
+        | 'b,2'   |
+        +---------+
+        | 'c,2'   |
+        +---------+
 
-    The :func:`fromtext` function provides a starting point for custom handling
-    of text files. E.g., using :func:`capture`::
-
-        >>> from petl import capture
-        >>> table2 = capture(table1, 'lines', '(.*)\\\\t(.*)$', ['foo', 'bar'])
+        >>> # now post-process,e.g., with capture()
+        ... from petl import capture
+        >>> table2 = capture(table1, 'lines', '(.*),(.*)$', ['foo', 'bar'])
         >>> look(table2)
         +-------+-------+
         | 'foo' | 'bar' |
@@ -48,7 +46,7 @@ def fromtext(source=None, header=('lines',), strip=None):
         +-------+-------+
         | 'b'   | '2'   |
         +-------+-------+
-        | 'c'   | '3'   |
+        | 'c'   | '2'   |
         +-------+-------+
 
     Note that the strip() function is called on each line, which by default
@@ -139,34 +137,24 @@ else:
 def totext(table, source=None, template=None, prologue=None, epilogue=None):
     """Write the table to a text file. E.g.::
 
+        >>> table1 = [['foo', 'bar'],
+        ...           ['a', 1],
+        ...           ['b', 2],
+        ...           ['c', 2]]
         >>> from petl import totext, look
-        >>> look(table)
-        +-------+-------+
-        | 'foo' | 'bar' |
-        +=======+=======+
-        | 'a'   | 1     |
-        +-------+-------+
-        | 'b'   | 2     |
-        +-------+-------+
-        | 'c'   | 2     |
-        +-------+-------+
-
-        >>> prologue = \"\"\"{| class="wikitable"
+        >>> prologue = '''{| class="wikitable"
         ... |-
         ... ! foo
         ... ! bar
-        ... \"\"\"
-        >>> template = \"\"\"|-
+        ... '''
+        >>> template = '''|-
         ... | {foo}
         ... | {bar}
-        ... \"\"\"
-        >>> epilogue = "|}"
-        >>> totext(table, 'test.txt', template, prologue, epilogue)
-        >>>
+        ... '''
+        >>> epilogue = '|}'
+        >>> totext(table1, 'test.txt', template, prologue, epilogue)
         >>> # see what we did
-        ... with open('test.txt') as f:
-        ...     print f.read()
-        ...
+        ... print(open('test.txt').read())
         {| class="wikitable"
         |-
         ! foo
