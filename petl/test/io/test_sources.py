@@ -7,7 +7,7 @@ from tempfile import NamedTemporaryFile
 from petl.compat import PY2
 
 
-from petl.test.util import ieq, eq_
+from petl.test.helpers import ieq, eq_
 from petl.io.csv import fromcsv, tocsv, appendcsv, fromtsv, totsv
 from petl.io.sources import StringSource, PopenSource, ZipSource
 

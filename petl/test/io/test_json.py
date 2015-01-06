@@ -6,7 +6,7 @@ from tempfile import NamedTemporaryFile
 import json
 
 
-from petl.test.util import ieq
+from petl.test.helpers import ieq
 from petl.io.json import fromjson, fromdicts, tojson, tojsonarrays
 
 

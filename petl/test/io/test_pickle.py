@@ -6,7 +6,7 @@ from tempfile import NamedTemporaryFile
 from petl.compat import pickle
 
 
-from petl.test.util import ieq
+from petl.test.helpers import ieq
 from petl.io.pickle import frompickle, topickle, appendpickle
 
 

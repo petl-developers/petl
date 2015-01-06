@@ -5,7 +5,7 @@ from __future__ import absolute_import, print_function, division, \
 from petl.compat import next
 
 
-from petl.util import RowContainer, asindices
+from petl.util.base import RowContainer, asindices
 
 
 def filldown(table, *fields, **kwargs):

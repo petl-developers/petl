@@ -13,7 +13,7 @@ from tempfile import NamedTemporaryFile
 from petl.compat import next
 
 
-from petl.test.util import ieq, eq_
+from petl.test.helpers import ieq, eq_
 from petl.io.db import fromdb, todb, appenddb
 
 

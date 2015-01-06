@@ -79,7 +79,7 @@ info = logger.info
 debug = logger.debug
 
 
-from petl.util import RowContainer
+from petl.util.base import RowContainer
 import petl.fluent
 from petl.io import StringSource
 

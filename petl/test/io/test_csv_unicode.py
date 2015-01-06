@@ -7,7 +7,7 @@ import codecs
 from tempfile import NamedTemporaryFile
 
 
-from petl.test.util import ieq, eq_
+from petl.test.helpers import ieq, eq_
 from petl.io.csv import fromucsv, toucsv, appenducsv
 
 

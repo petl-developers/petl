@@ -7,7 +7,7 @@ import gzip
 import os
 
 
-from petl.test.util import ieq, eq_
+from petl.test.helpers import ieq, eq_
 from petl.io.text import fromtext, totext
 
 

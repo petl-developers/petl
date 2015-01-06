@@ -3,60 +3,92 @@
 Utility functions
 =================
 
-.. autofunction:: petl.util.header
-.. autofunction:: petl.util.data
-.. autofunction:: petl.util.iterdata
-.. autofunction:: petl.util.fieldnames
-.. autofunction:: petl.util.nrows
-.. autofunction:: petl.util.look
-.. autofunction:: petl.util.lookall
-.. autofunction:: petl.util.see
-.. autofunction:: petl.util.values
-.. autofunction:: petl.util.itervalues
-.. autofunction:: petl.util.valuecount
-.. autofunction:: petl.util.valuecounts
-.. autofunction:: petl.util.valuecounter
-.. autofunction:: petl.util.dicts
-.. autofunction:: petl.util.iterdicts
-.. autofunction:: petl.util.namedtuples
-.. autofunction:: petl.util.iternamedtuples
-.. autofunction:: petl.util.records
-.. autofunction:: petl.util.iterrecords
-.. autofunction:: petl.util.columns
-.. autofunction:: petl.util.facetcolumns
-.. autofunction:: petl.util.isunique
-.. autofunction:: petl.util.isordered
-.. autofunction:: petl.util.limits
-.. autofunction:: petl.util.stats
-.. autofunction:: petl.util.stringpatterns
-.. autofunction:: petl.util.stringpatterncounter
-.. autofunction:: petl.util.rowlengths
-.. autofunction:: petl.util.typecounts
-.. autofunction:: petl.util.typecounter
-.. autofunction:: petl.util.typeset
-.. autofunction:: petl.util.parsecounts
-.. autofunction:: petl.util.parsecounter
-.. autofunction:: petl.util.dateparser
-.. autofunction:: petl.util.timeparser
-.. autofunction:: petl.util.datetimeparser
-.. autofunction:: petl.util.boolparser
-.. autofunction:: petl.util.numparser
-.. autofunction:: petl.util.lookup
-.. autofunction:: petl.util.lookupone
-.. autofunction:: petl.util.dictlookup
-.. autofunction:: petl.util.dictlookupone
-.. autofunction:: petl.util.expr
-.. autofunction:: petl.util.strjoin
-.. autofunction:: petl.util.randomtable
-.. autofunction:: petl.util.dummytable
-.. autofunction:: petl.util.diffheaders
-.. autofunction:: petl.util.diffvalues
-.. autofunction:: petl.util.heapqmergesorted
-.. autofunction:: petl.util.shortlistmergesorted
-.. autofunction:: petl.util.progress
-.. autofunction:: petl.util.clock
-.. autofunction:: petl.util.rowgroupby
-.. autofunction:: petl.util.nthword
-.. autofunction:: petl.util.cache
-.. autofunction:: petl.util.empty
-.. autofunction:: petl.util.coalesce
+Basic utilities
+---------------
+
+.. autofunction:: petl.util.base.header
+.. autofunction:: petl.util.base.data
+.. autofunction:: petl.util.base.fieldnames
+.. autofunction:: petl.util.base.nrows
+.. autofunction:: petl.util.base.values
+.. autofunction:: petl.util.base.dicts
+.. autofunction:: petl.util.base.namedtuples
+.. autofunction:: petl.util.base.records
+.. autofunction:: petl.util.base.expr
+.. autofunction:: petl.util.base.rowgroupby
+.. autofunction:: petl.util.base.empty
+
+Visualising tables
+------------------
+
+.. autofunction:: petl.util.vis.look
+.. autofunction:: petl.util.vis.lookall
+.. autofunction:: petl.util.vis.see
+
+Parsing string/text values
+--------------------------
+
+.. autofunction:: petl.util.parsers.dateparser
+.. autofunction:: petl.util.parsers.timeparser
+.. autofunction:: petl.util.parsers.datetimeparser
+.. autofunction:: petl.util.parsers.boolparser
+.. autofunction:: petl.util.parsers.numparser
+
+Lookup data structures
+----------------------
+
+.. autofunction:: petl.util.lookups.lookup
+.. autofunction:: petl.util.lookups.lookupone
+.. autofunction:: petl.util.lookups.dictlookup
+.. autofunction:: petl.util.lookups.dictlookupone
+.. autofunction:: petl.util.lookups.recordlookup
+.. autofunction:: petl.util.lookups.recordlookupone
+
+Counting
+--------
+
+.. autofunction:: petl.util.counting.valuecount
+.. autofunction:: petl.util.counting.valuecounts
+.. autofunction:: petl.util.counting.valuecounter
+.. autofunction:: petl.util.counting.stringpatterns
+.. autofunction:: petl.util.counting.stringpatterncounter
+.. autofunction:: petl.util.counting.rowlengths
+.. autofunction:: petl.util.counting.typecounts
+.. autofunction:: petl.util.counting.typecounter
+.. autofunction:: petl.util.counting.parsecounts
+.. autofunction:: petl.util.counting.parsecounter
+
+Timing
+------
+
+.. autofunction:: petl.util.timing.progress
+.. autofunction:: petl.util.timing.clock
+
+Statistics
+----------
+
+.. autofunction:: petl.util.statistics.limits
+.. autofunction:: petl.util.statistics.stats
+
+Materialising tables
+--------------------
+
+.. autofunction:: petl.util.materialise.columns
+.. autofunction:: petl.util.materialise.facetcolumns
+.. autofunction:: petl.util.materialise.cache
+
+Randomly generated tables
+-------------------------
+
+.. autofunction:: petl.util.random.randomtable
+.. autofunction:: petl.util.random.dummytable
+
+Miscellaneous
+-------------
+
+.. autofunction:: petl.util.misc.typeset
+.. autofunction:: petl.util.misc.diffheaders
+.. autofunction:: petl.util.misc.diffvalues
+.. autofunction:: petl.util.misc.strjoin
+.. autofunction:: petl.util.misc.nthword
+.. autofunction:: petl.util.misc.coalesce

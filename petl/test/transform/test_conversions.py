@@ -2,7 +2,7 @@ from __future__ import absolute_import, print_function, division
 # N.B., do not import unicode_literals in tests
 
 
-from petl.test.util import ieq
+from petl.test.helpers import ieq
 from petl.transform.conversions import convert, convertall, convertnumbers, \
     replace, update
 

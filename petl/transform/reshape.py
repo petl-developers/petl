@@ -8,8 +8,9 @@ import operator
 from petl.compat import next
 
 
-from petl.util import RowContainer, rowgetter, comparable_itemgetter, values, \
-    itervalues, header, data
+from petl.comparison import comparable_itemgetter
+from petl.util.base import RowContainer, rowgetter, values, itervalues, \
+    header, data
 from petl.transform.sorts import sort
 
 

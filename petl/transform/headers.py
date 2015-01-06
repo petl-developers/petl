@@ -6,7 +6,7 @@ import itertools
 from petl.compat import next
 
 
-from petl.util import RowContainer
+from petl.util.base import RowContainer
 
 
 def rename(table, *args):

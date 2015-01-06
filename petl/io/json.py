@@ -10,7 +10,7 @@ from petl.compat import PY2
 
 
 # internal dependencies
-from petl.util import data, RowContainer, dicts as asdicts
+from petl.util.base import data, RowContainer, dicts as _dicts
 from petl.io.sources import read_source_from_arg, write_source_from_arg
 
 
@@ -152,7 +152,7 @@ def tojson(table, source=None, prefix=None, suffix=None, *args, **kwargs):
 
     """
 
-    obj = list(asdicts(table))
+    obj = list(_dicts(table))
     _writejson(source, obj, prefix, suffix, *args, **kwargs)
 
 

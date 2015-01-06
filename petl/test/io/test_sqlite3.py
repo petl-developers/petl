@@ -6,7 +6,7 @@ from tempfile import NamedTemporaryFile
 import sqlite3
 
 
-from petl.test.util import ieq
+from petl.test.helpers import ieq
 from petl.io.sqlite3 import fromsqlite3, tosqlite3, appendsqlite3
 
 

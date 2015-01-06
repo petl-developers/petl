@@ -8,7 +8,7 @@ from petl.compat import next, string_types, callable
 from petl.comparison import Comparable
 
 
-from petl.util import asindices, expr, RowContainer, values, Record
+from petl.util.base import asindices, expr, RowContainer, values, Record
 
 
 def select(table, *args, **kwargs):

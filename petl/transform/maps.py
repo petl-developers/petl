@@ -6,7 +6,7 @@ import operator
 from petl.compat import OrderedDict, next, string_types
 
 
-from petl.util import RowContainer, expr, rowgroupby, Record
+from petl.util.base import RowContainer, expr, rowgroupby, Record
 from petl.transform.sorts import sort
 
 

@@ -5,7 +5,7 @@ from __future__ import absolute_import, print_function, division
 from datetime import datetime
 
 
-from petl.test.util import ieq
+from petl.test.helpers import ieq
 from petl.transform.reshape import melt, recast, transpose, pivot, flatten, \
     unflatten
 from petl.transform.regex import split, capture

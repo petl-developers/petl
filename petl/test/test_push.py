@@ -6,7 +6,7 @@ from tempfile import NamedTemporaryFile
 
 
 from petl.io import fromcsv, fromtsv, frompickle
-from petl.test.util import ieq
+from petl.test.helpers import ieq
 from petl.push import tocsv, totsv, topickle, partition, sort, duplicates, \
     unique, diff
 

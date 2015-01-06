@@ -79,14 +79,6 @@ Regular expressions
 .. autofunction:: petl.transform.regex.split
 .. autofunction:: petl.transform.regex.capture
 
-Deduplicating rows
--------------------
-
-.. autofunction:: petl.transform.dedup.duplicates
-.. autofunction:: petl.transform.dedup.unique
-.. autofunction:: petl.transform.dedup.conflicts
-.. autofunction:: petl.transform.dedup.distinct
-
 Unpacking compound values
 -------------------------
 
@@ -106,6 +98,7 @@ Sorting
 
 .. autofunction:: petl.transform.sorts.sort
 .. autofunction:: petl.transform.sorts.mergesort
+.. autofunction:: petl.transform.sorts.isordered
 
 Joins
 -----
@@ -134,6 +127,15 @@ Set operations
 .. autofunction:: petl.transform.setops.intersection
 .. autofunction:: petl.transform.setops.hashcomplement
 .. autofunction:: petl.transform.setops.hashintersection
+
+Deduplicating rows
+-------------------
+
+.. autofunction:: petl.transform.dedup.duplicates
+.. autofunction:: petl.transform.dedup.unique
+.. autofunction:: petl.transform.dedup.conflicts
+.. autofunction:: petl.transform.dedup.distinct
+.. autofunction:: petl.transform.dedup.isunique
 
 Reducing rows
 -------------

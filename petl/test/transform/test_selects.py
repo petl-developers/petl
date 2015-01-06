@@ -2,7 +2,7 @@ from __future__ import absolute_import, print_function, division
 # N.B., do not import unicode_literals in tests
 
 
-from petl.test.util import ieq, eq_
+from petl.test.helpers import ieq, eq_
 from petl.comparison import Comparable
 from petl.transform.selects import select, selectin, selectcontains, \
     rowlenselect, selectre, selectusingcontext, facet, selectgt, selectlt

@@ -9,7 +9,7 @@ from petl.compat import izip, izip_longest, next, count, string_types
 
 
 # internal dependencies
-from petl.util import asindices, rowgetter, Record, RowContainer
+from petl.util.base import asindices, rowgetter, Record, RowContainer
 
 
 import logging

@@ -7,7 +7,7 @@ import operator
 from petl.compat import OrderedDict, next, string_types, reduce
 
 
-from petl.util import RowContainer, iterpeek, rowgroupby
+from petl.util.base import RowContainer, iterpeek, rowgroupby
 from petl.transform.sorts import sort, mergesort
 from petl.transform.basics import cut
 from petl.transform.dedup import distinct

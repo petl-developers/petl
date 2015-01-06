@@ -6,7 +6,8 @@ import operator
 from petl.compat import next
 
 
-from petl.util import RowContainer, lookup, asindices, rowgetter, iterpeek
+from petl.util.base import RowContainer, asindices, rowgetter, iterpeek
+from petl.util.lookups import lookup
 from petl.transform.joins import keys_from_args
 
 

@@ -8,7 +8,7 @@ import os
 from petl.compat import PY2
 
 
-from petl.test.util import ieq, eq_
+from petl.test.helpers import ieq, eq_
 from petl.io.csv import fromcsv, fromtsv, tocsv, appendcsv, totsv, appendtsv
 
 

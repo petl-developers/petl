@@ -10,7 +10,7 @@ from petl.transform.headers import rename, setheader, extendheader, \
 from petl.transform.conversions import convert, convertall, replace, \
     replaceall, update, convertnumbers
 
-from petl.transform.sorts import sort, mergesort
+from petl.transform.sorts import sort, mergesort, isordered
 
 from petl.transform.selects import select, selectop, selectcontains, selecteq, \
     selectfalse, selectge, selectgt, selectin, selectis, selectisinstance, \
@@ -41,7 +41,8 @@ from petl.transform.maps import fieldmap, rowmap, rowmapmany, rowgroupmap
 
 from petl.transform.unpacks import unpack, unpackdict
 
-from petl.transform.dedup import duplicates, unique, distinct, conflicts
+from petl.transform.dedup import duplicates, unique, distinct, conflicts, \
+    isunique
 
 from petl.transform.setops import complement, intersection, \
     recordcomplement, diff, recorddiff, hashintersection, hashcomplement

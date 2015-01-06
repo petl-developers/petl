@@ -2,7 +2,7 @@ from __future__ import absolute_import, print_function, division
 # N.B., do not import unicode_literals in tests
 
 
-from petl.test.util import ieq
+from petl.test.helpers import ieq
 from petl.util import expr, empty, coalesce
 from petl.transform.basics import cut, cat, addfield, rowslice, head, tail, \
     cutout, skipcomments, annex, addrownumbers, addcolumn, \

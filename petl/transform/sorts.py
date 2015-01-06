@@ -1,19 +1,24 @@
 from __future__ import absolute_import, print_function, division, \
     unicode_literals
 
+
+import heapq
 from tempfile import NamedTemporaryFile
 import itertools
-from petl.compat import pickle, next
 import logging
+from collections import namedtuple
+import operator
+from petl.compat import pickle, next
+
+
+from petl.comparison import comparable_itemgetter
+from petl.util.base import RowContainer, asindices
+
 
 logger = logging.getLogger(__name__)
 warning = logger.warning
 info = logger.info
 debug = logger.debug
-
-from petl.comparison import comparable_itemgetter
-from petl.util import RowContainer, asindices, shortlistmergesorted, \
-    heapqmergesorted
 
 
 def sort(table, key=None, reverse=False, buffersize=None, tempdir=None,
@@ -115,6 +120,65 @@ def iterchunk(f):
             pass
 
 
+_Keyed = namedtuple('Keyed', ['key', 'obj'])
+
+
+def _heapqmergesorted(key=None, *iterables):
+    """Return a single iterator over the given iterables, sorted by the
+    given `key` function, assuming the input iterables are already sorted by
+    the same function. (I.e., the merge part of a general merge sort.) Uses
+    :func:`heapq.merge` for the underlying implementation."""
+
+    if key is None:
+        keyed_iterables = iterables
+        for element in heapq.merge(*keyed_iterables):
+            yield element
+    else:
+        keyed_iterables = [(_Keyed(key(obj), obj) for obj in iterable)
+                           for iterable in iterables]
+        for element in heapq.merge(*keyed_iterables):
+            yield element.obj
+
+
+def _shortlistmergesorted(key=None, reverse=False, *iterables):
+    """Return a single iterator over the given iterables, sorted by the
+    given `key` function, assuming the input iterables are already sorted by
+    the same function. (I.e., the merge part of a general merge sort.) Uses
+    :func:`min` (or :func:`max` if ``reverse=True``) for the underlying
+    implementation."""
+
+    if reverse:
+        op = max
+    else:
+        op = min
+    if key is not None:
+        opkwargs = {'key': key}
+    else:
+        opkwargs = dict()
+    # populate initial shortlist
+    # (remember some iterables might be empty)
+    iterators = list()
+    shortlist = list()
+    for iterable in iterables:
+        it = iter(iterable)
+        try:
+            first = next(it)
+            iterators.append(it)
+            shortlist.append(first)
+        except StopIteration:
+            pass
+    # do the mergesort
+    while iterators:
+        nxt = op(shortlist, **opkwargs)
+        yield nxt
+        nextidx = shortlist.index(nxt)
+        try:
+            shortlist[nextidx] = next(iterators[nextidx])
+        except StopIteration:
+            del shortlist[nextidx]
+            del iterators[nextidx]
+
+
 def _mergesorted(key=None, reverse=False, *iterables):
     # N.B., I've used heapq for normal merge sort and shortlist merge sort for
     # reverse merge sort because I've assumed that heapq.merge is faster and
@@ -124,9 +188,9 @@ def _mergesorted(key=None, reverse=False, *iterables):
     # worth profiling more carefully
 
     if reverse:
-        return shortlistmergesorted(key, True, *iterables)
+        return _shortlistmergesorted(key, True, *iterables)
     else:
-        return heapqmergesorted(key, *iterables)
+        return _heapqmergesorted(key, *iterables)
 
 
 defaultbuffersize = 100000
@@ -391,5 +455,62 @@ def itermergesort(sources, key, header, missing, reverse):
         getkey = comparable_itemgetter(*indices)
 
     # OK, do the merge sort
-    for row in shortlistmergesorted(getkey, reverse, *sits):
+    for row in _shortlistmergesorted(getkey, reverse, *sits):
         yield row
+
+
+def isordered(table, key=None, reverse=False, strict=False):
+    """
+    Return True if the table is ordered (i.e., sorted) by the given key. E.g.::
+
+        >>> from petl import isordered, look
+        >>> look(table)
+        +-------+-------+-------+
+        | 'foo' | 'bar' | 'baz' |
+        +=======+=======+=======+
+        | 'a'   | 1     | True  |
+        +-------+-------+-------+
+        | 'b'   | 3     | True  |
+        +-------+-------+-------+
+        | 'b'   | 2     |       |
+        +-------+-------+-------+
+
+        >>> isordered(table, key='foo')
+        True
+        >>> isordered(table, key='foo', strict=True)
+        False
+        >>> isordered(table, key='foo', reverse=True)
+        False
+
+    .. versionadded:: 0.10
+
+    """
+
+    # determine the operator to use when comparing rows
+    if reverse and strict:
+        op = operator.lt
+    elif reverse and not strict:
+        op = operator.le
+    elif strict:
+        op = operator.gt
+    else:
+        op = operator.ge
+
+    it = iter(table)
+    fnms = [str(f) for f in next(it)]
+    if key is None:
+        prev = next(it)
+        for curr in it:
+            if not op(curr, prev):
+                return False
+            prev = curr
+    else:
+        getkey = comparable_itemgetter(*asindices(fnms, key))
+        prev = next(it)
+        prevkey = getkey(prev)
+        for curr in it:
+            currkey = getkey(curr)
+            if not op(currkey, prevkey):
+                return False
+            prevkey = currkey
+    return True

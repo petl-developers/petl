@@ -9,7 +9,7 @@ from petl.compat import next, PY2
 
 
 # internal dependencies
-from petl.util import RowContainer, asdict
+from petl.util.base import RowContainer, asdict
 from petl.io.sources import read_source_from_arg, write_source_from_arg
 
 

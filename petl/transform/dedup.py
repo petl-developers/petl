@@ -5,7 +5,7 @@ from __future__ import absolute_import, print_function, division, \
 import operator
 
 
-from petl.util import RowContainer, asindices
+from petl.util.base import RowContainer, asindices, itervalues
 from petl.transform.sorts import sort
 
 
@@ -405,3 +405,33 @@ class DistinctView(RowContainer):
                 if keys != previous_keys:
                     yield tuple(row)
                 previous_keys = keys
+
+
+def isunique(table, field):
+    """
+    Return True if there are no duplicate values for the given field(s),
+    otherwise False. E.g.::
+
+        >>> from petl import isunique
+        >>> table = [['foo', 'bar'], ['a', 1], ['b'], ['b', 2], ['c', 3, True]]
+        >>> isunique(table, 'foo')
+        False
+        >>> isunique(table, 'bar')
+        True
+
+    The `field` argument can be a single field name or index (starting from
+    zero) or a tuple of field names and/or indexes.
+
+    .. versionchanged:: 0.10
+
+    Renamed from "unique". See also :func:`petl.unique`.
+
+    """
+
+    vals = set()
+    for v in itervalues(table, field):
+        if v in vals:
+            return False
+        else:
+            vals.add(v)
+    return True

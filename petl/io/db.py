@@ -8,7 +8,7 @@ from petl.compat import next
 
 
 # internal dependencies
-from petl.util import RowContainer
+from petl.util.base import RowContainer
 
 
 logger = logging.getLogger(__name__)

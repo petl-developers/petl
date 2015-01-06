@@ -5,7 +5,7 @@ from __future__ import absolute_import, print_function, division
 from petl.compat import next
 
 
-from petl.test.util import ieq, eq_
+from petl.test.helpers import ieq, eq_
 from petl.transform.regex import capture, split, search, searchcomplement
 from petl.transform.basics import TransformError
 

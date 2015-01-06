@@ -10,7 +10,7 @@ from petl.compat import string_types
 
 
 # internal dependencies
-from petl.util import RowContainer
+from petl.util.base import RowContainer
 from petl.io.sources import read_source_from_arg
 
 

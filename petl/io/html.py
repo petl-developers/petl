@@ -9,7 +9,7 @@ from petl.compat import text_type, numeric_types, next, PY2
 
 
 # internal dependencies
-from petl.util import RowContainer
+from petl.util.base import RowContainer
 from petl.io.sources import write_source_from_arg
 
 

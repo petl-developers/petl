@@ -2,8 +2,9 @@ from __future__ import absolute_import, print_function, division
 # N.B., do not import unicode_literals in tests
 
 
-from petl.test.util import ieq
-from petl.transform.dedup import duplicates, unique, conflicts, distinct
+from petl.test.helpers import ieq
+from petl.transform.dedup import duplicates, unique, conflicts, distinct, \
+    isunique
 
 
 def test_duplicates():
@@ -106,8 +107,8 @@ def test_unique_wholerow():
 
     result = unique(table)
     expectation = (('foo', 'bar', 'baz'),
-             ('A', 1, 2),
-             ('D', 4, 12.3))
+                   ('A', 1, 2),
+                   ('D', 4, 12.3))
     ieq(expectation, result)
 
 
@@ -231,3 +232,10 @@ def test_key_distinct_count():
               ('B', '2', '3.4', 2),
               ('D', 4, 12.3, 1))
     ieq(expect, result)
+
+
+def test_isunique():
+
+    table = (('foo', 'bar'), ('a', 1), ('b',), ('b', 2), ('c', 3, True))
+    assert not isunique(table, 'foo')
+    assert isunique(table, 'bar')

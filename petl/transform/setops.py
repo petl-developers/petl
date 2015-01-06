@@ -11,7 +11,7 @@ debug = logger.debug
 
 
 from petl.comparison import Comparable
-from petl.util import header, RowContainer
+from petl.util.base import header, RowContainer
 from petl.transform.sorts import sort
 from petl.transform.basics import cut
 

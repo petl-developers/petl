@@ -8,8 +8,8 @@ from petl.compat import next
 
 
 from petl.comparison import comparable_itemgetter, Comparable
-from petl.util import RowContainer, asindices, rowgetter, rowgroupby, header,\
-    data
+from petl.util.base import RowContainer, asindices, rowgetter, rowgroupby, \
+    header, data
 from petl.transform.sorts import sort
 from petl.transform.basics import cut, cutout
 from petl.transform.dedup import distinct

@@ -16,8 +16,9 @@ from collections import defaultdict
 from petl.compat import pickle, next, PY3
 
 
-from petl.util import asindices, Record, shortlistmergesorted, \
-    comparable_itemgetter
+from petl.util.base import asindices, Record
+from petl.comparison import comparable_itemgetter
+from petl.transform.sorts import _shortlistmergesorted
 import petl.transform
 
 
@@ -93,8 +94,7 @@ class PipelineConnection(object):
 
 
 def tocsv(filename, dialect='excel', **kwargs):
-    """
-    Push rows to a CSV file. E.g.::
+    """Push rows to a CSV file. E.g.::
 
         >>> from petl.push import tocsv
         >>> p = tocsv('example.csv')
@@ -106,8 +106,7 @@ def tocsv(filename, dialect='excel', **kwargs):
 
 
 def totsv(filename, dialect='excel-tab', **kwargs):
-    """
-    Push rows to a tab-delimited file. E.g.::
+    """Push rows to a tab-delimited file. E.g.::
 
         >>> from petl.push import totsv
         >>> p = totsv('example.tsv')
@@ -157,8 +156,7 @@ class ToCsvConnection(PipelineConnection):
 
 
 def topickle(filename, protocol=-1):
-    """
-    Push rows to a pickle file. E.g.::
+    """Push rows to a pickle file. E.g.::
 
         >>> from petl.push import topickle
         >>> p = topickle('example.pickle')
@@ -204,8 +202,7 @@ class ToPickleConnection(PipelineConnection):
 
 
 def partition(discriminator):
-    """
-    Partition rows based on values of a field or results of applying a
+    """Partition rows based on values of a field or results of applying a
     function on the row. E.g.::
 
         >>> from petl.push import partition, tocsv
@@ -254,8 +251,7 @@ class PartitionConnection(PipelineConnection):
 
 
 def sort(key=None, reverse=False, buffersize=None):
-    """
-    Sort rows based on some key field or fields. E.g.::
+    """Sort rows based on some key field or fields. E.g.::
 
         >>> from petl.push import sort, tocsv
         >>> p = sort('foo')
@@ -328,7 +324,7 @@ class SortConnection(PipelineConnection):
             chunkiters = [iterchunk(f) for f in self.chunkfiles]
             # make sure any left in cache are included
             chunkiters.append(self.cache)
-            for row in shortlistmergesorted(self.getkey, self.reverse,
+            for row in _shortlistmergesorted(self.getkey, self.reverse,
                                             *chunkiters):
                 self.broadcast(row)
         else:
@@ -346,8 +342,7 @@ def iterchunk(f):
 
 
 def duplicates(key):
-    """
-    Report rows with duplicate key values. E.g.::
+    """Report rows with duplicate key values. E.g.::
 
         >>> from petl.push import duplicates, tocsv
         >>> p = duplicates('foo')
@@ -440,8 +435,7 @@ class DuplicatesConnection(PipelineConnection):
         
 
 def unique(key):
-    """
-    Report rows with unique key values. E.g.::
+    """Report rows with unique key values. E.g.::
 
         >>> from petl.push import unique, tocsv
         >>> p = unique('foo')
@@ -482,8 +476,7 @@ class UniqueConnection(DuplicatesConnection):
 
 
 def diff():
-    """
-    Find rows that differ between two tables. E.g.::
+    """Find rows that differ between two tables. E.g.::
 
         >>> from petl.push import diff, tocsv
         >>> p = diff()
@@ -561,85 +554,3 @@ class DiffComponent(PipelineComponent):
                             b = tuple(next(itb))
                         except StopIteration:
                             b = None
-
-
-# TODO standard components (one in, one out)...
-# totext
-# tosqlite3
-# todb
-# toxml
-# tojson
-# todicts
-# tolist
-# rename
-# setheader
-# extendheader
-# pushheader
-# skip
-# skipcomments
-# rowslice
-# head
-# tail
-# cut
-# cutout
-# select
-# selectop
-# selecteq
-# selectne
-# selectlt
-# selectle
-# selectgt
-# selectge
-# selectrangeopen
-# selectrangeopenleft
-# selectrangeopenright
-# selectrangeclosed
-# selectin
-# selectnotin
-# selectis
-# selectisnot
-# selectre
-# rowselect
-# rowlenselect
-# fieldselect
-# replace
-# replaceall
-# convert
-# convertall
-# fieldconvert
-# convertnumbers
-# resub
-# extend
-# capture
-# split
-# unpack
-# fieldmap
-# rowmap
-# rowmapmany
-# sort
-# aggregate
-# rangeaggregate
-# rangecounts
-# rowreduce
-# rangerowreduce
-# mergereduce
-# melt
-# recast
-# transpose
-# pivot
-#
-
-# TODO branching components (one in, many out)...
-# conflicts (default pipe is conflicts, 'remainder' is the rest)
-#
-
-# TODO special components (many in)...
-# cat (no point?)
-# joins
-# complement (default pipe is complement, 'remainder' is the rest)
-# recordcomplement
-# recorddiff
-# intersection
-# mergesort
-# merge
-# 

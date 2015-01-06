@@ -8,7 +8,7 @@ from petl.compat import string_types, next
 
 
 # internal dependencies
-from petl.util import RowContainer
+from petl.util.base import RowContainer
 
 
 quotechar = '"'

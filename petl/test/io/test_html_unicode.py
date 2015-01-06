@@ -5,7 +5,7 @@ from __future__ import absolute_import, print_function, division
 
 import codecs
 from tempfile import NamedTemporaryFile
-from petl.test.util import eq_
+from petl.test.helpers import eq_
 
 
 from petl.io.html import touhtml

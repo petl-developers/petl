@@ -6,7 +6,7 @@ import operator
 
 
 from petl.compat import OrderedDict
-from petl.test.util import ieq
+from petl.test.helpers import ieq
 from petl.util import strjoin
 from petl.transform.reductions import rowreduce, aggregate, \
     mergeduplicates, Conflict, fold

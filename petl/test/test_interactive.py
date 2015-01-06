@@ -4,13 +4,13 @@ from __future__ import absolute_import, print_function, division
 
 from tempfile import NamedTemporaryFile
 import csv
-from petl.test.util import eq_
+from petl.test.helpers import eq_
 from petl.compat import PY2
 
 
 import petl
 import petl.interactive as etl
-from petl.test.util import ieq
+from petl.test.helpers import ieq
 
 
 def test_basics():

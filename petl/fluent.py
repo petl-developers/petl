@@ -61,7 +61,7 @@ from __future__ import absolute_import, print_function, division, \
 
 import sys
 import inspect
-from petl.util import RowContainer
+from petl.util.base import RowContainer
 
 
 petl = sys.modules['petl']

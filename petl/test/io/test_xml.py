@@ -5,7 +5,7 @@ from __future__ import absolute_import, print_function, division
 from tempfile import NamedTemporaryFile
 
 
-from petl.test.util import ieq
+from petl.test.helpers import ieq
 from petl.util import nrows, look
 from petl.io.xml import fromxml
 

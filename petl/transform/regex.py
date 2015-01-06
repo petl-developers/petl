@@ -7,7 +7,7 @@ import operator
 from petl.compat import next, string_types
 
 
-from petl.util import RowContainer, asindices
+from petl.util.base import RowContainer, asindices
 from petl.transform.basics import TransformError
 from petl.transform.conversions import convert
 

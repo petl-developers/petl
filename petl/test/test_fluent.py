@@ -9,7 +9,7 @@ from petl.compat import PY2
 
 import petl
 import petl.fluent as etl
-from petl.test.util import ieq, eq_
+from petl.test.helpers import ieq, eq_
 
 
 def test_basics():

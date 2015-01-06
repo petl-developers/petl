@@ -5,8 +5,9 @@ from __future__ import absolute_import, print_function, division, \
 from petl.compat import next, integer_types, string_types
 
 
-from petl.util import numparser, RowContainer, FieldSelectionError, \
-    expr, header, Record
+from petl.errors import FieldSelectionError
+from petl.util.base import RowContainer, expr, header, Record
+from petl.util.parsers import numparser
 
 
 def convert(table, *args, **kwargs):
@@ -166,9 +167,10 @@ def convert(table, *args, **kwargs):
 
     """
 
+    converters = None
     if len(args) == 0:
         # no conversion specified, can be set afterwards via suffix notation
-        converters = None
+        pass
     elif len(args) == 1:
         converters = args[0]
     elif len(args) > 1:
@@ -198,7 +200,6 @@ def convertall(table, *args, **kwargs):
     """
 
     # TODO don't read the data twice!
-
     return convert(table, header(table), *args, **kwargs)
 
 

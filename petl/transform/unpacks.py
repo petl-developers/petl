@@ -6,7 +6,7 @@ import itertools
 from petl.compat import next
 
 
-from petl.util import RowContainer
+from petl.util.base import RowContainer
 
 
 def unpack(table, field, newfields=None, include_original=False, missing=None):
