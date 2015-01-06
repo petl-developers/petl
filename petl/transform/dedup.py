@@ -53,7 +53,7 @@ def duplicates(table, key=None, presorted=False, buffersize=None, tempdir=None,
     If `presorted` is True, it is assumed that the data are already sorted by
     the given key, and the `buffersize`, `tempdir` and `cache` arguments are 
     ignored. Otherwise, the data are sorted, see also the discussion of the
-    `buffersize`, `tempdir` and `cache` arguments under the :func:`sort`
+    `buffersize`, `tempdir` and `cache` arguments under the :func:`petl.transform.sorts.sort`
     function.
     
     See also :func:`unique` and :func:`distinct`.
@@ -148,7 +148,7 @@ def unique(table, key=None, presorted=False, buffersize=None, tempdir=None,
     If `presorted` is True, it is assumed that the data are already sorted by
     the given key, and the `buffersize`, `tempdir` and `cache` arguments are
     ignored. Otherwise, the data are sorted, see also the discussion of the
-    `buffersize`, `tempdir` and `cache` arguments under the :func:`sort`
+    `buffersize`, `tempdir` and `cache` arguments under the :func:`petl.transform.sorts.sort`
     function.
 
     See also :func:`duplicates` and :func:`distinct`.
@@ -251,7 +251,7 @@ def conflicts(table, key, missing=None, include=None, exclude=None,
     If `presorted` is True, it is assumed that the data are already sorted by
     the given key, and the `buffersize`, `tempdir` and `cache` arguments are
     ignored. Otherwise, the data are sorted, see also the discussion of the
-    `buffersize`, `tempdir` and `cache` arguments under the :func:`sort`
+    `buffersize`, `tempdir` and `cache` arguments under the :func:`petl.transform.sorts.sort`
     function.
     
     """

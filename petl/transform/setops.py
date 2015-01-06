@@ -18,44 +18,27 @@ from petl.transform.basics import cut
 
 def complement(a, b, presorted=False, buffersize=None, tempdir=None,
                cache=True):
-    """
-    Return rows in `a` that are not in `b`. E.g.::
+    """Return rows in `a` that are not in `b`. E.g.::
 
         >>> from petl import complement, look
-        >>> look(a)
-        +-------+-------+-------+
-        | 'foo' | 'bar' | 'baz' |
-        +=======+=======+=======+
-        | 'A'   | 1     | True  |
-        +-------+-------+-------+
-        | 'C'   | 7     | False |
-        +-------+-------+-------+
-        | 'B'   | 2     | False |
-        +-------+-------+-------+
-        | 'C'   | 9     | True  |
-        +-------+-------+-------+
-
-        >>> look(b)
-        +-----+-----+-------+
-        | 'x' | 'y' | 'z'   |
-        +=====+=====+=======+
-        | 'B' | 2   | False |
-        +-----+-----+-------+
-        | 'A' | 9   | False |
-        +-----+-----+-------+
-        | 'B' | 3   | True  |
-        +-----+-----+-------+
-        | 'C' | 9   | True  |
-        +-----+-----+-------+
-
+        >>> a = [['foo', 'bar', 'baz'],
+        ...      ['A', 1, True],
+        ...      ['C', 7, False],
+        ...      ['B', 2, False],
+        ...      ['C', 9, True]]
+        >>> b = [['x', 'y', 'z'],
+        ...      ['B', 2, False],
+        ...      ['A', 9, False],
+        ...      ['B', 3, True],
+        ...      ['C', 9, True]]
         >>> aminusb = complement(a, b)
         >>> look(aminusb)
         +-------+-------+-------+
         | 'foo' | 'bar' | 'baz' |
         +=======+=======+=======+
-        | 'A'   | 1     | True  |
+        | 'A'   |     1 | True  |
         +-------+-------+-------+
-        | 'C'   | 7     | False |
+        | 'C'   |     7 | False |
         +-------+-------+-------+
 
         >>> bminusa = complement(b, a)
@@ -63,20 +46,20 @@ def complement(a, b, presorted=False, buffersize=None, tempdir=None,
         +-----+-----+-------+
         | 'x' | 'y' | 'z'   |
         +=====+=====+=======+
-        | 'A' | 9   | False |
+        | 'A' |   9 | False |
         +-----+-----+-------+
-        | 'B' | 3   | True  |
+        | 'B' |   3 | True  |
         +-----+-----+-------+
 
     Note that the field names of each table are ignored - rows are simply
-    compared following a lexical sort. See also the :func:`recordcomplement`
-    function.
+    compared following a lexical sort. See also the
+    :func:`petl.transform.setops.recordcomplement` function.
 
     If `presorted` is True, it is assumed that the data are already sorted by
     the given key, and the `buffersize`, `tempdir` and `cache` arguments are
     ignored. Otherwise, the data are sorted, see also the discussion of the
-    `buffersize`, `tempdir` and `cache` arguments under the :func:`sort`
-    function.
+    `buffersize`, `tempdir` and `cache` arguments under the
+    :func:`petl.transform.sorts.sort` function.
 
     """
 
@@ -152,44 +135,27 @@ def itercomplement(ta, tb):
 
 
 def recordcomplement(a, b, buffersize=None, tempdir=None, cache=True):
-    """
-    Find records in `a` that are not in `b`. E.g.::
+    """Find records in `a` that are not in `b`. E.g.::
 
         >>> from petl import recordcomplement, look
-        >>> look(a)
-        +-------+-------+-------+
-        | 'foo' | 'bar' | 'baz' |
-        +=======+=======+=======+
-        | 'A'   | 1     | True  |
-        +-------+-------+-------+
-        | 'C'   | 7     | False |
-        +-------+-------+-------+
-        | 'B'   | 2     | False |
-        +-------+-------+-------+
-        | 'C'   | 9     | True  |
-        +-------+-------+-------+
-
-        >>> look(b)
-        +-------+-------+-------+
-        | 'bar' | 'foo' | 'baz' |
-        +=======+=======+=======+
-        | 2     | 'B'   | False |
-        +-------+-------+-------+
-        | 9     | 'A'   | False |
-        +-------+-------+-------+
-        | 3     | 'B'   | True  |
-        +-------+-------+-------+
-        | 9     | 'C'   | True  |
-        +-------+-------+-------+
-
+        >>> a = [['foo', 'bar', 'baz'],
+        ...      ['A', 1, True],
+        ...      ['C', 7, False],
+        ...      ['B', 2, False],
+        ...      ['C', 9, True]]
+        >>> b = [['bar', 'foo', 'baz'],
+        ...      [2, 'B', False],
+        ...      [9, 'A', False],
+        ...      [3, 'B', True],
+        ...      [9, 'C', True]]
         >>> aminusb = recordcomplement(a, b)
         >>> look(aminusb)
         +-------+-------+-------+
         | 'foo' | 'bar' | 'baz' |
         +=======+=======+=======+
-        | 'A'   | 1     | True  |
+        | 'A'   |     1 | True  |
         +-------+-------+-------+
-        | 'C'   | 7     | False |
+        | 'C'   |     7 | False |
         +-------+-------+-------+
 
         >>> bminusa = recordcomplement(b, a)
@@ -197,18 +163,17 @@ def recordcomplement(a, b, buffersize=None, tempdir=None, cache=True):
         +-------+-------+-------+
         | 'bar' | 'foo' | 'baz' |
         +=======+=======+=======+
-        | 3     | 'B'   | True  |
+        |     3 | 'B'   | True  |
         +-------+-------+-------+
-        | 9     | 'A'   | False |
+        |     9 | 'A'   | False |
         +-------+-------+-------+
 
     Note that both tables must have the same set of fields, but that the order
-    of the fields does not matter. See also the :func:`complement` function.
+    of the fields does not matter. See also the
+    :func:`petl.transform.setups.complement` function.
 
     See also the discussion of the `buffersize`, `tempdir` and `cache` arguments
-    under the :func:`sort` function.
-
-    .. versionadded:: 0.3
+    under the :func:`petl.transform.sorts.sort` function.
 
     """
 
@@ -222,46 +187,30 @@ def recordcomplement(a, b, buffersize=None, tempdir=None, cache=True):
 
 
 def diff(a, b, presorted=False, buffersize=None, tempdir=None, cache=True):
-    """
-    Find the difference between rows in two tables. Returns a pair of tables.
+    """Find the difference between rows in two tables. Returns a pair of tables.
     E.g.::
 
         >>> from petl import diff, look
-        >>> look(a)
-        +-------+-------+-------+
-        | 'foo' | 'bar' | 'baz' |
-        +=======+=======+=======+
-        | 'A'   | 1     | True  |
-        +-------+-------+-------+
-        | 'C'   | 7     | False |
-        +-------+-------+-------+
-        | 'B'   | 2     | False |
-        +-------+-------+-------+
-        | 'C'   | 9     | True  |
-        +-------+-------+-------+
-
-        >>> look(b)
-        +-----+-----+-------+
-        | 'x' | 'y' | 'z'   |
-        +=====+=====+=======+
-        | 'B' | 2   | False |
-        +-----+-----+-------+
-        | 'A' | 9   | False |
-        +-----+-----+-------+
-        | 'B' | 3   | True  |
-        +-----+-----+-------+
-        | 'C' | 9   | True  |
-        +-----+-----+-------+
-
+        >>>
+        >>> a = [['foo', 'bar', 'baz'],
+        ...      ['A', 1, True],
+        ...      ['C', 7, False],
+        ...      ['B', 2, False],
+        ...      ['C', 9, True]]
+        >>> b = [['x', 'y', 'z'],
+        ...      ['B', 2, False],
+        ...      ['A', 9, False],
+        ...      ['B', 3, True],
+        ...      ['C', 9, True]]
         >>> added, subtracted = diff(a, b)
         >>> # rows in b not in a
         ... look(added)
         +-----+-----+-------+
         | 'x' | 'y' | 'z'   |
         +=====+=====+=======+
-        | 'A' | 9   | False |
+        | 'A' |   9 | False |
         +-----+-----+-------+
-        | 'B' | 3   | True  |
+        | 'B' |   3 | True  |
         +-----+-----+-------+
 
         >>> # rows in a not in b
@@ -269,19 +218,19 @@ def diff(a, b, presorted=False, buffersize=None, tempdir=None, cache=True):
         +-------+-------+-------+
         | 'foo' | 'bar' | 'baz' |
         +=======+=======+=======+
-        | 'A'   | 1     | True  |
+        | 'A'   |     1 | True  |
         +-------+-------+-------+
-        | 'C'   | 7     | False |
+        | 'C'   |     7 | False |
         +-------+-------+-------+
 
     Convenient shorthand for ``(complement(b, a), complement(a, b))``. See also
-    :func:`complement`.
+    :func:`petl.transform.setops.complement`.
 
     If `presorted` is True, it is assumed that the data are already sorted by
     the given key, and the `buffersize`, `tempdir` and `cache` arguments are
     ignored. Otherwise, the data are sorted, see also the discussion of the
-    `buffersize`, `tempdir` and `cache` arguments under the :func:`sort`
-    function.
+    `buffersize`, `tempdir` and `cache` arguments under the
+    :func:`petl.transform.sorts.sort` function.
 
     """
 
@@ -296,63 +245,44 @@ def diff(a, b, presorted=False, buffersize=None, tempdir=None, cache=True):
 
 
 def recorddiff(a, b, buffersize=None, tempdir=None, cache=True):
-    """
-    Find the difference between records in two tables. E.g.::
+    """Find the difference between records in two tables. E.g.::
 
         >>> from petl import recorddiff, look
-        >>> look(a)
-        +-------+-------+-------+
-        | 'foo' | 'bar' | 'baz' |
-        +=======+=======+=======+
-        | 'A'   | 1     | True  |
-        +-------+-------+-------+
-        | 'C'   | 7     | False |
-        +-------+-------+-------+
-        | 'B'   | 2     | False |
-        +-------+-------+-------+
-        | 'C'   | 9     | True  |
-        +-------+-------+-------+
-
-        >>> look(b)
-        +-------+-------+-------+
-        | 'bar' | 'foo' | 'baz' |
-        +=======+=======+=======+
-        | 2     | 'B'   | False |
-        +-------+-------+-------+
-        | 9     | 'A'   | False |
-        +-------+-------+-------+
-        | 3     | 'B'   | True  |
-        +-------+-------+-------+
-        | 9     | 'C'   | True  |
-        +-------+-------+-------+
-
+        >>> a = [['foo', 'bar', 'baz'],
+        ...      ['A', 1, True],
+        ...      ['C', 7, False],
+        ...      ['B', 2, False],
+        ...      ['C', 9, True]]
+        >>> b = [['bar', 'foo', 'baz'],
+        ...      [2, 'B', False],
+        ...      [9, 'A', False],
+        ...      [3, 'B', True],
+        ...      [9, 'C', True]]
         >>> added, subtracted = recorddiff(a, b)
         >>> look(added)
         +-------+-------+-------+
         | 'bar' | 'foo' | 'baz' |
         +=======+=======+=======+
-        | 3     | 'B'   | True  |
+        |     3 | 'B'   | True  |
         +-------+-------+-------+
-        | 9     | 'A'   | False |
+        |     9 | 'A'   | False |
         +-------+-------+-------+
 
         >>> look(subtracted)
         +-------+-------+-------+
         | 'foo' | 'bar' | 'baz' |
         +=======+=======+=======+
-        | 'A'   | 1     | True  |
+        | 'A'   |     1 | True  |
         +-------+-------+-------+
-        | 'C'   | 7     | False |
+        | 'C'   |     7 | False |
         +-------+-------+-------+
 
     Convenient shorthand for
     ``(recordcomplement(b, a), recordcomplement(a, b))``. See also
-    :func:`recordcomplement`.
+    :func:`petl.transform.setops.recordcomplement`.
 
     See also the discussion of the `buffersize`, `tempdir` and `cache`
-    arguments under the :func:`sort` function.
-
-    .. versionadded:: 0.3
+    arguments under the :func:`petl.transform.sorts.sort` function.
 
     """
 
@@ -365,51 +295,34 @@ def recorddiff(a, b, buffersize=None, tempdir=None, cache=True):
 
 def intersection(a, b, presorted=False, buffersize=None, tempdir=None,
                  cache=True):
-    """
-    Return rows in `a` that are also in `b`. E.g.::
+    """Return rows in `a` that are also in `b`. E.g.::
 
         >>> from petl import intersection, look
-        >>> look(table1)
-        +-------+-------+-------+
-        | 'foo' | 'bar' | 'baz' |
-        +=======+=======+=======+
-        | 'A'   | 1     | True  |
-        +-------+-------+-------+
-        | 'C'   | 7     | False |
-        +-------+-------+-------+
-        | 'B'   | 2     | False |
-        +-------+-------+-------+
-        | 'C'   | 9     | True  |
-        +-------+-------+-------+
-
-        >>> look(table2)
-        +-----+-----+-------+
-        | 'x' | 'y' | 'z'   |
-        +=====+=====+=======+
-        | 'B' | 2   | False |
-        +-----+-----+-------+
-        | 'A' | 9   | False |
-        +-----+-----+-------+
-        | 'B' | 3   | True  |
-        +-----+-----+-------+
-        | 'C' | 9   | True  |
-        +-----+-----+-------+
-
+        >>> table1 = [['foo', 'bar', 'baz'],
+        ...           ['A', 1, True],
+        ...           ['C', 7, False],
+        ...           ['B', 2, False],
+        ...           ['C', 9, True]]
+        >>> table2 = [['x', 'y', 'z'],
+        ...           ['B', 2, False],
+        ...           ['A', 9, False],
+        ...           ['B', 3, True],
+        ...           ['C', 9, True]]
         >>> table3 = intersection(table1, table2)
         >>> look(table3)
         +-------+-------+-------+
         | 'foo' | 'bar' | 'baz' |
         +=======+=======+=======+
-        | 'B'   | 2     | False |
+        | 'B'   |     2 | False |
         +-------+-------+-------+
-        | 'C'   | 9     | True  |
+        | 'C'   |     9 | True  |
         +-------+-------+-------+
 
     If `presorted` is True, it is assumed that the data are already sorted by
     the given key, and the `buffersize`, `tempdir` and `cache` arguments are
     ignored. Otherwise, the data are sorted, see also the discussion of the
-    `buffersize`, `tempdir` and `cache` arguments under the :func:`sort`
-    function.
+    `buffersize`, `tempdir` and `cache` arguments under the
+    :func:`petl.transform.sorts.sort` function.
 
     """
 
@@ -457,15 +370,13 @@ def iterintersection(a, b):
 
 
 def hashcomplement(a, b):
-    """
-    Alternative implementation of :func:`complement`, where the complement is
-    executed by constructing an in-memory set for all rows found in the right
-    hand table, then iterating over rows from the left hand table.
+    """Alternative implementation of :func:`petl.transform.setops.complement`,
+    where the complement is executed by constructing an in-memory set for all
+    rows found in the right hand table, then iterating over rows from the
+    left hand table.
 
     May be faster and/or more resource efficient where the right table is small
     and the left table is large.
-
-    .. versionadded:: 0.5
 
     """
 
@@ -500,15 +411,13 @@ def iterhashcomplement(a, b):
 
 
 def hashintersection(a, b):
-    """
-    Alternative implementation of :func:`intersection`, where the intersection
+    """Alternative implementation of
+    :func:`petl.transform.setops.intersection`, where the intersection
     is executed by constructing an in-memory set for all rows found in the
     right hand table, then iterating over rows from the left hand table.
 
     May be faster and/or more resource efficient where the right table is small
     and the left table is large.
-
-    .. versionadded:: 0.5
 
     """
 

@@ -59,93 +59,6 @@ table4 = sort(table1)
 look(table4)
 
 
-# complement
-
-a = [['foo', 'bar', 'baz'],
-     ['A', 1, True],
-     ['C', 7, False],
-     ['B', 2, False],
-     ['C', 9, True]]
-b = [['x', 'y', 'z'],
-     ['B', 2, False],
-     ['A', 9, False],
-     ['B', 3, True],
-     ['C', 9, True]]
-
-from petl import complement, look
-look(a)
-look(b)
-aminusb = complement(a, b)
-look(aminusb)
-bminusa = complement(b, a)
-look(bminusa)
-
-
-# recordcomplement
-
-a = (('foo', 'bar', 'baz'),
-     ('A', 1, True),
-     ('C', 7, False),
-     ('B', 2, False),
-     ('C', 9, True))
-b = (('bar', 'foo', 'baz'),
-     (2, 'B', False),
-     (9, 'A', False),
-     (3, 'B', True),
-     (9, 'C', True))
-
-from petl import recordcomplement, look
-look(a)
-look(b)
-aminusb = recordcomplement(a, b)
-look(aminusb)
-bminusa = recordcomplement(b, a)
-look(bminusa)
-
-# diff
-
-a = [['foo', 'bar', 'baz'],
-     ['A', 1, True],
-     ['C', 7, False],
-     ['B', 2, False],
-     ['C', 9, True]]
-b = [['x', 'y', 'z'],
-     ['B', 2, False],
-     ['A', 9, False],
-     ['B', 3, True],
-     ['C', 9, True]]
-
-from petl import diff, look
-look(a)
-look(b)
-added, subtracted = diff(a, b)
-# rows in b not in a
-look(added)
-# rows in a not in b
-look(subtracted)
-
-
-# recorddiff
-
-a = (('foo', 'bar', 'baz'),
-     ('A', 1, True),
-     ('C', 7, False),
-     ('B', 2, False),
-     ('C', 9, True))
-b = (('bar', 'foo', 'baz'),
-     (2, 'B', False),
-     (9, 'A', False),
-     (3, 'B', True),
-     (9, 'C', True))
-
-from petl import recorddiff, look    
-look(a)
-look(b)
-added, subtracted = recorddiff(a, b)
-look(added)
-look(subtracted)
-
-
 # unpack
 
 table1 = [['foo', 'bar'],
@@ -157,26 +70,6 @@ from petl import unpack, look
 look(table1)
 table2 = unpack(table1, 'bar', ['baz', 'quux'])
 look(table2)
-
-
-# intersection
-
-table1 = (('foo', 'bar', 'baz'),
-          ('A', 1, True),
-          ('C', 7, False),
-          ('B', 2, False),
-          ('C', 9, True))
-table2 = (('x', 'y', 'z'),
-          ('B', 2, False),
-          ('A', 9, False),
-          ('B', 3, True),
-          ('C', 9, True))
-
-from petl import intersection, look
-look(table1)
-look(table2)
-table3 = intersection(table1, table2)
-look(table3)
 
 
 # mergesort
