@@ -160,17 +160,17 @@ def test_rename():
              ('-', 56))
 
     result = rename(table, 'foo', 'foofoo')
-    assert fieldnames(result) == ['foofoo', 'bar']
+    assert fieldnames(result) == ('foofoo', 'bar')
 
     result = rename(table, 0, 'foofoo')
-    assert fieldnames(result) == ['foofoo', 'bar']
+    assert fieldnames(result) == ('foofoo', 'bar')
 
     result = rename(table, {'foo': 'foofoo', 'bar': 'barbar'})
-    assert fieldnames(result) == ['foofoo', 'barbar']
+    assert fieldnames(result) == ('foofoo', 'barbar')
 
     result = rename(table)
     result['foo'] = 'spong'
-    assert fieldnames(result) == ['spong', 'bar']
+    assert fieldnames(result) == ('spong', 'bar')
 
 
 def test_rename_empty():

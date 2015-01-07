@@ -20,7 +20,7 @@ def test_header():
 def test_fieldnames():
     table = (('foo', 'bar'), ('a', 1), ('b', 2))
     actual = fieldnames(table)
-    expect = ['foo', 'bar']
+    expect = ('foo', 'bar')
     eq_(expect, actual)
 
     class CustomField(object):
@@ -40,7 +40,7 @@ def test_fieldnames():
              ('a', 1),
              ('b', 2))
     actual = fieldnames(table)
-    expect = ['foo', 'bar']
+    expect = ('foo', 'bar')
     eq_(expect, actual)
 
 

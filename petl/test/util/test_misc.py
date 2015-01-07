@@ -17,9 +17,9 @@ def test_typeset():
 
     actual = typeset(table, 'foo')
     if PY2:
-        expect = set([str, unicode])
+        expect = set(['str', 'unicode'])
     else:
-        expect = set([bytes, str])
+        expect = set(['bytes', 'str'])
     eq_(expect, actual)
 
 
