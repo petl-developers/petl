@@ -11,7 +11,8 @@ def test_repr():
              ('a', 1),
              ('b', 2),
              ('c', 2))
-    expect = repr(etl.look(table))
+    expect = str(etl.look(table,
+                          index_header=etl.config.table_repr_index_header))
     actual = repr(etl.wrap(table))
     eq_(expect, actual)
 
@@ -21,7 +22,8 @@ def test_str():
              ('a', 1),
              ('b', 2),
              ('c', 2))
-    expect = str(etl.look(table, vrepr=str))
+    expect = str(etl.look(table, vrepr=str,
+                          index_header=etl.config.table_str_index_header))
     actual = str(etl.wrap(table))
     eq_(expect, actual)
 
@@ -34,8 +36,8 @@ def test_repr_html():
     expect = """<table class='petl'>
 <thead>
 <tr>
-<th>foo</th>
-<th>bar</th>
+<th>0|foo</th>
+<th>1|bar</th>
 </tr>
 </thead>
 <tbody>
@@ -65,14 +67,14 @@ def test_repr_html_limit():
              ('b', 2),
              ('c', 2))
 
-    # lower repr limit
-    etl.repr_html_limit = 2
+    # lower limit
+    etl.config.table_repr_html_limit = 2
 
     expect = """<table class='petl'>
 <thead>
 <tr>
-<th>foo</th>
-<th>bar</th>
+<th>0|foo</th>
+<th>1|bar</th>
 </tr>
 </thead>
 <tbody>
@@ -89,5 +91,6 @@ def test_repr_html_limit():
 <p><strong>...</strong></p>
 """
     actual = etl.wrap(table)._repr_html_()
+    print(actual)
     for l1, l2 in zip(expect.split('\n'), actual.split('\r\n')):
         eq_(l1, l2)

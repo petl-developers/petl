@@ -14,7 +14,7 @@ from petl.io.sources import write_source_from_arg
 
 
 def tohtml(table, source=None, caption=None, representation=text_type,
-           lineterminator='\r\n'):
+           lineterminator='\r\n', index_header=False):
     """Write the table as HTML to a file. E.g.::
 
         >>> table1 = [['foo', 'bar'],
@@ -55,14 +55,15 @@ def tohtml(table, source=None, caption=None, representation=text_type,
 
     touhtml(table, source=source, caption=caption,
             representation=representation, lineterminator=lineterminator,
-            encoding='ascii')
+            encoding='ascii', index_header=index_header)
 
 
 Table.tohtml = tohtml
 
 
 def touhtml(table, source=None, caption=None, encoding='utf-8',
-            representation=text_type, lineterminator='\r\n'):
+            representation=text_type, lineterminator='\r\n',
+            index_header=False):
     """Write the table as HTML to a text file using the given encoding.
 
     """
@@ -76,7 +77,7 @@ def touhtml(table, source=None, caption=None, encoding='utf-8',
         try:
             it = iter(table)
             flds = next(it)
-            _write_begin(f, flds, lineterminator, caption)
+            _write_begin(f, flds, lineterminator, caption, index_header)
             for row in it:
                 _write_row(f, row, lineterminator, representation)
             _write_end(f, lineterminator)
@@ -89,15 +90,17 @@ Table.touhtml = touhtml
 
 
 def teeuhtml(table, source=None, caption=None,
-             encoding='utf-8', representation=text_type, lineterminator='\r\n'):
+             encoding='utf-8', representation=text_type,
+             lineterminator='\r\n', index_header=False):
     """Return a table that writes rows to a Unicode HTML file as they are
     iterated over.
 
     """
 
     return TeeUnicodeHTMLView(table, source=source, caption=caption,
-                             encoding=encoding, representation=representation,
-                             lineterminator=lineterminator)
+                              encoding=encoding, representation=representation,
+                              lineterminator=lineterminator,
+                              index_header=index_header)
 
 
 Table.teeuhtml = teeuhtml
@@ -107,19 +110,21 @@ class TeeUnicodeHTMLView(Table):
 
     def __init__(self, table, source=None, caption=None,
                  encoding='utf-8', representation=text_type,
-                 lineterminator='\r\n'):
+                 lineterminator='\r\n', index_header=False):
         self.table = table
         self.source = source
         self.caption = caption
         self.encoding = encoding
         self.representation = representation
         self.lineterminator = lineterminator
+        self.index_header = index_header
 
     def __iter__(self):
         source = write_source_from_arg(self.source)
         lineterminator = self.lineterminator
         caption = self.caption
         representation = self.representation
+        index_header = self.index_header
         with source.open_('wb') as f:
             if PY2:
                 f = codecs.getwriter(self.encoding)(f)
@@ -128,7 +133,7 @@ class TeeUnicodeHTMLView(Table):
             try:
                 it = iter(self.table)
                 flds = next(it)
-                _write_begin(f, flds, lineterminator, caption)
+                _write_begin(f, flds, lineterminator, caption, index_header)
                 yield flds
                 for row in it:
                     _write_row(f, row, lineterminator, representation)
@@ -140,27 +145,30 @@ class TeeUnicodeHTMLView(Table):
 
 
 def teehtml(table, source=None, caption=None, representation=text_type,
-            lineterminator='\r\n'):
+            lineterminator='\r\n', index_header=False):
     """Return a table that writes rows to an HTML file as they are iterated
     over.
 
     """
 
     return TeeUnicodeHTMLView(table, source=source, caption=caption,
-                             representation=representation,
-                             lineterminator=lineterminator, encoding='ascii')
+                              representation=representation,
+                              lineterminator=lineterminator, encoding='ascii',
+                              index_header=False)
 
 
 Table.teehtml = teehtml
 
 
-def _write_begin(f, flds, lineterminator, caption):
+def _write_begin(f, flds, lineterminator, caption, index_header):
     f.write("<table class='petl'>" + lineterminator)
     if caption is not None:
         f.write(('<caption>%s</caption>' % caption) + lineterminator)
     f.write('<thead>' + lineterminator)
     f.write('<tr>' + lineterminator)
-    for h in flds:
+    for i, h in enumerate(flds):
+        if index_header:
+            h = '%s|%s' % (i, h)
         f.write(('<th>%s</th>' % h) + lineterminator)
     f.write('</tr>' + lineterminator)
     f.write('</thead>' + lineterminator)

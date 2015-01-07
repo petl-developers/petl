@@ -7,6 +7,7 @@ from collections import defaultdict
 from petl.compat import numeric_types
 
 
+import petl.config as config
 from petl.util.base import Table
 
 
@@ -72,7 +73,7 @@ def look(table, *sliceargs, **kwargs):
 
     The default style can also be changed, e.g.::
 
-        >>> look.default_style = 'simple'
+        >>> petl.config.look_default_style = 'simple'
         >>> look(table)
         =====  =====
         'foo'  'bar'
@@ -101,30 +102,6 @@ def look(table, *sliceargs, **kwargs):
 Table.look = look
 
 
-# default limit for table representation
-table_repr_limit = 5
-
-
-# set True to display field indices
-table_repr_index_header = False
-
-
-# set to str or repr for different behaviour
-table_repr_html_value = str
-
-
-def repr_look(self):
-    return repr(look(self, table_repr_limit, vrepr=repr))
-
-
-def str_look(self):
-    return str(look(self, table_repr_limit, vrepr=str))
-
-
-Table.__repr__ = repr_look
-Table.__str__ = str_look
-
-
 def lookall(table, **kwargs):
     """
     Format the entire table as text for inspection in an interactive session.
@@ -147,7 +124,8 @@ class Look(object):
         else:
             self.sliceargs = sliceargs
         self.vrepr = kwargs.get('vrepr', repr)
-        self.style = kwargs.get('style', look.default_style)
+        self.style = kwargs.get('style', config.look_default_style)
+        self.index_header = kwargs.get('index_header', False)
 
     @property
     def n(self):
@@ -197,25 +175,30 @@ class Look(object):
 
     def __repr__(self):
         if self.style == 'simple':
-            return format_table_simple(self.table, self.vrepr, self.sliceargs)
+            return format_table_simple(self.table, self.vrepr, self.sliceargs,
+                                       index_header=self.index_header)
         elif self.style == 'minimal':
-            return format_table_minimal(self.table, self.vrepr, self.sliceargs)
+            return format_table_minimal(self.table, self.vrepr, self.sliceargs,
+                                        index_header=self.index_header)
         else:
-            return format_table_grid(self.table, self.vrepr, self.sliceargs)
+            return format_table_grid(self.table, self.vrepr, self.sliceargs,
+                                     index_header=self.index_header)
 
     def __str__(self):
         return repr(self)
 
+    def __unicode__(self):
+        return repr(self)
 
-look.default_style = 'grid'
 
-
-def format_table_grid(table, vrepr, sliceargs):
+def format_table_grid(table, vrepr, sliceargs, index_header):
     it = iter(table)
 
     # fields representation
     flds = next(it)
-    fldsrepr = [vrepr(f) for f in flds]
+    fldsrepr = [str(f) for f in flds]
+    if index_header:
+        fldsrepr = ['%s|%s' % (i, r) for (i, r) in enumerate(fldsrepr)]
 
     # rows representations
     rows = list(islice(it, *sliceargs))
@@ -292,12 +275,14 @@ def format_table_grid(table, vrepr, sliceargs):
     return output
 
 
-def format_table_simple(table, vrepr, sliceargs):
+def format_table_simple(table, vrepr, sliceargs, index_header):
     it = iter(table)
 
     # fields representation
     flds = next(it)
-    fldsrepr = [vrepr(f) for f in flds]
+    fldsrepr = [str(f) for f in flds]
+    if index_header:
+        fldsrepr = ['%s|%s' % (i, r) for (i, r) in enumerate(fldsrepr)]
 
     # rows representations
     rows = list(islice(it, *sliceargs))
@@ -359,12 +344,14 @@ def format_table_simple(table, vrepr, sliceargs):
     return output
 
 
-def format_table_minimal(table, vrepr, sliceargs):
+def format_table_minimal(table, vrepr, sliceargs, index_header):
     it = iter(table)
 
     # fields representation
     flds = next(it)
-    fldsrepr = [vrepr(f) for f in flds]
+    fldsrepr = [str(f) for f in flds]
+    if index_header:
+        fldsrepr = ['%s|%s' % (i, r) for (i, r) in enumerate(fldsrepr)]
 
     # rows representations
     rows = list(islice(it, *sliceargs))
@@ -451,7 +438,7 @@ def lookallstr(table):
 Table.lookallstr = lookallstr
 
 
-def see(table, *sliceargs):
+def see(table, *sliceargs, **kwargs):
     """
     Format a portion of a table as text in a column-oriented layout for
     inspection in an interactive session. E.g.::
@@ -471,7 +458,7 @@ def see(table, *sliceargs):
 
     """
 
-    return See(table, *sliceargs)
+    return See(table, *sliceargs, **kwargs)
 
 
 Table.see = see
@@ -479,12 +466,14 @@ Table.see = see
 
 class See(object):
 
-    def __init__(self, table, *sliceargs):
+    def __init__(self, table, *sliceargs, **kwargs):
         self.table = table
         if not sliceargs:
             self.sliceargs = (5,)
         else:
             self.sliceargs = sliceargs
+        self.vrepr = kwargs.get('vrepr', repr)
+        self.index_header = kwargs.get('index_header', False)
 
     def __repr__(self):
         it = iter(self.table)
@@ -493,10 +482,12 @@ class See(object):
         for row in islice(it, *self.sliceargs):
             for i, f in enumerate(flds):
                 try:
-                    cols[str(i)].append(repr(row[i]))
+                    cols[str(i)].append(self.vrepr(row[i]))
                 except IndexError:
                     cols[str(f)].append('')
         output = ''
         for i, f in enumerate(flds):
-            output += '%r: %s\n' % (f, ', '.join(cols[str(i)]))
+            if self.index_header:
+                f = '%s|%s' % (i, f)
+            output += '%s: %s\n' % (f, ', '.join(cols[str(i)]))
         return output

@@ -11,6 +11,7 @@ import operator
 from petl.compat import pickle, next
 
 
+import petl.config as config
 from petl.comparison import comparable_itemgetter
 from petl.util.base import Table, asindices
 
@@ -196,9 +197,6 @@ def _mergesorted(key=None, reverse=False, *iterables):
         return _heapqmergesorted(key, *iterables)
 
 
-defaultbuffersize = 100000
-
-
 class SortView(Table):
     def __init__(self, source, key=None, reverse=False, buffersize=None,
                  tempdir=None, cache=True):
@@ -206,7 +204,7 @@ class SortView(Table):
         self.key = key
         self.reverse = reverse
         if buffersize is None:
-            self.buffersize = defaultbuffersize
+            self.buffersize = config.sort_default_buffersize
         else:
             self.buffersize = buffersize
         self.tempdir = tempdir

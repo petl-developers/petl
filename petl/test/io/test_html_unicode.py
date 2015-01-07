@@ -18,8 +18,7 @@ def test_touhtml():
            (u'Արամ Խաչատրյան', 1),
            (u'Johann Strauß', 2),
            (u'Вагиф Сәмәдоғлу', 3),
-           (u'章子怡', 4),
-           )
+           (u'章子怡', 4))
     fn = NamedTemporaryFile().name
     touhtml(tbl, fn, lineterminator='\n')
 

@@ -26,7 +26,6 @@ see the :ref:`genindex`.
    util
    fluent
    interactive
-   push
    case_study_1
    related_work
 
