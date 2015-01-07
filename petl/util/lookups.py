@@ -13,54 +13,44 @@ def lookup(table, keyspec, valuespec=None, dictionary=None):
     """
     Load a dictionary with data from the given table. E.g.::
 
-        >>> from petl import lookup
-        >>> table = [['foo', 'bar'], ['a', 1], ['b', 2], ['b', 3]]
-        >>> lkp = lookup(table, 'foo', 'bar')
+        >>> import petl as etl
+        >>> table1 = [['foo', 'bar'],
+        ...           ['a', 1],
+        ...           ['b', 2],
+        ...           ['b', 3]]
+        >>> lkp = etl.lookup(table1, 'foo', 'bar')
         >>> lkp['a']
         [1]
         >>> lkp['b']
         [2, 3]
-
-    If no `valuespec` argument is given, defaults to the whole
-    row (as a tuple), e.g.::
-
-        >>> table = [['foo', 'bar'], ['a', 1], ['b', 2], ['b', 3]]
-        >>> lkp = lookup(table, 'foo')
+        >>> # if no valuespec argument is given, defaults to the whole
+        ... # row (as a tuple)
+        ... lkp = etl.lookup(table1, 'foo')
         >>> lkp['a']
         [('a', 1)]
         >>> lkp['b']
         [('b', 2), ('b', 3)]
-
-    Compound keys are supported, e.g.::
-
-        >>> t2 = [['foo', 'bar', 'baz'],
-        ...       ['a', 1, True],
-        ...       ['b', 2, False],
-        ...       ['b', 3, True],
-        ...       ['b', 3, False]]
-        >>> lkp = lookup(t2, ('foo', 'bar'), 'baz')
+        >>> # compound keys are supported
+        ... table2 = [['foo', 'bar', 'baz'],
+        ...           ['a', 1, True],
+        ...           ['b', 2, False],
+        ...           ['b', 3, True],
+        ...           ['b', 3, False]]
+        >>> lkp = etl.lookup(table2, ('foo', 'bar'), 'baz')
         >>> lkp[('a', 1)]
         [True]
         >>> lkp[('b', 2)]
         [False]
         >>> lkp[('b', 3)]
         [True, False]
-
-    Data can be loaded into an existing dictionary-like object, including
-    persistent dictionaries created via the :mod:`shelve` module, e.g.::
-
-        >>> import shelve
-        >>> table = [['foo', 'bar'], ['a', 1], ['b', 2], ['b', 3]]
-        >>> lkp = shelve.open('example.dat')
-        >>> lkp = lookup(table, 'foo', 'bar', lkp)
+        >>> # data can be loaded into an existing dictionary-like
+        ... # object, including persistent dictionaries created via the
+        ... # shelve module
+        ... import shelve
+        >>> lkp = shelve.open('example.dat', flag='n')
+        >>> lkp = etl.lookup(table1, 'foo', 'bar', lkp)
         >>> lkp.close()
-        >>> exit()
-        $ python
-        Python 2.7.1+ (r271:86832, Apr 11 2011, 18:05:24)
-        [GCC 4.5.2] on linux2
-        Type "help", "copyright", "credits" or "license" for more information.
-        >>> import shelve
-        >>> lkp = shelve.open('example.dat')
+        >>> lkp = shelve.open('example.dat', flag='r')
         >>> lkp['a']
         [1]
         >>> lkp['b']
@@ -102,76 +92,51 @@ def lookupone(table, keyspec, valuespec=None, dictionary=None, strict=False):
     Load a dictionary with data from the given table, assuming there is
     at most one value for each key. E.g.::
 
-        >>> from petl import lookupone
-        >>> table = [['foo', 'bar'], ['a', 1], ['b', 2], ['c', 2]]
-        >>> lkp = lookupone(table, 'foo', 'bar')
+        >>> import petl as etl
+        >>> table1 = [['foo', 'bar'],
+        ...           ['a', 1],
+        ...           ['b', 2],
+        ...           ['b', 3]]
+        >>> # if the specified key is not unique and strict=False (default),
+        ... # the first value wins
+        ... lkp = etl.lookupone(table1, 'foo', 'bar')
         >>> lkp['a']
         1
         >>> lkp['b']
         2
-        >>> lkp['c']
-        2
-
-    If the specified key is not unique and strict=False (default),
-    the first value wins, e.g.::
-
-        >>> table = [['foo', 'bar'], ['a', 1], ['b', 2], ['b', 3]]
-        >>> lkp = lookupone(table, 'foo', 'bar', strict=False)
-        >>> lkp['a']
-        1
-        >>> lkp['b']
-        2
-
-    If the specified key is not unique and strict=True, will raise
-    DuplicateKeyError, e.g.::
-
-        >>> table = [['foo', 'bar'], ['a', 1], ['b', 2], ['b', 3]]
-        >>> lkp = lookupone(table, 'foo', strict=True)
-        Traceback (most recent call last):
-          File "<stdin>", line 1, in <module>
-          File "petl/util.py", line 451, in lookupone
-        petl.util.DuplicateKeyError
-
-    Compound keys are supported, e.g.::
-
-        >>> t2 = [['foo', 'bar', 'baz'],
-        ...       ['a', 1, True],
-        ...       ['b', 2, False],
-        ...       ['b', 3, True]]
-        >>> lkp = lookupone(t2, ('foo', 'bar'), 'baz')
+        >>> # if the specified key is not unique and strict=True, will raise
+        ... # DuplicateKeyError
+        ... try:
+        ...     lkp = etl.lookupone(table1, 'foo', strict=True)
+        ... except etl.errors.DuplicateKeyError as e:
+        ...     print(e)
+        ...
+        duplicate key: 'b'
+        >>> # compound keys are supported
+        ... table2 = [['foo', 'bar', 'baz'],
+        ...           ['a', 1, True],
+        ...           ['b', 2, False],
+        ...           ['b', 3, True],
+        ...           ['b', 3, False]]
+        >>> lkp = etl.lookupone(table2, ('foo', 'bar'), 'baz')
         >>> lkp[('a', 1)]
         True
         >>> lkp[('b', 2)]
         False
         >>> lkp[('b', 3)]
         True
-
-    Data can be loaded into an existing dictionary-like object, including
-    persistent dictionaries created via the :mod:`shelve` module, e.g.::
-
-        >>> from petl import lookupone
-        >>> import shelve
-        >>> table = [['foo', 'bar'], ['a', 1], ['b', 2], ['c', 2]]
-        >>> lkp = shelve.open('example.dat')
-        >>> lkp = lookupone(table, 'foo', 'bar', dictionary=lkp)
+        >>> # data can be loaded into an existing dictionary-like
+        ... # object, including persistent dictionaries created via the
+        ... # shelve module
+        ... import shelve
+        >>> lkp = shelve.open('example.dat', flag='n')
+        >>> lkp = etl.lookupone(table1, 'foo', 'bar', lkp)
         >>> lkp.close()
-        >>> exit()
-        $ python
-        Python 2.7.1+ (r271:86832, Apr 11 2011, 18:05:24)
-        [GCC 4.5.2] on linux2
-        Type "help", "copyright", "credits" or "license" for more information.
-        >>> import shelve
-        >>> lkp = shelve.open('example.dat')
+        >>> lkp = shelve.open('example.dat', flag='r')
         >>> lkp['a']
         1
         >>> lkp['b']
         2
-        >>> lkp['c']
-        2
-
-    .. versionchanged:: 0.11
-
-    Changed so that strict=False is default and first value wins.
 
     """
 
@@ -191,7 +156,7 @@ def lookupone(table, keyspec, valuespec=None, dictionary=None, strict=False):
     for row in it:
         k = getkey(row)
         if strict and k in dictionary:
-            raise DuplicateKeyError
+            raise DuplicateKeyError(k)
         elif k not in dictionary:
             v = getvalue(row)
             dictionary[k] = v
@@ -205,52 +170,41 @@ def dictlookup(table, keyspec, dictionary=None):
     """
     Load a dictionary with data from the given table, mapping to dicts. E.g.::
 
-        >>> from petl import dictlookup
-        >>> table = [['foo', 'bar'], ['a', 1], ['b', 2], ['b', 3]]
-        >>> lkp = dictlookup(table, 'foo')
+        >>> import petl as etl
+        >>> table1 = [['foo', 'bar'],
+        ...           ['a', 1],
+        ...           ['b', 2],
+        ...           ['b', 3]]
+        >>> lkp = etl.dictlookup(table1, 'foo')
         >>> lkp['a']
         [{'foo': 'a', 'bar': 1}]
         >>> lkp['b']
         [{'foo': 'b', 'bar': 2}, {'foo': 'b', 'bar': 3}]
-
-    Compound keys are supported, e.g.::
-
-        >>> t2 = [['foo', 'bar', 'baz'],
-        ...       ['a', 1, True],
-        ...       ['b', 2, False],
-        ...       ['b', 3, True],
-        ...       ['b', 3, False]]
-        >>> lkp = dictlookup(t2, ('foo', 'bar'))
+        >>> # compound keys are supported
+        ... table2 = [['foo', 'bar', 'baz'],
+        ...           ['a', 1, True],
+        ...           ['b', 2, False],
+        ...           ['b', 3, True],
+        ...           ['b', 3, False]]
+        >>> lkp = etl.dictlookup(table2, ('foo', 'bar'))
         >>> lkp[('a', 1)]
-        [{'baz': True, 'foo': 'a', 'bar': 1}]
+        [{'foo': 'a', 'baz': True, 'bar': 1}]
         >>> lkp[('b', 2)]
-        [{'baz': False, 'foo': 'b', 'bar': 2}]
+        [{'foo': 'b', 'baz': False, 'bar': 2}]
         >>> lkp[('b', 3)]
-        [{'baz': True, 'foo': 'b', 'bar': 3}, {'baz': False, 'foo': 'b', 'bar': 3}]
-
-    Data can be loaded into an existing dictionary-like object, including
-    persistent dictionaries created via the :mod:`shelve` module, e.g.::
-
-        >>> import shelve
-        >>> table = [['foo', 'bar'], ['a', 1], ['b', 2], ['b', 3]]
-        >>> lkp = shelve.open('example.dat')
-        >>> lkp = dictlookup(table, 'foo', dictionary=lkp)
+        [{'foo': 'b', 'baz': True, 'bar': 3}, {'foo': 'b', 'baz': False, 'bar': 3}]
+        >>> # data can be loaded into an existing dictionary-like
+        ... # object, including persistent dictionaries created via the
+        ... # shelve module
+        ... import shelve
+        >>> lkp = shelve.open('example.dat', flag='n')
+        >>> lkp = etl.dictlookup(table1, 'foo', lkp)
         >>> lkp.close()
-        >>> exit()
-        $ python
-        Python 2.7.1+ (r271:86832, Apr 11 2011, 18:05:24)
-        [GCC 4.5.2] on linux2
-        Type "help", "copyright", "credits" or "license" for more information.
-        >>> import shelve
-        >>> lkp = shelve.open('example.dat')
+        >>> lkp = shelve.open('example.dat', flag='r')
         >>> lkp['a']
         [{'foo': 'a', 'bar': 1}]
         >>> lkp['b']
         [{'foo': 'b', 'bar': 2}, {'foo': 'b', 'bar': 3}]
-
-    .. versionchanged:: 0.15
-
-    Renamed from `recordlookup`.
 
     """
 
@@ -278,11 +232,83 @@ def dictlookup(table, keyspec, dictionary=None):
 Table.dictlookup = dictlookup
 
 
+def dictlookupone(table, keyspec, dictionary=None, strict=False):
+    """
+    Load a dictionary with data from the given table, mapping to dicts,
+    assuming there is at most one row for each key. E.g.::
+
+        >>> import petl as etl
+        >>> table1 = [['foo', 'bar'],
+        ...           ['a', 1],
+        ...           ['b', 2],
+        ...           ['b', 3]]
+        >>> # if the specified key is not unique and strict=False (default),
+        ... # the first value wins
+        ... lkp = etl.dictlookupone(table1, 'foo')
+        >>> lkp['a']
+        {'foo': 'a', 'bar': 1}
+        >>> lkp['b']
+        {'foo': 'b', 'bar': 2}
+        >>> # if the specified key is not unique and strict=True, will raise
+        ... # DuplicateKeyError
+        ... try:
+        ...     lkp = etl.dictlookupone(table1, 'foo', strict=True)
+        ... except etl.errors.DuplicateKeyError as e:
+        ...     print(e)
+        ...
+        duplicate key: 'b'
+        >>> # compound keys are supported
+        ... table2 = [['foo', 'bar', 'baz'],
+        ...           ['a', 1, True],
+        ...           ['b', 2, False],
+        ...           ['b', 3, True],
+        ...           ['b', 3, False]]
+        >>> lkp = etl.dictlookupone(table2, ('foo', 'bar'))
+        >>> lkp[('a', 1)]
+        {'foo': 'a', 'baz': True, 'bar': 1}
+        >>> lkp[('b', 2)]
+        {'foo': 'b', 'baz': False, 'bar': 2}
+        >>> lkp[('b', 3)]
+        {'foo': 'b', 'baz': True, 'bar': 3}
+        >>> # data can be loaded into an existing dictionary-like
+        ... # object, including persistent dictionaries created via the
+        ... # shelve module
+        ... import shelve
+        >>> lkp = shelve.open('example.dat', flag='n')
+        >>> lkp = etl.dictlookupone(table1, 'foo', lkp)
+        >>> lkp.close()
+        >>> lkp = shelve.open('example.dat', flag='r')
+        >>> lkp['a']
+        {'foo': 'a', 'bar': 1}
+        >>> lkp['b']
+        {'foo': 'b', 'bar': 2}
+
+    """
+
+    if dictionary is None:
+        dictionary = dict()
+
+    it = iter(table)
+    flds = next(it)
+    keyindices = asindices(flds, keyspec)
+    assert len(keyindices) > 0, 'no keyspec selected'
+    getkey = operator.itemgetter(*keyindices)
+    for row in it:
+        k = getkey(row)
+        if strict and k in dictionary:
+            raise DuplicateKeyError(k)
+        elif k not in dictionary:
+            d = asdict(flds, row)
+            dictionary[k] = d
+    return dictionary
+
+
+Table.dictlookupone = dictlookupone
+
+
 def recordlookup(table, keyspec, dictionary=None):
     """
     Load a dictionary with data from the given table, mapping to record objects.
-
-    .. versionadded:: 0.17
 
     """
 
@@ -310,115 +336,11 @@ def recordlookup(table, keyspec, dictionary=None):
 Table.recordlookup = recordlookup
 
 
-def dictlookupone(table, keyspec, dictionary=None, strict=False):
-    """
-    Load a dictionary with data from the given table, mapping to dicts,
-    assuming there is at most one row for each key. E.g.::
-
-        >>> from petl import dictlookupone
-        >>> table = [['foo', 'bar'], ['a', 1], ['b', 2], ['c', 2]]
-        >>> lkp = dictlookupone(table, 'foo')
-        >>> lkp['a']
-        {'foo': 'a', 'bar': 1}
-        >>> lkp['b']
-        {'foo': 'b', 'bar': 2}
-        >>> lkp['c']
-        {'foo': 'c', 'bar': 2}
-
-    If the specified key is not unique and strict=False (default),
-    the first dict wins, e.g.::
-
-        >>> table = [['foo', 'bar'], ['a', 1], ['b', 2], ['b', 3]]
-        >>> lkp = dictlookupone(table, 'foo')
-        >>> lkp['a']
-        {'foo': 'a', 'bar': 1}
-        >>> lkp['b']
-        {'foo': 'b', 'bar': 2}
-
-    If the specified key is not unique and strict=True, will raise
-    DuplicateKeyError, e.g.::
-
-        >>> table = [['foo', 'bar'], ['a', 1], ['b', 2], ['b', 3]]
-        >>> lkp = dictlookupone(table, 'foo', strict=True)
-        Traceback (most recent call last):
-          File "<stdin>", line 1, in <module>
-          File "petl/util.py", line 451, in lookupone
-        petl.util.DuplicateKeyError
-
-    Compound keys are supported, e.g.::
-
-        >>> t2 = [['foo', 'bar', 'baz'],
-        ...       ['a', 1, True],
-        ...       ['b', 2, False],
-        ...       ['b', 3, True]]
-        >>> lkp = dictlookupone(t2, ('foo', 'bar'), strict=False)
-        >>> lkp[('a', 1)]
-        {'baz': True, 'foo': 'a', 'bar': 1}
-        >>> lkp[('b', 2)]
-        {'baz': False, 'foo': 'b', 'bar': 2}
-        >>> lkp[('b', 3)]
-        {'baz': True, 'foo': 'b', 'bar': 3}
-
-    Data can be loaded into an existing dictionary-like object, including
-    persistent dictionaries created via the :mod:`shelve` module, e.g.::
-
-        >>> import shelve
-        >>> lkp = shelve.open('example.dat')
-        >>> table = [['foo', 'bar'], ['a', 1], ['b', 2], ['c', 2]]
-        >>> lkp = dictlookupone(table, 'foo', dictionary=lkp)
-        >>> lkp.close()
-        >>> exit()
-        $ python
-        Python 2.7.1+ (r271:86832, Apr 11 2011, 18:05:24)
-        [GCC 4.5.2] on linux2
-        Type "help", "copyright", "credits" or "license" for more information.
-        >>> import shelve
-        >>> lkp = shelve.open('example.dat')
-        >>> lkp['a']
-        {'foo': 'a', 'bar': 1}
-        >>> lkp['b']
-        {'foo': 'b', 'bar': 2}
-        >>> lkp['c']
-        {'foo': 'c', 'bar': 2}
-
-    .. versionchanged:: 0.11
-
-    Changed so that strict=False is default and first value wins.
-
-    .. versionchanged:: 0.15
-
-    Renamed from `recordlookupone`.
-
-    """
-
-    if dictionary is None:
-        dictionary = dict()
-
-    it = iter(table)
-    flds = next(it)
-    keyindices = asindices(flds, keyspec)
-    assert len(keyindices) > 0, 'no keyspec selected'
-    getkey = operator.itemgetter(*keyindices)
-    for row in it:
-        k = getkey(row)
-        if strict and k in dictionary:
-            raise DuplicateKeyError
-        elif k not in dictionary:
-            d = asdict(flds, row)
-            dictionary[k] = d
-    return dictionary
-
-
-Table.dictlookupone = dictlookupone
-
-
 def recordlookupone(table, keyspec, dictionary=None, strict=False):
     """
     Load a dictionary with data from the given table, mapping to record objects,
     assuming there is at most one row for each key.
 
-    .. versionchanged:: 0.17
-
     """
 
     if dictionary is None:
@@ -432,7 +354,7 @@ def recordlookupone(table, keyspec, dictionary=None, strict=False):
     for row in it:
         k = getkey(row)
         if strict and k in dictionary:
-            raise DuplicateKeyError
+            raise DuplicateKeyError(k)
         elif k not in dictionary:
             d = Record(row, flds)
             dictionary[k] = d

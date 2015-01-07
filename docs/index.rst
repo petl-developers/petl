@@ -24,8 +24,6 @@ see the :ref:`genindex`.
    io
    transform
    util
-   fluent
-   interactive
    case_study_1
    related_work
 

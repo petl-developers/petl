@@ -14,14 +14,12 @@ def datetimeparser(fmt, strict=True):
         >>> isodatetime = datetimeparser('%Y-%m-%dT%H:%M:%S')
         >>> isodatetime('2002-12-25T00:00:00')
         datetime.datetime(2002, 12, 25, 0, 0)
-        >>> isodatetime('2002-12-25T00:00:99')
-        Traceback (most recent call last):
-          File "<stdin>", line 1, in <module>
-          File "petl/util.py", line 1018, in parser
-            return datetime.strptime(value.strip(), format)
-          File "/usr/lib/python2.7/_strptime.py", line 328, in _strptime
-            data_string[found.end():])
-        ValueError: unconverted data remains: 9
+        >>> try:
+        ...     isodatetime('2002-12-25T00:00:99')
+        ... except ValueError as e:
+        ...     print(e)
+        ...
+        unconverted data remains: 9
 
     If ``strict=False`` then if an error occurs when parsing, the original
     value will be returned as-is, and no error will be raised.
@@ -47,14 +45,12 @@ def dateparser(fmt, strict=True):
         >>> isodate = dateparser('%Y-%m-%d')
         >>> isodate('2002-12-25')
         datetime.date(2002, 12, 25)
-        >>> isodate('2002-02-30')
-        Traceback (most recent call last):
-          File "<stdin>", line 1, in <module>
-          File "petl/util.py", line 1032, in parser
-            return parser
-          File "/usr/lib/python2.7/_strptime.py", line 440, in _strptime
-            datetime_date(year, 1, 1).toordinal() + 1
-        ValueError: day is out of range for month
+        >>> try:
+        ...     isodate('2002-02-30')
+        ... except ValueError as e:
+        ...     print(e)
+        ...
+        day is out of range for month
 
     If ``strict=False`` then if an error occurs when parsing, the original
     value will be returned as-is, and no error will be raised.
@@ -82,22 +78,18 @@ def timeparser(fmt, strict=True):
         datetime.time(0, 0)
         >>> isotime('13:00:00')
         datetime.time(13, 0)
-        >>> isotime('12:00:99')
-        Traceback (most recent call last):
-          File "<stdin>", line 1, in <module>
-          File "petl/util.py", line 1046, in parser
-
-          File "/usr/lib/python2.7/_strptime.py", line 328, in _strptime
-            data_string[found.end():])
-        ValueError: unconverted data remains: 9
-        >>> isotime('25:00:00')
-        Traceback (most recent call last):
-          File "<stdin>", line 1, in <module>
-          File "petl/util.py", line 1046, in parser
-
-          File "/usr/lib/python2.7/_strptime.py", line 325, in _strptime
-            (data_string, format))
-        ValueError: time data '25:00:00' does not match format '%H:%M:%S'
+        >>> try:
+        ...     isotime('12:00:99')
+        ... except ValueError as e:
+        ...     print(e)
+        ...
+        unconverted data remains: 9
+        >>> try:
+        ...     isotime('25:00:00')
+        ... except ValueError as e:
+        ...     print(e)
+        ...
+        time data '25:00:00' does not match format '%H:%M:%S'
 
     If ``strict=False`` then if an error occurs when parsing, the original
     value will be returned as-is, and no error will be raised.
@@ -126,26 +118,24 @@ def boolparser(true_strings=('true', 't', 'yes', 'y', '1'),
         >>> mybool = boolparser(true_strings=['yes', 'y'], false_strings=['no', 'n'])
         >>> mybool('y')
         True
-        >>> mybool('Y')
-        True
         >>> mybool('yes')
+        True
+        >>> mybool('Y')
         True
         >>> mybool('No')
         False
-        >>> mybool('nO')
-        False
-        >>> mybool('true')
-        Traceback (most recent call last):
-          File "<stdin>", line 1, in <module>
-          File "petl/util.py", line 1175, in parser
-            raise ValueError('value is not one of recognised boolean strings: %r' % value)
-        ValueError: value is not one of recognised boolean strings: 'true'
-        >>> mybool('foo')
-        Traceback (most recent call last):
-          File "<stdin>", line 1, in <module>
-          File "petl/util.py", line 1175, in parser
-            raise ValueError('value is not one of recognised boolean strings: %r' % value)
-        ValueError: value is not one of recognised boolean strings: 'foo'
+        >>> try:
+        ...     mybool('foo')
+        ... except ValueError as e:
+        ...     print(e)
+        ...
+        value is not one of recognised boolean strings: 'foo'
+        >>> try:
+        ...     mybool('True')
+        ... except ValueError as e:
+        ...     print(e)
+        ...
+        value is not one of recognised boolean strings: 'true'
 
     If ``strict=False`` then if an error occurs when parsing, the original
     value will be returned as-is, and no error will be raised.

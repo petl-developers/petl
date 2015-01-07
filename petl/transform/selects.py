@@ -12,9 +12,10 @@ from petl.util.base import asindices, expr, Table, values, Record
 
 
 def select(table, *args, **kwargs):
-    """Select rows meeting a condition. E.g.::
+    """
+    Select rows meeting a condition. E.g.::
 
-        >>> from petl import select, look
+        >>> import petl as etl
         >>> table1 = [['foo', 'bar', 'baz'],
         ...           ['a', 4, 9.3],
         ...           ['a', 2, 88.2],
@@ -24,30 +25,30 @@ def select(table, *args, **kwargs):
         ...           ['c', 2]]
         >>> # the second positional argument can be a function accepting
         ... # a row
-        ... table2 = select(table1,
-        ...                 lambda rec: rec.foo == 'a' and rec.baz > 88.1)
-        >>> look(table2)
+        ... table2 = etl.select(table1,
+        ...                     lambda rec: rec.foo == 'a' and rec.baz > 88.1)
+        >>> table2
         +-------+-------+-------+
-        | 'foo' | 'bar' | 'baz' |
+        | 0|foo | 1|bar | 2|baz |
         +=======+=======+=======+
         | 'a'   |     2 |  88.2 |
         +-------+-------+-------+
 
         >>> # the second positional argument can also be an expression
         ... # string, which will be converted to a function using petl.expr()
-        ... table3 = select(table1, "{foo} == 'a' and {baz} > 88.1")
-        >>> look(table3)
+        ... table3 = etl.select(table1, "{foo} == 'a' and {baz} > 88.1")
+        >>> table3
         +-------+-------+-------+
-        | 'foo' | 'bar' | 'baz' |
+        | 0|foo | 1|bar | 2|baz |
         +=======+=======+=======+
         | 'a'   |     2 |  88.2 |
         +-------+-------+-------+
 
         >>> # the condition can also be applied to a single field
-        ... table4 = select(table1, 'foo', lambda v: v == 'a')
-        >>> look(table4)
+        ... table4 = etl.select(table1, 'foo', lambda v: v == 'a')
+        >>> table4
         +-------+-------+-------+
-        | 'foo' | 'bar' | 'baz' |
+        | 0|foo | 1|bar | 2|baz |
         +=======+=======+=======+
         | 'a'   |     4 |   9.3 |
         +-------+-------+-------+
@@ -332,10 +333,11 @@ Table.selectrangeclosed = selectrangeclosed
 
 
 def selectre(table, field, pattern, flags=0, complement=False):
-    """Select rows where a regular expression search using the given pattern on
+    """
+    Select rows where a regular expression search using the given pattern on
     the given field returns a match. E.g.::
 
-        >>> from petl import selectre, look
+        >>> import petl as etl
         >>> table1 = [['foo', 'bar', 'baz'],
         ...           ['aa', 4, 9.3],
         ...           ['aaa', 2, 88.2],
@@ -343,10 +345,10 @@ def selectre(table, field, pattern, flags=0, complement=False):
         ...           ['ccc', 8, 42.0],
         ...           ['bb', 7, 100.9],
         ...           ['c', 2]]
-        >>> table2 = selectre(table1, 'foo', '[ab]{2}')
-        >>> look(table2)
+        >>> table2 = etl.selectre(table1, 'foo', '[ab]{2}')
+        >>> table2
         +-------+-------+-------+
-        | 'foo' | 'bar' | 'baz' |
+        | 0|foo | 1|bar | 2|baz |
         +=======+=======+=======+
         | 'aa'  |     4 |   9.3 |
         +-------+-------+-------+
@@ -410,10 +412,11 @@ Table.notnone = selectnotnone
 
 
 def selectusingcontext(table, query):
-    """Select rows based on data in the current row and/or previous and
+    """
+    Select rows based on data in the current row and/or previous and
     next row. E.g.::
 
-        >>> from petl import look, selectusingcontext
+        >>> import petl as etl
         >>> table1 = [['foo', 'bar'],
         ...           ['A', 1],
         ...           ['B', 4],
@@ -423,10 +426,10 @@ def selectusingcontext(table, query):
         ...     return ((prv is not None and (cur.bar - prv.bar) < 2)
         ...             or (nxt is not None and (nxt.bar - cur.bar) < 2))
         ...
-        >>> table2 = selectusingcontext(table1, query)
-        >>> look(table2)
+        >>> table2 = etl.selectusingcontext(table1, query)
+        >>> table2
         +-------+-------+
-        | 'foo' | 'bar' |
+        | 0|foo | 1|bar |
         +=======+=======+
         | 'B'   |     4 |
         +-------+-------+
@@ -471,9 +474,10 @@ def iterselectusingcontext(table, query):
 
 
 def facet(table, field):
-    """Return a dictionary mapping field values to tables. E.g.::
+    """
+    Return a dictionary mapping field values to tables. E.g.::
 
-        >>> from petl import facet, look
+        >>> import petl as etl
         >>> table1 = [['foo', 'bar', 'baz'],
         ...           ['a', 4, 9.3],
         ...           ['a', 2, 88.2],
@@ -481,28 +485,28 @@ def facet(table, field):
         ...           ['c', 8, 42.0],
         ...           ['d', 7, 100.9],
         ...           ['c', 2]]
-        >>> foo = facet(table1, 'foo')
+        >>> foo = etl.facet(table1, 'foo')
         >>> sorted(foo.keys())
         ['a', 'b', 'c', 'd']
-        >>> look(foo['a'])
+        >>> foo['a']
         +-------+-------+-------+
-        | 'foo' | 'bar' | 'baz' |
+        | 0|foo | 1|bar | 2|baz |
         +=======+=======+=======+
         | 'a'   |     4 |   9.3 |
         +-------+-------+-------+
         | 'a'   |     2 |  88.2 |
         +-------+-------+-------+
 
-        >>> look(foo['c'])
+        >>> foo['c']
         +-------+-------+-------+
-        | 'foo' | 'bar' | 'baz' |
+        | 0|foo | 1|bar | 2|baz |
         +=======+=======+=======+
         | 'c'   |     8 |  42.0 |
         +-------+-------+-------+
         | 'c'   |     2 |       |
         +-------+-------+-------+
 
-    See also :func:`petl.util.facetcolumns`.
+    See also :func:`petl.util.materialise.facetcolumns`.
 
     """
 

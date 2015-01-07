@@ -1,10 +1,13 @@
 from __future__ import division, print_function, absolute_import
 import os
 
+
 # fromsqlite3()
 ###############
 
 os.remove('example.db')
+
+import petl as etl
 import sqlite3
 # set up a database to demonstrate with
 data = [['a', 1],
@@ -20,23 +23,21 @@ for row in data:
 connection.commit()
 c.close()
 # now demonstrate the petl.fromsqlite3 function
-from petl import look, fromsqlite3
-foobar = fromsqlite3('example.db', 'select * from foobar')
-look(foobar)
+table = etl.fromsqlite3('example.db', 'select * from foobar')
+table
 
 
 # tosqlite3()
 ##############
 
 os.remove('example.db')
+
+import petl as etl
 table1 = [['foo', 'bar'],
           ['a', 1],
           ['b', 2],
           ['c', 2]]
-from petl import tosqlite3, look
-_ = tosqlite3(table1, 'example.db', 'foobar', create=True)
+_ = etl.tosqlite3(table1, 'example.db', 'foobar', create=True)
 # look what it did
-from petl import fromsqlite3
-table2 = fromsqlite3('example.db', 'select * from foobar')
-look(table2)
-
+table2 = etl.fromsqlite3('example.db', 'select * from foobar')
+table2

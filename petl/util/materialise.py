@@ -15,6 +15,7 @@ def listoflists(tbl):
 
 
 Table.listoflists = listoflists
+Table.lol = listoflists
 
 
 def tupleoftuples(tbl):
@@ -22,6 +23,7 @@ def tupleoftuples(tbl):
 
 
 Table.tupleoftuples = tupleoftuples
+Table.tot = tupleoftuples
 
 
 def listoftuples(tbl):
@@ -29,6 +31,7 @@ def listoftuples(tbl):
 
 
 Table.listoftuples = listoftuples
+Table.lot = listoftuples
 
 
 def tupleoflists(tbl):
@@ -36,21 +39,22 @@ def tupleoflists(tbl):
 
 
 Table.tupleoflists = tupleoflists
+Table.tol = tupleoflists
 
 
 def columns(table, missing=None):
     """
     Construct a :class:`dict` mapping field names to lists of values. E.g.::
 
-        >>> from petl import columns
+        >>> import petl as etl
         >>> table = [['foo', 'bar'], ['a', 1], ['b', 2], ['b', 3]]
-        >>> cols = columns(table)
+        >>> cols = etl.columns(table)
         >>> cols['foo']
         ['a', 'b', 'b']
         >>> cols['bar']
         [1, 2, 3]
 
-    See also :func:`facetcolumns`.
+    See also :func:`petl.util.materialise.facetcolumns`.
 
     """
 
@@ -71,24 +75,19 @@ Table.columns = columns
 
 def facetcolumns(table, key, missing=None):
     """
-    Like :func:`columns` but stratified by values of the given key field. E.g.::
+    Like :func:`petl.util.materialise.columns` but stratified by values of the
+    given key field. E.g.::
 
-        >>> from petl import facetcolumns
+        >>> import petl as etl
         >>> table = [['foo', 'bar', 'baz'],
         ...          ['a', 1, True],
         ...          ['b', 2, True],
         ...          ['b', 3]]
-        >>> fc = facetcolumns(table, 'foo')
+        >>> fc = etl.facetcolumns(table, 'foo')
         >>> fc['a']
-        {'baz': [True], 'foo': ['a'], 'bar': [1]}
+        {'foo': ['a'], 'baz': [True], 'bar': [1]}
         >>> fc['b']
-        {'baz': [True, None], 'foo': ['b', 'b'], 'bar': [2, 3]}
-        >>> fc['c']
-        Traceback (most recent call last):
-          File "<stdin>", line 1, in <module>
-        KeyError: 'c'
-
-    .. versionadded:: 0.8
+        {'foo': ['b', 'b'], 'baz': [True, None], 'bar': [2, 3]}
 
     """
 
@@ -122,8 +121,6 @@ def cache(table, n=10000):
     """
     Wrap the table with a cache that caches up to `n` rows as they are initially
     requested via iteration.
-
-    .. versionadded:: 0.16
 
     """
 

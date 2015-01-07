@@ -15,8 +15,10 @@ from petl.io.sources import read_source_from_arg
 
 
 def fromxml(source, *args, **kwargs):
-    """Extract data from an XML file. E.g.::
+    """
+    Extract data from an XML file. E.g.::
 
+        >>> import petl as etl
         >>> # setup a file to demonstrate with
         ... d = '''<table>
         ...     <tr>
@@ -36,11 +38,10 @@ def fromxml(source, *args, **kwargs):
         ...     f.write(d)
         ...
         212
-        >>> from petl import fromxml, look
-        >>> table1 = fromxml('example1.xml', 'tr', 'td')
-        >>> look(table1)
+        >>> table1 = etl.fromxml('example1.xml', 'tr', 'td')
+        >>> table1
         +-------+-------+
-        | 'foo' | 'bar' |
+        | 0|foo | 1|bar |
         +=======+=======+
         | 'a'   | '1'   |
         +-------+-------+
@@ -49,8 +50,8 @@ def fromxml(source, *args, **kwargs):
         | 'c'   | '2'   |
         +-------+-------+
 
-        >>> # if the data values are stored in an attribute, provide the
-        ... # attribute name as an extra positional argument
+        >>> # if the data values are stored in an attribute, provide the attribute name
+        ... # as an extra positional argument
         ... d = '''<table>
         ...     <tr>
         ...         <td v='foo'/><td v='bar'/>
@@ -69,10 +70,10 @@ def fromxml(source, *args, **kwargs):
         ...     f.write(d)
         ...
         220
-        >>> table2 = fromxml('example2.xml', 'tr', 'td', 'v')
-        >>> look(table2)
+        >>> table2 = etl.fromxml('example2.xml', 'tr', 'td', 'v')
+        >>> table2
         +-------+-------+
-        | 'foo' | 'bar' |
+        | 0|foo | 1|bar |
         +=======+=======+
         | 'a'   | '1'   |
         +-------+-------+
@@ -98,11 +99,11 @@ def fromxml(source, *args, **kwargs):
         ...     f.write(d)
         ...
         223
-        >>> table3 = fromxml('example3.xml', 'row',
-        ...                  {'foo': 'foo', 'bar': ('baz/bar', 'v')})
-        >>> look(table3)
+        >>> table3 = etl.fromxml('example3.xml', 'row',
+        ...                      {'foo': 'foo', 'bar': ('baz/bar', 'v')})
+        >>> table3
         +------------+-------+
-        | 'bar'      | 'foo' |
+        | 0|bar      | 1|foo |
         +============+=======+
         | ('1', '3') | 'a'   |
         +------------+-------+
@@ -111,8 +112,8 @@ def fromxml(source, *args, **kwargs):
         | '2'        | 'c'   |
         +------------+-------+
 
-    Note that the implementation is currently *not*
-    streaming, i.e., the whole document is loaded into memory.
+    Note that the implementation is currently *not* streaming, i.e.,
+    the whole document is loaded into memory.
 
     If multiple elements match a given field, all values are reported as a
     tuple.

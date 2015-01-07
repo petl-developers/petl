@@ -212,6 +212,14 @@ def test_addfield():
     ieq(expectation, result)
     ieq(expectation, result)
 
+    result = addfield(table, 'baz', lambda row: '%s,%s' % (row.foo, row.bar))
+    expectation = (('foo', 'bar', 'baz'),
+                   ('M', 12, 'M,12'),
+                   ('F', 34, 'F,34'),
+                   ('-', 56, '-,56'))
+    ieq(expectation, result)
+    ieq(expectation, result)
+
     result = addfield(table, 'baz', lambda rec: rec['bar'] * 2)
     expectation = (('foo', 'bar', 'baz'),
                    ('M', 12, 24),

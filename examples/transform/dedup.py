@@ -4,7 +4,7 @@ from __future__ import division, print_function, absolute_import
 # duplicates()
 ##############
 
-from petl import duplicates, look
+import petl as etl
 table1 = [['foo', 'bar', 'baz'],
           ['A', 1, 2.0],
           ['B', 2, 3.4],
@@ -13,17 +13,17 @@ table1 = [['foo', 'bar', 'baz'],
           ['B', 2, 12.3],
           ['E', None, 1.3],
           ['D', 4, 14.5]]
-table2 = duplicates(table1, 'foo')
-look(table2)
+table2 = etl.duplicates(table1, 'foo')
+table2
 # compound keys are supported
-table3 = duplicates(table1, key=['foo', 'bar'])
-look(table3)
+table3 = etl.duplicates(table1, key=['foo', 'bar'])
+table3
 
 
 # unique()
 ##########
 
-from petl import unique, look
+import petl as etl
 table1 = [['foo', 'bar', 'baz'],
           ['A', 1, 2],
           ['B', '2', '3.4'],
@@ -33,14 +33,14 @@ table1 = [['foo', 'bar', 'baz'],
           ['E', None, None],
           ['D', 4, 12.3],
           ['F', 7, 2.3]]
-table2 = unique(table1, 'foo')
-look(table2)
+table2 = etl.unique(table1, 'foo')
+table2
 
 
 # conflicts()
 #############
 
-from petl import conflicts, look
+import petl as etl
 table1 = [['foo', 'bar', 'baz'],
           ['A', 1, 2.7],
           ['B', 2, None],
@@ -49,8 +49,20 @@ table1 = [['foo', 'bar', 'baz'],
           ['E', None],
           ['D', 3, 12.3],
           ['A', 2, None]]
-table2 = conflicts(table1, 'foo')
-look(table2)
+table2 = etl.conflicts(table1, 'foo')
+table2
 
+
+# isunique()
+############
+
+import petl as etl
+table1 = [['foo', 'bar'],
+          ['a', 1],
+          ['b'],
+          ['b', 2],
+          ['c', 3, True]]
+etl.isunique(table1, 'foo')
+etl.isunique(table1, 'bar')
 
 

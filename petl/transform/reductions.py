@@ -15,10 +15,11 @@ from petl.transform.dedup import distinct
 
 def rowreduce(table, key, reducer, fields=None, presorted=False,
               buffersize=None, tempdir=None, cache=True):
-    """Group rows under the given key then apply `reducer` to produce a single
+    """
+    Group rows under the given key then apply `reducer` to produce a single
     output row for each input group of rows. E.g.::
     
-        >>> from petl import rowreduce, look
+        >>> import petl as etl
         >>> table1 = [['foo', 'bar'],
         ...           ['a', 3],
         ...           ['a', 7],
@@ -29,11 +30,11 @@ def rowreduce(table, key, reducer, fields=None, presorted=False,
         >>> def sumbar(key, rows):
         ...     return [key, sum(row[1] for row in rows)]
         ...
-        >>> table2 = rowreduce(table1, key='foo', reducer=sumbar,
-        ...                    fields=['foo', 'barsum'])
-        >>> look(table2)
+        >>> table2 = etl.rowreduce(table1, key='foo', reducer=sumbar,
+        ...                        fields=['foo', 'barsum'])
+        >>> table2
         +-------+----------+
-        | 'foo' | 'barsum' |
+        | 0|foo | 1|barsum |
         +=======+==========+
         | 'a'   |       10 |
         +-------+----------+
@@ -91,7 +92,8 @@ def aggregate(table, key, aggregation=None, value=None, presorted=False,
     """Group rows under the given key then apply aggregation functions.
     E.g.::
 
-        >>> from petl import aggregate, look
+        >>> import petl as etl
+        >>>
         >>> table1 = [['foo', 'bar', 'baz'],
         ...           ['a', 3, True],
         ...           ['a', 7, False],
@@ -100,10 +102,10 @@ def aggregate(table, key, aggregation=None, value=None, presorted=False,
         ...           ['b', 9, False],
         ...           ['c', 4, True]]
         >>> # aggregate whole rows
-        ... table2 = aggregate(table1, 'foo', len)
-        >>> look(table2)
+        ... table2 = etl.aggregate(table1, 'foo', len)
+        >>> table2
         +-------+---------+
-        | 'foo' | 'value' |
+        | 0|foo | 1|value |
         +=======+=========+
         | 'a'   |       2 |
         +-------+---------+
@@ -113,10 +115,10 @@ def aggregate(table, key, aggregation=None, value=None, presorted=False,
         +-------+---------+
 
         >>> # aggregate single field
-        ... table3 = aggregate(table1, 'foo', sum, 'bar')
-        >>> look(table3)
+        ... table3 = etl.aggregate(table1, 'foo', sum, 'bar')
+        >>> table3
         +-------+---------+
-        | 'foo' | 'value' |
+        | 0|foo | 1|value |
         +=======+=========+
         | 'a'   |      10 |
         +-------+---------+
@@ -126,11 +128,11 @@ def aggregate(table, key, aggregation=None, value=None, presorted=False,
         +-------+---------+
 
         >>> # alternative signature using keyword args
-        ... table4 = aggregate(table1, key=('foo', 'bar'),
-        ...                    aggregation=list, value=('bar', 'baz'))
-        >>> look(table4)
+        ... table4 = etl.aggregate(table1, key=('foo', 'bar'),
+        ...                        aggregation=list, value=('bar', 'baz'))
+        >>> table4
         +-------+-------+-------------------------+
-        | 'foo' | 'bar' | 'value'                 |
+        | 0|foo | 1|bar | 2|value                 |
         +=======+=======+=========================+
         | 'a'   |     3 | [(3, True)]             |
         +-------+-------+-------------------------+
@@ -145,7 +147,8 @@ def aggregate(table, key, aggregation=None, value=None, presorted=False,
 
         >>> # aggregate multiple fields
         ... from collections import OrderedDict
-        >>> from petl import strjoin
+        >>> import petl as etl
+        >>>
         >>> aggregation = OrderedDict()
         >>> aggregation['count'] = len
         >>> aggregation['minbar'] = 'bar', min
@@ -154,11 +157,11 @@ def aggregate(table, key, aggregation=None, value=None, presorted=False,
         >>> # default aggregation function is list
         ... aggregation['listbar'] = 'bar'
         >>> aggregation['listbarbaz'] = ('bar', 'baz'), list
-        >>> aggregation['bars'] = 'bar', strjoin(', ')
-        >>> table5 = aggregate(table1, 'foo', aggregation)
-        >>> look(table5)
+        >>> aggregation['bars'] = 'bar', etl.strjoin(', ')
+        >>> table5 = etl.aggregate(table1, 'foo', aggregation)
+        >>> table5
         +-------+---------+----------+----------+----------+-----------+-------------------------------------+-----------+
-        | 'foo' | 'count' | 'minbar' | 'maxbar' | 'sumbar' | 'listbar' | 'listbarbaz'                        | 'bars'    |
+        | 0|foo | 1|count | 2|minbar | 3|maxbar | 4|sumbar | 5|listbar | 6|listbarbaz                        | 7|bars    |
         +=======+=========+==========+==========+==========+===========+=====================================+===========+
         | 'a'   |       2 |        3 |        7 |       10 | [3, 7]    | [(3, True), (7, False)]             | '3, 7'    |
         +-------+---------+----------+----------+----------+-----------+-------------------------------------+-----------+
@@ -372,9 +375,10 @@ Table.groupselectmax = groupselectmax
 
 def mergeduplicates(table, key, missing=None, presorted=False, buffersize=None,
                     tempdir=None, cache=True):
-    """Merge duplicate rows under the given key. E.g.::
+    """
+    Merge duplicate rows under the given key. E.g.::
 
-        >>> from petl import mergeduplicates, look
+        >>> import petl as etl
         >>> table1 = [['foo', 'bar', 'baz'],
         ...           ['A', 1, 2.7],
         ...           ['B', 2, None],
@@ -383,10 +387,10 @@ def mergeduplicates(table, key, missing=None, presorted=False, buffersize=None,
         ...           ['E', None, 42.],
         ...           ['D', 3, 12.3],
         ...           ['A', 2, None]]
-        >>> table2 = mergeduplicates(table1, 'foo')
-        >>> look(table2)
+        >>> table2 = etl.mergeduplicates(table1, 'foo')
+        >>> table2
         +-------+------------------+-----------------------+
-        | 'foo' | 'bar'            | 'baz'                 |
+        | 0|foo | 1|bar            | 2|baz                 |
         +=======+==================+=======================+
         | 'A'   | Conflict({1, 2}) |                   2.7 |
         +-------+------------------+-----------------------+
@@ -467,12 +471,13 @@ def itermergeduplicates(table, key, missing):
 
 
 def merge(*tables, **kwargs):
-    """Convenience function to combine multiple tables (via
+    """
+    Convenience function to combine multiple tables (via
     :func:`petl.transform.sorts.mergesort`) then combine duplicate rows by
     merging under the given key (via
     :func:`petl.transform.reductions.mergeduplicates`). E.g.::
 
-        >>> from petl import look, merge
+        >>> import petl as etl
         >>> table1 = [['foo', 'bar', 'baz'],
         ...           [1, 'A', True],
         ...           [2, 'B', None],
@@ -481,10 +486,10 @@ def merge(*tables, **kwargs):
         ...           ['A', True, 42.0],
         ...           ['B', False, 79.3],
         ...           ['C', False, 12.4]]
-        >>> table3 = merge(table1, table2, key='bar')
-        >>> look(table3)
+        >>> table3 = etl.merge(table1, table2, key='bar')
+        >>> table3
         +-------+-------+-------------------------+--------+
-        | 'bar' | 'foo' | 'baz'                   | 'quux' |
+        | 0|bar | 1|foo | 2|baz                   | 3|quux |
         +=======+=======+=========================+========+
         | 'A'   |     1 | True                    |   42.0 |
         +-------+-------+-------------------------+--------+
@@ -517,21 +522,22 @@ class Conflict(frozenset):
 
 def fold(table, key, f, value=None, presorted=False, buffersize=None,
          tempdir=None, cache=True):
-    """Reduce rows recursively via the Python standard :func:`reduce` function.
+    """
+    Reduce rows recursively via the Python standard :func:`reduce` function.
     E.g.::
 
-        >>> from petl import fold, look
+        >>> import petl as etl
         >>> table1 = [['id', 'count'],
         ...           [1, 3],
         ...           [1, 5],
         ...           [2, 4],
         ...           [2, 8]]
         >>> import operator
-        >>> table2 = fold(table1, 'id', operator.add, 'count',
-        ...               presorted=True)
-        >>> look(table2)
+        >>> table2 = etl.fold(table1, 'id', operator.add, 'count',
+        ...                   presorted=True)
+        >>> table2
         +-------+---------+
-        | 'key' | 'value' |
+        | 0|key | 1|value |
         +=======+=========+
         |     1 |       8 |
         +-------+---------+

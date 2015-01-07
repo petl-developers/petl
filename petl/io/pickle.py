@@ -12,23 +12,24 @@ from petl.io.sources import read_source_from_arg, write_source_from_arg
 
 
 def frompickle(source=None):
-    """Extract a table From data pickled in the given file. The rows in the
+    """
+    Extract a table From data pickled in the given file. The rows in the
     table should have been pickled to the file one at a time. E.g.::
 
+        >>> import petl as etl
+        >>> import pickle
         >>> # set up a file to demonstrate with
-        ... import pickle
-        >>> with open('example.p', 'wb') as f:
+        ... with open('example.p', 'wb') as f:
         ...     pickle.dump(['foo', 'bar'], f)
         ...     pickle.dump(['a', 1], f)
         ...     pickle.dump(['b', 2], f)
         ...     pickle.dump(['c', 2.5], f)
         ...
-        >>> # now demonstrate the use of petl.frompickle
-        ... from petl import frompickle, look
-        >>> table1 = frompickle('example.p')
-        >>> look(table1)
+        >>> # now demonstrate the use of frompickle()
+        ... table1 = etl.frompickle('example.p')
+        >>> table1
         +-------+-------+
-        | 'foo' | 'bar' |
+        | 0|foo | 1|bar |
         +=======+=======+
         | 'a'   |     1 |
         +-------+-------+
@@ -36,6 +37,7 @@ def frompickle(source=None):
         +-------+-------+
         | 'c'   |   2.5 |
         +-------+-------+
+
 
     """
 
@@ -58,20 +60,20 @@ class PickleView(Table):
 
 
 def topickle(table, source=None, protocol=-1, write_header=True):
-    """Write the table to a pickle file. E.g.::
+    """
+    Write the table to a pickle file. E.g.::
 
+        >>> import petl as etl
         >>> table1 = [['foo', 'bar'],
         ...           ['a', 1],
         ...           ['b', 2],
         ...           ['c', 2]]
-        >>> from petl import topickle, look
-        >>> topickle(table1, 'example.p')
+        >>> etl.topickle(table1, 'example.p')
         >>> # look what it did
-        ... from petl import frompickle
-        >>> table2 = frompickle('example.p')
-        >>> look(table2)
+        ... table2 = etl.frompickle('example.p')
+        >>> table2
         +-------+-------+
-        | 'foo' | 'bar' |
+        | 0|foo | 1|bar |
         +=======+=======+
         | 'a'   |     1 |
         +-------+-------+
@@ -84,7 +86,7 @@ def topickle(table, source=None, protocol=-1, write_header=True):
     overwritten.
 
     The pickle file format preserves type information, i.e., reading and writing
-    is round-trippable.
+    is round-trippable for tables with non-string data values.
 
     """
 
@@ -96,7 +98,8 @@ Table.topickle = topickle
 
 
 def appendpickle(table, source=None, protocol=-1, write_header=False):
-    """Append data to an existing pickle file. I.e., as :func:`topickle`
+    """
+    Append data to an existing pickle file. I.e., as :func:`topickle`
     but the file is opened in append mode.
 
     Note that no attempt is made to check that the fields or row lengths are
@@ -124,13 +127,14 @@ def _writepickle(table, source, mode, protocol, write_header):
 
 
 def teepickle(table, source=None, protocol=-1, write_header=True):
-    """Return a table that writes rows to a pickle file as they are iterated
+    """
+    Return a table that writes rows to a pickle file as they are iterated
     over.
 
     """
 
     return TeePickleView(table, source=source, protocol=protocol,
-                              write_header=write_header)
+                         write_header=write_header)
 
 
 Table.teepickle = teepickle

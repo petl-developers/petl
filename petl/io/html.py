@@ -15,14 +15,15 @@ from petl.io.sources import write_source_from_arg
 
 def tohtml(table, source=None, caption=None, representation=text_type,
            lineterminator='\r\n', index_header=False):
-    """Write the table as HTML to a file. E.g.::
+    """
+    Write the table as HTML to a file. E.g.::
 
+        >>> import petl as etl
         >>> table1 = [['foo', 'bar'],
         ...           ['a', 1],
         ...           ['b', 2],
         ...           ['c', 2]]
-        >>> from petl import tohtml
-        >>> tohtml(table1, 'example.html', caption='example table')
+        >>> etl.tohtml(table1, 'example.html', caption='example table')
         >>> print(open('example.html').read())
         <table class='petl'>
         <caption>example table</caption>
@@ -64,7 +65,8 @@ Table.tohtml = tohtml
 def touhtml(table, source=None, caption=None, encoding='utf-8',
             representation=text_type, lineterminator='\r\n',
             index_header=False):
-    """Write the table as HTML to a text file using the given encoding.
+    """
+    Write the table as HTML to a text file using the given encoding.
 
     """
 
@@ -92,7 +94,8 @@ Table.touhtml = touhtml
 def teeuhtml(table, source=None, caption=None,
              encoding='utf-8', representation=text_type,
              lineterminator='\r\n', index_header=False):
-    """Return a table that writes rows to a Unicode HTML file as they are
+    """
+    Return a table that writes rows to a Unicode HTML file as they are
     iterated over.
 
     """
@@ -146,7 +149,8 @@ class TeeUnicodeHTMLView(Table):
 
 def teehtml(table, source=None, caption=None, representation=text_type,
             lineterminator='\r\n', index_header=False):
-    """Return a table that writes rows to an HTML file as they are iterated
+    """
+    Return a table that writes rows to an HTML file as they are iterated
     over.
 
     """

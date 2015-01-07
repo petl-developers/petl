@@ -178,7 +178,7 @@ class TeeCSVView(Table):
 
 def teeucsv_impl(table, source, write_header, encoding='utf-8', **csvargs):
     return TeeUnicodeCSVView(table, source=source, write_header=write_header,
-                            encoding=encoding, **csvargs)
+                             encoding=encoding, **csvargs)
 
 
 class TeeUnicodeCSVView(Table):

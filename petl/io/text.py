@@ -14,19 +14,20 @@ from petl.io.sources import read_source_from_arg, write_source_from_arg
 
 
 def fromtext(source=None, header=('lines',), strip=None):
-    """Extract a table from lines in the given text file. E.g.::
+    """
+    Extract a table from lines in the given text file. E.g.::
 
-        >>> # example data
+        >>> import petl as etl
+        >>> # setup example file
         ... text = 'a,1\\nb,2\\nc,2\\n'
         >>> with open('example.txt', 'w') as f:
         ...     f.write(text)
         ...
         12
-        >>> from petl import fromtext, look
-        >>> table1 = fromtext('example.txt')
-        >>> look(table1)
+        >>> table1 = etl.fromtext('example.txt')
+        >>> table1
         +---------+
-        | 'lines' |
+        | 0|lines |
         +=========+
         | 'a,1'   |
         +---------+
@@ -35,12 +36,11 @@ def fromtext(source=None, header=('lines',), strip=None):
         | 'c,2'   |
         +---------+
 
-        >>> # now post-process,e.g., with capture()
-        ... from petl import capture
-        >>> table2 = capture(table1, 'lines', '(.*),(.*)$', ['foo', 'bar'])
-        >>> look(table2)
+        >>> # post-process, e.g., with capture()
+        ... table2 = table1.capture('lines', '(.*),(.*)$', ['foo', 'bar'])
+        >>> table2
         +-------+-------+
-        | 'foo' | 'bar' |
+        | 0|foo | 1|bar |
         +=======+=======+
         | 'a'   | '1'   |
         +-------+-------+
@@ -61,7 +61,8 @@ def fromtext(source=None, header=('lines',), strip=None):
 
 
 def fromutext(source=None, header=(u'lines',), encoding='utf-8', strip=None):
-    """Extract a table from lines in the given text file using the given
+    """
+    Extract a table from lines in the given text file using the given
     encoding. Like :func:`fromtext` but accepts an additional ``encoding``
     argument which should be one of the Python supported encodings.
 
@@ -135,13 +136,14 @@ else:
 
 
 def totext(table, source=None, template=None, prologue=None, epilogue=None):
-    """Write the table to a text file. E.g.::
+    """
+    Write the table to a text file. E.g.::
 
+        >>> import petl as etl
         >>> table1 = [['foo', 'bar'],
         ...           ['a', 1],
         ...           ['b', 2],
         ...           ['c', 2]]
-        >>> from petl import totext, look
         >>> prologue = '''{| class="wikitable"
         ... |-
         ... ! foo
@@ -152,7 +154,7 @@ def totext(table, source=None, template=None, prologue=None, epilogue=None):
         ... | {bar}
         ... '''
         >>> epilogue = '|}'
-        >>> totext(table1, 'example.txt', template, prologue, epilogue)
+        >>> etl.totext(table1, 'example.txt', template, prologue, epilogue)
         >>> # see what we did
         ... print(open('example.txt').read())
         {| class="wikitable"
@@ -195,7 +197,8 @@ Table.totext = totext
 
 
 def appendtext(table, source=None, template=None, prologue=None, epilogue=None):
-    """Append the table to a text file.
+    """
+    Append the table to a text file.
 
     """
 
@@ -220,7 +223,8 @@ Table.appendtext = appendtext
 
 def toutext(table, source=None, encoding='utf-8', template=None, prologue=None,
             epilogue=None):
-    """Write the table to a text file via the given encoding. Like
+    """
+    Write the table to a text file via the given encoding. Like
     :func:`totext` but accepts an additional ``encoding`` argument which
     should be one of the Python supported encodings.
 
@@ -246,7 +250,8 @@ Table.toutext = toutext
 
 def appendutext(table, source=None, encoding='utf-8', template=None,
                 prologue=None, epilogue=None):
-    """Append the table to a text file via the given encoding. Like
+    """
+    Append the table to a text file via the given encoding. Like
     :func:`appendtext` but accepts an additional ``encoding`` argument which
     should be one of the Python supported encodings.
 
@@ -299,7 +304,8 @@ def _teetext(table, f, prologue, template, epilogue):
 
 
 def teetext(table, source=None, template=None, prologue=None, epilogue=None):
-    """Return a table that writes rows to a text file as they are iterated over.
+    """
+    Return a table that writes rows to a text file as they are iterated over.
 
     """
 
@@ -343,7 +349,8 @@ class TeeTextView(Table):
 
 def teeutext(table, source=None, encoding='utf-8', template=None,
              prologue=None, epilogue=None):
-    """Return a table that writes rows to a Unicode text file as they are
+    """
+    Return a table that writes rows to a Unicode text file as they are
     iterated over.
 
     """

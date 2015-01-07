@@ -174,7 +174,42 @@ class Table(IterContainer):
 
 
 def values(table, *field, **kwargs):
-    """TODO
+    """
+    Return a container supporting iteration over values in a given field or
+    fields. E.g.::
+
+        >>> import petl as etl
+        >>> table1 = [['foo', 'bar'],
+        ...           ['a', True],
+        ...           ['b'],
+        ...           ['b', True],
+        ...           ['c', False]]
+        >>> foo = etl.values(table1, 'foo')
+        >>> foo
+        foo: 'a', 'b', 'b', 'c'
+        >>> list(foo)
+        ['a', 'b', 'b', 'c']
+        >>> bar = etl.values(table1, 'bar')
+        >>> bar
+        bar: True, None, True, False
+        >>> list(bar)
+        [True, None, True, False]
+        >>> # values from multiple fields
+        ... table2 = [['foo', 'bar', 'baz'],
+        ...           [1, 'a', True],
+        ...           [2, 'bb', True],
+        ...           [3, 'd', False]]
+        >>> foobaz = etl.values(table2, 'foo', 'baz')
+        >>> foobaz
+        ('foo', 'baz'): (1, True), (2, True), (3, False)
+        >>> list(foobaz)
+        [(1, True), (2, True), (3, False)]
+
+    The field argument can be a single field name or index (starting from
+    zero) or a tuple of field names and/or indexes. Multiple fields can also be
+    provided as positional arguments.
+
+    If rows are uneven, the value of the keyword argument `missing` is returned.
 
     """
 
@@ -188,29 +223,29 @@ class ValuesView(IterContainer):
 
     def __init__(self, table, *field, **kwargs):
         self.table = table
+        # deal with field arg in a backwards-compatible way
+        if len(field) == 1:
+            field = field[0]
         self.field = field
         self.kwargs = kwargs
 
     def __iter__(self):
-        return itervalues(self.table, *self.field, **self.kwargs)
+        return itervalues(self.table, self.field, **self.kwargs)
 
     def __repr__(self):
         vreprs = list(map(repr, islice(self, 6)))
-        r = ', '.join(vreprs[:5])
+        r = str(self.field) + ': '
+        r += ', '.join(vreprs[:5])
         if len(vreprs) > 5:
             r += ', ...'
         return r
 
 
-def itervalues(table, *field, **kwargs):
+def itervalues(table, field, **kwargs):
 
     missing = kwargs.get('missing', None)
     it = iter(table)
     srcflds = next(it)
-
-    # deal with field arg in a backwards-compatible way
-    if len(field) == 1:
-        field = field[0]
 
     indices = asindices(srcflds, field)
     assert len(indices) > 0, 'no field selected'
@@ -290,7 +325,16 @@ def rowgetter(*indices):
 
 
 def header(table):
-    """TODO
+    """
+    Return the header row for the given table. E.g.::
+
+        >>> import petl as etl
+        >>> table = [['foo', 'bar'], ['a', 1], ['b', 2]]
+        >>> etl.header(table)
+        ('foo', 'bar')
+
+    Note that the header row will always be returned as a tuple, regardless
+    of what the underlying data are.
 
     """
 
@@ -302,18 +346,38 @@ Table.header = header
 
 
 def fieldnames(table):
-    """TODO
+    """
+    Return the string values of the header row. If the header row
+    contains only strings, then this function is equivalent to header(), i.e.::
+
+        >>> import petl as etl
+        >>> table = [['foo', 'bar'], ['a', 1], ['b', 2]]
+        >>> etl.fieldnames(table)
+        ('foo', 'bar')
+        >>> etl.header(table)
+        ('foo', 'bar')
 
     """
 
-    return [str(f) for f in header(table)]
+    return tuple(str(f) for f in header(table))
 
 
 Table.fieldnames = fieldnames
 
 
 def data(table, *sliceargs):
-    """TODO
+    """
+    Return a container supporting iteration over data rows in a given table
+    (i.e., without the header). E.g.::
+
+        >>> import petl as etl
+        >>> table = [['foo', 'bar'], ['a', 1], ['b', 2]]
+        >>> d = etl.data(table)
+        >>> list(d)
+        [['a', 1], ['b', 2]]
+
+    Positional arguments can be used to slice the data rows. The sliceargs
+    are passed to :func:`itertools.islice`.
 
     """
 
@@ -342,7 +406,19 @@ def iterdata(table, *sliceargs):
 
 
 def dicts(table, *sliceargs, **kwargs):
-    """TODO
+    """
+    Return a container supporting iteration over rows as dicts. E.g.::
+
+        >>> import petl as etl
+        >>> table = [['foo', 'bar'], ['a', 1], ['b', 2]]
+        >>> d = etl.dicts(table)
+        >>> d
+        {'foo': 'a', 'bar': 1}
+        {'foo': 'b', 'bar': 2}
+        >>> list(d)
+        [{'foo': 'a', 'bar': 1}, {'foo': 'b', 'bar': 2}]
+
+    Short rows are padded with the value of the `missing` keyword argument.
 
     """
 
@@ -399,7 +475,22 @@ def asdict(flds, row, missing=None):
 
 
 def namedtuples(table, *sliceargs, **kwargs):
-    """TODO
+    """
+    View the table as a container of named tuples. E.g.::
+
+        >>> import petl as etl
+        >>> table = [['foo', 'bar'], ['a', 1], ['b', 2]]
+        >>> d = etl.namedtuples(table)
+        >>> d
+        row(foo='a', bar=1)
+        row(foo='b', bar=2)
+        >>> list(d)
+        [row(foo='a', bar=1), row(foo='b', bar=2)]
+
+    Short rows are padded with the value of the `missing` keyword argument.
+
+    The `name` keyword argument can be given to override the name of the
+    named tuple class (defaults to 'row').
 
     """
 
@@ -495,7 +586,28 @@ class Record(tuple):
 
 
 def records(table, *sliceargs, **kwargs):
-    """TODO
+    """
+    Return a container supporting iteration over rows as records, where a
+    record is a hybrid object supporting all possible ways of accessing values.
+    E.g.::
+
+
+        >>> import petl as etl
+        >>> table = [['foo', 'bar'], ['a', 1], ['b', 2]]
+        >>> d = etl.records(table)
+        >>> d
+        ('a', 1)
+        ('b', 2)
+        >>> list(d)
+        [('a', 1), ('b', 2)]
+        >>> [r[0] for r in d]
+        ['a', 'b']
+        >>> [r['foo'] for r in d]
+        ['a', 'b']
+        >>> [r.foo for r in d]
+        ['a', 'b']
+
+    Short rows are padded with the value of the `missing` keyword argument.
 
     """
 
@@ -524,10 +636,6 @@ class RecordsView(IterContainer):
 
 
 def iterrecords(table, *sliceargs, **kwargs):
-    """TODO
-
-    """
-
     missing = kwargs.get('missing', None)
     it = iter(table)
     flds = next(it)
@@ -538,8 +646,8 @@ def iterrecords(table, *sliceargs, **kwargs):
 
 
 def expr(s):
-    """Construct a function operating on a record (i.e., a dictionary
-    representation of a data row, indexed by field name).
+    """
+    Construct a function operating on a table record.
 
     The expression string is converted into a lambda function by prepending
     the string with ``'lambda rec: '``, then replacing anything enclosed in
@@ -562,7 +670,23 @@ def expr(s):
 def rowgroupby(table, key, value=None):
     """Convenient adapter for :func:`itertools.groupby`. E.g.::
 
-        >>> TODO
+        >>> import petl as etl
+        >>> table1 = [['foo', 'bar', 'baz'],
+        ...           ['a', 1, True],
+        ...           ['b', 3, True],
+        ...           ['b', 2]]
+        >>> # group entire rows
+        ... for key, group in etl.rowgroupby(table1, 'foo'):
+        ...     print(key, list(group))
+        ...
+        a [('a', 1, True)]
+        b [('b', 3, True), ('b', 2)]
+        >>> # group specific values
+        ... for key, group in etl.rowgroupby(table1, 'foo', 'bar'):
+        ...     print(key, list(group))
+        ...
+        a [1]
+        b [3, 2]
 
     N.B., assumes the input table is already sorted by the given key.
 
@@ -616,15 +740,20 @@ def iterpeek(it, n=1):
 
 
 def empty():
-    """Return an empty table. Can be useful when building up a table from a set
+    """
+    Return an empty table. Can be useful when building up a table from a set
     of columns, e.g.::
 
-        >>> from petl import empty, addcolumn, look
-        >>> table1 = addcolumn(empty(), 'foo', ['A', 'B'])
-        >>> table2 = addcolumn(table1, 'bar', [1, 2])
-        >>> look(table2)
+        >>> import petl as etl
+        >>> table = (
+        ...     etl
+        ...     .empty()
+        ...     .addcolumn('foo', ['A', 'B'])
+        ...     .addcolumn('bar', [1, 2])
+        ... )
+        >>> table
         +-------+-------+
-        | 'foo' | 'bar' |
+        | 0|foo | 1|bar |
         +=======+=======+
         | 'A'   |     1 |
         +-------+-------+

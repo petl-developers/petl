@@ -20,19 +20,20 @@ debug = logger.debug
 
 
 def cut(table, *args, **kwargs):
-    """Choose and/or re-order fields. E.g.::
+    """
+    Choose and/or re-order fields. E.g.::
 
-        >>> from petl import look, cut
+        >>> import petl as etl
         >>> table1 = [['foo', 'bar', 'baz'],
         ...           ['A', 1, 2.7],
         ...           ['B', 2, 3.4],
         ...           ['B', 3, 7.8],
         ...           ['D', 42, 9.0],
         ...           ['E', 12]]
-        >>> table2 = cut(table1, 'foo', 'baz')
-        >>> look(table2)
+        >>> table2 = etl.cut(table1, 'foo', 'baz')
+        >>> table2
         +-------+-------+
-        | 'foo' | 'baz' |
+        | 0|foo | 1|baz |
         +=======+=======+
         | 'A'   |   2.7 |
         +-------+-------+
@@ -46,10 +47,10 @@ def cut(table, *args, **kwargs):
         +-------+-------+
 
         >>> # fields can also be specified by index, starting from zero
-        ... table3 = cut(table1, 0, 2)
-        >>> look(table3)
+        ... table3 = etl.cut(table1, 0, 2)
+        >>> table3
         +-------+-------+
-        | 'foo' | 'baz' |
+        | 0|foo | 1|baz |
         +=======+=======+
         | 'A'   |   2.7 |
         +-------+-------+
@@ -63,10 +64,10 @@ def cut(table, *args, **kwargs):
         +-------+-------+
 
         >>> # field names and indices can be mixed
-        ... table4 = cut(table1, 'bar', 0)
-        >>> look(table4)
+        ... table4 = etl.cut(table1, 'bar', 0)
+        >>> table4
         +-------+-------+
-        | 'bar' | 'foo' |
+        | 0|bar | 1|foo |
         +=======+=======+
         |     1 | 'A'   |
         +-------+-------+
@@ -80,10 +81,10 @@ def cut(table, *args, **kwargs):
         +-------+-------+
 
         >>> # select a range of fields
-        ... table5 = cut(table1, *range(0, 2))
-        >>> look(table5)
+        ... table5 = etl.cut(table1, *range(0, 2))
+        >>> table5
         +-------+-------+
-        | 'foo' | 'bar' |
+        | 0|foo | 1|bar |
         +=======+=======+
         | 'A'   |     1 |
         +-------+-------+
@@ -149,19 +150,20 @@ def itercut(source, spec, missing=None):
 
     
 def cutout(table, *args, **kwargs):
-    """Remove fields. E.g.::
+    """
+    Remove fields. E.g.::
 
-        >>> from petl import cutout, look
+        >>> import petl as etl
         >>> table1 = [['foo', 'bar', 'baz'],
         ...           ['A', 1, 2.7],
         ...           ['B', 2, 3.4],
         ...           ['B', 3, 7.8],
         ...           ['D', 42, 9.0],
         ...           ['E', 12]]
-        >>> table2 = cutout(table1, 'bar')
-        >>> look(table2)
+        >>> table2 = etl.cutout(table1, 'bar')
+        >>> table2
         +-------+-------+
-        | 'foo' | 'baz' |
+        | 0|foo | 1|baz |
         +=======+=======+
         | 'A'   |   2.7 |
         +-------+-------+
@@ -221,19 +223,20 @@ def itercutout(source, spec, missing=None):
 
     
 def cat(*tables, **kwargs):
-    """Concatenate data from two or more tables. E.g.::
+    """
+    Concatenate data from two or more tables. E.g.::
     
-        >>> from petl import look, cat
+        >>> import petl as etl
         >>> table1 = [['foo', 'bar'],
         ...           [1, 'A'],
         ...           [2, 'B']]
         >>> table2 = [['bar', 'baz'],
         ...           ['C', True],
         ...           ['D', False]]
-        >>> table3 = cat(table1, table2)
-        >>> look(table3)
+        >>> table3 = etl.cat(table1, table2)
+        >>> table3
         +-------+-------+-------+
-        | 'foo' | 'bar' | 'baz' |
+        | 0|foo | 1|bar | 2|baz |
         +=======+=======+=======+
         |     1 | 'A'   | None  |
         +-------+-------+-------+
@@ -251,10 +254,10 @@ def cat(*tables, **kwargs):
         ...           [u'B', u'3', u'7.8', True],
         ...           ['D', 'xyz', 9.0],
         ...           ['E', None]]
-        >>> table5 = cat(table4)
-        >>> look(table5)
+        >>> table5 = etl.cat(table4)
+        >>> table5
         +-------+-------+-------+
-        | 'foo' | 'bar' | 'baz' |
+        | 0|foo | 1|bar | 2|baz |
         +=======+=======+=======+
         | 'A'   |     1 |     2 |
         +-------+-------+-------+
@@ -271,10 +274,10 @@ def cat(*tables, **kwargs):
         ... table6 = [['bar', 'foo'],
         ...           ['A', 1],
         ...           ['B', 2]]
-        >>> table7 = cat(table6, header=['A', 'foo', 'B', 'bar', 'C'])
-        >>> look(table7)
+        >>> table7 = etl.cat(table6, header=['A', 'foo', 'B', 'bar', 'C'])
+        >>> table7
         +------+-------+------+-------+------+
-        | 'A'  | 'foo' | 'B'  | 'bar' | 'C'  |
+        | 0|A  | 1|foo | 2|B  | 3|bar | 4|C  |
         +======+=======+======+=======+======+
         | None |     1 | None | 'A'   | None |
         +------+-------+------+-------+------+
@@ -288,10 +291,10 @@ def cat(*tables, **kwargs):
         >>> table9 = [['bar', 'baz'],
         ...           ['C', True],
         ...           ['D', False]]
-        >>> table10 = cat(table8, table9, header=['A', 'foo', 'B', 'bar', 'C'])
-        >>> look(table10)
+        >>> table10 = etl.cat(table8, table9, header=['A', 'foo', 'B', 'bar', 'C'])
+        >>> table10
         +------+-------+------+-------+------+
-        | 'A'  | 'foo' | 'B'  | 'bar' | 'C'  |
+        | 0|A  | 1|foo | 2|B  | 3|bar | 4|C  |
         +======+=======+======+=======+======+
         | None |     1 | None | 'A'   | None |
         +------+-------+------+-------+------+
@@ -377,18 +380,19 @@ def itercat(sources, missing, header):
 
 
 def addfield(table, field, value=None, index=None, missing=None):
-    """Add a field with a fixed or calculated value. E.g.::
+    """
+    Add a field with a fixed or calculated value. E.g.::
     
-        >>> from petl import addfield, look
+        >>> import petl as etl
         >>> table1 = [['foo', 'bar'],
         ...           ['M', 12],
         ...           ['F', 34],
         ...           ['-', 56]]
         >>> # using a fixed value
-        ... table2 = addfield(table1, 'baz', 42)
-        >>> look(table2)
+        ... table2 = etl.addfield(table1, 'baz', 42)
+        >>> table2
         +-------+-------+-------+
-        | 'foo' | 'bar' | 'baz' |
+        | 0|foo | 1|bar | 2|baz |
         +=======+=======+=======+
         | 'M'   |    12 |    42 |
         +-------+-------+-------+
@@ -398,10 +402,10 @@ def addfield(table, field, value=None, index=None, missing=None):
         +-------+-------+-------+
 
         >>> # calculating the value
-        ... table2 = addfield(table1, 'baz', lambda rec: rec['bar'] * 2)
-        >>> look(table2)
+        ... table2 = etl.addfield(table1, 'baz', lambda rec: rec['bar'] * 2)
+        >>> table2
         +-------+-------+-------+
-        | 'foo' | 'bar' | 'baz' |
+        | 0|foo | 1|bar | 2|baz |
         +=======+=======+=======+
         | 'M'   |    12 |    24 |
         +-------+-------+-------+
@@ -463,29 +467,30 @@ def iteraddfield(source, field, value, index):
         
     
 def rowslice(table, *sliceargs):
-    """Choose a subsequence of data rows. E.g.::
+    """
+    Choose a subsequence of data rows. E.g.::
     
-        >>> from petl import rowslice, look
+        >>> import petl as etl
         >>> table1 = [['foo', 'bar'],
         ...           ['a', 1],
         ...           ['b', 2],
         ...           ['c', 5],
         ...           ['d', 7],
         ...           ['f', 42]]
-        >>> table2 = rowslice(table1, 2)
-        >>> look(table2)
+        >>> table2 = etl.rowslice(table1, 2)
+        >>> table2
         +-------+-------+
-        | 'foo' | 'bar' |
+        | 0|foo | 1|bar |
         +=======+=======+
         | 'a'   |     1 |
         +-------+-------+
         | 'b'   |     2 |
         +-------+-------+
 
-        >>> table3 = rowslice(table1, 1, 4)
-        >>> look(table3)
+        >>> table3 = etl.rowslice(table1, 1, 4)
+        >>> table3
         +-------+-------+
-        | 'foo' | 'bar' |
+        | 0|foo | 1|bar |
         +=======+=======+
         | 'b'   |     2 |
         +-------+-------+
@@ -494,10 +499,10 @@ def rowslice(table, *sliceargs):
         | 'd'   |     7 |
         +-------+-------+
 
-        >>> table4 = rowslice(table1, 0, 5, 2)
-        >>> look(table4)
+        >>> table4 = etl.rowslice(table1, 0, 5, 2)
+        >>> table4
         +-------+-------+
-        | 'foo' | 'bar' |
+        | 0|foo | 1|bar |
         +=======+=======+
         | 'a'   |     1 |
         +-------+-------+
@@ -540,9 +545,10 @@ def iterrowslice(source, sliceargs):
 
 
 def head(table, n=5):
-    """Choose the first n data rows. E.g.::
+    """
+    Select the first n data rows. E.g.::
 
-        >>> from petl import head, look
+        >>> import petl as etl
         >>> table1 = [['foo', 'bar'],
         ...           ['a', 1],
         ...           ['b', 2],
@@ -551,10 +557,10 @@ def head(table, n=5):
         ...           ['f', 42],
         ...           ['f', 3],
         ...           ['h', 90]]
-        >>> table2 = head(table1, 4)
-        >>> look(table2)
+        >>> table2 = etl.head(table1, 4)
+        >>> table2
         +-------+-------+
-        | 'foo' | 'bar' |
+        | 0|foo | 1|bar |
         +=======+=======+
         | 'a'   |     1 |
         +-------+-------+
@@ -577,9 +583,10 @@ Table.head = head
 
         
 def tail(table, n=5):
-    """Choose the last n data rows. E.g.::
+    """
+    Select the last n data rows. E.g.::
 
-        >>> from petl import tail, look
+        >>> import petl as etl
         >>> table1 = [['foo', 'bar'],
         ...           ['a', 1],
         ...           ['b', 2],
@@ -591,10 +598,10 @@ def tail(table, n=5):
         ...           ['k', 12],
         ...           ['l', 77],
         ...           ['q', 2]]
-        >>> table2 = tail(table1, 4)
-        >>> look(table2)
+        >>> table2 = etl.tail(table1, 4)
+        >>> table2
         +-------+-------+
-        | 'foo' | 'bar' |
+        | 0|foo | 1|bar |
         +=======+=======+
         | 'h'   |    90 |
         +-------+-------+
@@ -639,20 +646,21 @@ def itertail(source, n):
 
 
 def skipcomments(table, prefix):
-    """Skip any row where the first value is a string and starts with
+    """
+    Skip any row where the first value is a string and starts with
     `prefix`. E.g.::
     
-        >>> from petl import skipcomments, look
+        >>> import petl as etl
         >>> table1 = [['##aaa', 'bbb', 'ccc'],
         ...           ['##mmm',],
         ...           ['#foo', 'bar'],
         ...           ['##nnn', 1],
         ...           ['a', 1],
         ...           ['b', 2]]
-        >>> table2 = skipcomments(table1, '##')
-        >>> look(table2)
+        >>> table2 = etl.skipcomments(table1, '##')
+        >>> table2
         +--------+-------+
-        | '#foo' | 'bar' |
+        | 0|#foo | 1|bar |
         +========+=======+
         | 'a'    |     1 |
         +--------+-------+
@@ -688,7 +696,8 @@ def iterskipcomments(source, prefix):
 
 
 def movefield(table, field, index):
-    """Move a field to a new position.
+    """
+    Move a field to a new position.
 
     """
 
@@ -731,9 +740,10 @@ class MoveFieldView(Table):
 
 
 def annex(*tables, **kwargs):
-    """Join two or more tables by row order. E.g.::
+    """
+    Join two or more tables by row order. E.g.::
 
-        >>> from petl import annex, look
+        >>> import petl as etl
         >>> table1 = [['foo', 'bar'],
         ...           ['A', 9],
         ...           ['C', 2],
@@ -741,10 +751,10 @@ def annex(*tables, **kwargs):
         >>> table2 = [['foo', 'baz'],
         ...           ['B', 3],
         ...           ['D', 10]]
-        >>> table3 = annex(table1, table2)
-        >>> look(table3)
+        >>> table3 = etl.annex(table1, table2)
+        >>> table3
         +-------+-------+-------+-------+
-        | 'foo' | 'bar' | 'foo' | 'baz' |
+        | 0|foo | 1|bar | 2|foo | 3|baz |
         +=======+=======+=======+=======+
         | 'A'   |     9 | 'B'   |     3 |
         +-------+-------+-------+-------+
@@ -796,17 +806,18 @@ def iterannex(tables, missing):
           
     
 def addrownumbers(table, start=1, step=1):
-    """Add a field of row numbers. E.g.::
+    """
+    Add a field of row numbers. E.g.::
 
-        >>> from petl import addrownumbers, look
+        >>> import petl as etl
         >>> table1 = [['foo', 'bar'],
         ...           ['A', 9],
         ...           ['C', 2],
         ...           ['F', 1]]
-        >>> table2 = addrownumbers(table1)
-        >>> look(table2)
+        >>> table2 = etl.addrownumbers(table1)
+        >>> table2
         +-------+-------+-------+
-        | 'row' | 'foo' | 'bar' |
+        | 0|row | 1|foo | 2|bar |
         +=======+=======+=======+
         |     1 | 'A'   |     9 |
         +-------+-------+-------+
@@ -849,17 +860,18 @@ def iteraddrownumbers(table, start, step):
         
 
 def addcolumn(table, field, col, index=None, missing=None):
-    """Add a column of data to the table. E.g.::
+    """
+    Add a column of data to the table. E.g.::
     
-        >>> from petl import addcolumn, look
+        >>> import petl as etl
         >>> table1 = [['foo', 'bar'],
         ...           ['A', 1],
         ...           ['B', 2]]
         >>> col = [True, False]
-        >>> table2 = addcolumn(table1, 'baz', col)
-        >>> look(table2)
+        >>> table2 = etl.addcolumn(table1, 'baz', col)
+        >>> table2
         +-------+-------+-------+
-        | 'foo' | 'bar' | 'baz' |
+        | 0|foo | 1|bar | 2|baz |
         +=======+=======+=======+
         | 'A'   |     1 | True  |
         +-------+-------+-------+
@@ -918,11 +930,12 @@ class TransformError(Exception):
 
 
 def addfieldusingcontext(table, field, query):
-    """Like :func:`addfield` but the `query` function is passed the previous,
+    """
+    Like :func:`addfield` but the `query` function is passed the previous,
     current and next rows, so values may be calculated based on data in adjacent
     rows. E.g.::
 
-        >>> from petl import look, addfieldusingcontext
+        >>> import petl as etl
         >>> table1 = [['foo', 'bar'],
         ...           ['A', 1],
         ...           ['B', 4],
@@ -940,11 +953,11 @@ def addfieldusingcontext(table, field, query):
         ...     else:
         ...         return nxt.bar - cur.bar
         ...
-        >>> table2 = addfieldusingcontext(table1, 'baz', upstream)
-        >>> table3 = addfieldusingcontext(table2, 'quux', downstream)
-        >>> look(table3)
+        >>> table2 = etl.addfieldusingcontext(table1, 'baz', upstream)
+        >>> table3 = etl.addfieldusingcontext(table2, 'quux', downstream)
+        >>> table3
         +-------+-------+-------+--------+
-        | 'foo' | 'bar' | 'baz' | 'quux' |
+        | 0|foo | 1|bar | 2|baz | 3|quux |
         +=======+=======+=======+========+
         | 'A'   |     1 | None  |      3 |
         +-------+-------+-------+--------+

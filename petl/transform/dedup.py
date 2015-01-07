@@ -11,10 +11,11 @@ from petl.transform.sorts import sort
 
 def duplicates(table, key=None, presorted=False, buffersize=None, tempdir=None, 
                cache=True):
-    """Select rows with duplicate values under a given key (or duplicate
+    """
+    Select rows with duplicate values under a given key (or duplicate
     rows where no key is given). E.g.::
 
-        >>> from petl import duplicates, look
+        >>> import petl as etl
         >>> table1 = [['foo', 'bar', 'baz'],
         ...           ['A', 1, 2.0],
         ...           ['B', 2, 3.4],
@@ -23,10 +24,10 @@ def duplicates(table, key=None, presorted=False, buffersize=None, tempdir=None,
         ...           ['B', 2, 12.3],
         ...           ['E', None, 1.3],
         ...           ['D', 4, 14.5]]
-        >>> table2 = duplicates(table1, 'foo')
-        >>> look(table2)
+        >>> table2 = etl.duplicates(table1, 'foo')
+        >>> table2
         +-------+-------+-------+
-        | 'foo' | 'bar' | 'baz' |
+        | 0|foo | 1|bar | 2|baz |
         +=======+=======+=======+
         | 'B'   |     2 |   3.4 |
         +-------+-------+-------+
@@ -40,10 +41,10 @@ def duplicates(table, key=None, presorted=False, buffersize=None, tempdir=None,
         +-------+-------+-------+
 
         >>> # compound keys are supported
-        ... table3 = duplicates(table1, key=['foo', 'bar'])
-        >>> look(table3)
+        ... table3 = etl.duplicates(table1, key=['foo', 'bar'])
+        >>> table3
         +-------+-------+-------+
-        | 'foo' | 'bar' | 'baz' |
+        | 0|foo | 1|bar | 2|baz |
         +=======+=======+=======+
         | 'B'   |     2 |   3.4 |
         +-------+-------+-------+
@@ -53,10 +54,11 @@ def duplicates(table, key=None, presorted=False, buffersize=None, tempdir=None,
     If `presorted` is True, it is assumed that the data are already sorted by
     the given key, and the `buffersize`, `tempdir` and `cache` arguments are 
     ignored. Otherwise, the data are sorted, see also the discussion of the
-    `buffersize`, `tempdir` and `cache` arguments under the :func:`petl.transform.sorts.sort`
-    function.
+    `buffersize`, `tempdir` and `cache` arguments under the
+    :func:`petl.transform.sorts.sort` function.
     
-    See also :func:`unique` and :func:`distinct`.
+    See also :func:`petl.transform.dedup.unique` and
+    :func:`petl.transform.dedup.distinct`.
     
     """
 
@@ -123,10 +125,11 @@ def iterduplicates(source, key):
     
 def unique(table, key=None, presorted=False, buffersize=None, tempdir=None,
            cache=True):
-    """Select rows with unique values under a given key (or unique rows
+    """
+    Select rows with unique values under a given key (or unique rows
     if no key is given). E.g.::
 
-        >>> from petl import unique, look
+        >>> import petl as etl
         >>> table1 = [['foo', 'bar', 'baz'],
         ...           ['A', 1, 2],
         ...           ['B', '2', '3.4'],
@@ -136,10 +139,10 @@ def unique(table, key=None, presorted=False, buffersize=None, tempdir=None,
         ...           ['E', None, None],
         ...           ['D', 4, 12.3],
         ...           ['F', 7, 2.3]]
-        >>> table2 = unique(table1, 'foo')
-        >>> look(table2)
+        >>> table2 = etl.unique(table1, 'foo')
+        >>> table2
         +-------+-------+-------+
-        | 'foo' | 'bar' | 'baz' |
+        | 0|foo | 1|bar | 2|baz |
         +=======+=======+=======+
         | 'A'   |     1 |     2 |
         +-------+-------+-------+
@@ -151,10 +154,11 @@ def unique(table, key=None, presorted=False, buffersize=None, tempdir=None,
     If `presorted` is True, it is assumed that the data are already sorted by
     the given key, and the `buffersize`, `tempdir` and `cache` arguments are
     ignored. Otherwise, the data are sorted, see also the discussion of the
-    `buffersize`, `tempdir` and `cache` arguments under the :func:`petl.transform.sorts.sort`
-    function.
+    `buffersize`, `tempdir` and `cache` arguments under the
+    :func:`petl.transform.sorts.sort` function.
 
-    See also :func:`duplicates` and :func:`distinct`.
+    See also :func:`petl.transform.dedup.duplicates` and
+    :func:`petl.transform.dedup.distinct`.
     
     """
 
@@ -219,10 +223,11 @@ def iterunique(source, key):
     
 def conflicts(table, key, missing=None, include=None, exclude=None, 
               presorted=False, buffersize=None, tempdir=None, cache=True):
-    """Select rows with the same key value but differing in some other field.
+    """
+    Select rows with the same key value but differing in some other field.
     E.g.::
 
-        >>> from petl import conflicts, look
+        >>> import petl as etl
         >>> table1 = [['foo', 'bar', 'baz'],
         ...           ['A', 1, 2.7],
         ...           ['B', 2, None],
@@ -231,10 +236,10 @@ def conflicts(table, key, missing=None, include=None, exclude=None,
         ...           ['E', None],
         ...           ['D', 3, 12.3],
         ...           ['A', 2, None]]
-        >>> table2 = conflicts(table1, 'foo')
-        >>> look(table2)
+        >>> table2 = etl.conflicts(table1, 'foo')
+        >>> table2
         +-------+-------+-------+
-        | 'foo' | 'bar' | 'baz' |
+        | 0|foo | 1|bar | 2|baz |
         +=======+=======+=======+
         | 'A'   |     1 |   2.7 |
         +-------+-------+-------+
@@ -257,8 +262,8 @@ def conflicts(table, key, missing=None, include=None, exclude=None,
     If `presorted` is True, it is assumed that the data are already sorted by
     the given key, and the `buffersize`, `tempdir` and `cache` arguments are
     ignored. Otherwise, the data are sorted, see also the discussion of the
-    `buffersize`, `tempdir` and `cache` arguments under the :func:`petl.transform.sorts.sort`
-    function.
+    `buffersize`, `tempdir` and `cache` arguments under the
+    :func:`petl.transform.sorts.sort` function.
     
     """
     
@@ -345,7 +350,8 @@ def iterconflicts(source, key, missing, exclude, include):
 
 def distinct(table, key=None, count=None, presorted=False, buffersize=None,
              tempdir=None, cache=True):
-    """Return only distinct rows in the table. See also :func:`duplicates` and
+    """
+    Return only distinct rows in the table. See also :func:`duplicates` and
     :func:`unique`.
 
     If the `count` argument is not None, it will be used as the name for an
@@ -424,11 +430,15 @@ def isunique(table, field):
     Return True if there are no duplicate values for the given field(s),
     otherwise False. E.g.::
 
-        >>> from petl import isunique
-        >>> table = [['foo', 'bar'], ['a', 1], ['b'], ['b', 2], ['c', 3, True]]
-        >>> isunique(table, 'foo')
+        >>> import petl as etl
+        >>> table1 = [['foo', 'bar'],
+        ...           ['a', 1],
+        ...           ['b'],
+        ...           ['b', 2],
+        ...           ['c', 3, True]]
+        >>> etl.isunique(table1, 'foo')
         False
-        >>> isunique(table, 'bar')
+        >>> etl.isunique(table1, 'bar')
         True
 
     The `field` argument can be a single field name or index (starting from

@@ -11,17 +11,18 @@ from petl.transform.sorts import sort
 
 
 def fieldmap(table, mappings=None, failonerror=False, errorvalue=None):
-    """Transform a table, mapping fields arbitrarily between input and output.
+    """
+    Transform a table, mapping fields arbitrarily between input and output.
     E.g.::
 
-        >>> from petl import fieldmap, look
+        >>> import petl as etl
+        >>> from collections import OrderedDict
         >>> table1 = [['id', 'sex', 'age', 'height', 'weight'],
         ...           [1, 'male', 16, 1.45, 62.0],
         ...           [2, 'female', 19, 1.34, 55.4],
         ...           [3, 'female', 17, 1.78, 74.4],
         ...           [4, 'male', 21, 1.33, 45.2],
         ...           [5, '-', 25, 1.65, 51.9]]
-        >>> from collections import OrderedDict
         >>> mappings = OrderedDict()
         >>> # rename a field
         ... mappings['subject_id'] = 'id'
@@ -32,10 +33,10 @@ def fieldmap(table, mappings=None, failonerror=False, errorvalue=None):
         >>> # apply a calculation to a combination of fields
         ... mappings['bmi'] = lambda rec: rec['weight'] / rec['height']**2
         >>> # transform and inspect the output
-        ... table2 = fieldmap(table1, mappings)
-        >>> look(table2)
+        ... table2 = etl.fieldmap(table1, mappings)
+        >>> table2
         +--------------+----------+--------------+--------------------+
-        | 'subject_id' | 'gender' | 'age_months' | 'bmi'              |
+        | 0|subject_id | 1|gender | 2|age_months | 3|bmi              |
         +==============+==========+==============+====================+
         |            1 | 'M'      |          192 |  29.48870392390012 |
         +--------------+----------+--------------+--------------------+
@@ -141,9 +142,10 @@ def composedict(d, srcfld):
 
 
 def rowmap(table, rowmapper, fields, failonerror=False):
-    """Transform rows via an arbitrary function. E.g.::
+    """
+    Transform rows via an arbitrary function. E.g.::
 
-        >>> from petl import rowmap, look
+        >>> import petl as etl
         >>> table1 = [['id', 'sex', 'age', 'height', 'weight'],
         ...           [1, 'male', 16, 1.45, 62.0],
         ...           [2, 'female', 19, 1.34, 55.4],
@@ -157,12 +159,12 @@ def rowmap(table, rowmapper, fields, failonerror=False):
         ...             row.age * 12,
         ...             row.height / row.weight ** 2]
         ...
-        >>> table2 = rowmap(table1, rowmapper,
-        ...                 fields=['subject_id', 'gender', 'age_months',
-        ...                         'bmi'])
-        >>> look(table2)
+        >>> table2 = etl.rowmap(table1, rowmapper,
+        ...                     fields=['subject_id', 'gender', 'age_months',
+        ...                             'bmi'])
+        >>> table2
         +--------------+----------+--------------+-----------------------+
-        | 'subject_id' | 'gender' | 'age_months' | 'bmi'                 |
+        | 0|subject_id | 1|gender | 2|age_months | 3|bmi                 |
         +==============+==========+==============+=======================+
         |            1 | 'M'      |          192 | 0.0003772112382934443 |
         +--------------+----------+--------------+-----------------------+
@@ -214,10 +216,11 @@ def iterrowmap(source, rowmapper, fields, failonerror):
 
 
 def rowmapmany(table, rowgenerator, fields, failonerror=False):
-    """Map each input row to any number of output rows via an arbitrary
+    """
+    Map each input row to any number of output rows via an arbitrary
     function. E.g.::
 
-        >>> from petl import rowmapmany, lookall
+        >>> import petl as etl
         >>> table1 = [['id', 'sex', 'age', 'height', 'weight'],
         ...           [1, 'male', 16, 1.45, 62.0],
         ...           [2, 'female', 19, 1.34, 55.4],
@@ -230,34 +233,34 @@ def rowmapmany(table, rowgenerator, fields, failonerror=False):
         ...     yield [row[0], 'age_months', row.age * 12]
         ...     yield [row[0], 'bmi', row.height / row.weight ** 2]
         ...
-        >>> table2 = rowmapmany(table1, rowgenerator,
-        ...                     fields=['subject_id', 'variable', 'value'])
-        >>> lookall(table2)
-        +--------------+--------------+-----------------------+
-        | 'subject_id' | 'variable'   | 'value'               |
-        +==============+==============+=======================+
-        |            1 | 'gender'     | 'M'                   |
-        +--------------+--------------+-----------------------+
-        |            1 | 'age_months' |                   192 |
-        +--------------+--------------+-----------------------+
-        |            1 | 'bmi'        | 0.0003772112382934443 |
-        +--------------+--------------+-----------------------+
-        |            2 | 'gender'     | 'F'                   |
-        +--------------+--------------+-----------------------+
-        |            2 | 'age_months' |                   228 |
-        +--------------+--------------+-----------------------+
-        |            2 | 'bmi'        | 0.0004366015456998006 |
-        +--------------+--------------+-----------------------+
-        |            3 | 'gender'     | None                  |
-        +--------------+--------------+-----------------------+
-        |            3 | 'age_months' |                   204 |
-        +--------------+--------------+-----------------------+
-        |            3 | 'bmi'        | 0.0003215689675106949 |
-        +--------------+--------------+-----------------------+
-        |            4 | 'gender'     | 'M'                   |
-        +--------------+--------------+-----------------------+
-        |            4 | 'age_months' |                   252 |
-        +--------------+--------------+-----------------------+
+        >>> table2 = etl.rowmapmany(table1, rowgenerator,
+        ...                         fields=['subject_id', 'variable', 'value'])
+        >>> table2.lookall()
+        +------------+--------------+-----------------------+
+        | subject_id | variable     | value                 |
+        +============+==============+=======================+
+        |          1 | 'gender'     | 'M'                   |
+        +------------+--------------+-----------------------+
+        |          1 | 'age_months' |                   192 |
+        +------------+--------------+-----------------------+
+        |          1 | 'bmi'        | 0.0003772112382934443 |
+        +------------+--------------+-----------------------+
+        |          2 | 'gender'     | 'F'                   |
+        +------------+--------------+-----------------------+
+        |          2 | 'age_months' |                   228 |
+        +------------+--------------+-----------------------+
+        |          2 | 'bmi'        | 0.0004366015456998006 |
+        +------------+--------------+-----------------------+
+        |          3 | 'gender'     | None                  |
+        +------------+--------------+-----------------------+
+        |          3 | 'age_months' |                   204 |
+        +------------+--------------+-----------------------+
+        |          3 | 'bmi'        | 0.0003215689675106949 |
+        +------------+--------------+-----------------------+
+        |          4 | 'gender'     | 'M'                   |
+        +------------+--------------+-----------------------+
+        |          4 | 'age_months' |                   252 |
+        +------------+--------------+-----------------------+
 
     The `rowgenerator` function should accept a single row and yield zero or
     more rows (lists or tuples).
@@ -303,7 +306,8 @@ def iterrowmapmany(source, rowgenerator, fields, failonerror):
 
 def rowgroupmap(table, key, mapper, fields=None, presorted=False,
                 buffersize=None, tempdir=None, cache=True):
-    """Group rows under the given key then apply `mapper` to yield zero or more
+    """
+    Group rows under the given key then apply `mapper` to yield zero or more
     output rows for each input group of rows.
 
     """

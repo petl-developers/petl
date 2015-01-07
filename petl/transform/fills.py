@@ -9,8 +9,10 @@ from petl.util.base import Table, asindices
 
 
 def filldown(table, *fields, **kwargs):
-    """Replace missing values with non-missing values from the row above. E.g.::
+    """
+    Replace missing values with non-missing values from the row above. E.g.::
 
+        >>> import petl as etl
         >>> table1 = [['foo', 'bar', 'baz'],
         ...           [1, 'a', None],
         ...           [1, None, .23],
@@ -19,66 +21,65 @@ def filldown(table, *fields, **kwargs):
         ...           [2, None, .56],
         ...           [2, 'c', None],
         ...           [None, 'c', .72]]
-        >>> from petl import filldown, lookall
-        >>> table2 = filldown(table1)
-        >>> lookall(table2)
-        +-------+-------+-------+
-        | 'foo' | 'bar' | 'baz' |
-        +=======+=======+=======+
-        |     1 | 'a'   | None  |
-        +-------+-------+-------+
-        |     1 | 'a'   |  0.23 |
-        +-------+-------+-------+
-        |     1 | 'b'   |  0.23 |
-        +-------+-------+-------+
-        |     2 | 'b'   |  0.23 |
-        +-------+-------+-------+
-        |     2 | 'b'   |  0.56 |
-        +-------+-------+-------+
-        |     2 | 'c'   |  0.56 |
-        +-------+-------+-------+
-        |     2 | 'c'   |  0.72 |
-        +-------+-------+-------+
+        >>> table2 = etl.filldown(table1)
+        >>> table2.lookall()
+        +-----+-----+------+
+        | foo | bar | baz  |
+        +=====+=====+======+
+        |   1 | 'a' | None |
+        +-----+-----+------+
+        |   1 | 'a' | 0.23 |
+        +-----+-----+------+
+        |   1 | 'b' | 0.23 |
+        +-----+-----+------+
+        |   2 | 'b' | 0.23 |
+        +-----+-----+------+
+        |   2 | 'b' | 0.56 |
+        +-----+-----+------+
+        |   2 | 'c' | 0.56 |
+        +-----+-----+------+
+        |   2 | 'c' | 0.72 |
+        +-----+-----+------+
 
-        >>> table3 = filldown(table1, 'bar')
-        >>> lookall(table3)
-        +-------+-------+-------+
-        | 'foo' | 'bar' | 'baz' |
-        +=======+=======+=======+
-        |     1 | 'a'   | None  |
-        +-------+-------+-------+
-        |     1 | 'a'   |  0.23 |
-        +-------+-------+-------+
-        |     1 | 'b'   | None  |
-        +-------+-------+-------+
-        |     2 | 'b'   | None  |
-        +-------+-------+-------+
-        |     2 | 'b'   |  0.56 |
-        +-------+-------+-------+
-        |     2 | 'c'   | None  |
-        +-------+-------+-------+
-        | None  | 'c'   |  0.72 |
-        +-------+-------+-------+
+        >>> table3 = etl.filldown(table1, 'bar')
+        >>> table3.lookall()
+        +------+-----+------+
+        | foo  | bar | baz  |
+        +======+=====+======+
+        |    1 | 'a' | None |
+        +------+-----+------+
+        |    1 | 'a' | 0.23 |
+        +------+-----+------+
+        |    1 | 'b' | None |
+        +------+-----+------+
+        |    2 | 'b' | None |
+        +------+-----+------+
+        |    2 | 'b' | 0.56 |
+        +------+-----+------+
+        |    2 | 'c' | None |
+        +------+-----+------+
+        | None | 'c' | 0.72 |
+        +------+-----+------+
 
-        >>> table4 = filldown(table1, 'bar', 'baz')
-        >>> lookall(table4)
-        +-------+-------+-------+
-        | 'foo' | 'bar' | 'baz' |
-        +=======+=======+=======+
-        |     1 | 'a'   | None  |
-        +-------+-------+-------+
-        |     1 | 'a'   |  0.23 |
-        +-------+-------+-------+
-        |     1 | 'b'   |  0.23 |
-        +-------+-------+-------+
-        |     2 | 'b'   |  0.23 |
-        +-------+-------+-------+
-        |     2 | 'b'   |  0.56 |
-        +-------+-------+-------+
-        |     2 | 'c'   |  0.56 |
-        +-------+-------+-------+
-        | None  | 'c'   |  0.72 |
-        +-------+-------+-------+
+        >>> table4 = etl.filldown(table1, 'bar', 'baz')
+        >>> table4.lookall()
+        +------+-----+------+
+        | foo  | bar | baz  |
+        +======+=====+======+
+        |    1 | 'a' | None |
+        +------+-----+------+
+        |    1 | 'a' | 0.23 |
+        +------+-----+------+
+        |    1 | 'b' | 0.23 |
+        +------+-----+------+
+        |    2 | 'b' | 0.23 |
+        +------+-----+------+
+        |    2 | 'b' | 0.56 |
+        +------+-----+------+
+        |    2 | 'c' | 0.56 |
+        +------+-----+------+
+        | None | 'c' | 0.72 |
+        +------+-----+------+
 
     Use the `missing` keyword argument to control which value is treated as
     missing (`None` by default).
@@ -122,8 +123,10 @@ def iterfilldown(table, fillfields, missing):
 
 
 def fillright(table, missing=None):
-    """Replace missing values with preceding non-missing values. E.g.::
+    """
+    Replace missing values with preceding non-missing values. E.g.::
 
+        >>> import petl as etl
         >>> table1 = [['foo', 'bar', 'baz'],
         ...           [1, 'a', None],
         ...           [1, None, .23],
@@ -132,26 +135,25 @@ def fillright(table, missing=None):
         ...           [2, None, .56],
         ...           [2, 'c', None],
         ...           [None, 'c', .72]]
-        >>> from petl import fillright, lookall
-        >>> table2 = fillright(table1)
-        >>> lookall(table2)
-        +-------+-------+-------+
-        | 'foo' | 'bar' | 'baz' |
-        +=======+=======+=======+
-        |     1 | 'a'   | 'a'   |
-        +-------+-------+-------+
-        |     1 |     1 |  0.23 |
-        +-------+-------+-------+
-        |     1 | 'b'   | 'b'   |
-        +-------+-------+-------+
-        |     2 |     2 |     2 |
-        +-------+-------+-------+
-        |     2 |     2 |  0.56 |
-        +-------+-------+-------+
-        |     2 | 'c'   | 'c'   |
-        +-------+-------+-------+
-        | None  | 'c'   |  0.72 |
-        +-------+-------+-------+
+        >>> table2 = etl.fillright(table1)
+        >>> table2.lookall()
+        +------+-----+------+
+        | foo  | bar | baz  |
+        +======+=====+======+
+        |    1 | 'a' | 'a'  |
+        +------+-----+------+
+        |    1 |   1 | 0.23 |
+        +------+-----+------+
+        |    1 | 'b' | 'b'  |
+        +------+-----+------+
+        |    2 |   2 |    2 |
+        +------+-----+------+
+        |    2 |   2 | 0.56 |
+        +------+-----+------+
+        |    2 | 'c' | 'c'  |
+        +------+-----+------+
+        | None | 'c' | 0.72 |
+        +------+-----+------+
 
     Use the `missing` keyword argument to control which value is treated as
     missing (`None` by default).
@@ -187,8 +189,10 @@ def iterfillright(table, missing):
 
 
 def fillleft(table, missing=None):
-    """Replace missing values with following non-missing values. E.g.::
+    """
+    Replace missing values with following non-missing values. E.g.::
 
+        >>> import petl as etl
         >>> table1 = [['foo', 'bar', 'baz'],
         ...           [1, 'a', None],
         ...           [1, None, .23],
@@ -197,26 +201,25 @@ def fillleft(table, missing=None):
         ...           [2, None, .56],
         ...           [2, 'c', None],
         ...           [None, 'c', .72]]
-        >>> from petl import fillleft, lookall
-        >>> table2 = fillleft(table1)
-        >>> lookall(table2)
-        +-------+-------+-------+
-        | 'foo' | 'bar' | 'baz' |
-        +=======+=======+=======+
-        |     1 | 'a'   | None  |
-        +-------+-------+-------+
-        |     1 |  0.23 |  0.23 |
-        +-------+-------+-------+
-        |     1 | 'b'   | None  |
-        +-------+-------+-------+
-        |     2 | None  | None  |
-        +-------+-------+-------+
-        |     2 |  0.56 |  0.56 |
-        +-------+-------+-------+
-        |     2 | 'c'   | None  |
-        +-------+-------+-------+
-        | 'c'   | 'c'   |  0.72 |
-        +-------+-------+-------+
+        >>> table2 = etl.fillleft(table1)
+        >>> table2.lookall()
+        +-----+------+------+
+        | foo | bar  | baz  |
+        +=====+======+======+
+        |   1 | 'a'  | None |
+        +-----+------+------+
+        |   1 | 0.23 | 0.23 |
+        +-----+------+------+
+        |   1 | 'b'  | None |
+        +-----+------+------+
+        |   2 | None | None |
+        +-----+------+------+
+        |   2 | 0.56 | 0.56 |
+        +-----+------+------+
+        |   2 | 'c'  | None |
+        +-----+------+------+
+        | 'c' | 'c'  | 0.72 |
+        +-----+------+------+
 
     Use the `missing` keyword argument to control which value is treated as
     missing (`None` by default).

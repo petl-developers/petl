@@ -3,12 +3,13 @@
 Utility functions
 =================
 
+
 Basic utilities
 ---------------
 
 .. autofunction:: petl.util.base.header
-.. autofunction:: petl.util.base.data
 .. autofunction:: petl.util.base.fieldnames
+.. autofunction:: petl.util.base.data
 .. autofunction:: petl.util.base.values
 .. autofunction:: petl.util.base.dicts
 .. autofunction:: petl.util.base.namedtuples
@@ -17,6 +18,7 @@ Basic utilities
 .. autofunction:: petl.util.base.rowgroupby
 .. autofunction:: petl.util.base.empty
 
+
 Visualising tables
 ------------------
 
@@ -24,14 +26,6 @@ Visualising tables
 .. autofunction:: petl.util.vis.lookall
 .. autofunction:: petl.util.vis.see
 
-Parsing string/text values
---------------------------
-
-.. autofunction:: petl.util.parsers.dateparser
-.. autofunction:: petl.util.parsers.timeparser
-.. autofunction:: petl.util.parsers.datetimeparser
-.. autofunction:: petl.util.parsers.boolparser
-.. autofunction:: petl.util.parsers.numparser
 
 Lookup data structures
 ----------------------
@@ -42,6 +36,17 @@ Lookup data structures
 .. autofunction:: petl.util.lookups.dictlookupone
 .. autofunction:: petl.util.lookups.recordlookup
 .. autofunction:: petl.util.lookups.recordlookupone
+
+
+Parsing string/text values
+--------------------------
+
+.. autofunction:: petl.util.parsers.dateparser
+.. autofunction:: petl.util.parsers.timeparser
+.. autofunction:: petl.util.parsers.datetimeparser
+.. autofunction:: petl.util.parsers.boolparser
+.. autofunction:: petl.util.parsers.numparser
+
 
 Counting
 --------
@@ -58,17 +63,20 @@ Counting
 .. autofunction:: petl.util.counting.parsecounts
 .. autofunction:: petl.util.counting.parsecounter
 
+
 Timing
 ------
 
 .. autofunction:: petl.util.timing.progress
 .. autofunction:: petl.util.timing.clock
 
+
 Statistics
 ----------
 
 .. autofunction:: petl.util.statistics.limits
 .. autofunction:: petl.util.statistics.stats
+
 
 Materialising tables
 --------------------
@@ -81,11 +89,13 @@ Materialising tables
 .. autofunction:: petl.util.materialise.tupleoftuples
 .. autofunction:: petl.util.materialise.cache
 
+
 Randomly generated tables
 -------------------------
 
 .. autofunction:: petl.util.random.randomtable
 .. autofunction:: petl.util.random.dummytable
+
 
 Miscellaneous
 -------------

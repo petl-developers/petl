@@ -3,6 +3,7 @@
 Transform - transforming tables
 ===============================
 
+
 Basic transformations
 ---------------------
 
@@ -20,6 +21,7 @@ Basic transformations
 .. autofunction:: petl.transform.basics.addfieldusingcontext
 .. autofunction:: petl.transform.basics.annex
 
+
 Header manipulations
 --------------------
 
@@ -31,6 +33,7 @@ Header manipulations
 .. autofunction:: petl.transform.headers.suffixheader
 .. autofunction:: petl.transform.headers.skip
 
+
 Converting values
 -----------------
 
@@ -40,6 +43,7 @@ Converting values
 .. autofunction:: petl.transform.conversions.replace
 .. autofunction:: petl.transform.conversions.replaceall
 .. autofunction:: petl.transform.conversions.update
+
 
 Selecting rows
 --------------
@@ -71,6 +75,7 @@ Selecting rows
 .. autofunction:: petl.transform.selects.rowlenselect
 .. autofunction:: petl.transform.selects.facet
 
+
 Regular expressions
 -------------------
 
@@ -79,11 +84,13 @@ Regular expressions
 .. autofunction:: petl.transform.regex.split
 .. autofunction:: petl.transform.regex.capture
 
+
 Unpacking compound values
 -------------------------
 
 .. autofunction:: petl.transform.unpacks.unpack
 .. autofunction:: petl.transform.unpacks.unpackdict
+
 
 Transforming rows
 -----------------
@@ -93,12 +100,14 @@ Transforming rows
 .. autofunction:: petl.transform.maps.rowmapmany
 .. autofunction:: petl.transform.maps.rowgroupmap
 
+
 Sorting
 -------
 
 .. autofunction:: petl.transform.sorts.sort
 .. autofunction:: petl.transform.sorts.mergesort
 .. autofunction:: petl.transform.sorts.isordered
+
 
 Joins
 -----
@@ -117,6 +126,7 @@ Joins
 .. autofunction:: petl.transform.hashjoins.hashrightjoin
 .. autofunction:: petl.transform.hashjoins.hashantijoin
 
+
 Set operations
 --------------
 
@@ -128,6 +138,7 @@ Set operations
 .. autofunction:: petl.transform.setops.hashcomplement
 .. autofunction:: petl.transform.setops.hashintersection
 
+
 Deduplicating rows
 -------------------
 
@@ -136,6 +147,7 @@ Deduplicating rows
 .. autofunction:: petl.transform.dedup.conflicts
 .. autofunction:: petl.transform.dedup.distinct
 .. autofunction:: petl.transform.dedup.isunique
+
 
 Reducing rows
 -------------
@@ -150,6 +162,7 @@ Reducing rows
 .. autofunction:: petl.transform.reductions.groupselectmin
 .. autofunction:: petl.transform.reductions.groupselectmax
 
+
 Reshaping tables
 ----------------
 
@@ -160,11 +173,10 @@ Reshaping tables
 .. autofunction:: petl.transform.reshape.flatten
 .. autofunction:: petl.transform.reshape.unflatten
 
+
 Filling missing values
 ----------------------
 
 .. autofunction:: petl.transform.fills.filldown
 .. autofunction:: petl.transform.fills.fillright
 .. autofunction:: petl.transform.fills.fillleft
-
-

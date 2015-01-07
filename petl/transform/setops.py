@@ -18,9 +18,10 @@ from petl.transform.basics import cut
 
 def complement(a, b, presorted=False, buffersize=None, tempdir=None,
                cache=True):
-    """Return rows in `a` that are not in `b`. E.g.::
+    """
+    Return rows in `a` that are not in `b`. E.g.::
 
-        >>> from petl import complement, look
+        >>> import petl as etl
         >>> a = [['foo', 'bar', 'baz'],
         ...      ['A', 1, True],
         ...      ['C', 7, False],
@@ -31,20 +32,20 @@ def complement(a, b, presorted=False, buffersize=None, tempdir=None,
         ...      ['A', 9, False],
         ...      ['B', 3, True],
         ...      ['C', 9, True]]
-        >>> aminusb = complement(a, b)
-        >>> look(aminusb)
+        >>> aminusb = etl.complement(a, b)
+        >>> aminusb
         +-------+-------+-------+
-        | 'foo' | 'bar' | 'baz' |
+        | 0|foo | 1|bar | 2|baz |
         +=======+=======+=======+
         | 'A'   |     1 | True  |
         +-------+-------+-------+
         | 'C'   |     7 | False |
         +-------+-------+-------+
 
-        >>> bminusa = complement(b, a)
-        >>> look(bminusa)
+        >>> bminusa = etl.complement(b, a)
+        >>> bminusa
         +-----+-----+-------+
-        | 'x' | 'y' | 'z'   |
+        | 0|x | 1|y | 2|z   |
         +=====+=====+=======+
         | 'A' |   9 | False |
         +-----+-----+-------+
@@ -138,9 +139,10 @@ def itercomplement(ta, tb):
 
 
 def recordcomplement(a, b, buffersize=None, tempdir=None, cache=True):
-    """Find records in `a` that are not in `b`. E.g.::
+    """
+    Find records in `a` that are not in `b`. E.g.::
 
-        >>> from petl import recordcomplement, look
+        >>> import petl as etl
         >>> a = [['foo', 'bar', 'baz'],
         ...      ['A', 1, True],
         ...      ['C', 7, False],
@@ -151,20 +153,20 @@ def recordcomplement(a, b, buffersize=None, tempdir=None, cache=True):
         ...      [9, 'A', False],
         ...      [3, 'B', True],
         ...      [9, 'C', True]]
-        >>> aminusb = recordcomplement(a, b)
-        >>> look(aminusb)
+        >>> aminusb = etl.recordcomplement(a, b)
+        >>> aminusb
         +-------+-------+-------+
-        | 'foo' | 'bar' | 'baz' |
+        | 0|foo | 1|bar | 2|baz |
         +=======+=======+=======+
         | 'A'   |     1 | True  |
         +-------+-------+-------+
         | 'C'   |     7 | False |
         +-------+-------+-------+
 
-        >>> bminusa = recordcomplement(b, a)
-        >>> look(bminusa)
+        >>> bminusa = etl.recordcomplement(b, a)
+        >>> bminusa
         +-------+-------+-------+
-        | 'bar' | 'foo' | 'baz' |
+        | 0|bar | 1|foo | 2|baz |
         +=======+=======+=======+
         |     3 | 'B'   | True  |
         +-------+-------+-------+
@@ -193,11 +195,11 @@ Table.recordcomplement = recordcomplement
 
 
 def diff(a, b, presorted=False, buffersize=None, tempdir=None, cache=True):
-    """Find the difference between rows in two tables. Returns a pair of tables.
+    """
+    Find the difference between rows in two tables. Returns a pair of tables.
     E.g.::
 
-        >>> from petl import diff, look
-        >>>
+        >>> import petl as etl
         >>> a = [['foo', 'bar', 'baz'],
         ...      ['A', 1, True],
         ...      ['C', 7, False],
@@ -208,11 +210,11 @@ def diff(a, b, presorted=False, buffersize=None, tempdir=None, cache=True):
         ...      ['A', 9, False],
         ...      ['B', 3, True],
         ...      ['C', 9, True]]
-        >>> added, subtracted = diff(a, b)
+        >>> added, subtracted = etl.diff(a, b)
         >>> # rows in b not in a
-        ... look(added)
+        ... added
         +-----+-----+-------+
-        | 'x' | 'y' | 'z'   |
+        | 0|x | 1|y | 2|z   |
         +=====+=====+=======+
         | 'A' |   9 | False |
         +-----+-----+-------+
@@ -220,9 +222,9 @@ def diff(a, b, presorted=False, buffersize=None, tempdir=None, cache=True):
         +-----+-----+-------+
 
         >>> # rows in a not in b
-        ... look(subtracted)
+        ... subtracted
         +-------+-------+-------+
-        | 'foo' | 'bar' | 'baz' |
+        | 0|foo | 1|bar | 2|baz |
         +=======+=======+=======+
         | 'A'   |     1 | True  |
         +-------+-------+-------+
@@ -254,9 +256,10 @@ Table.diff = diff
 
 
 def recorddiff(a, b, buffersize=None, tempdir=None, cache=True):
-    """Find the difference between records in two tables. E.g.::
+    """
+    Find the difference between records in two tables. E.g.::
 
-        >>> from petl import recorddiff, look
+        >>> import petl as etl
         >>> a = [['foo', 'bar', 'baz'],
         ...      ['A', 1, True],
         ...      ['C', 7, False],
@@ -267,19 +270,19 @@ def recorddiff(a, b, buffersize=None, tempdir=None, cache=True):
         ...      [9, 'A', False],
         ...      [3, 'B', True],
         ...      [9, 'C', True]]
-        >>> added, subtracted = recorddiff(a, b)
-        >>> look(added)
+        >>> added, subtracted = etl.recorddiff(a, b)
+        >>> added
         +-------+-------+-------+
-        | 'bar' | 'foo' | 'baz' |
+        | 0|bar | 1|foo | 2|baz |
         +=======+=======+=======+
         |     3 | 'B'   | True  |
         +-------+-------+-------+
         |     9 | 'A'   | False |
         +-------+-------+-------+
 
-        >>> look(subtracted)
+        >>> subtracted
         +-------+-------+-------+
-        | 'foo' | 'bar' | 'baz' |
+        | 0|foo | 1|bar | 2|baz |
         +=======+=======+=======+
         | 'A'   |     1 | True  |
         +-------+-------+-------+
@@ -307,9 +310,10 @@ Table.recorddiff = recorddiff
 
 def intersection(a, b, presorted=False, buffersize=None, tempdir=None,
                  cache=True):
-    """Return rows in `a` that are also in `b`. E.g.::
+    """
+    Return rows in `a` that are also in `b`. E.g.::
 
-        >>> from petl import intersection, look
+        >>> import petl as etl
         >>> table1 = [['foo', 'bar', 'baz'],
         ...           ['A', 1, True],
         ...           ['C', 7, False],
@@ -320,10 +324,10 @@ def intersection(a, b, presorted=False, buffersize=None, tempdir=None,
         ...           ['A', 9, False],
         ...           ['B', 3, True],
         ...           ['C', 9, True]]
-        >>> table3 = intersection(table1, table2)
-        >>> look(table3)
+        >>> table3 = etl.intersection(table1, table2)
+        >>> table3
         +-------+-------+-------+
-        | 'foo' | 'bar' | 'baz' |
+        | 0|foo | 1|bar | 2|baz |
         +=======+=======+=======+
         | 'B'   |     2 | False |
         +-------+-------+-------+
@@ -385,7 +389,8 @@ def iterintersection(a, b):
 
 
 def hashcomplement(a, b):
-    """Alternative implementation of :func:`petl.transform.setops.complement`,
+    """
+    Alternative implementation of :func:`petl.transform.setops.complement`,
     where the complement is executed by constructing an in-memory set for all
     rows found in the right hand table, then iterating over rows from the
     left hand table.
@@ -429,7 +434,8 @@ def iterhashcomplement(a, b):
 
 
 def hashintersection(a, b):
-    """Alternative implementation of
+    """
+    Alternative implementation of
     :func:`petl.transform.setops.intersection`, where the intersection
     is executed by constructing an in-memory set for all rows found in the
     right hand table, then iterating over rows from the left hand table.

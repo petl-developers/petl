@@ -3,12 +3,13 @@
 Extract/Load - reading/writing tables from files, databases and other sources
 =============================================================================
 
+
 Extract (read)
 --------------
 
 The "from..." functions read a table from a file-like source or
-database. For everything except :func:`fromdb` the ``source`` argument
-provides information about where to read the underlying data from. If
+database. For everything except :func:`petl.io.db.fromdb` the ``source``
+argument provides information about where to read the underlying data from. If
 the ``source`` argument is ``None`` or a string it is interpreted as
 follows:
 
@@ -21,6 +22,7 @@ follows:
 Some helper classes are also available for reading from other types of file-like
 sources, e.g., reading data from a Zip file, a string or a subprocess,
 see the section on I/O helper classes below for more information.
+
 
 Load (write)
 ------------
@@ -38,6 +40,7 @@ follows:
 Some helper classes are also available for writing to other types of
 file-like sources, e.g., writing to a Zip file or string buffer, see
 the section on I/O helper classes below for more information.
+
 
 Delimited files
 ---------------
@@ -59,6 +62,7 @@ Delimited files
 .. autofunction:: petl.io.csv.appendutsv
 .. autofunction:: petl.io.csv.teeutsv
 
+
 Pickle files
 ------------
 
@@ -66,6 +70,7 @@ Pickle files
 .. autofunction:: petl.io.pickle.topickle
 .. autofunction:: petl.io.pickle.appendpickle
 .. autofunction:: petl.io.pickle.teepickle
+
 
 Text files
 ----------
@@ -79,12 +84,14 @@ Text files
 .. autofunction:: petl.io.text.appendutext
 .. autofunction:: petl.io.text.teeutext
 
+
 XML files
 ---------
 
 .. autofunction:: petl.io.xml.fromxml
 
 For writing to an XML file, see :func:`petl.io.text.totext`.
+
 
 HTML files
 ----------
@@ -94,6 +101,7 @@ HTML files
 .. autofunction:: petl.io.html.touhtml
 .. autofunction:: petl.io.html.teeuhtml
 
+
 JSON files
 ----------
 
@@ -101,6 +109,7 @@ JSON files
 .. autofunction:: petl.io.json.fromdicts
 .. autofunction:: petl.io.json.tojson
 .. autofunction:: petl.io.json.tojsonarrays
+
 
 Databases
 ---------
@@ -111,20 +120,23 @@ Databases
 .. autofunction:: petl.io.db.todb
 .. autofunction:: petl.io.db.appenddb
 
+
 I/O helper classes
 ------------------
 
 The following classes are helpers for extract (``from...()``) and load
 (``to...()``) functions that use a file-like data source. An instance
 of any of the following classes can be used as the ``source`` argument
-to data extraction functions like :func:`fromcsv` etc., with the
-exception of :class:`StdoutSource` which is write-only. An instance of
+to data extraction functions like :func:`petl.io.csv.fromcsv` etc., with the
+exception of :class:`petl.io.sources.StdoutSource` which is write-only. An
+instance of
 any of the following classes can also be used as the ``source``
 argument to data loading functions like :func:`tocsv` etc., with the
-exception of :class:`StdinSource`, :class:`URLSource` and
-:class:`PopenSource` which are read-only. The behaviour of each source
-can usually be configured by passing arguments to the constructor, see
-the source code of the :mod:`petl.io.sources` module for full details.
+exception of :class:`petl.io.sources.StdinSource`,
+:class:`petl.io.sources.URLSource` and :class:`petl.io.sources.PopenSource`
+which are read-only. The behaviour of each source can usually be configured
+by passing arguments to the constructor, see the source code of the
+:mod:`petl.io.sources` module for full details.
 
 .. autoclass:: petl.io.sources.FileSource
 .. autoclass:: petl.io.sources.GzipSource
@@ -135,9 +147,3 @@ the source code of the :mod:`petl.io.sources` module for full details.
 .. autoclass:: petl.io.sources.URLSource
 .. autoclass:: petl.io.sources.MemorySource
 .. autoclass:: petl.io.sources.PopenSource
-
-
-
-
-
-

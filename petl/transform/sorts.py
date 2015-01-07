@@ -24,20 +24,21 @@ debug = logger.debug
 
 def sort(table, key=None, reverse=False, buffersize=None, tempdir=None,
          cache=True):
-    """Sort the table. Field names or indices (from zero) can be used to specify
+    """
+    Sort the table. Field names or indices (from zero) can be used to specify
     the key. E.g.::
 
-        >>> from petl import sort, look
+        >>> import petl as etl
         >>> table1 = [['foo', 'bar'],
         ...           ['C', 2],
         ...           ['A', 9],
         ...           ['A', 6],
         ...           ['F', 1],
         ...           ['D', 10]]
-        >>> table2 = sort(table1, 'foo')
-        >>> look(table2)
+        >>> table2 = etl.sort(table1, 'foo')
+        >>> table2
         +-------+-------+
-        | 'foo' | 'bar' |
+        | 0|foo | 1|bar |
         +=======+=======+
         | 'A'   |     9 |
         +-------+-------+
@@ -51,10 +52,10 @@ def sort(table, key=None, reverse=False, buffersize=None, tempdir=None,
         +-------+-------+
 
         >>> # sorting by compound key is supported
-        ... table3 = sort(table1, key=['foo', 'bar'])
-        >>> look(table3)
+        ... table3 = etl.sort(table1, key=['foo', 'bar'])
+        >>> table3
         +-------+-------+
-        | 'foo' | 'bar' |
+        | 0|foo | 1|bar |
         +=======+=======+
         | 'A'   |     6 |
         +-------+-------+
@@ -68,10 +69,10 @@ def sort(table, key=None, reverse=False, buffersize=None, tempdir=None,
         +-------+-------+
 
         >>> # if no key is specified, the default is a lexical sort
-        ... table4 = sort(table1)
-        >>> look(table4)
+        ... table4 = etl.sort(table1)
+        >>> table4
         +-------+-------+
-        | 'foo' | 'bar' |
+        | 0|foo | 1|bar |
         +=======+=======+
         | 'A'   |     6 |
         +-------+-------+
@@ -92,13 +93,13 @@ def sort(table, key=None, reverse=False, buffersize=None, tempdir=None,
     and then a merge sort is performed on the temporary files.
 
     If `buffersize` is `None`, the value of
-    `petl.transform.sorts.defaultbuffersize` will be used. By default this is
+    `petl.config.sort_default_buffersize` will be used. By default this is
     set to 100000 rows, but can be changed, e.g.::
 
-        >>> import petl.transform.sorts
-        >>> petl.transform.sorts.defaultbuffersize = 500000
+        >>> import petl.config
+        >>> petl.config.sort_default_buffersize = 500000
 
-    If `petl.transform.sorts.defaultbuffersize` is set to `None`, this forces
+    If `petl.config.sort_default_buffersize` is set to `None`, this forces
     all sorting to be done entirely in memory.
 
     By default the results of the sort will be cached, and so a second pass over
@@ -323,9 +324,10 @@ class SortView(Table):
 
 
 def mergesort(*tables, **kwargs):
-    """Combine multiple input tables into one sorted output table. E.g.::
+    """
+    Combine multiple input tables into one sorted output table. E.g.::
 
-        >>> from petl import mergesort, look
+        >>> import petl as etl
         >>> table1 = [['foo', 'bar'],
         ...           ['A', 9],
         ...           ['C', 2],
@@ -337,21 +339,29 @@ def mergesort(*tables, **kwargs):
         ...           ['D', 10],
         ...           ['A', 10],
         ...           ['F', 4]]
-        >>> table3 = mergesort(table1, table2, key='foo')
-        >>> look(table3)
-        +-------+-------+
-        | 'foo' | 'bar' |
-        +=======+=======+
-        | 'A'   |     9 |
-        +-------+-------+
-        | 'A'   |     6 |
-        +-------+-------+
-        | 'A'   |    10 |
-        +-------+-------+
-        | 'B'   |     3 |
-        +-------+-------+
-        | 'C'   |     2 |
-        +-------+-------+
+        >>> table3 = etl.mergesort(table1, table2, key='foo')
+        >>> table3.lookall()
+        +-----+-----+
+        | foo | bar |
+        +=====+=====+
+        | 'A' |   9 |
+        +-----+-----+
+        | 'A' |   6 |
+        +-----+-----+
+        | 'A' |  10 |
+        +-----+-----+
+        | 'B' |   3 |
+        +-----+-----+
+        | 'C' |   2 |
+        +-----+-----+
+        | 'D' |  10 |
+        +-----+-----+
+        | 'D' |  10 |
+        +-----+-----+
+        | 'F' |   1 |
+        +-----+-----+
+        | 'F' |   4 |
+        +-----+-----+
 
     If the input tables are already sorted by the given key, give
     ``presorted=True`` as a keyword argument.
@@ -467,23 +477,18 @@ def issorted(table, key=None, reverse=False, strict=False):
     """
     Return True if the table is ordered (i.e., sorted) by the given key. E.g.::
 
-        >>> from petl import issorted, look
-        >>> look(table)
-        +-------+-------+-------+
-        | 'foo' | 'bar' | 'baz' |
-        +=======+=======+=======+
-        | 'a'   | 1     | True  |
-        +-------+-------+-------+
-        | 'b'   | 3     | True  |
-        +-------+-------+-------+
-        | 'b'   | 2     |       |
-        +-------+-------+-------+
-
-        >>> issorted(table, key='foo')
+        >>> import petl as etl
+        >>> table1 = [['foo', 'bar', 'baz'],
+        ...           ['a', 1, True],
+        ...           ['b', 3, True],
+        ...           ['b', 2]]
+        >>> etl.issorted(table1, key='foo')
         True
-        >>> issorted(table, key='foo', strict=True)
+        >>> etl.issorted(table1, key='bar')
         False
-        >>> issorted(table, key='foo', reverse=True)
+        >>> etl.issorted(table1, key='foo', strict=True)
+        False
+        >>> etl.issorted(table1, key='foo', reverse=True)
         False
 
     """

@@ -21,9 +21,10 @@ def _quote(s):
 
 
 def fromsqlite3(source, query, *args, **kwargs):
-    """Provides access to data from an :mod:`sqlite3` database file via a given
-    query. E.g.::
+    """
+    Extract data from an :mod:`sqlite3` database file via a given query. E.g.::
 
+        >>> import petl as etl
         >>> import sqlite3
         >>> # set up a database to demonstrate with
         ... data = [['a', 1],
@@ -39,11 +40,10 @@ def fromsqlite3(source, query, *args, **kwargs):
         >>> connection.commit()
         >>> c.close()
         >>> # now demonstrate the petl.fromsqlite3 function
-        ... from petl import look, fromsqlite3
-        >>> foobar = fromsqlite3('example.db', 'select * from foobar')
-        >>> look(foobar)
+        ... table = etl.fromsqlite3('example.db', 'select * from foobar')
+        >>> table
         +-------+-------+
-        | 'foo' | 'bar' |
+        | 0|foo | 1|bar |
         +=======+=======+
         | 'a'   |     1 |
         +-------+-------+
@@ -92,23 +92,23 @@ class Sqlite3View(Table):
 
 def tosqlite3(table, filename_or_connection, tablename, create=False,
               commit=True):
-    """Load data into a table in an :mod:`sqlite3` database. Note that if
+    """
+    Load data into a table in an :mod:`sqlite3` database. Note that if
     the database table exists, it will be truncated, i.e., all
     existing rows will be deleted prior to inserting the new
     data. E.g.::
 
+        >>> import petl as etl
         >>> table1 = [['foo', 'bar'],
         ...           ['a', 1],
         ...           ['b', 2],
         ...           ['c', 2]]
-        >>> from petl import tosqlite3, look
-        >>> _ = tosqlite3(table1, 'example.db', 'foobar', create=True)
+        >>> _ = etl.tosqlite3(table1, 'example.db', 'foobar', create=True)
         >>> # look what it did
-        ... from petl import fromsqlite3
-        >>> table2 = fromsqlite3('example.db', 'select * from foobar')
-        >>> look(table2)
+        ... table2 = etl.fromsqlite3('example.db', 'select * from foobar')
+        >>> table2
         +-------+-------+
-        | 'foo' | 'bar' |
+        | 0|foo | 1|bar |
         +=======+=======+
         | 'a'   |     1 |
         +-------+-------+
@@ -176,7 +176,8 @@ def _tosqlite3(table, filename_or_connection, tablename, create=False,
 
 
 def appendsqlite3(table, filename_or_connection, tablename, commit=True):
-    """Load data into a table in an :mod:`sqlite3` database. As
+    """
+    Load data into a table in an :mod:`sqlite3` database. As
     :func:`tosqlite3` except the table must exist and is not truncated before
     loading.
 

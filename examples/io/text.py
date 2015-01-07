@@ -4,28 +4,27 @@ from __future__ import division, print_function, absolute_import
 # fromtext()
 ############
 
-# example data
+import petl as etl
+# setup example file
 text = 'a,1\nb,2\nc,2\n'
 with open('example.txt', 'w') as f:
     f.write(text)
 
-from petl import fromtext, look
-table1 = fromtext('example.txt')
-look(table1)
-# now post-process,e.g., with capture()
-from petl import capture
-table2 = capture(table1, 'lines', '(.*),(.*)$', ['foo', 'bar'])
-look(table2)
+table1 = etl.fromtext('example.txt')
+table1
+# post-process, e.g., with capture()
+table2 = table1.capture('lines', '(.*),(.*)$', ['foo', 'bar'])
+table2
 
 
 # totext()
 ##########
 
+import petl as etl
 table1 = [['foo', 'bar'],
           ['a', 1],
           ['b', 2],
           ['c', 2]]
-from petl import totext, look
 prologue = '''{| class="wikitable"
 |-
 ! foo
@@ -36,6 +35,6 @@ template = '''|-
 | {bar}
 '''
 epilogue = '|}'
-totext(table1, 'example.txt', template, prologue, epilogue)
+etl.totext(table1, 'example.txt', template, prologue, epilogue)
 # see what we did
 print(open('example.txt').read())

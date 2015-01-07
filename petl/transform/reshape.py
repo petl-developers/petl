@@ -19,65 +19,65 @@ def melt(table, key=None, variables=None, variablefield='variable',
     """
     Reshape a table, melting fields into data. E.g.::
 
-        >>> from petl import melt, lookall
+        >>> import petl as etl
         >>> table1 = [['id', 'gender', 'age'],
         ...           [1, 'F', 12],
         ...           [2, 'M', 17],
         ...           [3, 'M', 16]]
-        >>> table2 = melt(table1, 'id')
-        >>> lookall(table2)
-        +------+------------+---------+
-        | 'id' | 'variable' | 'value' |
-        +======+============+=========+
-        |    1 | 'gender'   | 'F'     |
-        +------+------------+---------+
-        |    1 | 'age'      |      12 |
-        +------+------------+---------+
-        |    2 | 'gender'   | 'M'     |
-        +------+------------+---------+
-        |    2 | 'age'      |      17 |
-        +------+------------+---------+
-        |    3 | 'gender'   | 'M'     |
-        +------+------------+---------+
-        |    3 | 'age'      |      16 |
-        +------+------------+---------+
+        >>> table2 = etl.melt(table1, 'id')
+        >>> table2.lookall()
+        +----+----------+-------+
+        | id | variable | value |
+        +====+==========+=======+
+        |  1 | 'gender' | 'F'   |
+        +----+----------+-------+
+        |  1 | 'age'    |    12 |
+        +----+----------+-------+
+        |  2 | 'gender' | 'M'   |
+        +----+----------+-------+
+        |  2 | 'age'    |    17 |
+        +----+----------+-------+
+        |  3 | 'gender' | 'M'   |
+        +----+----------+-------+
+        |  3 | 'age'    |    16 |
+        +----+----------+-------+
 
         >>> # compound keys are supported
         ... table3 = [['id', 'time', 'height', 'weight'],
         ...           [1, 11, 66.4, 12.2],
         ...           [2, 16, 53.2, 17.3],
         ...           [3, 12, 34.5, 9.4]]
-        >>> table4 = melt(table3, key=['id', 'time'])
-        >>> lookall(table4)
-        +------+--------+------------+---------+
-        | 'id' | 'time' | 'variable' | 'value' |
-        +======+========+============+=========+
-        |    1 |     11 | 'height'   |    66.4 |
-        +------+--------+------------+---------+
-        |    1 |     11 | 'weight'   |    12.2 |
-        +------+--------+------------+---------+
-        |    2 |     16 | 'height'   |    53.2 |
-        +------+--------+------------+---------+
-        |    2 |     16 | 'weight'   |    17.3 |
-        +------+--------+------------+---------+
-        |    3 |     12 | 'height'   |    34.5 |
-        +------+--------+------------+---------+
-        |    3 |     12 | 'weight'   |     9.4 |
-        +------+--------+------------+---------+
+        >>> table4 = etl.melt(table3, key=['id', 'time'])
+        >>> table4.lookall()
+        +----+------+----------+-------+
+        | id | time | variable | value |
+        +====+======+==========+=======+
+        |  1 |   11 | 'height' |  66.4 |
+        +----+------+----------+-------+
+        |  1 |   11 | 'weight' |  12.2 |
+        +----+------+----------+-------+
+        |  2 |   16 | 'height' |  53.2 |
+        +----+------+----------+-------+
+        |  2 |   16 | 'weight' |  17.3 |
+        +----+------+----------+-------+
+        |  3 |   12 | 'height' |  34.5 |
+        +----+------+----------+-------+
+        |  3 |   12 | 'weight' |   9.4 |
+        +----+------+----------+-------+
 
         >>> # a subset of variable fields can be selected
-        ... table5 = melt(table3, key=['id', 'time'],
-        ...               variables=['height'])
-        >>> lookall(table5)
-        +------+--------+------------+---------+
-        | 'id' | 'time' | 'variable' | 'value' |
-        +======+========+============+=========+
-        |    1 |     11 | 'height'   |    66.4 |
-        +------+--------+------------+---------+
-        |    2 |     16 | 'height'   |    53.2 |
-        +------+--------+------------+---------+
-        |    3 |     12 | 'height'   |    34.5 |
-        +------+--------+------------+---------+
+        ... table5 = etl.melt(table3, key=['id', 'time'],
+        ...                   variables=['height'])
+        >>> table5.lookall()
+        +----+------+----------+-------+
+        | id | time | variable | value |
+        +====+======+==========+=======+
+        |  1 |   11 | 'height' |  66.4 |
+        +----+------+----------+-------+
+        |  2 |   16 | 'height' |  53.2 |
+        +----+------+----------+-------+
+        |  3 |   12 | 'height' |  34.5 |
+        +----+------+----------+-------+
 
     See also :func:`petl.transform.reshape.recast`.
 
@@ -151,9 +151,10 @@ def itermelt(source, key, variables, variablefield, valuefield):
 
 def recast(table, key=None, variablefield='variable', valuefield='value',
            samplesize=1000, reducers=None, missing=None):
-    """Recast molten data. E.g.::
+    """
+    Recast molten data. E.g.::
 
-        >>> from petl import recast, look
+        >>> import petl as etl
         >>> table1 = [['id', 'variable', 'value'],
         ...           [3, 'age', 16],
         ...           [1, 'gender', 'F'],
@@ -161,10 +162,10 @@ def recast(table, key=None, variablefield='variable', valuefield='value',
         ...           [2, 'age', 17],
         ...           [1, 'age', 12],
         ...           [3, 'gender', 'M']]
-        >>> table2 = recast(table1)
-        >>> look(table2)
+        >>> table2 = etl.recast(table1)
+        >>> table2
         +------+-------+----------+
-        | 'id' | 'age' | 'gender' |
+        | 0|id | 1|age | 2|gender |
         +======+=======+==========+
         |    1 |    12 | 'F'      |
         +------+-------+----------+
@@ -181,10 +182,10 @@ def recast(table, key=None, variablefield='variable', valuefield='value',
         ...           [2, 'age', 17],
         ...           [1, 'age', 12],
         ...           [3, 'gender', 'M']]
-        >>> table4 = recast(table3, variablefield='vars', valuefield='vals')
-        >>> look(table4)
+        >>> table4 = etl.recast(table3, variablefield='vars', valuefield='vals')
+        >>> table4
         +------+-------+----------+
-        | 'id' | 'age' | 'gender' |
+        | 0|id | 1|age | 2|gender |
         +======+=======+==========+
         |    1 |    12 | 'F'      |
         +------+-------+----------+
@@ -202,10 +203,10 @@ def recast(table, key=None, variablefield='variable', valuefield='value',
         ...           [2, 16, 'weight', 43.3],
         ...           [3, 12, 'weight', 34.5],
         ...           [3, 17, 'weight', 49.4]]
-        >>> table7 = recast(table6, key='id')
-        >>> look(table7)
+        >>> table7 = etl.recast(table6, key='id')
+        >>> table7
         +------+--------------+
-        | 'id' | 'weight'     |
+        | 0|id | 1|weight     |
         +======+==============+
         |    1 | [66.4, 55.2] |
         +------+--------------+
@@ -218,10 +219,10 @@ def recast(table, key=None, variablefield='variable', valuefield='value',
         ... def mean(values):
         ...     return float(sum(values)) / len(values)
         ...
-        >>> table8 = recast(table6, key='id', reducers={'weight': mean})
-        >>> look(table8)
+        >>> table8 = etl.recast(table6, key='id', reducers={'weight': mean})
+        >>> table8
         +------+--------------------+
-        | 'id' | 'weight'           |
+        | 0|id | 1|weight           |
         +======+====================+
         |    1 | 60.800000000000004 |
         +------+--------------------+
@@ -237,10 +238,10 @@ def recast(table, key=None, variablefield='variable', valuefield='value',
         ...           [2, 'age', 17],
         ...           [1, 'age', 12],
         ...           [3, 'gender', 'M']]
-        >>> table10 = recast(table9, key='id')
-        >>> look(table10)
+        >>> table10 = etl.recast(table9, key='id')
+        >>> table10
         +------+-------+----------+
-        | 'id' | 'age' | 'gender' |
+        | 0|id | 1|age | 2|gender |
         +======+=======+==========+
         |    1 |    12 | 'F'      |
         +------+-------+----------+
@@ -400,19 +401,20 @@ def iterrecast(source, key, variablefield, valuefield,
 
 
 def transpose(table):
-    """Transpose rows into columns. E.g.::
+    """
+    Transpose rows into columns. E.g.::
 
-        >>> from petl import transpose, look
+        >>> import petl as etl
         >>> table1 = [['id', 'colour'],
         ...           [1, 'blue'],
         ...           [2, 'red'],
         ...           [3, 'purple'],
         ...           [5, 'yellow'],
         ...           [7, 'orange']]
-        >>> table2 = transpose(table1)
-        >>> look(table2)
+        >>> table2 = etl.transpose(table1)
+        >>> table2
         +----------+--------+-------+----------+----------+----------+
-        | 'id'     | 1      | 2     | 3        | 5        | 7        |
+        | 0|id     | 1|1    | 2|2   | 3|3      | 4|5      | 5|7      |
         +==========+========+=======+==========+==========+==========+
         | 'colour' | 'blue' | 'red' | 'purple' | 'yellow' | 'orange' |
         +----------+--------+-------+----------+----------+----------+
@@ -445,9 +447,10 @@ def itertranspose(source):
 
 def pivot(table, f1, f2, f3, aggfun, missing=None,
           presorted=False, buffersize=None, tempdir=None, cache=True):
-    """Construct a pivot table. E.g.::
+    """
+    Construct a pivot table. E.g.::
 
-        >>> from petl import pivot, look
+        >>> import petl as etl
         >>> table1 = [['region', 'gender', 'style', 'units'],
         ...           ['east', 'boy', 'tee', 12],
         ...           ['east', 'boy', 'golf', 14],
@@ -461,30 +464,30 @@ def pivot(table, f1, f2, f3, aggfun, missing=None,
         ...           ['west', 'girl', 'tee', 6],
         ...           ['west', 'girl', 'golf', 16],
         ...           ['west', 'girl', 'fancy', 1]]
-        >>> table2 = pivot(table1, 'region', 'gender', 'units', sum)
-        >>> look(table2)
+        >>> table2 = etl.pivot(table1, 'region', 'gender', 'units', sum)
+        >>> table2
         +----------+-------+--------+
-        | 'region' | 'boy' | 'girl' |
+        | 0|region | 1|boy | 2|girl |
         +==========+=======+========+
         | 'east'   |    33 |     29 |
         +----------+-------+--------+
         | 'west'   |    35 |     23 |
         +----------+-------+--------+
 
-        >>> table3 = pivot(table1, 'region', 'style', 'units', sum)
-        >>> look(table3)
+        >>> table3 = etl.pivot(table1, 'region', 'style', 'units', sum)
+        >>> table3
         +----------+---------+--------+-------+
-        | 'region' | 'fancy' | 'golf' | 'tee' |
+        | 0|region | 1|fancy | 2|golf | 3|tee |
         +==========+=========+========+=======+
         | 'east'   |      25 |     22 |    15 |
         +----------+---------+--------+-------+
         | 'west'   |       9 |     31 |    18 |
         +----------+---------+--------+-------+
 
-        >>> table4 = pivot(table1, 'gender', 'style', 'units', sum)
-        >>> look(table4)
+        >>> table4 = etl.pivot(table1, 'gender', 'style', 'units', sum)
+        >>> table4
         +----------+---------+--------+-------+
-        | 'gender' | 'fancy' | 'golf' | 'tee' |
+        | 0|gender | 1|fancy | 2|golf | 3|tee |
         +==========+=========+========+=======+
         | 'boy'    |      15 |     29 |    24 |
         +----------+---------+--------+-------+
@@ -547,15 +550,16 @@ def iterpivot(source, f1, f2, f3, aggfun, missing):
 
 
 def flatten(table):
-    """Convert a table to a sequence of values in row-major order. E.g.::
+    """
+    Convert a table to a sequence of values in row-major order. E.g.::
 
-        >>> from petl import flatten
+        >>> import petl as etl
         >>> table1 = [['foo', 'bar', 'baz'],
         ...           ['A', 1, True],
         ...           ['C', 7, False],
         ...           ['B', 2, False],
         ...           ['C', 9, True]]
-        >>> list(flatten(table1))
+        >>> list(etl.flatten(table1))
         ['A', 1, True, 'C', 7, False, 'B', 2, False, 'C', 9, True]
 
     See also :func:`petl.transform.reshape.unflatten`.
@@ -580,14 +584,15 @@ class FlattenView(Table):
 
 
 def unflatten(*args, **kwargs):
-    """Convert a sequence of values in row-major order into a table. E.g.::
+    """
+    Convert a sequence of values in row-major order into a table. E.g.::
 
-        >>> from petl import unflatten, look
+        >>> import petl as etl
         >>> a = ['A', 1, True, 'C', 7, False, 'B', 2, False, 'C', 9]
-        >>> table1 = unflatten(a, 3)
-        >>> look(table1)
+        >>> table1 = etl.unflatten(a, 3)
+        >>> table1
         +------+------+-------+
-        | 'f0' | 'f1' | 'f2'  |
+        | 0|f0 | 1|f1 | 2|f2  |
         +======+======+=======+
         | 'A'  |    1 | True  |
         +------+------+-------+
@@ -611,10 +616,10 @@ def unflatten(*args, **kwargs):
         ...           [False],
         ...           ['C'],
         ...           [9]]
-        >>> table3 = unflatten(table2, 'lines', 3)
-        >>> look(table3)
+        >>> table3 = etl.unflatten(table2, 'lines', 3)
+        >>> table3
         +------+------+-------+
-        | 'f0' | 'f1' | 'f2'  |
+        | 0|f0 | 1|f1 | 2|f2  |
         +======+======+=======+
         | 'A'  |    1 | True  |
         +------+------+-------+

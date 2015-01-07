@@ -4,7 +4,7 @@ from __future__ import absolute_import, print_function, division
 # complement()
 ##############
 
-from petl import complement, look
+import petl as etl
 a = [['foo', 'bar', 'baz'],
      ['A', 1, True],
      ['C', 7, False],
@@ -15,16 +15,16 @@ b = [['x', 'y', 'z'],
      ['A', 9, False],
      ['B', 3, True],
      ['C', 9, True]]
-aminusb = complement(a, b)
-look(aminusb)
-bminusa = complement(b, a)
-look(bminusa)
+aminusb = etl.complement(a, b)
+aminusb
+bminusa = etl.complement(b, a)
+bminusa
 
 
 # recordcomplement()
 ####################
 
-from petl import recordcomplement, look
+import petl as etl
 a = [['foo', 'bar', 'baz'],
      ['A', 1, True],
      ['C', 7, False],
@@ -35,17 +35,16 @@ b = [['bar', 'foo', 'baz'],
      [9, 'A', False],
      [3, 'B', True],
      [9, 'C', True]]
-aminusb = recordcomplement(a, b)
-look(aminusb)
-bminusa = recordcomplement(b, a)
-look(bminusa)
+aminusb = etl.recordcomplement(a, b)
+aminusb
+bminusa = etl.recordcomplement(b, a)
+bminusa
 
 
 # diff()
 ########
 
-from petl import diff, look
-
+import petl as etl
 a = [['foo', 'bar', 'baz'],
      ['A', 1, True],
      ['C', 7, False],
@@ -56,17 +55,17 @@ b = [['x', 'y', 'z'],
      ['A', 9, False],
      ['B', 3, True],
      ['C', 9, True]]
-added, subtracted = diff(a, b)
+added, subtracted = etl.diff(a, b)
 # rows in b not in a
-look(added)
+added
 # rows in a not in b
-look(subtracted)
+subtracted
 
 
 # recorddiff()
 ##############
 
-from petl import recorddiff, look    
+import petl as etl
 a = [['foo', 'bar', 'baz'],
      ['A', 1, True],
      ['C', 7, False],
@@ -77,15 +76,15 @@ b = [['bar', 'foo', 'baz'],
      [9, 'A', False],
      [3, 'B', True],
      [9, 'C', True]]
-added, subtracted = recorddiff(a, b)
-look(added)
-look(subtracted)
+added, subtracted = etl.recorddiff(a, b)
+added
+subtracted
 
 
 # intersection()
 ################
 
-from petl import intersection, look
+import petl as etl
 table1 = [['foo', 'bar', 'baz'],
           ['A', 1, True],
           ['C', 7, False],
@@ -96,7 +95,7 @@ table2 = [['x', 'y', 'z'],
           ['A', 9, False],
           ['B', 3, True],
           ['C', 9, True]]
-table3 = intersection(table1, table2)
-look(table3)
+table3 = etl.intersection(table1, table2)
+table3
 
 

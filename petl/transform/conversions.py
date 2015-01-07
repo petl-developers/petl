@@ -14,16 +14,16 @@ def convert(table, *args, **kwargs):
     """Transform values under one or more fields via arbitrary functions, method
     invocations or dictionary translations. E.g.::
 
+        >>> import petl as etl
         >>> table1 = [['foo', 'bar', 'baz'],
         ...           ['A', '2.4', 12],
         ...           ['B', '5.7', 34],
         ...           ['C', '1.2', 56]]
-        >>> from petl import convert, look
         >>> # using a built-in function:
-        ... table2 = convert(table1, 'bar', float)
-        >>> look(table2)
+        ... table2 = etl.convert(table1, 'bar', float)
+        >>> table2
         +-------+-------+-------+
-        | 'foo' | 'bar' | 'baz' |
+        | 0|foo | 1|bar | 2|baz |
         +=======+=======+=======+
         | 'A'   |   2.4 |    12 |
         +-------+-------+-------+
@@ -33,10 +33,10 @@ def convert(table, *args, **kwargs):
         +-------+-------+-------+
 
         >>> # using a lambda function::
-        ... table3 = convert(table1, 'baz', lambda v: v*2)
-        >>> look(table3)
+        ... table3 = etl.convert(table1, 'baz', lambda v: v*2)
+        >>> table3
         +-------+-------+-------+
-        | 'foo' | 'bar' | 'baz' |
+        | 0|foo | 1|bar | 2|baz |
         +=======+=======+=======+
         | 'A'   | '2.4' |    24 |
         +-------+-------+-------+
@@ -47,10 +47,10 @@ def convert(table, *args, **kwargs):
 
         >>> # a method of the data value can also be invoked by passing
         ... # the method name
-        ... table4 = convert(table1, 'foo', 'lower')
-        >>> look(table4)
+        ... table4 = etl.convert(table1, 'foo', 'lower')
+        >>> table4
         +-------+-------+-------+
-        | 'foo' | 'bar' | 'baz' |
+        | 0|foo | 1|bar | 2|baz |
         +=======+=======+=======+
         | 'a'   | '2.4' |    12 |
         +-------+-------+-------+
@@ -60,10 +60,10 @@ def convert(table, *args, **kwargs):
         +-------+-------+-------+
 
         >>> # arguments to the method invocation can also be given
-        ... table5 = convert(table1, 'foo', 'replace', 'A', 'AA')
-        >>> look(table5)
+        ... table5 = etl.convert(table1, 'foo', 'replace', 'A', 'AA')
+        >>> table5
         +-------+-------+-------+
-        | 'foo' | 'bar' | 'baz' |
+        | 0|foo | 1|bar | 2|baz |
         +=======+=======+=======+
         | 'AA'  | '2.4' |    12 |
         +-------+-------+-------+
@@ -73,10 +73,10 @@ def convert(table, *args, **kwargs):
         +-------+-------+-------+
 
         >>> # values can also be translated via a dictionary
-        ... table7 = convert(table1, 'foo', {'A': 'Z', 'B': 'Y'})
-        >>> look(table7)
+        ... table7 = etl.convert(table1, 'foo', {'A': 'Z', 'B': 'Y'})
+        >>> table7
         +-------+-------+-------+
-        | 'foo' | 'bar' | 'baz' |
+        | 0|foo | 1|bar | 2|baz |
         +=======+=======+=======+
         | 'Z'   | '2.4' |    12 |
         +-------+-------+-------+
@@ -86,10 +86,10 @@ def convert(table, *args, **kwargs):
         +-------+-------+-------+
 
         >>> # the same conversion can be applied to multiple fields
-        ... table8 = convert(table1, ('foo', 'bar', 'baz'), str)
-        >>> look(table8)
+        ... table8 = etl.convert(table1, ('foo', 'bar', 'baz'), str)
+        >>> table8
         +-------+-------+-------+
-        | 'foo' | 'bar' | 'baz' |
+        | 0|foo | 1|bar | 2|baz |
         +=======+=======+=======+
         | 'A'   | '2.4' | '12'  |
         +-------+-------+-------+
@@ -99,12 +99,12 @@ def convert(table, *args, **kwargs):
         +-------+-------+-------+
 
         >>> # multiple conversions can be specified at the same time
-        ... table9 = convert(table1, {'foo': 'lower',
-        ...                           'bar': float,
-        ...                           'baz': lambda v: v*2})
-        >>> look(table9)
+        ... table9 = etl.convert(table1, {'foo': 'lower',
+        ...                               'bar': float,
+        ...                               'baz': lambda v: v * 2})
+        >>> table9
         +-------+-------+-------+
-        | 'foo' | 'bar' | 'baz' |
+        | 0|foo | 1|bar | 2|baz |
         +=======+=======+=======+
         | 'a'   |   2.4 |    24 |
         +-------+-------+-------+
@@ -114,10 +114,10 @@ def convert(table, *args, **kwargs):
         +-------+-------+-------+
 
         >>> # ...or alternatively via a list
-        ... table10 = convert(table1, ['lower', float, lambda v: v*2])
-        >>> look(table10)
+        ... table10 = etl.convert(table1, ['lower', float, lambda v: v*2])
+        >>> table10
         +-------+-------+-------+
-        | 'foo' | 'bar' | 'baz' |
+        | 0|foo | 1|bar | 2|baz |
         +=======+=======+=======+
         | 'a'   |   2.4 |    24 |
         +-------+-------+-------+
@@ -127,11 +127,11 @@ def convert(table, *args, **kwargs):
         +-------+-------+-------+
 
         >>> # conversion can be conditional
-        ... table11 = convert(table1, 'baz', lambda v: v*2,
-        ...                   where=lambda r: r.foo == 'B')
-        >>> look(table11)
+        ... table11 = etl.convert(table1, 'baz', lambda v: v * 2,
+        ...                       where=lambda r: r.foo == 'B')
+        >>> table11
         +-------+-------+-------+
-        | 'foo' | 'bar' | 'baz' |
+        | 0|foo | 1|bar | 2|baz |
         +=======+=======+=======+
         | 'A'   | '2.4' |    12 |
         +-------+-------+-------+
@@ -141,11 +141,12 @@ def convert(table, *args, **kwargs):
         +-------+-------+-------+
 
         >>> # conversion can access other values from the same row
-        ... table12 = convert(table1, 'baz', lambda v, row: v * float(row.bar),
-        ...                   pass_row=True)
-        >>> look(table12)
+        ... table12 = etl.convert(table1, 'baz',
+        ...                       lambda v, row: v * float(row.bar),
+        ...                       pass_row=True)
+        >>> table12
         +-------+-------+--------------------+
-        | 'foo' | 'bar' | 'baz'              |
+        | 0|foo | 1|bar | 2|baz              |
         +=======+=======+====================+
         | 'A'   | '2.4' | 28.799999999999997 |
         +-------+-------+--------------------+
@@ -193,7 +194,8 @@ Table.convert = convert
 
 
 def convertall(table, *args, **kwargs):
-    """Convenience function to convert all fields in the table using a common
+    """
+    Convenience function to convert all fields in the table using a common
     function or mapping. See also :func:`convert`.
 
     The ``where`` keyword argument can be given with a callable or expression
@@ -210,7 +212,8 @@ Table.convertall = convertall
 
 
 def replace(table, field, a, b, **kwargs):
-    """Convenience function to replace all occurrences of `a` with `b` under the
+    """
+    Convenience function to replace all occurrences of `a` with `b` under the
     given field. See also :func:`convert`.
 
     The ``where`` keyword argument can be given with a callable or expression
@@ -226,7 +229,8 @@ Table.replace = replace
 
 
 def replaceall(table, a, b, **kwargs):
-    """Convenience function to replace all instances of `a` with `b` under all
+    """
+    Convenience function to replace all instances of `a` with `b` under all
     fields. See also :func:`convertall`.
 
     The ``where`` keyword argument can be given with a callable or expression
@@ -242,7 +246,8 @@ Table.replaceall = replaceall
 
 
 def update(table, field, value, **kwargs):
-    """Convenience function to convert a field to a fixed value. Accepts the
+    """
+    Convenience function to convert a field to a fixed value. Accepts the
     ``where`` keyword argument. See also :func:`convert`.
 
     """
@@ -254,17 +259,18 @@ Table.update = update
 
 
 def convertnumbers(table, strict=False, **kwargs):
-    """Convenience function to convert all field values to numbers where
+    """
+    Convenience function to convert all field values to numbers where
     possible. E.g.::
 
+        >>> import petl as etl
         >>> table1 = [['foo', 'bar', 'baz', 'quux'],
         ...           ['1', '3.0', '9+3j', 'aaa'],
         ...           ['2', '1.3', '7+2j', None]]
-        >>> from petl import convertnumbers, look
-        >>> table2 = convertnumbers(table1)
-        >>> look(table2)
+        >>> table2 = etl.convertnumbers(table1)
+        >>> table2
         +-------+-------+--------+--------+
-        | 'foo' | 'bar' | 'baz'  | 'quux' |
+        | 0|foo | 1|bar | 2|baz  | 3|quux |
         +=======+=======+========+========+
         |     1 |   3.0 | (9+3j) | 'aaa'  |
         +-------+-------+--------+--------+

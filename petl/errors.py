@@ -3,7 +3,12 @@ from __future__ import absolute_import, print_function, division, \
 
 
 class DuplicateKeyError(Exception):
-    pass
+
+    def __init__(self, key):
+        self.key = key
+
+    def __str__(self):
+        return 'duplicate key: %r' % self.key
 
 
 class FieldSelectionError(Exception):

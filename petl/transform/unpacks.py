@@ -10,17 +10,18 @@ from petl.util.base import Table
 
 
 def unpack(table, field, newfields=None, include_original=False, missing=None):
-    """Unpack data values that are lists or tuples. E.g.::
+    """
+    Unpack data values that are lists or tuples. E.g.::
 
-        >>> from petl import unpack, look
+        >>> import petl as etl
         >>> table1 = [['foo', 'bar'],
         ...           [1, ['a', 'b']],
         ...           [2, ['c', 'd']],
         ...           [3, ['e', 'f']]]
-        >>> table2 = unpack(table1, 'bar', ['baz', 'quux'])
-        >>> look(table2)
+        >>> table2 = etl.unpack(table1, 'bar', ['baz', 'quux'])
+        >>> table2
         +-------+-------+--------+
-        | 'foo' | 'baz' | 'quux' |
+        | 0|foo | 1|baz | 2|quux |
         +=======+=======+========+
         |     1 | 'a'   | 'b'    |
         +-------+-------+--------+
@@ -109,17 +110,18 @@ def iterunpack(source, field, newfields, include_original, missing):
 
 def unpackdict(table, field, keys=None, includeoriginal=False,
                samplesize=1000, missing=None):
-    """Unpack dictionary values into separate fields. E.g.::
+    """
+    Unpack dictionary values into separate fields. E.g.::
 
-        >>> from petl import unpackdict, look
+        >>> import petl as etl
         >>> table1 = [['foo', 'bar'],
         ...           [1, {'baz': 'a', 'quux': 'b'}],
         ...           [2, {'baz': 'c', 'quux': 'd'}],
         ...           [3, {'baz': 'e', 'quux': 'f'}]]
-        >>> table2 = unpackdict(table1, 'bar')
-        >>> look(table2)
+        >>> table2 = etl.unpackdict(table1, 'bar')
+        >>> table2
         +-------+-------+--------+
-        | 'foo' | 'baz' | 'quux' |
+        | 0|foo | 1|baz | 2|quux |
         +=======+=======+========+
         |     1 | 'a'   | 'b'    |
         +-------+-------+--------+

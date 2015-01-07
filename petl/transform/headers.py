@@ -10,18 +10,19 @@ from petl.util.base import Table
 
 
 def rename(table, *args):
-    """Replace one or more fields in the table's header row. E.g.::
+    """
+    Replace one or more values in the table's header row. E.g.::
 
+        >>> import petl as etl
         >>> table1 = [['sex', 'age'],
         ...           ['m', 12],
         ...           ['f', 34],
         ...           ['-', 56]]
-        >>> from petl import look, rename
         >>> # rename a single field
-        ... table2 = rename(table1, 'sex', 'gender')
-        >>> look(table2)
+        ... table2 = etl.rename(table1, 'sex', 'gender')
+        >>> table2
         +----------+-------+
-        | 'gender' | 'age' |
+        | 0|gender | 1|age |
         +==========+=======+
         | 'm'      |    12 |
         +----------+-------+
@@ -30,11 +31,12 @@ def rename(table, *args):
         | '-'      |    56 |
         +----------+-------+
 
-        >>> # rename multiple fields by passing a dictionary as the second argument
-        ... table3 = rename(table1, {'sex': 'gender', 'age': 'age_years'})
-        >>> look(table3)
+        >>> # rename multiple fields by passing a dictionary as the second
+        ... # argument
+        ... table3 = etl.rename(table1, {'sex': 'gender', 'age': 'age_years'})
+        >>> table3
         +----------+-------------+
-        | 'gender' | 'age_years' |
+        | 0|gender | 1|age_years |
         +==========+=============+
         | 'm'      |          12 |
         +----------+-------------+
@@ -86,16 +88,17 @@ def iterrename(source, spec):
 
 
 def setheader(table, fields):
-    """Replace header in the given table. E.g.::
+    """
+    Replace header row in the given table. E.g.::
 
+        >>> import petl as etl
         >>> table1 = [['foo', 'bar'],
         ...           ['a', 1],
         ...           ['b', 2]]
-        >>> from petl import setheader, look
-        >>> table2 = setheader(table1, ['foofoo', 'barbar'])
-        >>> look(table2)
+        >>> table2 = etl.setheader(table1, ['foofoo', 'barbar'])
+        >>> table2
         +----------+----------+
-        | 'foofoo' | 'barbar' |
+        | 0|foofoo | 1|barbar |
         +==========+==========+
         | 'a'      |        1 |
         +----------+----------+
@@ -132,16 +135,17 @@ def itersetheader(source, fields):
 
 
 def extendheader(table, fields):
-    """Extend fields in the given table. E.g.::
+    """
+    Extend header row in the given table. E.g.::
 
+        >>> import petl as etl
         >>> table1 = [['foo'],
         ...           ['a', 1, True],
         ...           ['b', 2, False]]
-        >>> from petl import extendheader, look
-        >>> table2 = extendheader(table1, ['bar', 'baz'])
-        >>> look(table2)
+        >>> table2 = etl.extendheader(table1, ['bar', 'baz'])
+        >>> table2
         +-------+-------+-------+
-        | 'foo' | 'bar' | 'baz' |
+        | 0|foo | 1|bar | 2|baz |
         +=======+=======+=======+
         | 'a'   |     1 | True  |
         +-------+-------+-------+
@@ -180,15 +184,16 @@ def iterextendheader(source, fields):
 
 
 def pushheader(table, fields, *args):
-    """Push rows down and prepend a header row. E.g.::
+    """
+    Push rows down and prepend a header row. E.g.::
 
+        >>> import petl as etl
         >>> table1 = [['a', 1],
         ...           ['b', 2]]
-        >>> from petl import pushheader, look
-        >>> table2 = pushheader(table1, ['foo', 'bar'])
-        >>> look(table2)
+        >>> table2 = etl.pushheader(table1, ['foo', 'bar'])
+        >>> table2
         +-------+-------+
-        | 'foo' | 'bar' |
+        | 0|foo | 1|bar |
         +=======+=======+
         | 'a'   |     1 |
         +-------+-------+
@@ -234,18 +239,19 @@ def iterpushheader(source, fields):
 
 
 def skip(table, n):
-    """Skip `n` rows, including the header row. E.g.::
+    """
+    Skip `n` rows, including the header row. E.g.::
 
+        >>> import petl as etl
         >>> table1 = [['#aaa', 'bbb', 'ccc'],
         ...           ['#mmm'],
         ...           ['foo', 'bar'],
         ...           ['a', 1],
         ...           ['b', 2]]
-        >>> from petl import skip, look
-        >>> table2 = skip(table1, 2)
-        >>> look(table2)
+        >>> table2 = etl.skip(table1, 2)
+        >>> table2
         +-------+-------+
-        | 'foo' | 'bar' |
+        | 0|foo | 1|bar |
         +=======+=======+
         | 'a'   |     1 |
         +-------+-------+
@@ -322,5 +328,3 @@ class SuffixHeaderView(Table):
         yield outfields
         for row in it:
             yield row
-
-

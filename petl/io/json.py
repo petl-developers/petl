@@ -15,21 +15,25 @@ from petl.io.sources import read_source_from_arg, write_source_from_arg
 
 
 def fromjson(source, *args, **kwargs):
-    """Extract data from a JSON file. The file must contain a JSON array as
+    """
+    Extract data from a JSON file. The file must contain a JSON array as
     the top level object, and each member of the array will be treated as a
     row of data. E.g.::
 
-        >>> data = '''[{"foo": "a", "bar": 1},
+        >>> import petl as etl
+        >>> data = '''
+        ... [{"foo": "a", "bar": 1},
         ... {"foo": "b", "bar": 2},
-        ... {"foo": "c", "bar": 2}]'''
+        ... {"foo": "c", "bar": 2}]
+        ... '''
         >>> with open('example.json', 'w') as f:
-        ...     _ = f.write(data)
+        ...     f.write(data)
         ...
-        >>> from petl import fromjson, look
-        >>> table1 = fromjson('example.json')
-        >>> look(table1)
+        74
+        >>> table1 = etl.fromjson('example.json')
+        >>> table1
         +-------+-------+
-        | 'bar' | 'foo' |
+        | 0|bar | 1|foo |
         +=======+=======+
         |     1 | 'a'   |
         +-------+-------+
@@ -40,7 +44,7 @@ def fromjson(source, *args, **kwargs):
 
     If your JSON file does not fit this structure, you will need to parse it
     via :func:`json.load` and select the array to treat as the data, see also
-    :func:`fromdicts`.
+    :func:`petl.io.json.fromdicts`.
 
     """
 
@@ -85,16 +89,17 @@ class JsonView(Table):
 
 
 def fromdicts(dicts, header=None):
-    """View a sequence of Python :class:`dict` as a table. E.g.::
+    """
+    View a sequence of Python :class:`dict` as a table. E.g.::
 
+        >>> import petl as etl
         >>> dicts = [{"foo": "a", "bar": 1},
         ...          {"foo": "b", "bar": 2},
         ...          {"foo": "c", "bar": 2}]
-        >>> from petl import fromdicts, look
-        >>> table = fromdicts(dicts)
-        >>> look(table)
+        >>> table1 = etl.fromdicts(dicts)
+        >>> table1
         +-------+-------+
-        | 'bar' | 'foo' |
+        | 0|bar | 1|foo |
         +=======+=======+
         |     1 | 'a'   |
         +-------+-------+
@@ -103,7 +108,7 @@ def fromdicts(dicts, header=None):
         |     2 | 'c'   |
         +-------+-------+
 
-    See also :func:`fromjson`.
+    See also :func:`petl.io.json.fromjson`.
 
     """
 
@@ -135,14 +140,15 @@ class DictsView(Table):
 
 
 def tojson(table, source=None, prefix=None, suffix=None, *args, **kwargs):
-    """Write a table in JSON format, with rows output as JSON objects. E.g.::
+    """
+    Write a table in JSON format, with rows output as JSON objects. E.g.::
 
+        >>> import petl as etl
         >>> table1 = [['foo', 'bar'],
         ...           ['a', 1],
         ...           ['b', 2],
         ...           ['c', 2]]
-        >>> from petl import tojson
-        >>> tojson(table1, 'example.json', sort_keys=True)
+        >>> etl.tojson(table1, 'example.json', sort_keys=True)
         >>> # check what it did
         ... print(open('example.json').read())
         [{"bar": 1, "foo": "a"}, {"bar": 2, "foo": "b"}, {"bar": 2, "foo": "c"}]
@@ -161,14 +167,15 @@ Table.tojson = tojson
 
 def tojsonarrays(table, source=None, prefix=None, suffix=None,
                  output_header=False, *args, **kwargs):
-    """Write a table in JSON format, with rows output as JSON arrays. E.g.::
+    """
+    Write a table in JSON format, with rows output as JSON arrays. E.g.::
 
+        >>> import petl as etl
         >>> table1 = [['foo', 'bar'],
         ...           ['a', 1],
         ...           ['b', 2],
         ...           ['c', 2]]
-        >>> from petl import tojsonarrays
-        >>> tojsonarrays(table1, 'example.json')
+        >>> etl.tojsonarrays(table1, 'example.json')
         >>> # check what it did
         ... print(open('example.json').read())
         [["a", 1], ["b", 2], ["c", 2]]

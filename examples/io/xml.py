@@ -1,6 +1,7 @@
 from __future__ import division, print_function, absolute_import
 
 
+import petl as etl
 # setup a file to demonstrate with
 d = '''<table>
     <tr>
@@ -19,9 +20,8 @@ d = '''<table>
 with open('example1.xml', 'w') as f:
     f.write(d)
 
-from petl import fromxml, look
-table1 = fromxml('example1.xml', 'tr', 'td')
-look(table1)
+table1 = etl.fromxml('example1.xml', 'tr', 'td')
+table1
 # if the data values are stored in an attribute, provide the attribute name
 # as an extra positional argument
 d = '''<table>
@@ -41,8 +41,8 @@ d = '''<table>
 with open('example2.xml', 'w') as f:
     f.write(d)
 
-table2 = fromxml('example2.xml', 'tr', 'td', 'v')
-look(table2)
+table2 = etl.fromxml('example2.xml', 'tr', 'td', 'v')
+table2
 # data values can also be extracted by providing a mapping of field
 # names to element paths
 d = '''<table>
@@ -59,6 +59,6 @@ d = '''<table>
 with open('example3.xml', 'w') as f:
     f.write(d)
 
-table3 = fromxml('example3.xml', 'row',
-                 {'foo': 'foo', 'bar': ('baz/bar', 'v')})
-look(table3)
+table3 = etl.fromxml('example3.xml', 'row',
+                     {'foo': 'foo', 'bar': ('baz/bar', 'v')})
+table3

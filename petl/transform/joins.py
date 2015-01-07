@@ -47,9 +47,10 @@ def keys_from_args(left, right, key, lkey, rkey):
 
 def join(left, right, key=None, lkey=None, rkey=None, presorted=False,
          buffersize=None, tempdir=None, cache=True, lprefix=None, rprefix=None):
-    """Perform an equi-join on the given tables. E.g.::
+    """
+    Perform an equi-join on the given tables. E.g.::
 
-        >>> from petl import join, look
+        >>> import petl as etl
         >>> table1 = [['id', 'colour'],
         ...           [1, 'blue'],
         ...           [2, 'red'],
@@ -58,10 +59,10 @@ def join(left, right, key=None, lkey=None, rkey=None, presorted=False,
         ...           [1, 'circle'],
         ...           [3, 'square'],
         ...           [4, 'ellipse']]
-        >>> table3 = join(table1, table2, key='id')
-        >>> look(table3)
+        >>> table3 = etl.join(table1, table2, key='id')
+        >>> table3
         +------+----------+----------+
-        | 'id' | 'colour' | 'shape'  |
+        | 0|id | 1|colour | 2|shape  |
         +======+==========+==========+
         |    1 | 'blue'   | 'circle' |
         +------+----------+----------+
@@ -69,10 +70,10 @@ def join(left, right, key=None, lkey=None, rkey=None, presorted=False,
         +------+----------+----------+
 
         >>> # if no key is given, a natural join is tried
-        ... table4 = join(table1, table2)
-        >>> look(table4)
+        ... table4 = etl.join(table1, table2)
+        >>> table4
         +------+----------+----------+
-        | 'id' | 'colour' | 'shape'  |
+        | 0|id | 1|colour | 2|shape  |
         +======+==========+==========+
         |    1 | 'blue'   | 'circle' |
         +------+----------+----------+
@@ -88,10 +89,10 @@ def join(left, right, key=None, lkey=None, rkey=None, presorted=False,
         ...           [1, 'circle'],
         ...           [1, 'square'],
         ...           [2, 'ellipse']]
-        >>> table7 = join(table5, table6, key='id')
-        >>> look(table7)
+        >>> table7 = etl.join(table5, table6, key='id')
+        >>> table7
         +------+----------+-----------+
-        | 'id' | 'colour' | 'shape'   |
+        | 0|id | 1|colour | 2|shape   |
         +======+==========+===========+
         |    1 | 'blue'   | 'circle'  |
         +------+----------+-----------+
@@ -113,10 +114,10 @@ def join(left, right, key=None, lkey=None, rkey=None, presorted=False,
         ...           [1, 2, 4.5],
         ...           [2, 1, 6.7],
         ...           [2, 2, 8.9]]
-        >>> table10 = join(table8, table9, key=['id', 'time'])
-        >>> look(table10)
+        >>> table10 = etl.join(table8, table9, key=['id', 'time'])
+        >>> table10
         +------+--------+----------+----------+
-        | 'id' | 'time' | 'height' | 'weight' |
+        | 0|id | 1|time | 2|height | 3|weight |
         +======+========+==========+==========+
         |    1 |      2 |     34.5 |      4.5 |
         +------+--------+----------+----------+
@@ -175,9 +176,10 @@ class JoinView(Table):
 def leftjoin(left, right, key=None, lkey=None, rkey=None, missing=None,
              presorted=False, buffersize=None, tempdir=None, cache=True,
              lprefix=None, rprefix=None):
-    """Perform a left outer join on the given tables. E.g.::
+    """
+    Perform a left outer join on the given tables. E.g.::
 
-        >>> from petl import leftjoin, look
+        >>> import petl as etl
         >>> table1 = [['id', 'colour'],
         ...           [1, 'blue'],
         ...           [2, 'red'],
@@ -186,10 +188,10 @@ def leftjoin(left, right, key=None, lkey=None, rkey=None, missing=None,
         ...           [1, 'circle'],
         ...           [3, 'square'],
         ...           [4, 'ellipse']]
-        >>> table3 = leftjoin(table1, table2, key='id')
-        >>> look(table3)
+        >>> table3 = etl.leftjoin(table1, table2, key='id')
+        >>> table3
         +------+----------+----------+
-        | 'id' | 'colour' | 'shape'  |
+        | 0|id | 1|colour | 2|shape  |
         +======+==========+==========+
         |    1 | 'blue'   | 'circle' |
         +------+----------+----------+
@@ -222,9 +224,10 @@ Table.leftjoin = leftjoin
 def rightjoin(left, right, key=None, lkey=None, rkey=None, missing=None,
               presorted=False, buffersize=None, tempdir=None, cache=True,
               lprefix=None, rprefix=None):
-    """Perform a right outer join on the given tables. E.g.::
+    """
+    Perform a right outer join on the given tables. E.g.::
 
-        >>> from petl import rightjoin, look
+        >>> import petl as etl
         >>> table1 = [['id', 'colour'],
         ...           [1, 'blue'],
         ...           [2, 'red'],
@@ -233,10 +236,10 @@ def rightjoin(left, right, key=None, lkey=None, rkey=None, missing=None,
         ...           [1, 'circle'],
         ...           [3, 'square'],
         ...           [4, 'ellipse']]
-        >>> table3 = rightjoin(table1, table2, key='id')
-        >>> look(table3)
+        >>> table3 = etl.rightjoin(table1, table2, key='id')
+        >>> table3
         +------+----------+-----------+
-        | 'id' | 'colour' | 'shape'   |
+        | 0|id | 1|colour | 2|shape   |
         +======+==========+===========+
         |    1 | 'blue'   | 'circle'  |
         +------+----------+-----------+
@@ -270,9 +273,10 @@ Table.rightjoin = rightjoin
 def outerjoin(left, right, key=None, lkey=None, rkey=None, missing=None,
               presorted=False, buffersize=None, tempdir=None, cache=True,
               lprefix=None, rprefix=None):
-    """Perform a full outer join on the given tables. E.g.::
+    """
+    Perform a full outer join on the given tables. E.g.::
 
-        >>> from petl import outerjoin, look
+        >>> import petl as etl
         >>> table1 = [['id', 'colour'],
         ...           [1, 'blue'],
         ...           [2, 'red'],
@@ -281,10 +285,10 @@ def outerjoin(left, right, key=None, lkey=None, rkey=None, missing=None,
         ...           [1, 'circle'],
         ...           [3, 'square'],
         ...           [4, 'ellipse']]
-        >>> table3 = outerjoin(table1, table2, key='id')
-        >>> look(table3)
+        >>> table3 = etl.outerjoin(table1, table2, key='id')
+        >>> table3
         +------+----------+-----------+
-        | 'id' | 'colour' | 'shape'   |
+        | 0|id | 1|colour | 2|shape   |
         +======+==========+===========+
         |    1 | 'blue'   | 'circle'  |
         +------+----------+-----------+
@@ -381,6 +385,8 @@ def iterjoin(left, right, lkey, rkey, leftouter=False, rightouter=False,
     # construct group iterators for both tables
     lgit = itertools.groupby(lit, key=lgetk)
     rgit = itertools.groupby(rit, key=rgetk)
+    lrowgrp = []
+    rrowgrp = []
 
     # loop until *either* of the iterators is exhausted
     # initialise here to handle empty tables
@@ -438,19 +444,20 @@ def iterjoin(left, right, lkey, rkey, leftouter=False, rightouter=False,
 
 
 def crossjoin(*tables, **kwargs):
-    """Form the cartesian product of the given tables. E.g.::
+    """
+    Form the cartesian product of the given tables. E.g.::
 
-        >>> from petl import crossjoin, look
+        >>> import petl as etl
         >>> table1 = [['id', 'colour'],
         ...           [1, 'blue'],
         ...           [2, 'red']]
         >>> table2 = [['id', 'shape'],
         ...           [1, 'circle'],
         ...           [3, 'square']]
-        >>> table3 = crossjoin(table1, table2)
-        >>> look(table3)
+        >>> table3 = etl.crossjoin(table1, table2)
+        >>> table3
         +------+----------+------+----------+
-        | 'id' | 'colour' | 'id' | 'shape'  |
+        | 0|id | 1|colour | 2|id | 3|shape  |
         +======+==========+======+==========+
         |    1 | 'blue'   |    1 | 'circle' |
         +------+----------+------+----------+
@@ -504,10 +511,11 @@ def itercrossjoin(sources, prefix):
 
 def antijoin(left, right, key=None, lkey=None, rkey=None, presorted=False,
              buffersize=None, tempdir=None, cache=True):
-    """Return rows from the `left` table where the key value does not occur in
+    """
+    Return rows from the `left` table where the key value does not occur in
     the `right` table. E.g.::
 
-        >>> from petl import antijoin, look
+        >>> import petl as etl
         >>> table1 = [['id', 'colour'],
         ...           [0, 'black'],
         ...           [1, 'blue'],
@@ -517,10 +525,10 @@ def antijoin(left, right, key=None, lkey=None, rkey=None, presorted=False,
         >>> table2 = [['id', 'shape'],
         ...           [1, 'circle'],
         ...           [3, 'square']]
-        >>> table3 = antijoin(table1, table2, key='id')
-        >>> look(table3)
+        >>> table3 = etl.antijoin(table1, table2, key='id')
+        >>> table3
         +------+----------+
-        | 'id' | 'colour' |
+        | 0|id | 1|colour |
         +======+==========+
         |    0 | 'black'  |
         +------+----------+
@@ -543,7 +551,9 @@ def antijoin(left, right, key=None, lkey=None, rkey=None, presorted=False,
     """
 
     lkey, rkey = keys_from_args(left, right, key, lkey, rkey)
-    return AntiJoinView(left, right, lkey, rkey, presorted, buffersize)
+    return AntiJoinView(left=left, right=right, lkey=lkey, rkey=rkey,
+                        presorted=presorted, buffersize=buffersize,
+                        tempdir=tempdir, cache=cache)
 
 
 Table.antijoin = antijoin
@@ -587,6 +597,7 @@ def iterantijoin(left, right, lkey, rkey):
     # construct group iterators for both tables
     lgit = itertools.groupby(lit, key=lgetk)
     rgit = itertools.groupby(rit, key=rgetk)
+    lrowgrp = []
 
     # loop until *either* of the iterators is exhausted
     lkval, rkval = Comparable(None), Comparable(None)
@@ -627,10 +638,11 @@ def iterantijoin(left, right, lkey, rkey):
 def lookupjoin(left, right, key=None, lkey=None, rkey=None, missing=None,
                presorted=False, buffersize=None, tempdir=None, cache=True,
                lprefix=None, rprefix=None):
-    """Perform a left join, but where the key is not unique in the right-hand
+    """
+    Perform a left join, but where the key is not unique in the right-hand
     table, arbitrarily choose the first row and ignore others. E.g.::
 
-        >>> from petl import lookupjoin, look
+        >>> import petl as etl
         >>> table1 = [['id', 'color', 'cost'],
         ...           [1, 'blue', 12],
         ...           [2, 'red', 8],
@@ -642,10 +654,10 @@ def lookupjoin(left, right, key=None, lkey=None, rkey=None, missing=None,
         ...           [2, 'square', 'big'],
         ...           [3, 'ellipse', 'small'],
         ...           [3, 'ellipse', 'tiny']]
-        >>> table3 = lookupjoin(table1, table2, key='id')
-        >>> look(table3)
+        >>> table3 = etl.lookupjoin(table1, table2, key='id')
+        >>> table3
         +------+----------+--------+-----------+---------+
-        | 'id' | 'color'  | 'cost' | 'shape'   | 'size'  |
+        | 0|id | 1|color  | 2|cost | 3|shape   | 4|size  |
         +======+==========+========+===========+=========+
         |    1 | 'blue'   |     12 | 'circle'  | 'big'   |
         +------+----------+--------+-----------+---------+
@@ -747,6 +759,7 @@ def iterlookupjoin(left, right, lkey, rkey, missing=None, lprefix=None,
     # construct group iterators for both tables
     lgit = itertools.groupby(lit, key=lgetk)
     rgit = itertools.groupby(rit, key=rgetk)
+    lrowgrp = []
 
     # loop until *either* of the iterators is exhausted
     lkval, rkval = None, None  # initialise here to handle empty tables
@@ -788,18 +801,19 @@ def iterlookupjoin(left, right, lkey, rkey, missing=None, lprefix=None,
 
 def unjoin(table, value, key=None, autoincrement=(1, 1), presorted=False,
            buffersize=None, tempdir=None, cache=True):
-    """Split a table into two tables by reversing an inner join. E.g.::
+    """
+    Split a table into two tables by reversing an inner join. E.g.::
 
-        >>> from petl import look, unjoin
+        >>> import petl as etl
         >>> # join key is present in the table
         ... table1 = (('foo', 'bar', 'baz'),
         ...           ('A', 1, 'apple'),
         ...           ('B', 1, 'apple'),
         ...           ('C', 2, 'orange'))
-        >>> table2, table3 = unjoin(table1, 'baz', key='bar')
-        >>> look(table2)
+        >>> table2, table3 = etl.unjoin(table1, 'baz', key='bar')
+        >>> table2
         +-------+-------+
-        | 'foo' | 'bar' |
+        | 0|foo | 1|bar |
         +=======+=======+
         | 'A'   |     1 |
         +-------+-------+
@@ -808,9 +822,9 @@ def unjoin(table, value, key=None, autoincrement=(1, 1), presorted=False,
         | 'C'   |     2 |
         +-------+-------+
 
-        >>> look(table3)
+        >>> table3
         +-------+----------+
-        | 'bar' | 'baz'    |
+        | 0|bar | 1|baz    |
         +=======+==========+
         |     1 | 'apple'  |
         +-------+----------+
@@ -822,10 +836,10 @@ def unjoin(table, value, key=None, autoincrement=(1, 1), presorted=False,
         ...           ('A', 'apple'),
         ...           ('B', 'apple'),
         ...           ('C', 'orange'))
-        >>> table5, table6 = unjoin(table4, 'bar')
-        >>> look(table5)
+        >>> table5, table6 = etl.unjoin(table4, 'bar')
+        >>> table5
         +-------+----------+
-        | 'foo' | 'bar_id' |
+        | 0|foo | 1|bar_id |
         +=======+==========+
         | 'A'   |        1 |
         +-------+----------+
@@ -834,9 +848,9 @@ def unjoin(table, value, key=None, autoincrement=(1, 1), presorted=False,
         | 'C'   |        2 |
         +-------+----------+
 
-        >>> look(table6)
+        >>> table6
         +------+----------+
-        | 'id' | 'bar'    |
+        | 0|id | 1|bar    |
         +======+==========+
         |    1 | 'apple'  |
         +------+----------+
