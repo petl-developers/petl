@@ -16,83 +16,61 @@ def look(table, *sliceargs, **kwargs):
     Format a portion of the table as text for inspection in an interactive
     session. E.g.::
 
-        >>> from petl import look
-        >>> table = [['foo', 'bar'], ['a', 1], ['b', 2]]
-        >>> look(table)
-        +-------+-------+
-        | 'foo' | 'bar' |
-        +=======+=======+
-        | 'a'   | 1     |
-        +-------+-------+
-        | 'b'   | 2     |
-        +-------+-------+
+        >>> import petl as etl
+        >>> table1 = [['foo', 'bar'],
+        ...           ['a', 1],
+        ...           ['b', 2]]
+        >>> etl.look(table1)
+        +-----+-----+
+        | foo | bar |
+        +=====+=====+
+        | 'a' |   1 |
+        +-----+-----+
+        | 'b' |   2 |
+        +-----+-----+
 
-    Any irregularities in the length of header and/or data rows will appear as
-    blank cells, e.g.::
+        >>> # alternative formatting styles
+        ... etl.look(table1, style='simple')
+        ===  ===
+        foo  bar
+        ===  ===
+        'a'    1
+        'b'    2
+        ===  ===
 
-        >>> table = [['foo', 'bar'], ['a'], ['b', 2, True]]
-        >>> look(table)
-        +-------+-------+------+
-        | 'foo' | 'bar' |      |
-        +=======+=======+======+
-        | 'a'   |       |      |
-        +-------+-------+------+
-        | 'b'   | 2     | True |
-        +-------+-------+------+
+        >>> etl.look(table1, style='minimal')
+        foo  bar
+        'a'    1
+        'b'    2
 
-    .. versionchanged:: 0.3
-
-    Positional arguments can be used to slice the data rows. The `sliceargs` are
-    passed to :func:`itertools.islice`.
-
-    .. versionchanged:: 0.8
-
-    The properties `n` and `p` can be used to look at the next and previous rows
-    respectively. I.e., try ``>>> look(table)`` then ``>>> _.n`` then
-    ``>>> _.p``.
-
-    .. versionchanged:: 0.13
+        >>> # any irregularities in the length of header and/or data
+        ... # rows will appear as blank cells
+        ... table2 = [['foo', 'bar'],
+        ...           ['a'],
+        ...           ['b', 2, True]]
+        >>> etl.look(table2)
+        +-----+-----+------+
+        | foo | bar |      |
+        +=====+=====+======+
+        | 'a' |     |      |
+        +-----+-----+------+
+        | 'b' |   2 | True |
+        +-----+-----+------+
 
     Three alternative presentation styles are available: 'grid', 'simple' and
     'minimal', where 'grid' is the default. A different style can be specified
-    using the `style` keyword argument, e.g.::
+    using the `style` keyword argument. The default style can also be changed
+    by setting ``petl.config.look_default_style``.
 
-        >>> table = [['foo', 'bar'], ['a', 1], ['b', 2]]
-        >>> look(table, style='simple')
-        =====  =====
-        'foo'  'bar'
-        =====  =====
-        'a'        1
-        'b'        2
-        =====  =====
+    Positional arguments can be used to slice the data rows. The `sliceargs` are
+    passed to :func:`itertools.islice`. By default, the first 5 data rows are
+    shown.
 
-        >>> look(table, style='minimal')
-        'foo'  'bar'
-        'a'        1
-        'b'        2
+    The properties `n` and `p` can be used to look at the next and previous rows
+    respectively. E.g., try ``>>> etl.look(table)`` then ``>>> _.n`` then
+    ``>>> _.p``.
 
-    The default style can also be changed, e.g.::
-
-        >>> petl.config.look_default_style = 'simple'
-        >>> look(table)
-        =====  =====
-        'foo'  'bar'
-        =====  =====
-        'a'        1
-        'b'        2
-        =====  =====
-
-        >>> look.default_style = 'grid'
-        >>> look(table)
-        +-------+-------+
-        | 'foo' | 'bar' |
-        +=======+=======+
-        | 'a'   |     1 |
-        +-------+-------+
-        | 'b'   |     2 |
-        +-------+-------+
-
-    See also :func:`lookall` and :func:`see`.
+    See also :func:`petl.util.vis.lookall` and :func:`petl.util.vis.see`.
 
     """
 
@@ -107,6 +85,9 @@ def lookall(table, **kwargs):
     Format the entire table as text for inspection in an interactive session.
 
     N.B., this will load the entire table into memory.
+
+    See also :func:`petl.util.vis.look` and :func:`petl.util.vis.see`.
+
     """
 
     return look(table, 0, None, **kwargs)
@@ -409,11 +390,8 @@ def format_table_minimal(table, vrepr, sliceargs, index_header):
 
 
 def lookstr(table, *sliceargs):
-    """
-    Like :func:`look` but use str() rather than repr() for cell
-    contents.
-
-    .. versionadded:: 0.10
+    """Like :func:`petl.util.vis.look` but use str() rather than repr() for data
+    values.
 
     """
 
@@ -425,10 +403,8 @@ Table.lookstr = lookstr
 
 def lookallstr(table):
     """
-    Like :func:`lookall` but use str() rather than repr() for cell
-    contents.
-
-    .. versionadded:: 0.10
+    Like :func:`petl.util.vis.lookall` but use str() rather than repr() for data
+    values.
 
     """
 
@@ -443,15 +419,13 @@ def see(table, *sliceargs, **kwargs):
     Format a portion of a table as text in a column-oriented layout for
     inspection in an interactive session. E.g.::
 
-        >>> from petl import see
+        >>> import petl as etl
         >>> table = [['foo', 'bar'], ['a', 1], ['b', 2]]
-        >>> see(table)
-        'foo': 'a', 'b'
-        'bar': 1, 2
+        >>> etl.see(table)
+        foo: 'a', 'b'
+        bar: 1, 2
 
     Useful for tables with a larger number of fields.
-
-    .. versionchanged:: 0.3
 
     Positional arguments can be used to slice the data rows. The `sliceargs` are
     passed to :func:`itertools.islice`.
