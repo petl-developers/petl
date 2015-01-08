@@ -19,7 +19,7 @@ python-etl@googlegroups.com or `raise an issue
 <https://github.com/alimanfoo/petl/issues/new>`_ on GitHub.
 
 For an example of :mod:`petl` in use, see the `case study on Comparing Tables
-<http://nbviewer.ipython.org/github/alimanfoo/petl/tree/master/notes/case_study_1.ipynb>`_.
+<http://nbviewer.ipython.org/github/alimanfoo/petl/tree/v1.0/notes/case_study_1.ipynb>`_.
 
 For an alphabetic list of all functions in the package,
 see the :ref:`genindex`.
