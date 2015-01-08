@@ -25,6 +25,8 @@ Visualising tables
 .. autofunction:: petl.util.vis.look
 .. autofunction:: petl.util.vis.lookall
 .. autofunction:: petl.util.vis.see
+.. autofunction:: petl.util.vis.display
+.. autofunction:: petl.util.vis.displayall
 
 
 Lookup data structures

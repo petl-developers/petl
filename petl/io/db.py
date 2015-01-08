@@ -21,38 +21,37 @@ def fromdb(dbo, query, *args, **kwargs):
     """Provides access to data from any DB-API 2.0 connection via a given query.
     E.g., using :mod:`sqlite3`::
 
+        >>> import petl as etl
         >>> import sqlite3
-        >>> from petl import look, fromdb
         >>> connection = sqlite3.connect('example.db')
-        >>> table = fromdb(connection, 'select * from foobar')
-        >>> look(table)
+        >>> table = etl.fromdb(connection, 'select * from foobar')
 
     E.g., using :mod:`psycopg2` (assuming you've installed it first)::
 
+        >>> import petl as etl
         >>> import psycopg2
-        >>> from petl import look, fromdb
-        >>> connection = psycopg2.connect("dbname=example user=postgres")
-        >>> table = fromdb(connection, 'select * from example')
-        >>> look(table)
+        >>> connection = psycopg2.connect('dbname=example user=postgres')
+        >>> table = etl.fromdb(connection, 'select * from example')
 
     E.g., using :mod:`pymysql` (assuming you've installed it first)::
 
+        >>> import petl as etl
         >>> import pymysql
-        >>> from petl import look, fromdb
-        >>> connection = pymysql.connect(password="moonpie", database="thangs")
-        >>> table = fromdb(connection, 'select * from example')
-        >>> look(table)
+        >>> connection = pymysql.connect(password='moonpie', database='thangs')
+        >>> table = etl.fromdb(connection, 'select * from example')
 
-    The first argument may also be a function that creates a cursor. E.g.::
+    The `dbo` argument may also be a function that creates a cursor. E.g.::
 
+        >>> import petl as etl
         >>> import psycopg2
-        >>> from petl import look, fromdb
-        >>> connection = psycopg2.connect("dbname=example user=postgres")
+        >>> connection = psycopg2.connect('dbname=example user=postgres')
         >>> mkcursor = lambda: connection.cursor(cursor_factory=psycopg2.extras.DictCursor)
-        >>> table = fromdb(mkcursor, 'select * from example')
-        >>> look(table)
+        >>> table = etl.fromdb(mkcursor, 'select * from example')
 
     N.B., each call to the function should return a new cursor.
+
+    The parameter `dbo` may also be an SQLAlchemy engine, session or
+    connection object.
 
     Note that the default behaviour of most database servers and clients is for
     the entire result set for each query to be sent from the server to the
@@ -63,11 +62,10 @@ def fromdb(dbo, query, *args, **kwargs):
 
     To use a server-side cursor with a PostgreSQL database, e.g.::
 
+        >>> import petl as etl
         >>> import psycopg2
-        >>> from petl import look, fromdb
-        >>> connection = psycopg2.connect("dbname=example user=postgres")
-        >>> table = fromdb(lambda: connection.cursor(name='arbitrary'), 'select * from example')
-        >>> look(table)
+        >>> connection = psycopg2.connect('dbname=example user=postgres')
+        >>> table = etl.fromdb(lambda: connection.cursor(name='arbitrary'), 'select * from example')
 
     For more information on server-side cursors see the following links:
 
@@ -216,40 +214,28 @@ def todb(table, dbo, tablename, schema=None, commit=True):
     i.e., all existing rows will be deleted prior to inserting the new data.
     E.g.::
 
-        >>> from petl import look, todb
-        >>> look(table)
-        +-------+-------+
-        | 'foo' | 'bar' |
-        +=======+=======+
-        | 'a'   | 1     |
-        +-------+-------+
-        | 'b'   | 2     |
-        +-------+-------+
-        | 'c'   | 2     |
-        +-------+-------+
-
-    ... using :mod:`sqlite3`::
-
-        >>> import sqlite3
+        >>> import petl as etl
+        >>> table = [['foo', 'bar'],
+        ...          ['a', 1],
+        ...          ['b', 2],
+        ...          ['c', 2]]
+        >>> # using sqlite3
+        ... import sqlite3
         >>> connection = sqlite3.connect('example.db')
         >>> # assuming table "foobar" already exists in the database
-        ... todb(table, connection, 'foobar')
-
-    ... using :mod:`psycopg2`::
-
+        ... etl.todb(table, connection, 'foobar')
+        >>> # using psycopg2
         >>> import psycopg2
-        >>> connection = psycopg2.connect("dbname=example user=postgres")
+        >>> connection = psycopg2.connect('dbname=example user=postgres')
         >>> # assuming table "foobar" already exists in the database
-        ... todb(table, connection, 'foobar')
-
-    ... using :mod:`MySQLdb`::
-
+        ... etl.todb(table, connection, 'foobar')
+        >>> # using pymysql
         >>> import pymysql
-        >>> connection = pymysql.connect(password="moonpie", database="thangs")
+        >>> connection = pymysql.connect(password='moonpie', database='thangs')
         >>> # tell MySQL to use standard quote character
         ... connection.cursor().execute('SET SQL_MODE=ANSI_QUOTES')
         >>> # load data, assuming table "foobar" already exists in the database
-        ... todb(table, connection, 'foobar')
+        ... etl.todb(table, connection, 'foobar')
 
     N.B., for MySQL the statement ``SET SQL_MODE=ANSI_QUOTES`` is required to
     ensure MySQL uses SQL-92 standard quote characters.
@@ -257,9 +243,12 @@ def todb(table, dbo, tablename, schema=None, commit=True):
     A cursor can also be provided instead of a connection, e.g.::
 
         >>> import psycopg2
-        >>> connection = psycopg2.connect("dbname=example user=postgres")
+        >>> connection = psycopg2.connect('dbname=example user=postgres')
         >>> cursor = connection.cursor()
-        >>> todb(table, cursor, 'foobar')
+        >>> etl.todb(table, cursor, 'foobar')
+
+    The parameter `dbo` may also be an SQLAlchemy engine, session or
+    connection object.
 
     """
 
@@ -544,54 +533,9 @@ def _todb_sqlalchemy_session(table, session, tablename, schema=None,
 def appenddb(table, dbo, tablename, schema=None, commit=True):
     """
     Load data into an existing database table via a DB-API 2.0
-    connection or cursor. Note that the database table will be appended,
-    i.e., the new data will be inserted into the table, and any existing
-    rows will remain. E.g.::
-
-        >>> from petl import look, appenddb
-        >>> look(table)
-        +-------+-------+
-        | 'foo' | 'bar' |
-        +=======+=======+
-        | 'a'   | 1     |
-        +-------+-------+
-        | 'b'   | 2     |
-        +-------+-------+
-        | 'c'   | 2     |
-        +-------+-------+
-
-    ... using :mod:`sqlite3`::
-
-        >>> import sqlite3
-        >>> connection = sqlite3.connect('example.db')
-        >>> # assuming table "foobar" already exists in the database
-        ... appenddb(table, connection, 'foobar')
-
-    ... using :mod:`psycopg2`::
-
-        >>> import psycopg2
-        >>> connection = psycopg2.connect("dbname=example user=postgres")
-        >>> # assuming table "foobar" already exists in the database
-        ... appenddb(table, connection, 'foobar')
-
-    ... using :mod:`mysql`::
-
-        >>> import pymysql
-        >>> connection = pymysql.connect(password="moonpie", database="thangs")
-        >>> # tell MySQL to use standard quote character
-        ... connection.cursor().execute('SET SQL_MODE=ANSI_QUOTES')
-        >>> # load data, appending rows to table "foobar"
-        ... appenddb(table, connection, 'foobar')
-
-    N.B., for MySQL the statement ``SET SQL_MODE=ANSI_QUOTES`` is required to
-    ensure MySQL uses SQL-92 standard quote characters.
-
-    A cursor can also be provided instead of a connection, e.g.::
-
-        >>> import psycopg2
-        >>> connection = psycopg2.connect("dbname=example user=postgres")
-        >>> cursor = connection.cursor()
-        >>> appenddb(table, cursor, 'foobar')
+    connection or cursor. As :func:`petl.io.db.todb` except that the database
+    table will be appended, i.e., the new data will be inserted into the
+    table, and any existing rows will remain.
 
     """
 

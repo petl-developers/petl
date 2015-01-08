@@ -8,11 +8,19 @@ Introduction
 Installation
 ------------
 
-This module is available from the `Python Package Index
+This package is available from the `Python Package Index
 <http://pypi.python.org/pypi/petl>`_. On Linux distributions you
-should be able to do ``easy_install petl`` or ``pip install petl``. On
-other platforms you can download manually, extract and run ``python
+should be able to do::
+
+    $ pip install petl
+
+On other platforms you can download manually, extract and run ``python
 setup.py install``.
+
+To verify the installation, the test suite can be run with :mod:`nose`::
+
+    $ pip install nose
+    $ nosetests -v petl
 
 
 Dependencies and extensions
@@ -24,7 +32,7 @@ maintenance. However, there are many third party packages which could
 usefuly be used with :mod:`petl`, e.g., providing access to data from
 Excel or other file types. Some extensions with these additional
 dependencies are provided by the `petlx
-<http://pypi.python.org/pypi/petlx>`_ package, a companion package to
+<http://petlx.readthedocs.org>`_ package, a companion package to
 :mod:`petl`.
 
 
@@ -103,6 +111,7 @@ The :mod:`petl` package supports both functional and object-oriented
 programming styles. For example, the example transformation pipeline in the
 section above could also be written as::
 
+        >>> import petl as etl
 	>>> table = (
 	...     etl
 	...     .fromcsv('example.csv')
@@ -191,11 +200,8 @@ Also included in the ``petl`` distribution is a script to execute
 simple transformation pipelines directly from the operating system
 shell. E.g.::
 
-    $ virtualenv petl
-    $ . petl/bin/activate
-    $ pip install petl
-    $ petl "dummytable().tocsv()" > dummy.csv
-    $ cat dummy.csv | petl "fromcsv().cut('foo', 'baz').selectgt('baz', 0.5).head().data().totsv()"
+	$ petl "dummytable().tocsv()" > dummy.csv
+	$ cat dummy.csv | petl "fromcsv().cut('foo', 'baz').selectgt('baz', 0.5).head().data().totsv()"
 
 The ``petl`` script is extremely simple, it expects a single
 positional argument, which is evaluated as Python code but with all of
@@ -220,11 +226,11 @@ any object which satisfies the following:
 
 A **row iterator** is an iterator which satisfies the following:
 
-4. each item returned by the iterator is either a list or a tuple
+4. each item returned by the iterator is a sequence (e.g., tuple or list)
 
-5. the first item returned by the iterator is a **header row** comprising a list or tuple of **header values**
+5. the first item returned by the iterator is a **header row** comprising a sequence of **header values**
 
-6. each subsequent item returned by the iterator is a **data row** comprising a list or tuple of **data values**
+6. each subsequent item returned by the iterator is a **data row** comprising a sequence of **data values**
 
 7. a **header value** is typically a string (`str`) but may be an object of any type as long as it implements `__str__` and is pickleable
 
@@ -250,7 +256,7 @@ examine outputs from several intermediate steps, before all of the
 steps are defined and the transformation is executed in full.
 
 Note that this convention does not place any restrictions on the
-lengths of header and data rows. A table may return a header row
+lengths of header and data rows. A table may contain a header row
 and/or data rows of varying lengths.
 
 
@@ -269,14 +275,46 @@ chunks. Which strategy is used will depend on the arguments passed
 into the :func:`petl.transform.sorts.sort` function when it is called.
 
 In either case, the sorting can take some time, and if the sorted data
-will be used more than once, it is undesirable to throw away
-the sorted data and start again from scratch each time. It is better
-to cache the sorted data, if possible, so it can be re-used.
+will be used more than once, it is undesirable to start again from
+scratch each time. It is better to cache the sorted data, if possible,
+so it can be re-used.
 
 The :func:`petl.transform.sorts.sort` function, and all functions which use
-it internally, provide a `cache` keyword argument, which can be used to
+it internally, provide a `cache` keyword argument which can be used to
 turn on or off the caching of sorted data.
 
 There is also an explicit :func:`petl.util.materialise.cache` function, which
 can be used to cache in memory up to a configurable number of rows from any
 table.
+
+
+Acknowledgments
+---------------
+
+This package is primarily developed and maintained by Alistair Miles
+<alimanfoo@googlemail.com> with funding from the `MRC Centre for
+Genomics and Global Health <http://www.cggh.org>`_.
+
+The following people have also contributed to the development of this
+package:
+
+* Alexander Stauber
+* Andrew Kim (`andrewakim <https://github.com/andrewakim>`_)
+* Caleb Lloyd (`caleblloyd <https://github.com/caleblloyd>`_)
+* Florent Xicluna (`florentx <https://github.com/florentx>`_)
+* Jonathan Camile (`deytao <https://github.com/deytao>`_)
+* Kenneth Borthwick
+* Michael Rea (`rea725 <https://github.com/rea725>`_)
+* Olivier Macchioni (`omacchioni <https://github.com/omacchioni>`_)
+* Olivier Poitrey (`rs <https://github.com/rs>`_)
+* Peder Jakobsen (`pjakobsen <https://github.com/pjakobsen>`_)
+* Phillip Knaus (`phillipknaus <https://github.com/phillipknauss>`_)
+* Richard Pearson (`podpearson <https://github.com/podpearson>`_)
+* Roger Woodley (`rogerkwoodley <https://github.com/rogerkwoodley>`_)
+* `adamsdarlingtower <https://github.com/adamsdarlingtower>`_
+* `imazor <https://github.com/imazor>`_
+* `james-unified <https://github.com/james-unified>`_
+* `shayh <https://github.com/shayh>`_
+* `thatneat <https://github.com/thatneat>`_
+* `titusz <https://github.com/titusz>`_
+* `zigen <https://github.com/zigen>`_

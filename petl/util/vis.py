@@ -4,11 +4,13 @@ from __future__ import absolute_import, print_function, division, \
 
 from itertools import islice
 from collections import defaultdict
-from petl.compat import numeric_types
+from petl.compat import numeric_types, text_type
 
 
-import petl.config as config
+from petl import config
 from petl.util.base import Table
+from petl.io.sources import MemorySource
+from petl.io.html import touhtml
 
 
 def look(table, *sliceargs, **kwargs):
@@ -465,3 +467,115 @@ class See(object):
                 f = '%s|%s' % (i, f)
             output += '%s: %s\n' % (f, ', '.join(cols[str(i)]))
         return output
+
+
+def _vis_overflow(table, limit):
+    overflow = False
+    if limit:
+        # try reading one more than the limit, to see if there are more rows
+        table = list(islice(table, 0, limit+2))
+        if len(table) > limit+1:
+            overflow = True
+            table = table[:-1]
+    return table, overflow
+
+
+def _table_repr(table):
+    limit = config.table_repr_limit
+    index_header = config.table_repr_index_header
+    vrepr = repr
+    table, overflow = _vis_overflow(table, limit)
+    l = look(table, limit, vrepr=vrepr, index_header=index_header)
+    t = str(l)
+    if overflow:
+        t += '...\n'
+    return t
+
+
+Table.__repr__ = _table_repr
+
+
+def _table_str(table):
+    limit = config.table_str_limit
+    index_header = config.table_str_index_header
+    vrepr = str
+    table, overflow = _vis_overflow(table, limit)
+    l = look(table, limit, vrepr=vrepr, index_header=index_header)
+    t = str(l)
+    if overflow:
+        t += '...\n'
+    return t
+
+
+Table.__str__ = _table_str
+
+
+def _table_unicode(table):
+    limit = config.table_str_limit
+    index_header = config.table_str_index_header
+    vrepr = text_type
+    table, overflow = _vis_overflow(table, limit)
+    l = look(table, limit, vrepr=vrepr, index_header=index_header)
+    t = text_type(l)
+    if overflow:
+        t += '...\n'
+    return t
+
+
+Table.__unicode__ = _table_unicode
+
+
+def _table_html(table, limit=5, vrepr=text_type, index_header=False,
+                caption=None, tr_style=None, td_styles=None):
+    table, overflow = _vis_overflow(table, limit)
+    buf = MemorySource()
+    encoding = 'utf-8'
+    touhtml(table, buf, encoding=encoding, index_header=index_header,
+            vrepr=vrepr, caption=caption, tr_style=tr_style,
+            td_styles=td_styles)
+    s = text_type(buf.getvalue(), encoding)
+    if overflow:
+        s += '<p><strong>...</strong></p>'
+    return s
+
+
+def _table_repr_html(table):
+    limit = config.table_repr_html_limit
+    index_header = config.table_repr_html_index_header
+    vrepr = text_type
+    s = _table_html(table, limit=limit, vrepr=vrepr, index_header=index_header)
+    return s
+
+
+Table._repr_html_ = _table_repr_html
+
+
+def display(table, limit=5, vrepr=text_type,
+            index_header=False, caption=None, tr_style=None, td_styles=None):
+    """
+    Display a table inline within an IPython notebook.
+    
+    """
+
+    from IPython.core.display import display_html
+    html = _table_html(table, limit=limit, vrepr=vrepr, 
+                       index_header=index_header, caption=caption,
+                       tr_style=tr_style, td_styles=td_styles)
+    display_html(html, raw=True)
+
+
+Table.display = display
+
+
+def displayall(table, vrepr=text_type,
+               index_header=False, caption=None, tr_style=None, td_styles=None):
+    """
+    Display **all rows** from a table inline within an IPython notebook.
+
+    """
+
+    display(table, limit=None, vrepr=vrepr, index_header=index_header,
+            caption=caption, tr_style=tr_style, td_styles=td_styles)
+
+
+Table.displayall = displayall
