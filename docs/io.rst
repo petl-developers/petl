@@ -53,14 +53,6 @@ Delimited files
 .. autofunction:: petl.io.csv.totsv
 .. autofunction:: petl.io.csv.appendtsv
 .. autofunction:: petl.io.csv.teetsv
-.. autofunction:: petl.io.csv.fromucsv
-.. autofunction:: petl.io.csv.toucsv
-.. autofunction:: petl.io.csv.appenducsv
-.. autofunction:: petl.io.csv.teeucsv
-.. autofunction:: petl.io.csv.fromutsv
-.. autofunction:: petl.io.csv.toutsv
-.. autofunction:: petl.io.csv.appendutsv
-.. autofunction:: petl.io.csv.teeutsv
 
 
 Pickle files
@@ -79,10 +71,6 @@ Text files
 .. autofunction:: petl.io.text.totext
 .. autofunction:: petl.io.text.appendtext
 .. autofunction:: petl.io.text.teetext
-.. autofunction:: petl.io.text.fromutext
-.. autofunction:: petl.io.text.toutext
-.. autofunction:: petl.io.text.appendutext
-.. autofunction:: petl.io.text.teeutext
 
 
 XML files
@@ -98,8 +86,6 @@ HTML files
 
 .. autofunction:: petl.io.html.tohtml
 .. autofunction:: petl.io.html.teehtml
-.. autofunction:: petl.io.html.touhtml
-.. autofunction:: petl.io.html.teeuhtml
 
 
 JSON files
@@ -125,18 +111,22 @@ I/O helper classes
 ------------------
 
 The following classes are helpers for extract (``from...()``) and load
-(``to...()``) functions that use a file-like data source. An instance
-of any of the following classes can be used as the ``source`` argument
-to data extraction functions like :func:`petl.io.csv.fromcsv` etc., with the
-exception of :class:`petl.io.sources.StdoutSource` which is write-only. An
-instance of
-any of the following classes can also be used as the ``source``
+(``to...()``) functions that use a file-like data source.
+
+An instance of any of the following classes can be used as the ``source``
+argument to data extraction functions like :func:`petl.io.csv.fromcsv` etc.,
+with the exception of :class:`petl.io.sources.StdoutSource` which is
+write-only.
+
+An instance of any of the following classes can also be used as the ``source``
 argument to data loading functions like :func:`tocsv` etc., with the
 exception of :class:`petl.io.sources.StdinSource`,
 :class:`petl.io.sources.URLSource` and :class:`petl.io.sources.PopenSource`
-which are read-only. The behaviour of each source can usually be configured
-by passing arguments to the constructor, see the source code of the
-:mod:`petl.io.sources` module for full details.
+which are read-only.
+
+The behaviour of each source can usually be configured by passing arguments
+to the constructor, see the source code of the :mod:`petl.io.sources` module
+for full details.
 
 .. autoclass:: petl.io.sources.FileSource
 .. autoclass:: petl.io.sources.GzipSource

@@ -140,7 +140,7 @@ Set operations
 
 
 Deduplicating rows
--------------------
+------------------
 
 .. autofunction:: petl.transform.dedup.duplicates
 .. autofunction:: petl.transform.dedup.unique

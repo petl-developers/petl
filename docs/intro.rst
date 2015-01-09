@@ -72,8 +72,8 @@ Similarly, if one or more transformation functions are applied, e.g.::
     >>> table5 = etl.addfield(table4, 'quux', lambda row: row.bar * row.baz)
 
 ...no actual transformation work will be done until data are
-requested from `table5` or any of the other tables returned by
-the intermediate steps. 
+requested from `table5` (or any of the other tables returned by
+the intermediate steps).
 
 So in effect, a 5 step pipeline has been set up, and rows will pass through
 the pipeline on demand, as they are pulled from the end of the pipeline via
@@ -430,8 +430,8 @@ The following functions have been renamed:
 * isordered() - renamed to issorted()
 * StringSource() - renamed to MemorySource()
 
-:mod:`petl.fluent` and :mod:`petl.interactive` functionalities merged into root :mod:`petl` module
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+:mod:`petl.fluent` and :mod:`petl.interactive`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The functionalities previously available in the :mod:`petl.fluent` and
 :mod:`petl.interactive` modules have been integrated into the root
