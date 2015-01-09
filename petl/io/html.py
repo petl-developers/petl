@@ -1,9 +1,7 @@
-from __future__ import absolute_import, print_function, division, \
-    unicode_literals
+from __future__ import absolute_import, print_function, division
 
 
 # standard library dependencies
-import codecs
 import io
 from petl.compat import text_type, numeric_types, next, PY2, izip_longest, \
     string_types, callable
@@ -11,11 +9,12 @@ from petl.compat import text_type, numeric_types, next, PY2, izip_longest, \
 
 # internal dependencies
 from petl.util.base import Table, Record
+from petl.io.base import getcodec
 from petl.io.sources import write_source_from_arg
 
 
-def tohtml(table, source=None, caption=None, vrepr=text_type,
-           lineterminator='\r\n', index_header=False,
+def tohtml(table, source=None, encoding=None, errors=None, caption=None,
+           vrepr=text_type, lineterminator='\n', index_header=False,
            tr_style=None, td_styles=None):
     """
     Write the table as HTML to a file. E.g.::
@@ -56,78 +55,78 @@ def tohtml(table, source=None, caption=None, vrepr=text_type,
 
     """
 
-    touhtml(table, source=source, caption=caption,
-            vrepr=vrepr, lineterminator=lineterminator,
-            encoding='ascii', index_header=index_header,
-            tr_style=tr_style, td_styles=td_styles)
-
-
-Table.tohtml = tohtml
-
-
-def touhtml(table, source=None, caption=None, encoding='utf-8',
-            vrepr=text_type, lineterminator='\r\n',
-            index_header=False, tr_style=None, td_styles=None):
-    """
-    Write the table as HTML to a text file using the given encoding.
-
-    """
-
     source = write_source_from_arg(source)
-    with source.open_('wb') as f:
+    with source.open('wb') as buf:
+
+        # deal with text encoding
         if PY2:
-            f = codecs.getwriter(encoding)(f)
+            codec = getcodec(encoding)
+            f = codec.streamwriter(buf, errors=errors)
         else:
-            f = io.TextIOWrapper(f, encoding=encoding, newline='')
+            f = io.TextIOWrapper(buf,
+                                 encoding=encoding,
+                                 errors=errors)
+
+        # write the table
         try:
             it = iter(table)
-            flds = next(it)
-            _write_begin(f, flds, lineterminator, caption, index_header)
+
+            # write header
+            hdr = next(it)
+            _write_begin(f, hdr, lineterminator, caption, index_header)
+
+            # write body
             if tr_style and callable(tr_style):
                 # wrap as records
-                it = (Record(row, flds) for row in it)
+                it = (Record(row, hdr) for row in it)
             for row in it:
-                _write_row(f, flds, row, lineterminator, vrepr,
+                _write_row(f, hdr, row, lineterminator, vrepr,
                            tr_style, td_styles)
+
+            # finish up
             _write_end(f, lineterminator)
+            f.flush()
+
         finally:
             if not PY2:
                 f.detach()
 
 
-Table.touhtml = touhtml
+Table.tohtml = tohtml
 
 
-def teeuhtml(table, source=None, caption=None,
-             encoding='utf-8', vrepr=text_type,
-             lineterminator='\r\n', index_header=False,
-             tr_style=None, td_styles=None):
+def teehtml(table, source=None, encoding=None, errors=None, caption=None,
+            vrepr=text_type, lineterminator='\n', index_header=False,
+            tr_style=None, td_styles=None):
     """
     Return a table that writes rows to a Unicode HTML file as they are
     iterated over.
 
     """
 
-    return TeeUnicodeHTMLView(table, source=source, caption=caption,
-                              encoding=encoding, vrepr=vrepr,
-                              lineterminator=lineterminator,
-                              index_header=index_header,
-                              tr_style=tr_style, td_styles=td_styles)
+    source = write_source_from_arg(source)
+    return TeeHTMLView(table, source=source,
+                       encoding=encoding, errors=errors, caption=caption,
+                       vrepr=vrepr,
+                       lineterminator=lineterminator,
+                       index_header=index_header,
+                       tr_style=tr_style, td_styles=td_styles)
 
 
-Table.teeuhtml = teeuhtml
+Table.teehtml = teehtml
 
 
-class TeeUnicodeHTMLView(Table):
+class TeeHTMLView(Table):
 
-    def __init__(self, table, source=None, caption=None,
-                 encoding='utf-8', vrepr=text_type,
-                 lineterminator='\r\n', index_header=False,
+    def __init__(self, table, source=None, encoding=None,
+                 errors=None, caption=None, vrepr=text_type,
+                 lineterminator='\n', index_header=False,
                  tr_style=None, td_styles=None):
         self.table = table
         self.source = source
-        self.caption = caption
         self.encoding = encoding
+        self.errors = errors
+        self.caption = caption
         self.vrepr = vrepr
         self.lineterminator = lineterminator
         self.index_header = index_header
@@ -135,53 +134,53 @@ class TeeUnicodeHTMLView(Table):
         self.td_styles = td_styles
 
     def __iter__(self):
-        source = write_source_from_arg(self.source)
+        table = self.table
+        source = self.source
+        encoding = self.encoding
+        errors = self.errors
         lineterminator = self.lineterminator
         caption = self.caption
-        vrepr = self.vrepr
         index_header = self.index_header
         tr_style = self.tr_style
         td_styles = self.td_styles
-        with source.open_('wb') as f:
+        vrepr = self.vrepr
+
+        with source.open('wb') as buf:
+
+            # deal with text encoding
             if PY2:
-                f = codecs.getwriter(self.encoding)(f)
+                codec = getcodec(encoding)
+                f = codec.streamwriter(buf, errors=errors)
             else:
-                f = io.TextIOWrapper(f, encoding=self.encoding, newline='')
+                f = io.TextIOWrapper(buf,
+                                     encoding=encoding,
+                                     errors=errors)
+
+            # write the table
             try:
-                it = iter(self.table)
-                flds = next(it)
-                _write_begin(f, flds, lineterminator, caption, index_header)
-                yield flds
+                it = iter(table)
+
+                # write header
+                hdr = next(it)
+                _write_begin(f, hdr, lineterminator, caption, index_header)
+                yield hdr
+
+                # write body
                 if tr_style and callable(tr_style):
                     # wrap as records
-                    it = (Record(row, flds) for row in it)
+                    it = (Record(row, hdr) for row in it)
                 for row in it:
-                    _write_row(f, flds, row, lineterminator, vrepr,
+                    _write_row(f, hdr, row, lineterminator, vrepr,
                                tr_style, td_styles)
                     yield row
+
+                # finish up
                 _write_end(f, lineterminator)
+                f.flush()
+
             finally:
                 if not PY2:
                     f.detach()
-
-
-def teehtml(table, source=None, caption=None, vrepr=text_type,
-            lineterminator='\r\n', index_header=False,
-            tr_style=None, td_styles=None):
-    """
-    Return a table that writes rows to an HTML file as they are iterated
-    over.
-
-    """
-
-    return TeeUnicodeHTMLView(table, source=source, caption=caption,
-                              vrepr=vrepr,
-                              lineterminator=lineterminator, encoding='ascii',
-                              index_header=index_header,
-                              tr_style=tr_style, td_styles=td_styles)
-
-
-Table.teehtml = teehtml
 
 
 def _write_begin(f, flds, lineterminator, caption, index_header):

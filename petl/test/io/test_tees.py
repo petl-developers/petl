@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, print_function, division
-# N.B., do not import unicode_literals in tests
 
 
 from tempfile import NamedTemporaryFile
@@ -83,7 +82,7 @@ def test_teecsv_write_header():
         etl.fromcsv(f2.name).convertnumbers())
 
 
-def test_teeucsv():
+def test_teecsv_unicode():
 
     t1 = ((u'name', u'id'),
           (u'Արամ Խաչատրյան', 1),
@@ -94,15 +93,15 @@ def test_teeucsv():
     f1 = NamedTemporaryFile()
     f2 = NamedTemporaryFile()
 
-    etl.wrap(t1).teeucsv(f1.name).selectgt('id', 1).toucsv(f2.name)
+    etl.wrap(t1).teecsv(f1.name).selectgt('id', 1).tocsv(f2.name)
 
     ieq(t1,
-        etl.fromucsv(f1.name).convertnumbers())
+        etl.fromcsv(f1.name).convertnumbers())
     ieq(etl.wrap(t1).selectgt('id', 1),
-        etl.fromucsv(f2.name).convertnumbers())
+        etl.fromcsv(f2.name).convertnumbers())
 
 
-def test_teeucsv_write_header():
+def test_teecsv_unicode_write_header():
 
     t1 = ((u'name', u'id'),
           (u'Արամ Խաչատրյան', u'1'),
@@ -116,16 +115,16 @@ def test_teeucsv_write_header():
     (etl
      .wrap(t1)
      .convertnumbers()
-     .teeucsv(f1.name, write_header=False)
-     .selectgt('id', 1).toucsv(f2.name))
+     .teecsv(f1.name, write_header=False)
+     .selectgt('id', 1).tocsv(f2.name))
 
     ieq(t1[1:],
-        etl.fromucsv(f1.name))
+        etl.fromcsv(f1.name))
     ieq(etl.wrap(t1).convertnumbers().selectgt('id', 1),
-        etl.fromucsv(f2.name).convertnumbers())
+        etl.fromcsv(f2.name).convertnumbers())
 
 
-def test_teeutsv():
+def test_teetsv_unicode():
 
     t1 = ((u'name', u'id'),
           (u'Արամ Խաչատրյան', 1),
@@ -136,12 +135,12 @@ def test_teeutsv():
     f1 = NamedTemporaryFile()
     f2 = NamedTemporaryFile()
 
-    etl.wrap(t1).teeutsv(f1.name).selectgt('id', 1).toutsv(f2.name)
+    etl.wrap(t1).teetsv(f1.name).selectgt('id', 1).totsv(f2.name)
 
     ieq(t1,
-        etl.fromutsv(f1.name).convertnumbers())
+        etl.fromtsv(f1.name).convertnumbers())
     ieq(etl.wrap(t1).selectgt('id', 1),
-        etl.fromutsv(f2.name).convertnumbers())
+        etl.fromtsv(f2.name).convertnumbers())
 
 
 def test_teetext():
@@ -172,7 +171,7 @@ def test_teetext():
         etl.frompickle(f2.name))
 
 
-def test_teeutext():
+def test_teetext_unicode():
 
     t1 = ((u'foo', u'bar'),
           (u'Արամ Խաչատրյան', 2),
@@ -187,15 +186,15 @@ def test_teeutext():
     epilogue = u'章子怡,4'
     (etl
      .wrap(t1)
-     .teeutext(f1.name,
-               template=template,
-               prologue=prologue,
-               epilogue=epilogue)
+     .teetext(f1.name,
+              template=template,
+              prologue=prologue,
+              epilogue=epilogue)
      .selectgt('bar', 1)
      .topickle(f2.name))
 
     ieq(t1 + ((u'章子怡', 4),),
-        etl.fromucsv(f1.name).convertnumbers())
+        etl.fromcsv(f1.name).convertnumbers())
     ieq(etl.wrap(t1).selectgt('bar', 1),
         etl.frompickle(f2.name))
 
@@ -215,7 +214,7 @@ def test_teehtml():
     ieq(etl.wrap(t1).selectgt('bar', 1), etl.frompickle(f2.name))
 
 
-def test_teeuhtml():
+def test_teehtml_unicode():
 
     t1 = ((u'foo', u'bar'),
           (u'Արամ Խաչատրյան', 2),
@@ -224,7 +223,7 @@ def test_teeuhtml():
 
     f1 = NamedTemporaryFile()
     f2 = NamedTemporaryFile()
-    etl.wrap(t1).teeuhtml(f1.name).selectgt('bar', 1).topickle(f2.name)
+    etl.wrap(t1).teehtml(f1.name).selectgt('bar', 1).topickle(f2.name)
 
     ieq(t1, etl.fromxml(f1.name, './/tr', ('th', 'td')).convertnumbers())
     ieq(etl.wrap(t1).selectgt('bar', 1), etl.frompickle(f2.name))

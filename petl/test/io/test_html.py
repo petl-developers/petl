@@ -1,5 +1,4 @@
 from __future__ import absolute_import, print_function, division
-# N.B., do not import unicode_literals in tests
 
 
 from tempfile import NamedTemporaryFile
@@ -18,7 +17,7 @@ def test_tohtml():
              ('c', False))
 
     f = NamedTemporaryFile(delete=False)
-    tohtml(table, f.name, lineterminator='\n')
+    tohtml(table, f.name, encoding='ascii', lineterminator='\n')
 
     # check what it did
     with open(f.name, 'rb') as o:
@@ -56,7 +55,8 @@ def test_tohtml_caption():
              ('a', 1),
              ('b', (1, 2)))
     f = NamedTemporaryFile(delete=False)
-    tohtml(table, f.name, caption='my table', lineterminator='\n')
+    tohtml(table, f.name, encoding='ascii', caption='my table',
+           lineterminator='\n')
 
     # check what it did
     with open(f.name, 'rb') as o:

@@ -1,5 +1,4 @@
 from __future__ import absolute_import, print_function, division
-# N.B., do not import unicode_literals in tests
 
 
 from tempfile import NamedTemporaryFile
@@ -21,7 +20,7 @@ def test_fromtext():
     f.write('c\t3\n')
     f.close()
 
-    actual = fromtext(f.name)
+    actual = fromtext(f.name, encoding='ascii')
     expect = (('lines',),
               ('foo\tbar',),
               ('a\t1',),
@@ -48,7 +47,7 @@ def test_fromtext_lineterminators():
         f = NamedTemporaryFile(mode='wt', delete=False)
         f.write(lt.join(data))
         f.close()
-        actual = fromtext(f.name)
+        actual = fromtext(f.name, encoding='ascii')
         ieq(expect, actual)
 
 
@@ -70,7 +69,8 @@ def test_totext():
 | {bar}
 """
     epilogue = "|}"
-    totext(table, f.name, template, prologue, epilogue)
+    totext(table, f.name, encoding='ascii', template=template,
+           prologue=prologue, epilogue=epilogue)
 
     # check what it did
     with open(f.name, 'r') as o:
@@ -108,7 +108,7 @@ def test_fromtext_gz():
     finally:
         f.close()
 
-    actual = fromtext(fn)
+    actual = fromtext(fn, encoding='ascii')
     expect = (('lines',),
               ('foo\tbar',),
               ('a\t1',),
@@ -139,7 +139,8 @@ def test_totext_gz():
 | {bar}
 """
     epilogue = "|}"
-    totext(table, fn, template, prologue, epilogue)
+    totext(table, fn, encoding='ascii', template=template, prologue=prologue,
+           epilogue=epilogue)
 
     # check what it did
     o = gzip.open(fn, 'rt')

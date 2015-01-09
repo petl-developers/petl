@@ -1,17 +1,16 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, print_function, division
-# N.B., do not import unicode_literals in tests
 
 
-import codecs
+import io
 from tempfile import NamedTemporaryFile
 from petl.test.helpers import ieq, eq_
 
 
-from petl.io.text import fromutext, toutext
+from petl.io.text import fromtext, totext
 
 
-def test_fromutext():
+def test_fromtext():
 
     data = u'''name,id
 Արամ Խաչատրյան,1
@@ -20,11 +19,11 @@ Johann Strauß,2
 章子怡,4
 '''
     fn = NamedTemporaryFile().name
-    f = codecs.open(fn, encoding='utf-8', mode='w')
+    f = io.open(fn, encoding='utf-8', mode='wt')
     f.write(data)
     f.close()
 
-    actual = fromutext(fn)
+    actual = fromtext(fn)
     expect = ((u'lines',),
               (u'name,id',),
               (u'Արամ Խաչատրյան,1',),
@@ -36,7 +35,7 @@ Johann Strauß,2
     ieq(expect, actual)  # verify can iterate twice
 
 
-def test_toutext():
+def test_totext():
 
     # exercise function
     tbl = ((u'name', u'id'),
@@ -56,11 +55,11 @@ def test_toutext():
 """
     epilogue = u"|}"
     fn = NamedTemporaryFile().name
-    toutext(tbl, fn, template=template, prologue=prologue,
-            epilogue=epilogue)
+    totext(tbl, fn, template=template, prologue=prologue,
+           epilogue=epilogue)
 
     # check what it did
-    f = codecs.open(fn, encoding='utf-8', mode='r')
+    f = io.open(fn, encoding='utf-8', mode='rt')
     actual = f.read()
     expect = u"""{| class="wikitable"
 |-

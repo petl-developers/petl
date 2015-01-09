@@ -1,5 +1,4 @@
 from __future__ import print_function, division, absolute_import
-# N.B., do not import unicode_literals in tests
 
 
 from datetime import datetime

@@ -9,4 +9,4 @@ dist
 .tox/
 example*.*
 .coverage
-tmp
+tmp*

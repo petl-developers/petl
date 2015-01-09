@@ -1,5 +1,4 @@
-from __future__ import absolute_import, print_function, division, \
-    unicode_literals
+from __future__ import absolute_import, print_function, division
 
 
 # standard library dependencies
@@ -156,7 +155,7 @@ class XmlView(Table):
         vmatch = self.vmatch
         vdict = self.vdict
 
-        with self.source.open_('rb') as xmlf:
+        with self.source.open('rb') as xmlf:
 
             tree = ElementTree.parse(xmlf)
             if not hasattr(tree, 'iterfind'):

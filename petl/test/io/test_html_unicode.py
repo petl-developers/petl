@@ -1,17 +1,16 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, print_function, division
-# N.B., do not import unicode_literals in tests
 
 
-import codecs
+import io
 from tempfile import NamedTemporaryFile
 from petl.test.helpers import eq_
 
 
-from petl.io.html import touhtml
+from petl.io.html import tohtml
 
 
-def test_touhtml():
+def test_tohtml():
 
     # exercise function
     tbl = ((u'name', u'id'),
@@ -20,10 +19,10 @@ def test_touhtml():
            (u'Вагиф Сәмәдоғлу', 3),
            (u'章子怡', 4))
     fn = NamedTemporaryFile().name
-    touhtml(tbl, fn, lineterminator='\n')
+    tohtml(tbl, fn, lineterminator='\n')
 
     # check what it did
-    f = codecs.open(fn, mode='r', encoding='utf-8')
+    f = io.open(fn, mode='rt', encoding='utf-8')
     actual = f.read()
     expect = u"""<table class='petl'>
 <thead>

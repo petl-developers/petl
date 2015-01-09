@@ -4,18 +4,16 @@ from petl.io.sources import FileSource, GzipSource, BZ2Source, ZipSource, \
     StdinSource, StdoutSource, URLSource, StringSource, PopenSource, \
     MemorySource
 
-from petl.io.csv import fromcsv, fromtsv, fromucsv, fromutsv, tocsv, \
-    appendcsv, totsv, appendtsv, toucsv, appenducsv, toutsv, appendutsv, \
-    teecsv, teetsv, teeucsv, teeutsv
+from petl.io.csv import fromcsv, fromtsv, tocsv, appendcsv, totsv, appendtsv, \
+    teecsv, teetsv
 
 from petl.io.pickle import frompickle, topickle, appendpickle, teepickle
 
-from petl.io.text import fromtext, totext, appendtext, fromutext, toutext, \
-    appendutext, teetext, teeutext
+from petl.io.text import fromtext, totext, appendtext, teetext
 
 from petl.io.xml import fromxml
 
-from petl.io.html import tohtml, touhtml, teehtml, teeuhtml
+from petl.io.html import tohtml, teehtml
 
 from petl.io.json import fromjson, tojson, tojsonarrays, fromdicts
 

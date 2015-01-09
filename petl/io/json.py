@@ -1,5 +1,4 @@
-from __future__ import absolute_import, print_function, division, \
-    unicode_literals
+from __future__ import absolute_import, print_function, division
 
 
 # standard library dependencies
@@ -62,7 +61,7 @@ class JsonView(Table):
         self.header = kwargs.pop('header', None)
 
     def __iter__(self):
-        with self.source.open_('rb') as f:
+        with self.source.open('rb') as f:
             if not PY2:
                 # wrap buffer for text IO
                 f = io.TextIOWrapper(f, encoding='utf-8', newline='',
@@ -198,7 +197,7 @@ Table.tojsonarrays = tojsonarrays
 def _writejson(source, obj, prefix, suffix, *args, **kwargs):
     encoder = JSONEncoder(*args, **kwargs)
     source = write_source_from_arg(source)
-    with source.open_('wb') as f:
+    with source.open('wb') as f:
         if PY2:
             # write directly to buffer
             _writeobj(encoder, obj, f, prefix, suffix)

@@ -1,11 +1,4 @@
 from __future__ import absolute_import, print_function, division
-# N.B., do not import unicode_literals in tests
-
-
-# N.B., this file only tests the DB-related functions using sqlite3,
-# as anything else requires database connection configuration. See
-# docs/dbtests.py for a script to exercise the DB-related functions with
-# MySQL and Postgres.
 
 
 import sqlite3
@@ -15,6 +8,12 @@ from petl.compat import next
 
 from petl.test.helpers import ieq, eq_
 from petl.io.db import fromdb, todb, appenddb
+
+
+# N.B., this file only tests the DB-related functions using sqlite3,
+# as anything else requires database connection configuration. See
+# docs/dbtests.py for a script to exercise the DB-related functions with
+# MySQL and Postgres.
 
 
 def test_fromdb():

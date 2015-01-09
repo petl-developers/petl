@@ -1,7 +1,7 @@
-from __future__ import absolute_import, print_function, division, \
-    unicode_literals
+from __future__ import absolute_import, print_function, division
 
 
+import locale
 from itertools import islice
 from collections import defaultdict
 from petl.compat import numeric_types, text_type
@@ -10,7 +10,7 @@ from petl.compat import numeric_types, text_type
 from petl import config
 from petl.util.base import Table
 from petl.io.sources import MemorySource
-from petl.io.html import touhtml
+from petl.io.html import tohtml
 
 
 def look(table, *sliceargs, **kwargs):
@@ -526,13 +526,14 @@ Table.__unicode__ = _table_unicode
 
 
 def _table_html(table, limit=5, vrepr=text_type, index_header=False,
-                caption=None, tr_style=None, td_styles=None):
+                caption=None, tr_style=None, td_styles=None, encoding=None):
+    if encoding is None:
+        encoding = locale.getpreferredencoding()
     table, overflow = _vis_overflow(table, limit)
     buf = MemorySource()
-    encoding = 'utf-8'
-    touhtml(table, buf, encoding=encoding, index_header=index_header,
-            vrepr=vrepr, caption=caption, tr_style=tr_style,
-            td_styles=td_styles)
+    tohtml(table, buf, encoding=encoding, index_header=index_header,
+           vrepr=vrepr, caption=caption, tr_style=tr_style,
+           td_styles=td_styles)
     s = text_type(buf.getvalue(), encoding)
     if overflow:
         s += '<p><strong>...</strong></p>'
@@ -550,8 +551,8 @@ def _table_repr_html(table):
 Table._repr_html_ = _table_repr_html
 
 
-def display(table, limit=5, vrepr=text_type,
-            index_header=False, caption=None, tr_style=None, td_styles=None):
+def display(table, limit=5, vrepr=text_type, index_header=False,
+            caption=None, tr_style=None, td_styles=None, encoding=None):
     """
     Display a table inline within an IPython notebook.
     
@@ -560,22 +561,24 @@ def display(table, limit=5, vrepr=text_type,
     from IPython.core.display import display_html
     html = _table_html(table, limit=limit, vrepr=vrepr, 
                        index_header=index_header, caption=caption,
-                       tr_style=tr_style, td_styles=td_styles)
+                       tr_style=tr_style, td_styles=td_styles,
+                       encoding=encoding)
     display_html(html, raw=True)
 
 
 Table.display = display
 
 
-def displayall(table, vrepr=text_type,
-               index_header=False, caption=None, tr_style=None, td_styles=None):
+def displayall(table, vrepr=text_type, index_header=False, caption=None,
+               tr_style=None, td_styles=None, encoding=None):
     """
     Display **all rows** from a table inline within an IPython notebook.
 
     """
 
     display(table, limit=None, vrepr=vrepr, index_header=index_header,
-            caption=caption, tr_style=tr_style, td_styles=td_styles)
+            caption=caption, tr_style=tr_style, td_styles=td_styles,
+            encoding=encoding)
 
 
 Table.displayall = displayall

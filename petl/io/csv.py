@@ -1,5 +1,4 @@
-from __future__ import absolute_import, print_function, division, \
-    unicode_literals
+from __future__ import absolute_import, print_function, division
 
 
 # standard library dependencies
@@ -10,14 +9,14 @@ from petl.compat import PY2
 from petl.util.base import Table
 from petl.io.sources import read_source_from_arg, write_source_from_arg
 if PY2:
-    from petl.io.csv_py2 import fromcsv_impl, fromucsv_impl, tocsv_impl, \
-        toucsv_impl, appendcsv_impl, appenducsv_impl, teecsv_impl, teeucsv_impl
+    from petl.io.csv_py2 import fromcsv_impl, tocsv_impl, appendcsv_impl, \
+        teecsv_impl
 else:
-    from petl.io.csv_py3 import fromcsv_impl, fromucsv_impl, tocsv_impl, \
-        toucsv_impl, appendcsv_impl, appenducsv_impl, teecsv_impl, teeucsv_impl
+    from petl.io.csv_py3 import fromcsv_impl, tocsv_impl, appendcsv_impl, \
+        teecsv_impl
 
 
-def fromcsv(source=None, dialect='excel', **kwargs):
+def fromcsv(source=None, encoding=None, errors=None, **csvargs):
     """
     Extract a table from a delimited file. E.g.::
 
@@ -53,48 +52,27 @@ def fromcsv(source=None, dialect='excel', **kwargs):
     Note that all data values are strings, and any intended numeric values will
     need to be converted, see also :func:`convert`.
 
-    Under Python 3 this function is equivalent to :func:`fromucsv` with
-    ``encoding='ascii'``.
-
     """
 
     source = read_source_from_arg(source)
-    return fromcsv_impl(source=source, dialect=dialect, **kwargs)
+    csvargs.setdefault('dialect', 'excel')
+    return fromcsv_impl(source=source, encoding=encoding, errors=errors,
+                        **csvargs)
 
 
-def fromtsv(source=None, dialect='excel-tab', **kwargs):
+def fromtsv(source=None, encoding=None, errors=None, **csvargs):
     """
     Convenience function, as :func:`fromcsv` but with different default
     dialect (tab delimited).
 
     """
 
-    return fromcsv(source, dialect=dialect, **kwargs)
+    csvargs.setdefault('dialect', 'excel-tab')
+    return fromcsv(source, encoding=encoding, errors=errors, **csvargs)
 
 
-def fromucsv(source=None, encoding='utf-8', dialect='excel', **kwargs):
-    """
-    Extract a table from a delimited file with the given text encoding. Like
-    :func:`fromcsv` but accepts an additional ``encoding`` argument which
-    should be one of the Python supported encodings.
-
-    """
-
-    source = read_source_from_arg(source)
-    return fromucsv_impl(source, encoding=encoding, dialect=dialect, **kwargs)
-
-
-def fromutsv(source=None, encoding='utf-8', dialect='excel-tab', **kwargs):
-    """
-    Convenience function, as :func:`fromucsv` but with different default
-    dialect (tab delimited).
-
-    """
-
-    return fromucsv(source=source, encoding=encoding, dialect=dialect, **kwargs)
-
-
-def tocsv(table, source=None, dialect='excel', write_header=True, **kwargs):
+def tocsv(table, source=None, encoding=None, errors=None, write_header=True,
+          **csvargs):
     """
     Write the table to a CSV file. E.g.::
 
@@ -123,15 +101,16 @@ def tocsv(table, source=None, dialect='excel', write_header=True, **kwargs):
     """
 
     source = write_source_from_arg(source)
-    tocsv_impl(table, source=source, dialect=dialect,
-               write_header=write_header, **kwargs)
+    csvargs.setdefault('dialect', 'excel')
+    tocsv_impl(table, source=source, encoding=encoding, errors=errors,
+               write_header=write_header, **csvargs)
 
 
 Table.tocsv = tocsv
 
 
-def appendcsv(table, source=None, dialect='excel', write_header=False,
-              **kwargs):
+def appendcsv(table, source=None, encoding=None, errors=None,
+              write_header=False, **csvargs):
     """
     Append data rows to an existing CSV file. As :func:`tocsv` but the
     file is opened in append mode and the table header is not written by
@@ -144,154 +123,74 @@ def appendcsv(table, source=None, dialect='excel', write_header=False,
     """
 
     source = write_source_from_arg(source)
-    appendcsv_impl(table, source=source, dialect=dialect,
-                   write_header=write_header, **kwargs)
+    csvargs.setdefault('dialect', 'excel')
+    appendcsv_impl(table, source=source, encoding=encoding, errors=errors,
+                   write_header=write_header, **csvargs)
 
 
 Table.appendcsv = appendcsv
 
 
-def totsv(table, source=None, dialect='excel-tab', **kwargs):
+def totsv(table, source=None, encoding=None, errors=None,
+          write_header=True, **csvargs):
     """
     Convenience function, as :func:`tocsv` but with different default dialect
     (tab delimited).
 
     """
 
-    return tocsv(table, source=source, dialect=dialect, **kwargs)
+    csvargs.setdefault('dialect', 'excel-tab')
+    return tocsv(table, source=source, encoding=encoding, errors=errors,
+                 write_header=write_header, **csvargs)
 
 
 Table.totsv = totsv
 
 
-def appendtsv(table, source=None, dialect='excel-tab', **kwargs):
+def appendtsv(table, source=None, encoding=None, errors=None,
+              write_header=False, **csvargs):
     """
     Convenience function, as :func:`appendcsv` but with different default
     dialect (tab delimited).
 
     """
 
-    return appendcsv(table, source=source, dialect=dialect, **kwargs)
+    csvargs.setdefault('dialect', 'excel-tab')
+    return appendcsv(table, source=source, encoding=encoding, errors=errors,
+                     write_header=write_header, **csvargs)
 
 
 Table.appendtsv = appendtsv
 
 
-def toucsv(table, source=None, dialect='excel', encoding='utf-8',
-           write_header=True, **kwargs):
-    """
-    Write the table to a delimited file using the given text encoding. Like
-    :func:`tocsv` but accepts an additional ``encoding`` argument which
-    should be one of the Python supported encodings.
-
-    """
-
-    source = write_source_from_arg(source)
-    toucsv_impl(table, source=source, dialect=dialect, encoding=encoding,
-                write_header=write_header, **kwargs)
-
-
-Table.toucsv = toucsv
-
-
-def appenducsv(table, source=None, dialect='excel', encoding='utf-8',
-               write_header=False, **kwargs):
-    """
-    Append the table to a delimited file using the given text encoding. Like
-    :func:`appendcsv` but accepts an additional ``encoding`` argument which
-    should be one of the Python supported encodings.
-
-    """
-
-    source = write_source_from_arg(source)
-    appenducsv_impl(table, source=source, dialect=dialect, encoding=encoding,
-                    write_header=write_header, **kwargs)
-
-
-Table.appenducsv = appenducsv
-
-
-def toutsv(table, source=None, dialect='excel-tab', **kwargs):
-    """
-    Convenience function, as :func:`toucsv` but with different default
-    dialect (tab delimited).
-
-    """
-
-    return toucsv(table, source=source, dialect=dialect, **kwargs)
-
-
-Table.toutsv = toutsv
-
-
-def appendutsv(table, source=None, dialect='excel-tab', **kwargs):
-    """
-    Convenience function, as :func:`appenducsv` but with different default
-    dialect (tab delimited).
-
-    """
-
-    return appenducsv(table, source=source, dialect=dialect, **kwargs)
-
-
-Table.appendutsv = appendutsv
-
-
-def teecsv(table, source=None, write_header=True, dialect='excel', **kwargs):
+def teecsv(table, source=None, encoding=None, errors=None, write_header=True,
+           **csvargs):
     """
     Returns a table that writes rows to a CSV file as they are iterated over.
 
     """
 
     source = write_source_from_arg(source)
-    return teecsv_impl(table, source=source, write_header=write_header,
-                       dialect=dialect, **kwargs)
+    csvargs.setdefault('dialect', 'excel')
+    return teecsv_impl(table, source=source, encoding=encoding,
+                       errors=errors, write_header=write_header,
+                       **csvargs)
 
 
 Table.teecsv = teecsv
 
 
-def teetsv(table, source=None, write_header=True, dialect='excel-tab',
-           **kwargs):
+def teetsv(table, source=None, encoding=None, errors=None, write_header=True,
+           **csvargs):
     """
     Convenience function, as :func:`teecsv` but with different default
     dialect (tab delimited).
 
     """
 
-    return teecsv(table, source=source, write_header=write_header,
-                  dialect=dialect, **kwargs)
+    csvargs.setdefault('dialect', 'excel-tab')
+    return teecsv(table, source=source, encoding=encoding, errors=errors,
+                  write_header=write_header, **csvargs)
 
 
 Table.teetsv = teetsv
-
-
-def teeucsv(table, source=None, write_header=True, dialect='excel',
-            encoding='utf-8', **kwargs):
-    """
-    Returns a table that writes rows to a Unicode CSV file as they are
-    iterated over.
-
-    """
-
-    source = write_source_from_arg(source)
-    return teeucsv_impl(table, source=source, encoding=encoding,
-                        write_header=write_header, dialect=dialect, **kwargs)
-
-
-Table.teeucsv = teeucsv
-
-
-def teeutsv(table, source=None, write_header=True, dialect='excel-tab',
-            encoding='utf-8', **kwargs):
-    """
-    Convenience function, as :func:`teeucsv` but with different default
-    dialect (tab delimited).
-
-    """
-
-    return teeucsv(table, source=source, write_header=write_header,
-                   dialect=dialect, encoding=encoding, **kwargs)
-
-
-Table.teeutsv = teeutsv

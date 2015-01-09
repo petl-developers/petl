@@ -9,13 +9,11 @@ database setup prior to running.
 
 
 from __future__ import absolute_import, print_function, division
-
-
 import sys
-sys.path.insert(0, './src')
-import petl
-from petl.testutils import ieq
-from petl import look, fromdb, todb, appenddb, cut
+
+
+import petl as etl
+from petl.test.helpers import ieq
 
 
 def exercise(dbo):
@@ -26,36 +24,36 @@ def exercise(dbo):
     expect_empty = (('foo', 'bar'),)
     expect = (('foo', 'bar'), ('a', 1), ('b', 1))
     expect_appended = (('foo', 'bar'), ('a', 1), ('b', 1), ('a', 1), ('b', 1))
-    actual = fromdb(dbo, 'SELECT * FROM test')
+    actual = etl.fromdb(dbo, 'SELECT * FROM test')
 
     print('verify empty to start with...')
     ieq(expect_empty, actual)
-    print(look(actual))
+    print(etl.look(actual))
     
     print('write some data and verify...')
-    todb(expect, dbo, 'test')
+    etl.todb(expect, dbo, 'test')
     ieq(expect, actual)
-    print(look(actual))
+    print(etl.look(actual))
     
     print('append some data and verify...')
-    appenddb(expect, dbo, 'test')
+    etl.appenddb(expect, dbo, 'test')
     ieq(expect_appended, actual)
-    print(look(actual))
+    print(etl.look(actual))
     
     print('overwrite and verify...')
-    todb(expect, dbo, 'test')
+    etl.todb(expect, dbo, 'test')
     ieq(expect, actual)
-    print(look(actual))
+    print(etl.look(actual))
     
     print('cut, overwrite and verify')
-    todb(cut(expect, 'bar', 'foo'), dbo, 'test')
+    etl.todb(etl.cut(expect, 'bar', 'foo'), dbo, 'test')
     ieq(expect, actual)
-    print(look(actual))
+    print(etl.look(actual))
 
     print('cut, append and verify')
-    appenddb(cut(expect, 'bar', 'foo'), dbo, 'test')
+    etl.appenddb(etl.cut(expect, 'bar', 'foo'), dbo, 'test')
     ieq(expect_appended, actual)
-    print(look(actual))
+    print(etl.look(actual))
 
 
 def exercise_ss_cursor(setup_dbo, ss_dbo):
@@ -67,36 +65,36 @@ def exercise_ss_cursor(setup_dbo, ss_dbo):
     expect_empty = (('foo', 'bar'),)
     expect = (('foo', 'bar'), ('a', 1), ('b', 1))
     expect_appended = (('foo', 'bar'), ('a', 1), ('b', 1), ('a', 1), ('b', 1))
-    actual = fromdb(ss_dbo, 'SELECT * FROM test')
+    actual = etl.fromdb(ss_dbo, 'SELECT * FROM test')
 
     print('verify empty to start with...')
     ieq(expect_empty, actual)
-    print(look(actual))
+    print(etl.look(actual))
 
     print('write some data and verify...')
-    todb(expect, setup_dbo, 'test')
+    etl.todb(expect, setup_dbo, 'test')
     ieq(expect, actual)
-    print(look(actual))
+    print(etl.look(actual))
 
     print('append some data and verify...')
-    appenddb(expect, setup_dbo, 'test')
+    etl.appenddb(expect, setup_dbo, 'test')
     ieq(expect_appended, actual)
-    print(look(actual))
+    print(etl.look(actual))
 
     print('overwrite and verify...')
-    todb(expect, setup_dbo, 'test')
+    etl.todb(expect, setup_dbo, 'test')
     ieq(expect, actual)
-    print(look(actual))
+    print(etl.look(actual))
 
     print('cut, overwrite and verify')
-    todb(cut(expect, 'bar', 'foo'), setup_dbo, 'test')
+    etl.todb(etl.cut(expect, 'bar', 'foo'), setup_dbo, 'test')
     ieq(expect, actual)
-    print(look(actual))
+    print(etl.look(actual))
 
     print('cut, append and verify')
-    appenddb(cut(expect, 'bar', 'foo'), setup_dbo, 'test')
+    etl.appenddb(etl.cut(expect, 'bar', 'foo'), setup_dbo, 'test')
     ieq(expect_appended, actual)
-    print(look(actual))
+    print(etl.look(actual))
 
 
 def exercise_with_schema(dbo, db):
@@ -107,17 +105,17 @@ def exercise_with_schema(dbo, db):
     print()
     expect = (('foo', 'bar'), ('a', 1), ('b', 1))
     expect_appended = (('foo', 'bar'), ('a', 1), ('b', 1), ('a', 1), ('b', 1))
-    actual = fromdb(dbo, 'SELECT * FROM test')
+    actual = etl.fromdb(dbo, 'SELECT * FROM test')
 
     print('write some data and verify...')
-    todb(expect, dbo, 'test', schema=db)
+    etl.todb(expect, dbo, 'test', schema=db)
     ieq(expect, actual)
-    print(look(actual))
+    print(etl.look(actual))
     
     print('append some data and verify...')
-    appenddb(expect, dbo, 'test', schema=db)
+    etl.appenddb(expect, dbo, 'test', schema=db)
     ieq(expect_appended, actual)
-    print(look(actual))
+    print(etl.look(actual))
     
 
 def exercise_unicode(dbo):
@@ -132,11 +130,11 @@ def exercise_unicode(dbo):
               (u'Вагиф Сәмәдоғлу', 3),
               (u'章子怡', 4),
               )
-    actual = fromdb(dbo, 'SELECT * FROM test_unicode')
+    actual = etl.fromdb(dbo, 'SELECT * FROM test_unicode')
     print('write some data and verify...')
-    todb(expect, dbo, 'test_unicode')
+    etl.todb(expect, dbo, 'test_unicode')
     ieq(expect, actual)
-    print(look(actual))
+    print(etl.look(actual))
 
 
 def setup_mysql(dbapi_connection):
@@ -259,7 +257,7 @@ def exercise_postgresql(host, user, passwd, db):
 
 
 if __name__ == '__main__':
-    print(petl.VERSION)
+    print(etl.__version__)
     
     # setup logging
     import logging

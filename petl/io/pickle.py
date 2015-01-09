@@ -1,5 +1,4 @@
-from __future__ import absolute_import, print_function, division, \
-    unicode_literals
+from __future__ import absolute_import, print_function, division
 
 
 # standard library dependencies
@@ -51,7 +50,7 @@ class PickleView(Table):
         self.source = source
 
     def __iter__(self):
-        with self.source.open_('rb') as f:
+        with self.source.open('rb') as f:
             try:
                 while True:
                     yield tuple(pickle.load(f))
@@ -117,7 +116,7 @@ Table.appendpickle = appendpickle
 
 def _writepickle(table, source, mode, protocol, write_header):
     source = write_source_from_arg(source)
-    with source.open_(mode) as f:
+    with source.open(mode) as f:
         it = iter(table)
         hdr = next(it)
         if write_header:
@@ -151,7 +150,7 @@ class TeePickleView(Table):
     def __iter__(self):
         protocol = self.protocol
         source = write_source_from_arg(self.source)
-        with source.open_('wb') as f:
+        with source.open('wb') as f:
             it = iter(self.table)
             hdr = next(it)
             if self.write_header:

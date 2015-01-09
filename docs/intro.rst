@@ -45,31 +45,31 @@ data is requested.
 
 E.g., given a file at 'example.csv' in the current working directory::
 
-	>>> example_data = """foo,bar,baz
-	... a,1,3.4
-	... b,2,7.4
-	... c,6,2.2
-	... d,9,8.1
-	... """
-	>>> with open('example.csv', 'w') as f:
-	...     f.write(example_data)
-	...
+    >>> example_data = """foo,bar,baz
+    ... a,1,3.4
+    ... b,2,7.4
+    ... c,6,2.2
+    ... d,9,8.1
+    ... """
+    >>> with open('example.csv', 'w') as f:
+    ...     f.write(example_data)
+    ...
 
 ...the following code **does not** actually read the file or load any of its
 contents into memory::
 
-	>>> import petl as etl
-	>>> table1 = etl.fromcsv('example.csv')
+    >>> import petl as etl
+    >>> table1 = etl.fromcsv('example.csv')
 
 Rather, `table1` is a **row container** (see Conventions below), which can be
 iterated over, extracting data from the underlying file on demand.
 
 Similarly, if one or more transformation functions are applied, e.g.::
 
-	>>> table2 = etl.convert(table1, 'foo', 'upper')
-	>>> table3 = etl.convert(table2, 'bar', int)
-	>>> table4 = etl.convert(table3, 'baz', float)
-	>>> table5 = etl.addfield(table4, 'quux', lambda row: row.bar * row.baz)
+    >>> table2 = etl.convert(table1, 'foo', 'upper')
+    >>> table3 = etl.convert(table2, 'bar', int)
+    >>> table4 = etl.convert(table3, 'baz', float)
+    >>> table5 = etl.addfield(table4, 'quux', lambda row: row.bar * row.baz)
 
 ...no actual transformation work will be done until data are
 requested from `table5` or any of the other tables returned by
@@ -86,18 +86,18 @@ which write data to a file or database (e.g., :func:`petl.io.csv.tocsv`,
 and cause all of the transformation steps to be executed on the
 requested rows, e.g.::
 
-	>>> etl.look(table5)
-	+-----+-----+-----+--------------------+
-	| foo | bar | baz | quux               |
-	+=====+=====+=====+====================+
-	| 'A' |   1 | 3.4 |                3.4 |
-	+-----+-----+-----+--------------------+
-	| 'B' |   2 | 7.4 |               14.8 |
-	+-----+-----+-----+--------------------+
-	| 'C' |   6 | 2.2 | 13.200000000000001 |
-	+-----+-----+-----+--------------------+
-	| 'D' |   9 | 8.1 |  72.89999999999999 |
-	+-----+-----+-----+--------------------+
+    >>> etl.look(table5)
+    +-----+-----+-----+--------------------+
+    | foo | bar | baz | quux               |
+    +=====+=====+=====+====================+
+    | 'A' |   1 | 3.4 |                3.4 |
+    +-----+-----+-----+--------------------+
+    | 'B' |   2 | 7.4 |               14.8 |
+    +-----+-----+-----+--------------------+
+    | 'C' |   6 | 2.2 | 13.200000000000001 |
+    +-----+-----+-----+--------------------+
+    | 'D' |   9 | 8.1 |  72.89999999999999 |
+    +-----+-----+-----+--------------------+
 
 ...although note that :func:`petl.util.vis.look` will by default only request
 the first 5 rows, and so the minimum amount of processing will be done to
@@ -111,43 +111,43 @@ The :mod:`petl` package supports both functional and object-oriented
 programming styles. For example, the example transformation pipeline in the
 section above could also be written as::
 
-        >>> import petl as etl
-	>>> table = (
-	...     etl
-	...     .fromcsv('example.csv')
-	...     .convert('foo', 'upper')
-	...     .convert('bar', int)
-	...     .convert('baz', float)
-	...     .addfield('quux', lambda row: row.bar * row.baz)
-	... )
-	>>> table.look()
-	+-----+-----+-----+--------------------+
-	| foo | bar | baz | quux               |
-	+=====+=====+=====+====================+
-	| 'A' |   1 | 3.4 |                3.4 |
-	+-----+-----+-----+--------------------+
-	| 'B' |   2 | 7.4 |               14.8 |
-	+-----+-----+-----+--------------------+
-	| 'C' |   6 | 2.2 | 13.200000000000001 |
-	+-----+-----+-----+--------------------+
-	| 'D' |   9 | 8.1 |  72.89999999999999 |
-	+-----+-----+-----+--------------------+
+    >>> import petl as etl
+    >>> table = (
+    ...     etl
+    ...     .fromcsv('example.csv')
+    ...     .convert('foo', 'upper')
+    ...     .convert('bar', int)
+    ...     .convert('baz', float)
+    ...     .addfield('quux', lambda row: row.bar * row.baz)
+    ... )
+    >>> table.look()
+    +-----+-----+-----+--------------------+
+    | foo | bar | baz | quux               |
+    +=====+=====+=====+====================+
+    | 'A' |   1 | 3.4 |                3.4 |
+    +-----+-----+-----+--------------------+
+    | 'B' |   2 | 7.4 |               14.8 |
+    +-----+-----+-----+--------------------+
+    | 'C' |   6 | 2.2 | 13.200000000000001 |
+    +-----+-----+-----+--------------------+
+    | 'D' |   9 | 8.1 |  72.89999999999999 |
+    +-----+-----+-----+--------------------+
 
 A ``wrap()`` function is also provided to use the object-oriented style with
 any valid row container object, e.g.::
 
-	>>> l = [['foo', 'bar'], ['a', 1], ['b', 2], ['c', 2]]
-	>>> table = etl.wrap(l)
-	>>> table.look()
-	+-----+-----+
-	| foo | bar |
-	+=====+=====+
-	| 'a' |   1 |
-	+-----+-----+
-	| 'b' |   2 |
-	+-----+-----+
-	| 'c' |   2 |
-	+-----+-----+
+    >>> l = [['foo', 'bar'], ['a', 1], ['b', 2], ['c', 2]]
+    >>> table = etl.wrap(l)
+    >>> table.look()
+    +-----+-----+
+    | foo | bar |
+    +=====+=====+
+    | 'a' |   1 |
+    +-----+-----+
+    | 'b' |   2 |
+    +-----+-----+
+    | 'c' |   2 |
+    +-----+-----+
 
 
 Interactive use
@@ -157,37 +157,37 @@ When using :mod:`petl` from within an interactive Python session, the
 default representation for table objects uses the :func:`petl.util.vis.look()`
 function, so a table object can be returned at the prompt to inspect it, e.g.::
 
-	>>> l = [['foo', 'bar'], ['a', 1], ['b', 2], ['c', 2]]
-	>>> table = etl.wrap(l)
-	>>> table
-	+-------+-------+
-	| 0|foo | 1|bar |
-	+=======+=======+
-	| 'a'   |     1 |
-	+-------+-------+
-	| 'b'   |     2 |
-	+-------+-------+
-	| 'c'   |     2 |
-	+-------+-------+
+    >>> l = [['foo', 'bar'], ['a', 1], ['b', 2], ['c', 2]]
+    >>> table = etl.wrap(l)
+    >>> table
+    +-------+-------+
+    | 0|foo | 1|bar |
+    +=======+=======+
+    | 'a'   |     1 |
+    +-------+-------+
+    | 'b'   |     2 |
+    +-------+-------+
+    | 'c'   |     2 |
+    +-------+-------+
 
 By default the fields in the header are numbered for convenience, this can be
 turned off via the :mod:`petl.config` module, e.g.::
 
-	>>> etl.config.table_repr_index_header = False
+    >>> etl.config.table_repr_index_header = False
 
 By default data values are rendered using the built-in :func:`repr` function.
 To see the string (:func:`str`) values instead, :func:`print` the table, e.g.:
 
-	>>> print(table)
-	+-----+-----+
-	| foo | bar |
-	+=====+=====+
-	| a   |   1 |
-	+-----+-----+
-	| b   |   2 |
-	+-----+-----+
-	| c   |   2 |
-	+-----+-----+
+    >>> print(table)
+    +-----+-----+
+    | foo | bar |
+    +=====+=====+
+    | a   |   1 |
+    +-----+-----+
+    | b   |   2 |
+    +-----+-----+
+    | c   |   2 |
+    +-----+-----+
 
 Table objects also implement ``_repr_html_()`` and so will be displayed as an
 HTML table if returned from a cell in an IPython notebook. The functions
@@ -203,8 +203,8 @@ Also included in the ``petl`` distribution is a script to execute
 simple transformation pipelines directly from the operating system
 shell. E.g.::
 
-	$ petl "dummytable().tocsv()" > dummy.csv
-	$ cat dummy.csv | petl "fromcsv().cut('foo', 'baz').selectgt('baz', 0.5).head().data().totsv()"
+    $ petl "dummytable().tocsv()" > dummy.csv
+    $ cat dummy.csv | petl "fromcsv().cut('foo', 'baz').selectgt('baz', 0.5).head().data().totsv()"
 
 The ``petl`` script is extremely simple, it expects a single
 positional argument, which is evaluated as Python code but with all of
@@ -354,32 +354,32 @@ The different comparison behaviour may also give unexpected results
 when selecting rows of a table. E.g., the following will work
 under Python 2.x but raise an exception under Python 3.4::
 
-	>>> import petl as etl
-	>>> table = [['foo', 'bar'],
-	...          ['a', 1],
-	...          ['b', None]]
-	>>> # raises exception under Python 3
-	... etl.select(table, 'bar', lambda v: v > 0)
+    >>> import petl as etl
+    >>> table = [['foo', 'bar'],
+    ...          ['a', 1],
+    ...          ['b', None]]
+    >>> # raises exception under Python 3
+    ... etl.select(table, 'bar', lambda v: v > 0)
 
 To get the more relaxed behaviour under Python 3.4,
 use the :mod:`petl.transform.selects.selectgt` function, or wrap
 values with :class:`petl.comparison.Comparable`, e.g.::
 
     >>> # works under Python 3
-	... etl.selectgt(table, 'bar', 0)
-	+-------+-------+
-	| 0|foo | 1|bar |
-	+=======+=======+
-	| 'a'   |     1 |
-	+-------+-------+
+    ... etl.selectgt(table, 'bar', 0)
+    +-------+-------+
+    | 0|foo | 1|bar |
+    +=======+=======+
+    | 'a'   |     1 |
+    +-------+-------+
 
-	>>> # or ...
-	... etl.select(table, 'bar', lambda v: v > etl.Comparable(0))
-	+-------+-------+
-	| 0|foo | 1|bar |
-	+=======+=======+
-	| 'a'   |     1 |
-	+-------+-------+
+    >>> # or ...
+    ... etl.select(table, 'bar', lambda v: v > etl.Comparable(0))
+    +-------+-------+
+    | 0|foo | 1|bar |
+    +=======+=======+
+    | 'a'   |     1 |
+    +-------+-------+
 
 
 Functionalities removed

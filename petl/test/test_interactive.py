@@ -1,5 +1,4 @@
 from __future__ import absolute_import, print_function, division
-# N.B., do not import unicode_literals in tests
 
 
 import petl as etl
@@ -57,7 +56,7 @@ def test_repr_html():
 </table>
 """
     actual = etl.wrap(table)._repr_html_()
-    for l1, l2 in zip(expect.split('\n'), actual.split('\r\n')):
+    for l1, l2 in zip(expect.split('\n'), actual.split('\n')):
         eq_(l1, l2)
 
 
@@ -92,5 +91,5 @@ def test_repr_html_limit():
 """
     actual = etl.wrap(table)._repr_html_()
     print(actual)
-    for l1, l2 in zip(expect.split('\n'), actual.split('\r\n')):
+    for l1, l2 in zip(expect.split('\n'), actual.split('\n')):
         eq_(l1, l2)

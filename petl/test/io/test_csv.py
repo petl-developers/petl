@@ -1,5 +1,4 @@
 from __future__ import absolute_import, print_function, division
-# N.B., do not import unicode_literals in tests
 
 
 from tempfile import NamedTemporaryFile
@@ -26,7 +25,7 @@ def test_fromcsv():
               ('a', '1'),
               ('b', '2'),
               ('c', '2'))
-    actual = fromcsv(f.name)
+    actual = fromcsv(f.name, encoding='ascii')
     ieq(expect, actual)
     ieq(expect, actual)  # verify can iterate twice
 
@@ -47,7 +46,7 @@ def test_fromcsv_lineterminators():
         f = NamedTemporaryFile(mode='w', delete=False)
         f.write(lt.join(data))
         f.close()
-        actual = fromcsv(f.name)
+        actual = fromcsv(f.name, encoding='ascii')
         ieq(expect, actual)
 
 
@@ -65,7 +64,7 @@ def test_fromtsv():
               ('a', '1'),
               ('b', '2'),
               ('c', '2'))
-    actual = fromtsv(f.name)
+    actual = fromtsv(f.name, encoding='ascii')
     ieq(expect, actual)
     ieq(expect, actual)  # verify can iterate twice
 
@@ -96,7 +95,7 @@ def test_fromcsv_gz():
         fz = gzip.open(fn, 'wt')
         fz.write(lt.join(data))
         fz.close()
-        actual = fromcsv(fn)
+        actual = fromcsv(fn, encoding='ascii')
         ieq(expect, actual)
         ieq(expect, actual)  # verify can iterate twice
 
@@ -110,7 +109,7 @@ def test_tocsv_appendcsv():
              ('c', 2))
     f = NamedTemporaryFile(delete=False)
     f.close()
-    tocsv(table, f.name, lineterminator='\n')
+    tocsv(table, f.name, encoding='ascii', lineterminator='\n')
 
     # check what it did
     with open(f.name, 'r') as o:
@@ -128,7 +127,7 @@ def test_tocsv_appendcsv():
               ('d', 7),
               ('e', 9),
               ('f', 1))
-    appendcsv(table2, f.name, lineterminator='\n')
+    appendcsv(table2, f.name, encoding='ascii', lineterminator='\n')
 
     # check what it did
     with open(f.name, 'r') as o:
@@ -153,7 +152,8 @@ def test_tocsv_noheader():
              ('b', 2),
              ('c', 2))
     f = NamedTemporaryFile(delete=False)
-    tocsv(table, f.name, lineterminator='\n', write_header=False)
+    tocsv(table, f.name, encoding='ascii', lineterminator='\n',
+          write_header=False)
 
     # check what it did
     with open(f.name, 'r') as o:
@@ -175,7 +175,7 @@ def test_totsv_appendtsv():
              ('c', 2))
     f = NamedTemporaryFile(delete=False)
     f.close()
-    totsv(table, f.name, lineterminator='\n')
+    totsv(table, f.name, encoding='ascii', lineterminator='\n')
 
     # check what it did
     with open(f.name, 'r') as o:
@@ -193,7 +193,7 @@ def test_totsv_appendtsv():
               ('d', 7),
               ('e', 9),
               ('f', 1))
-    appendtsv(table2, f.name, lineterminator='\n')
+    appendtsv(table2, f.name, encoding='ascii', lineterminator='\n')
 
     # check what it did
     with open(f.name, 'r') as o:
@@ -220,7 +220,7 @@ def test_tocsv_appendcsv_gz():
     f = NamedTemporaryFile(delete=False)
     fn = f.name + '.gz'
     f.close()
-    tocsv(table, fn, lineterminator='\n')
+    tocsv(table, fn, encoding='ascii', lineterminator='\n')
 
     # check what it did
     o = gzip.open(fn, 'rt')
@@ -241,7 +241,7 @@ def test_tocsv_appendcsv_gz():
               ('d', 7),
               ('e', 9),
               ('f', 1))
-    appendcsv(table2, fn, lineterminator='\n')
+    appendcsv(table2, fn, encoding='ascii', lineterminator='\n')
 
     # check what it did
     o = gzip.open(fn, 'rt')

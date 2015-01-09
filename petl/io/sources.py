@@ -1,7 +1,7 @@
-from __future__ import absolute_import, print_function, division, \
-    unicode_literals
+from __future__ import absolute_import, print_function, division
 
 
+import io
 import gzip
 import sys
 import bz2
@@ -11,7 +11,7 @@ import subprocess
 import logging
 
 
-from petl.compat import urlopen, StringIO, BytesIO, string_types
+from petl.compat import urlopen, StringIO, BytesIO, string_types, PY2
 
 
 logger = logging.getLogger(__name__)
@@ -26,8 +26,8 @@ class FileSource(object):
         self.filename = filename
         self.kwargs = kwargs
 
-    def open_(self, mode='r'):
-        return open(self.filename, mode, **self.kwargs)
+    def open(self, mode='r'):
+        return io.open(self.filename, mode, **self.kwargs)
 
 
 class GzipSource(object):
@@ -37,7 +37,7 @@ class GzipSource(object):
         self.kwargs = kwargs
 
     @contextmanager
-    def open_(self, mode='r'):
+    def open(self, mode='r'):
         source = gzip.open(self.filename, mode, **self.kwargs)
         try:
             yield source
@@ -51,7 +51,7 @@ class BZ2Source(object):
         self.filename = filename
         self.kwargs = kwargs
 
-    def open_(self, mode='r'):
+    def open(self, mode='r'):
         return bz2.BZ2File(self.filename, mode, **self.kwargs)
 
 
@@ -64,8 +64,11 @@ class ZipSource(object):
         self.kwargs = kwargs
 
     @contextmanager
-    def open_(self, mode):
-        mode = mode.translate({ord('b'): None, ord('U'): None})
+    def open(self, mode):
+        if PY2:
+            mode = mode.translate(None, 'bU')
+        else:
+            mode = mode.translate({ord('b'): None, ord('U'): None})
         zf = zipfile.ZipFile(self.filename, mode, **self.kwargs)
         try:
             if self.pwd is not None:
@@ -79,7 +82,7 @@ class ZipSource(object):
 class StdinSource(object):
 
     @contextmanager
-    def open_(self, mode='r'):
+    def open(self, mode='r'):
         if not mode.startswith('r'):
             raise Exception('source is read-only')
         yield sys.stdin
@@ -88,7 +91,7 @@ class StdinSource(object):
 class StdoutSource(object):
 
     @contextmanager
-    def open_(self, mode):
+    def open(self, mode):
         if mode.startswith('r'):
             raise Exception('source is write-only')
         yield sys.stdout
@@ -101,7 +104,7 @@ class URLSource(object):
         self.kwargs = kwargs
 
     @contextmanager
-    def open_(self, mode='r'):
+    def open(self, mode='r'):
         if not mode.startswith('r'):
             raise Exception('source is read-only')
         f = urlopen(*self.args, **self.kwargs)
@@ -118,7 +121,7 @@ class MemorySource(object):
         self.buffer = None
 
     @contextmanager
-    def open_(self, mode='rb'):
+    def open(self, mode='rb'):
         try:
             if 'r' in mode:
                 if self.s is not None:
@@ -163,7 +166,7 @@ class PopenSource(object):
         self.kwargs = kwargs
 
     @contextmanager
-    def open_(self, mode='r'):
+    def open(self, mode='r'):
         if not mode.startswith('r'):
             raise Exception('source is read-only')
         self.kwargs['stdout'] = subprocess.PIPE
@@ -175,7 +178,7 @@ class PopenSource(object):
 
 
 _invalid_source_msg = 'invalid source argument, expected None or a string or ' \
-                      'an object implementing open_(), found %r'
+                      'an object implementing open(), found %r'
 
 
 def read_source_from_arg(source):
@@ -191,8 +194,8 @@ def read_source_from_arg(source):
         else:
             return FileSource(source)
     else:
-        assert (hasattr(source, 'open_')
-                and callable(getattr(source, 'open_'))), \
+        assert (hasattr(source, 'open')
+                and callable(getattr(source, 'open'))), \
             _invalid_source_msg % source
         return source
 
@@ -208,7 +211,7 @@ def write_source_from_arg(source):
         else:
             return FileSource(source)
     else:
-        assert (hasattr(source, 'open_')
-                and callable(getattr(source, 'open_'))), \
+        assert (hasattr(source, 'open')
+                and callable(getattr(source, 'open'))), \
             _invalid_source_msg % source
         return source

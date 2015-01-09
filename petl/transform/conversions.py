@@ -1,5 +1,4 @@
-from __future__ import absolute_import, print_function, division, \
-    unicode_literals
+from __future__ import absolute_import, print_function, division
 
 
 from petl.compat import next, integer_types, string_types
