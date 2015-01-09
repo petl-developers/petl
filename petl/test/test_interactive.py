@@ -10,8 +10,7 @@ def test_repr():
              ('a', 1),
              ('b', 2),
              ('c', 2))
-    expect = str(etl.look(table,
-                          index_header=etl.config.table_repr_index_header))
+    expect = str(etl.look(table))
     actual = repr(etl.wrap(table))
     eq_(expect, actual)
 
@@ -21,8 +20,7 @@ def test_str():
              ('a', 1),
              ('b', 2),
              ('c', 2))
-    expect = str(etl.look(table, vrepr=str,
-                          index_header=etl.config.table_str_index_header))
+    expect = str(etl.look(table, vrepr=str))
     actual = str(etl.wrap(table))
     eq_(expect, actual)
 
@@ -35,8 +33,8 @@ def test_repr_html():
     expect = """<table class='petl'>
 <thead>
 <tr>
-<th>0|foo</th>
-<th>1|bar</th>
+<th>foo</th>
+<th>bar</th>
 </tr>
 </thead>
 <tbody>
@@ -67,13 +65,13 @@ def test_repr_html_limit():
              ('c', 2))
 
     # lower limit
-    etl.config.table_repr_html_limit = 2
+    etl.config.display_limit = 2
 
     expect = """<table class='petl'>
 <thead>
 <tr>
-<th>0|foo</th>
-<th>1|bar</th>
+<th>foo</th>
+<th>bar</th>
 </tr>
 </thead>
 <tbody>

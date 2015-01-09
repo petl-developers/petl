@@ -96,9 +96,9 @@ def sort(table, key=None, reverse=False, buffersize=None, tempdir=None,
     set to 100000 rows, but can be changed, e.g.::
 
         >>> import petl.config
-        >>> petl.config.sort_default_buffersize = 500000
+        >>> petl.config.sort_buffersize = 500000
 
-    If `petl.config.sort_default_buffersize` is set to `None`, this forces
+    If `petl.config.sort_buffersize` is set to `None`, this forces
     all sorting to be done entirely in memory.
 
     By default the results of the sort will be cached, and so a second pass over
@@ -204,7 +204,7 @@ class SortView(Table):
         self.key = key
         self.reverse = reverse
         if buffersize is None:
-            self.buffersize = config.sort_default_buffersize
+            self.buffersize = config.sort_buffersize
         else:
             self.buffersize = buffersize
         self.tempdir = tempdir

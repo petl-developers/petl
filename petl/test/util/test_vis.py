@@ -77,10 +77,10 @@ foo  bar
 ===  ===
 """
     eq_(expect, actual)
-    etl.config.look_default_style = 'simple'
+    etl.config.look_style = 'simple'
     actual = repr(look(table))
     eq_(expect, actual)
-    etl.config.look_default_style = 'grid'
+    etl.config.look_style = 'grid'
 
 
 def test_look_style_minimal():
@@ -91,10 +91,10 @@ def test_look_style_minimal():
 'b'    2
 """
     eq_(expect, actual)
-    etl.config.look_default_style = 'minimal'
+    etl.config.look_style = 'minimal'
     actual = repr(look(table))
     eq_(expect, actual)
-    etl.config.look_default_style = 'grid'
+    etl.config.look_style = 'grid'
 
 
 def test_see():

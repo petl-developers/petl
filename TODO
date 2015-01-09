@@ -1,13 +1,12 @@
-TODO get rid of all 'u' functions
 
-TODO refector config, especially look and display defaults
+DONE refector config, especially look and display defaults
 look_limit
 look_index_header
 display_limit
 display_index_header
 sort_buffersize
 
-TODO change so index_header is False by default in representations
+DONE change so index_header is False by default in representations
 
 TODO redo all docstring examples
 

@@ -13,7 +13,7 @@ from petl.io.sources import MemorySource
 from petl.io.html import tohtml
 
 
-def look(table, *sliceargs, **kwargs):
+def look(table, limit=0, vrepr=None, index_header=None, style=None):
     """
     Format a portion of the table as text for inspection in an interactive
     session. E.g.::
@@ -62,24 +62,67 @@ def look(table, *sliceargs, **kwargs):
     Three alternative presentation styles are available: 'grid', 'simple' and
     'minimal', where 'grid' is the default. A different style can be specified
     using the `style` keyword argument. The default style can also be changed
-    by setting ``petl.config.look_default_style``.
-
-    Positional arguments can be used to slice the data rows. The `sliceargs` are
-    passed to :func:`itertools.islice`. By default, the first 5 data rows are
-    shown.
-
-    The properties `n` and `p` can be used to look at the next and previous rows
-    respectively. E.g., try ``>>> etl.look(table)`` then ``>>> _.n`` then
-    ``>>> _.p``.
-
-    See also :func:`petl.util.vis.lookall` and :func:`petl.util.vis.see`.
+    by setting ``petl.config.look_style``.
 
     """
 
-    return Look(table, *sliceargs, **kwargs)
+    # determine defaults
+    if limit == 0:
+        limit = config.look_limit
+    if vrepr is None:
+        vrepr = config.look_vrepr
+    if index_header is None:
+        index_header = config.look_index_header
+    if style is None:
+        style = config.look_style
+
+    return Look(table, limit=limit, vrepr=vrepr, index_header=index_header,
+                style=style)
 
 
 Table.look = look
+
+
+class Look(object):
+
+    def __init__(self, table, limit, vrepr, index_header, style):
+        self.table = table
+        self.limit = limit
+        self.vrepr = vrepr
+        self.index_header = index_header
+        self.style = style
+
+    def __repr__(self):
+
+        # determine if table overflows limit
+        table, overflow = _vis_overflow(self.table, self.limit)
+
+        # construct output
+        style = self.style
+        vrepr = self.vrepr
+        index_header = self.index_header
+        if style == 'simple':
+            output = _look_simple(table, vrepr=vrepr, index_header=index_header)
+        elif style == 'minimal':
+            output = _look_minimal(table, vrepr=vrepr, index_header=index_header)
+        else:
+            output = _look_grid(table, vrepr=vrepr, index_header=index_header)
+
+        # add overflow indicator
+        if overflow:
+            output += '...\n'
+
+        return output
+
+    __str__ = __repr__
+    __unicode__ = __repr__
+
+
+def _table_repr(table):
+    return str(look(table))
+
+
+Table.__repr__ = _table_repr
 
 
 def lookall(table, **kwargs):
@@ -92,89 +135,49 @@ def lookall(table, **kwargs):
 
     """
 
-    return look(table, 0, None, **kwargs)
+    kwargs['limit'] = None
+    return look(table, **kwargs)
+
+
+def lookstr(table, limit=0, **kwargs):
+    """Like :func:`petl.util.vis.look` but use str() rather than repr() for data
+    values.
+
+    """
+
+    kwargs['vrepr'] = str
+    return look(table, limit=limit, **kwargs)
+
+
+Table.lookstr = lookstr
+
+
+def _table_str(table):
+    return str(lookstr(table))
+
+
+Table.__str__ = _table_str
+Table.__unicode__ = _table_str
+
+
+def lookallstr(table, **kwargs):
+    """
+    Like :func:`petl.util.vis.lookall` but use str() rather than repr() for data
+    values.
+
+    """
+
+    kwargs['vrepr'] = str
+    return lookall(table, **kwargs)
+
+
+Table.lookallstr = lookallstr
 
 
 Table.lookall = lookall
 
 
-class Look(object):
-
-    def __init__(self, table, *sliceargs, **kwargs):
-        self.table = table
-        if not sliceargs:
-            self.sliceargs = (5,)
-        else:
-            self.sliceargs = sliceargs
-        self.vrepr = kwargs.get('vrepr', repr)
-        self.style = kwargs.get('style', config.look_default_style)
-        self.index_header = kwargs.get('index_header', False)
-
-    @property
-    def n(self):
-        if not self.sliceargs:
-            sliceargs = (5,)
-        elif len(self.sliceargs) == 1:
-            stop = self.sliceargs[0]
-            sliceargs = (stop, 2*stop)
-        elif len(self.sliceargs) == 2:
-            start = self.sliceargs[0]
-            stop = self.sliceargs[1]
-            page = stop - start
-            sliceargs = (stop, stop + page)
-        else:
-            start = self.sliceargs[0]
-            stop = self.sliceargs[1]
-            page = stop - start
-            step = self.sliceargs[2]
-            sliceargs = (stop, stop + page, step)
-        return Look(self.table, *sliceargs)
-
-    @property
-    def p(self):
-        if not self.sliceargs:
-            sliceargs = (5,)
-        elif len(self.sliceargs) == 1:
-            # already at the start, do nothing
-            sliceargs = self.sliceargs
-        elif len(self.sliceargs) == 2:
-            start = self.sliceargs[0]
-            stop = self.sliceargs[1]
-            page = stop - start
-            if start - page < 0:
-                sliceargs = (0, page)
-            else:
-                sliceargs = (start - page, start)
-        else:
-            start = self.sliceargs[0]
-            stop = self.sliceargs[1]
-            page = stop - start
-            step = self.sliceargs[2]
-            if start - page < 0:
-                sliceargs = (0, page, step)
-            else:
-                sliceargs = (start - page, start, step)
-        return Look(self.table, *sliceargs)
-
-    def __repr__(self):
-        if self.style == 'simple':
-            return format_table_simple(self.table, self.vrepr, self.sliceargs,
-                                       index_header=self.index_header)
-        elif self.style == 'minimal':
-            return format_table_minimal(self.table, self.vrepr, self.sliceargs,
-                                        index_header=self.index_header)
-        else:
-            return format_table_grid(self.table, self.vrepr, self.sliceargs,
-                                     index_header=self.index_header)
-
-    def __str__(self):
-        return repr(self)
-
-    def __unicode__(self):
-        return repr(self)
-
-
-def format_table_grid(table, vrepr, sliceargs, index_header):
+def _look_grid(table, vrepr, index_header):
     it = iter(table)
 
     # fields representation
@@ -184,7 +187,7 @@ def format_table_grid(table, vrepr, sliceargs, index_header):
         fldsrepr = ['%s|%s' % (i, r) for (i, r) in enumerate(fldsrepr)]
 
     # rows representations
-    rows = list(islice(it, *sliceargs))
+    rows = list(it)
     rowsrepr = [[vrepr(v) for v in row] for row in rows]
 
     # find maximum row length - may be uneven
@@ -258,7 +261,7 @@ def format_table_grid(table, vrepr, sliceargs, index_header):
     return output
 
 
-def format_table_simple(table, vrepr, sliceargs, index_header):
+def _look_simple(table, vrepr, index_header):
     it = iter(table)
 
     # fields representation
@@ -268,7 +271,7 @@ def format_table_simple(table, vrepr, sliceargs, index_header):
         fldsrepr = ['%s|%s' % (i, r) for (i, r) in enumerate(fldsrepr)]
 
     # rows representations
-    rows = list(islice(it, *sliceargs))
+    rows = list(it)
     rowsrepr = [[vrepr(v) for v in row] for row in rows]
 
     # find maximum row length - may be uneven
@@ -327,7 +330,7 @@ def format_table_simple(table, vrepr, sliceargs, index_header):
     return output
 
 
-def format_table_minimal(table, vrepr, sliceargs, index_header):
+def _look_minimal(table, vrepr, index_header):
     it = iter(table)
 
     # fields representation
@@ -337,7 +340,7 @@ def format_table_minimal(table, vrepr, sliceargs, index_header):
         fldsrepr = ['%s|%s' % (i, r) for (i, r) in enumerate(fldsrepr)]
 
     # rows representations
-    rows = list(islice(it, *sliceargs))
+    rows = list(it)
     rowsrepr = [[vrepr(v) for v in row] for row in rows]
 
     # find maximum row length - may be uneven
@@ -391,32 +394,7 @@ def format_table_minimal(table, vrepr, sliceargs, index_header):
     return output
 
 
-def lookstr(table, *sliceargs):
-    """Like :func:`petl.util.vis.look` but use str() rather than repr() for data
-    values.
-
-    """
-
-    return Look(table, *sliceargs, vrepr=str)
-
-
-Table.lookstr = lookstr
-
-
-def lookallstr(table):
-    """
-    Like :func:`petl.util.vis.lookall` but use str() rather than repr() for data
-    values.
-
-    """
-
-    return lookstr(table, 0, None)
-
-
-Table.lookallstr = lookallstr
-
-
-def see(table, *sliceargs, **kwargs):
+def see(table, limit=0, vrepr=None, index_header=None):
     """
     Format a portion of a table as text in a column-oriented layout for
     inspection in an interactive session. E.g.::
@@ -429,44 +407,63 @@ def see(table, *sliceargs, **kwargs):
 
     Useful for tables with a larger number of fields.
 
-    Positional arguments can be used to slice the data rows. The `sliceargs` are
-    passed to :func:`itertools.islice`.
 
     """
 
-    return See(table, *sliceargs, **kwargs)
+    # determine defaults
+    if limit == 0:
+        limit = config.see_limit
+    if vrepr is None:
+        vrepr = config.see_vrepr
+    if index_header is None:
+        index_header = config.see_index_header
 
-
-Table.see = see
+    return See(table, limit=limit, vrepr=vrepr, index_header=index_header)
 
 
 class See(object):
 
-    def __init__(self, table, *sliceargs, **kwargs):
+    def __init__(self, table, limit, vrepr, index_header):
         self.table = table
-        if not sliceargs:
-            self.sliceargs = (5,)
-        else:
-            self.sliceargs = sliceargs
-        self.vrepr = kwargs.get('vrepr', repr)
-        self.index_header = kwargs.get('index_header', False)
+        self.limit = limit
+        self.vrepr = vrepr
+        self.index_header = index_header
 
     def __repr__(self):
-        it = iter(self.table)
+
+        # determine if table overflows limit
+        table, overflow = _vis_overflow(self.table, self.limit)
+
+        vrepr = self.vrepr
+        index_header = self.index_header
+
+        # construct output
+        output = ''
+        it = iter(table)
         flds = next(it)
         cols = defaultdict(list)
-        for row in islice(it, *self.sliceargs):
+        for row in it:
             for i, f in enumerate(flds):
                 try:
-                    cols[str(i)].append(self.vrepr(row[i]))
+                    cols[str(i)].append(vrepr(row[i]))
                 except IndexError:
                     cols[str(f)].append('')
-        output = ''
         for i, f in enumerate(flds):
-            if self.index_header:
+            if index_header:
                 f = '%s|%s' % (i, f)
-            output += '%s: %s\n' % (f, ', '.join(cols[str(i)]))
+            output += '%s: %s' % (f, ', '.join(cols[str(i)]))
+            if overflow:
+                output += '...\n'
+            else:
+                output += '\n'
+
         return output
+
+    __str__ = __repr__
+    __unicode__ = __repr__
+
+
+Table.see = see
 
 
 def _vis_overflow(table, limit):
@@ -480,105 +477,61 @@ def _vis_overflow(table, limit):
     return table, overflow
 
 
-def _table_repr(table):
-    limit = config.table_repr_limit
-    index_header = config.table_repr_index_header
-    vrepr = repr
-    table, overflow = _vis_overflow(table, limit)
-    l = look(table, limit, vrepr=vrepr, index_header=index_header)
-    t = str(l)
-    if overflow:
-        t += '...\n'
-    return t
+def _display_html(table, limit=0, vrepr=None, index_header=None, caption=None,
+                  tr_style=None, td_styles=None, encoding=None):
 
-
-Table.__repr__ = _table_repr
-
-
-def _table_str(table):
-    limit = config.table_str_limit
-    index_header = config.table_str_index_header
-    vrepr = str
-    table, overflow = _vis_overflow(table, limit)
-    l = look(table, limit, vrepr=vrepr, index_header=index_header)
-    t = str(l)
-    if overflow:
-        t += '...\n'
-    return t
-
-
-Table.__str__ = _table_str
-
-
-def _table_unicode(table):
-    limit = config.table_str_limit
-    index_header = config.table_str_index_header
-    vrepr = text_type
-    table, overflow = _vis_overflow(table, limit)
-    l = look(table, limit, vrepr=vrepr, index_header=index_header)
-    t = text_type(l)
-    if overflow:
-        t += '...\n'
-    return t
-
-
-Table.__unicode__ = _table_unicode
-
-
-def _table_html(table, limit=5, vrepr=text_type, index_header=False,
-                caption=None, tr_style=None, td_styles=None, encoding=None):
+    # determine defaults
+    if limit == 0:
+        limit = config.display_limit
+    if vrepr is None:
+        vrepr = config.display_vrepr
+    if index_header is None:
+        index_header = config.display_index_header
     if encoding is None:
         encoding = locale.getpreferredencoding()
+
     table, overflow = _vis_overflow(table, limit)
     buf = MemorySource()
     tohtml(table, buf, encoding=encoding, index_header=index_header,
            vrepr=vrepr, caption=caption, tr_style=tr_style,
            td_styles=td_styles)
-    s = text_type(buf.getvalue(), encoding)
+    output = text_type(buf.getvalue(), encoding)
+
     if overflow:
-        s += '<p><strong>...</strong></p>'
-    return s
+        output += '<p><strong>...</strong></p>'
+
+    return output
 
 
-def _table_repr_html(table):
-    limit = config.table_repr_html_limit
-    index_header = config.table_repr_html_index_header
-    vrepr = text_type
-    s = _table_html(table, limit=limit, vrepr=vrepr, index_header=index_header)
-    return s
+Table._repr_html_ = _display_html
 
 
-Table._repr_html_ = _table_repr_html
-
-
-def display(table, limit=5, vrepr=text_type, index_header=False,
-            caption=None, tr_style=None, td_styles=None, encoding=None):
+def display(table, limit=0, vrepr=None, index_header=None, caption=None,
+            tr_style=None, td_styles=None, encoding=None):
     """
     Display a table inline within an IPython notebook.
     
     """
 
     from IPython.core.display import display_html
-    html = _table_html(table, limit=limit, vrepr=vrepr, 
-                       index_header=index_header, caption=caption,
-                       tr_style=tr_style, td_styles=td_styles,
-                       encoding=encoding)
+    html = _display_html(table, limit=limit, vrepr=vrepr,
+                         index_header=index_header, caption=caption,
+                         tr_style=tr_style, td_styles=td_styles,
+                         encoding=encoding)
     display_html(html, raw=True)
 
 
 Table.display = display
 
 
-def displayall(table, vrepr=text_type, index_header=False, caption=None,
-               tr_style=None, td_styles=None, encoding=None):
+def displayall(table, **kwargs):
     """
     Display **all rows** from a table inline within an IPython notebook.
 
     """
 
-    display(table, limit=None, vrepr=vrepr, index_header=index_header,
-            caption=caption, tr_style=tr_style, td_styles=td_styles,
-            encoding=encoding)
+    kwargs['limit'] = None
+    display(table, **kwargs)
 
 
 Table.displayall = displayall
