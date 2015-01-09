@@ -39,15 +39,15 @@ def fromxml(source, *args, **kwargs):
         212
         >>> table1 = etl.fromxml('example1.xml', 'tr', 'td')
         >>> table1
-        +-------+-------+
-        | 0|foo | 1|bar |
-        +=======+=======+
-        | 'a'   | '1'   |
-        +-------+-------+
-        | 'b'   | '2'   |
-        +-------+-------+
-        | 'c'   | '2'   |
-        +-------+-------+
+        +-----+-----+
+        | foo | bar |
+        +=====+=====+
+        | 'a' | '1' |
+        +-----+-----+
+        | 'b' | '2' |
+        +-----+-----+
+        | 'c' | '2' |
+        +-----+-----+
 
         >>> # if the data values are stored in an attribute, provide the attribute name
         ... # as an extra positional argument
@@ -71,15 +71,15 @@ def fromxml(source, *args, **kwargs):
         220
         >>> table2 = etl.fromxml('example2.xml', 'tr', 'td', 'v')
         >>> table2
-        +-------+-------+
-        | 0|foo | 1|bar |
-        +=======+=======+
-        | 'a'   | '1'   |
-        +-------+-------+
-        | 'b'   | '2'   |
-        +-------+-------+
-        | 'c'   | '2'   |
-        +-------+-------+
+        +-----+-----+
+        | foo | bar |
+        +=====+=====+
+        | 'a' | '1' |
+        +-----+-----+
+        | 'b' | '2' |
+        +-----+-----+
+        | 'c' | '2' |
+        +-----+-----+
 
         >>> # data values can also be extracted by providing a mapping of field
         ... # names to element paths
@@ -101,15 +101,15 @@ def fromxml(source, *args, **kwargs):
         >>> table3 = etl.fromxml('example3.xml', 'row',
         ...                      {'foo': 'foo', 'bar': ('baz/bar', 'v')})
         >>> table3
-        +------------+-------+
-        | 0|bar      | 1|foo |
-        +============+=======+
-        | ('1', '3') | 'a'   |
-        +------------+-------+
-        | '2'        | 'b'   |
-        +------------+-------+
-        | '2'        | 'c'   |
-        +------------+-------+
+        +------------+-----+
+        | bar        | foo |
+        +============+=====+
+        | ('1', '3') | 'a' |
+        +------------+-----+
+        | '2'        | 'b' |
+        +------------+-----+
+        | '2'        | 'c' |
+        +------------+-----+
 
     Note that the implementation is currently *not* streaming, i.e.,
     the whole document is loaded into memory.

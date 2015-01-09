@@ -31,6 +31,7 @@ see the :ref:`genindex`.
    io
    transform
    util
+   changes
    related_work
 
 Indices and tables

@@ -27,32 +27,32 @@ def select(table, *args, **kwargs):
         ... table2 = etl.select(table1,
         ...                     lambda rec: rec.foo == 'a' and rec.baz > 88.1)
         >>> table2
-        +-------+-------+-------+
-        | 0|foo | 1|bar | 2|baz |
-        +=======+=======+=======+
-        | 'a'   |     2 |  88.2 |
-        +-------+-------+-------+
+        +-----+-----+------+
+        | foo | bar | baz  |
+        +=====+=====+======+
+        | 'a' |   2 | 88.2 |
+        +-----+-----+------+
 
         >>> # the second positional argument can also be an expression
         ... # string, which will be converted to a function using petl.expr()
         ... table3 = etl.select(table1, "{foo} == 'a' and {baz} > 88.1")
         >>> table3
-        +-------+-------+-------+
-        | 0|foo | 1|bar | 2|baz |
-        +=======+=======+=======+
-        | 'a'   |     2 |  88.2 |
-        +-------+-------+-------+
+        +-----+-----+------+
+        | foo | bar | baz  |
+        +=====+=====+======+
+        | 'a' |   2 | 88.2 |
+        +-----+-----+------+
 
         >>> # the condition can also be applied to a single field
         ... table4 = etl.select(table1, 'foo', lambda v: v == 'a')
         >>> table4
-        +-------+-------+-------+
-        | 0|foo | 1|bar | 2|baz |
-        +=======+=======+=======+
-        | 'a'   |     4 |   9.3 |
-        +-------+-------+-------+
-        | 'a'   |     2 |  88.2 |
-        +-------+-------+-------+
+        +-----+-----+------+
+        | foo | bar | baz  |
+        +=====+=====+======+
+        | 'a' |   4 |  9.3 |
+        +-----+-----+------+
+        | 'a' |   2 | 88.2 |
+        +-----+-----+------+
 
     The complement of the selection can be returned (i.e., the query can be
     inverted) by providing `complement=True` as a keyword argument.
@@ -346,15 +346,15 @@ def selectre(table, field, pattern, flags=0, complement=False):
         ...           ['c', 2]]
         >>> table2 = etl.selectre(table1, 'foo', '[ab]{2}')
         >>> table2
-        +-------+-------+-------+
-        | 0|foo | 1|bar | 2|baz |
-        +=======+=======+=======+
-        | 'aa'  |     4 |   9.3 |
-        +-------+-------+-------+
-        | 'aaa' |     2 |  88.2 |
-        +-------+-------+-------+
-        | 'bb'  |     7 | 100.9 |
-        +-------+-------+-------+
+        +-------+-----+-------+
+        | foo   | bar | baz   |
+        +=======+=====+=======+
+        | 'aa'  |   4 |   9.3 |
+        +-------+-----+-------+
+        | 'aaa' |   2 |  88.2 |
+        +-------+-----+-------+
+        | 'bb'  |   7 | 100.9 |
+        +-------+-----+-------+
 
     See also :func:`petl.transform.regex.search`.
 
@@ -427,13 +427,13 @@ def selectusingcontext(table, query):
         ...
         >>> table2 = etl.selectusingcontext(table1, query)
         >>> table2
-        +-------+-------+
-        | 0|foo | 1|bar |
-        +=======+=======+
-        | 'B'   |     4 |
-        +-------+-------+
-        | 'C'   |     5 |
-        +-------+-------+
+        +-----+-----+
+        | foo | bar |
+        +=====+=====+
+        | 'B' |   4 |
+        +-----+-----+
+        | 'C' |   5 |
+        +-----+-----+
 
     The `query` function should accept three rows and return a boolean value.
 
@@ -488,22 +488,22 @@ def facet(table, field):
         >>> sorted(foo.keys())
         ['a', 'b', 'c', 'd']
         >>> foo['a']
-        +-------+-------+-------+
-        | 0|foo | 1|bar | 2|baz |
-        +=======+=======+=======+
-        | 'a'   |     4 |   9.3 |
-        +-------+-------+-------+
-        | 'a'   |     2 |  88.2 |
-        +-------+-------+-------+
+        +-----+-----+------+
+        | foo | bar | baz  |
+        +=====+=====+======+
+        | 'a' |   4 |  9.3 |
+        +-----+-----+------+
+        | 'a' |   2 | 88.2 |
+        +-----+-----+------+
 
         >>> foo['c']
-        +-------+-------+-------+
-        | 0|foo | 1|bar | 2|baz |
-        +=======+=======+=======+
-        | 'c'   |     8 |  42.0 |
-        +-------+-------+-------+
-        | 'c'   |     2 |       |
-        +-------+-------+-------+
+        +-----+-----+------+
+        | foo | bar | baz  |
+        +=====+=====+======+
+        | 'c' |   8 | 42.0 |
+        +-----+-----+------+
+        | 'c' |   2 |      |
+        +-----+-----+------+
 
     See also :func:`petl.util.materialise.facetcolumns`.
 

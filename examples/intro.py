@@ -15,7 +15,7 @@ table2 = etl.convert(table1, 'foo', 'upper')
 table3 = etl.convert(table2, 'bar', int)
 table4 = etl.convert(table3, 'baz', float)
 table5 = etl.addfield(table4, 'quux', lambda row: row.bar * row.baz)
-etl.look(table5)
+table5
 
 table = (
     etl
@@ -25,7 +25,7 @@ table = (
     .convert('baz', float)
     .addfield('quux', lambda row: row.bar * row.baz)
 )
-table.look()
+table
 
 l = [['foo', 'bar'], ['a', 1], ['b', 2], ['c', 2]]
 table = etl.wrap(l)
@@ -35,4 +35,6 @@ l = [['foo', 'bar'], ['a', 1], ['b', 2], ['c', 2]]
 table = etl.wrap(l)
 table
 
-etl.config.table_repr_index_header = False
+etl.config.look_index_header = True
+
+table

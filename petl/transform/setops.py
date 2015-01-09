@@ -33,23 +33,23 @@ def complement(a, b, presorted=False, buffersize=None, tempdir=None,
         ...      ['C', 9, True]]
         >>> aminusb = etl.complement(a, b)
         >>> aminusb
-        +-------+-------+-------+
-        | 0|foo | 1|bar | 2|baz |
-        +=======+=======+=======+
-        | 'A'   |     1 | True  |
-        +-------+-------+-------+
-        | 'C'   |     7 | False |
-        +-------+-------+-------+
+        +-----+-----+-------+
+        | foo | bar | baz   |
+        +=====+=====+=======+
+        | 'A' |   1 | True  |
+        +-----+-----+-------+
+        | 'C' |   7 | False |
+        +-----+-----+-------+
 
         >>> bminusa = etl.complement(b, a)
         >>> bminusa
-        +-----+-----+-------+
-        | 0|x | 1|y | 2|z   |
-        +=====+=====+=======+
-        | 'A' |   9 | False |
-        +-----+-----+-------+
-        | 'B' |   3 | True  |
-        +-----+-----+-------+
+        +-----+---+-------+
+        | x   | y | z     |
+        +=====+===+=======+
+        | 'A' | 9 | False |
+        +-----+---+-------+
+        | 'B' | 3 | True  |
+        +-----+---+-------+
 
     Note that the field names of each table are ignored - rows are simply
     compared following a lexical sort. See also the
@@ -154,23 +154,23 @@ def recordcomplement(a, b, buffersize=None, tempdir=None, cache=True):
         ...      [9, 'C', True]]
         >>> aminusb = etl.recordcomplement(a, b)
         >>> aminusb
-        +-------+-------+-------+
-        | 0|foo | 1|bar | 2|baz |
-        +=======+=======+=======+
-        | 'A'   |     1 | True  |
-        +-------+-------+-------+
-        | 'C'   |     7 | False |
-        +-------+-------+-------+
+        +-----+-----+-------+
+        | foo | bar | baz   |
+        +=====+=====+=======+
+        | 'A' |   1 | True  |
+        +-----+-----+-------+
+        | 'C' |   7 | False |
+        +-----+-----+-------+
 
         >>> bminusa = etl.recordcomplement(b, a)
         >>> bminusa
-        +-------+-------+-------+
-        | 0|bar | 1|foo | 2|baz |
-        +=======+=======+=======+
-        |     3 | 'B'   | True  |
-        +-------+-------+-------+
-        |     9 | 'A'   | False |
-        +-------+-------+-------+
+        +-----+-----+-------+
+        | bar | foo | baz   |
+        +=====+=====+=======+
+        |   3 | 'B' | True  |
+        +-----+-----+-------+
+        |   9 | 'A' | False |
+        +-----+-----+-------+
 
     Note that both tables must have the same set of fields, but that the order
     of the fields does not matter. See also the
@@ -212,23 +212,23 @@ def diff(a, b, presorted=False, buffersize=None, tempdir=None, cache=True):
         >>> added, subtracted = etl.diff(a, b)
         >>> # rows in b not in a
         ... added
-        +-----+-----+-------+
-        | 0|x | 1|y | 2|z   |
-        +=====+=====+=======+
-        | 'A' |   9 | False |
-        +-----+-----+-------+
-        | 'B' |   3 | True  |
-        +-----+-----+-------+
+        +-----+---+-------+
+        | x   | y | z     |
+        +=====+===+=======+
+        | 'A' | 9 | False |
+        +-----+---+-------+
+        | 'B' | 3 | True  |
+        +-----+---+-------+
 
         >>> # rows in a not in b
         ... subtracted
-        +-------+-------+-------+
-        | 0|foo | 1|bar | 2|baz |
-        +=======+=======+=======+
-        | 'A'   |     1 | True  |
-        +-------+-------+-------+
-        | 'C'   |     7 | False |
-        +-------+-------+-------+
+        +-----+-----+-------+
+        | foo | bar | baz   |
+        +=====+=====+=======+
+        | 'A' |   1 | True  |
+        +-----+-----+-------+
+        | 'C' |   7 | False |
+        +-----+-----+-------+
 
     Convenient shorthand for ``(complement(b, a), complement(a, b))``. See also
     :func:`petl.transform.setops.complement`.
@@ -271,22 +271,22 @@ def recorddiff(a, b, buffersize=None, tempdir=None, cache=True):
         ...      [9, 'C', True]]
         >>> added, subtracted = etl.recorddiff(a, b)
         >>> added
-        +-------+-------+-------+
-        | 0|bar | 1|foo | 2|baz |
-        +=======+=======+=======+
-        |     3 | 'B'   | True  |
-        +-------+-------+-------+
-        |     9 | 'A'   | False |
-        +-------+-------+-------+
+        +-----+-----+-------+
+        | bar | foo | baz   |
+        +=====+=====+=======+
+        |   3 | 'B' | True  |
+        +-----+-----+-------+
+        |   9 | 'A' | False |
+        +-----+-----+-------+
 
         >>> subtracted
-        +-------+-------+-------+
-        | 0|foo | 1|bar | 2|baz |
-        +=======+=======+=======+
-        | 'A'   |     1 | True  |
-        +-------+-------+-------+
-        | 'C'   |     7 | False |
-        +-------+-------+-------+
+        +-----+-----+-------+
+        | foo | bar | baz   |
+        +=====+=====+=======+
+        | 'A' |   1 | True  |
+        +-----+-----+-------+
+        | 'C' |   7 | False |
+        +-----+-----+-------+
 
     Convenient shorthand for
     ``(recordcomplement(b, a), recordcomplement(a, b))``. See also
@@ -325,13 +325,13 @@ def intersection(a, b, presorted=False, buffersize=None, tempdir=None,
         ...           ['C', 9, True]]
         >>> table3 = etl.intersection(table1, table2)
         >>> table3
-        +-------+-------+-------+
-        | 0|foo | 1|bar | 2|baz |
-        +=======+=======+=======+
-        | 'B'   |     2 | False |
-        +-------+-------+-------+
-        | 'C'   |     9 | True  |
-        +-------+-------+-------+
+        +-----+-----+-------+
+        | foo | bar | baz   |
+        +=====+=====+=======+
+        | 'B' |   2 | False |
+        +-----+-----+-------+
+        | 'C' |   9 | True  |
+        +-----+-----+-------+
 
     If `presorted` is True, it is assumed that the data are already sorted by
     the given key, and the `buffersize`, `tempdir` and `cache` arguments are

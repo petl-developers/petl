@@ -8,7 +8,7 @@ sort_buffersize
 
 DONE change so index_header is False by default in representations
 
-TODO redo all docstring examples
+DONE redo all docstring examples
 
 TODO add subsection to changes in 1.0 about 'u' functions removed
 

@@ -20,29 +20,28 @@ def rename(table, *args):
         >>> # rename a single field
         ... table2 = etl.rename(table1, 'sex', 'gender')
         >>> table2
-        +----------+-------+
-        | 0|gender | 1|age |
-        +==========+=======+
-        | 'm'      |    12 |
-        +----------+-------+
-        | 'f'      |    34 |
-        +----------+-------+
-        | '-'      |    56 |
-        +----------+-------+
+        +--------+-----+
+        | gender | age |
+        +========+=====+
+        | 'm'    |  12 |
+        +--------+-----+
+        | 'f'    |  34 |
+        +--------+-----+
+        | '-'    |  56 |
+        +--------+-----+
 
-        >>> # rename multiple fields by passing a dictionary as the second
-        ... # argument
+        >>> # rename multiple fields by passing a dictionary as the second argument
         ... table3 = etl.rename(table1, {'sex': 'gender', 'age': 'age_years'})
         >>> table3
-        +----------+-------------+
-        | 0|gender | 1|age_years |
-        +==========+=============+
-        | 'm'      |          12 |
-        +----------+-------------+
-        | 'f'      |          34 |
-        +----------+-------------+
-        | '-'      |          56 |
-        +----------+-------------+
+        +--------+-----------+
+        | gender | age_years |
+        +========+===========+
+        | 'm'    |        12 |
+        +--------+-----------+
+        | 'f'    |        34 |
+        +--------+-----------+
+        | '-'    |        56 |
+        +--------+-----------+
 
     The field to rename can be specified as an index (i.e., integer representing
     field position).
@@ -96,13 +95,13 @@ def setheader(table, fields):
         ...           ['b', 2]]
         >>> table2 = etl.setheader(table1, ['foofoo', 'barbar'])
         >>> table2
-        +----------+----------+
-        | 0|foofoo | 1|barbar |
-        +==========+==========+
-        | 'a'      |        1 |
-        +----------+----------+
-        | 'b'      |        2 |
-        +----------+----------+
+        +--------+--------+
+        | foofoo | barbar |
+        +========+========+
+        | 'a'    |      1 |
+        +--------+--------+
+        | 'b'    |      2 |
+        +--------+--------+
 
     See also :func:`petl.transform.headers.extendheader`,
     :func:`petl.transform.headers.pushheader`.
@@ -143,13 +142,13 @@ def extendheader(table, fields):
         ...           ['b', 2, False]]
         >>> table2 = etl.extendheader(table1, ['bar', 'baz'])
         >>> table2
-        +-------+-------+-------+
-        | 0|foo | 1|bar | 2|baz |
-        +=======+=======+=======+
-        | 'a'   |     1 | True  |
-        +-------+-------+-------+
-        | 'b'   |     2 | False |
-        +-------+-------+-------+
+        +-----+-----+-------+
+        | foo | bar | baz   |
+        +=====+=====+=======+
+        | 'a' |   1 | True  |
+        +-----+-----+-------+
+        | 'b' |   2 | False |
+        +-----+-----+-------+
 
     See also :func:`petl.transform.headers.setheader`,
     :func:`petl.transform.headers.pushheader`.
@@ -191,13 +190,13 @@ def pushheader(table, fields, *args):
         ...           ['b', 2]]
         >>> table2 = etl.pushheader(table1, ['foo', 'bar'])
         >>> table2
-        +-------+-------+
-        | 0|foo | 1|bar |
-        +=======+=======+
-        | 'a'   |     1 |
-        +-------+-------+
-        | 'b'   |     2 |
-        +-------+-------+
+        +-----+-----+
+        | foo | bar |
+        +=====+=====+
+        | 'a' |   1 |
+        +-----+-----+
+        | 'b' |   2 |
+        +-----+-----+
 
     The header row can either be a list or positional arguments.
 
@@ -249,13 +248,13 @@ def skip(table, n):
         ...           ['b', 2]]
         >>> table2 = etl.skip(table1, 2)
         >>> table2
-        +-------+-------+
-        | 0|foo | 1|bar |
-        +=======+=======+
-        | 'a'   |     1 |
-        +-------+-------+
-        | 'b'   |     2 |
-        +-------+-------+
+        +-----+-----+
+        | foo | bar |
+        +=====+=====+
+        | 'a' |   1 |
+        +-----+-----+
+        | 'b' |   2 |
+        +-----+-----+
 
     See also :func:`petl.transform.basics.skipcomments`.
 

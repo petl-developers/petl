@@ -19,15 +19,15 @@ def unpack(table, field, newfields=None, include_original=False, missing=None):
         ...           [3, ['e', 'f']]]
         >>> table2 = etl.unpack(table1, 'bar', ['baz', 'quux'])
         >>> table2
-        +-------+-------+--------+
-        | 0|foo | 1|baz | 2|quux |
-        +=======+=======+========+
-        |     1 | 'a'   | 'b'    |
-        +-------+-------+--------+
-        |     2 | 'c'   | 'd'    |
-        +-------+-------+--------+
-        |     3 | 'e'   | 'f'    |
-        +-------+-------+--------+
+        +-----+-----+------+
+        | foo | baz | quux |
+        +=====+=====+======+
+        |   1 | 'a' | 'b'  |
+        +-----+-----+------+
+        |   2 | 'c' | 'd'  |
+        +-----+-----+------+
+        |   3 | 'e' | 'f'  |
+        +-----+-----+------+
 
     This function will attempt to unpack exactly the number of values as
     given by the number of new fields specified. If there are more values
@@ -119,15 +119,15 @@ def unpackdict(table, field, keys=None, includeoriginal=False,
         ...           [3, {'baz': 'e', 'quux': 'f'}]]
         >>> table2 = etl.unpackdict(table1, 'bar')
         >>> table2
-        +-------+-------+--------+
-        | 0|foo | 1|baz | 2|quux |
-        +=======+=======+========+
-        |     1 | 'a'   | 'b'    |
-        +-------+-------+--------+
-        |     2 | 'c'   | 'd'    |
-        +-------+-------+--------+
-        |     3 | 'e'   | 'f'    |
-        +-------+-------+--------+
+        +-----+-----+------+
+        | foo | baz | quux |
+        +=====+=====+======+
+        |   1 | 'a' | 'b'  |
+        +-----+-----+------+
+        |   2 | 'c' | 'd'  |
+        +-----+-----+------+
+        |   3 | 'e' | 'f'  |
+        +-----+-----+------+
 
     See also :func:`petl.transform.unpacks.unpack`.
 

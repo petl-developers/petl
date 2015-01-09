@@ -60,24 +60,24 @@ def join(left, right, key=None, lkey=None, rkey=None, presorted=False,
         ...           [4, 'ellipse']]
         >>> table3 = etl.join(table1, table2, key='id')
         >>> table3
-        +------+----------+----------+
-        | 0|id | 1|colour | 2|shape  |
-        +======+==========+==========+
-        |    1 | 'blue'   | 'circle' |
-        +------+----------+----------+
-        |    3 | 'purple' | 'square' |
-        +------+----------+----------+
+        +----+----------+----------+
+        | id | colour   | shape    |
+        +====+==========+==========+
+        |  1 | 'blue'   | 'circle' |
+        +----+----------+----------+
+        |  3 | 'purple' | 'square' |
+        +----+----------+----------+
 
         >>> # if no key is given, a natural join is tried
         ... table4 = etl.join(table1, table2)
         >>> table4
-        +------+----------+----------+
-        | 0|id | 1|colour | 2|shape  |
-        +======+==========+==========+
-        |    1 | 'blue'   | 'circle' |
-        +------+----------+----------+
-        |    3 | 'purple' | 'square' |
-        +------+----------+----------+
+        +----+----------+----------+
+        | id | colour   | shape    |
+        +====+==========+==========+
+        |  1 | 'blue'   | 'circle' |
+        +----+----------+----------+
+        |  3 | 'purple' | 'square' |
+        +----+----------+----------+
 
         >>> # note behaviour if the key is not unique in either or both tables
         ... table5 = [['id', 'colour'],
@@ -90,19 +90,19 @@ def join(left, right, key=None, lkey=None, rkey=None, presorted=False,
         ...           [2, 'ellipse']]
         >>> table7 = etl.join(table5, table6, key='id')
         >>> table7
-        +------+----------+-----------+
-        | 0|id | 1|colour | 2|shape   |
-        +======+==========+===========+
-        |    1 | 'blue'   | 'circle'  |
-        +------+----------+-----------+
-        |    1 | 'blue'   | 'square'  |
-        +------+----------+-----------+
-        |    1 | 'red'    | 'circle'  |
-        +------+----------+-----------+
-        |    1 | 'red'    | 'square'  |
-        +------+----------+-----------+
-        |    2 | 'purple' | 'ellipse' |
-        +------+----------+-----------+
+        +----+----------+-----------+
+        | id | colour   | shape     |
+        +====+==========+===========+
+        |  1 | 'blue'   | 'circle'  |
+        +----+----------+-----------+
+        |  1 | 'blue'   | 'square'  |
+        +----+----------+-----------+
+        |  1 | 'red'    | 'circle'  |
+        +----+----------+-----------+
+        |  1 | 'red'    | 'square'  |
+        +----+----------+-----------+
+        |  2 | 'purple' | 'ellipse' |
+        +----+----------+-----------+
 
         >>> # compound keys are supported
         ... table8 = [['id', 'time', 'height'],
@@ -115,13 +115,13 @@ def join(left, right, key=None, lkey=None, rkey=None, presorted=False,
         ...           [2, 2, 8.9]]
         >>> table10 = etl.join(table8, table9, key=['id', 'time'])
         >>> table10
-        +------+--------+----------+----------+
-        | 0|id | 1|time | 2|height | 3|weight |
-        +======+========+==========+==========+
-        |    1 |      2 |     34.5 |      4.5 |
-        +------+--------+----------+----------+
-        |    2 |      1 |     56.7 |      6.7 |
-        +------+--------+----------+----------+
+        +----+------+--------+--------+
+        | id | time | height | weight |
+        +====+======+========+========+
+        |  1 |    2 |   34.5 |    4.5 |
+        +----+------+--------+--------+
+        |  2 |    1 |   56.7 |    6.7 |
+        +----+------+--------+--------+
 
     If `presorted` is True, it is assumed that the data are already sorted by
     the given key, and the `buffersize`, `tempdir` and `cache` arguments are
@@ -189,15 +189,15 @@ def leftjoin(left, right, key=None, lkey=None, rkey=None, missing=None,
         ...           [4, 'ellipse']]
         >>> table3 = etl.leftjoin(table1, table2, key='id')
         >>> table3
-        +------+----------+----------+
-        | 0|id | 1|colour | 2|shape  |
-        +======+==========+==========+
-        |    1 | 'blue'   | 'circle' |
-        +------+----------+----------+
-        |    2 | 'red'    | None     |
-        +------+----------+----------+
-        |    3 | 'purple' | 'square' |
-        +------+----------+----------+
+        +----+----------+----------+
+        | id | colour   | shape    |
+        +====+==========+==========+
+        |  1 | 'blue'   | 'circle' |
+        +----+----------+----------+
+        |  2 | 'red'    | None     |
+        +----+----------+----------+
+        |  3 | 'purple' | 'square' |
+        +----+----------+----------+
 
     If `presorted` is True, it is assumed that the data are already sorted by
     the given key, and the `buffersize`, `tempdir` and `cache` arguments are
@@ -237,15 +237,15 @@ def rightjoin(left, right, key=None, lkey=None, rkey=None, missing=None,
         ...           [4, 'ellipse']]
         >>> table3 = etl.rightjoin(table1, table2, key='id')
         >>> table3
-        +------+----------+-----------+
-        | 0|id | 1|colour | 2|shape   |
-        +======+==========+===========+
-        |    1 | 'blue'   | 'circle'  |
-        +------+----------+-----------+
-        |    3 | 'purple' | 'square'  |
-        +------+----------+-----------+
-        |    4 | None     | 'ellipse' |
-        +------+----------+-----------+
+        +----+----------+-----------+
+        | id | colour   | shape     |
+        +====+==========+===========+
+        |  1 | 'blue'   | 'circle'  |
+        +----+----------+-----------+
+        |  3 | 'purple' | 'square'  |
+        +----+----------+-----------+
+        |  4 | None     | 'ellipse' |
+        +----+----------+-----------+
 
     If `presorted` is True, it is assumed that the data are already sorted by
     the given key, and the `buffersize`, `tempdir` and `cache` arguments are
@@ -286,17 +286,17 @@ def outerjoin(left, right, key=None, lkey=None, rkey=None, missing=None,
         ...           [4, 'ellipse']]
         >>> table3 = etl.outerjoin(table1, table2, key='id')
         >>> table3
-        +------+----------+-----------+
-        | 0|id | 1|colour | 2|shape   |
-        +======+==========+===========+
-        |    1 | 'blue'   | 'circle'  |
-        +------+----------+-----------+
-        |    2 | 'red'    | None      |
-        +------+----------+-----------+
-        |    3 | 'purple' | 'square'  |
-        +------+----------+-----------+
-        |    4 | None     | 'ellipse' |
-        +------+----------+-----------+
+        +----+----------+-----------+
+        | id | colour   | shape     |
+        +====+==========+===========+
+        |  1 | 'blue'   | 'circle'  |
+        +----+----------+-----------+
+        |  2 | 'red'    | None      |
+        +----+----------+-----------+
+        |  3 | 'purple' | 'square'  |
+        +----+----------+-----------+
+        |  4 | None     | 'ellipse' |
+        +----+----------+-----------+
 
     If `presorted` is True, it is assumed that the data are already sorted by
     the given key, and the `buffersize`, `tempdir` and `cache` arguments are
@@ -455,17 +455,17 @@ def crossjoin(*tables, **kwargs):
         ...           [3, 'square']]
         >>> table3 = etl.crossjoin(table1, table2)
         >>> table3
-        +------+----------+------+----------+
-        | 0|id | 1|colour | 2|id | 3|shape  |
-        +======+==========+======+==========+
-        |    1 | 'blue'   |    1 | 'circle' |
-        +------+----------+------+----------+
-        |    1 | 'blue'   |    3 | 'square' |
-        +------+----------+------+----------+
-        |    2 | 'red'    |    1 | 'circle' |
-        +------+----------+------+----------+
-        |    2 | 'red'    |    3 | 'square' |
-        +------+----------+------+----------+
+        +----+--------+----+----------+
+        | id | colour | id | shape    |
+        +====+========+====+==========+
+        |  1 | 'blue' |  1 | 'circle' |
+        +----+--------+----+----------+
+        |  1 | 'blue' |  3 | 'square' |
+        +----+--------+----+----------+
+        |  2 | 'red'  |  1 | 'circle' |
+        +----+--------+----+----------+
+        |  2 | 'red'  |  3 | 'square' |
+        +----+--------+----+----------+
 
     If `prefix` is `True` then field names in the output table header will be
     prefixed by the index of the input table.
@@ -526,17 +526,17 @@ def antijoin(left, right, key=None, lkey=None, rkey=None, presorted=False,
         ...           [3, 'square']]
         >>> table3 = etl.antijoin(table1, table2, key='id')
         >>> table3
-        +------+----------+
-        | 0|id | 1|colour |
-        +======+==========+
-        |    0 | 'black'  |
-        +------+----------+
-        |    2 | 'red'    |
-        +------+----------+
-        |    4 | 'yellow' |
-        +------+----------+
-        |    5 | 'white'  |
-        +------+----------+
+        +----+----------+
+        | id | colour   |
+        +====+==========+
+        |  0 | 'black'  |
+        +----+----------+
+        |  2 | 'red'    |
+        +----+----------+
+        |  4 | 'yellow' |
+        +----+----------+
+        |  5 | 'white'  |
+        +----+----------+
 
     If `presorted` is True, it is assumed that the data are already sorted by
     the given key, and the `buffersize`, `tempdir` and `cache` arguments are
@@ -655,15 +655,15 @@ def lookupjoin(left, right, key=None, lkey=None, rkey=None, missing=None,
         ...           [3, 'ellipse', 'tiny']]
         >>> table3 = etl.lookupjoin(table1, table2, key='id')
         >>> table3
-        +------+----------+--------+-----------+---------+
-        | 0|id | 1|color  | 2|cost | 3|shape   | 4|size  |
-        +======+==========+========+===========+=========+
-        |    1 | 'blue'   |     12 | 'circle'  | 'big'   |
-        +------+----------+--------+-----------+---------+
-        |    2 | 'red'    |      8 | 'square'  | 'tiny'  |
-        +------+----------+--------+-----------+---------+
-        |    3 | 'purple' |      4 | 'ellipse' | 'small' |
-        +------+----------+--------+-----------+---------+
+        +----+----------+------+-----------+---------+
+        | id | color    | cost | shape     | size    |
+        +====+==========+======+===========+=========+
+        |  1 | 'blue'   |   12 | 'circle'  | 'big'   |
+        +----+----------+------+-----------+---------+
+        |  2 | 'red'    |    8 | 'square'  | 'tiny'  |
+        +----+----------+------+-----------+---------+
+        |  3 | 'purple' |    4 | 'ellipse' | 'small' |
+        +----+----------+------+-----------+---------+
 
     See also :func:`petl.transform.joins.leftjoin`.
 
@@ -811,24 +811,24 @@ def unjoin(table, value, key=None, autoincrement=(1, 1), presorted=False,
         ...           ('C', 2, 'orange'))
         >>> table2, table3 = etl.unjoin(table1, 'baz', key='bar')
         >>> table2
-        +-------+-------+
-        | 0|foo | 1|bar |
-        +=======+=======+
-        | 'A'   |     1 |
-        +-------+-------+
-        | 'B'   |     1 |
-        +-------+-------+
-        | 'C'   |     2 |
-        +-------+-------+
+        +-----+-----+
+        | foo | bar |
+        +=====+=====+
+        | 'A' |   1 |
+        +-----+-----+
+        | 'B' |   1 |
+        +-----+-----+
+        | 'C' |   2 |
+        +-----+-----+
 
         >>> table3
-        +-------+----------+
-        | 0|bar | 1|baz    |
-        +=======+==========+
-        |     1 | 'apple'  |
-        +-------+----------+
-        |     2 | 'orange' |
-        +-------+----------+
+        +-----+----------+
+        | bar | baz      |
+        +=====+==========+
+        |   1 | 'apple'  |
+        +-----+----------+
+        |   2 | 'orange' |
+        +-----+----------+
 
         >>> # an integer join key can also be reconstructed
         ... table4 = (('foo', 'bar'),
@@ -837,24 +837,24 @@ def unjoin(table, value, key=None, autoincrement=(1, 1), presorted=False,
         ...           ('C', 'orange'))
         >>> table5, table6 = etl.unjoin(table4, 'bar')
         >>> table5
-        +-------+----------+
-        | 0|foo | 1|bar_id |
-        +=======+==========+
-        | 'A'   |        1 |
-        +-------+----------+
-        | 'B'   |        1 |
-        +-------+----------+
-        | 'C'   |        2 |
-        +-------+----------+
+        +-----+--------+
+        | foo | bar_id |
+        +=====+========+
+        | 'A' |      1 |
+        +-----+--------+
+        | 'B' |      1 |
+        +-----+--------+
+        | 'C' |      2 |
+        +-----+--------+
 
         >>> table6
-        +------+----------+
-        | 0|id | 1|bar    |
-        +======+==========+
-        |    1 | 'apple'  |
-        +------+----------+
-        |    2 | 'orange' |
-        +------+----------+
+        +----+----------+
+        | id | bar      |
+        +====+==========+
+        |  1 | 'apple'  |
+        +----+----------+
+        |  2 | 'orange' |
+        +----+----------+
 
     The `autoincrement` parameter controls how an integer join key is
     reconstructed, and should be a tuple of (`start`, `step`).

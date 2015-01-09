@@ -31,15 +31,15 @@ def fromjson(source, *args, **kwargs):
         74
         >>> table1 = etl.fromjson('example.json')
         >>> table1
-        +-------+-------+
-        | 0|bar | 1|foo |
-        +=======+=======+
-        |     1 | 'a'   |
-        +-------+-------+
-        |     2 | 'b'   |
-        +-------+-------+
-        |     2 | 'c'   |
-        +-------+-------+
+        +-----+-----+
+        | bar | foo |
+        +=====+=====+
+        |   1 | 'a' |
+        +-----+-----+
+        |   2 | 'b' |
+        +-----+-----+
+        |   2 | 'c' |
+        +-----+-----+
 
     If your JSON file does not fit this structure, you will need to parse it
     via :func:`json.load` and select the array to treat as the data, see also
@@ -97,15 +97,15 @@ def fromdicts(dicts, header=None):
         ...          {"foo": "c", "bar": 2}]
         >>> table1 = etl.fromdicts(dicts)
         >>> table1
-        +-------+-------+
-        | 0|bar | 1|foo |
-        +=======+=======+
-        |     1 | 'a'   |
-        +-------+-------+
-        |     2 | 'b'   |
-        +-------+-------+
-        |     2 | 'c'   |
-        +-------+-------+
+        +-----+-----+
+        | bar | foo |
+        +=====+=====+
+        |   1 | 'a' |
+        +-----+-----+
+        |   2 | 'b' |
+        +-----+-----+
+        |   2 | 'c' |
+        +-----+-----+
 
     See also :func:`petl.io.json.fromjson`.
 

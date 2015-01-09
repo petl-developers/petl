@@ -26,28 +26,28 @@ def fromtext(source=None, encoding=None, errors=None, strip=None,
         12
         >>> table1 = etl.fromtext('example.txt')
         >>> table1
-        +---------+
-        | 0|lines |
-        +=========+
-        | 'a,1'   |
-        +---------+
-        | 'b,2'   |
-        +---------+
-        | 'c,2'   |
-        +---------+
+        +-------+
+        | lines |
+        +=======+
+        | 'a,1' |
+        +-------+
+        | 'b,2' |
+        +-------+
+        | 'c,2' |
+        +-------+
 
         >>> # post-process, e.g., with capture()
         ... table2 = table1.capture('lines', '(.*),(.*)$', ['foo', 'bar'])
         >>> table2
-        +-------+-------+
-        | 0|foo | 1|bar |
-        +=======+=======+
-        | 'a'   | '1'   |
-        +-------+-------+
-        | 'b'   | '2'   |
-        +-------+-------+
-        | 'c'   | '2'   |
-        +-------+-------+
+        +-----+-----+
+        | foo | bar |
+        +=====+=====+
+        | 'a' | '1' |
+        +-----+-----+
+        | 'b' | '2' |
+        +-----+-----+
+        | 'c' | '2' |
+        +-----+-----+
 
     Note that the strip() function is called on each line, which by default
     will remove leading and trailing whitespace, including the end-of-line

@@ -34,15 +34,15 @@ def fromcsv(source=None, encoding=None, errors=None, **csvargs):
         >>> # now demonstrate the use of fromcsv()
         ... table2 = etl.fromcsv('example.csv')
         >>> table2
-        +-------+-------+
-        | 0|foo | 1|bar |
-        +=======+=======+
-        | 'a'   | '1'   |
-        +-------+-------+
-        | 'b'   | '2'   |
-        +-------+-------+
-        | 'c'   | '2'   |
-        +-------+-------+
+        +-----+-----+
+        | foo | bar |
+        +=====+=====+
+        | 'a' | '1' |
+        +-----+-----+
+        | 'b' | '2' |
+        +-----+-----+
+        | 'c' | '2' |
+        +-----+-----+
 
     The `source` argument is the path of the delimited file, all other keyword
     arguments are passed to :func:`csv.reader`. So, e.g., to override the

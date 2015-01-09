@@ -27,15 +27,15 @@ def frompickle(source=None):
         >>> # now demonstrate the use of frompickle()
         ... table1 = etl.frompickle('example.p')
         >>> table1
-        +-------+-------+
-        | 0|foo | 1|bar |
-        +=======+=======+
-        | 'a'   |     1 |
-        +-------+-------+
-        | 'b'   |     2 |
-        +-------+-------+
-        | 'c'   |   2.5 |
-        +-------+-------+
+        +-----+-----+
+        | foo | bar |
+        +=====+=====+
+        | 'a' |   1 |
+        +-----+-----+
+        | 'b' |   2 |
+        +-----+-----+
+        | 'c' | 2.5 |
+        +-----+-----+
 
 
     """
@@ -71,15 +71,15 @@ def topickle(table, source=None, protocol=-1, write_header=True):
         >>> # look what it did
         ... table2 = etl.frompickle('example.p')
         >>> table2
-        +-------+-------+
-        | 0|foo | 1|bar |
-        +=======+=======+
-        | 'a'   |     1 |
-        +-------+-------+
-        | 'b'   |     2 |
-        +-------+-------+
-        | 'c'   |     2 |
-        +-------+-------+
+        +-----+-----+
+        | foo | bar |
+        +=====+=====+
+        | 'a' |   1 |
+        +-----+-----+
+        | 'b' |   2 |
+        +-----+-----+
+        | 'c' |   2 |
+        +-----+-----+
 
     Note that if a file already exists at the given location, it will be
     overwritten.

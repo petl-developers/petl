@@ -25,30 +25,30 @@ def duplicates(table, key=None, presorted=False, buffersize=None, tempdir=None,
         ...           ['D', 4, 14.5]]
         >>> table2 = etl.duplicates(table1, 'foo')
         >>> table2
-        +-------+-------+-------+
-        | 0|foo | 1|bar | 2|baz |
-        +=======+=======+=======+
-        | 'B'   |     2 |   3.4 |
-        +-------+-------+-------+
-        | 'B'   |     3 |   7.8 |
-        +-------+-------+-------+
-        | 'B'   |     2 |  12.3 |
-        +-------+-------+-------+
-        | 'D'   |     6 |   9.3 |
-        +-------+-------+-------+
-        | 'D'   |     4 |  14.5 |
-        +-------+-------+-------+
+        +-----+-----+------+
+        | foo | bar | baz  |
+        +=====+=====+======+
+        | 'B' |   2 |  3.4 |
+        +-----+-----+------+
+        | 'B' |   3 |  7.8 |
+        +-----+-----+------+
+        | 'B' |   2 | 12.3 |
+        +-----+-----+------+
+        | 'D' |   6 |  9.3 |
+        +-----+-----+------+
+        | 'D' |   4 | 14.5 |
+        +-----+-----+------+
 
         >>> # compound keys are supported
         ... table3 = etl.duplicates(table1, key=['foo', 'bar'])
         >>> table3
-        +-------+-------+-------+
-        | 0|foo | 1|bar | 2|baz |
-        +=======+=======+=======+
-        | 'B'   |     2 |   3.4 |
-        +-------+-------+-------+
-        | 'B'   |     2 |  12.3 |
-        +-------+-------+-------+
+        +-----+-----+------+
+        | foo | bar | baz  |
+        +=====+=====+======+
+        | 'B' |   2 |  3.4 |
+        +-----+-----+------+
+        | 'B' |   2 | 12.3 |
+        +-----+-----+------+
         
     If `presorted` is True, it is assumed that the data are already sorted by
     the given key, and the `buffersize`, `tempdir` and `cache` arguments are 
@@ -140,15 +140,15 @@ def unique(table, key=None, presorted=False, buffersize=None, tempdir=None,
         ...           ['F', 7, 2.3]]
         >>> table2 = etl.unique(table1, 'foo')
         >>> table2
-        +-------+-------+-------+
-        | 0|foo | 1|bar | 2|baz |
-        +=======+=======+=======+
-        | 'A'   |     1 |     2 |
-        +-------+-------+-------+
-        | 'E'   | None  | None  |
-        +-------+-------+-------+
-        | 'F'   |     7 |   2.3 |
-        +-------+-------+-------+
+        +-----+------+------+
+        | foo | bar  | baz  |
+        +=====+======+======+
+        | 'A' |    1 |    2 |
+        +-----+------+------+
+        | 'E' | None | None |
+        +-----+------+------+
+        | 'F' |    7 |  2.3 |
+        +-----+------+------+
         
     If `presorted` is True, it is assumed that the data are already sorted by
     the given key, and the `buffersize`, `tempdir` and `cache` arguments are
@@ -237,17 +237,17 @@ def conflicts(table, key, missing=None, include=None, exclude=None,
         ...           ['A', 2, None]]
         >>> table2 = etl.conflicts(table1, 'foo')
         >>> table2
-        +-------+-------+-------+
-        | 0|foo | 1|bar | 2|baz |
-        +=======+=======+=======+
-        | 'A'   |     1 |   2.7 |
-        +-------+-------+-------+
-        | 'A'   |     2 | None  |
-        +-------+-------+-------+
-        | 'D'   |     3 |   9.4 |
-        +-------+-------+-------+
-        | 'D'   |     3 |  12.3 |
-        +-------+-------+-------+
+        +-----+-----+------+
+        | foo | bar | baz  |
+        +=====+=====+======+
+        | 'A' |   1 |  2.7 |
+        +-----+-----+------+
+        | 'A' |   2 | None |
+        +-----+-----+------+
+        | 'D' |   3 |  9.4 |
+        +-----+-----+------+
+        | 'D' |   3 | 12.3 |
+        +-----+-----+------+
         
     Missing values are not considered conflicts. By default, `None` is treated
     as the missing value, this can be changed via the `missing` keyword 

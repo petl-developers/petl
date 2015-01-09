@@ -41,15 +41,15 @@ def fromsqlite3(source, query, *args, **kwargs):
         >>> # now demonstrate the petl.fromsqlite3 function
         ... table = etl.fromsqlite3('example.db', 'select * from foobar')
         >>> table
-        +-------+-------+
-        | 0|foo | 1|bar |
-        +=======+=======+
-        | 'a'   |     1 |
-        +-------+-------+
-        | 'b'   |     2 |
-        +-------+-------+
-        | 'c'   |   2.0 |
-        +-------+-------+
+        +-----+-----+
+        | foo | bar |
+        +=====+=====+
+        | 'a' |   1 |
+        +-----+-----+
+        | 'b' |   2 |
+        +-----+-----+
+        | 'c' | 2.0 |
+        +-----+-----+
 
     Either a database file name or a connection object can be given as the
     first argument.
@@ -106,15 +106,15 @@ def tosqlite3(table, filename_or_connection, tablename, create=False,
         >>> # look what it did
         ... table2 = etl.fromsqlite3('example.db', 'select * from foobar')
         >>> table2
-        +-------+-------+
-        | 0|foo | 1|bar |
-        +=======+=======+
-        | 'a'   |     1 |
-        +-------+-------+
-        | 'b'   |     2 |
-        +-------+-------+
-        | 'c'   |     2 |
-        +-------+-------+
+        +-----+-----+
+        | foo | bar |
+        +=====+=====+
+        | 'a' |   1 |
+        +-----+-----+
+        | 'b' |   2 |
+        +-----+-----+
+        | 'c' |   2 |
+        +-----+-----+
 
     If the table does not exist and ``create=True`` then a table will be created
     using the field names in the table header. However, note that no type

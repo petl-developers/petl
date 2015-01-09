@@ -36,53 +36,53 @@ def sort(table, key=None, reverse=False, buffersize=None, tempdir=None,
         ...           ['D', 10]]
         >>> table2 = etl.sort(table1, 'foo')
         >>> table2
-        +-------+-------+
-        | 0|foo | 1|bar |
-        +=======+=======+
-        | 'A'   |     9 |
-        +-------+-------+
-        | 'A'   |     6 |
-        +-------+-------+
-        | 'C'   |     2 |
-        +-------+-------+
-        | 'D'   |    10 |
-        +-------+-------+
-        | 'F'   |     1 |
-        +-------+-------+
+        +-----+-----+
+        | foo | bar |
+        +=====+=====+
+        | 'A' |   9 |
+        +-----+-----+
+        | 'A' |   6 |
+        +-----+-----+
+        | 'C' |   2 |
+        +-----+-----+
+        | 'D' |  10 |
+        +-----+-----+
+        | 'F' |   1 |
+        +-----+-----+
 
         >>> # sorting by compound key is supported
         ... table3 = etl.sort(table1, key=['foo', 'bar'])
         >>> table3
-        +-------+-------+
-        | 0|foo | 1|bar |
-        +=======+=======+
-        | 'A'   |     6 |
-        +-------+-------+
-        | 'A'   |     9 |
-        +-------+-------+
-        | 'C'   |     2 |
-        +-------+-------+
-        | 'D'   |    10 |
-        +-------+-------+
-        | 'F'   |     1 |
-        +-------+-------+
+        +-----+-----+
+        | foo | bar |
+        +=====+=====+
+        | 'A' |   6 |
+        +-----+-----+
+        | 'A' |   9 |
+        +-----+-----+
+        | 'C' |   2 |
+        +-----+-----+
+        | 'D' |  10 |
+        +-----+-----+
+        | 'F' |   1 |
+        +-----+-----+
 
         >>> # if no key is specified, the default is a lexical sort
         ... table4 = etl.sort(table1)
         >>> table4
-        +-------+-------+
-        | 0|foo | 1|bar |
-        +=======+=======+
-        | 'A'   |     6 |
-        +-------+-------+
-        | 'A'   |     9 |
-        +-------+-------+
-        | 'C'   |     2 |
-        +-------+-------+
-        | 'D'   |    10 |
-        +-------+-------+
-        | 'F'   |     1 |
-        +-------+-------+
+        +-----+-----+
+        | foo | bar |
+        +=====+=====+
+        | 'A' |   6 |
+        +-----+-----+
+        | 'A' |   9 |
+        +-----+-----+
+        | 'C' |   2 |
+        +-----+-----+
+        | 'D' |  10 |
+        +-----+-----+
+        | 'F' |   1 |
+        +-----+-----+
 
     The `buffersize` argument should be an `int` or `None`.
 
@@ -92,7 +92,7 @@ def sort(table, key=None, reverse=False, buffersize=None, tempdir=None,
     and then a merge sort is performed on the temporary files.
 
     If `buffersize` is `None`, the value of
-    `petl.config.sort_default_buffersize` will be used. By default this is
+    `petl.config.sort_buffersize` will be used. By default this is
     set to 100000 rows, but can be changed, e.g.::
 
         >>> import petl.config
