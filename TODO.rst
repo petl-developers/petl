@@ -20,10 +20,6 @@ TODO make sure use field names rather than naked header
 
 TODO integrate dbtests with other tests
 
-TODO avoid multiple passes
-
-TODO add running stats
-
 TODO add documentation about contributing
 
 TODO native comparison option (native_compare=True)
@@ -31,3 +27,8 @@ TODO native comparison option (native_compare=True)
 TODO other open issues
 
 TODO review all issues
+
+TODO avoid multiple passes
+
+TODO add running stats
+
