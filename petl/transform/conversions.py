@@ -315,8 +315,9 @@ def iterfieldconvert(source, converters, failonerror, errorvalue, where,
 
     # grab the fields in the source table
     it = iter(source)
-    flds = next(it)
-    yield tuple(flds)  # these are not modified
+    hdr = next(it)
+    flds = list(map(str, hdr))
+    yield tuple(hdr)  # these are not modified
 
     # build converter functions
     converter_functions = dict()

@@ -130,8 +130,7 @@ def itercut(source, spec, missing=None):
     
     # convert field selection into field indices
     hdr = next(it)
-    flds = list(map(str, hdr))
-    indices = asindices(flds, spec)
+    indices = asindices(hdr, spec)
 
     # define a function to transform each row in the source data 
     # according to the field selection
@@ -203,8 +202,7 @@ def itercutout(source, spec, missing=None):
     
     # convert field selection into field indices
     hdr = next(it)
-    flds = list(map(str, hdr))
-    indicesout = asindices(flds, spec)
+    indicesout = asindices(hdr, spec)
     indices = [i for i in range(len(hdr)) if i not in indicesout]
     
     # define a function to transform each row in the source data 
@@ -724,7 +722,6 @@ class MoveFieldView(Table):
 
         # determine output fields
         hdr = next(it)
-        flds = list(map(str, hdr))
         outhdr = [f for f in hdr if f != self.field]
         outhdr.insert(self.index, self.field)
         yield tuple(outhdr)
@@ -732,7 +729,7 @@ class MoveFieldView(Table):
         # define a function to transform each row in the source data
         # according to the field selection
         outflds = list(map(str, outhdr))
-        indices = asindices(flds, outflds)
+        indices = asindices(hdr, outflds)
         transform = rowgetter(*indices)
 
         # construct the transformed data

@@ -88,14 +88,14 @@ def iterduplicates(source, key):
     # first need to sort the data
     it = iter(source)
 
-    flds = next(it)
-    yield tuple(flds)
+    hdr = next(it)
+    yield tuple(hdr)
 
     # convert field selection into field indices
     if key is None:
-        indices = range(len(flds))
+        indices = range(len(hdr))
     else:
-        indices = asindices(flds, key)
+        indices = asindices(hdr, key)
         
     # now use field indices to construct a _getkey function
     # N.B., this may raise an exception on short rows, depending on

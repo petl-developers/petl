@@ -280,29 +280,27 @@ class TableWrapper(Table):
 wrap = TableWrapper
 
 
-def asindices(flds, spec):
+def asindices(hdr, spec):
     """Convert the given field `spec` into a list of field indices."""
 
-    names = [str(f) for f in flds]
+    flds = list(map(str, hdr))
     indices = list()
-    if isinstance(spec, string_types):
-        spec = (spec,)
-    if isinstance(spec, int):
+    if not isinstance(spec, (list, tuple)):
         spec = (spec,)
     for s in spec:
-        # spec could be a field name
-        if s in names:
-            indices.append(names.index(s))
-        # or spec could be a field index
-        elif isinstance(s, int) and s < len(names):
+        # spec could be a field index (takes priority)
+        if isinstance(s, int) and s < len(hdr):
             indices.append(s)  # index fields from 0
+        # spec could be a field
+        elif s in flds:
+            indices.append(flds.index(s))
         else:
             raise FieldSelectionError(s)
     return indices
 
 
-def rowitemgetter(fields, spec):
-    indices = asindices(fields, spec)
+def rowitemgetter(hdr, spec):
+    indices = asindices(hdr, spec)
     getter = comparable_itemgetter(*indices)
     return getter
 
