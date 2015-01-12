@@ -155,7 +155,7 @@ class TeePickleView(Table):
             hdr = next(it)
             if self.write_header:
                 pickle.dump(hdr, f, protocol)
-            yield hdr
+            yield tuple(hdr)
             for row in it:
                 pickle.dump(row, f, protocol)
-                yield row
+                yield tuple(row)

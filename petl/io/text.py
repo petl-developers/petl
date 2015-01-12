@@ -191,7 +191,8 @@ def _writetext(table, source, mode, encoding, errors, template, prologue,
             if prologue is not None:
                 f.write(prologue)
             it = iter(table)
-            flds = next(it)
+            hdr = next(it)
+            flds = list(map(str, hdr))
             for row in it:
                 rec = asdict(flds, row)
                 s = template.format(**rec)
@@ -262,8 +263,9 @@ def _iterteetext(table, source, encoding, errors, template, prologue, epilogue):
             if prologue is not None:
                 f.write(prologue)
             it = iter(table)
-            flds = next(it)
-            yield flds
+            hdr = next(it)
+            yield tuple(hdr)
+            flds = list(map(str, hdr))
             for row in it:
                 rec = asdict(flds, row)
                 s = template.format(**rec)

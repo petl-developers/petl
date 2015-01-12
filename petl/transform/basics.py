@@ -129,15 +129,16 @@ def itercut(source, spec, missing=None):
     spec = tuple(spec)  # make sure no-one can change midstream
     
     # convert field selection into field indices
-    flds = next(it)
+    hdr = next(it)
+    flds = list(map(str, hdr))
     indices = asindices(flds, spec)
 
     # define a function to transform each row in the source data 
     # according to the field selection
     transform = rowgetter(*indices)
     
-    # yield the transformed field names
-    yield transform(flds)
+    # yield the transformed header
+    yield transform(hdr)
     
     # construct the transformed data
     for row in it:
@@ -201,16 +202,17 @@ def itercutout(source, spec, missing=None):
     spec = tuple(spec)  # make sure no-one can change midstream
     
     # convert field selection into field indices
-    flds = next(it)
+    hdr = next(it)
+    flds = list(map(str, hdr))
     indicesout = asindices(flds, spec)
-    indices = [i for i in range(len(flds)) if i not in indicesout]
+    indices = [i for i in range(len(hdr)) if i not in indicesout]
     
     # define a function to transform each row in the source data 
     # according to the field selection
     transform = rowgetter(*indices)
     
-    # yield the transformed field names
-    yield transform(flds)
+    # yield the transformed header
+    yield transform(hdr)
     
     # construct the transformed data
     for row in it:
@@ -341,12 +343,13 @@ class CatView(Table):
 
 def itercat(sources, missing, header):
     its = [iter(t) for t in sources]
-    source_flds_lists = [next(it) for it in its]
+    source_hdrs = [next(it) for it in its]
+    source_flds = [list(map(str, hdr)) for hdr in source_hdrs]
 
     if header is None:
         # determine output fields by gathering all fields found in the sources
         outflds = list()
-        for flds in source_flds_lists:
+        for flds in source_flds:
             for f in flds:
                 if f not in outflds:
                     # add any new fields as we find them
@@ -359,7 +362,7 @@ def itercat(sources, missing, header):
     # output data rows
     for source_index, it in enumerate(its):
 
-        flds = source_flds_lists[source_index]
+        flds = source_flds[source_index]
         
         # now construct and yield the data rows
         for row in it:
@@ -439,16 +442,17 @@ class AddFieldView(Table):
 
 def iteraddfield(source, field, value, index):
     it = iter(source)
-    flds = next(it)
-    
+    hdr = next(it)
+    flds = list(map(str, hdr))
+
     # determine index of new field
     if index is None:
-        index = len(flds)
+        index = len(hdr)
         
     # construct output fields
-    outflds = list(flds)    
-    outflds.insert(index, field)
-    yield tuple(outflds)
+    outhdr = list(hdr)
+    outhdr.insert(index, field)
+    yield tuple(outhdr)
 
     if callable(value):
         # wrap rows as records if using calculated value
@@ -719,14 +723,16 @@ class MoveFieldView(Table):
         it = iter(self.table)
 
         # determine output fields
-        fields = list(next(it))
-        newfields = [f for f in fields if f != self.field]
-        newfields.insert(self.index, self.field)
-        yield tuple(newfields)
+        hdr = next(it)
+        flds = list(map(str, hdr))
+        outhdr = [f for f in hdr if f != self.field]
+        outhdr.insert(self.index, self.field)
+        yield tuple(outhdr)
 
         # define a function to transform each row in the source data
         # according to the field selection
-        indices = asindices(fields, newfields)
+        outflds = list(map(str, outhdr))
+        indices = asindices(flds, outflds)
         transform = rowgetter(*indices)
 
         # construct the transformed data
@@ -784,16 +790,16 @@ class AnnexView(Table):
     
 
 def iterannex(tables, missing):
-    iters = [iter(t) for t in tables]
-    headers = [next(it) for it in iters]
-    outfields = tuple(chain(*headers))  
-    yield outfields
-    for rows in izip_longest(*iters):
+    its = [iter(t) for t in tables]
+    hdrs = [next(it) for it in its]
+    outhdr = tuple(chain(*hdrs))
+    yield outhdr
+    for rows in izip_longest(*its):
         outrow = list()
         for i, row in enumerate(rows):
-            lh = len(headers[i])
+            lh = len(hdrs[i])
             if row is None:  # handle uneven length tables
-                row = [missing] * len(headers[i])
+                row = [missing] * len(hdrs[i])
             else:
                 lr = len(row)
                 if lr < lh:  # handle short rows
@@ -849,10 +855,10 @@ class AddRowNumbersView(Table):
 
 def iteraddrownumbers(table, start, step):
     it = iter(table)
-    flds = next(it)
-    outflds = ['row']
-    outflds.extend(flds)
-    yield tuple(outflds)
+    hdr = next(it)
+    outhdr = ['row']
+    outhdr.extend(hdr)
+    yield tuple(outhdr)
     for row, n in izip(it, count(start, step)):
         outrow = [n]
         outrow.extend(row)
@@ -904,22 +910,22 @@ class AddColumnView(Table):
     
 def iteraddcolumn(table, field, col, index, missing):
     it = iter(table)
-    fields = [str(f) for f in next(it)]
-    
+    hdr = next(it)
+
     # determine position of new column
     if index is None:
-        index = len(fields)
+        index = len(hdr)
     
     # construct output header
-    outflds = list(fields)
-    outflds.insert(index, field)
-    yield tuple(outflds)
+    outhdr = list(hdr)
+    outhdr.insert(index, field)
+    yield tuple(outhdr)
     
     # construct output data
     for row, val in izip_longest(it, col, fillvalue=missing):
         # run out of rows?
         if row == missing:
-            row = [missing] * len(fields)
+            row = [missing] * len(hdr)
         outrow = list(row)
         outrow.insert(index, val)
         yield tuple(outrow)
@@ -993,9 +999,10 @@ class AddFieldUsingContextView(Table):
 
 def iteraddfieldusingcontext(table, field, query):
     it = iter(table)
-    fields = tuple(next(it))
-    yield fields + (field,)
-    it = (Record(row, fields) for row in it)
+    hdr = tuple(next(it))
+    flds = list(map(str, hdr))
+    yield hdr + (field,)
+    it = (Record(row, flds) for row in it)
     prv = None
     cur = next(it)
     for nxt in it:

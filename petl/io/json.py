@@ -70,17 +70,17 @@ class JsonView(Table):
                 result = json.load(f, *self.args, **self.kwargs)
                 if self.header is None:
                     # determine fields
-                    header = set()
+                    hdr = set()
                     for o in result:
                         if hasattr(o, 'keys'):
-                            header |= set(o.keys())
-                    header = sorted(header)
+                            hdr |= set(o.keys())
+                    hdr = sorted(hdr)
                 else:
-                    header = self.header
-                yield tuple(header)
+                    hdr = self.header
+                yield tuple(hdr)
                 # output data rows
                 for o in result:
-                    row = tuple(o[f] if f in o else None for f in header)
+                    row = tuple(o[f] if f in o else None for f in hdr)
                     yield row
             finally:
                 if not PY2:
@@ -124,17 +124,17 @@ class DictsView(Table):
         result = self.dicts
         if self.header is None:
             # determine fields
-            header = set()
+            hdr = set()
             for o in result:
                 if hasattr(o, 'keys'):
-                    header |= set(o.keys())
-            header = sorted(header)
+                    hdr |= set(o.keys())
+            hdr = sorted(hdr)
         else:
-            header = self.header
-        yield tuple(header)
+            hdr = self.header
+        yield tuple(hdr)
         # output data rows
         for o in result:
-            row = tuple(o[f] if f in o else None for f in header)
+            row = tuple(o[f] if f in o else None for f in hdr)
             yield row
 
 

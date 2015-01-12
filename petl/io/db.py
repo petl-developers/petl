@@ -176,8 +176,8 @@ def _iter_dbapi_cursor(cursor, query, *args, **kwargs):
     # which may be postponed if using server-side cursors
     first_row = cursor.fetchone()
     # fields should be available now
-    fields = [d[0] for d in cursor.description]
-    yield tuple(fields)
+    hdr = [d[0] for d in cursor.description]
+    yield tuple(hdr)
     if first_row is None:
         raise StopIteration
     yield first_row
@@ -330,9 +330,9 @@ def _todb_dbapi_connection(table, connection, tablename, schema=None,
 
     # sanitise field names
     it = iter(table)
-    fields = next(it)
-    fieldnames = list(map(str, fields))
-    colnames = [_quote(n) for n in fieldnames]
+    hdr = next(it)
+    flds = list(map(str, hdr))
+    colnames = [_quote(n) for n in flds]
     debug('column names: %r', colnames)
 
     # determine paramstyle and build placeholders string
@@ -378,9 +378,9 @@ def _todb_dbapi_mkcurs(table, mkcurs, tablename, schema=None, commit=True,
 
     # sanitise field names
     it = iter(table)
-    fields = next(it)
-    fieldnames = list(map(str, fields))
-    colnames = [_quote(n) for n in fieldnames]
+    hdr = next(it)
+    flds = list(map(str, hdr))
+    colnames = [_quote(n) for n in flds]
     debug('column names: %r', colnames)
 
     debug('obtain cursor and connection')
@@ -426,9 +426,9 @@ def _todb_dbapi_cursor(table, cursor, tablename, schema=None, commit=True,
 
     # sanitise field names
     it = iter(table)
-    fields = next(it)
-    fieldnames = list(map(str, fields))
-    colnames = [_quote(n) for n in fieldnames]
+    hdr = next(it)
+    flds = list(map(str, hdr))
+    colnames = [_quote(n) for n in flds]
     debug('column names: %r', colnames)
 
     debug('obtain connection via cursor')
@@ -480,9 +480,9 @@ def _todb_sqlalchemy_connection(table, connection, tablename, schema=None,
 
     # sanitise field names
     it = iter(table)
-    fields = next(it)
-    fieldnames = list(map(str, fields))
-    colnames = [_quote(n) for n in fieldnames]
+    hdr = next(it)
+    flds = list(map(str, hdr))
+    colnames = [_quote(n) for n in flds]
     debug('column names: %r', colnames)
 
     # N.B., we need to obtain a reference to the underlying DB-API connection so

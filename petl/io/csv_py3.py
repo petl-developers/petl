@@ -85,10 +85,10 @@ class TeeCSVView(Table):
                 hdr = next(it)
                 if self.write_header:
                     writer.writerow(hdr)
-                yield hdr
+                yield tuple(hdr)
                 for row in it:
                     writer.writerow(row)
-                    yield row
+                    yield tuple(row)
                 csvfile.flush()
             finally:
                 csvfile.detach()

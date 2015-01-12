@@ -80,8 +80,8 @@ class Sqlite3View(Table):
 
         cursor = self.connection.cursor()
         cursor.execute(self.query, *self.args, **self.kwargs)
-        fields = [d[0] for d in cursor.description]
-        yield tuple(fields)
+        hdr = [d[0] for d in cursor.description]
+        yield tuple(hdr)
         for row in cursor:
             yield row  # don't wrap
 
@@ -146,8 +146,8 @@ def _tosqlite3(table, filename_or_connection, tablename, create=False,
 
     tablename = _quote(tablename)
     it = iter(table)
-    fields = next(it)
-    fieldnames = map(str, fields)
+    hdr = next(it)
+    fieldnames = list(map(str, hdr))
     colnames = [_quote(n) for n in fieldnames]
 
     cursor = conn.cursor()

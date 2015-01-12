@@ -113,12 +113,12 @@ class TeeCSVView(Table):
             if self.write_header:
                 writer.writerow(hdr)
             # N.B., always yield header, even if we don't write it
-            yield hdr
+            yield tuple(hdr)
 
             # data rows
             for row in it:
                 writer.writerow(row)
-                yield row
+                yield tuple(row)
 
 
 # Additional classes for Unicode CSV support in PY2
