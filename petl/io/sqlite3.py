@@ -177,8 +177,8 @@ def _tosqlite3(table, filename_or_connection, tablename, create=False,
 def appendsqlite3(table, filename_or_connection, tablename, commit=True):
     """
     Load data into a table in an :mod:`sqlite3` database. As
-    :func:`tosqlite3` except the table must exist and is not truncated before
-    loading.
+    :func:`petl.io.sqlite3.tosqlite3` except the table must exist and is not
+    truncated before loading.
 
     Either a database file name or a connection object can be given as the
     second argument.

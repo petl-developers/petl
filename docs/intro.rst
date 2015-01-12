@@ -1,37 +1,40 @@
 Introduction
 ============
 
+.. _intro_installation:
 
 Installation
 ------------
 
 This package is available from the `Python Package Index
-<http://pypi.python.org/pypi/petl>`_. On Linux distributions you
-should be able to do::
+<http://pypi.python.org/pypi/petl>`_. If you have `pip
+<https://pip.pypa.io/>`_ you should be able to do::
 
     $ pip install petl
 
-On other platforms you can download manually, extract and run ``python
-setup.py install``.
+You can also download manually, extract and run ``python setup.py
+install``.
 
-To verify the installation, the test suite can be run with :mod:`nose`::
+To verify the installation, the test suite can be run with `nose
+<https://nose.readthedocs.org/>`_, e.g.::
 
     $ pip install nose
     $ nosetests -v petl
 
+.. _intro_dependencies:
 
 Dependencies and extensions
 ---------------------------
 
-This package has been written with no dependencies other than the
-Python core modules, for ease of installation and
-maintenance. However, there are many third party packages which could
-usefuly be used with :mod:`petl`, e.g., providing access to data from
-Excel or other file types. Some extensions with these additional
-dependencies are provided by the `petlx
+This package is written in pure Python and has no dependencies other
+than the Python core modules. However, there are many third party
+packages which could usefuly be used with :mod:`petl`, e.g., providing
+access to data from Excel or other file types. Some extensions with
+these additional dependencies are provided by the `petlx
 <http://petlx.readthedocs.org>`_ package, a companion package to
 :mod:`petl`.
 
+.. _intro_pipelines:
 
 ETL pipelines
 -------------
@@ -58,8 +61,9 @@ contents into memory::
     >>> import petl as etl
     >>> table1 = etl.fromcsv('example.csv')
 
-Rather, `table1` is a **row container** (see Conventions below), which can be
-iterated over, extracting data from the underlying file on demand.
+Rather, `table1` is a **table container** (see :ref:`intro_conventions`
+below) which can be iterated over, extracting data from the
+underlying file on demand.
 
 Similarly, if one or more transformation functions are applied, e.g.::
 
@@ -100,13 +104,14 @@ requested rows, e.g.::
 the first 5 rows, and so the minimum amount of processing will be done to
 produce 5 rows.
 
+.. _intro_programming_styles:
 
 Functional and object-oriented programming styles
 -------------------------------------------------
 
 The :mod:`petl` package supports both functional and object-oriented
-programming styles. For example, the example transformation pipeline in the
-section above could also be written as::
+programming styles. For example, the example in the section on
+:ref:`intro_pipelines` above could also be written as::
 
     >>> import petl as etl
     >>> table = (
@@ -131,7 +136,7 @@ section above could also be written as::
     +-----+-----+-----+--------------------+
 
 A ``wrap()`` function is also provided to use the object-oriented style with
-any valid row container object, e.g.::
+any valid table container object, e.g.::
 
     >>> l = [['foo', 'bar'], ['a', 1], ['b', 2], ['c', 2]]
     >>> table = etl.wrap(l)
@@ -146,6 +151,7 @@ any valid row container object, e.g.::
     | 'c' |   2 |
     +-----+-----+
 
+.. _intro_interactive_use:
 
 Interactive use
 ---------------
@@ -181,17 +187,19 @@ To see the string (:func:`str`) values instead, :func:`print` the table, e.g.:
     | c   |   2 |
     +-----+-----+
 
+.. _intro_ipython_notebook:
 
 IPython notebook integration
 ----------------------------
 
 Table objects also implement ``_repr_html_()`` and so will be displayed as an
 HTML table if returned from a cell in an IPython notebook. The functions
-:func:`petl.util.viz.display` and :func:`petl.util.viz.displayall` also
+:func:`petl.util.vis.display` and :func:`petl.util.vis.displayall` also
 provide more control over rendering of tables within an IPython notebook.
 
 For examples of usage see the `repr_html notebook <http://nbviewer.ipython.org/github/alimanfoo/petl/blob/v1.0/repr_html.ipynb>`_.
 
+.. _intro_executable:
 
 ``petl`` executable
 -------------------
@@ -207,24 +215,25 @@ The ``petl`` script is extremely simple, it expects a single
 positional argument, which is evaluated as Python code but with all of
 the functions in the :mod:`petl` namespace imported.
 
+.. _intro_conventions:
 
-Conventions - row containers and row iterators
-----------------------------------------------
+Conventions - table containers and table iterators
+--------------------------------------------------
 
 This package defines the following convention for objects acting as
 containers of tabular data and supporting row-oriented iteration over
 the data.
 
-A **row container** (also referred to here as a **table**) is
+A **table container** (also referred to here as a **table**) is
 any object which satisfies the following:
 
 1. implements the `__iter__` method
 
-2. `__iter__` returns a **row iterator** (see below)
+2. `__iter__` returns a **table iterator** (see below)
 
-3. all row iterators returned by `__iter__` are independent, i.e., consuming items from one iterator will not affect any other iterators
+3. all table iterators returned by `__iter__` are independent, i.e., consuming items from one iterator will not affect any other iterators
 
-A **row iterator** is an iterator which satisfies the following:
+A **table iterator** is an iterator which satisfies the following:
 
 4. each item returned by the iterator is a sequence (e.g., tuple or list)
 
@@ -236,19 +245,19 @@ A **row iterator** is an iterator which satisfies the following:
 
 8. a **data value** is any pickleable object
 
-So, for example, a list of lists is a valid row container::
+So, for example, a list of lists is a valid table container::
 
     >>> table = [['foo', 'bar'], ['a', 1], ['b', 2]]
 
 Note that an object returned by the :func:`csv.reader` function from the
-standard Python :mod:`csv` module is a row iterator and **not** a row
+standard Python :mod:`csv` module is a table iterator and **not** a table
 container, because it can only be iterated over once. However, it is
-straightforward to define functions that support the row container convention
+straightforward to define functions that support the table container convention
 and provide access to data from CSV or other types of file or data source, see
 e.g. the :func:`petl.io.csv.fromcsv` function.
 
-The main reason for requiring that row containers support independent
-row iterators (point 3) is that data from a table may need to be
+The main reason for requiring that table containers support independent
+table iterators (point 3) is that data from a table may need to be
 iterated over several times within the same program or interactive
 session. E.g., when using :mod:`petl` in an interactive session to build up
 a sequence of data transformation steps, the user might want to
@@ -259,6 +268,7 @@ Note that this convention does not place any restrictions on the
 lengths of header and data rows. A table may contain a header row
 and/or data rows of varying lengths.
 
+.. _intro_caching:
 
 Caching
 -------
@@ -287,6 +297,7 @@ There is also an explicit :func:`petl.util.materialise.cache` function, which
 can be used to cache in memory up to a configurable number of rows from any
 table.
 
+.. _intro_acknowledgments:
 
 Acknowledgments
 ---------------

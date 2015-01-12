@@ -513,7 +513,8 @@ def rowslice(table, *sliceargs):
     Positional arguments are used to slice the data rows. The `sliceargs` are
     passed through to :func:`itertools.islice`.
 
-    See also :func:`head`, :func:`tail`.
+    See also :func:`petl.transform.basics.head`,
+    :func:`petl.transform.basics.tail`.
 
     """
 
@@ -545,7 +546,7 @@ def iterrowslice(source, sliceargs):
 
 def head(table, n=5):
     """
-    Select the first n data rows. E.g.::
+    Select the first `n` data rows. E.g.::
 
         >>> import petl as etl
         >>> table1 = [['foo', 'bar'],
@@ -583,7 +584,7 @@ Table.head = head
         
 def tail(table, n=5):
     """
-    Select the last n data rows. E.g.::
+    Select the last `n` data rows. E.g.::
 
         >>> import petl as etl
         >>> table1 = [['foo', 'bar'],
@@ -930,9 +931,9 @@ class TransformError(Exception):
 
 def addfieldusingcontext(table, field, query):
     """
-    Like :func:`addfield` but the `query` function is passed the previous,
-    current and next rows, so values may be calculated based on data in adjacent
-    rows. E.g.::
+    Like :func:`petl.transform.basics.addfield` but the `query` function is
+    passed the previous, current and next rows, so values may be calculated
+    based on data in adjacent rows. E.g.::
 
         >>> import petl as etl
         >>> table1 = [['foo', 'bar'],

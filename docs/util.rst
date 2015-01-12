@@ -55,15 +55,15 @@ Counting
 
 .. autofunction:: petl.util.counting.nrows
 .. autofunction:: petl.util.counting.valuecount
-.. autofunction:: petl.util.counting.valuecounts
 .. autofunction:: petl.util.counting.valuecounter
-.. autofunction:: petl.util.counting.stringpatterns
+.. autofunction:: petl.util.counting.valuecounts
 .. autofunction:: petl.util.counting.stringpatterncounter
+.. autofunction:: petl.util.counting.stringpatterns
 .. autofunction:: petl.util.counting.rowlengths
-.. autofunction:: petl.util.counting.typecounts
 .. autofunction:: petl.util.counting.typecounter
-.. autofunction:: petl.util.counting.parsecounts
+.. autofunction:: petl.util.counting.typecounts
 .. autofunction:: petl.util.counting.parsecounter
+.. autofunction:: petl.util.counting.parsecounts
 
 
 Timing

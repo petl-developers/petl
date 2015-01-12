@@ -50,7 +50,7 @@ def fromcsv(source=None, encoding=None, errors=None, **csvargs):
     argument.
 
     Note that all data values are strings, and any intended numeric values will
-    need to be converted, see also :func:`convert`.
+    need to be converted, see also :func:`petl.transform.conversions.convert`.
 
     """
 
@@ -62,8 +62,8 @@ def fromcsv(source=None, encoding=None, errors=None, **csvargs):
 
 def fromtsv(source=None, encoding=None, errors=None, **csvargs):
     """
-    Convenience function, as :func:`fromcsv` but with different default
-    dialect (tab delimited).
+    Convenience function, as :func:`petl.io.csv.fromcsv` but with different
+    default dialect (tab delimited).
 
     """
 
@@ -112,8 +112,8 @@ Table.tocsv = tocsv
 def appendcsv(table, source=None, encoding=None, errors=None,
               write_header=False, **csvargs):
     """
-    Append data rows to an existing CSV file. As :func:`tocsv` but the
-    file is opened in append mode and the table header is not written by
+    Append data rows to an existing CSV file. As :func:`petl.io.csv.tocsv`
+    but the file is opened in append mode and the table header is not written by
     default.
 
     Note that no attempt is made to check that the fields or row lengths are
@@ -134,8 +134,8 @@ Table.appendcsv = appendcsv
 def totsv(table, source=None, encoding=None, errors=None,
           write_header=True, **csvargs):
     """
-    Convenience function, as :func:`tocsv` but with different default dialect
-    (tab delimited).
+    Convenience function, as :func:`petl.io.csv.tocsv` but with different
+    default dialect (tab delimited).
 
     """
 
@@ -150,8 +150,8 @@ Table.totsv = totsv
 def appendtsv(table, source=None, encoding=None, errors=None,
               write_header=False, **csvargs):
     """
-    Convenience function, as :func:`appendcsv` but with different default
-    dialect (tab delimited).
+    Convenience function, as :func:`petl.io.csv.appendcsv` but with different
+    default dialect (tab delimited).
 
     """
 
@@ -183,8 +183,8 @@ Table.teecsv = teecsv
 def teetsv(table, source=None, encoding=None, errors=None, write_header=True,
            **csvargs):
     """
-    Convenience function, as :func:`teecsv` but with different default
-    dialect (tab delimited).
+    Convenience function, as :func:`petl.io.csv.teecsv` but with different
+    default dialect (tab delimited).
 
     """
 

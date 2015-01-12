@@ -49,7 +49,7 @@ def fieldmap(table, mappings=None, failonerror=False, errorvalue=None):
         +------------+--------+------------+--------------------+
 
     Note also that the mapping value can be an expression string, which will be
-    converted to a lambda function via :func:`petl.util.expr`.
+    converted to a lambda function via :func:`petl.util.base.expr`.
 
     """
 

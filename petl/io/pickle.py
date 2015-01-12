@@ -98,8 +98,8 @@ Table.topickle = topickle
 
 def appendpickle(table, source=None, protocol=-1, write_header=False):
     """
-    Append data to an existing pickle file. I.e., as :func:`topickle`
-    but the file is opened in append mode.
+    Append data to an existing pickle file. I.e.,
+    as :func:`petl.io.pickle.topickle` but the file is opened in append mode.
 
     Note that no attempt is made to check that the fields or row lengths are
     consistent with the existing data, the data rows from the table are simply

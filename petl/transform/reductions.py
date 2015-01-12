@@ -497,8 +497,8 @@ def merge(*tables, **kwargs):
         | 'C' |   4 | Conflict({False, True}) | 12.4 |
         +-----+-----+-------------------------+------+
 
-    Keyword arguments are the same as for :func:`mergesort`, except `key` is
-    required.
+    Keyword arguments are the same as for
+    :func:`petl.transform.sorts.mergesort`, except `key` is required.
 
     """
 

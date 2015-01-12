@@ -116,10 +116,10 @@ def facetcolumns(table, key, missing=None):
 Table.facetcolumns = facetcolumns
 
 
-def cache(table, n=10000):
+def cache(table, n=None):
     """
     Wrap the table with a cache that caches up to `n` rows as they are initially
-    requested via iteration.
+    requested via iteration (cache all rows be default).
 
     """
 
@@ -131,32 +131,32 @@ Table.cache = cache
 
 class CacheView(Table):
 
-    def __init__(self, inner, n=10000):
-        self._inner = inner
-        self._n = n
-        self._cache = list()
-        self._cachecomplete = False
+    def __init__(self, inner, n=None):
+        self.inner = inner
+        self.n = n
+        self.cache = list()
+        self.cachecomplete = False
 
     def clearcache(self):
-        self._cache = list()
-        self._cachecomplete = False
+        self.cache = list()
+        self.cachecomplete = False
 
     def __iter__(self):
 
         # serve whatever is in the cache first
-        for row in self._cache:
+        for row in self.cache:
             yield row
 
-        if not self._cachecomplete:
+        if not self.cachecomplete:
 
             # serve the remainder from the inner iterator
-            it = iter(self._inner)
-            for row in islice(it, len(self._cache), None):
+            it = iter(self.inner)
+            for row in islice(it, len(self.cache), None):
                 # maybe there's more room in the cache?
-                if len(self._cache) < self._n:
-                    self._cache.append(row)
+                if not self.n or len(self.cache) < self.n:
+                    self.cache.append(row)
                 yield row
 
             # does the cache contain a complete copy of the inner table?
-            if len(self._cache) < self._n:
-                object.__setattr__(self, '_cachecomplete', True)
+            if not self.n or len(self.cache) < self.n:
+                self.cachecomplete = True

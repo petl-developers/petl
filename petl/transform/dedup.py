@@ -350,15 +350,17 @@ def iterconflicts(source, key, missing, exclude, include):
 def distinct(table, key=None, count=None, presorted=False, buffersize=None,
              tempdir=None, cache=True):
     """
-    Return only distinct rows in the table. See also :func:`duplicates` and
-    :func:`unique`.
+    Return only distinct rows in the table.
 
     If the `count` argument is not None, it will be used as the name for an
     additional field, and the values of the field will be the number of
     duplicate rows.
 
     If the `key` keyword argument is passed, the comparison is done on the
-    given key instead of the full row
+    given key instead of the full row.
+
+    See also :func:`petl.transform.dedup.duplicates` and
+    :func:`petl.transform.dedup.unique`.
 
     """
 

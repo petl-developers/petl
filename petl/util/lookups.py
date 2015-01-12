@@ -8,7 +8,7 @@ from petl.errors import DuplicateKeyError
 from petl.util.base import Table, asindices, asdict, Record
 
 
-def lookup(table, keyspec, valuespec=None, dictionary=None):
+def lookup(table, key, value=None, dictionary=None):
     """
     Load a dictionary with data from the given table. E.g.::
 
@@ -22,7 +22,7 @@ def lookup(table, keyspec, valuespec=None, dictionary=None):
         [1]
         >>> lkp['b']
         [2, 3]
-        >>> # if no valuespec argument is given, defaults to the whole
+        >>> # if no value argument is given, defaults to the whole
         ... # row (as a tuple)
         ... lkp = etl.lookup(table1, 'foo')
         >>> lkp['a']
@@ -62,12 +62,12 @@ def lookup(table, keyspec, valuespec=None, dictionary=None):
 
     it = iter(table)
     flds = next(it)
-    if valuespec is None:
-        valuespec = flds  # default valuespec is complete row
-    keyindices = asindices(flds, keyspec)
-    assert len(keyindices) > 0, 'no keyspec selected'
-    valueindices = asindices(flds, valuespec)
-    assert len(valueindices) > 0, 'no valuespec selected'
+    if value is None:
+        value = flds  # default value is complete row
+    keyindices = asindices(flds, key)
+    assert len(keyindices) > 0, 'no key selected'
+    valueindices = asindices(flds, value)
+    assert len(valueindices) > 0, 'no value selected'
     getkey = operator.itemgetter(*keyindices)
     getvalue = operator.itemgetter(*valueindices)
     for row in it:
@@ -86,7 +86,7 @@ def lookup(table, keyspec, valuespec=None, dictionary=None):
 Table.lookup = lookup
 
 
-def lookupone(table, keyspec, valuespec=None, dictionary=None, strict=False):
+def lookupone(table, key, value=None, dictionary=None, strict=False):
     """
     Load a dictionary with data from the given table, assuming there is
     at most one value for each key. E.g.::
@@ -144,12 +144,12 @@ def lookupone(table, keyspec, valuespec=None, dictionary=None, strict=False):
 
     it = iter(table)
     flds = next(it)
-    if valuespec is None:
-        valuespec = flds
-    keyindices = asindices(flds, keyspec)
-    assert len(keyindices) > 0, 'no keyspec selected'
-    valueindices = asindices(flds, valuespec)
-    assert len(valueindices) > 0, 'no valuespec selected'
+    if value is None:
+        value = flds
+    keyindices = asindices(flds, key)
+    assert len(keyindices) > 0, 'no key selected'
+    valueindices = asindices(flds, value)
+    assert len(valueindices) > 0, 'no value selected'
     getkey = operator.itemgetter(*keyindices)
     getvalue = operator.itemgetter(*valueindices)
     for row in it:
@@ -165,7 +165,7 @@ def lookupone(table, keyspec, valuespec=None, dictionary=None, strict=False):
 Table.lookupone = lookupone
 
 
-def dictlookup(table, keyspec, dictionary=None):
+def dictlookup(table, key, dictionary=None):
     """
     Load a dictionary with data from the given table, mapping to dicts. E.g.::
 
@@ -212,8 +212,8 @@ def dictlookup(table, keyspec, dictionary=None):
 
     it = iter(table)
     flds = next(it)
-    keyindices = asindices(flds, keyspec)
-    assert len(keyindices) > 0, 'no keyspec selected'
+    keyindices = asindices(flds, key)
+    assert len(keyindices) > 0, 'no key selected'
     getkey = operator.itemgetter(*keyindices)
     for row in it:
         k = getkey(row)
@@ -231,7 +231,7 @@ def dictlookup(table, keyspec, dictionary=None):
 Table.dictlookup = dictlookup
 
 
-def dictlookupone(table, keyspec, dictionary=None, strict=False):
+def dictlookupone(table, key, dictionary=None, strict=False):
     """
     Load a dictionary with data from the given table, mapping to dicts,
     assuming there is at most one row for each key. E.g.::
@@ -289,8 +289,8 @@ def dictlookupone(table, keyspec, dictionary=None, strict=False):
 
     it = iter(table)
     flds = next(it)
-    keyindices = asindices(flds, keyspec)
-    assert len(keyindices) > 0, 'no keyspec selected'
+    keyindices = asindices(flds, key)
+    assert len(keyindices) > 0, 'no key selected'
     getkey = operator.itemgetter(*keyindices)
     for row in it:
         k = getkey(row)
@@ -305,7 +305,7 @@ def dictlookupone(table, keyspec, dictionary=None, strict=False):
 Table.dictlookupone = dictlookupone
 
 
-def recordlookup(table, keyspec, dictionary=None):
+def recordlookup(table, key, dictionary=None):
     """
     Load a dictionary with data from the given table, mapping to record objects.
 
@@ -316,8 +316,8 @@ def recordlookup(table, keyspec, dictionary=None):
 
     it = iter(table)
     flds = next(it)
-    keyindices = asindices(flds, keyspec)
-    assert len(keyindices) > 0, 'no keyspec selected'
+    keyindices = asindices(flds, key)
+    assert len(keyindices) > 0, 'no key selected'
     getkey = operator.itemgetter(*keyindices)
     for row in it:
         k = getkey(row)
@@ -335,7 +335,7 @@ def recordlookup(table, keyspec, dictionary=None):
 Table.recordlookup = recordlookup
 
 
-def recordlookupone(table, keyspec, dictionary=None, strict=False):
+def recordlookupone(table, key, dictionary=None, strict=False):
     """
     Load a dictionary with data from the given table, mapping to record objects,
     assuming there is at most one row for each key.
@@ -347,8 +347,8 @@ def recordlookupone(table, keyspec, dictionary=None, strict=False):
 
     it = iter(table)
     flds = next(it)
-    keyindices = asindices(flds, keyspec)
-    assert len(keyindices) > 0, 'no keyspec selected'
+    keyindices = asindices(flds, key)
+    assert len(keyindices) > 0, 'no key selected'
     getkey = operator.itemgetter(*keyindices)
     for row in it:
         k = getkey(row)

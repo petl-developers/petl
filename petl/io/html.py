@@ -50,7 +50,7 @@ def tohtml(table, source=None, encoding=None, errors=None, caption=None,
         </tbody>
         </table>
 
-    The ``caption`` keyword argument is used to provide a table caption
+    The `caption` keyword argument is used to provide a table caption
     in the output HTML.
 
     """

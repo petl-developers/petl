@@ -273,8 +273,8 @@ def search(table, *args, **kwargs):
         | 'mango'  |  42 | 'I like them'            |
         +----------+-----+--------------------------+
 
-    The complement of search() (i.e., the rows not found via search())
-    can be found via :func:`petl.transform.regex.searchcomplement`
+    The complement can be found via
+    :func:`petl.transform.regex.searchcomplement`.
 
     """
 

@@ -174,7 +174,7 @@ def recordcomplement(a, b, buffersize=None, tempdir=None, cache=True):
 
     Note that both tables must have the same set of fields, but that the order
     of the fields does not matter. See also the
-    :func:`petl.transform.setups.complement` function.
+    :func:`petl.transform.setops.complement` function.
 
     See also the discussion of the `buffersize`, `tempdir` and `cache` arguments
     under the :func:`petl.transform.sorts.sort` function.

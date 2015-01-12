@@ -52,18 +52,18 @@ def stats(table, field):
         ...          ['D', 'xyz', 9.0],
         ...          ['E', None]]
         >>> etl.stats(table, 'bar')
-        OrderedDict([('min', 1.0), ('max', 3.0), ('sum', 6.0), ('mean', 2.0), ('count', 3), ('errors', 2)])
+        {'mean': 2.0, 'max': 3.0, 'min': 1.0, 'errors': 2, 'sum': 6.0, 'count': 3}
 
     The `field` argument can be a field name or index (starting from zero).
 
     """
 
-    output = OrderedDict([('min', None),
-                          ('max', None),
-                          ('sum', None),
-                          ('mean', None),
-                          ('count', 0),
-                          ('errors', 0)])
+    output = dict([('min', None),
+                   ('max', None),
+                   ('sum', None),
+                   ('mean', None),
+                   ('count', 0),
+                   ('errors', 0)])
     for v in itervalues(table, field):
         try:
             v = float(v)

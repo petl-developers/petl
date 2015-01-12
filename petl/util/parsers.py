@@ -165,7 +165,7 @@ def boolparser(true_strings=('true', 't', 'yes', 'y', '1'),
 def numparser(strict=False):
     """Return a function that will attempt to parse the value as a number,
     trying :func:`int`, :func:`long`, :func:`float` and :func:`complex` in
-    that order. If all fail, return the value as-is, unless `strict`=`True`,
+    that order. If all fail, return the value as-is, unless ``strict=True``,
     in which case raise the underlying exception.
 
     """

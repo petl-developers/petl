@@ -80,6 +80,7 @@ Regular expressions
 -------------------
 
 .. autofunction:: petl.transform.regex.search
+.. autofunction:: petl.transform.regex.searchcomplement
 .. autofunction:: petl.transform.regex.sub
 .. autofunction:: petl.transform.regex.split
 .. autofunction:: petl.transform.regex.capture

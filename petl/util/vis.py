@@ -526,7 +526,8 @@ Table.display = display
 
 def displayall(table, **kwargs):
     """
-    Display **all rows** from a table inline within an IPython notebook.
+    Display **all rows** from a table inline within an IPython notebook (use
+    with caution, big tables will kill your browser).
 
     """
 

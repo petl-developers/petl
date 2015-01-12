@@ -24,6 +24,8 @@ For an example of :mod:`petl` in use, see the `case study on comparing tables
 For an alphabetic list of all functions in the package,
 see the :ref:`genindex`.
 
+.. note:: Version 1.0 is a new major release of :mod:`petl`. See the :doc:`changes` section for more information about what has changed in version 1.0.
+
 .. toctree::
    :maxdepth: 2
 

@@ -1,68 +1,140 @@
-What's new
-==========
+Changes
+=======
 
 Version 1.0
 -----------
 
-Version 1.0 is a new major release. Although much of the functionality
-available in the 0.x series is still available in 1.0, there have been
-a number of substantive changes which are not backwards-compatible.
+Version 1.0 is a new major release of :mod:`petl`. The main purpose of
+version 1.0 is to introduce support for Python 3.4, in addition to the
+existing support for Python 2.6 and 2.7. Much of the functionality
+available in :mod:`petl` versions 0.x has remained unchanged in
+version 1.0, and most existing code that uses :mod:`petl` should work
+unchanged with version 1.0 or with minor changes. However there have
+been a number of API changes, described below.
 
 If you have any questions about migrating to version 1.0 or find any
 problems or issues please email python-etl@googlegroups.com.
 
-Python 3 compatibility
+Text file encoding
+~~~~~~~~~~~~~~~~~~
+
+Version 1.0 unifies the API for working with ASCII and non-ASCII
+encoded text files, including CSV and HTML. 
+
+The following functions now accept an 'encoding' argument, which
+defaults to the value of ``locale.getpreferredencoding()`` (usually
+'utf-8'): `fromcsv`, `tocsv`, `appendcsv`, `teecsv`, `fromtsv`,
+`totsv`, `appendtsv`, `teetsv`, `fromtext`, `totext`, `appendtext`,
+`tohtml`, `teehtml`.
+
+The following functions have been removed as they are now redundant:
+`fromucsv`, `toucsv`, `appenducsv`, `teeucsv`, `fromutsv`, `toutsv`,
+`appendutsv`, `teeutsv`, `fromutext`, `toutext`, `appendutext`,
+`touhtml`, `teeuhtml`.
+
+To migrate code, in most cases it should be possible to simply replace
+'fromucsv' with 'fromcsv', etc.
+
+`pelt.fluent` and `petl.interactive`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The functionality previously available through the `petl.fluent` and
+`petl.interactive` modules is now available through the root petl
+module.
+
+This means two things. 
+
+First, is is now possible to use either functional or fluent (i.e.,
+object-oriented) styles of programming with the root :mod:`petl`
+module, as described in introductory section on
+:ref:`intro_programming_styles`.
+
+Second, the default representation of table objects uses the :func:`petl.util.vis.look`
+function, so you can simply return a table from the prompt to inspect
+it, as described in the introductory section on
+:ref:`intro_interactive_use`.
+
+The `petl.fluent` and `petl.interactive` modules have been removed as
+they are now redundant.
+
+The automatic caching behaviour of the `petl.interactive` module has
+**not** been retained. If you want to enable caching behaviour for a
+particular table, make an explicit call to the
+:func:`petl.util.materialise.cache` function. See also :ref:`intro_caching`.
+
+IPython notebook integration
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In version 1.0 :mod:`petl` table objects implement `_repr_html_()` so
+can be returned from a cell in an IPython notebook and will
+automatically format as an HTML table.
+
+The :func:`petl.util.vis.display` and :func:`petl.util.vis.displayall`
+functions have been ported across from the `petlx.ipython` package. If
+you are working within the IPython notebook these functions give
+greater control over how tables are rendered. For some examples, see:
+
+  http://nbviewer.ipython.org/github/alimanfoo/petl/blob/v1.0/repr_html.ipynb
+
+Other functions removed or renamed
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The following functions have been removed because they are overly
+complicated and/or hardly ever used. If you use any of these functions
+and would like to see them re-instated then please email
+python-etl@googlegroups.com: `rangefacet`, `rangerowreduce`,
+`rangeaggregate`, `rangecounts`, `multirangeaggregate`, `lenstats`.
+
+The following functions were marked as deprecated in petl 0.x and have
+been removed in version 1.0: `dataslice` (use `data` instead),
+`fieldconvert` (use `convert` instead), `fieldselect` (use `select` instead),
+`parsenumber` (use `numparser` instead), `recordmap` (use `rowmap` instead),
+`recordmapmany` (use `rowmapmany` instead), `recordreduce` (use `rowreduce`
+instead), `recordselect` (use `rowselect` instead), `valueset` (use
+``table.values(‘foo’).set()`` instead).
+
+The following functions are no longer available in the root
+:mod:`petl` namespace, but are still available from a subpackage if
+you really need them: `iterdata` (use `data` instead), `iterdicts`
+(use `dicts` instead), `iternamedtuples` (use `namedtuples` instead),
+`iterrecords` (use `records` instead), `itervalues` (use `values`
+instead).
+
+The following functions have been renamed: `isordered` (renamed to
+`issorted`), `StringSource` (renamed to `MemorySource`).
+
+Sorting and comparison
 ~~~~~~~~~~~~~~~~~~~~~~
 
-As of version 1.0 :mod:`petl` can be used with Python 2.6, Python 2.7
-and Python 3.4.
+A major difference between Python 2 and Python 3 involves comparison
+and sorting of objects of different types. Python 3 is a lot stricter
+about what you can compare with what, e.g., ``None < 1 < 'foo'`` works
+in Python 2.x but raises an exception in Python 3. The strict
+comparison behaviour of Python 3 is generally a problem for typical
+usages of :mod:`petl`, where data can be highly heterogeneous and a
+column in a table may have a mixture of values of many different
+types, including `None` for missing.
 
-Efforts have been made to ensure that the behaviour of :mod:`petl` is
-consistent across these different Python versions. However, there are
-two areas in particular where behaviour may be inconsistent or
-unexpected, and you are advised to check the results of your code
-carefully.
-
-The first area concerns reading and writing to text files, including
-CSV and HTML. The :mod:`petl` API for reading and writing these files
-maintains a separation between functions working with ascii text only
-(e.g., :func:`petl.io.csv.fromcsv`) and functions capable of working
-with any character encoding (e.g.,
-:func:`petl.io.csv.fromucsv`). These functions **should** behave in a
-consistent way across Python versions, however the underlying
-implementations are quite different depending on which Python version
-is being used, and therefore there is a greater risk of
-inconsistencies arising.
-
-The second area concerns comparison behaviour between objects of
-different types (e.g., ``None < 1 < 'foo'``), which is substantially
-different in Python 3.4. This has consequences mainly for functions
-which involve sorting, e.g., :func:`petl.transform.sorts.sort` and
-other functions which depend on it. Python 3.4 is much stricter and
-raises an Exception whenever objects of different types are compared,
-whereas Python 2.x is more relaxed and allows comparisons between
-objects of different types.
-
-:mod:`petl` is designed to work well especially in situations
-involving highly heterogeneous data, where values within a single
-table column could objects of any type and include missing values
-represented as ``None`` or something else. In these situations it is
-generally preferable to allow sorting of heterogeneously typed
-objects, even if the ordering is not meaningful. Therefore :mod:`petl`
-tries to emulate the relaxed comparison behaviour of Python 2.x under
-all Python versions. It actually goes further than this, to allow
+To maintain the usability of :mod:`petl` in this type of scenario, and
+to ensure that the behaviour of :mod:`petl` is as consistent as
+possible across different Python versions, the
+:func:`petl.transform.sorts.sort` function and anything that depends
+on it (as well as any other functions making use of rich comparisons)
+implement the relaxed comparison behaviour that is available under
+Python 2.x. In fact :mod:`petl` goes further than this, allowing
 comparison of a wider range of types than is possible under Python 2.x
 (e.g., ``datetime`` with ``None``).
 
-Again, this should mean that code using :mod:`petl` and involving
-sorting that ran previously under Python 2.x should return the same
-results under Python 3.4. However, because this has required some
-re-engineering of :mod:`petl` internals, this is another area where
-there may be inconsistencies or unexpected results.
+As the underlying code to achieve this has been completely reworked,
+there may be inconsistencies or unexpected behaviour, so it's worth
+testing carefully the results of any code previously run using
+:mod:`petl` 0.x, especially if you are also migrating from Python 2 to
+Python 3.
 
-The different comparison behaviour may also give unexpected results
-when selecting rows of a table. E.g., the following will work
-under Python 2.x but raise an exception under Python 3.4::
+The different comparison behaviour under different Python versions may
+also give unexpected results when selecting rows of a table. E.g., the
+following will work under Python 2.x but raise an exception under
+Python 3.4::
 
     >>> import petl as etl
     >>> table = [['foo', 'bar'],
@@ -91,95 +163,34 @@ values with :class:`petl.comparison.Comparable`, e.g.::
     | 'a' |   1 |
     +-----+-----+
 
+Configuration module
+~~~~~~~~~~~~~~~~~~~~
 
-Functionalities removed
-~~~~~~~~~~~~~~~~~~~~~~~
-
-A number of functions that provided some substantive functionality
-(i.e., were not simply convenience) have been removed in version 1.0
-because they were overly complicated and not frequently used. The list
-of these functions is below:
-
-* rangefacet()
-* rangerowreduce()
-* rangerecordreduce()
-* rangeaggregate()
-* rangecounts()
-* multirangeaggregate()
-* lenstats()
-
-If you have a concrete use case for any of these functions and would
-like to see them re-instated then please email
-python-etl@googlegroups.com.
-
-The following functions were marked as deprecated in petl 0.x and have
-been removed from version 1.0:
-
-* dataslice() - use data() instead
-* fieldconvert() - use convert() instead
-* fieldselect() - use select() instead
-* parsenumber() - use numparser() instead
-* recordmap() - use rowmap() instead
-* recordmapmany() - use rowmapmany() instead
-* recordreduce() - use rowreduce() instead
-* recordselect() - use rowselect() instead
-* valueset() - use table.values('foo').set() instead
-
-The following functions are no longer available in the root
-:mod:`petl` namespace, but are still available from a subpackage if
-you really need them:
-
-* iterdata() - use data() instead
-* iterdicts() - use dicts() instead
-* iternamedtuples() - use namedtuples() instead
-* iterrecords() - use records() instead
-* itervalues() - use values() instead
-
-The following functions have been renamed:
-
-* isordered() - renamed to issorted()
-* StringSource() - renamed to MemorySource()
-
-:mod:`petl.fluent` and :mod:`petl.interactive`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The functionalities previously available in the :mod:`petl.fluent` and
-:mod:`petl.interactive` modules have been integrated into the root
-:mod:`petl` module. The :mod:`petl.fluent` and :mod:`petl.interactive`
-modules have been removed.
-
-This means that the root :mod:`petl` module now supports both the
-functional and fluent (i.e., object-oriented) usage styles as
-described above.
-
-It also means that table objects have a natural representation when
-returned from the prompt in an interactive Python session.
-
-Note that the universal caching behaviour of the
-:mod:`petl.interactive` module has been dropped. If you need caching
-behaviour, use the :func:`petl.util.materialise.cache` function explicitly.
-
-IPython notebook integration
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The functionalities previously available through the
-:mod:`petlx.ipython` module have been integrated into
-:mod:`petl`. This means that table objects will render as HTML tables
-when returned from a cell in an IPython notebook. The functions
-:mod:`petl.util.vis.display` and :mod:`petl.util.vis.displayall` are
-also available for finer control over how tables are rendered in a
-notebook.
+All configuration variables have been brought together into a new
+`petl.config` module. See the source code for the variables available,
+they should be self-explanatory.
 
 :mod:`petl.push` moved to :mod:`petlx`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The :mod:`petl.push` module has been moved to the
-`petlx <http://petlx.readthedocs.org>`_ extensions project.
+The :mod:`petl.push` module remains in an experimental state and has
+been moved to the `petlx <http://petlx.readthedocs.org>`_ extensions
+project.
+
+Argument names and other minor changes
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Argument names for a small number of functions have been changed to
+create consistency across the API.
+
+There are some other minor changes as well. If you are migrating from
+:mod:`petl` version 0.x the best thing is to run your code and inspect
+any errors. Email python-etl@googlegroups.com if you have any
+questions.
 
 Source code reorganisation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The source code has been substantially reorganised. This should not
-affect users of the :mod:`petl` package as all functions are available
-through the root :mod:`petl` namespace, however, anyone developing
-code for contribution to :mod:`petl` will have to rebase.
+affect users of the :mod:`petl` package however as all functions are
+available through the root :mod:`petl` namespace.
