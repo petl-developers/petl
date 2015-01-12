@@ -1,6 +1,6 @@
 tox
 # remove .dev0 from src/petl/__init__.py
-# sed -i -e 's/.dev0//' src/petl/__init__.py
+sed -i -e 's/.dev0//' petl/__init__.py
 version=`grep __version__ petl/__init__.py | sed -e "s/.*__version__[ ]=[ ]'\(.*\)'/\1/"`
 echo $version
 # git commit and push
