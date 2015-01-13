@@ -340,33 +340,41 @@ def groupcountdistinctvalues(table, key, value):
 Table.groupcountdistinctvalues = groupcountdistinctvalues
 
 
-def groupselectfirst(table, key):
+def groupselectfirst(table, key, presorted=False, buffersize=None,
+                     tempdir=None, cache=True):
     """Group by the `key` field then return the first row within each group."""
 
     _reducer = lambda k, rows: next(rows)
-    return rowreduce(table, key, reducer=_reducer)
+    return rowreduce(table, key, reducer=_reducer, presorted=presorted,
+                     buffersize=buffersize, tempdir=tempdir, cache=cache)
 
 
 Table.groupselectfirst = groupselectfirst
 
 
-def groupselectmin(table, key, value):
+def groupselectmin(table, key, value, presorted=False, buffersize=None,
+                   tempdir=None, cache=True):
     """Group by the `key` field then return the row with the maximum of the
     `value` field within each group. N.B., will only return one row for each
     group, even if multiple rows have the same (maximum) value."""
 
-    return groupselectfirst(sort(table, value, reverse=False), key)
+    return groupselectfirst(sort(table, value, reverse=False), key,
+                            presorted=presorted, buffersize=buffersize,
+                            tempdir=tempdir, cache=cache)
 
 
 Table.groupselectmin = groupselectmin
 
     
-def groupselectmax(table, key, value):
+def groupselectmax(table, key, value, presorted=False, buffersize=None,
+                   tempdir=None, cache=True):
     """Group by the `key` field then return the row with the minimum of the
     `value` field within each group. N.B., will only return one row for each
     group, even if multiple rows have the same (maximum) value."""
 
-    return groupselectfirst(sort(table, value, reverse=True), key)
+    return groupselectfirst(sort(table, value, reverse=True), key,
+                            presorted=presorted, buffersize=buffersize,
+                            tempdir=tempdir, cache=cache)
 
 
 Table.groupselectmax = groupselectmax
