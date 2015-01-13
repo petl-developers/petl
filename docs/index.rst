@@ -34,6 +34,7 @@ see the :ref:`genindex`.
    transform
    util
    changes
+   contributing
    related_work
 
 Indices and tables
