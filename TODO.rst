@@ -16,7 +16,7 @@ DONE add subsection to changes in 1.0 about 'u' functions removed
 
 DONE add subsection to changes in 1.0 about config
 
-TODO make sure use field names rather than naked header
+DONE make sure use field names rather than naked header
 
 TODO integrate dbtests with other tests
 
