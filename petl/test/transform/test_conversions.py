@@ -3,7 +3,7 @@ from __future__ import absolute_import, print_function, division
 
 from petl.test.helpers import ieq
 from petl.transform.conversions import convert, convertall, convertnumbers, \
-    replace, update
+    replace, update, format, interpolate
 
 
 def test_convert():
@@ -332,4 +332,34 @@ def test_replace_unhashable():
     table1 = (('foo', 'bar'), ('a', ['b']), ('c', None))
     expect = (('foo', 'bar'), ('a', ['b']), ('c', []))
     actual = replace(table1, 'bar', None, [])
+    ieq(expect, actual)
+
+
+def test_format():
+
+    table = (('foo', 'bar'),
+             ('a', 1),
+             ('b', 2))
+
+    expect = (('foo', 'bar'),
+              ('a', '01'),
+              ('b', '02'))
+
+    actual = format(table, 'bar', '{:02d}')
+    ieq(expect, actual)
+    ieq(expect, actual)
+
+
+def test_interpolate():
+
+    table = (('foo', 'bar'),
+             ('a', 1),
+             ('b', 2))
+
+    expect = (('foo', 'bar'),
+              ('a', '01'),
+              ('b', '02'))
+
+    actual = interpolate(table, 'bar', '%02d')
+    ieq(expect, actual)
     ieq(expect, actual)

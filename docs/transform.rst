@@ -42,6 +42,10 @@ Converting values
 .. autofunction:: petl.transform.conversions.convertnumbers
 .. autofunction:: petl.transform.conversions.replace
 .. autofunction:: petl.transform.conversions.replaceall
+.. autofunction:: petl.transform.conversions.format
+.. autofunction:: petl.transform.conversions.formatall
+.. autofunction:: petl.transform.conversions.interpolate
+.. autofunction:: petl.transform.conversions.interpolateall
 .. autofunction:: petl.transform.conversions.update
 
 

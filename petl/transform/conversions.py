@@ -421,3 +421,75 @@ def dictconverter(d):
             # value is not hashable
             return v
     return conv
+
+
+def format(table, field, fmt, **kwargs):
+    """
+    Convenience function to format all values in the given `field` using the
+    `fmt` format string.
+
+    The ``where`` keyword argument can be given with a callable or expression
+    which is evaluated on each row and which should return True if the
+    conversion should be applied on that row, else False.
+
+    """
+
+    conv = lambda v: fmt.format(v)
+    return convert(table, field, conv, **kwargs)
+
+
+Table.format = format
+
+
+def formatall(table, fmt, **kwargs):
+    """
+    Convenience function to format all values in all fields using the
+    `fmt` format string.
+
+    The ``where`` keyword argument can be given with a callable or expression
+    which is evaluated on each row and which should return True if the
+    conversion should be applied on that row, else False.
+
+    """
+
+    conv = lambda v: fmt.format(v)
+    return convertall(table, conv, **kwargs)
+
+
+Table.formatall = formatall
+
+
+def interpolate(table, field, fmt, **kwargs):
+    """
+    Convenience function to interpolate all values in the given `field` using
+    the `fmt` string.
+
+    The ``where`` keyword argument can be given with a callable or expression
+    which is evaluated on each row and which should return True if the
+    conversion should be applied on that row, else False.
+
+    """
+
+    conv = lambda v: fmt % v
+    return convert(table, field, conv, **kwargs)
+
+
+Table.interpolate = interpolate
+
+
+def interpolateall(table, fmt, **kwargs):
+    """
+    Convenience function to interpolate all values in all fields using
+    the `fmt` string.
+
+    The ``where`` keyword argument can be given with a callable or expression
+    which is evaluated on each row and which should return True if the
+    conversion should be applied on that row, else False.
+
+    """
+
+    conv = lambda v: fmt % v
+    return convertall(table, conv, **kwargs)
+
+
+Table.interpolateall = interpolateall
