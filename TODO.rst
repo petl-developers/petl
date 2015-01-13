@@ -22,13 +22,8 @@ TODO integrate dbtests with other tests
 
 TODO add documentation about contributing
 
-TODO native comparison option (native_compare=True)
-
 TODO other open issues
-
-TODO review all issues
-
-TODO avoid multiple passes
 
 TODO add running stats
 
+TODO review all issues
