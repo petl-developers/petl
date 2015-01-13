@@ -1,7 +1,7 @@
 from __future__ import absolute_import, print_function, division
 
 
-from petl.compat import next, integer_types, string_types
+from petl.compat import next, integer_types, string_types, text_type
 
 
 from petl.errors import FieldSelectionError
@@ -316,7 +316,7 @@ def iterfieldconvert(source, converters, failonerror, errorvalue, where,
     # grab the fields in the source table
     it = iter(source)
     hdr = next(it)
-    flds = list(map(str, hdr))
+    flds = list(map(text_type, hdr))
     yield tuple(hdr)  # these are not modified
 
     # build converter functions

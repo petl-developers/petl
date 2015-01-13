@@ -2,7 +2,7 @@ from __future__ import absolute_import, print_function, division
 
 
 import itertools
-from petl.compat import next, string_types
+from petl.compat import next, text_type
 from petl.errors import FieldSelectionError
 
 
@@ -31,7 +31,7 @@ def rename(table, *args, **kwargs):
         | '-'    |  56 |
         +--------+-----+
 
-        >>> # rename multiple fields by passing a dictionary as the second argument
+        >>> # rename multiple fields by passing dictionary as second argument
         ... table3 = etl.rename(table1, {'sex': 'gender', 'age': 'age_years'})
         >>> table3
         +--------+-----------+
@@ -77,7 +77,7 @@ class RenameView(Table):
 def iterrename(source, spec, strict):
     it = iter(source)
     hdr = next(it)
-    flds = list(map(str, hdr))
+    flds = list(map(text_type, hdr))
     if strict:
         for x in spec:
             if isinstance(x, int):

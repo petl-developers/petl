@@ -3,7 +3,7 @@ from __future__ import absolute_import, print_function, division
 
 # standard library dependencies
 import logging
-from petl.compat import next
+from petl.compat import next, text_type
 
 
 # internal dependencies
@@ -331,7 +331,7 @@ def _todb_dbapi_connection(table, connection, tablename, schema=None,
     # sanitise field names
     it = iter(table)
     hdr = next(it)
-    flds = list(map(str, hdr))
+    flds = list(map(text_type, hdr))
     colnames = [_quote(n) for n in flds]
     debug('column names: %r', colnames)
 
@@ -379,7 +379,7 @@ def _todb_dbapi_mkcurs(table, mkcurs, tablename, schema=None, commit=True,
     # sanitise field names
     it = iter(table)
     hdr = next(it)
-    flds = list(map(str, hdr))
+    flds = list(map(text_type, hdr))
     colnames = [_quote(n) for n in flds]
     debug('column names: %r', colnames)
 
@@ -427,7 +427,7 @@ def _todb_dbapi_cursor(table, cursor, tablename, schema=None, commit=True,
     # sanitise field names
     it = iter(table)
     hdr = next(it)
-    flds = list(map(str, hdr))
+    flds = list(map(text_type, hdr))
     colnames = [_quote(n) for n in flds]
     debug('column names: %r', colnames)
 
@@ -481,7 +481,7 @@ def _todb_sqlalchemy_connection(table, connection, tablename, schema=None,
     # sanitise field names
     it = iter(table)
     hdr = next(it)
-    flds = list(map(str, hdr))
+    flds = list(map(text_type, hdr))
     colnames = [_quote(n) for n in flds]
     debug('column names: %r', colnames)
 

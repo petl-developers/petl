@@ -101,7 +101,7 @@ def itercapture(source, field, pattern, newfields, include_original, flags,
     prog = re.compile(pattern, flags)
 
     hdr = next(it)
-    flds = list(map(str, hdr))
+    flds = list(map(text_type, hdr))
     if isinstance(field, int) and field < len(hdr):
         field_index = field
     elif field in flds:
@@ -198,7 +198,7 @@ def itersplit(source, field, pattern, newfields, include_original, maxsplit,
     prog = re.compile(pattern, flags)
 
     hdr = next(it)
-    flds = list(map(str, hdr))
+    flds = list(map(text_type, hdr))
     if isinstance(field, int) and field < len(hdr):
         field_index = field
         field = hdr[field_index]
@@ -313,7 +313,7 @@ def itersearch(table, pattern, field, flags, complement):
     prog = re.compile(pattern, flags)
     it = iter(table)
     hdr = next(it)
-    flds = list(map(str, hdr))
+    flds = list(map(text_type, hdr))
     yield tuple(hdr)
 
     if field is None:

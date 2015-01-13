@@ -49,8 +49,8 @@ def fromxml(source, *args, **kwargs):
         | 'c' | '2' |
         +-----+-----+
 
-        >>> # if the data values are stored in an attribute, provide the attribute name
-        ... # as an extra positional argument
+        >>> # if the data values are stored in an attribute, provide the
+        ... # attribute name as an extra positional argument
         ... d = '''<table>
         ...     <tr>
         ...         <td v='foo'/><td v='bar'/>

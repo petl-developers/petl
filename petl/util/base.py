@@ -9,7 +9,7 @@ import operator
 from collections import namedtuple
 from petl.compat import imap, izip, izip_longest, ifilter, ifilterfalse, \
     Counter, OrderedDict, compress, combinations_with_replacement, reduce, \
-    next, string_types
+    next, string_types, text_type
 
 
 from petl.errors import FieldSelectionError
@@ -270,8 +270,7 @@ def itervalues(table, field, **kwargs):
 class TableWrapper(Table):
 
     def __init__(self, inner):
-        # avoid infinite recursion
-        object.__setattr__(self, 'inner', inner)
+        self.inner = inner
 
     def __iter__(self):
         return iter(self.inner)
@@ -283,7 +282,7 @@ wrap = TableWrapper
 def asindices(hdr, spec):
     """Convert the given field `spec` into a list of field indices."""
 
-    flds = list(map(str, hdr))
+    flds = list(map(text_type, hdr))
     indices = list()
     if not isinstance(spec, (list, tuple)):
         spec = (spec,)
@@ -519,7 +518,7 @@ def iternamedtuples(table, *sliceargs, **kwargs):
     name = kwargs.get('name', 'row')
     it = iter(table)
     hdr = next(it)
-    flds = list(map(str, hdr))
+    flds = list(map(text_type, hdr))
     nt = namedtuple(name, tuple(flds))
     if sliceargs:
         it = islice(it, *sliceargs)
@@ -635,7 +634,7 @@ def iterrecords(table, *sliceargs, **kwargs):
     missing = kwargs.get('missing', None)
     it = iter(table)
     hdr = next(it)
-    flds = list(map(str, hdr))
+    flds = list(map(text_type, hdr))
     if sliceargs:
         it = islice(it, *sliceargs)
     for row in it:
@@ -691,7 +690,7 @@ def rowgroupby(table, key, value=None):
 
     it = iter(table)
     hdr = next(it)
-    flds = list(map(str, hdr))
+    flds = list(map(text_type, hdr))
     # wrap rows as records
     it = (Record(row, flds) for row in it)
 

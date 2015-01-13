@@ -3,7 +3,7 @@ from __future__ import absolute_import, print_function, division
 
 # standard library dependencies
 import sqlite3
-from petl.compat import string_types, next
+from petl.compat import string_types, next, text_type
 
 
 # internal dependencies
@@ -147,7 +147,7 @@ def _tosqlite3(table, filename_or_connection, tablename, create=False,
     tablename = _quote(tablename)
     it = iter(table)
     hdr = next(it)
-    fieldnames = list(map(str, hdr))
+    fieldnames = list(map(text_type, hdr))
     colnames = [_quote(n) for n in fieldnames]
 
     cursor = conn.cursor()

@@ -4,7 +4,7 @@ from __future__ import absolute_import, print_function, division
 # standard library dependencies
 from itertools import islice, chain
 from collections import deque
-from petl.compat import izip, izip_longest, next, count, string_types
+from petl.compat import izip, izip_longest, next, count, string_types, text_type
 
 
 # internal dependencies
@@ -342,7 +342,7 @@ class CatView(Table):
 def itercat(sources, missing, header):
     its = [iter(t) for t in sources]
     source_hdrs = [next(it) for it in its]
-    source_flds = [list(map(str, hdr)) for hdr in source_hdrs]
+    source_flds = [list(map(text_type, hdr)) for hdr in source_hdrs]
 
     if header is None:
         # determine output fields by gathering all fields found in the sources
@@ -441,7 +441,7 @@ class AddFieldView(Table):
 def iteraddfield(source, field, value, index):
     it = iter(source)
     hdr = next(it)
-    flds = list(map(str, hdr))
+    flds = list(map(text_type, hdr))
 
     # determine index of new field
     if index is None:
@@ -997,7 +997,7 @@ class AddFieldUsingContextView(Table):
 def iteraddfieldusingcontext(table, field, query):
     it = iter(table)
     hdr = tuple(next(it))
-    flds = list(map(str, hdr))
+    flds = list(map(text_type, hdr))
     yield hdr + (field,)
     it = (Record(row, flds) for row in it)
     prv = None

@@ -1,9 +1,6 @@
 from __future__ import absolute_import, print_function, division
 
 
-from petl.compat import OrderedDict
-
-
 from petl.util.base import values, Table
 
 

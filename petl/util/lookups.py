@@ -2,6 +2,7 @@ from __future__ import absolute_import, print_function, division
 
 
 import operator
+from petl.compat import text_type
 
 
 from petl.errors import DuplicateKeyError
@@ -62,7 +63,7 @@ def lookup(table, key, value=None, dictionary=None):
 
     it = iter(table)
     hdr = next(it)
-    flds = list(map(str, hdr))
+    flds = list(map(text_type, hdr))
     if value is None:
         value = flds  # default value is complete row
     keyindices = asindices(hdr, key)
@@ -145,7 +146,7 @@ def lookupone(table, key, value=None, dictionary=None, strict=False):
 
     it = iter(table)
     hdr = next(it)
-    flds = list(map(str, hdr))
+    flds = list(map(text_type, hdr))
     if value is None:
         value = flds
     keyindices = asindices(hdr, key)
@@ -214,7 +215,7 @@ def dictlookup(table, key, dictionary=None):
 
     it = iter(table)
     hdr = next(it)
-    flds = list(map(str, hdr))
+    flds = list(map(text_type, hdr))
     keyindices = asindices(hdr, key)
     assert len(keyindices) > 0, 'no key selected'
     getkey = operator.itemgetter(*keyindices)
@@ -292,7 +293,7 @@ def dictlookupone(table, key, dictionary=None, strict=False):
 
     it = iter(table)
     hdr = next(it)
-    flds = list(map(str, hdr))
+    flds = list(map(text_type, hdr))
     keyindices = asindices(hdr, key)
     assert len(keyindices) > 0, 'no key selected'
     getkey = operator.itemgetter(*keyindices)
@@ -320,7 +321,7 @@ def recordlookup(table, key, dictionary=None):
 
     it = iter(table)
     hdr = next(it)
-    flds = list(map(str, hdr))
+    flds = list(map(text_type, hdr))
     keyindices = asindices(hdr, key)
     assert len(keyindices) > 0, 'no key selected'
     getkey = operator.itemgetter(*keyindices)
@@ -352,7 +353,7 @@ def recordlookupone(table, key, dictionary=None, strict=False):
 
     it = iter(table)
     hdr = next(it)
-    flds = list(map(str, hdr))
+    flds = list(map(text_type, hdr))
     keyindices = asindices(hdr, key)
     assert len(keyindices) > 0, 'no key selected'
     getkey = operator.itemgetter(*keyindices)

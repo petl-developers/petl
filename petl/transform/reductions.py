@@ -3,7 +3,7 @@ from __future__ import absolute_import, print_function, division
 
 import itertools
 import operator
-from petl.compat import OrderedDict, next, string_types, reduce
+from petl.compat import OrderedDict, next, string_types, reduce, text_type
 
 
 from petl.util.base import Table, iterpeek, rowgroupby
@@ -438,7 +438,7 @@ class MergeDuplicatesView(Table):
 def itermergeduplicates(table, key, missing):
     it = iter(table)
     hdr, it = iterpeek(it)
-    flds = list(map(str, hdr))
+    flds = list(map(text_type, hdr))
 
     # determine output fields
     if isinstance(key, string_types):

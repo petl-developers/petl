@@ -345,7 +345,7 @@ def test_format():
               ('a', '01'),
               ('b', '02'))
 
-    actual = format(table, 'bar', '{:02d}')
+    actual = format(table, 'bar', '{0:02d}')
     ieq(expect, actual)
     ieq(expect, actual)
 

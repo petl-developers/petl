@@ -8,7 +8,8 @@ from petl.transform.headers import rename, setheader, extendheader, \
     pushheader, skip, prefixheader, suffixheader
 
 from petl.transform.conversions import convert, convertall, replace, \
-    replaceall, update, convertnumbers
+    replaceall, update, convertnumbers, format, formatall, interpolate, \
+    interpolateall
 
 from petl.transform.sorts import sort, mergesort, issorted
 

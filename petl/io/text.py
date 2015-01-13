@@ -3,7 +3,7 @@ from __future__ import absolute_import, print_function, division
 
 # standard library dependencies
 import io
-from petl.compat import next, PY2
+from petl.compat import next, PY2, text_type
 
 
 # internal dependencies
@@ -192,7 +192,7 @@ def _writetext(table, source, mode, encoding, errors, template, prologue,
                 f.write(prologue)
             it = iter(table)
             hdr = next(it)
-            flds = list(map(str, hdr))
+            flds = list(map(text_type, hdr))
             for row in it:
                 rec = asdict(flds, row)
                 s = template.format(**rec)
@@ -265,7 +265,7 @@ def _iterteetext(table, source, encoding, errors, template, prologue, epilogue):
             it = iter(table)
             hdr = next(it)
             yield tuple(hdr)
-            flds = list(map(str, hdr))
+            flds = list(map(text_type, hdr))
             for row in it:
                 rec = asdict(flds, row)
                 s = template.format(**rec)

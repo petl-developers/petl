@@ -3,7 +3,7 @@ from __future__ import absolute_import, print_function, division
 
 import operator
 from itertools import islice
-from petl.compat import izip_longest
+from petl.compat import izip_longest, text_type
 
 
 from petl.util.base import asindices, Table
@@ -93,7 +93,7 @@ def facetcolumns(table, key, missing=None):
     fct = dict()
     it = iter(table)
     hdr = next(it)
-    flds = list(map(str, hdr))
+    flds = list(map(text_type, hdr))
     indices = asindices(hdr, key)
     assert len(indices) > 0, 'no key field selected'
     getkey = operator.itemgetter(*indices)

@@ -2,7 +2,7 @@ from __future__ import absolute_import, print_function, division
 
 
 import itertools
-from petl.compat import next
+from petl.compat import next, text_type
 
 
 from petl.util.base import Table
@@ -64,7 +64,7 @@ def iterunpack(source, field, newfields, include_original, missing):
     it = iter(source)
 
     hdr = next(it)
-    flds = list(map(str, hdr))
+    flds = list(map(text_type, hdr))
     if field in flds:
         field_index = flds.index(field)
     elif isinstance(field, int) and field < len(flds):
@@ -164,7 +164,7 @@ def iterunpackdict(table, field, keys, includeoriginal, samplesize, missing):
     # set up
     it = iter(table)
     hdr = next(it)
-    flds = list(map(str, hdr))
+    flds = list(map(text_type, hdr))
     fidx = flds.index(field)
     outhdr = list(flds)
     if not includeoriginal:

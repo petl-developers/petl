@@ -3,7 +3,7 @@ from __future__ import absolute_import, print_function, division
 
 import operator
 import re
-from petl.compat import next, string_types, callable
+from petl.compat import next, string_types, callable, text_type
 from petl.comparison import Comparable
 
 
@@ -128,7 +128,7 @@ def iterfieldselect(source, field, where, complement, missing):
 def iterrowselect(source, where, missing, complement):
     it = iter(source)
     hdr = next(it)
-    flds = list(map(str, hdr))
+    flds = list(map(text_type, hdr))
     yield tuple(hdr)
     it = (Record(row, flds, missing=missing) for row in it)
     for row in it:
@@ -459,7 +459,7 @@ class SelectUsingContextView(Table):
 def iterselectusingcontext(table, query):
     it = iter(table)
     hdr = tuple(next(it))
-    flds = list(map(str, hdr))
+    flds = list(map(text_type, hdr))
     yield hdr
     it = (Record(row, flds) for row in it)
     prv = None

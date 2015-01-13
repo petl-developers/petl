@@ -3,7 +3,6 @@ from __future__ import absolute_import, print_function, division
 
 # standard library dependencies
 import csv
-import codecs
 import cStringIO
 
 

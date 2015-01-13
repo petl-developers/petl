@@ -7,7 +7,7 @@ import itertools
 import logging
 from collections import namedtuple
 import operator
-from petl.compat import pickle, next
+from petl.compat import pickle, next, text_type
 
 
 import petl.config as config
@@ -424,7 +424,7 @@ def itermergesort(sources, key, header, missing, reverse):
         # determine output fields by gathering all fields found in the sources
         outhdr = list()
         for hdr in src_hdrs:
-            for f in list(map(str, hdr)):
+            for f in list(map(text_type, hdr)):
                 if f not in outhdr:
                     # add any new fields as we find them
                     outhdr.append(f)
@@ -434,7 +434,7 @@ def itermergesort(sources, key, header, missing, reverse):
     yield tuple(outhdr)
 
     def _standardisedata(it, hdr, ofs):
-        flds = list(map(str, hdr))
+        flds = list(map(text_type, hdr))
         # now construct and yield the data rows
         for _row in it:
             try:

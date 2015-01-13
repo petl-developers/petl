@@ -2,7 +2,7 @@ from __future__ import absolute_import, print_function, division
 
 
 import operator
-from petl.compat import OrderedDict, next, string_types
+from petl.compat import OrderedDict, next, string_types, text_type
 
 
 from petl.util.base import Table, expr, rowgroupby, Record
@@ -83,7 +83,7 @@ class FieldMapView(Table):
 def iterfieldmap(source, mappings, failonerror, errorvalue):
     it = iter(source)
     hdr = next(it)
-    flds = list(map(str, hdr))
+    flds = list(map(text_type, hdr))
     outhdr = mappings.keys()
     yield tuple(outhdr)
 
@@ -204,7 +204,7 @@ class RowMapView(Table):
 def iterrowmap(source, rowmapper, fields, failonerror):
     it = iter(source)
     hdr = next(it)
-    flds = list(map(str, hdr))
+    flds = list(map(text_type, hdr))
     yield tuple(fields)
     it = (Record(row, flds) for row in it)
     for row in it:
@@ -292,7 +292,7 @@ class RowMapManyView(Table):
 def iterrowmapmany(source, rowgenerator, fields, failonerror):
     it = iter(source)
     hdr = next(it)
-    flds = list(map(str, hdr))
+    flds = list(map(text_type, hdr))
     yield tuple(fields)
     it = (Record(row, flds) for row in it)
     for row in it:

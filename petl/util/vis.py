@@ -184,7 +184,7 @@ def _look_grid(table, vrepr, index_header):
 
     # fields representation
     hdr = next(it)
-    flds = list(map(str, hdr))
+    flds = list(map(text_type, hdr))
     if index_header:
         fldsrepr = ['%s|%s' % (i, r) for (i, r) in enumerate(flds)]
     else:
@@ -270,7 +270,7 @@ def _look_simple(table, vrepr, index_header):
 
     # fields representation
     hdr = next(it)
-    flds = list(map(str, hdr))
+    flds = list(map(text_type, hdr))
     if index_header:
         fldsrepr = ['%s|%s' % (i, r) for (i, r) in enumerate(flds)]
     else:
@@ -341,7 +341,7 @@ def _look_minimal(table, vrepr, index_header):
 
     # fields representation
     hdr = next(it)
-    flds = list(map(str, hdr))
+    flds = list(map(text_type, hdr))
     if index_header:
         fldsrepr = ['%s|%s' % (i, r) for (i, r) in enumerate(flds)]
     else:
