@@ -2,13 +2,14 @@ from __future__ import absolute_import, print_function, division
 
 
 import itertools
-from petl.compat import next
+from petl.compat import next, string_types
+from petl.errors import FieldSelectionError
 
 
 from petl.util.base import Table
 
 
-def rename(table, *args):
+def rename(table, *args, **kwargs):
     """
     Replace one or more values in the table's header row. E.g.::
 
@@ -48,7 +49,7 @@ def rename(table, *args):
 
     """
 
-    return RenameView(table, *args)
+    return RenameView(table, *args, **kwargs)
 
 
 Table.rename = rename
@@ -56,7 +57,7 @@ Table.rename = rename
 
 class RenameView(Table):
 
-    def __init__(self, table, *args):
+    def __init__(self, table, *args, **kwargs):
         self.source = table
         if len(args) == 0:
             self.spec = dict()
@@ -64,22 +65,30 @@ class RenameView(Table):
             self.spec = args[0]
         elif len(args) == 2:
             self.spec = {args[0]: args[1]}
+        self.strict = kwargs.get('strict', True)
 
     def __iter__(self):
-        return iterrename(self.source, self.spec)
+        return iterrename(self.source, self.spec, self.strict)
 
     def __setitem__(self, key, value):
         self.spec[key] = value
 
 
-def iterrename(source, spec):
+def iterrename(source, spec, strict):
     it = iter(source)
-    spec = spec.copy()  # make sure nobody can change this midstream
     hdr = next(it)
-    outhdr = [spec[f] if f in spec
-              else spec[i] if i in spec
+    flds = list(map(str, hdr))
+    if strict:
+        for x in spec:
+            if isinstance(x, int):
+                if x < 0 or x >= len(hdr):
+                    raise FieldSelectionError(x)
+            elif x not in flds:
+                raise FieldSelectionError(x)
+    outhdr = [spec[i] if i in spec
+              else spec[f] if f in spec
               else f
-              for i, f in enumerate(hdr)]
+              for i, f in enumerate(flds)]
     yield tuple(outhdr)
     for row in it:
         yield tuple(row)
