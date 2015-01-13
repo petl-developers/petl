@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from __future__ import absolute_import, print_function, division
 
 
@@ -210,6 +211,19 @@ def test_searchcomplement():
                ('cucumber', 41, 'better than mango'))
     ieq(expect3, table3)
     ieq(expect3, table3)
+
+
+def test_search_unicode():
+    tbl = ((u'name', u'id'),
+           (u'Արամ Խաչատրյան', 1),
+           (u'Johann Strauß', 2),
+           (u'Вагиф Сәмәдоғлу', 3),
+           (u'章子怡', 4))
+    actual = search(tbl, u'.Խա.')
+    expect = ((u'name', u'id'),
+              (u'Արամ Խաչատրյան', 1))
+    ieq(expect, actual)
+    ieq(expect, actual)
 
 
 # TODO test sub()

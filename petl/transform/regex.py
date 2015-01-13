@@ -3,7 +3,7 @@ from __future__ import absolute_import, print_function, division
 
 import re
 import operator
-from petl.compat import next, string_types
+from petl.compat import next, string_types, text_type
 
 
 from petl.util.base import Table, asindices
@@ -318,16 +318,16 @@ def itersearch(table, pattern, field, flags, complement):
 
     if field is None:
         # search whole row
-        test = lambda r: any(prog.search(str(v)) for v in r)
+        test = lambda r: any(prog.search(text_type(v)) for v in r)
     elif isinstance(field, string_types):
         # search single field
         index = flds.index(field)
-        test = lambda r: prog.search(str(r[index]))
+        test = lambda r: prog.search(text_type(r[index]))
     else:  # list or tuple or ...
         # search selection of fields
         indices = asindices(hdr, field)
         getvals = operator.itemgetter(*indices)
-        test = lambda r: any(prog.search(str(v)) for v in getvals(r))
+        test = lambda r: any(prog.search(text_type(v)) for v in getvals(r))
 
     # complement==False, return rows that match
     if not complement:
