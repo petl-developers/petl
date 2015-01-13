@@ -75,12 +75,12 @@ class RenameView(Table):
 def iterrename(source, spec):
     it = iter(source)
     spec = spec.copy()  # make sure nobody can change this midstream
-    sourceflds = next(it)
-    newflds = [spec[f] if f in spec
-               else spec[i] if i in spec
-               else f
-               for i, f in enumerate(sourceflds)]
-    yield tuple(newflds)
+    hdr = next(it)
+    outhdr = [spec[f] if f in spec
+              else spec[i] if i in spec
+              else f
+              for i, f in enumerate(hdr)]
+    yield tuple(outhdr)
     for row in it:
         yield tuple(row)
 
@@ -126,7 +126,7 @@ class SetHeaderView(Table):
 
 def itersetheader(source, fields):
     it = iter(source)
-    next(it)  # discard source fields
+    next(it)  # discard source header
     yield tuple(fields)
     for row in it:
         yield tuple(row)
@@ -173,10 +173,10 @@ class ExtendHeaderView(Table):
 
 def iterextendheader(source, fields):
     it = iter(source)
-    srcflds = next(it)
-    outflds = list(srcflds)
-    outflds.extend(fields)
-    yield tuple(outflds)
+    hdr = next(it)
+    outhdr = list(hdr)
+    outhdr.extend(fields)
+    yield tuple(outhdr)
     for row in it:
         yield tuple(row)
 
@@ -297,9 +297,9 @@ class PrefixHeaderView(Table):
 
     def __iter__(self):
         it = iter(self.table)
-        fields = next(it)
-        outfields = tuple((str(self.prefix) + str(f)) for f in fields)
-        yield outfields
+        hdr = next(it)
+        outhdr = tuple((str(self.prefix) + str(f)) for f in hdr)
+        yield outhdr
         for row in it:
             yield row
 
@@ -321,8 +321,8 @@ class SuffixHeaderView(Table):
 
     def __iter__(self):
         it = iter(self.table)
-        fields = next(it)
-        outfields = tuple((str(f) + str(self.suffix)) for f in fields)
-        yield outfields
+        hdr = next(it)
+        outhdr = tuple((str(f) + str(self.suffix)) for f in hdr)
+        yield outhdr
         for row in it:
             yield row

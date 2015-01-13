@@ -244,9 +244,9 @@ def itervalues(table, field, **kwargs):
 
     missing = kwargs.get('missing', None)
     it = iter(table)
-    srcflds = next(it)
+    hdr = next(it)
 
-    indices = asindices(srcflds, field)
+    indices = asindices(hdr, field)
     assert len(indices) > 0, 'no field selected'
     getvalue = operator.itemgetter(*indices)
     for row in it:
@@ -315,7 +315,7 @@ def rowgetter(*indices):
     # value itself, so let's define a function
     if len(indices) == 1:
         index = indices[0]
-        return lambda row: (row[index],)  # note comma - singleton tuple!
+        return lambda row: (row[index],)  # note comma - singleton tuple
     # if more than one index, use itemgetter, it should be the most efficient
     else:
         return operator.itemgetter(*indices)
@@ -444,25 +444,24 @@ class DictsView(IterContainer):
 
 
 def iterdicts(table, *sliceargs, **kwargs):
-
     missing = kwargs.get('missing', None)
     it = iter(table)
-    flds = next(it)
+    hdr = next(it)
     if sliceargs:
         it = islice(it, *sliceargs)
     for row in it:
-        yield asdict(flds, row, missing)
+        yield asdict(hdr, row, missing)
 
 
-def asdict(flds, row, missing=None):
-    names = [str(f) for f in flds]
+def asdict(hdr, row, missing=None):
+    flds = [str(f) for f in hdr]
     try:
         # list comprehension should be faster
-        items = [(names[i], row[i]) for i in range(len(names))]
+        items = [(flds[i], row[i]) for i in range(len(flds))]
     except IndexError:
         # short row, fall back to slower for loop
         items = list()
-        for i, f in enumerate(names):
+        for i, f in enumerate(flds):
             try:
                 v = row[i]
             except IndexError:
@@ -516,11 +515,11 @@ class NamedTuplesView(IterContainer):
 
 
 def iternamedtuples(table, *sliceargs, **kwargs):
-
     missing = kwargs.get('missing', None)
     name = kwargs.get('name', 'row')
     it = iter(table)
-    flds = next(it)
+    hdr = next(it)
+    flds = list(map(str, hdr))
     nt = namedtuple(name, tuple(flds))
     if sliceargs:
         it = islice(it, *sliceargs)
@@ -635,7 +634,8 @@ class RecordsView(IterContainer):
 def iterrecords(table, *sliceargs, **kwargs):
     missing = kwargs.get('missing', None)
     it = iter(table)
-    flds = next(it)
+    hdr = next(it)
+    flds = list(map(str, hdr))
     if sliceargs:
         it = islice(it, *sliceargs)
     for row in it:
@@ -690,16 +690,17 @@ def rowgroupby(table, key, value=None):
     """
 
     it = iter(table)
-    fields = next(it)
+    hdr = next(it)
+    flds = list(map(str, hdr))
     # wrap rows as records
-    it = (Record(row, fields) for row in it)
+    it = (Record(row, flds) for row in it)
 
     # determine key function
     if callable(key):
         getkey = key
         native_key = True
     else:
-        kindices = asindices(fields, key)
+        kindices = asindices(hdr, key)
         getkey = comparable_itemgetter(*kindices)
         native_key = False
 
@@ -713,7 +714,7 @@ def rowgroupby(table, key, value=None):
         if callable(value):
             getval = value
         else:
-            vindices = asindices(fields, value)
+            vindices = asindices(hdr, value)
             getval = operator.itemgetter(*vindices)
         if native_key:
             return ((k, (getval(v) for v in vals))

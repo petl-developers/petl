@@ -63,7 +63,8 @@ class UnpackView(Table):
 def iterunpack(source, field, newfields, include_original, missing):
     it = iter(source)
 
-    flds = next(it)
+    hdr = next(it)
+    flds = list(map(str, hdr))
     if field in flds:
         field_index = flds.index(field)
     elif isinstance(field, int) and field < len(flds):
@@ -73,22 +74,22 @@ def iterunpack(source, field, newfields, include_original, missing):
         raise Exception('field invalid: must be either field name or index')
 
     # determine output fields
-    out_flds = list(flds)
+    outhdr = list(flds)
     if not include_original:
-        out_flds.remove(field)
+        outhdr.remove(field)
     if isinstance(newfields, (list, tuple)):
-        out_flds.extend(newfields)
+        outhdr.extend(newfields)
         nunpack = len(newfields)
     elif isinstance(newfields, int):
         nunpack = newfields
         newfields = [str(field) + str(i+1) for i in range(newfields)]
-        out_flds.extend(newfields)
+        outhdr.extend(newfields)
     elif newfields is None:
         nunpack = 0
     else:
         raise Exception('newfields argument must be list or tuple of field '
                         'names, or int (number of values to unpack)')
-    yield tuple(out_flds)
+    yield tuple(outhdr)
 
     # construct the output data
     for row in it:
@@ -162,11 +163,12 @@ def iterunpackdict(table, field, keys, includeoriginal, samplesize, missing):
 
     # set up
     it = iter(table)
-    fields = next(it)
-    fidx = fields.index(field)
-    outfields = list(fields)
+    hdr = next(it)
+    flds = list(map(str, hdr))
+    fidx = flds.index(field)
+    outhdr = list(flds)
     if not includeoriginal:
-        del outfields[fidx]
+        del outhdr[fidx]
 
     # are keys specified?
     if not keys:
@@ -180,8 +182,8 @@ def iterunpackdict(table, field, keys, includeoriginal, samplesize, missing):
                 pass
         it = itertools.chain(sample, it)
         keys = sorted(keys)
-    outfields.extend(keys)
-    yield tuple(outfields)
+    outhdr.extend(keys)
+    yield tuple(outhdr)
 
     # generate the data rows
     for row in it:
@@ -191,6 +193,6 @@ def iterunpackdict(table, field, keys, includeoriginal, samplesize, missing):
         for key in keys:
             try:
                 outrow.append(row[fidx][key])
-            except:
+            except (IndexError, KeyError, TypeError):
                 outrow.append(missing)
         yield tuple(outrow)

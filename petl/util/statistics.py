@@ -4,7 +4,7 @@ from __future__ import absolute_import, print_function, division
 from petl.compat import OrderedDict
 
 
-from petl.util.base import itervalues, Table
+from petl.util.base import values, Table
 
 
 def limits(table, field):
@@ -23,7 +23,7 @@ def limits(table, field):
 
     """
 
-    vals = itervalues(table, field)
+    vals = iter(values(table, field))
     try:
         minv = maxv = next(vals)
     except StopIteration:
@@ -64,7 +64,7 @@ def stats(table, field):
                    ('mean', None),
                    ('count', 0),
                    ('errors', 0)])
-    for v in itervalues(table, field):
+    for v in values(table, field):
         try:
             v = float(v)
         except (ValueError, TypeError):

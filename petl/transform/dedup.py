@@ -188,14 +188,14 @@ def iterunique(source, key):
     # first need to sort the data
     it = iter(source)
 
-    flds = next(it)
-    yield tuple(flds)
+    hdr = next(it)
+    yield tuple(hdr)
 
     # convert field selection into field indices
     if key is None:
-        indices = range(len(flds))
+        indices = range(len(hdr))
     else:
-        indices = asindices(flds, key)
+        indices = asindices(hdr, key)
         
     # now use field indices to construct a _getkey function
     # N.B., this may raise an exception on short rows, depending on
@@ -306,11 +306,12 @@ def iterconflicts(source, key, missing, exclude, include):
         include = None
         
     it = iter(source)
-    flds = next(it)
-    yield tuple(flds)
+    hdr = next(it)
+    flds = list(map(str, hdr))
+    yield tuple(hdr)
 
     # convert field selection into field indices
-    indices = asindices(flds, key)
+    indices = asindices(hdr, key)
                     
     # now use field indices to construct a _getkey function
     # N.B., this may raise an exception on short rows, depending on
@@ -384,13 +385,13 @@ class DistinctView(Table):
 
     def __iter__(self):
         it = iter(self.table)
-        flds = next(it)
+        hdr = next(it)
 
         # convert field selection into field indices
         if self.key is None:
-            indices = range(len(flds))
+            indices = range(len(hdr))
         else:
-            indices = asindices(flds, self.key)
+            indices = asindices(hdr, self.key)
 
         # now use field indices to construct a _getkey function
         # N.B., this may raise an exception on short rows, depending on
@@ -398,8 +399,8 @@ class DistinctView(Table):
         getkey = operator.itemgetter(*indices)
 
         if self.count:
-            flds = tuple(flds) + (self.count,)
-            yield flds
+            hdr = tuple(hdr) + (self.count,)
+            yield hdr
             previous = None
             n_dup = 1
             for row in it:
@@ -417,7 +418,7 @@ class DistinctView(Table):
             # deal with last row
             yield tuple(previous) + (n_dup,)
         else:
-            yield flds
+            yield tuple(hdr)
             previous_keys = None
             for row in it:
                 keys = getkey(row)

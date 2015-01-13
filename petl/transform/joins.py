@@ -16,8 +16,10 @@ from petl.transform.dedup import distinct
 
 def natural_key(left, right):
     # determine key field or fields
-    lflds = header(left)
-    rflds = header(right)
+    lhdr = header(left)
+    lflds = list(map(str, lhdr))
+    rhdr = header(right)
+    rflds = list(map(str, rhdr))
     key = [f for f in lflds if f in rflds]
     assert len(key) > 0, 'no fields in common'
     if len(key) == 1:
@@ -134,6 +136,7 @@ def join(left, right, key=None, lkey=None, rkey=None, presorted=False,
 
     """
 
+    # TODO don't read data twice (occurs if using natural key)
     lkey, rkey = keys_from_args(left, right, key, lkey, rkey)
     return JoinView(left, right, lkey=lkey, rkey=rkey,
                     presorted=presorted, buffersize=buffersize, tempdir=tempdir,
@@ -210,6 +213,7 @@ def leftjoin(left, right, key=None, lkey=None, rkey=None, missing=None,
 
     """
 
+    # TODO don't read data twice (occurs if using natural key)
     lkey, rkey = keys_from_args(left, right, key, lkey, rkey)
     return JoinView(left, right, lkey=lkey, rkey=rkey,
                     presorted=presorted, leftouter=True, rightouter=False,
@@ -258,6 +262,7 @@ def rightjoin(left, right, key=None, lkey=None, rkey=None, missing=None,
 
     """
 
+    # TODO don't read data twice (occurs if using natural key)
     lkey, rkey = keys_from_args(left, right, key, lkey, rkey)
     return JoinView(left, right, lkey=lkey, rkey=rkey,
                     presorted=presorted, leftouter=False, rightouter=True,
@@ -309,6 +314,7 @@ def outerjoin(left, right, key=None, lkey=None, rkey=None, missing=None,
 
     """
 
+    # TODO don't read data twice (occurs if using natural key)
     lkey, rkey = keys_from_args(left, right, key, lkey, rkey)
     return JoinView(left, right, lkey=lkey, rkey=rkey,
                     presorted=presorted, leftouter=True, rightouter=True,
@@ -324,12 +330,12 @@ def iterjoin(left, right, lkey, rkey, leftouter=False, rightouter=False,
     lit = iter(left)
     rit = iter(right)
 
-    lflds = next(lit)
-    rflds = next(rit)
+    lhdr = next(lit)
+    rhdr = next(rit)
 
     # determine indices of the key fields in left and right tables
-    lkind = asindices(lflds, lkey)
-    rkind = asindices(rflds, rkey)
+    lkind = asindices(lhdr, lkey)
+    rkind = asindices(rhdr, rkey)
 
     # construct functions to extract key values from both tables
     lgetk = comparable_itemgetter(*lkind)
@@ -338,20 +344,19 @@ def iterjoin(left, right, lkey, rkey, leftouter=False, rightouter=False,
     # determine indices of non-key fields in the right table
     # (in the output, we only include key fields from the left table - we
     # don't want to duplicate fields)
-    rvind = [i for i in range(len(rflds)) if i not in rkind]
+    rvind = [i for i in range(len(rhdr)) if i not in rkind]
     rgetv = rowgetter(*rvind)
 
     # determine the output fields
     if lprefix is None:
-        outflds = list(lflds)
+        outhdr = list(lhdr)
     else:
-        outflds = [(str(lprefix) + str(f))
-                   for f in lflds]
+        outhdr = [(str(lprefix) + str(f)) for f in lhdr]
     if rprefix is None:
-        outflds.extend(rgetv(rflds))
+        outhdr.extend(rgetv(rhdr))
     else:
-        outflds.extend([(str(rprefix) + str(f)) for f in rgetv(rflds)])
-    yield tuple(outflds)
+        outhdr.extend([(str(rprefix) + str(f)) for f in rgetv(rhdr)])
+    yield tuple(outhdr)
 
     # define a function to join two groups of rows
     def joinrows(_lrowgrp, _rrowgrp):
@@ -364,7 +369,7 @@ def iterjoin(left, right, lkey, rkey, leftouter=False, rightouter=False,
         elif _lrowgrp is None:
             for rrow in _rrowgrp:
                 # start with missing values in place of the left row
-                outrow = [missing] * len(lflds)
+                outrow = [missing] * len(lhdr)
                 # set key values
                 for li, ri in zip(lkind, rkind):
                     outrow[li] = rrow[ri]
@@ -491,14 +496,14 @@ class CrossJoinView(Table):
 def itercrossjoin(sources, prefix):
 
     # construct fields
-    outflds = list()
+    outhdr = list()
     for i, s in enumerate(sources):
         if prefix:
             # use one-based numbering
-            outflds.extend([str(i+1) + '_' + str(f) for f in header(s)])
+            outhdr.extend([str(i+1) + '_' + str(f) for f in header(s)])
         else:
-            outflds.extend(header(s))
-    yield tuple(outflds)
+            outhdr.extend(header(s))
+    yield tuple(outhdr)
 
     datasrcs = [data(src) for src in sources]
     for prod in itertools.product(*datasrcs):
@@ -581,13 +586,13 @@ def iterantijoin(left, right, lkey, rkey):
     lit = iter(left)
     rit = iter(right)
 
-    lflds = next(lit)
-    rflds = next(rit)
-    yield tuple(lflds)
+    lhdr = next(lit)
+    rhdr = next(rit)
+    yield tuple(lhdr)
 
     # determine indices of the key fields in left and right tables
-    lkind = asindices(lflds, lkey)
-    rkind = asindices(rflds, rkey)
+    lkind = asindices(lhdr, lkey)
+    rkind = asindices(rhdr, rkey)
 
     # construct functions to extract key values from both tables
     lgetk = comparable_itemgetter(*lkind)
@@ -709,12 +714,12 @@ def iterlookupjoin(left, right, lkey, rkey, missing=None, lprefix=None,
     lit = iter(left)
     rit = iter(right)
 
-    lflds = next(lit)
-    rflds = next(rit)
+    lhdr = next(lit)
+    rhdr = next(rit)
 
     # determine indices of the key fields in left and right tables
-    lkind = asindices(lflds, lkey)
-    rkind = asindices(rflds, rkey)
+    lkind = asindices(lhdr, lkey)
+    rkind = asindices(rhdr, rkey)
 
     # construct functions to extract key values from both tables
     lgetk = operator.itemgetter(*lkind)
@@ -723,20 +728,19 @@ def iterlookupjoin(left, right, lkey, rkey, missing=None, lprefix=None,
     # determine indices of non-key fields in the right table
     # (in the output, we only include key fields from the left table - we
     # don't want to duplicate fields)
-    rvind = [i for i in range(len(rflds)) if i not in rkind]
+    rvind = [i for i in range(len(rhdr)) if i not in rkind]
     rgetv = rowgetter(*rvind)
 
     # determine the output fields
     if lprefix is None:
-        outflds = list(lflds)
+        outhdr = list(lhdr)
     else:
-        outflds = [(str(lprefix) + str(f))
-                   for f in lflds]
+        outhdr = [(str(lprefix) + str(f)) for f in lhdr]
     if rprefix is None:
-        outflds.extend(rgetv(rflds))
+        outhdr.extend(rgetv(rhdr))
     else:
-        outflds.extend([(str(rprefix) + str(f)) for f in rgetv(rflds)])
-    yield tuple(outflds)
+        outhdr.extend([(str(rprefix) + str(f)) for f in rgetv(rhdr)])
+    yield tuple(outhdr)
 
     # define a function to join two groups of rows
     def joinrows(_lrowgrp, _rrowgrp):
@@ -894,13 +898,13 @@ class ConvertToIncrementingCounterView(Table):
 
     def __iter__(self):
         it = iter(self.table)
-        fields = next(it)
-        table = itertools.chain([fields], it)
+        hdr = next(it)
+        table = itertools.chain([hdr], it)
         value = self.value
-        vidx = fields.index(value)
-        outflds = list(fields)
-        outflds[vidx] = '%s_id' % value
-        yield tuple(outflds)
+        vidx = hdr.index(value)
+        outhdr = list(hdr)
+        outhdr[vidx] = '%s_id' % value
+        yield tuple(outhdr)
         offset, multiplier = self.autoincrement
         for n, (_, group) in enumerate(rowgroupby(table, value)):
             for row in group:

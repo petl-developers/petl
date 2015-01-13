@@ -102,9 +102,11 @@ class Look(object):
         vrepr = self.vrepr
         index_header = self.index_header
         if style == 'simple':
-            output = _look_simple(table, vrepr=vrepr, index_header=index_header)
+            output = _look_simple(table, vrepr=vrepr,
+                                  index_header=index_header)
         elif style == 'minimal':
-            output = _look_minimal(table, vrepr=vrepr, index_header=index_header)
+            output = _look_minimal(table, vrepr=vrepr,
+                                   index_header=index_header)
         else:
             output = _look_grid(table, vrepr=vrepr, index_header=index_header)
 
@@ -181,23 +183,25 @@ def _look_grid(table, vrepr, index_header):
     it = iter(table)
 
     # fields representation
-    flds = next(it)
-    fldsrepr = [str(f) for f in flds]
+    hdr = next(it)
+    flds = list(map(str, hdr))
     if index_header:
-        fldsrepr = ['%s|%s' % (i, r) for (i, r) in enumerate(fldsrepr)]
+        fldsrepr = ['%s|%s' % (i, r) for (i, r) in enumerate(flds)]
+    else:
+        fldsrepr = flds
 
     # rows representations
     rows = list(it)
     rowsrepr = [[vrepr(v) for v in row] for row in rows]
 
     # find maximum row length - may be uneven
-    rowlens = [len(flds)]
+    rowlens = [len(hdr)]
     rowlens.extend([len(row) for row in rows])
     maxrowlen = max(rowlens)
 
     # pad short fields and rows
-    if len(flds) < maxrowlen:
-        fldsrepr.extend([''] * (maxrowlen - len(flds)))
+    if len(hdr) < maxrowlen:
+        fldsrepr.extend([''] * (maxrowlen - len(hdr)))
     for valsrepr in rowsrepr:
         if len(valsrepr) < maxrowlen:
             valsrepr.extend([''] * (maxrowlen - len(valsrepr)))
@@ -265,23 +269,25 @@ def _look_simple(table, vrepr, index_header):
     it = iter(table)
 
     # fields representation
-    flds = next(it)
-    fldsrepr = [str(f) for f in flds]
+    hdr = next(it)
+    flds = list(map(str, hdr))
     if index_header:
-        fldsrepr = ['%s|%s' % (i, r) for (i, r) in enumerate(fldsrepr)]
+        fldsrepr = ['%s|%s' % (i, r) for (i, r) in enumerate(flds)]
+    else:
+        fldsrepr = flds
 
     # rows representations
     rows = list(it)
     rowsrepr = [[vrepr(v) for v in row] for row in rows]
 
     # find maximum row length - may be uneven
-    rowlens = [len(flds)]
+    rowlens = [len(hdr)]
     rowlens.extend([len(row) for row in rows])
     maxrowlen = max(rowlens)
 
     # pad short fields and rows
-    if len(flds) < maxrowlen:
-        fldsrepr.extend([''] * (maxrowlen - len(flds)))
+    if len(hdr) < maxrowlen:
+        fldsrepr.extend([''] * (maxrowlen - len(hdr)))
     for valsrepr in rowsrepr:
         if len(valsrepr) < maxrowlen:
             valsrepr.extend([''] * (maxrowlen - len(valsrepr)))
@@ -334,23 +340,25 @@ def _look_minimal(table, vrepr, index_header):
     it = iter(table)
 
     # fields representation
-    flds = next(it)
-    fldsrepr = [str(f) for f in flds]
+    hdr = next(it)
+    flds = list(map(str, hdr))
     if index_header:
-        fldsrepr = ['%s|%s' % (i, r) for (i, r) in enumerate(fldsrepr)]
+        fldsrepr = ['%s|%s' % (i, r) for (i, r) in enumerate(flds)]
+    else:
+        fldsrepr = flds
 
     # rows representations
     rows = list(it)
     rowsrepr = [[vrepr(v) for v in row] for row in rows]
 
     # find maximum row length - may be uneven
-    rowlens = [len(flds)]
+    rowlens = [len(hdr)]
     rowlens.extend([len(row) for row in rows])
     maxrowlen = max(rowlens)
 
     # pad short fields and rows
-    if len(flds) < maxrowlen:
-        fldsrepr.extend([''] * (maxrowlen - len(flds)))
+    if len(hdr) < maxrowlen:
+        fldsrepr.extend([''] * (maxrowlen - len(hdr)))
     for valsrepr in rowsrepr:
         if len(valsrepr) < maxrowlen:
             valsrepr.extend([''] * (maxrowlen - len(valsrepr)))

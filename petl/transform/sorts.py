@@ -209,7 +209,7 @@ class SortView(Table):
             self.buffersize = buffersize
         self.tempdir = tempdir
         self.cache = cache
-        self._fldcache = None
+        self._hdrcache = None
         self._memcache = None
         self._filecache = None
         self._getkey = None
@@ -218,7 +218,7 @@ class SortView(Table):
         self._clearcache()
 
     def _clearcache(self):
-        self._fldcache = None
+        self._hdrcache = None
         self._memcache = None
         self._filecache = None
         self._getkey = None
@@ -236,13 +236,13 @@ class SortView(Table):
 
     def _iterfrommemcache(self):
         debug('iterate from mem cache')
-        yield tuple(self._fldcache)
+        yield tuple(self._hdrcache)
         for row in self._memcache:
             yield tuple(row)
 
     def _iterfromfilecache(self):
         debug('iterate from file cache: %r', [f for f in self._filecache])
-        yield tuple(self._fldcache)
+        yield tuple(self._hdrcache)
         chunkiters = [iterchunk(f) for f in self._filecache]
         for row in _mergesorted(self._getkey, self.reverse, *chunkiters):
             yield tuple(row)
@@ -252,14 +252,14 @@ class SortView(Table):
         self._clearcache()
         it = iter(source)
 
-        flds = next(it)
-        yield tuple(flds)
+        hdr = next(it)
+        yield tuple(hdr)
 
         if key is not None:
             # convert field selection into field indices
-            indices = asindices(flds, key)
+            indices = asindices(hdr, key)
         else:
-            indices = range(len(flds))
+            indices = range(len(hdr))
         # now use field indices to construct a _getkey function
         # N.B., this will probably raise an exception on short rows
         getkey = comparable_itemgetter(*indices)
@@ -268,10 +268,6 @@ class SortView(Table):
 
         # initialise the first chunk
         rows = list(itertools.islice(it, 0, self.buffersize))
-        # print(repr(getkey))
-        # print(rows)
-        # for row in rows:
-        # print(row, getkey(row))
         rows.sort(key=getkey, reverse=reverse)
 
         # have we exhausted the source iterator?
@@ -279,7 +275,7 @@ class SortView(Table):
 
             if self.cache:
                 debug('caching mem')
-                self._fldcache = flds
+                self._hdrcache = hdr
                 self._memcache = rows
                 # actually not needed to iterate from memcache
                 self._getkey = getkey
@@ -313,7 +309,7 @@ class SortView(Table):
 
             if self.cache:
                 debug('caching files %r', chunkfiles)
-                self._fldcache = flds
+                self._hdrcache = hdr
                 self._filecache = chunkfiles
                 self._getkey = getkey
 
@@ -422,22 +418,23 @@ def itermergesort(sources, key, header, missing, reverse):
     # borrow this from itercat - TODO remove code smells
 
     its = [iter(t) for t in sources]
-    source_flds_lists = [next(it) for it in its]
+    src_hdrs = [next(it) for it in its]
 
     if header is None:
         # determine output fields by gathering all fields found in the sources
-        outflds = list()
-        for flds in source_flds_lists:
-            for f in flds:
-                if f not in outflds:
+        outhdr = list()
+        for hdr in src_hdrs:
+            for f in list(map(str, hdr)):
+                if f not in outhdr:
                     # add any new fields as we find them
-                    outflds.append(f)
+                    outhdr.append(f)
     else:
         # predetermined output fields
-        outflds = header
-    yield tuple(outflds)
+        outhdr = header
+    yield tuple(outhdr)
 
-    def _standardisedata(it, flds, ofs):
+    def _standardisedata(it, hdr, ofs):
+        flds = list(map(str, hdr))
         # now construct and yield the data rows
         for _row in it:
             try:
@@ -455,14 +452,14 @@ def itermergesort(sources, key, header, missing, reverse):
                 yield tuple(outrow)
 
     # wrap all iterators to standardise fields
-    sits = [_standardisedata(it, flds, outflds)
-            for flds, it in zip(source_flds_lists, its)]
+    sits = [_standardisedata(it, hdr, outhdr)
+            for hdr, it in zip(src_hdrs, its)]
 
     # now determine key function
     getkey = None
     if key is not None:
         # convert field selection into field indices
-        indices = asindices(outflds, key)
+        indices = asindices(outhdr, key)
         # now use field indices to construct a _getkey function
         # N.B., this will probably raise an exception on short rows
         getkey = comparable_itemgetter(*indices)
@@ -503,7 +500,7 @@ def issorted(table, key=None, reverse=False, strict=False):
         op = operator.ge
 
     it = iter(table)
-    fnms = [str(f) for f in next(it)]
+    flds = [str(f) for f in next(it)]
     if key is None:
         prev = next(it)
         for curr in it:
@@ -511,7 +508,7 @@ def issorted(table, key=None, reverse=False, strict=False):
                 return False
             prev = curr
     else:
-        getkey = comparable_itemgetter(*asindices(fnms, key))
+        getkey = comparable_itemgetter(*asindices(flds, key))
         prev = next(it)
         prevkey = getkey(prev)
         for curr in it:

@@ -82,15 +82,16 @@ class FieldMapView(Table):
 
 def iterfieldmap(source, mappings, failonerror, errorvalue):
     it = iter(source)
-    flds = next(it)
-    outflds = mappings.keys()
-    yield tuple(outflds)
+    hdr = next(it)
+    flds = list(map(str, hdr))
+    outhdr = mappings.keys()
+    yield tuple(outhdr)
 
     mapfuns = dict()
     for outfld, m in mappings.items():
-        if m in flds:
+        if m in hdr:
             mapfuns[outfld] = operator.itemgetter(m)
-        elif isinstance(m, int) and m < len(flds):
+        elif isinstance(m, int) and m < len(hdr):
             mapfuns[outfld] = operator.itemgetter(m)
         elif isinstance(m, string_types):
             mapfuns[outfld] = expr(m)
@@ -112,7 +113,7 @@ def iterfieldmap(source, mappings, failonerror, errorvalue):
     it = (Record(row, flds) for row in it)
     for row in it:
         outrow = list()
-        for outfld in outflds:
+        for outfld in outhdr:
             try:
                 val = mapfuns[outfld](row)
             except Exception as e:
@@ -202,9 +203,10 @@ class RowMapView(Table):
 
 def iterrowmap(source, rowmapper, fields, failonerror):
     it = iter(source)
-    srcflds = next(it)
+    hdr = next(it)
+    flds = list(map(str, hdr))
     yield tuple(fields)
-    it = (Record(row, srcflds) for row in it)
+    it = (Record(row, flds) for row in it)
     for row in it:
         try:
             outrow = rowmapper(row)
@@ -289,9 +291,10 @@ class RowMapManyView(Table):
 
 def iterrowmapmany(source, rowgenerator, fields, failonerror):
     it = iter(source)
-    srcflds = next(it)
+    hdr = next(it)
+    flds = list(map(str, hdr))
     yield tuple(fields)
-    it = (Record(row, srcflds) for row in it)
+    it = (Record(row, flds) for row in it)
     for row in it:
         try:
             for outrow in rowgenerator(row):

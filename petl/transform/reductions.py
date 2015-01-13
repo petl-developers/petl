@@ -221,12 +221,12 @@ def itersimpleaggregate(table, key, aggregation, value):
 
     # determine output header
     if isinstance(key, (list, tuple)):
-        outfields = tuple(key) + ('value',)
+        outhdr = tuple(key) + ('value',)
     elif callable(key):
-        outfields = ('key', 'value')
+        outhdr = ('key', 'value')
     else:
-        outfields = (key, 'value')
-    yield outfields
+        outhdr = (key, 'value')
+    yield outhdr
 
     # generate data
     if isinstance(key, (list, tuple)):
@@ -268,9 +268,9 @@ class MultiAggregateView(Table):
 def itermultiaggregate(source, key, aggregation):
     aggregation = OrderedDict(aggregation.items())  # take a copy
     it = iter(source)
-    srcflds = next(it)
+    hdr = next(it)
     # push back header to ensure we iterate only once
-    it = itertools.chain([srcflds], it)  
+    it = itertools.chain([hdr], it)
 
     # normalise aggregators
     for outfld in aggregation:
@@ -290,14 +290,14 @@ def itermultiaggregate(source, key, aggregation):
 
     # determine output header
     if isinstance(key, (list, tuple)):
-        outflds = list(key)
+        outhdr = list(key)
     elif callable(key):
-        outflds = ['key']
+        outhdr = ['key']
     else:
-        outflds = [key]
+        outhdr = [key]
     for outfld in aggregation:
-        outflds.append(outfld)
-    yield tuple(outflds)
+        outhdr.append(outfld)
+    yield tuple(outhdr)
     
     # generate data
     for k, rows in rowgroupby(it, key):
@@ -313,13 +313,13 @@ def itermultiaggregate(source, key, aggregation):
                 aggval = aggfun(rows)
                 outrow.append(aggval)
             elif isinstance(srcfld, (list, tuple)):
-                idxs = [srcflds.index(f) for f in srcfld]
+                idxs = [hdr.index(f) for f in srcfld]
                 valgetter = operator.itemgetter(*idxs)
                 vals = (valgetter(row) for row in rows)
                 aggval = aggfun(vals)
                 outrow.append(aggval)
             else:
-                idx = srcflds.index(srcfld)
+                idx = hdr.index(srcfld)
                 # try using generator comprehension
                 vals = (row[idx] for row in rows)
                 aggval = aggfun(vals)
@@ -437,7 +437,8 @@ class MergeDuplicatesView(Table):
 
 def itermergeduplicates(table, key, missing):
     it = iter(table)
-    fields, it = iterpeek(it)
+    hdr, it = iterpeek(it)
+    flds = list(map(str, hdr))
 
     # determine output fields
     if isinstance(key, string_types):
@@ -446,8 +447,8 @@ def itermergeduplicates(table, key, missing):
     else:
         outflds = list(key)
         keyflds = set(key)
-    valflds = [f for f in fields if f not in keyflds]
-    valfldidxs = [fields.index(f) for f in valflds]
+    valflds = [f for f in flds if f not in keyflds]
+    valfldidxs = [flds.index(f) for f in valflds]
     outflds.extend(valflds)
     yield tuple(outflds)
 

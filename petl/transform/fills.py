@@ -104,11 +104,11 @@ class FillDownView(Table):
 
 def iterfilldown(table, fillfields, missing):
     it = iter(table)
-    fields = next(it)
-    yield tuple(fields)
+    hdr = next(it)
+    yield tuple(hdr)
     if not fillfields:  # fill down all fields
-        fillfields = fields
-    fillindices = asindices(fields, fillfields)
+        fillfields = hdr
+    fillindices = asindices(hdr, fillfields)
     fill = list(next(it))  # fill values
     yield tuple(fill)
     for row in it:
@@ -177,8 +177,8 @@ class FillRightView(Table):
 
 def iterfillright(table, missing):
     it = iter(table)
-    fields = next(it)
-    yield tuple(fields)
+    hdr = next(it)
+    yield tuple(hdr)
     for row in it:
         outrow = list(row)
         for i, _ in enumerate(outrow):
@@ -243,8 +243,8 @@ class FillLeftView(Table):
 
 def iterfillleft(table, missing):
     it = iter(table)
-    fields = next(it)
-    yield tuple(fields)
+    hdr = next(it)
+    yield tuple(hdr)
     for row in it:
         outrow = list(reversed(row))
         for i, _ in enumerate(outrow):

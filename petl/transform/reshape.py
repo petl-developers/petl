@@ -109,7 +109,8 @@ def itermelt(source, key, variables, variablefield, valuefield):
     it = iter(source)
 
     # normalise some stuff
-    flds = next(it)
+    hdr = next(it)
+    flds = list(map(str, hdr))
 
     if key and not isinstance(key, (list, tuple)):
         key = (key,)  # normalise to a tuple
@@ -125,10 +126,10 @@ def itermelt(source, key, variables, variablefield, valuefield):
         variables = [f for f in flds if f not in key]
 
     # determine the output fields
-    out_flds = list(key)
-    out_flds.append(variablefield)
-    out_flds.append(valuefield)
-    yield tuple(out_flds)
+    outhdr = list(key)
+    outhdr.append(variablefield)
+    outhdr.append(valuefield)
+    yield tuple(outhdr)
 
     key_indices = [flds.index(k) for k in key]
     getkey = rowgetter(*key_indices)
@@ -290,13 +291,11 @@ class RecastView(Table):
 def iterrecast(source, key, variablefield, valuefield,
                samplesize, reducers, missing):
 
-    # TODO implementing this by making two passes through the data is a bit
-    # ugly, and could be costly if there are several upstream transformations
-    # that would need to be re-executed each pass - better to make one pass,
-    # caching the rows sampled to discover variables to be recast as fields?
+    # TODO only make one pass through the data
 
     it = iter(source)
-    fields = next(it)
+    hdr = next(it)
+    flds = list(map(str, hdr))
 
     # normalise some stuff
     keyfields = key
@@ -316,29 +315,29 @@ def iterrecast(source, key, variablefield, valuefield,
     # infer key fields
     if not keyfields:
         # assume keyfields is fields not in variables
-        keyfields = [f for f in fields
+        keyfields = [f for f in flds
                      if f not in variablefields and f != valuefield]
 
     # infer key fields
     if not variablefields:
         # assume variables are fields not in keyfields
-        variablefields = [f for f in fields
+        variablefields = [f for f in flds
                           if f not in keyfields and f != valuefield]
 
     # sanity checks
-    assert valuefield in fields, 'invalid value field: %s' % valuefield
+    assert valuefield in flds, 'invalid value field: %s' % valuefield
     assert valuefield not in keyfields, 'value field cannot be keyfields'
     assert valuefield not in variablefields, \
         'value field cannot be variable field'
     for f in keyfields:
-        assert f in fields, 'invalid keyfields field: %s' % f
+        assert f in flds, 'invalid keyfields field: %s' % f
     for f in variablefields:
-        assert f in fields, 'invalid variable field: %s' % f
+        assert f in flds, 'invalid variable field: %s' % f
 
     # we'll need these later
-    valueindex = fields.index(valuefield)
-    keyindices = [fields.index(f) for f in keyfields]
-    variableindices = [fields.index(f) for f in variablefields]
+    valueindex = flds.index(valuefield)
+    keyindices = [flds.index(f) for f in keyfields]
+    variableindices = [flds.index(f) for f in variablefields]
 
     # determine the actual variable names to be cast as fields
     if isinstance(variablefields, dict):
@@ -357,10 +356,10 @@ def iterrecast(source, key, variablefield, valuefield,
     # finished the first pass
 
     # determine the output fields
-    outfields = list(keyfields)
+    outhdr = list(keyfields)
     for f in variablefields:
-        outfields.extend(variables[f])
-    yield tuple(outfields)
+        outhdr.extend(variables[f])
+    yield tuple(outhdr)
 
     # output data
 
@@ -438,9 +437,9 @@ class TransposeView(Table):
 
 
 def itertranspose(source):
-    fields = header(source)
-    its = [iter(source) for _ in fields]
-    for i in range(len(fields)):
+    hdr = header(source)
+    its = [iter(source) for _ in hdr]
+    for i in range(len(hdr)):
         yield tuple(row[i] for row in its[i])
 
 
@@ -526,19 +525,20 @@ class PivotView(Table):
 def iterpivot(source, f1, f2, f3, aggfun, missing):
 
     # first pass - collect fields
-    f2vals = set(itervalues(source, f2))  # TODO sampling
+    f2vals = set(itervalues(source, f2))  # TODO only make one pass
     f2vals = list(f2vals)
     f2vals.sort()
-    outflds = [f1]
-    outflds.extend(f2vals)
-    yield tuple(outflds)
+    outhdr = [f1]
+    outhdr.extend(f2vals)
+    yield tuple(outhdr)
 
     # second pass - generate output
     it = iter(source)
-    srcflds = next(it)
-    f1i = srcflds.index(f1)
-    f2i = srcflds.index(f2)
-    f3i = srcflds.index(f3)
+    hdr = next(it)
+    flds = list(map(str, hdr))
+    f1i = flds.index(f1)
+    f2i = flds.index(f2)
+    f3i = flds.index(f3)
     for v1, v1rows in itertools.groupby(it, key=operator.itemgetter(f1i)):
         outrow = [v1] + [missing] * len(f2vals)
         for v2, v12rows in itertools.groupby(v1rows,
@@ -658,8 +658,8 @@ class UnflattenView(Table):
         missing = self.missing
 
         # generate header row
-        fields = tuple('f%s' % i for i in range(period))
-        yield fields
+        outhdr = tuple('f%s' % i for i in range(period))
+        yield outhdr
 
         # generate data rows
         row = list()

@@ -61,12 +61,13 @@ def lookup(table, key, value=None, dictionary=None):
         dictionary = dict()
 
     it = iter(table)
-    flds = next(it)
+    hdr = next(it)
+    flds = list(map(str, hdr))
     if value is None:
         value = flds  # default value is complete row
-    keyindices = asindices(flds, key)
+    keyindices = asindices(hdr, key)
     assert len(keyindices) > 0, 'no key selected'
-    valueindices = asindices(flds, value)
+    valueindices = asindices(hdr, value)
     assert len(valueindices) > 0, 'no value selected'
     getkey = operator.itemgetter(*keyindices)
     getvalue = operator.itemgetter(*valueindices)
@@ -143,12 +144,13 @@ def lookupone(table, key, value=None, dictionary=None, strict=False):
         dictionary = dict()
 
     it = iter(table)
-    flds = next(it)
+    hdr = next(it)
+    flds = list(map(str, hdr))
     if value is None:
         value = flds
-    keyindices = asindices(flds, key)
+    keyindices = asindices(hdr, key)
     assert len(keyindices) > 0, 'no key selected'
-    valueindices = asindices(flds, value)
+    valueindices = asindices(hdr, value)
     assert len(valueindices) > 0, 'no value selected'
     getkey = operator.itemgetter(*keyindices)
     getvalue = operator.itemgetter(*valueindices)
@@ -211,8 +213,9 @@ def dictlookup(table, key, dictionary=None):
         dictionary = dict()
 
     it = iter(table)
-    flds = next(it)
-    keyindices = asindices(flds, key)
+    hdr = next(it)
+    flds = list(map(str, hdr))
+    keyindices = asindices(hdr, key)
     assert len(keyindices) > 0, 'no key selected'
     getkey = operator.itemgetter(*keyindices)
     for row in it:
@@ -288,8 +291,9 @@ def dictlookupone(table, key, dictionary=None, strict=False):
         dictionary = dict()
 
     it = iter(table)
-    flds = next(it)
-    keyindices = asindices(flds, key)
+    hdr = next(it)
+    flds = list(map(str, hdr))
+    keyindices = asindices(hdr, key)
     assert len(keyindices) > 0, 'no key selected'
     getkey = operator.itemgetter(*keyindices)
     for row in it:
@@ -315,8 +319,9 @@ def recordlookup(table, key, dictionary=None):
         dictionary = dict()
 
     it = iter(table)
-    flds = next(it)
-    keyindices = asindices(flds, key)
+    hdr = next(it)
+    flds = list(map(str, hdr))
+    keyindices = asindices(hdr, key)
     assert len(keyindices) > 0, 'no key selected'
     getkey = operator.itemgetter(*keyindices)
     for row in it:
@@ -346,8 +351,9 @@ def recordlookupone(table, key, dictionary=None, strict=False):
         dictionary = dict()
 
     it = iter(table)
-    flds = next(it)
-    keyindices = asindices(flds, key)
+    hdr = next(it)
+    flds = list(map(str, hdr))
+    keyindices = asindices(hdr, key)
     assert len(keyindices) > 0, 'no key selected'
     getkey = operator.itemgetter(*keyindices)
     for row in it:

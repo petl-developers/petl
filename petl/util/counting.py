@@ -4,7 +4,7 @@ from __future__ import absolute_import, print_function, division
 from petl.compat import Counter, string_types, maketrans
 
 
-from petl.util.base import itervalues, Table, iterdata, wrap
+from petl.util.base import values, Table, data, wrap
 
 
 def nrows(table):
@@ -18,7 +18,7 @@ def nrows(table):
 
     """
 
-    return sum(1 for _ in iterdata(table))
+    return sum(1 for _ in data(table))
 
 
 Table.nrows = nrows
@@ -42,10 +42,9 @@ def valuecount(table, field, value, missing=None):
 
     """
 
-    it = itervalues(table, field, missing=missing)
     total = 0
     vs = 0
-    for v in it:
+    for v in values(table, field, missing=missing):
         total += 1
         if v == value:
             vs += 1
@@ -76,7 +75,7 @@ def valuecounter(table, *field, **kwargs):
 
     missing = kwargs.get('missing', None)
     counter = Counter()
-    for v in itervalues(table, field, missing=missing):
+    for v in values(table, field, missing=missing):
         try:
             counter[v] += 1
         except IndexError:
@@ -194,7 +193,7 @@ def parsecounter(table, field, parsers=(('int', int), ('float', float))):
     for n in parsers.keys():
         counter[n] = 0
         errors[n] = 0
-    for v in itervalues(table, field):
+    for v in values(table, field):
         if isinstance(v, string_types):
             for name, parser in parsers.items():
                 try:
@@ -280,7 +279,7 @@ def typecounter(table, field):
     """
 
     counter = Counter()
-    for v in itervalues(table, field):
+    for v in values(table, field):
         try:
             counter[v.__class__.__name__] += 1
         except IndexError:
@@ -373,7 +372,7 @@ def stringpatterncounter(table, field):
         'AAAAAAAAAAAAAAAAAAAAAAAAAAaaaaaaaaaaaaaaaaaaaaaaaaaa9999999999'
     )
     counter = Counter()
-    for v in itervalues(table, field):
+    for v in values(table, field):
         p = str(v).translate(trans)
         counter[p] += 1
     return counter
@@ -458,9 +457,8 @@ def rowlengths(table):
 
     """
 
-    it = iterdata(table)
     counter = Counter()
-    for row in it:
+    for row in data(table):
         counter[len(row)] += 1
     output = [('length', 'count')]
     output.extend(counter.most_common())

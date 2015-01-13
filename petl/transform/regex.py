@@ -100,21 +100,22 @@ def itercapture(source, field, pattern, newfields, include_original, flags,
     it = iter(source)
     prog = re.compile(pattern, flags)
 
-    flds = next(it)
-    if field in flds:
-        field_index = flds.index(field)
-    elif isinstance(field, int) and field < len(flds):
+    hdr = next(it)
+    flds = list(map(str, hdr))
+    if isinstance(field, int) and field < len(hdr):
         field_index = field
+    elif field in flds:
+        field_index = flds.index(field)
     else:
         raise Exception('field invalid: must be either field name or index')
 
     # determine output fields
-    out_flds = list(flds)
+    outhdr = list(flds)
     if not include_original:
-        out_flds.remove(field)
+        outhdr.remove(field)
     if newfields:
-        out_flds.extend(newfields)
-    yield tuple(out_flds)
+        outhdr.extend(newfields)
+    yield tuple(outhdr)
 
     # construct the output data
     for row in it:
@@ -128,7 +129,8 @@ def itercapture(source, field, pattern, newfields, include_original, flags,
             if fill is not None:
                 out_row.extend(fill)
             else:
-                raise TransformError('value %r did not match pattern %r' % (value, pattern))
+                raise TransformError('value %r did not match pattern %r'
+                                     % (value, pattern))
         else:
             out_row.extend(match.groups())
         yield tuple(out_row)
@@ -195,22 +197,23 @@ def itersplit(source, field, pattern, newfields, include_original, maxsplit,
     it = iter(source)
     prog = re.compile(pattern, flags)
 
-    flds = next(it)
-    if field in flds:
-        field_index = flds.index(field)
-    elif isinstance(field, int) and field < len(flds):
+    hdr = next(it)
+    flds = list(map(str, hdr))
+    if isinstance(field, int) and field < len(hdr):
         field_index = field
-        field = flds[field_index]
+        field = hdr[field_index]
+    elif field in flds:
+        field_index = flds.index(field)
     else:
         raise Exception('field invalid: must be either field name or index')
 
     # determine output fields
-    out_flds = list(flds)
+    outhdr = list(flds)
     if not include_original:
-        out_flds.remove(field)
+        outhdr.remove(field)
     if newfields:
-        out_flds.extend(newfields)
-    yield tuple(out_flds)
+        outhdr.extend(newfields)
+    yield tuple(outhdr)
 
     # construct the output data
     for row in it:
@@ -309,19 +312,20 @@ class SearchView(Table):
 def itersearch(table, pattern, field, flags, complement):
     prog = re.compile(pattern, flags)
     it = iter(table)
-    fields = [str(f) for f in next(it)]
-    yield tuple(fields)
+    hdr = next(it)
+    flds = list(map(str, hdr))
+    yield tuple(hdr)
 
     if field is None:
         # search whole row
         test = lambda r: any(prog.search(str(v)) for v in r)
     elif isinstance(field, string_types):
         # search single field
-        index = fields.index(field)
+        index = flds.index(field)
         test = lambda r: prog.search(str(r[index]))
     else:  # list or tuple or ...
         # search selection of fields
-        indices = asindices(fields, field)
+        indices = asindices(hdr, field)
         getvals = operator.itemgetter(*indices)
         test = lambda r: any(prog.search(str(v)) for v in getvals(r))
 

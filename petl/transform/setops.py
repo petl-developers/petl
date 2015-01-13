@@ -181,6 +181,8 @@ def recordcomplement(a, b, buffersize=None, tempdir=None, cache=True):
 
     """
 
+    # TODO possible with only one pass?
+
     ha = header(a)
     hb = header(b)
     assert set(ha) == set(hb), 'both tables must have the same set of fields'
@@ -368,14 +370,14 @@ class IntersectionView(Table):
 def iterintersection(a, b):
     ita = iter(a)
     itb = iter(b)
-    aflds = next(ita)
-    next(itb)  # ignore b fields
-    yield tuple(aflds)
+    ahdr = next(ita)
+    next(itb)  # ignore b header
+    yield tuple(ahdr)
     try:
         a = tuple(next(ita))
         b = tuple(next(itb))
         while True:
-            if a < b:
+            if Comparable(a) < Comparable(b):
                 a = tuple(next(ita))
             elif a == b:
                 yield a
@@ -417,12 +419,12 @@ class HashComplementView(Table):
 
 def iterhashcomplement(a, b):
     ita = iter(a)
-    aflds = next(ita)
-    yield tuple(aflds)
+    ahdr = next(ita)
+    yield tuple(ahdr)
     itb = iter(b)
-    next(itb)  # discard b fields, assume they are the same
+    next(itb)  # discard b header, assume same as a
 
-    # n.b., need to account for possibility of duplicate rows
+    # N.B., need to account for possibility of duplicate rows
     bcnt = Counter(tuple(row) for row in itb)
     for ar in ita:
         t = tuple(ar)
@@ -462,12 +464,12 @@ class HashIntersectionView(Table):
 
 def iterhashintersection(a, b):
     ita = iter(a)
-    aflds = next(ita)
-    yield tuple(aflds)
+    ahdr = next(ita)
+    yield tuple(ahdr)
     itb = iter(b)
-    next(itb)  # discard b fields, assume they are the same
+    next(itb)  # discard b header, assume same as a
 
-    # n.b., need to account for possibility of duplicate rows
+    # N.B., need to account for possibility of duplicate rows
     bcnt = Counter(tuple(row) for row in itb)
     for ar in ita:
         t = tuple(ar)

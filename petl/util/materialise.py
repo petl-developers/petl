@@ -59,11 +59,11 @@ def columns(table, missing=None):
 
     cols = dict()
     it = iter(table)
-    fields = [str(f) for f in next(it)]
-    for f in fields:
+    flds = [str(f) for f in next(it)]
+    for f in flds:
         cols[f] = list()
     for row in it:
-        for f, v in izip_longest(fields, row, fillvalue=missing):
+        for f, v in izip_longest(flds, row, fillvalue=missing):
             if f in cols:
                 cols[f].append(v)
     return cols
@@ -92,8 +92,9 @@ def facetcolumns(table, key, missing=None):
 
     fct = dict()
     it = iter(table)
-    fields = [str(f) for f in next(it)]
-    indices = asindices(fields, key)
+    hdr = next(it)
+    flds = list(map(str, hdr))
+    indices = asindices(hdr, key)
     assert len(indices) > 0, 'no key field selected'
     getkey = operator.itemgetter(*indices)
 
@@ -101,12 +102,12 @@ def facetcolumns(table, key, missing=None):
         kv = getkey(row)
         if kv not in fct:
             cols = dict()
-            for f in fields:
+            for f in flds:
                 cols[f] = list()
             fct[kv] = cols
         else:
             cols = fct[kv]
-        for f, v in izip_longest(fields, row, fillvalue=missing):
+        for f, v in izip_longest(flds, row, fillvalue=missing):
             if f in cols:
                 cols[f].append(v)
 
