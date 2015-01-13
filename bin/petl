@@ -1,19 +1,20 @@
 #!/usr/bin/env python
 
+from __future__ import print_function, division, absolute_import
 import sys
 import os
 import os.path
 import glob
 from optparse import OptionParser
 
-from petl import VERSION
-from petl.fluent import *
+from petl import __version__
+from petl import *
 
 parser = OptionParser(
     usage="%prog [options] expression",
     description="Evaluate a Python expression.  The expression will be "
-                "evaluated using eval(), with petl.fluent functions imported.",
-    version=VERSION)
+                "evaluated using eval(), with petl functions imported.",
+    version=__version__)
 
 options, args = parser.parse_args()
 
@@ -24,7 +25,7 @@ except ValueError:
 r = eval(expression)
 
 if r is not None:
-    if isinstance(r, FluentWrapper):
-        print look(r)
+    if isinstance(r, Table):
+        print(look(r))
     else:
-        print str(r)
+        print(str(r))
