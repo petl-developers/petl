@@ -18,9 +18,9 @@ DONE add subsection to changes in 1.0 about config
 
 DONE make sure use field names rather than naked header
 
-TODO integrate dbtests with other tests
+DONE integrate dbtests with other tests
 
-TODO add documentation about contributing
+DONE add documentation about contributing
 
 TODO other open issues
 
