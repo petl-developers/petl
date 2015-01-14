@@ -26,11 +26,13 @@ To verify the installation, the test suite can be run with `nose
 Dependencies and extensions
 ---------------------------
 
-This package is written in pure Python and has no dependencies other
-than the Python core modules. However, there are many third party
-packages which could usefuly be used with :mod:`petl`, e.g., providing
-access to data from Excel or other file types. Some extensions with
-these additional dependencies are provided by the `petlx
+This package is written in pure Python and has no installation requirements
+other than the Python core modules.
+
+Some of the functions in this package require installation of third party
+packages. This is indicated in the relevant parts of the documentation.
+
+Some extensions to :mod:`petl` are provided by the `petlx
 <http://petlx.readthedocs.org>`_ package, a companion package to
 :mod:`petl`.
 

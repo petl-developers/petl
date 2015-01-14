@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, print_function, division
+import sys
 import logging
 
 
@@ -120,99 +121,122 @@ def setup_postgresql(dbapi_connection):
     dbapi_connection.commit()
 
 
-def dbtest_mysql():
-    host, user, password, database = 'localhost', 'petl', 'test', 'petl'
+host, user, password, database = 'localhost', 'petl', 'test', 'petl'
 
+
+try:
     import pymysql
-    connect = pymysql.connect
+    import sqlalchemy
+    pymysql.connect(host=host,
+                    user=user,
+                    password=password,
+                    database=database)
+except Exception as e:
+    print('SKIP mysql tests: %s' % e, file=sys.stderr)
+else:
 
-    # assume database already created
-    dbapi_connection = connect(host=host,
-                               user=user,
-                               password=password,
-                               database=database)
+    def test_mysql():
 
-    # exercise using a dbapi_connection
-    setup_mysql(dbapi_connection)
-    _test_dbo(dbapi_connection)
+        import pymysql
+        connect = pymysql.connect
 
-    # exercise using a dbapi_cursor
-    setup_mysql(dbapi_connection)
-    dbapi_cursor = dbapi_connection.cursor()
-    _test_dbo(dbapi_cursor)
-    dbapi_cursor.close()
+        # assume database already created
+        dbapi_connection = connect(host=host,
+                                   user=user,
+                                   password=password,
+                                   database=database)
 
-    # exercise sqlalchemy dbapi_connection
-    setup_mysql(dbapi_connection)
-    from sqlalchemy import create_engine
-    sqlalchemy_engine = create_engine('mysql+pymysql://%s:%s@%s/%s' %
-                                      (user, password, host, database))
-    sqlalchemy_connection = sqlalchemy_engine.connect()
-    sqlalchemy_connection.execute('SET SQL_MODE=ANSI_QUOTES')
-    _test_dbo(sqlalchemy_connection)
-    sqlalchemy_connection.close()
+        # exercise using a dbapi_connection
+        setup_mysql(dbapi_connection)
+        _test_dbo(dbapi_connection)
 
-    # exercise sqlalchemy session
-    setup_mysql(dbapi_connection)
-    from sqlalchemy.orm import sessionmaker
-    Session = sessionmaker(bind=sqlalchemy_engine)
-    sqlalchemy_session = Session()
-    _test_dbo(sqlalchemy_session)
-    sqlalchemy_session.close()
+        # exercise using a dbapi_cursor
+        setup_mysql(dbapi_connection)
+        dbapi_cursor = dbapi_connection.cursor()
+        _test_dbo(dbapi_cursor)
+        dbapi_cursor.close()
 
-    # other exercises
-    _test_with_schema(dbapi_connection, database)
-    utf8_connection = connect(host=host, user=user,
-                              password=password,
-                              database=database,
-                              charset='utf8')
-    utf8_connection.cursor().execute('SET SQL_MODE=ANSI_QUOTES')
-    _test_unicode(utf8_connection)
+        # exercise sqlalchemy dbapi_connection
+        setup_mysql(dbapi_connection)
+        from sqlalchemy import create_engine
+        sqlalchemy_engine = create_engine('mysql+pymysql://%s:%s@%s/%s' %
+                                          (user, password, host, database))
+        sqlalchemy_connection = sqlalchemy_engine.connect()
+        sqlalchemy_connection.execute('SET SQL_MODE=ANSI_QUOTES')
+        _test_dbo(sqlalchemy_connection)
+        sqlalchemy_connection.close()
+
+        # exercise sqlalchemy session
+        setup_mysql(dbapi_connection)
+        from sqlalchemy.orm import sessionmaker
+        Session = sessionmaker(bind=sqlalchemy_engine)
+        sqlalchemy_session = Session()
+        _test_dbo(sqlalchemy_session)
+        sqlalchemy_session.close()
+
+        # other exercises
+        _test_with_schema(dbapi_connection, database)
+        utf8_connection = connect(host=host, user=user,
+                                  password=password,
+                                  database=database,
+                                  charset='utf8')
+        utf8_connection.cursor().execute('SET SQL_MODE=ANSI_QUOTES')
+        _test_unicode(utf8_connection)
 
 
-def dbtest_postgresql():
-    host, user, password, database = 'localhost', 'petl', 'test', 'petl'
-
+try:
     import psycopg2
-    import psycopg2.extensions
-    psycopg2.extensions.register_type(psycopg2.extensions.UNICODE)
-    psycopg2.extensions.register_type(psycopg2.extensions.UNICODEARRAY)
-
-    # assume database already created
-    dbapi_connection = psycopg2.connect(
+    import sqlalchemy
+    psycopg2.connect(
         'host=%s dbname=%s user=%s password=%s'
         % (host, database, user, password)
     )
+except Exception as e:
+    print('SKIP postgresql tests: %s' % e, file=sys.stderr)
+else:
 
-    # exercise using a dbapi_connection
-    setup_postgresql(dbapi_connection)
-    _test_dbo(dbapi_connection)
+    def test_postgresql():
 
-    # exercise using a dbapi_cursor
-    setup_postgresql(dbapi_connection)
-    dbapi_cursor = dbapi_connection.cursor()
-    _test_dbo(dbapi_cursor)
-    dbapi_cursor.close()
+        import psycopg2
+        import psycopg2.extensions
+        psycopg2.extensions.register_type(psycopg2.extensions.UNICODE)
+        psycopg2.extensions.register_type(psycopg2.extensions.UNICODEARRAY)
 
-    # exercise sqlalchemy dbapi_connection
-    setup_postgresql(dbapi_connection)
-    from sqlalchemy import create_engine
-    sqlalchemy_engine = create_engine('postgresql+psycopg2://%s:%s@%s/%s' %
-                                      (user, password, host, database))
-    sqlalchemy_connection = sqlalchemy_engine.connect()
-    _test_dbo(sqlalchemy_connection)
-    sqlalchemy_connection.close()
+        # assume database already created
+        dbapi_connection = psycopg2.connect(
+            'host=%s dbname=%s user=%s password=%s'
+            % (host, database, user, password)
+        )
 
-    # exercise sqlalchemy session
-    setup_postgresql(dbapi_connection)
-    from sqlalchemy.orm import sessionmaker
-    Session = sessionmaker(bind=sqlalchemy_engine)
-    sqlalchemy_session = Session()
-    _test_dbo(sqlalchemy_session)
-    sqlalchemy_session.close()
+        # exercise using a dbapi_connection
+        setup_postgresql(dbapi_connection)
+        _test_dbo(dbapi_connection)
 
-    # other exercises
-    _test_dbo(dbapi_connection,
-              lambda: dbapi_connection.cursor(name='arbitrary'))
-    _test_with_schema(dbapi_connection, 'public')
-    _test_unicode(dbapi_connection)
+        # exercise using a dbapi_cursor
+        setup_postgresql(dbapi_connection)
+        dbapi_cursor = dbapi_connection.cursor()
+        _test_dbo(dbapi_cursor)
+        dbapi_cursor.close()
+
+        # exercise sqlalchemy dbapi_connection
+        setup_postgresql(dbapi_connection)
+        from sqlalchemy import create_engine
+        sqlalchemy_engine = create_engine('postgresql+psycopg2://%s:%s@%s/%s' %
+                                          (user, password, host, database))
+        sqlalchemy_connection = sqlalchemy_engine.connect()
+        _test_dbo(sqlalchemy_connection)
+        sqlalchemy_connection.close()
+
+        # exercise sqlalchemy session
+        setup_postgresql(dbapi_connection)
+        from sqlalchemy.orm import sessionmaker
+        Session = sessionmaker(bind=sqlalchemy_engine)
+        sqlalchemy_session = Session()
+        _test_dbo(sqlalchemy_session)
+        sqlalchemy_session.close()
+
+        # other exercises
+        _test_dbo(dbapi_connection,
+                  lambda: dbapi_connection.cursor(name='arbitrary'))
+        _test_with_schema(dbapi_connection, 'public')
+        _test_unicode(dbapi_connection)

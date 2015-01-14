@@ -109,12 +109,30 @@ JSON files
 
 Databases
 ---------
+
 .. autofunction:: petl.io.sqlite3.fromsqlite3
 .. autofunction:: petl.io.sqlite3.tosqlite3
 .. autofunction:: petl.io.sqlite3.appendsqlite3
 .. autofunction:: petl.io.db.fromdb
 .. autofunction:: petl.io.db.todb
 .. autofunction:: petl.io.db.appenddb
+
+Arrays (numpy)
+--------------
+
+The following functions require `numpy <http://www.numpy.org/>`_ to be
+installed, e.g.::
+
+    $ pip install numpy
+
+.. autofunction:: petl.io.array.fromarray
+.. autofunction:: petl.io.array.toarray
+.. autofunction:: petl.io.array.torecarray
+
+In addition to the functions listed above, an ``array()`` method is available to
+load values from a single table column into a numpy array, e.g.::
+
+    TODO
 
 .. _io_helpers:
 

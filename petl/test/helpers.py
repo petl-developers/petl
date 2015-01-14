@@ -2,7 +2,7 @@ from __future__ import absolute_import, print_function, division
 
 
 from petl.compat import izip_longest
-from nose.tools import eq_
+from nose.tools import eq_, assert_almost_equal
 
 
 def ieq(expect, actual, cast=None):

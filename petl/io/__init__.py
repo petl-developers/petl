@@ -20,3 +20,5 @@ from petl.io.json import fromjson, tojson, tojsonarrays, fromdicts
 from petl.io.sqlite3 import fromsqlite3, tosqlite3, appendsqlite3
 
 from petl.io.db import fromdb, todb, appenddb
+
+from petl.io.array import fromarray, toarray, torecarray

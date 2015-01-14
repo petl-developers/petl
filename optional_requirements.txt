@@ -1,0 +1,8 @@
+openpyxl
+xlrd
+xlwt-future
+cython
+numpy
+pandas
+numexpr
+tables

@@ -1,0 +1,4 @@
+nose
+psycopg2
+pymysql
+sqlalchemy

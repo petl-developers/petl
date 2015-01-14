@@ -22,8 +22,21 @@ DONE integrate dbtests with other tests
 
 DONE add documentation about contributing
 
-TODO other open issues
-
-TODO add running stats
+DONE add running stats
 
 TODO review all issues
+
+TODO port petlx.array
+
+TODO port petlx.dataframe
+
+TODO port petlx.hdf5
+
+TODO port petlx.xls
+
+TODO port petlx.xlsx
+
+TODO port petlx.interval?
+
+TODO revise documentation about dependencies, add information about optional
+dependencies
