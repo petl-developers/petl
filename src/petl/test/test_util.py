@@ -12,7 +12,7 @@ from petl.util import header, fieldnames, data, records, rowcount, look, see, \
     valuecount, parsenumber, stringpatterns, diffheaders, diffvalues, \
     datetimeparser, values, columns, facetcolumns, isordered, \
     rowgroupby, lookstr, namedtuples, dicts, recordlookup, recordlookupone, \
-    nrows, progress
+    nrows, progress, ProgressView
 from petl.testutils import ieq
 
 
@@ -897,3 +897,54 @@ def test_progress():
              ('b', 2, True),
              ('b', 3))
     nrows(progress(table))
+
+
+def test_progress_onlinestats():
+    # testing consistent output of mean and variance
+    # explicity done here since processing times can vary
+    # by user
+
+    table = (('foo', 'bar', 'baz'),
+             ('a', 1, True),
+             ('b', 2, True),
+             ('b', 3))
+
+    # testing onlinestats with small dataset
+
+    dummydata_small = range(0,10,1)
+    progress = ProgressView(table, batchsize=10, prefix="", out=sys.stderr)
+    n, mean, variance = 0, 0, 0
+    for i in dummydata_small:
+        n += 1
+        mean, variance = progress._onlinestats(i,n,mean=mean,variance=variance)
+        if n == 5:
+
+            # check mean and variance on fifth cycle
+
+            eq_(2,mean)
+            eq_(2,variance)
+
+    # check final mean and variance of small dataset
+
+    eq_(4.5, mean)
+    eq_(8.25, variance)
+
+    # testing onlinestats with large dataset
+
+    dummydata_large = range(0,1000000,15)
+    n, mean, variance = 0, 0, 0
+    for j in dummydata_large:
+        n += 1
+        mean, variance, = progress._onlinestats(j,n,mean=mean,variance=variance)
+        if n == 5000:
+
+            # check mean and variance on 5000th cycle
+
+            eq_(37492.5, mean)
+            eq_(468749981.25, variance)
+
+    # check final mean and variance of large dataset
+
+    eq_(499995, mean)
+    eq_(83334166650, variance)
+

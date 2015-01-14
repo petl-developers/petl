@@ -2848,28 +2848,30 @@ def hybridrows(flds, it, missing=None):
     
 def progress(table, batchsize=1000, prefix="", out=sys.stderr):
     """
-    Report progress on rows passing through. E.g.::
+    Report progress on rows passing through.  E.g.::
     
         >>> from petl import dummytable, progress, tocsv
         >>> d = dummytable(100500)
         >>> p = progress(d, 10000)
         >>> tocsv(p, 'output.csv')
-        10000 rows in 0.57s (17574 rows/second); batch in 0.57s (17574 rows/second)
-        20000 rows in 1.13s (17723 rows/second); batch in 0.56s (17876 rows/second)
-        30000 rows in 1.69s (17732 rows/second); batch in 0.56s (17749 rows/second)
-        40000 rows in 2.27s (17652 rows/second); batch in 0.57s (17418 rows/second)
-        50000 rows in 2.83s (17679 rows/second); batch in 0.56s (17784 rows/second)
-        60000 rows in 3.39s (17694 rows/second); batch in 0.56s (17769 rows/second)
-        70000 rows in 3.96s (17671 rows/second); batch in 0.57s (17534 rows/second)
-        80000 rows in 4.53s (17677 rows/second); batch in 0.56s (17720 rows/second)
-        90000 rows in 5.09s (17681 rows/second); batch in 0.56s (17715 rows/second)
-        100000 rows in 5.66s (17675 rows/second); batch in 0.57s (17625 rows/second)
-        100500 rows in 5.69s (17674 rows/second)
+            10000 rows in 0.16s (63694 row/s); batch in 0.16s (63694 row/s)
+            20000 rows in 0.30s (66225 row/s); batch in 0.14s (68965 row/s)
+            30000 rows in 0.44s (67567 row/s); batch in 0.14s (70422 row/s)
+            40000 rows in 0.58s (68493 row/s); batch in 0.14s (71428 row/s)
+            50000 rows in 0.74s (67658 row/s); batch in 0.16s (64516 row/s)
+            60000 rows in 0.90s (66445 row/s); batch in 0.16s (60975 row/s)
+            70000 rows in 1.08s (65055 row/s); batch in 0.17s (57803 row/s)
+            80000 rows in 1.27s (62893 row/s); batch in 0.20s (51020 row/s)
+            90000 rows in 1.45s (61940 row/s); batch in 0.18s (55248 row/s)
+            100000 rows in 1.65s (60569 row/s); batch in 0.20s (50505 row/s)
+            100500 rows in 1.66s (60505 row/s); batch mean: 0.17s, sd: 0.02s (mean: 61458 row/s, sd: 7291 row/s)
     
     See also :func:`clock`.
-    
-    .. versionadded:: 0.10
-    
+
+    .. versionchanged:: 0.27
+
+        Now outputs batch mean and standard deviation of processing times and rates.
+
     """
     
     return ProgressView(table, batchsize, prefix, out)
@@ -2886,6 +2888,9 @@ class ProgressView(RowContainer):
     def __iter__(self):
         start = time.time()
         batchstart = start
+        ss = 0
+        batchtimemean, batchtimevariance, batchtimesd = 0, 0, 0
+        batchratemean, batchratevariance, batchratesd = 0, 0, 0
         for n, r in enumerate(self.wrapped):
             if n % self.batchsize == 0 and n > 0:
                 batchend = time.time()
@@ -2899,6 +2904,12 @@ class ProgressView(RowContainer):
                     batchrate = int(self.batchsize / batchtime)
                 except ZeroDivisionError:
                     batchrate = 0
+                ss += 1
+                batchtimemean, batchtimevariance = self._onlinestats(batchtime, ss, mean=batchtimemean, variance=batchtimevariance)
+                batchratemean, batchratevariance = self._onlinestats(batchrate, ss, mean=batchratemean, variance=batchratevariance)
+                # calculating the standard deviation by taking the sqrt of the variance
+                batchtimesd = batchtimevariance**0.5
+                batchratesd = batchratevariance**0.5
                 v = (n, elapsedtime, rate, batchtime, batchrate)
                 message = self.prefix + '%s rows in %.2fs (%s row/s); batch in %.2fs (%s row/s)' % v
                 print(message, file=self.out)
@@ -2912,12 +2923,21 @@ class ProgressView(RowContainer):
             rate = int(n / elapsedtime)
         except ZeroDivisionError:
             rate = 0
-        v = (n, elapsedtime, rate)
-        message = self.prefix + '%s rows in %.2fs (%s row/s)' % v
+        v = (n, elapsedtime, rate, batchtimemean, batchtimesd, batchratemean, batchratesd)
+        message = self.prefix + '%s rows in %.2fs (%s row/s); batch mean: %.2fs, sd: %.2fs (mean: %.f row/s, sd: %.f row/s)' % v
         print(message, file=self.out)
         if hasattr(self.out, 'flush'):
             self.out.flush()
 
+
+    def _onlinestats(self, xi, n, mean=0, variance=0):
+        # function to calculate online mean and variance
+        meanprv = mean
+        varianceprv = variance
+        mean = (((n - 1)*meanprv) + xi)/n
+        variance = (((n - 1)*varianceprv) + ((xi - meanprv)*(xi - mean)))/n
+
+        return mean, variance
 
 def clock(table):
     """
