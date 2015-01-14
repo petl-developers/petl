@@ -42,3 +42,6 @@ TODO port petlx.sql
 TODO port petlx.interval?
 
 TODO review all issues
+
+TODO add documentation to changes section about ported xls, xlsx, array,
+dataframe, hdf5, sql, ...
