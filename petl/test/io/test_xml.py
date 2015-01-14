@@ -2,11 +2,13 @@ from __future__ import absolute_import, print_function, division
 
 
 from tempfile import NamedTemporaryFile
+import sys
 
 
 from petl.test.helpers import ieq
 from petl.util import nrows, look
 from petl.io.xml import fromxml
+from petl.compat import urlopen
 
 
 def test_fromxml():
@@ -193,5 +195,12 @@ def test_fromxml_6():
 
 def test_fromxml_url():
 
-    tbl = fromxml('http://feeds.bbci.co.uk/news/rss.xml', './/item', 'title')
-    assert nrows(tbl) > 0
+    url = 'http://feeds.bbci.co.uk/news/rss.xml'
+    # check internet connection
+    try:
+        urlopen(url)
+    except Exception as e:
+        print('SKIP test_fromxml_url: %s' % e, file=sys.stderr)
+    else:
+        tbl = fromxml(url, './/item', 'title')
+        assert nrows(tbl) > 0

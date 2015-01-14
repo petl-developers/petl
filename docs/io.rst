@@ -128,11 +128,7 @@ installed, e.g.::
 .. autofunction:: petl.io.array.fromarray
 .. autofunction:: petl.io.array.toarray
 .. autofunction:: petl.io.array.torecarray
-
-In addition to the functions listed above, an ``array()`` method is available to
-load values from a single table column into a numpy array, e.g.::
-
-    TODO
+.. autofunction:: petl.io.array.valuestoarray
 
 .. _io_helpers:
 

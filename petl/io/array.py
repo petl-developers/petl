@@ -1,8 +1,4 @@
-"""
-A module providing convenience functionality for moving to/from numpy structured
-arrays.
-
-"""
+from __future__ import division, print_function, absolute_import
 
 
 from petl.compat import next, string_types
@@ -27,20 +23,30 @@ def toarray(table, dtype=None, count=-1, sample=1000):
     Load data from the given `table` into a
     `numpy <http://www.numpy.org/>`_ structured array. E.g.::
 
-        TODO
-        
-    If no datatype is specified, `sample` rows will be examined to infer an
-    appropriate datatype for each field.
-        
-    The datatype can be specified as a string, e.g.:
+        >>> import petl as etl
+        >>> table = [('foo', 'bar', 'baz'),
+        ...          ('apples', 1, 2.5),
+        ...          ('oranges', 3, 4.4),
+        ...          ('pears', 7, .1)]
+        >>> a = etl.toarray(table)
+        >>> a
+        array([('apples', 1, 2.5), ('oranges', 3, 4.4), ('pears', 7, 0.1)],
+              dtype=[('foo', '<U7'), ('bar', '<i8'), ('baz', '<f8')])
+        >>> # the dtype can be specified as a string
+        ... a = etl.toarray(table, dtype='a4, i2, f4')
+        >>> a
+        array([(b'appl', 1, 2.5), (b'oran', 3, 4.400000095367432),
+               (b'pear', 7, 0.10000000149011612)],
+              dtype=[('foo', 'S4'), ('bar', '<i2'), ('baz', '<f4')])
+        >>> # the dtype can also be partially specified
+        ... a = etl.toarray(table, dtype={'foo': 'a4'})
+        >>> a
+        array([(b'appl', 1, 2.5), (b'oran', 3, 4.4), (b'pear', 7, 0.1)],
+              dtype=[('foo', 'S4'), ('bar', '<i8'), ('baz', '<f8')])
 
-        TODO
+    If the dtype is not completely specified, `sample` rows will be
+    examined to infer an appropriate dtype.
 
-    The datatype can also be partially specified, in which case datatypes will
-    be inferred for other fields, e.g.:
-    
-        TODO
-    
     """
     
     import numpy as np
@@ -104,9 +110,26 @@ Table.torecarray = torecarray
 
 def fromarray(a):
     """
-    Extract a table from a numpy structured array, e.g.::
+    Extract a table from a `numpy <http://www.numpy.org/>`_ structured array,
+    e.g.::
 
-        TODO
+        >>> import petl as etl
+        >>> import numpy as np
+        >>> a = np.array([('apples', 1, 2.5),
+        ...               ('oranges', 3, 4.4),
+        ...               ('pears', 7, 0.1)],
+        ...              dtype='U8, i4,f4')
+        >>> table = etl.fromarray(a)
+        >>> table
+        +-----------+----+-----------+
+        | f0        | f1 | f2        |
+        +===========+====+===========+
+        | 'apples'  | 1  | 2.5       |
+        +-----------+----+-----------+
+        | 'oranges' | 3  | 4.4000001 |
+        +-----------+----+-----------+
+        | 'pears'   | 7  | 0.1       |
+        +-----------+----+-----------+
     
     """
     
@@ -125,6 +148,24 @@ class ArrayView(Table):
 
 
 def valuestoarray(vals, dtype=None, count=-1, sample=1000):
+    """
+    Load values from a table column into a `numpy <http://www.numpy.org/>`_
+    array, e.g.::
+
+        >>> import petl as etl
+        >>> table = [('foo', 'bar', 'baz'),
+        ...          ('apples', 1, 2.5),
+        ...          ('oranges', 3, 4.4),
+        ...          ('pears', 7, .1)]
+        >>> table = etl.wrap(table)
+        >>> table.values('bar').array()
+        array([1, 3, 7])
+        >>> # specify dtype
+        ... table.values('bar').array(dtype='i4')
+        array([1, 3, 7], dtype=int32)
+
+    """
+
     import numpy as np
     it = iter(vals)
     if dtype is None:
@@ -134,4 +175,5 @@ def valuestoarray(vals, dtype=None, count=-1, sample=1000):
     return a
 
 
+ValuesView.toarray = valuestoarray
 ValuesView.array = valuestoarray
