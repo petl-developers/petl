@@ -1,6 +1,7 @@
 from __future__ import absolute_import, print_function, division
 
 
+from petl.test.helpers import eq_
 from petl.util.statistics import stats
 
 
@@ -14,9 +15,11 @@ def test_stats():
              ('E', None))
 
     result = stats(table, 'bar')
-    assert result['min'] == 1.0
-    assert result['max'] == 3.0
-    assert result['sum'] == 6.0
-    assert result['count'] == 3
-    assert result['errors'] == 2
-    assert result['mean'] == 2.0
+    eq_(1.0, result.min)
+    eq_(3.0, result.max)
+    eq_(6.0, result.sum)
+    eq_(3, result.count)
+    eq_(2, result.errors)
+    eq_(2.0, result.mean)
+    eq_(2/3, result.pvariance)
+    eq_((2/3)**.5, result.pstdev)

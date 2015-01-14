@@ -1,6 +1,9 @@
 from __future__ import absolute_import, print_function, division
 
 
+from collections import namedtuple
+
+
 from petl.util.base import values, Table
 
 
@@ -37,6 +40,10 @@ def limits(table, field):
 Table.limits = limits
 
 
+_stats = namedtuple('stats', ('count', 'errors', 'sum', 'min', 'max', 'mean',
+                              'pvariance', 'pstdev'))
+
+
 def stats(table, field):
     """
     Calculate basic descriptive statistics on a given field. E.g.::
@@ -49,36 +56,43 @@ def stats(table, field):
         ...          ['D', 'xyz', 9.0],
         ...          ['E', None]]
         >>> etl.stats(table, 'bar')
-        {'mean': 2.0, 'max': 3.0, 'min': 1.0, 'errors': 2, 'sum': 6.0, 'count': 3}
+        stats(count=3, errors=2, sum=6.0, min=1.0, max=3.0, mean=2.0, pvariance=0.6666666666666666, pstdev=0.816496580927726)
 
     The `field` argument can be a field name or index (starting from zero).
 
     """
 
-    output = dict([('min', None),
-                   ('max', None),
-                   ('sum', None),
-                   ('mean', None),
-                   ('count', 0),
-                   ('errors', 0)])
+    _min = None
+    _max = None
+    _sum = 0
+    _mean = 0
+    _var = 0
+    _count = 0
+    _errors = 0
     for v in values(table, field):
         try:
             v = float(v)
         except (ValueError, TypeError):
-            output['errors'] += 1
+            _errors += 1
         else:
-            if output['min'] is None or v < output['min']:
-                output['min'] = v
-            if output['max'] is None or v > output['max']:
-                output['max'] = v
-            if output['sum'] is None:
-                output['sum'] = v
-            else:
-                output['sum'] += v
-            output['count'] += 1
-    if output['count'] > 0:
-        output['mean'] = output['sum'] / output['count']
-    return output
+            _count += 1
+            if _min is None or v < _min:
+                _min = v
+            if _max is None or v > _max:
+                _max = v
+            _sum += v
+            _mean, _var = onlinestats(v, _count, mean=_mean, variance=_var)
+    _std = _var**.5
+    return _stats(_count, _errors, _sum, _min, _max, _mean, _var, _std)
 
 
 Table.stats = stats
+
+
+def onlinestats(xi, n, mean=0, variance=0):
+    # function to calculate online mean and variance
+    meanprv = mean
+    varianceprv = variance
+    mean = (((n - 1)*meanprv) + xi)/n
+    variance = (((n - 1)*varianceprv) + ((xi - meanprv)*(xi - mean)))/n
+    return mean, variance
