@@ -10,8 +10,8 @@ from petl.util.base import Table
 def todataframe(table, index=None, exclude=None, columns=None,
                 coerce_float=False, nrows=None):
     """
-    Load data from the given `table` into a `pandas <http://TODO>`_ DataFrame.
-    E.g.::
+    Load data from the given `table` into a
+    `pandas <http://pandas.pydata.org/>`_ DataFrame. E.g.::
 
         >>> import petl as etl
         >>> table = [('foo', 'bar', 'baz'),
@@ -42,7 +42,8 @@ Table.todf = todataframe
 
 def fromdataframe(df, include_index=False):
     """
-    Extract a table from a pandas DataFrame. E.g.::
+    Extract a table from a `pandas <http://pandas.pydata.org/>`_ DataFrame.
+    E.g.::
 
         >>> import petl as etl
         >>> import pandas as pd

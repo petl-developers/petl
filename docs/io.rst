@@ -131,7 +131,9 @@ The following functions require `xlrd <http://TODO/>`_ and
 Excel .xlsx files (openpyxl)
 ----------------------------
 
-The following functions require `openpyxl <http://TODO/>`_ to be installed,
+The following functions require
+`openpyxl <https://bitbucket.org/ericgazoni/openpyxl/wiki/Home>`_ to be
+installed,
 e.g.::
 
     $ pip install openpyxl
@@ -155,13 +157,33 @@ installed, e.g.::
 DataFrames (pandas)
 -------------------
 
-The following functions require `pandas <http://TODO/>`_ to be
+The following functions require `pandas <http://pandas.pydata.org/>`_ to be
 installed, e.g.::
 
     $ pip install pandas
 
 .. autofunction:: petl.io.dataframe.fromdataframe
 .. autofunction:: petl.io.dataframe.todataframe
+
+HDF5 files (PyTables)
+---------------------
+
+The following functions require
+`PyTables <https://pytables.github.io/index.html>`_ to be installed, e.g.::
+
+    $ # install prerequisites...
+    $ pip install cython
+    $ pip install numpy
+    $ pip install numexpr
+    $ # install HDF5 somehow...
+    $ apt-get install libhdf5-7 libhdf5-dev
+    $ # install PyTables
+    $ pip install tables
+
+.. autofunction:: petl.io.hdf5.fromhdf5
+.. autofunction:: petl.io.hdf5.fromhdf5sorted
+.. autofunction:: petl.io.hdf5.tohdf5
+.. autofunction:: petl.io.hdf5.appendhdf5
 
 .. _io_helpers:
 

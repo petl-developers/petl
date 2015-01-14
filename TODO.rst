@@ -24,19 +24,21 @@ DONE add documentation about contributing
 
 DONE add running stats
 
-TODO review all issues
+DONE revise documentation about dependencies, add information about optional
+dependencies
 
-TODO port petlx.array
+DONE port petlx.array
 
-TODO port petlx.dataframe
+DONE port petlx.dataframe
 
-TODO port petlx.hdf5
+DONE port petlx.xls
 
-TODO port petlx.xls
+DONE port petlx.xlsx
 
-TODO port petlx.xlsx
+DONE port petlx.hdf5
+
+TODO port petlx.sql
 
 TODO port petlx.interval?
 
-TODO revise documentation about dependencies, add information about optional
-dependencies
+TODO review all issues

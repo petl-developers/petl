@@ -28,3 +28,5 @@ from petl.io.xlsx import fromxlsx, toxlsx
 from petl.io.array import fromarray, toarray, torecarray
 
 from petl.io.dataframe import fromdataframe, todataframe
+
+from petl.io.hdf5 import fromhdf5, fromhdf5sorted, tohdf5, appendhdf5
