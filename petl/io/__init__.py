@@ -21,4 +21,10 @@ from petl.io.sqlite3 import fromsqlite3, tosqlite3, appendsqlite3
 
 from petl.io.db import fromdb, todb, appenddb
 
+from petl.io.xls import fromxls, toxls
+
+from petl.io.xlsx import fromxlsx, toxlsx
+
 from petl.io.array import fromarray, toarray, torecarray
+
+from petl.io.dataframe import fromdataframe, todataframe

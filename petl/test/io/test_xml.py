@@ -193,14 +193,15 @@ def test_fromxml_6():
     ieq(expect, actual)  # verify can iterate twice
 
 
-def test_fromxml_url():
+url = 'http://feeds.bbci.co.uk/news/rss.xml'
+# check internet connection
+try:
+    urlopen(url)
+except Exception as e:
+    print('SKIP test_fromxml_url: %s' % e, file=sys.stderr)
+else:
 
-    url = 'http://feeds.bbci.co.uk/news/rss.xml'
-    # check internet connection
-    try:
-        urlopen(url)
-    except Exception as e:
-        print('SKIP test_fromxml_url: %s' % e, file=sys.stderr)
-    else:
-        tbl = fromxml(url, './/item', 'title')
-        assert nrows(tbl) > 0
+    def test_fromxml_url():
+
+            tbl = fromxml(url, './/item', 'title')
+            assert nrows(tbl) > 0

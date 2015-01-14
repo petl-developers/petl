@@ -117,6 +117,28 @@ Databases
 .. autofunction:: petl.io.db.todb
 .. autofunction:: petl.io.db.appenddb
 
+Excel .xls files (xlrd/xlwt)
+----------------------------
+
+The following functions require `xlrd <http://TODO/>`_ and
+`xlwt <http://TODO>`_ to be installed, e.g.::
+
+    $ pip install xlrd xlwt-future
+
+.. autofunction:: petl.io.xls.fromxls
+.. autofunction:: petl.io.xls.toxls
+
+Excel .xlsx files (openpyxl)
+----------------------------
+
+The following functions require `openpyxl <http://TODO/>`_ to be installed,
+e.g.::
+
+    $ pip install openpyxl
+
+.. autofunction:: petl.io.xlsx.fromxlsx
+.. autofunction:: petl.io.xlsx.toxlsx
+
 Arrays (numpy)
 --------------
 
@@ -129,6 +151,17 @@ installed, e.g.::
 .. autofunction:: petl.io.array.toarray
 .. autofunction:: petl.io.array.torecarray
 .. autofunction:: petl.io.array.valuestoarray
+
+DataFrames (pandas)
+-------------------
+
+The following functions require `pandas <http://TODO/>`_ to be
+installed, e.g.::
+
+    $ pip install pandas
+
+.. autofunction:: petl.io.dataframe.fromdataframe
+.. autofunction:: petl.io.dataframe.todataframe
 
 .. _io_helpers:
 
