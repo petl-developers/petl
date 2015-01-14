@@ -6,8 +6,6 @@
 
 
 from datetime import datetime, time
-from xlrd import open_workbook, XL_CELL_DATE, xldate_as_tuple
-from xlwt.Utils import col_by_name
 from petl.compat import xrange
 
 
@@ -31,6 +29,7 @@ class Col(Index):
     eg: ``[:, Col('A'), Col('B')]``
     """
     def __index__(self):
+        from xlwt.Utils import col_by_name
         return col_by_name(self.name)
 
 
@@ -75,6 +74,7 @@ class SheetView(object):
             setattr(self, name, xrange(start, stop))
 
     def __row(self, rowx):
+        from xlrd import XL_CELL_DATE, xldate_as_tuple
         for colx in self.cols:
             value = self.sheet.cell_value(rowx, colx)
             if self.sheet.cell_type(rowx, colx) == XL_CELL_DATE:
@@ -112,6 +112,7 @@ class View(object):
 
     def __init__(self, path, class_=None):
         self.class_ = class_ or self.class_
+        from xlrd import open_workbook
         self.book = open_workbook(path, formatting_info=0, on_demand=True)
 
     def __getitem__(self, item):

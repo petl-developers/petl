@@ -352,7 +352,6 @@ def _todb_dbapi_connection(table, connection, tablename, schema=None,
         cursor.close()
         cursor = connection.cursor()
 
-#    insertquery = 'INSERT INTO %s VALUES (%s)' % (tablename, placeholders)
     insertcolnames = ', '.join(colnames)
     insertquery = SQL_INSERT_QUERY % (tablename, insertcolnames, placeholders)
     debug('insert data via query %r' % insertquery)
@@ -505,7 +504,6 @@ def _todb_sqlalchemy_connection(table, connection, tablename, schema=None,
         debug('truncate the table via query %r', truncatequery)
         connection.execute(truncatequery)
 
-#    insertquery = 'INSERT INTO %s VALUES (%s)' % (tablename, placeholders)
     insertcolnames = ', '.join(colnames)
     insertquery = SQL_INSERT_QUERY % (tablename, insertcolnames, placeholders)
     debug('insert data via query %r' % insertquery)

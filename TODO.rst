@@ -41,6 +41,8 @@ TODO port petlx.sql
 
 TODO port petlx.interval?
 
+TODO port petlx.index as petl.io.textindex?
+
 TODO review all issues
 
 TODO add documentation to changes section about ported xls, xlsx, array,
