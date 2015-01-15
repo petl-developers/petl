@@ -161,10 +161,10 @@ Arrays (NumPy)
 
         $ pip install numpy
 
-.. autofunction:: petl.io.array.fromarray
-.. autofunction:: petl.io.array.toarray
-.. autofunction:: petl.io.array.torecarray
-.. autofunction:: petl.io.array.valuestoarray
+.. autofunction:: petl.io.numpy.fromarray
+.. autofunction:: petl.io.numpy.toarray
+.. autofunction:: petl.io.numpy.torecarray
+.. autofunction:: petl.io.numpy.valuestoarray
 
 DataFrames (pandas)
 -------------------
@@ -176,8 +176,8 @@ DataFrames (pandas)
 
         $ pip install pandas
 
-.. autofunction:: petl.io.dataframe.fromdataframe
-.. autofunction:: petl.io.dataframe.todataframe
+.. autofunction:: petl.io.pandas.fromdataframe
+.. autofunction:: petl.io.pandas.todataframe
 
 HDF5 files (PyTables)
 ---------------------
@@ -196,10 +196,26 @@ HDF5 files (PyTables)
         $ # install PyTables
         $ pip install tables
 
-.. autofunction:: petl.io.hdf5.fromhdf5
-.. autofunction:: petl.io.hdf5.fromhdf5sorted
-.. autofunction:: petl.io.hdf5.tohdf5
-.. autofunction:: petl.io.hdf5.appendhdf5
+.. autofunction:: petl.io.pytables.fromhdf5
+.. autofunction:: petl.io.pytables.fromhdf5sorted
+.. autofunction:: petl.io.pytables.tohdf5
+.. autofunction:: petl.io.pytables.appendhdf5
+
+Text indexes (Whoosh)
+---------------------
+
+.. note::
+
+    The following functions require `Whoosh <https://TODO>`_
+    to be installed, e.g.::
+
+        $ pip install whoosh
+
+.. autofunction:: petl.io.whoosh.fromtextindex
+.. autofunction:: petl.io.whoosh.searchtextindex
+.. autofunction:: petl.io.whoosh.searchtextindexpage
+.. autofunction:: petl.io.whoosh.totextindex
+.. autofunction:: petl.io.whoosh.appendtextindex
 
 .. _io_helpers:
 

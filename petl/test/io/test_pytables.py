@@ -10,14 +10,14 @@ from tempfile import NamedTemporaryFile
 from petl.test.helpers import ieq
 from petl.transform.sorts import sort
 import petl as etl
-from petl.io.hdf5 import fromhdf5, fromhdf5sorted, tohdf5, appendhdf5
+from petl.io.pytables import fromhdf5, fromhdf5sorted, tohdf5, appendhdf5
 
 
 try:
     # noinspection PyUnresolvedReferences
     import tables
 except ImportError as e:
-    print('SKIP hdf5 tests: %s' % e, file=sys.stderr)
+    print('SKIP pytables tests: %s' % e, file=sys.stderr)
 else:
 
     class FooBar(tables.IsDescription):

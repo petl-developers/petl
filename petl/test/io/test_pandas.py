@@ -6,14 +6,14 @@ import sys
 
 import petl as etl
 from petl.test.helpers import ieq
-from petl.io.dataframe import todataframe, fromdataframe
+from petl.io.pandas import todataframe, fromdataframe
 
 
 try:
     # noinspection PyUnresolvedReferences
     import pandas as pd
 except ImportError as e:
-    print('SKIP dataframe tests: %s' % e, file=sys.stderr)
+    print('SKIP pandas tests: %s' % e, file=sys.stderr)
 else:
 
     def test_todataframe():

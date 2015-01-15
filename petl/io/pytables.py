@@ -6,7 +6,7 @@ from petl.compat import string_types
 
 
 from petl.util.base import Table, iterpeek, data
-from petl.io.array import guessdtype
+from petl.io.numpy import guessdtype
 
 
 def fromhdf5(source, where=None, name=None, condition=None,
@@ -17,7 +17,8 @@ def fromhdf5(source, where=None, name=None, condition=None,
         >>> import petl as etl
         >>> import tables
         >>> # set up a new hdf5 table to demonstrate with
-        ... h5file = tables.openFile('example.h5', mode='w', title='Example file')
+        ... h5file = tables.openFile('example.h5', mode='w',
+        ...                          title='Example file')
         >>> h5file.createGroup('/', 'testgroup', 'Test Group')
         /testgroup (Group) 'Test Group'
           children := []
@@ -25,7 +26,8 @@ def fromhdf5(source, where=None, name=None, condition=None,
         ...     foo = tables.Int32Col(pos=0)
         ...     bar = tables.StringCol(6, pos=2)
         ...
-        >>> h5table = h5file.createTable('/testgroup', 'testtable', FooBar, 'Test Table')
+        >>> h5table = h5file.createTable('/testgroup', 'testtable', FooBar,
+        ...                              'Test Table')
         >>> # load some data into the table
         ... table1 = (('foo', 'bar'),
         ...           (1, b'asdfgh'),

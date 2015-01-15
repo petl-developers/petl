@@ -6,14 +6,14 @@ import sys
 
 import petl as etl
 from petl.test.helpers import ieq, eq_, assert_almost_equal
-from petl.io.array import toarray, fromarray, torecarray
+from petl.io.numpy import toarray, fromarray, torecarray
 
 
 try:
     # noinspection PyUnresolvedReferences
     import numpy as np
 except ImportError as e:
-    print('SKIP array tests: %s' % e, file=sys.stderr)
+    print('SKIP numpy tests: %s' % e, file=sys.stderr)
 else:
 
     def test_toarray_nodtype():

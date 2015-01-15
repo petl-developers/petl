@@ -23,8 +23,11 @@ from petl.io.xls import fromxls, toxls
 
 from petl.io.xlsx import fromxlsx, toxlsx
 
-from petl.io.array import fromarray, toarray, torecarray
+from petl.io.numpy import fromarray, toarray, torecarray
 
-from petl.io.dataframe import fromdataframe, todataframe
+from petl.io.pandas import fromdataframe, todataframe
 
-from petl.io.hdf5 import fromhdf5, fromhdf5sorted, tohdf5, appendhdf5
+from petl.io.pytables import fromhdf5, fromhdf5sorted, tohdf5, appendhdf5
+
+from petl.io.whoosh import fromtextindex, searchtextindex, \
+    searchtextindexpage, totextindex, appendtextindex
