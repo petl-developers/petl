@@ -110,9 +110,14 @@ JSON files
 Databases
 ---------
 
-.. autofunction:: petl.io.sqlite3.fromsqlite3
-.. autofunction:: petl.io.sqlite3.tosqlite3
-.. autofunction:: petl.io.sqlite3.appendsqlite3
+.. note::
+   
+    The automatic table creation feature of :func:`petl.io.db.todb`
+    requires `SQLAlchemy <http://www.sqlalchemy.org/>`_ to be installed, e.g.::
+
+        $ pip install sqlalchemy
+     
+
 .. autofunction:: petl.io.db.fromdb
 .. autofunction:: petl.io.db.todb
 .. autofunction:: petl.io.db.appenddb
@@ -120,10 +125,14 @@ Databases
 Excel .xls files (xlrd/xlwt)
 ----------------------------
 
-The following functions require `xlrd <http://TODO/>`_ and
-`xlwt <http://TODO>`_ to be installed, e.g.::
+.. note:: 
 
-    $ pip install xlrd xlwt-future
+    The following functions require `xlrd
+    <https://pypi.python.org/pypi/xlrd>`_ and `xlwt
+    <https://pypi.python.org/pypi/xlwt-future>`_ to be installed,
+    e.g.::
+
+        $ pip install xlrd xlwt-future
 
 .. autofunction:: petl.io.xls.fromxls
 .. autofunction:: petl.io.xls.toxls
@@ -131,23 +140,26 @@ The following functions require `xlrd <http://TODO/>`_ and
 Excel .xlsx files (openpyxl)
 ----------------------------
 
-The following functions require
-`openpyxl <https://bitbucket.org/ericgazoni/openpyxl/wiki/Home>`_ to be
-installed,
-e.g.::
+.. note::
 
-    $ pip install openpyxl
+    The following functions require `openpyxl
+    <https://bitbucket.org/ericgazoni/openpyxl/wiki/Home>`_ to be
+    installed, e.g.::
+
+        $ pip install openpyxl
 
 .. autofunction:: petl.io.xlsx.fromxlsx
 .. autofunction:: petl.io.xlsx.toxlsx
 
-Arrays (numpy)
+Arrays (NumPy)
 --------------
 
-The following functions require `numpy <http://www.numpy.org/>`_ to be
-installed, e.g.::
+.. note::
 
-    $ pip install numpy
+    The following functions require `numpy <http://www.numpy.org/>`_
+    to be installed, e.g.::
+
+        $ pip install numpy
 
 .. autofunction:: petl.io.array.fromarray
 .. autofunction:: petl.io.array.toarray
@@ -157,10 +169,12 @@ installed, e.g.::
 DataFrames (pandas)
 -------------------
 
-The following functions require `pandas <http://pandas.pydata.org/>`_ to be
-installed, e.g.::
+.. note:: 
 
-    $ pip install pandas
+    The following functions require `pandas
+    <http://pandas.pydata.org/>`_ to be installed, e.g.::
+
+        $ pip install pandas
 
 .. autofunction:: petl.io.dataframe.fromdataframe
 .. autofunction:: petl.io.dataframe.todataframe
@@ -168,17 +182,19 @@ installed, e.g.::
 HDF5 files (PyTables)
 ---------------------
 
-The following functions require
-`PyTables <https://pytables.github.io/index.html>`_ to be installed, e.g.::
+.. note:: 
 
-    $ # install prerequisites...
-    $ pip install cython
-    $ pip install numpy
-    $ pip install numexpr
-    $ # install HDF5 somehow...
-    $ apt-get install libhdf5-7 libhdf5-dev
-    $ # install PyTables
-    $ pip install tables
+    The following functions require `PyTables
+    <https://pytables.github.io/index.html>`_ to be installed, e.g.::
+
+        $ # install HDF5
+        $ apt-get install libhdf5-7 libhdf5-dev
+        $ # install other prerequisites
+        $ pip install cython
+        $ pip install numpy
+        $ pip install numexpr
+        $ # install PyTables
+        $ pip install tables
 
 .. autofunction:: petl.io.hdf5.fromhdf5
 .. autofunction:: petl.io.hdf5.fromhdf5sorted

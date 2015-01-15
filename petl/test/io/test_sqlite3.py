@@ -6,27 +6,27 @@ import sqlite3
 
 
 from petl.test.helpers import ieq
-from petl.io.sqlite3 import fromsqlite3, tosqlite3, appendsqlite3
+from petl.io.db import fromdb, todb, appenddb
 
 
 def test_fromsqlite3():
 
     # initial data
-    f = NamedTemporaryFile(delete=False)
+    f = NamedTemporaryFile()
     data = (('a', 1),
             ('b', 2),
             ('c', 2.0))
     connection = sqlite3.connect(f.name)
     c = connection.cursor()
-    c.execute('create table foobar (foo, bar)')
+    c.execute('CREATE TABLE foobar (foo, bar)')
     for row in data:
-        c.execute('insert into foobar values (?, ?)', row)
+        c.execute('INSERT INTO foobar VALUES (?, ?)', row)
     connection.commit()
     c.close()
     connection.close()
 
     # test the function
-    actual = fromsqlite3(f.name, 'select * from foobar')
+    actual = fromdb(f.name, 'SELECT * FROM foobar')
     expect = (('foo', 'bar'),
               ('a', 1),
               ('b', 2),
@@ -44,14 +44,14 @@ def test_fromsqlite3_connection():
             ('c', 2.0))
     connection = sqlite3.connect(':memory:')
     c = connection.cursor()
-    c.execute('create table foobar (foo, bar)')
+    c.execute('CREATE TABLE foobar (foo, bar)')
     for row in data:
-        c.execute('insert into foobar values (?, ?)', row)
+        c.execute('INSERT INTO foobar VALUES (?, ?)', row)
     connection.commit()
     c.close()
 
     # test the function
-    actual = fromsqlite3(connection, 'select * from foobar')
+    actual = fromdb(connection, 'SELECT * FROM foobar')
     expect = (('foo', 'bar'),
               ('a', 1),
               ('b', 2),
@@ -69,16 +69,16 @@ def test_fromsqlite3_withargs():
             ('c', 2.0))
     connection = sqlite3.connect(':memory:')
     c = connection.cursor()
-    c.execute('create table foobar (foo, bar)')
+    c.execute('CREATE TABLE foobar (foo, bar)')
     for row in data:
-        c.execute('insert into foobar values (?, ?)', row)
+        c.execute('INSERT INTO foobar VALUES (?, ?)', row)
     connection.commit()
     c.close()
 
     # test the function
-    actual = fromsqlite3(
+    actual = fromdb(
         connection,
-        'select * from foobar where bar > ? and bar < ?',
+        'SELECT * FROM foobar WHERE bar > ? AND bar < ?',
         (1, 3)
     )
     expect = (('foo', 'bar'),
@@ -96,11 +96,14 @@ def test_tosqlite3_appendsqlite3():
              ('b', 2),
              ('c', 2))
     f = NamedTemporaryFile(delete=False)
-    tosqlite3(table, f.name, 'foobar', create=True)
+    conn = sqlite3.connect(f.name)
+    conn.execute('CREATE TABLE foobar (foo TEXT, bar INT)')
+    conn.close()
+    todb(table, f.name, 'foobar')
 
     # check what it did
     conn = sqlite3.connect(f.name)
-    actual = conn.execute('select * from foobar')
+    actual = conn.execute('SELECT * FROM foobar')
     expect = (('a', 1),
               ('b', 2),
               ('c', 2))
@@ -111,11 +114,11 @@ def test_tosqlite3_appendsqlite3():
               ('d', 7),
               ('e', 9),
               ('f', 1))
-    appendsqlite3(table2, f.name, 'foobar')
+    appenddb(table2, f.name, 'foobar')
 
     # check what it did
     conn = sqlite3.connect(f.name)
-    actual = conn.execute('select * from foobar')
+    actual = conn.execute('SELECT * FROM foobar')
     expect = (('a', 1),
               ('b', 2),
               ('c', 2),
@@ -128,16 +131,17 @@ def test_tosqlite3_appendsqlite3():
 def test_tosqlite3_appendsqlite3_connection():
 
     conn = sqlite3.connect(':memory:')
+    conn.execute('CREATE TABLE foobar (foo TEXT, bar INT)')
 
     # exercise function
     table = (('foo', 'bar'),
              ('a', 1),
              ('b', 2),
              ('c', 2))
-    tosqlite3(table, conn, 'foobar', create=True)
+    todb(table, conn, 'foobar')
 
     # check what it did
-    actual = conn.execute('select * from foobar')
+    actual = conn.execute('SELECT * FROM foobar')
     expect = (('a', 1),
               ('b', 2),
               ('c', 2))
@@ -148,10 +152,10 @@ def test_tosqlite3_appendsqlite3_connection():
               ('d', 7),
               ('e', 9),
               ('f', 1))
-    appendsqlite3(table2, conn, 'foobar')
+    appenddb(table2, conn, 'foobar')
 
     # check what it did
-    actual = conn.execute('select * from foobar')
+    actual = conn.execute('SELECT * FROM foobar')
     expect = (('a', 1),
               ('b', 2),
               ('c', 2),
@@ -168,12 +172,16 @@ def test_tosqlite3_identifiers():
              ('a', 1),
              ('b', 2),
              ('c', 2))
-    f = NamedTemporaryFile(delete=False)
-    tosqlite3(table, f.name, 'foo " bar`', create=True)
+    f = NamedTemporaryFile()
+    conn = sqlite3.connect(f.name)
+    conn.execute('CREATE TABLE "foo "" bar`" '
+                 '("foo foo" TEXT, "bar.baz.spong`" INT)')
+    conn.close()
+    todb(table, f.name, 'foo " bar`')
 
     # check what it did
     conn = sqlite3.connect(f.name)
-    actual = conn.execute('select * from `foo " bar```')
+    actual = conn.execute('SELECT * FROM `foo " bar```')
     expect = (('a', 1),
               ('b', 2),
               ('c', 2))

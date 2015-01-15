@@ -95,7 +95,7 @@ def _test_unicode(dbo):
     print(etl.look(actual))
 
 
-def setup_mysql(dbapi_connection):
+def _setup_mysql(dbapi_connection):
     # setup table
     cursor = dbapi_connection.cursor()
     # deal with quote compatibility
@@ -109,7 +109,7 @@ def setup_mysql(dbapi_connection):
     dbapi_connection.commit()
 
 
-def setup_postgresql(dbapi_connection):
+def _setup_postgresql(dbapi_connection):
     # setup table
     cursor = dbapi_connection.cursor()
     cursor.execute('DROP TABLE IF EXISTS test')
@@ -147,17 +147,17 @@ else:
                                    database=database)
 
         # exercise using a dbapi_connection
-        setup_mysql(dbapi_connection)
+        _setup_mysql(dbapi_connection)
         _test_dbo(dbapi_connection)
 
         # exercise using a dbapi_cursor
-        setup_mysql(dbapi_connection)
+        _setup_mysql(dbapi_connection)
         dbapi_cursor = dbapi_connection.cursor()
         _test_dbo(dbapi_cursor)
         dbapi_cursor.close()
 
         # exercise sqlalchemy dbapi_connection
-        setup_mysql(dbapi_connection)
+        _setup_mysql(dbapi_connection)
         from sqlalchemy import create_engine
         sqlalchemy_engine = create_engine('mysql+pymysql://%s:%s@%s/%s' %
                                           (user, password, host, database))
@@ -167,7 +167,7 @@ else:
         sqlalchemy_connection.close()
 
         # exercise sqlalchemy session
-        setup_mysql(dbapi_connection)
+        _setup_mysql(dbapi_connection)
         from sqlalchemy.orm import sessionmaker
         Session = sessionmaker(bind=sqlalchemy_engine)
         sqlalchemy_session = Session()
@@ -209,17 +209,17 @@ else:
         )
 
         # exercise using a dbapi_connection
-        setup_postgresql(dbapi_connection)
+        _setup_postgresql(dbapi_connection)
         _test_dbo(dbapi_connection)
 
         # exercise using a dbapi_cursor
-        setup_postgresql(dbapi_connection)
+        _setup_postgresql(dbapi_connection)
         dbapi_cursor = dbapi_connection.cursor()
         _test_dbo(dbapi_cursor)
         dbapi_cursor.close()
 
         # exercise sqlalchemy dbapi_connection
-        setup_postgresql(dbapi_connection)
+        _setup_postgresql(dbapi_connection)
         from sqlalchemy import create_engine
         sqlalchemy_engine = create_engine('postgresql+psycopg2://%s:%s@%s/%s' %
                                           (user, password, host, database))
@@ -228,7 +228,7 @@ else:
         sqlalchemy_connection.close()
 
         # exercise sqlalchemy session
-        setup_postgresql(dbapi_connection)
+        _setup_postgresql(dbapi_connection)
         from sqlalchemy.orm import sessionmaker
         Session = sessionmaker(bind=sqlalchemy_engine)
         sqlalchemy_session = Session()

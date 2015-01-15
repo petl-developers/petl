@@ -3,17 +3,21 @@ from __future__ import absolute_import, print_function, division
 
 # standard library dependencies
 import logging
-from petl.compat import next, text_type
+import sqlite3
+from petl.compat import next, text_type, string_types
 
 
 # internal dependencies
 from petl.util.base import Table
+from petl.io.db_utils import _is_dbapi_connection, _is_dbapi_cursor, \
+    _is_sqlalchemy_connection, _is_sqlalchemy_engine, _is_sqlalchemy_session, \
+    _quote, _placeholders
+from petl.io.db_create import drop_table, create_table
 
 
 logger = logging.getLogger(__name__)
-warning = logger.warning
-info = logger.info
 debug = logger.debug
+warning = logger.warning
 
 
 def fromdb(dbo, query, *args, **kwargs):
@@ -23,34 +27,36 @@ def fromdb(dbo, query, *args, **kwargs):
         >>> import petl as etl
         >>> import sqlite3
         >>> connection = sqlite3.connect('example.db')
-        >>> table = etl.fromdb(connection, 'select * from foobar')
+        >>> table = etl.fromdb(connection, 'SELECT * FROM example')
 
     E.g., using :mod:`psycopg2` (assuming you've installed it first)::
 
         >>> import petl as etl
         >>> import psycopg2
         >>> connection = psycopg2.connect('dbname=example user=postgres')
-        >>> table = etl.fromdb(connection, 'select * from example')
+        >>> table = etl.fromdb(connection, 'SELECT * FROM example')
 
     E.g., using :mod:`pymysql` (assuming you've installed it first)::
 
         >>> import petl as etl
         >>> import pymysql
         >>> connection = pymysql.connect(password='moonpie', database='thangs')
-        >>> table = etl.fromdb(connection, 'select * from example')
+        >>> table = etl.fromdb(connection, 'SELECT * FROM example')
 
-    The `dbo` argument may also be a function that creates a cursor. E.g.::
+    The `dbo` argument may also be a function that creates a cursor. N.B., each
+    call to the function should return a new cursor. E.g.::
 
         >>> import petl as etl
         >>> import psycopg2
         >>> connection = psycopg2.connect('dbname=example user=postgres')
         >>> mkcursor = lambda: connection.cursor(cursor_factory=psycopg2.extras.DictCursor)
-        >>> table = etl.fromdb(mkcursor, 'select * from example')
-
-    N.B., each call to the function should return a new cursor.
+        >>> table = etl.fromdb(mkcursor, 'SELECT * FROM example')
 
     The parameter `dbo` may also be an SQLAlchemy engine, session or
     connection object.
+
+    The parameter `dbo` may also be a string, in which case it is interpreted as
+    the name of a file containing an :mod:`sqlite3` database.
 
     Note that the default behaviour of most database servers and clients is for
     the entire result set for each query to be sent from the server to the
@@ -64,7 +70,8 @@ def fromdb(dbo, query, *args, **kwargs):
         >>> import petl as etl
         >>> import psycopg2
         >>> connection = psycopg2.connect('dbname=example user=postgres')
-        >>> table = etl.fromdb(lambda: connection.cursor(name='arbitrary'), 'select * from example')
+        >>> table = etl.fromdb(lambda: connection.cursor(name='arbitrary'),
+        ...                    'SELECT * FROM example')
 
     For more information on server-side cursors see the following links:
 
@@ -73,31 +80,11 @@ def fromdb(dbo, query, *args, **kwargs):
 
     """
 
+    # convenience for working with sqlite3
+    if isinstance(dbo, string_types):
+        dbo = sqlite3.connect(dbo)
+
     return DbView(dbo, query, *args, **kwargs)
-
-
-def _is_dbapi_connection(dbo):
-    return _hasmethod(dbo, 'cursor')
-
-
-def _is_dbapi_cursor(dbo):
-    return _hasmethods(dbo, 'execute', 'executemany', 'fetchone', 'fetchmany',
-                       'fetchall')
-
-
-def _is_sqlalchemy_engine(dbo):
-    return (_hasmethods(dbo, 'execute', 'contextual_connect', 'raw_connection')
-            and _hasprop(dbo, 'driver'))
-
-
-def _is_sqlalchemy_session(dbo):
-    return _hasmethods(dbo, 'execute', 'connection', 'get_bind')
-
-
-def _is_sqlalchemy_connection(dbo):
-    # N.B., this are not completely selective conditions, this test needs
-    # to be applied after ruling out DB-API cursor
-    return _hasmethod(dbo, 'execute') and _hasprop(dbo, 'connection')
 
 
 class DbView(Table):
@@ -207,8 +194,11 @@ def _iter_sqlalchemy_session(session, query, *args, **kwargs):
         yield row
 
 
-def todb(table, dbo, tablename, schema=None, commit=True):
-    """Load data into an existing database table via a DB-API 2.0
+def todb(table, dbo, tablename, schema=None, commit=True,
+         create=False, drop=False, constraints=True, metadata=None,
+         dialect=None, sample=1000):
+    """
+    Load data into an existing database table via a DB-API 2.0
     connection or cursor. Note that the database table will be truncated,
     i.e., all existing rows will be deleted prior to inserting the new data.
     E.g.::
@@ -249,24 +239,69 @@ def todb(table, dbo, tablename, schema=None, commit=True):
     The parameter `dbo` may also be an SQLAlchemy engine, session or
     connection object.
 
+    The parameter `dbo` may also be a string, in which case it is interpreted as
+    the name of a file containing an :mod:`sqlite3` database.
+
+    If ``create=True`` this function will attempt to automatically create a
+    database table before loading the data. This functionality requires
+    `SQLAlchemy <http://www.sqlalchemy.org/>`_ to be installed.
+
+    Keyword arguments:
+
+    table : table container
+        Table data to load
+    dbo : database object
+        DB-API 2.0 connection, callable returning a DB-API 2.0 cursor, or
+        SQLAlchemy connection, engine or session
+    tablename : string
+        Name of the table in the database
+    schema : string
+        Name of the database schema to find the table in
+    commit : bool
+        If True commit the changes
+    create : bool
+        If True attempt to create the table before loading, inferring types
+        from a sample of the data (requires SQLAlchemy)
+    drop : bool
+        If True attempt to drop the table before recreating (only relevant if
+        create=True)
+    constraints : bool
+        If True use length and nullable constraints (only relevant if
+        create=True)
+    metadata : sqlalchemy.MetaData
+        Custom table metadata (only relevant if create=True)
+    dialect : string
+        One of {'access', 'sybase', 'sqlite', 'informix', 'firebird', 'mysql',
+        'oracle', 'maxdb', 'postgresql', 'mssql'} (only relevant if create=True)
+    sample : int
+        Number of rows to sample when inferring types etc. Set to 0 to use the
+        whole table (only relevant if create=True)
+
     """
 
-    _todb(table, dbo, tablename, schema=schema, commit=commit, truncate=True)
+    needs_closing = False
+
+    # convenience for working with sqlite3
+    if isinstance(dbo, string_types):
+        dbo = sqlite3.connect(dbo)
+        needs_closing = True
+
+    try:
+        if create:
+            if drop:
+                drop_table(dbo, tablename, schema=schema, commit=commit)
+            create_table(table, dbo, tablename, schema=schema, commit=commit,
+                         constraints=constraints, metadata=metadata,
+                         dialect=dialect, sample=sample)
+        _todb(table, dbo, tablename, schema=schema, commit=commit,
+              truncate=True)
+
+    finally:
+        if needs_closing:
+            dbo.close()
 
 
 Table.todb = todb
-
-
-def _hasmethod(o, n):
-    return hasattr(o, n) and callable(getattr(o, n))
-
-
-def _hasmethods(o, *l):
-    return all(_hasmethod(o, n) for n in l)
-
-
-def _hasprop(o, n):
-    return hasattr(o, n) and not callable(getattr(o, n))
 
 
 def _todb(table, dbo, tablename, schema=None, commit=True, truncate=False):
@@ -536,53 +571,20 @@ def appenddb(table, dbo, tablename, schema=None, commit=True):
 
     """
 
-    _todb(table, dbo, tablename, schema=schema, commit=commit, truncate=False)
+    needs_closing = False
+
+    # convenience for working with sqlite3
+    if isinstance(dbo, string_types):
+        dbo = sqlite3.connect(dbo)
+        needs_closing = True
+
+    try:
+        _todb(table, dbo, tablename, schema=schema, commit=commit,
+              truncate=False)
+
+    finally:
+        if needs_closing:
+            dbo.close()
 
 
 Table.appenddb = appenddb
-
-
-# default DB quote char per SQL-92
-quotechar = '"'
-
-
-def _quote(s):
-    # crude way to sanitise table and field names
-    # conform with the SQL-92 standard. See http://stackoverflow.com/a/214344
-    return quotechar + s.replace(quotechar, quotechar+quotechar) + quotechar
-
-
-def _placeholders(connection, names):
-    # discover the paramstyle
-    if connection is None:
-        # default to using question mark
-        debug('connection is None, default to using qmark paramstyle')
-        placeholders = ', '.join(['?'] * len(names))
-    else:
-        mod = __import__(connection.__class__.__module__)
-
-        if not hasattr(mod, 'paramstyle'):
-            debug('module %r from connection %r has no attribute paramstyle, '
-                  'defaulting to qmark', mod, connection)
-            # default to using question mark
-            placeholders = ', '.join(['?'] * len(names))
-
-        elif mod.paramstyle == 'qmark':
-            debug('found paramstyle qmark')
-            placeholders = ', '.join(['?'] * len(names))
-
-        elif mod.paramstyle in ('format', 'pyformat'):
-            debug('found paramstyle pyformat')
-            placeholders = ', '.join(['%s'] * len(names))
-
-        elif mod.paramstyle == 'numeric':
-            debug('found paramstyle numeric')
-            placeholders = ', '.join([':' + str(i + 1)
-                                      for i in range(len(names))])
-
-        else:
-            debug('found unexpected paramstyle %r, defaulting to qmark',
-                  mod.paramstyle)
-            placeholders = ', '.join(['?'] * len(names))
-
-    return placeholders

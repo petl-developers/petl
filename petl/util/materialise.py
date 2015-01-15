@@ -3,7 +3,7 @@ from __future__ import absolute_import, print_function, division
 
 import operator
 from itertools import islice
-from petl.compat import izip_longest, text_type
+from petl.compat import izip_longest, text_type, OrderedDict, next
 
 
 from petl.util.base import asindices, Table
@@ -57,9 +57,10 @@ def columns(table, missing=None):
 
     """
 
-    cols = dict()
+    cols = OrderedDict()
     it = iter(table)
-    flds = [str(f) for f in next(it)]
+    hdr = next(it)
+    flds = list(map(text_type, hdr))
     for f in flds:
         cols[f] = list()
     for row in it:
