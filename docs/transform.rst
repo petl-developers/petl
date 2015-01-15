@@ -185,3 +185,29 @@ Filling missing values
 .. autofunction:: petl.transform.fills.filldown
 .. autofunction:: petl.transform.fills.fillright
 .. autofunction:: petl.transform.fills.fillleft
+
+
+Intervals (intervaltree)
+------------------------
+
+.. note::
+
+    The following functions require the package `intervaltree
+    <https://github.com/chaimleib/intervaltree>`_ to be installed, e.g.::
+
+        $ pip install intervaltree
+
+.. autofunction:: petl.transform.intervals.intervaljoin
+.. autofunction:: petl.transform.intervals.intervalleftjoin
+.. autofunction:: petl.transform.intervals.intervaljoinvalues
+.. autofunction:: petl.transform.intervals.intervalantijoin
+.. autofunction:: petl.transform.intervals.intervallookup
+.. autofunction:: petl.transform.intervals.intervallookupone
+.. autofunction:: petl.transform.intervals.intervalrecordlookup
+.. autofunction:: petl.transform.intervals.intervalrecordlookupone
+.. autofunction:: petl.transform.intervals.facetintervallookup
+.. autofunction:: petl.transform.intervals.facetintervallookupone
+.. autofunction:: petl.transform.intervals.facetintervalrecordlookup
+.. autofunction:: petl.transform.intervals.facetintervalrecordlookupone
+.. autofunction:: petl.transform.intervals.intervalsubtract
+.. autofunction:: petl.transform.intervals.collapsedintervals

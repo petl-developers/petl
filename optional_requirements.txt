@@ -6,3 +6,5 @@ numpy
 pandas
 numexpr
 tables
+intervaltree
+whoosh

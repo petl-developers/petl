@@ -474,7 +474,7 @@ def iterselectusingcontext(table, query):
         yield cur
 
 
-def facet(table, field):
+def facet(table, key):
     """
     Return a dictionary mapping field values to tables. E.g.::
 
@@ -512,8 +512,8 @@ def facet(table, field):
     """
 
     fct = dict()
-    for v in set(values(table, field)):
-        fct[v] = selecteq(table, field, v)
+    for v in set(values(table, key)):
+        fct[v] = selecteq(table, key, v)
     return fct
 
 
