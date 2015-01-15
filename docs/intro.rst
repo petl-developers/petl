@@ -32,9 +32,8 @@ other than the Python core modules.
 Some of the functions in this package require installation of third party
 packages. This is indicated in the relevant parts of the documentation.
 
-Some extensions to :mod:`petl` are provided by the `petlx
-<http://petlx.readthedocs.org>`_ package, a companion package to
-:mod:`petl`.
+Some domain-specific and/or experimental extensions to :mod:`petl` are
+available from the `petlx <http://petlx.readthedocs.org>`_ package.
 
 .. _intro_pipelines:
 
