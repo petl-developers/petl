@@ -41,11 +41,11 @@ DONE port petlx.sql
 
 DONE merge sqlite3 module into db module
 
-TODO port petlx.interval?
+DONE port petlx.interval
 
 TODO port petlx.index as petl.io.textindex?
 
 TODO review all issues
 
 TODO add documentation to changes section about ported xls, xlsx, array,
-dataframe, hdf5, sql, merged sqlite3 ...
+dataframe, hdf5, sql, intervals, merged sqlite3 ...
