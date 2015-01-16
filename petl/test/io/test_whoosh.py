@@ -2,9 +2,8 @@
 from __future__ import absolute_import, print_function, division
 
 
+import sys
 import os
-import datetime
-
 
 from petl.test.helpers import ieq
 import petl as etl
@@ -21,6 +20,7 @@ else:
 
     from whoosh.index import create_in
     from whoosh.fields import *
+    import datetime
 
     dirname = os.path.join('tmp', 'whoosh')
     if not os.path.exists('tmp'):

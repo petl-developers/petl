@@ -50,8 +50,8 @@ dataframe, hdf5, sql, intervals, merged sqlite3 ...
 
 DONE validate module: implementation, documentation
 
-TODO look truncate
+DONE look truncate
 
-TODO display truncate
+DONE display truncate
 
 TODO review all issues
