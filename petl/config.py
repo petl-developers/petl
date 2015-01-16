@@ -8,6 +8,7 @@ look_style = 'grid'  # alternatives: 'simple', 'minimal'
 look_limit = 5
 look_index_header = False
 look_vrepr = repr
+look_width = None
 see_limit = 5
 see_index_header = False
 see_vrepr = repr

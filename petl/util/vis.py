@@ -76,6 +76,8 @@ def look(table, limit=0, vrepr=None, index_header=None, style=None,
         index_header = config.look_index_header
     if style is None:
         style = config.look_style
+    if width is None:
+        width = config.look_width
 
     return Look(table, limit=limit, vrepr=vrepr, index_header=index_header,
                 style=style, truncate=truncate, width=width)
