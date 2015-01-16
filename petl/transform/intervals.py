@@ -143,10 +143,8 @@ def intervallookup(table, start='start', stop='stop', value=None,
         [(3, 7, 'bar'), (4, 9, 'baz')]
 
     Note start coordinates are included and stop coordinates are excluded
-    from the interval.
-
-    Use the `include_stop` keyword argument to include the upper bound of the
-    interval when finding overlaps.
+    from the interval. Use the `include_stop` keyword argument to include the
+    upper bound of the interval when finding overlaps.
 
     Some examples using the `include_stop` and `value` keyword arguments::
     
@@ -253,6 +251,10 @@ def intervallookupone(table, start='start', stop='stop', value=None,
     If ``strict=True``, queries returning more than one result will
     raise a `DuplicateKeyError`. If ``strict=False`` and there is
     more than one result, the first result is returned.
+
+    Note start coordinates are included and stop coordinates are excluded
+    from the interval. Use the `include_stop` keyword argument to include the
+    upper bound of the interval when finding overlaps.
 
     """
 
@@ -483,6 +485,10 @@ def intervaljoin(left, right, lstart='start', lstop='stop', rstart='start',
         |     1 |   1 | 'e'  |     1 |    4 | 'foo' |
         +-------+-----+------+-------+------+-------+
 
+    Note start coordinates are included and stop coordinates are excluded
+    from the interval. Use the `include_stop` keyword argument to include the
+    upper bound of the interval when finding overlaps.
+
     An additional key comparison can be made, e.g.::
     
         >>> import petl as etl
@@ -611,6 +617,10 @@ def intervalleftjoin(left, right, lstart='start', lstop='stop', rstart='start',
         |    10 |  10 | 'f'  | None  | None | None  |
         +-------+-----+------+-------+------+-------+
 
+    Note start coordinates are included and stop coordinates are excluded
+    from the interval. Use the `include_stop` keyword argument to include the
+    upper bound of the interval when finding overlaps.
+
     """
     
     assert (lkey is None) == (rkey is None), \
@@ -667,6 +677,10 @@ def intervalantijoin(left, right, lstart='start', lstop='stop', rstart='start',
     """
     Return rows from the `left` table with no overlapping rows from the `right`
     table.
+
+    Note start coordinates are included and stop coordinates are excluded
+    from the interval. Use the `include_stop` keyword argument to include the
+    upper bound of the interval when finding overlaps.
 
     """
 
@@ -817,6 +831,10 @@ def intervaljoinvalues(left, right, value, lstart='start', lstop='stop',
     Convenience function to join the left table with values from a specific 
     field in the right hand table.
     
+    Note start coordinates are included and stop coordinates are excluded
+    from the interval. Use the `include_stop` keyword argument to include the
+    upper bound of the interval when finding overlaps.
+
     """
     
     assert (lkey is None) == (rkey is None), \

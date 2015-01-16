@@ -51,6 +51,7 @@ Some helper classes are also available for writing to other types of
 file-like sources, e.g., writing to a Zip file or string buffer, see
 the section on :ref:`io_helpers` below for more information.
 
+.. _io_csv:
 
 Delimited files
 ---------------
@@ -65,6 +66,8 @@ Delimited files
 .. autofunction:: petl.io.csv.teetsv
 
 
+.. _io_pickle:
+
 Pickle files
 ------------
 
@@ -73,6 +76,8 @@ Pickle files
 .. autofunction:: petl.io.pickle.appendpickle
 .. autofunction:: petl.io.pickle.teepickle
 
+
+.. _io_text:
 
 Text files
 ----------
@@ -83,6 +88,8 @@ Text files
 .. autofunction:: petl.io.text.teetext
 
 
+.. _io_xml:
+
 XML files
 ---------
 
@@ -91,12 +98,16 @@ XML files
 For writing to an XML file, see :func:`petl.io.text.totext`.
 
 
+.. _io_html:
+
 HTML files
 ----------
 
 .. autofunction:: petl.io.html.tohtml
 .. autofunction:: petl.io.html.teehtml
 
+
+.. _io_json:
 
 JSON files
 ----------
@@ -106,6 +117,8 @@ JSON files
 .. autofunction:: petl.io.json.tojson
 .. autofunction:: petl.io.json.tojsonarrays
 
+
+.. _io_db:
 
 Databases
 ---------
@@ -122,6 +135,9 @@ Databases
 .. autofunction:: petl.io.db.todb
 .. autofunction:: petl.io.db.appenddb
 
+
+.. _io_xls:
+
 Excel .xls files (xlrd/xlwt)
 ----------------------------
 
@@ -137,6 +153,9 @@ Excel .xls files (xlrd/xlwt)
 .. autofunction:: petl.io.xls.fromxls
 .. autofunction:: petl.io.xls.toxls
 
+
+.. _io_xlsx:
+
 Excel .xlsx files (openpyxl)
 ----------------------------
 
@@ -150,6 +169,9 @@ Excel .xlsx files (openpyxl)
 
 .. autofunction:: petl.io.xlsx.fromxlsx
 .. autofunction:: petl.io.xlsx.toxlsx
+
+
+.. _io_numpy:
 
 Arrays (NumPy)
 --------------
@@ -166,6 +188,9 @@ Arrays (NumPy)
 .. autofunction:: petl.io.numpy.torecarray
 .. autofunction:: petl.io.numpy.valuestoarray
 
+
+.. _io_pandas:
+
 DataFrames (pandas)
 -------------------
 
@@ -178,6 +203,9 @@ DataFrames (pandas)
 
 .. autofunction:: petl.io.pandas.fromdataframe
 .. autofunction:: petl.io.pandas.todataframe
+
+
+.. _io_pytables:
 
 HDF5 files (PyTables)
 ---------------------
@@ -200,6 +228,9 @@ HDF5 files (PyTables)
 .. autofunction:: petl.io.pytables.fromhdf5sorted
 .. autofunction:: petl.io.pytables.tohdf5
 .. autofunction:: petl.io.pytables.appendhdf5
+
+
+.. _io_whoosh:
 
 Text indexes (Whoosh)
 ---------------------

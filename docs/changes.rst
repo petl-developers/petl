@@ -10,7 +10,9 @@ existing support for Python 2.6 and 2.7. Much of the functionality
 available in :mod:`petl` versions 0.x has remained unchanged in
 version 1.0, and most existing code that uses :mod:`petl` should work
 unchanged with version 1.0 or with minor changes. However there have
-been a number of API changes, described below.
+been a number of API changes, and some functionality has been migrated
+from the `petlx <http://petlx.readthedocs.org>` package, described
+below.
 
 If you have any questions about migrating to version 1.0 or find any
 problems or issues please email python-etl@googlegroups.com.
@@ -57,24 +59,48 @@ it, as described in the introductory section on
 The `petl.fluent` and `petl.interactive` modules have been removed as
 they are now redundant.
 
-The automatic caching behaviour of the `petl.interactive` module has
-**not** been retained. If you want to enable caching behaviour for a
-particular table, make an explicit call to the
-:func:`petl.util.materialise.cache` function. See also :ref:`intro_caching`.
+To migrate code, it should be possible to simply replace "import
+petl.fluent as etl" or "import petl.interactive as etl" with "import
+petl as etl".
+
+Note that the automatic caching behaviour of the `petl.interactive`
+module has **not** been retained. If you want to enable caching
+behaviour for a particular table, make an explicit call to the
+:func:`petl.util.materialise.cache` function. See also
+:ref:`intro_caching`.
 
 IPython notebook integration
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-In version 1.0 :mod:`petl` table objects implement `_repr_html_()` so
-can be returned from a cell in an IPython notebook and will
-automatically format as an HTML table.
+In version 1.0 :mod:`petl` table container objects implement
+`_repr_html_()` so can be returned from a cell in an IPython notebook
+and will automatically format as an HTML table.
 
-The :func:`petl.util.vis.display` and :func:`petl.util.vis.displayall`
-functions have been ported across from the `petlx.ipython` package. If
-you are working within the IPython notebook these functions give
-greater control over how tables are rendered. For some examples, see:
+Also, the :func:`petl.util.vis.display` and
+:func:`petl.util.vis.displayall` functions have been migrated across
+from the `petlx.ipython` package. If you are working within the
+IPython notebook these functions give greater control over how tables
+are rendered. For some examples, see:
 
   http://nbviewer.ipython.org/github/alimanfoo/petl/blob/v1.0/repr_html.ipynb
+
+Database extract/load functions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The :func:`petl.io.db.todb` function now supports automatic table
+creation, inferring a schema from data in the table to be loaded. This
+functionality has been migrated across from the `petlx
+<http://petlx.readthedocs.org>`_ package, and requires `SQLAlchemy
+<http://www.sqlalchemy.org/>` to be installed.
+
+The functions `fromsqlite3`, `tosqlite3` and `appendsqlite3` have been
+removed as they duplicate functionality available from the existing
+functions :func:`petl.io.db.fromdb`, :func:`petl.io.db.todb` and
+:func:`petl.io.db.appenddb`. These existing functions have been
+modified so that if a string is provided as the `dbo` argument it is
+interpreted as the name of an :mod:`sqlite3` file. It should be
+possible to migrate code by simply replacing 'fromsqlite3' with
+'fromdb', etc.
 
 Other functions removed or renamed
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -120,7 +146,7 @@ to ensure that the behaviour of :mod:`petl` is as consistent as
 possible across different Python versions, the
 :func:`petl.transform.sorts.sort` function and anything that depends
 on it (as well as any other functions making use of rich comparisons)
-implement the relaxed comparison behaviour that is available under
+emulate the relaxed comparison behaviour that is available under
 Python 2.x. In fact :mod:`petl` goes further than this, allowing
 comparison of a wider range of types than is possible under Python 2.x
 (e.g., ``datetime`` with ``None``).
@@ -163,12 +189,42 @@ values with :class:`petl.comparison.Comparable`, e.g.::
     | 'a' |   1 |
     +-----+-----+
 
-Configuration module
+New extract/load modules
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+Several new extract/load modules have been added, migrating
+functionality previously available from the `petlx
+<http://petlx.readthedocs.org>`_ package:
+
+* :ref:`io_xls`
+* :ref:`io_xlsx`
+* :ref:`io_numpy`
+* :ref:`io_pandas`
+* :ref:`io_pytables`
+
+These modules all have dependencies on third party packages, but these
+have been kept as optional dependencies so are not required for
+installing :mod:`petl`.
+
+New intervals module
 ~~~~~~~~~~~~~~~~~~~~
 
+A new module has been added providing transformation functions based
+on intervals, migrating functionality previously available from the
+`petlx <http://petlx.readthedocs.org/>`_ package:
+
+* :ref:`transform_intervals`
+
+This module requires the `intervaltree
+<https://github.com/chaimleib/intervaltree>`_ module.
+
+New configuration module
+~~~~~~~~~~~~~~~~~~~~~~~~
+
 All configuration variables have been brought together into a new
-`petl.config` module. See the source code for the variables available,
-they should be self-explanatory.
+:mod:`petl.config` module. See the source code for the variables
+available, they should be self-explanatory.
+
 
 :mod:`petl.push` moved to :mod:`petlx`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -192,5 +248,5 @@ Source code reorganisation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The source code has been substantially reorganised. This should not
-affect users of the :mod:`petl` package however as all functions are
-available through the root :mod:`petl` namespace.
+affect users of the :mod:`petl` package however as all functions in
+the public API are available through the root :mod:`petl` namespace.
