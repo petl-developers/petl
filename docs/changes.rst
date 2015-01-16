@@ -11,8 +11,7 @@ available in :mod:`petl` versions 0.x has remained unchanged in
 version 1.0, and most existing code that uses :mod:`petl` should work
 unchanged with version 1.0 or with minor changes. However there have
 been a number of API changes, and some functionality has been migrated
-from the `petlx <http://petlx.readthedocs.org>` package, described
-below.
+from the `petlx`_ package, described below.
 
 If you have any questions about migrating to version 1.0 or find any
 problems or issues please email python-etl@googlegroups.com.
@@ -51,10 +50,10 @@ object-oriented) styles of programming with the root :mod:`petl`
 module, as described in introductory section on
 :ref:`intro_programming_styles`.
 
-Second, the default representation of table objects uses the :func:`petl.util.vis.look`
-function, so you can simply return a table from the prompt to inspect
-it, as described in the introductory section on
-:ref:`intro_interactive_use`.
+Second, the default representation of table objects uses the
+:func:`petl.util.vis.look` function, so you can simply return a table
+from the prompt to inspect it, as described in the introductory
+section on :ref:`intro_interactive_use`.
 
 The `petl.fluent` and `petl.interactive` modules have been removed as
 they are now redundant.
@@ -89,9 +88,8 @@ Database extract/load functions
 
 The :func:`petl.io.db.todb` function now supports automatic table
 creation, inferring a schema from data in the table to be loaded. This
-functionality has been migrated across from the `petlx
-<http://petlx.readthedocs.org>`_ package, and requires `SQLAlchemy
-<http://www.sqlalchemy.org/>` to be installed.
+functionality has been migrated across from the `petlx`_ package, and
+requires `SQLAlchemy <http://www.sqlalchemy.org/>` to be installed.
 
 The functions `fromsqlite3`, `tosqlite3` and `appendsqlite3` have been
 removed as they duplicate functionality available from the existing
@@ -193,8 +191,7 @@ New extract/load modules
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 Several new extract/load modules have been added, migrating
-functionality previously available from the `petlx
-<http://petlx.readthedocs.org>`_ package:
+functionality previously available from the `petlx`_ package:
 
 * :ref:`io_xls`
 * :ref:`io_xlsx`
@@ -218,7 +215,7 @@ New intervals module
 
 A new module has been added providing transformation functions based
 on intervals, migrating functionality previously available from the
-`petlx <http://petlx.readthedocs.org/>`_ package:
+`petlx`_ package:
 
 * :ref:`transform_intervals`
 
@@ -237,8 +234,7 @@ available, they should be self-explanatory.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The :mod:`petl.push` module remains in an experimental state and has
-been moved to the `petlx <http://petlx.readthedocs.org>`_ extensions
-project.
+been moved to the `petlx`_ extensions project.
 
 Argument names and other minor changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -257,3 +253,5 @@ Source code reorganisation
 The source code has been substantially reorganised. This should not
 affect users of the :mod:`petl` package however as all functions in
 the public API are available through the root :mod:`petl` namespace.
+
+.. _petlx: http://petlx.readthedocs.org

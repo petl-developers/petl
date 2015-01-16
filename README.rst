@@ -1,8 +1,8 @@
 petl - Extract, Transform and Load (Tables of Data)
 ===================================================
 
-``petl`` is a Python package for extracting, transforming and loading
-tables of data.
+``petl`` is a general purpose Python package for extracting, transforming and
+loading tables of data.
 
 - Docs: http://petl.readthedocs.org/
 - Source: https://github.com/alimanfoo/petl
@@ -12,9 +12,6 @@ tables of data.
 See also `petlx <https://github.com/alimanfoo/petlx>`_, a library of
 extension modules for ``petl``.
 
-There is also some information for developers/contributors on the
-`project wiki <https://github.com/alimanfoo/petl/wiki>`_.
-
-.. image:: https://travis-ci.org/alimanfoo/petl.svg?branch=master 
+.. image:: https://travis-ci.org/alimanfoo/petl.svg?branch=master
     :target: https://travis-ci.org/alimanfoo/petl
     :alt: continuous integration build status
