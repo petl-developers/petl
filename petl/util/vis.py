@@ -13,7 +13,8 @@ from petl.io.sources import MemorySource
 from petl.io.html import tohtml
 
 
-def look(table, limit=0, vrepr=None, index_header=None, style=None):
+def look(table, limit=0, vrepr=None, index_header=None, style=None,
+         truncate=None, width=None):
     """
     Format a portion of the table as text for inspection in an interactive
     session. E.g.::
@@ -77,7 +78,7 @@ def look(table, limit=0, vrepr=None, index_header=None, style=None):
         style = config.look_style
 
     return Look(table, limit=limit, vrepr=vrepr, index_header=index_header,
-                style=style)
+                style=style, truncate=truncate, width=width)
 
 
 Table.look = look
@@ -85,12 +86,15 @@ Table.look = look
 
 class Look(object):
 
-    def __init__(self, table, limit, vrepr, index_header, style):
+    def __init__(self, table, limit, vrepr, index_header, style, truncate,
+                 width):
         self.table = table
         self.limit = limit
         self.vrepr = vrepr
         self.index_header = index_header
         self.style = style
+        self.truncate = truncate
+        self.width = width
 
     def __repr__(self):
 
@@ -101,14 +105,19 @@ class Look(object):
         style = self.style
         vrepr = self.vrepr
         index_header = self.index_header
+        truncate = self.truncate
+        width = self.width
         if style == 'simple':
             output = _look_simple(table, vrepr=vrepr,
-                                  index_header=index_header)
+                                  index_header=index_header,
+                                  truncate=truncate, width=width)
         elif style == 'minimal':
             output = _look_minimal(table, vrepr=vrepr,
-                                   index_header=index_header)
+                                   index_header=index_header,
+                                   truncate=truncate, width=width)
         else:
-            output = _look_grid(table, vrepr=vrepr, index_header=index_header)
+            output = _look_grid(table, vrepr=vrepr, index_header=index_header,
+                                truncate=truncate, width=width)
 
         # add overflow indicator
         if overflow:
@@ -179,7 +188,7 @@ Table.lookallstr = lookallstr
 Table.lookall = lookall
 
 
-def _look_grid(table, vrepr, index_header):
+def _look_grid(table, vrepr, index_header, truncate, width):
     it = iter(table)
 
     # fields representation
@@ -206,6 +215,12 @@ def _look_grid(table, vrepr, index_header):
         if len(valsrepr) < maxrowlen:
             valsrepr.extend([''] * (maxrowlen - len(valsrepr)))
 
+    # truncate
+    if truncate:
+        fldsrepr = [x[:truncate] for x in fldsrepr]
+        rowsrepr = [[x[:truncate] for x in valsrepr]
+                    for valsrepr in rowsrepr]
+
     # find longest representations so we know how wide to make cells
     colwidths = [0] * maxrowlen  # initialise to 0
     for i, fr in enumerate(fldsrepr):
@@ -220,6 +235,8 @@ def _look_grid(table, vrepr, index_header):
     for w in colwidths:
         sep += '-' * (w + 2)
         sep += '+'
+    if width:
+        sep = sep[:width]
     sep += '\n'
 
     # construct a header separator
@@ -227,6 +244,8 @@ def _look_grid(table, vrepr, index_header):
     for w in colwidths:
         hedsep += '=' * (w + 2)
         hedsep += '+'
+    if width:
+        hedsep = hedsep[:width]
     hedsep += '\n'
 
     # construct a line for the header row
@@ -236,6 +255,8 @@ def _look_grid(table, vrepr, index_header):
         fldsline += ' ' + f
         fldsline += ' ' * (w - len(f))  # padding
         fldsline += ' |'
+    if width:
+        fldsline = fldsline[:width]
     fldsline += '\n'
 
     # construct a line for each data row
@@ -254,6 +275,8 @@ def _look_grid(table, vrepr, index_header):
                 rowline += ' ' + vr
                 rowline += ' ' * (w - len(vr))  # padding
                 rowline += ' |'
+        if width:
+            rowline = rowline[:width]
         rowline += '\n'
         rowlines.append(rowline)
 
@@ -265,7 +288,7 @@ def _look_grid(table, vrepr, index_header):
     return output
 
 
-def _look_simple(table, vrepr, index_header):
+def _look_simple(table, vrepr, index_header, truncate, width):
     it = iter(table)
 
     # fields representation
@@ -291,6 +314,12 @@ def _look_simple(table, vrepr, index_header):
     for valsrepr in rowsrepr:
         if len(valsrepr) < maxrowlen:
             valsrepr.extend([''] * (maxrowlen - len(valsrepr)))
+
+    # truncate
+    if truncate:
+        fldsrepr = [x[:truncate] for x in fldsrepr]
+        rowsrepr = [[x[:truncate] for x in valsrepr]
+                    for valsrepr in rowsrepr]
 
     # find longest representations so we know how wide to make cells
     colwidths = [0] * maxrowlen  # initialise to 0
@@ -303,10 +332,14 @@ def _look_simple(table, vrepr, index_header):
 
     # construct a header separator
     hedsep = '  '.join('=' * w for w in colwidths)
+    if width:
+        hedsep = hedsep[:width]
     hedsep += '\n'
 
     # construct a line for the header row
     fldsline = '  '.join(f.ljust(w) for f, w in zip(fldsrepr, colwidths))
+    if width:
+        fldsline = fldsline[:width]
     fldsline += '\n'
 
     # construct a line for each data row
@@ -324,6 +357,8 @@ def _look_simple(table, vrepr, index_header):
                 rowline += vr.ljust(w)
             if i < len(colwidths) - 1:
                 rowline += '  '
+        if width:
+            rowline = rowline[:width]
         rowline += '\n'
         rowlines.append(rowline)
 
@@ -336,7 +371,7 @@ def _look_simple(table, vrepr, index_header):
     return output
 
 
-def _look_minimal(table, vrepr, index_header):
+def _look_minimal(table, vrepr, index_header, truncate, width):
     it = iter(table)
 
     # fields representation
@@ -363,6 +398,12 @@ def _look_minimal(table, vrepr, index_header):
         if len(valsrepr) < maxrowlen:
             valsrepr.extend([''] * (maxrowlen - len(valsrepr)))
 
+    # truncate
+    if truncate:
+        fldsrepr = [x[:truncate] for x in fldsrepr]
+        rowsrepr = [[x[:truncate] for x in valsrepr]
+                    for valsrepr in rowsrepr]
+
     # find longest representations so we know how wide to make cells
     colwidths = [0] * maxrowlen  # initialise to 0
     for i, fr in enumerate(fldsrepr):
@@ -374,6 +415,8 @@ def _look_minimal(table, vrepr, index_header):
 
     # construct a line for the header row
     fldsline = '  '.join(f.ljust(w) for f, w in zip(fldsrepr, colwidths))
+    if width:
+        fldsline = fldsline[:width]
     fldsline += '\n'
 
     # construct a line for each data row
@@ -391,6 +434,8 @@ def _look_minimal(table, vrepr, index_header):
                 rowline += vr.ljust(w)
             if i < len(colwidths) - 1:
                 rowline += '  '
+        if width:
+            rowline = rowline[:width]
         rowline += '\n'
         rowlines.append(rowline)
 
@@ -486,7 +531,7 @@ def _vis_overflow(table, limit):
 
 
 def _display_html(table, limit=0, vrepr=None, index_header=None, caption=None,
-                  tr_style=None, td_styles=None, encoding=None):
+                  tr_style=None, td_styles=None, encoding=None, truncate=None):
 
     # determine defaults
     if limit == 0:
@@ -502,7 +547,7 @@ def _display_html(table, limit=0, vrepr=None, index_header=None, caption=None,
     buf = MemorySource()
     tohtml(table, buf, encoding=encoding, index_header=index_header,
            vrepr=vrepr, caption=caption, tr_style=tr_style,
-           td_styles=td_styles)
+           td_styles=td_styles, truncate=truncate)
     output = text_type(buf.getvalue(), encoding)
 
     if overflow:
@@ -515,7 +560,7 @@ Table._repr_html_ = _display_html
 
 
 def display(table, limit=0, vrepr=None, index_header=None, caption=None,
-            tr_style=None, td_styles=None, encoding=None):
+            tr_style=None, td_styles=None, encoding=None, truncate=None):
     """
     Display a table inline within an IPython notebook.
     
@@ -525,7 +570,7 @@ def display(table, limit=0, vrepr=None, index_header=None, caption=None,
     html = _display_html(table, limit=limit, vrepr=vrepr,
                          index_header=index_header, caption=caption,
                          tr_style=tr_style, td_styles=td_styles,
-                         encoding=encoding)
+                         encoding=encoding, truncate=truncate)
     display_html(html, raw=True)
 
 

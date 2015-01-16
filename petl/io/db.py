@@ -180,16 +180,16 @@ def _iter_sqlalchemy_engine(engine, query, *args, **kwargs):
 def _iter_sqlalchemy_connection(connection, query, *args, **kwargs):
     debug('connection: %r', connection)
     results = connection.execute(query, *args, **kwargs)
-    fields = results.keys()
-    yield tuple(fields)
+    hdr = results.keys()
+    yield tuple(hdr)
     for row in results:
         yield row
 
 
 def _iter_sqlalchemy_session(session, query, *args, **kwargs):
     results = session.execute(query, *args, **kwargs)
-    fields = results.keys()
-    yield tuple(fields)
+    hdr = results.keys()
+    yield tuple(hdr)
     for row in results:
         yield row
 

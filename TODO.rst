@@ -48,4 +48,10 @@ DONE port petlx.index
 DONE add documentation to changes section about ported xls, xlsx, array,
 dataframe, hdf5, sql, intervals, merged sqlite3 ...
 
+DONE validate module: implementation, documentation
+
+TODO look truncate
+
+TODO display truncate
+
 TODO review all issues

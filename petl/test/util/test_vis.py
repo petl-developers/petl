@@ -1,9 +1,16 @@
 from __future__ import absolute_import, print_function, division
 
 
+import logging
+
+
 from petl.test.helpers import eq_
 import petl as etl
 from petl.util.vis import look, see, lookstr
+
+
+logger = logging.getLogger(__name__)
+debug = logger.debug
 
 
 def test_look():
@@ -63,6 +70,47 @@ def test_look_bool():
 | 'b' | False |
 +-----+-------+
 """
+    eq_(expect, actual)
+
+
+def test_look_truncate():
+
+    table = (('foo', 'bar'), ('abcd', 1234), ('bcde', 2345))
+
+    actual = repr(look(table, truncate=3))
+    expect = """+-----+-----+
+| foo | bar |
++=====+=====+
+| 'ab | 123 |
++-----+-----+
+| 'bc | 234 |
++-----+-----+
+"""
+    eq_(expect, actual)
+
+    actual = repr(look(table, truncate=3, vrepr=str))
+    expect = """+-----+-----+
+| foo | bar |
++=====+=====+
+| abc | 123 |
++-----+-----+
+| bcd | 234 |
++-----+-----+
+"""
+    eq_(expect, actual)
+
+
+def test_look_width():
+
+    table = (('foo', 'bar'), ('a', 1), ('b', 2))
+    actual = repr(look(table, width=10))
+    expect = ("+-----+---\n"
+              "| foo | ba\n"
+              "+=====+===\n"
+              "| 'a' |   \n"
+              "+-----+---\n"
+              "| 'b' |   \n"
+              "+-----+---\n")
     eq_(expect, actual)
 
 

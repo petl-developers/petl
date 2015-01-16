@@ -12,7 +12,7 @@ from petl.transform.basics import cut
 from petl.transform.dedup import distinct
 
 
-def rowreduce(table, key, reducer, fields=None, presorted=False,
+def rowreduce(table, key, reducer, header=None, presorted=False,
               buffersize=None, tempdir=None, cache=True):
     """
     Group rows under the given key then apply `reducer` to produce a single
@@ -30,7 +30,7 @@ def rowreduce(table, key, reducer, fields=None, presorted=False,
         ...     return [key, sum(row[1] for row in rows)]
         ...
         >>> table2 = etl.rowreduce(table1, key='foo', reducer=sumbar,
-        ...                        fields=['foo', 'barsum'])
+        ...                        header=['foo', 'barsum'])
         >>> table2
         +-----+--------+
         | foo | barsum |
@@ -52,7 +52,7 @@ def rowreduce(table, key, reducer, fields=None, presorted=False,
     
     """
 
-    return RowReduceView(table, key, reducer, fields=fields,
+    return RowReduceView(table, key, reducer, header=header,
                          presorted=presorted, 
                          buffersize=buffersize, tempdir=tempdir, cache=cache)
 
@@ -62,7 +62,7 @@ Table.rowreduce = rowreduce
 
 class RowReduceView(Table):
     
-    def __init__(self, source, key, reducer, fields=None, 
+    def __init__(self, source, key, reducer, header=None,
                  presorted=False, buffersize=None, tempdir=None, cache=True):
         if presorted:
             self.source = source
@@ -70,18 +70,18 @@ class RowReduceView(Table):
             self.source = sort(source, key, buffersize=buffersize, 
                                tempdir=tempdir, cache=cache)
         self.key = key
-        self.fields = fields
+        self.header = header
         self.reducer = reducer
 
     def __iter__(self):
-        return iterrowreduce(self.source, self.key, self.reducer, self.fields)
+        return iterrowreduce(self.source, self.key, self.reducer, self.header)
 
     
-def iterrowreduce(source, key, reducer, fields):
-    if fields is None:
-        # output fields from source
-        fields, source = iterpeek(source)
-    yield tuple(fields)
+def iterrowreduce(source, key, reducer, header):
+    if header is None:
+        # output header from source
+        header, source = iterpeek(source)
+    yield tuple(header)
     for key, rows in rowgroupby(source, key):
         yield tuple(reducer(key, rows))
         
@@ -450,15 +450,15 @@ def itermergeduplicates(table, key, missing):
 
     # determine output fields
     if isinstance(key, string_types):
-        outflds = [key]
+        outhdr = [key]
         keyflds = set([key])
     else:
-        outflds = list(key)
+        outhdr = list(key)
         keyflds = set(key)
     valflds = [f for f in flds if f not in keyflds]
     valfldidxs = [flds.index(f) for f in valflds]
-    outflds.extend(valflds)
-    yield tuple(outflds)
+    outhdr.extend(valflds)
+    yield tuple(outhdr)
 
     # do the work
     for k, grp in rowgroupby(it, key):

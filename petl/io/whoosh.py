@@ -426,14 +426,14 @@ def itersearchindex(index_or_dirname, query, limit, pagenum, pagelen, indexname,
     try:
 
         # figure out header
-        fields = tuple()
+        hdr = tuple()
         if docnum_field is not None:
-            fields += (docnum_field,)
+            hdr += (docnum_field,)
         if score_field is not None:
-            fields += (score_field,)
+            hdr += (score_field,)
         stored_names = tuple(index.schema.stored_names())
-        fields += stored_names
-        yield fields
+        hdr += stored_names
+        yield hdr
 
         # parse the query
         if isinstance(query, string_types):

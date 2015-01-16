@@ -215,6 +215,14 @@ Filling missing values
 .. autofunction:: petl.transform.fills.fillleft
 
 
+.. _transform_validation:
+
+Validation
+----------
+
+.. autofunction:: petl.transform.validation.validate
+
+
 .. _transform_intervals:
 
 Intervals (intervaltree)

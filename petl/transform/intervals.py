@@ -914,8 +914,8 @@ def iterintervalsubtract(left, right, lstart, lstop, rstart, rstop, lkey, rkey,
         asindices(rhdr, rkey)
 
     # determine output fields
-    outfields = list(lflds)
-    yield tuple(outfields)
+    outhdr = list(lflds)
+    yield tuple(outhdr)
     
     # create getters for start and stop positions
     lstartidx, lstopidx = asindices(lhdr, (lstart, lstop))

@@ -15,7 +15,7 @@ from petl.io.sources import write_source_from_arg
 
 def tohtml(table, source=None, encoding=None, errors=None, caption=None,
            vrepr=text_type, lineterminator='\n', index_header=False,
-           tr_style=None, td_styles=None):
+           tr_style=None, td_styles=None, truncate=None):
     """
     Write the table as HTML to a file. E.g.::
 
@@ -73,7 +73,8 @@ def tohtml(table, source=None, encoding=None, errors=None, caption=None,
 
             # write header
             hdr = next(it)
-            _write_begin(f, hdr, lineterminator, caption, index_header)
+            _write_begin(f, hdr, lineterminator, caption, index_header,
+                         truncate)
 
             # write body
             if tr_style and callable(tr_style):
@@ -81,7 +82,7 @@ def tohtml(table, source=None, encoding=None, errors=None, caption=None,
                 it = (Record(row, hdr) for row in it)
             for row in it:
                 _write_row(f, hdr, row, lineterminator, vrepr,
-                           tr_style, td_styles)
+                           tr_style, td_styles, truncate)
 
             # finish up
             _write_end(f, lineterminator)
@@ -97,7 +98,7 @@ Table.tohtml = tohtml
 
 def teehtml(table, source=None, encoding=None, errors=None, caption=None,
             vrepr=text_type, lineterminator='\n', index_header=False,
-            tr_style=None, td_styles=None):
+            tr_style=None, td_styles=None, truncate=None):
     """
     Return a table that writes rows to a Unicode HTML file as they are
     iterated over.
@@ -105,23 +106,21 @@ def teehtml(table, source=None, encoding=None, errors=None, caption=None,
     """
 
     source = write_source_from_arg(source)
-    return TeeHTMLView(table, source=source,
-                       encoding=encoding, errors=errors, caption=caption,
-                       vrepr=vrepr,
-                       lineterminator=lineterminator,
-                       index_header=index_header,
-                       tr_style=tr_style, td_styles=td_styles)
+    return TeeHTMLView(table, source=source, encoding=encoding, errors=errors,
+                       caption=caption, vrepr=vrepr,
+                       lineterminator=lineterminator, index_header=index_header,
+                       tr_style=tr_style, td_styles=td_styles,
+                       truncate=truncate)
 
 
 Table.teehtml = teehtml
 
 
 class TeeHTMLView(Table):
-
-    def __init__(self, table, source=None, encoding=None,
-                 errors=None, caption=None, vrepr=text_type,
-                 lineterminator='\n', index_header=False,
-                 tr_style=None, td_styles=None):
+    def __init__(self, table, source=None, encoding=None, errors=None,
+                 caption=None, vrepr=text_type, lineterminator='\n',
+                 index_header=False, tr_style=None, td_styles=None,
+                 truncate=None):
         self.table = table
         self.source = source
         self.encoding = encoding
@@ -132,6 +131,7 @@ class TeeHTMLView(Table):
         self.index_header = index_header
         self.tr_style = tr_style
         self.td_styles = td_styles
+        self.truncate = truncate
 
     def __iter__(self):
         table = self.table
@@ -144,6 +144,7 @@ class TeeHTMLView(Table):
         tr_style = self.tr_style
         td_styles = self.td_styles
         vrepr = self.vrepr
+        truncate = self.truncate
 
         with source.open('wb') as buf:
 
@@ -162,7 +163,8 @@ class TeeHTMLView(Table):
 
                 # write header
                 hdr = next(it)
-                _write_begin(f, hdr, lineterminator, caption, index_header)
+                _write_begin(f, hdr, lineterminator, caption, index_header,
+                             truncate)
                 yield hdr
 
                 # write body
@@ -171,7 +173,7 @@ class TeeHTMLView(Table):
                     it = (Record(row, hdr) for row in it)
                 for row in it:
                     _write_row(f, hdr, row, lineterminator, vrepr,
-                               tr_style, td_styles)
+                               tr_style, td_styles, truncate)
                     yield row
 
                 # finish up
@@ -183,7 +185,7 @@ class TeeHTMLView(Table):
                     f.detach()
 
 
-def _write_begin(f, flds, lineterminator, caption, index_header):
+def _write_begin(f, flds, lineterminator, caption, index_header, truncate):
     f.write("<table class='petl'>" + lineterminator)
     if caption is not None:
         f.write(('<caption>%s</caption>' % caption) + lineterminator)
@@ -192,13 +194,16 @@ def _write_begin(f, flds, lineterminator, caption, index_header):
     for i, h in enumerate(flds):
         if index_header:
             h = '%s|%s' % (i, h)
+        if truncate:
+            h = h[:truncate]
         f.write(('<th>%s</th>' % h) + lineterminator)
     f.write('</tr>' + lineterminator)
     f.write('</thead>' + lineterminator)
     f.write('<tbody>' + lineterminator)
 
 
-def _write_row(f, flds, row, lineterminator, vrepr, tr_style, td_styles):
+def _write_row(f, flds, row, lineterminator, vrepr, tr_style, td_styles,
+               truncate):
     tr_css = _get_tr_css(row, tr_style)
     if tr_css:
         f.write(("<tr style='%s'>" % tr_css) + lineterminator)
@@ -206,6 +211,8 @@ def _write_row(f, flds, row, lineterminator, vrepr, tr_style, td_styles):
         f.write("<tr>" + lineterminator)
     for h, v in izip_longest(flds, row, fillvalue=None):
         r = vrepr(v)
+        if truncate:
+            r = r[:truncate]
         td_css = _get_td_css(h, v, td_styles)
         if td_css:
             f.write(("<td style='%s'>%s</td>" % (td_css, r)) + lineterminator)

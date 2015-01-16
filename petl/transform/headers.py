@@ -94,7 +94,7 @@ def iterrename(source, spec, strict):
         yield tuple(row)
 
 
-def setheader(table, fields):
+def setheader(table, header):
     """
     Replace header row in the given table. E.g.::
 
@@ -117,7 +117,7 @@ def setheader(table, fields):
 
     """
 
-    return SetHeaderView(table, fields)
+    return SetHeaderView(table, header)
 
 
 Table.setheader = setheader
@@ -125,18 +125,18 @@ Table.setheader = setheader
 
 class SetHeaderView(Table):
 
-    def __init__(self, source, fields):
+    def __init__(self, source, header):
         self.source = source
-        self.fields = fields
+        self.header = header
 
     def __iter__(self):
-        return itersetheader(self.source, self.fields)
+        return itersetheader(self.source, self.header)
 
 
-def itersetheader(source, fields):
+def itersetheader(source, header):
     it = iter(source)
     next(it)  # discard source header
-    yield tuple(fields)
+    yield tuple(header)
     for row in it:
         yield tuple(row)
 
@@ -190,7 +190,7 @@ def iterextendheader(source, fields):
         yield tuple(row)
 
 
-def pushheader(table, fields, *args):
+def pushheader(table, header, *args):
     """
     Push rows down and prepend a header row. E.g.::
 
@@ -211,7 +211,7 @@ def pushheader(table, fields, *args):
 
     """
 
-    return PushHeaderView(table, fields, *args)
+    return PushHeaderView(table, header, *args)
 
 
 Table.pushheader = pushheader
@@ -219,28 +219,27 @@ Table.pushheader = pushheader
 
 class PushHeaderView(Table):
 
-    def __init__(self, source, fields, *args):
+    def __init__(self, source, header, *args):
         self.source = source
         self.args = args
-        # if user passes fields as a list, just use this and ignore args
-        if isinstance(fields, (list, tuple)):
-            self.fields = fields
+        # if user passes header as a list, just use this and ignore args
+        if isinstance(header, (list, tuple)):
+            self.header = header
         # otherwise,
         elif len(args) > 0:
-            self.fields = []
-            self.fields.append(fields)  # first argument is named fields
-            for arg in args:
-                self.fields.append(arg)  # add the other positional arguments
+            self.header = []
+            self.header.append(header)  # first argument is named header
+            self.header.extend(args)  # add the other positional arguments
         else:
             assert False, 'bad parameters'
 
     def __iter__(self):
-        return iterpushheader(self.source, self.fields)
+        return iterpushheader(self.source, self.header)
 
 
-def iterpushheader(source, fields):
+def iterpushheader(source, header):
     it = iter(source)
-    yield tuple(fields)
+    yield tuple(header)
     for row in it:
         yield tuple(row)
 

@@ -206,6 +206,13 @@ These modules all have dependencies on third party packages, but these
 have been kept as optional dependencies so are not required for
 installing :mod:`petl`.
 
+New validate function
+~~~~~~~~~~~~~~~~~~~~~
+
+A new :func:`petl.transform.validation.validate` function has been
+added to provide a convenient interface when validating a table
+against a set of constraints.
+
 New intervals module
 ~~~~~~~~~~~~~~~~~~~~
 

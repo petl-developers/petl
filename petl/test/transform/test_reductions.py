@@ -25,7 +25,7 @@ def test_rowreduce():
         return [key, sum(row[1] for row in rows)]
         
     table2 = rowreduce(table1, key='foo', reducer=sumbar, 
-                       fields=['foo', 'barsum'])
+                       header=['foo', 'barsum'])
     expect2 = (('foo', 'barsum'),
                ('a', 10),
                ('b', 12),
@@ -47,7 +47,7 @@ def test_rowreduce_fieldnameaccess():
         return [key, sum([rec['bar'] for rec in records])]
         
     table2 = rowreduce(table1, key='foo', reducer=sumbar, 
-                       fields=['foo', 'barsum'])
+                       header=['foo', 'barsum'])
     expect2 = (('foo', 'barsum'),
                ('a', 10),
                ('b', 12),
@@ -69,7 +69,7 @@ def test_rowreduce_more():
         return [key, sum(rec['bar'] for rec in records)]
         
     table2 = rowreduce(table1, key='foo', reducer=sumbar, 
-                       fields=['foo', 'barsum'])
+                       header=['foo', 'barsum'])
     expect2 = (('foo', 'barsum'),
                ('aa', 10),
                ('bb', 12),
@@ -82,7 +82,7 @@ def test_rowreduce_empty():
     expect = (('foo', 'bar'),)
     reducer = lambda key, rows: (key, [r[0] for r in rows])
     actual = rowreduce(table, key='foo', reducer=reducer, 
-                       fields=('foo', 'bar'))
+                       header=('foo', 'bar'))
     ieq(expect, actual)
 
 

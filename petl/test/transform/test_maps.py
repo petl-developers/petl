@@ -103,7 +103,7 @@ def test_rowmap():
                 row[2] * 12,
                 row[4] / row[3] ** 2]
 
-    actual = rowmap(table, rowmapper, fields=['subject_id', 'gender',
+    actual = rowmap(table, rowmapper, header=['subject_id', 'gender',
                                               'age_months', 'bmi'])
     expect = (('subject_id', 'gender', 'age_months', 'bmi'),
               (1, 'M', 16 * 12, 62.0 / 1.45 ** 2),
@@ -126,7 +126,7 @@ def test_rowmap():
               (2, 'F', 19 * 12, 55.4 / 1.34 ** 2),
               (3, 'F', 17 * 12, 74.4 / 1.78 ** 2),
               (4, 'M', 21 * 12, 45.2 / 1.33 ** 2))
-    actual = rowmap(table2, rowmapper, fields=['subject_id', 'gender',
+    actual = rowmap(table2, rowmapper, header=['subject_id', 'gender',
                                                'age_months', 'bmi'])
     ieq(expect, actual)
 
@@ -141,7 +141,7 @@ def test_rowmap_empty():
                 row[2] * 12,
                 row[4] / row[3] ** 2]
 
-    actual = rowmap(table, rowmapper, fields=['subject_id', 'gender',
+    actual = rowmap(table, rowmapper, header=['subject_id', 'gender',
                                               'age_months', 'bmi'])
     expect = (('subject_id', 'gender', 'age_months', 'bmi'),)
     ieq(expect, actual)
@@ -162,7 +162,7 @@ def test_recordmap():
                 rec['age'] * 12,
                 rec['weight'] / rec['height'] ** 2]
 
-    actual = rowmap(table, recmapper, fields=['subject_id', 'gender',
+    actual = rowmap(table, recmapper, header=['subject_id', 'gender',
                                               'age_months', 'bmi'])
     expect = (('subject_id', 'gender', 'age_months', 'bmi'),
               (1, 'M', 16 * 12, 62.0 / 1.45 ** 2),
@@ -185,7 +185,7 @@ def test_recordmap():
               (2, 'F', 19 * 12, 55.4 / 1.34 ** 2),
               (3, 'F', 17 * 12, 74.4 / 1.78 ** 2),
               (4, 'M', 21 * 12, 45.2 / 1.33 ** 2))
-    actual = rowmap(table2, recmapper, fields=['subject_id', 'gender',
+    actual = rowmap(table2, recmapper, header=['subject_id', 'gender',
                                                'age_months', 'bmi'])
     ieq(expect, actual)
 
@@ -204,7 +204,7 @@ def test_rowmapmany():
         yield [row[0], 'age_months', row[2] * 12]
         yield [row[0], 'bmi', row[4] / row[3] ** 2]
 
-    actual = rowmapmany(table, rowgenerator, fields=['subject_id', 'variable',
+    actual = rowmapmany(table, rowgenerator, header=['subject_id', 'variable',
                                                      'value'])
     expect = (('subject_id', 'variable', 'value'),
               (1, 'gender', 'M'),
@@ -236,7 +236,7 @@ def test_recordmapmany():
         yield [rec['id'], 'age_months', rec['age'] * 12]
         yield [rec['id'], 'bmi', rec['weight'] / rec['height'] ** 2]
 
-    actual = rowmapmany(table, rowgenerator, fields=['subject_id', 'variable',
+    actual = rowmapmany(table, rowgenerator, header=['subject_id', 'variable',
                                                      'value'])
     expect = (('subject_id', 'variable', 'value'),
               (1, 'gender', 'M'),

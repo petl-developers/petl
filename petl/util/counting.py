@@ -143,10 +143,10 @@ class ValueCountsView(Table):
 
         # construct output header
         if isinstance(self.field, (tuple, list)):
-            outfields = tuple(self.field) + ('count', 'frequency')
+            outhdr = tuple(self.field) + ('count', 'frequency')
         else:
-            outfields = (self.field, 'count', 'frequency')
-        yield outfields
+            outhdr = (self.field, 'count', 'frequency')
+        yield outhdr
 
         # count values
         counter = valuecounter(self.table, *self.field, missing=self.missing)

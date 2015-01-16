@@ -141,7 +141,7 @@ def composedict(d, srcfld):
     return g
 
 
-def rowmap(table, rowmapper, fields, failonerror=False):
+def rowmap(table, rowmapper, header, failonerror=False):
     """
     Transform rows via an arbitrary function. E.g.::
 
@@ -160,7 +160,7 @@ def rowmap(table, rowmapper, fields, failonerror=False):
         ...             row.height / row.weight ** 2]
         ...
         >>> table2 = etl.rowmap(table1, rowmapper,
-        ...                     fields=['subject_id', 'gender', 'age_months',
+        ...                     header=['subject_id', 'gender', 'age_months',
         ...                             'bmi'])
         >>> table2
         +------------+--------+------------+-----------------------+
@@ -182,7 +182,7 @@ def rowmap(table, rowmapper, fields, failonerror=False):
 
     """
 
-    return RowMapView(table, rowmapper, fields, failonerror=failonerror)
+    return RowMapView(table, rowmapper, header, failonerror=failonerror)
 
 
 Table.rowmap = rowmap
@@ -190,22 +190,22 @@ Table.rowmap = rowmap
 
 class RowMapView(Table):
 
-    def __init__(self, source, rowmapper, fields, failonerror=False):
+    def __init__(self, source, rowmapper, header, failonerror=False):
         self.source = source
         self.rowmapper = rowmapper
-        self.fields = fields
+        self.header = header
         self.failonerror = failonerror
 
     def __iter__(self):
-        return iterrowmap(self.source, self.rowmapper, self.fields,
+        return iterrowmap(self.source, self.rowmapper, self.header,
                           self.failonerror)
 
 
-def iterrowmap(source, rowmapper, fields, failonerror):
+def iterrowmap(source, rowmapper, header, failonerror):
     it = iter(source)
     hdr = next(it)
     flds = list(map(text_type, hdr))
-    yield tuple(fields)
+    yield tuple(header)
     it = (Record(row, flds) for row in it)
     for row in it:
         try:
@@ -216,7 +216,7 @@ def iterrowmap(source, rowmapper, fields, failonerror):
                 raise e
 
 
-def rowmapmany(table, rowgenerator, fields, failonerror=False):
+def rowmapmany(table, rowgenerator, header, failonerror=False):
     """
     Map each input row to any number of output rows via an arbitrary
     function. E.g.::
@@ -235,7 +235,7 @@ def rowmapmany(table, rowgenerator, fields, failonerror=False):
         ...     yield [row[0], 'bmi', row.height / row.weight ** 2]
         ...
         >>> table2 = etl.rowmapmany(table1, rowgenerator,
-        ...                         fields=['subject_id', 'variable', 'value'])
+        ...                         header=['subject_id', 'variable', 'value'])
         >>> table2.lookall()
         +------------+--------------+-----------------------+
         | subject_id | variable     | value                 |
@@ -270,7 +270,7 @@ def rowmapmany(table, rowgenerator, fields, failonerror=False):
 
     """
 
-    return RowMapManyView(table, rowgenerator, fields, failonerror=failonerror)
+    return RowMapManyView(table, rowgenerator, header, failonerror=failonerror)
 
 
 Table.rowmapmany = rowmapmany
@@ -278,22 +278,22 @@ Table.rowmapmany = rowmapmany
 
 class RowMapManyView(Table):
 
-    def __init__(self, source, rowgenerator, fields, failonerror=False):
+    def __init__(self, source, rowgenerator, header, failonerror=False):
         self.source = source
         self.rowgenerator = rowgenerator
-        self.fields = fields
+        self.header = header
         self.failonerror = failonerror
 
     def __iter__(self):
-        return iterrowmapmany(self.source, self.rowgenerator, self.fields,
+        return iterrowmapmany(self.source, self.rowgenerator, self.header,
                               self.failonerror)
 
 
-def iterrowmapmany(source, rowgenerator, fields, failonerror):
+def iterrowmapmany(source, rowgenerator, header, failonerror):
     it = iter(source)
     hdr = next(it)
     flds = list(map(text_type, hdr))
-    yield tuple(fields)
+    yield tuple(header)
     it = (Record(row, flds) for row in it)
     for row in it:
         try:
@@ -306,7 +306,7 @@ def iterrowmapmany(source, rowgenerator, fields, failonerror):
                 pass
 
 
-def rowgroupmap(table, key, mapper, fields=None, presorted=False,
+def rowgroupmap(table, key, mapper, header=None, presorted=False,
                 buffersize=None, tempdir=None, cache=True):
     """
     Group rows under the given key then apply `mapper` to yield zero or more
@@ -314,7 +314,7 @@ def rowgroupmap(table, key, mapper, fields=None, presorted=False,
 
     """
 
-    return RowGroupMapView(table, key, mapper, fields=fields,
+    return RowGroupMapView(table, key, mapper, header=header,
                            presorted=presorted,
                            buffersize=buffersize, tempdir=tempdir, cache=cache)
 
@@ -324,7 +324,7 @@ Table.rowgroupmap = rowgroupmap
 
 class RowGroupMapView(Table):
 
-    def __init__(self, source, key, mapper, fields=None,
+    def __init__(self, source, key, mapper, header=None,
                  presorted=False, buffersize=None, tempdir=None, cache=True):
         if presorted:
             self.source = source
@@ -332,15 +332,15 @@ class RowGroupMapView(Table):
             self.source = sort(source, key, buffersize=buffersize,
                                tempdir=tempdir, cache=cache)
         self.key = key
-        self.fields = fields
+        self.header = header
         self.mapper = mapper
 
     def __iter__(self):
-        return iterrowgroupmap(self.source, self.key, self.mapper, self.fields)
+        return iterrowgroupmap(self.source, self.key, self.mapper, self.header)
 
 
-def iterrowgroupmap(source, key, mapper, fields):
-    yield tuple(fields)
+def iterrowgroupmap(source, key, mapper, header):
+    yield tuple(header)
     for key, rows in rowgroupby(source, key):
         for row in mapper(key, rows):
             yield row

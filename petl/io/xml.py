@@ -5,7 +5,7 @@ from __future__ import absolute_import, print_function, division
 from xml.etree import ElementTree
 from operator import attrgetter
 import itertools
-from petl.compat import string_types
+from petl.compat import string_types, text_type
 
 
 # internal dependencies
@@ -183,13 +183,13 @@ class XmlView(Table):
                 # difficult case, deal with different paths for each field
 
                 # determine output header
-                fields = tuple(sorted(vdict.keys()))
-                yield fields
+                flds = tuple(sorted(map(text_type, vdict.keys())))
+                yield flds
 
                 # setup value getters
                 vmatches = dict()
                 vgetters = dict()
-                for f in fields:
+                for f in flds:
                     vmatch = self.vdict[f]
                     if isinstance(vmatch, string_types):
                         # match element path
@@ -204,7 +204,7 @@ class XmlView(Table):
                 # determine data rows
                 for rowelm in tree.iterfind(self.rmatch):
                     yield tuple(vgetters[f](rowelm.findall(vmatches[f]))
-                                for f in fields)
+                                for f in flds)
 
 
 def element_text_getter(missing):
