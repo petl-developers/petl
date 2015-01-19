@@ -43,12 +43,10 @@ def test_stringsource():
 
 def test_popensource():
 
-    expect = (('foo', 'bar'),
-              ('a', '1'))
+    expect = (('foo', 'bar'),)
     delimiter = ' '
-    actual = fromcsv(PopenSource(r'echo -e foo bar\\na 1',
-                                 shell=True,
-                                 executable='/bin/bash'),
+    actual = fromcsv(PopenSource(r'echo foo bar',
+                                 shell=True),
                      delimiter=delimiter)
     ieq(expect, actual)
 
