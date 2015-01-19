@@ -2,6 +2,7 @@ from __future__ import absolute_import, print_function, division
 
 
 import os
+import gc
 from datetime import datetime
 from petl.compat import next
 
@@ -243,6 +244,51 @@ def test_sort_buffered_independent():
     eq_(expectation[1], next(it2))
     eq_(expectation[2], next(it2))
     eq_(expectation[2], next(it1))
+
+
+def test_sort_buffered_cleanup():
+
+    table = (('foo', 'bar'),
+             ('C', 2),
+             ('A', 9),
+             ('A', 6),
+             ('F', 1),
+             ('D', 10))
+    result = sort(table, 'bar', buffersize=2)
+    # initially filecache should be empty
+    eq_(None, result._filecache)
+    # pull rows through, should populate file cache
+    eq_(5, nrows(result))
+    eq_(3, len(result._filecache))
+    # check all files exist
+    filenames = [f.name for f in result._filecache]
+    for fn in filenames:
+        assert os.path.exists(fn)
+    # delete object and garbage collect
+    del result
+    gc.collect()
+    for fn in filenames:
+        assert not os.path.exists(fn)
+
+    # do it again, but check if cleanup is robust against open iterators
+    result = sort(table, 'bar', buffersize=2)
+    # pull rows through, should populate file cache
+    eq_(5, nrows(result))
+    eq_(3, len(result._filecache))
+    # check all files exist
+    filenames = [f.name for f in result._filecache]
+    for fn in filenames:
+        assert os.path.exists(fn)
+    # open an iterator
+    it = iter(result)
+    next(it)
+    next(it)
+    # delete objects and garbage collect
+    del result
+    del it
+    gc.collect()
+    for fn in filenames:
+        assert not os.path.exists(fn)
 
 
 def test_sort_empty():
