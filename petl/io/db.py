@@ -3,7 +3,6 @@ from __future__ import absolute_import, print_function, division
 
 # standard library dependencies
 import logging
-import sqlite3
 from petl.compat import next, text_type, string_types
 
 
@@ -82,6 +81,7 @@ def fromdb(dbo, query, *args, **kwargs):
 
     # convenience for working with sqlite3
     if isinstance(dbo, string_types):
+        import sqlite3
         dbo = sqlite3.connect(dbo)
 
     return DbView(dbo, query, *args, **kwargs)
@@ -283,6 +283,7 @@ def todb(table, dbo, tablename, schema=None, commit=True,
 
     # convenience for working with sqlite3
     if isinstance(dbo, string_types):
+        import sqlite3
         dbo = sqlite3.connect(dbo)
         needs_closing = True
 
@@ -575,6 +576,7 @@ def appenddb(table, dbo, tablename, schema=None, commit=True):
 
     # convenience for working with sqlite3
     if isinstance(dbo, string_types):
+        import sqlite3
         dbo = sqlite3.connect(dbo)
         needs_closing = True
 

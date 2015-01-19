@@ -36,9 +36,15 @@ if PY2:
     text_type = unicode
     binary_type = str
     from urllib2 import urlopen
-    from cStringIO import StringIO
+    try:
+        from cStringIO import StringIO
+    except ImportError:
+        from StringIO import StringIO
     BytesIO = StringIO
-    import cPickle as pickle
+    try:
+        import cPickle as pickle
+    except ImportError:
+        import pickle
     maxint = sys.maxint
     long = long
     xrange = xrange
