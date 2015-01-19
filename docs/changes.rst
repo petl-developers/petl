@@ -89,7 +89,7 @@ Database extract/load functions
 The :func:`petl.io.db.todb` function now supports automatic table
 creation, inferring a schema from data in the table to be loaded. This
 functionality has been migrated across from the `petlx`_ package, and
-requires `SQLAlchemy <http://www.sqlalchemy.org/>` to be installed.
+requires `SQLAlchemy <http://www.sqlalchemy.org/>`_ to be installed.
 
 The functions `fromsqlite3`, `tosqlite3` and `appendsqlite3` have been
 removed as they duplicate functionality available from the existing
@@ -128,7 +128,7 @@ The following functions have been renamed: `isordered` (renamed to
 `issorted`), `StringSource` (renamed to `MemorySource`).
 
 The function `selectre` has been removed as it duplicates
-functionality, use :func:`petl.transform.regex.search` instead.
+functionality, use `search` instead.
 
 Sorting and comparison
 ~~~~~~~~~~~~~~~~~~~~~~
