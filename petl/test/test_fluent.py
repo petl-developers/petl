@@ -35,33 +35,23 @@ def test_basics():
     
 def test_staticmethods():
     
-    if PY2:
-        mode = 'wb'
-    else:
-        mode = 'w'
-    if PY2:
-        delimiter = b'\t'
-    else:
-        delimiter = '\t'
-    f = NamedTemporaryFile(mode=mode, delete=False)
-    writer = csv.writer(f, delimiter=delimiter)
-    table = (('foo', 'bar'),
-             ('a', 1),
-             ('b', 2),
-             ('c', 2))
-    for row in table:
-        writer.writerow(row)
+    data = [b'foo,bar',
+            b'a,1',
+            b'b,2',
+            b'c,2']
+    f = NamedTemporaryFile(mode='wb', delete=False)
+    f.write(b'\n'.join(data))
     f.close()
-    
-    actual = etl.fromcsv(f.name, delimiter=delimiter)
+
     expect = (('foo', 'bar'),
               ('a', '1'),
               ('b', '2'),
               ('c', '2'))
+    actual = etl.fromcsv(f.name, encoding='ascii')
     ieq(expect, actual)
     ieq(expect, actual)  # verify can iterate twice
-    
-    
+
+
 def test_container():
     table = (('foo', 'bar'),
              ('a', 1),
