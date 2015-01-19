@@ -117,12 +117,14 @@ Table.sort = sort
 
 def _iterchunk(fn):
     # reopen so iterators from file cache are independent
+    debug('opening %s' % fn)
     with open(fn, 'rb') as f:
         try:
             while True:
                 yield pickle.load(f)
         except EOFError:
             pass
+    debug('closed %s' % fn)
 
 
 _Keyed = namedtuple('Keyed', ['key', 'obj'])
@@ -325,9 +327,16 @@ class _NamedTempFileDeleteOnGC(object):
     def __init__(self, name):
         self.name = name
 
-    def delete(self, unlink=os.unlink):
-        debug('deleting %s' % self.name)
-        unlink(self.name)
+    def delete(self, unlink=os.unlink, log=logger.debug):
+        name = self.name
+        try:
+            log('deleting %s' % name)
+            unlink(name)
+        except Exception as e:
+            log('exception deleting %s: %s' % (name, e))
+            raise
+        else:
+            log('deleted %s' % name)
 
     def __del__(self):
         self.delete()

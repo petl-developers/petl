@@ -268,9 +268,18 @@ def test_sort_buffered_cleanup():
     del result
     gc.collect()
     for fn in filenames:
-        assert not os.path.exists(fn)
+        assert not os.path.exists(fn), fn
 
-    # do it again, but check if cleanup is robust against open iterators
+
+def test_sort_buffered_cleanup_open_iterator():
+
+    table = (('foo', 'bar'),
+             ('C', 2),
+             ('A', 9),
+             ('A', 6),
+             ('F', 1),
+             ('D', 10))
+    # check if cleanup is robust against open iterators
     result = sort(table, 'bar', buffersize=2)
     # pull rows through, should populate file cache
     eq_(5, nrows(result))
