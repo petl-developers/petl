@@ -24,7 +24,7 @@ else:
 
     def test_fromxls():
         filename = pkg_resources.resource_filename(
-            'petl', 'test/resources/example.xls'
+            'petl', 'test/resources/test.xls'
         )
         tbl = fromxls(filename, 'Sheet1')
         expect = (('foo', 'bar'),
@@ -37,7 +37,7 @@ else:
 
     def test_fromxls_nosheet():
         filename = pkg_resources.resource_filename(
-            'petl', 'test/resources/example.xls'
+            'petl', 'test/resources/test.xls'
         )
         tbl = fromxls(filename)
         expect = (('foo', 'bar'),
@@ -50,7 +50,7 @@ else:
 
     def test_fromxls_use_view():
         filename = pkg_resources.resource_filename(
-            'petl', 'test/resources/example.xls'
+            'petl', 'test/resources/test.xls'
         )
         tbl = fromxls(filename, 'Sheet1', use_view=False)
         expect = (('foo', 'bar'),

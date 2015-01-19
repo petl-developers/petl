@@ -22,7 +22,7 @@ else:
 
     def test_fromxlsx():
         filename = pkg_resources.resource_filename(
-            'petl', 'test/resources/example.xlsx'
+            'petl', 'test/resources/test.xlsx'
         )
         tbl = fromxlsx(filename, 'Sheet1')
         expect = (('foo', 'bar'),
@@ -35,7 +35,7 @@ else:
 
     def test_fromxlsx_nosheet():
         filename = pkg_resources.resource_filename(
-            'petl', 'test/resources/example.xlsx'
+            'petl', 'test/resources/test.xlsx'
         )
         tbl = fromxlsx(filename)
         expect = (('foo', 'bar'),
@@ -48,7 +48,7 @@ else:
 
     def test_fromxlsx_range():
         filename = pkg_resources.resource_filename(
-            'petl', 'test/resources/example.xlsx'
+            'petl', 'test/resources/test.xlsx'
         )
         tbl = fromxlsx(filename, 'Sheet2', range_string='B2:C6')
         expect = (('foo', 'bar'),
