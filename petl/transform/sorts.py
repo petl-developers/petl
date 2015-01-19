@@ -117,14 +117,14 @@ Table.sort = sort
 
 def _iterchunk(fn):
     # reopen so iterators from file cache are independent
-    debug('opening %s' % fn)
+    debug('iterchunk, opening %s' % fn)
     with open(fn, 'rb') as f:
         try:
             while True:
                 yield pickle.load(f)
         except EOFError:
             pass
-    debug('closed %s' % fn)
+    debug('end of iterchunk, closed %s' % fn)
 
 
 _Keyed = namedtuple('Keyed', ['key', 'obj'])
@@ -242,11 +242,25 @@ class SortView(Table):
             yield tuple(row)
 
     def _iterfromfilecache(self):
-        debug('iterate from file cache: %r', [f.name for f in self._filecache])
+        # create a reference to the filecache here, so cleanup happens in the
+        # correct order
+        filecache = self._filecache
+        filenames = [f.name for f in filecache]
+        debug('iterate from file cache: %r', filenames)
         yield tuple(self._hdrcache)
-        chunkiters = [_iterchunk(f.name) for f in self._filecache]
-        for row in _mergesorted(self._getkey, self.reverse, *chunkiters):
-            yield tuple(row)
+        chunkiters = [_iterchunk(fn) for fn in filenames]
+        rows = _mergesorted(self._getkey, self.reverse, *chunkiters)
+        try:
+            for row in rows:
+                yield tuple(row)
+        finally:
+            debug('attempt cleanup from generator')
+            # N.B., need to ensure that any open files are closed **before**
+            # temporary files are deleted, as deletion will fail on Windows
+            # if file is in use (i.e., still open)
+            del chunkiters
+            del rows
+            del filecache
 
     def _iternocache(self, source, key, reverse):
         debug('iterate without cache')
