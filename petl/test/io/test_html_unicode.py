@@ -19,10 +19,10 @@ def test_tohtml():
            (u'Вагиф Сәмәдоғлу', 3),
            (u'章子怡', 4))
     fn = NamedTemporaryFile().name
-    tohtml(tbl, fn, lineterminator='\n')
+    tohtml(tbl, fn, encoding='utf-8', lineterminator='\n')
 
     # check what it did
-    f = io.open(fn, mode='rt', encoding='utf-8')
+    f = io.open(fn, mode='rt', encoding='utf-8', newline=None)
     actual = f.read()
     expect = u"""<table class='petl'>
 <thead>
