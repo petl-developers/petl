@@ -16,8 +16,8 @@ def test_teepickle():
           ('b', 1),
           ('c', 3))
 
-    f1 = NamedTemporaryFile()
-    f2 = NamedTemporaryFile()
+    f1 = NamedTemporaryFile(delete=False)
+    f2 = NamedTemporaryFile(delete=False)
     etl.wrap(t1).teepickle(f1.name).selectgt('bar', 1).topickle(f2.name)
 
     ieq(t1, etl.frompickle(f1.name))
@@ -31,15 +31,19 @@ def test_teecsv():
           ('b', 1),
           ('c', 3))
 
-    f1 = NamedTemporaryFile()
-    f2 = NamedTemporaryFile()
+    f1 = NamedTemporaryFile(delete=False)
+    f2 = NamedTemporaryFile(delete=False)
 
-    etl.wrap(t1).teecsv(f1.name).selectgt('bar', 1).tocsv(f2.name)
+    (etl
+     .wrap(t1)
+     .teecsv(f1.name, encoding='ascii')
+     .selectgt('bar', 1)
+     .tocsv(f2.name, encoding='ascii'))
 
     ieq(t1,
-        etl.fromcsv(f1.name).convertnumbers())
+        etl.fromcsv(f1.name, encoding='ascii').convertnumbers())
     ieq(etl.wrap(t1).selectgt('bar', 1),
-        etl.fromcsv(f2.name).convertnumbers())
+        etl.fromcsv(f2.name, encoding='ascii').convertnumbers())
 
 
 def test_teetsv():
@@ -49,15 +53,19 @@ def test_teetsv():
           ('b', 1),
           ('c', 3))
 
-    f1 = NamedTemporaryFile()
-    f2 = NamedTemporaryFile()
+    f1 = NamedTemporaryFile(delete=False)
+    f2 = NamedTemporaryFile(delete=False)
 
-    etl.wrap(t1).teetsv(f1.name).selectgt('bar', 1).totsv(f2.name)
+    (etl
+     .wrap(t1)
+     .teetsv(f1.name, encoding='ascii')
+     .selectgt('bar', 1)
+     .totsv(f2.name, encoding='ascii'))
 
     ieq(t1,
-        etl.fromtsv(f1.name).convertnumbers())
+        etl.fromtsv(f1.name, encoding='ascii').convertnumbers())
     ieq(etl.wrap(t1).selectgt('bar', 1),
-        etl.fromtsv(f2.name).convertnumbers())
+        etl.fromtsv(f2.name, encoding='ascii').convertnumbers())
 
 
 def test_teecsv_write_header():
@@ -67,19 +75,20 @@ def test_teecsv_write_header():
           ('b', '1'),
           ('c', '3'))
 
-    f1 = NamedTemporaryFile()
-    f2 = NamedTemporaryFile()
+    f1 = NamedTemporaryFile(delete=False)
+    f2 = NamedTemporaryFile(delete=False)
 
     (etl
      .wrap(t1)
      .convertnumbers()
-     .teecsv(f1.name, write_header=False)
-     .selectgt('bar', 1).tocsv(f2.name))
+     .teecsv(f1.name, write_header=False, encoding='ascii')
+     .selectgt('bar', 1)
+     .tocsv(f2.name, encoding='ascii'))
 
     ieq(t1[1:],
-        etl.fromcsv(f1.name))
+        etl.fromcsv(f1.name, encoding='ascii'))
     ieq(etl.wrap(t1).convertnumbers().selectgt('bar', 1),
-        etl.fromcsv(f2.name).convertnumbers())
+        etl.fromcsv(f2.name, encoding='ascii').convertnumbers())
 
 
 def test_teecsv_unicode():
@@ -90,15 +99,19 @@ def test_teecsv_unicode():
           (u'Вагиф Сәмәдоғлу', 3),
           (u'章子怡', 4))
 
-    f1 = NamedTemporaryFile()
-    f2 = NamedTemporaryFile()
+    f1 = NamedTemporaryFile(delete=False)
+    f2 = NamedTemporaryFile(delete=False)
 
-    etl.wrap(t1).teecsv(f1.name).selectgt('id', 1).tocsv(f2.name)
+    (etl
+     .wrap(t1)
+     .teecsv(f1.name, encoding='utf-8')
+     .selectgt('id', 1)
+     .tocsv(f2.name, encoding='utf-8'))
 
     ieq(t1,
-        etl.fromcsv(f1.name).convertnumbers())
+        etl.fromcsv(f1.name, encoding='utf-8').convertnumbers())
     ieq(etl.wrap(t1).selectgt('id', 1),
-        etl.fromcsv(f2.name).convertnumbers())
+        etl.fromcsv(f2.name, encoding='utf-8').convertnumbers())
 
 
 def test_teecsv_unicode_write_header():
@@ -109,19 +122,20 @@ def test_teecsv_unicode_write_header():
           (u'Вагиф Сәмәдоғлу', u'3'),
           (u'章子怡', u'4'))
 
-    f1 = NamedTemporaryFile()
-    f2 = NamedTemporaryFile()
+    f1 = NamedTemporaryFile(delete=False)
+    f2 = NamedTemporaryFile(delete=False)
 
     (etl
      .wrap(t1)
      .convertnumbers()
-     .teecsv(f1.name, write_header=False)
-     .selectgt('id', 1).tocsv(f2.name))
+     .teecsv(f1.name, write_header=False, encoding='utf-8')
+     .selectgt('id', 1)
+     .tocsv(f2.name, encoding='utf-8'))
 
     ieq(t1[1:],
-        etl.fromcsv(f1.name))
+        etl.fromcsv(f1.name, encoding='utf-8'))
     ieq(etl.wrap(t1).convertnumbers().selectgt('id', 1),
-        etl.fromcsv(f2.name).convertnumbers())
+        etl.fromcsv(f2.name, encoding='utf-8').convertnumbers())
 
 
 def test_teetsv_unicode():
@@ -132,15 +146,19 @@ def test_teetsv_unicode():
           (u'Вагиф Сәмәдоғлу', 3),
           (u'章子怡', 4),)
 
-    f1 = NamedTemporaryFile()
-    f2 = NamedTemporaryFile()
+    f1 = NamedTemporaryFile(delete=False)
+    f2 = NamedTemporaryFile(delete=False)
 
-    etl.wrap(t1).teetsv(f1.name).selectgt('id', 1).totsv(f2.name)
+    (etl
+     .wrap(t1)
+     .teetsv(f1.name, encoding='utf-8')
+     .selectgt('id', 1)
+     .totsv(f2.name, encoding='utf-8'))
 
     ieq(t1,
-        etl.fromtsv(f1.name).convertnumbers())
+        etl.fromtsv(f1.name, encoding='utf-8').convertnumbers())
     ieq(etl.wrap(t1).selectgt('id', 1),
-        etl.fromtsv(f2.name).convertnumbers())
+        etl.fromtsv(f2.name, encoding='utf-8').convertnumbers())
 
 
 def test_teetext():
@@ -150,8 +168,8 @@ def test_teetext():
           ('b', 1),
           ('c', 3))
 
-    f1 = NamedTemporaryFile()
-    f2 = NamedTemporaryFile()
+    f1 = NamedTemporaryFile(delete=False)
+    f2 = NamedTemporaryFile(delete=False)
 
     prologue = 'foo,bar\n'
     template = '{foo},{bar}\n'
@@ -178,8 +196,8 @@ def test_teetext_unicode():
           (u'Johann Strauß', 1),
           (u'Вагиф Сәмәдоғлу', 3))
 
-    f1 = NamedTemporaryFile()
-    f2 = NamedTemporaryFile()
+    f1 = NamedTemporaryFile(delete=False)
+    f2 = NamedTemporaryFile(delete=False)
 
     prologue = u'foo,bar\n'
     template = u'{foo},{bar}\n'
@@ -189,12 +207,13 @@ def test_teetext_unicode():
      .teetext(f1.name,
               template=template,
               prologue=prologue,
-              epilogue=epilogue)
+              epilogue=epilogue,
+              encoding='utf-8')
      .selectgt('bar', 1)
      .topickle(f2.name))
 
     ieq(t1 + ((u'章子怡', 4),),
-        etl.fromcsv(f1.name).convertnumbers())
+        etl.fromcsv(f1.name, encoding='utf-8').convertnumbers())
     ieq(etl.wrap(t1).selectgt('bar', 1),
         etl.frompickle(f2.name))
 
@@ -206,8 +225,8 @@ def test_teehtml():
           ('b', 1),
           ('c', 3))
 
-    f1 = NamedTemporaryFile()
-    f2 = NamedTemporaryFile()
+    f1 = NamedTemporaryFile(delete=False)
+    f2 = NamedTemporaryFile(delete=False)
     etl.wrap(t1).teehtml(f1.name).selectgt('bar', 1).topickle(f2.name)
 
     ieq(t1, etl.fromxml(f1.name, './/tr', ('th', 'td')).convertnumbers())
@@ -221,9 +240,16 @@ def test_teehtml_unicode():
           (u'Johann Strauß', 1),
           (u'Вагиф Сәмәдоғлу', 3))
 
-    f1 = NamedTemporaryFile()
-    f2 = NamedTemporaryFile()
-    etl.wrap(t1).teehtml(f1.name).selectgt('bar', 1).topickle(f2.name)
+    f1 = NamedTemporaryFile(delete=False)
+    f2 = NamedTemporaryFile(delete=False)
+    (etl
+     .wrap(t1)
+     .teehtml(f1.name, encoding='utf-8')
+     .selectgt('bar', 1)
+     .topickle(f2.name))
 
-    ieq(t1, etl.fromxml(f1.name, './/tr', ('th', 'td')).convertnumbers())
+    ieq(t1,
+        (etl
+         .fromxml(f1.name, './/tr', ('th', 'td'), encoding='utf-8')
+         .convertnumbers()))
     ieq(etl.wrap(t1).selectgt('bar', 1), etl.frompickle(f2.name))
