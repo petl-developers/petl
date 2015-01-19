@@ -12,7 +12,8 @@ from petl.io.db import fromdb, todb, appenddb
 def test_fromsqlite3():
 
     # initial data
-    f = NamedTemporaryFile()
+    f = NamedTemporaryFile(delete=False)
+    f.close()
     data = (('a', 1),
             ('b', 2),
             ('c', 2.0))
@@ -96,6 +97,7 @@ def test_tosqlite3_appendsqlite3():
              ('b', 2),
              ('c', 2))
     f = NamedTemporaryFile(delete=False)
+    f.close()
     conn = sqlite3.connect(f.name)
     conn.execute('CREATE TABLE foobar (foo TEXT, bar INT)')
     conn.close()
@@ -172,7 +174,8 @@ def test_tosqlite3_identifiers():
              ('a', 1),
              ('b', 2),
              ('c', 2))
-    f = NamedTemporaryFile()
+    f = NamedTemporaryFile(delete=False)
+    f.close()
     conn = sqlite3.connect(f.name)
     conn.execute('CREATE TABLE "foo "" bar`" '
                  '("foo foo" TEXT, "bar.baz.spong`" INT)')

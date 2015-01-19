@@ -23,7 +23,7 @@ Johann Strauß,2
     uf.write(data)
     uf.close()
 
-    actual = fromcsv(fn)
+    actual = fromcsv(fn, encoding='utf-8')
     expect = ((u'name', u'id'),
               (u'Արամ Խաչատրյան', u'1'),
               (u'Johann Strauß', u'2'),
@@ -47,10 +47,10 @@ def test_fromcsv_lineterminators():
 
     for lt in u'\r', u'\n', u'\r\n':
         fn = NamedTemporaryFile().name
-        uf = io.open(fn, encoding='utf-8', mode='wt')
+        uf = io.open(fn, encoding='utf-8', mode='wt', newline='')
         uf.write(lt.join(data))
         uf.close()
-        actual = fromcsv(fn)
+        actual = fromcsv(fn, encoding='utf-8')
         ieq(expect, actual)
 
 
@@ -62,7 +62,7 @@ def test_tocsv():
            (u'Вагиф Сәмәдоғлу', 3),
            (u'章子怡', 4))
     fn = NamedTemporaryFile().name
-    tocsv(tbl, fn, lineterminator='\n')
+    tocsv(tbl, fn, encoding='utf-8', lineterminator='\n')
 
     expect = u'''name,id
 Արամ Խաչատրյան,1
@@ -80,14 +80,14 @@ Johann Strauß,2
            (u'Johann Strauß', 2),
            (u'Вагиф Сәмәдоғлу', 3),
            (u'章子怡', 4))
-    tocsv(tbl, fn, lineterminator='\n', write_header=False)
+    tocsv(tbl, fn, encoding='utf-8', lineterminator='\n', write_header=False)
 
     expect = u'''Արամ Խաչատրյան,1
 Johann Strauß,2
 Вагиф Сәмәдоғлу,3
 章子怡,4
 '''
-    uf = io.open(fn, encoding='utf-8', mode='r')
+    uf = io.open(fn, encoding='utf-8', mode='rt')
     actual = uf.read()
     eq_(expect, actual)
 
@@ -108,7 +108,7 @@ Johann Strauß,2
     tbl = ((u'name', u'id'),
            (u'ኃይሌ ገብረሥላሴ', 5),
            (u'ედუარდ შევარდნაძე', 6))
-    appendcsv(tbl, fn, lineterminator='\n')
+    appendcsv(tbl, fn, encoding='utf-8', lineterminator='\n')
 
     expect = u'''name,id
 Արամ Խաչատրյան,1

@@ -19,36 +19,37 @@ def test_tohtml():
            (u'Вагиф Сәмәдоғлу', 3),
            (u'章子怡', 4))
     fn = NamedTemporaryFile().name
-    tohtml(tbl, fn, lineterminator='\n')
+    tohtml(tbl, fn, encoding='utf-8', lineterminator='\n')
 
     # check what it did
-    f = io.open(fn, mode='rt', encoding='utf-8')
+    f = io.open(fn, mode='rt', encoding='utf-8', newline='')
     actual = f.read()
-    expect = u"""<table class='petl'>
-<thead>
-<tr>
-<th>name</th>
-<th>id</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Արամ Խաչատրյան</td>
-<td style='text-align: right'>1</td>
-</tr>
-<tr>
-<td>Johann Strauß</td>
-<td style='text-align: right'>2</td>
-</tr>
-<tr>
-<td>Вагиф Сәмәдоғлу</td>
-<td style='text-align: right'>3</td>
-</tr>
-<tr>
-<td>章子怡</td>
-<td style='text-align: right'>4</td>
-</tr>
-</tbody>
-</table>
-"""
+    expect = (
+        u"<table class='petl'>\n"
+        u"<thead>\n"
+        u"<tr>\n"
+        u"<th>name</th>\n"
+        u"<th>id</th>\n"
+        u"</tr>\n"
+        u"</thead>\n"
+        u"<tbody>\n"
+        u"<tr>\n"
+        u"<td>Արամ Խաչատրյան</td>\n"
+        u"<td style='text-align: right'>1</td>\n"
+        u"</tr>\n"
+        u"<tr>\n"
+        u"<td>Johann Strauß</td>\n"
+        u"<td style='text-align: right'>2</td>\n"
+        u"</tr>\n"
+        u"<tr>\n"
+        u"<td>Вагиф Сәмәдоғлу</td>\n"
+        u"<td style='text-align: right'>3</td>\n"
+        u"</tr>\n"
+        u"<tr>\n"
+        u"<td>章子怡</td>\n"
+        u"<td style='text-align: right'>4</td>\n"
+        u"</tr>\n"
+        u"</tbody>\n"
+        u"</table>\n"
+    )
     eq_(expect, actual)

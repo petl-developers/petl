@@ -82,7 +82,8 @@ class TextView(Table):
             else:
                 f = io.TextIOWrapper(buf,
                                      encoding=self.encoding,
-                                     errors=self.errors)
+                                     errors=self.errors,
+                                     newline='')
 
             # generate the table
             try:
@@ -184,7 +185,8 @@ def _writetext(table, source, mode, encoding, errors, template, prologue,
         else:
             f = io.TextIOWrapper(buf,
                                  encoding=encoding,
-                                 errors=errors)
+                                 errors=errors,
+                                 newline='')
 
         # write the table
         try:
