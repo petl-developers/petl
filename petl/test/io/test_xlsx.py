@@ -65,7 +65,8 @@ else:
                ('B', 2),
                ('C', 2),
                (u'é', datetime(2012, 1, 1)))
-        f = NamedTemporaryFile()
+        f = NamedTemporaryFile(delete=False)
+        f.close()
         toxlsx(tbl, f.name, 'Sheet1')
         actual = fromxlsx(f.name, 'Sheet1')
         ieq(tbl, actual)
@@ -76,7 +77,8 @@ else:
                ('B', 2),
                ('C', 2),
                (u'é', datetime(2012, 1, 1)))
-        f = NamedTemporaryFile()
+        f = NamedTemporaryFile(delete=False)
+        f.close()
         toxlsx(tbl, f.name)
         actual = fromxlsx(f.name)
         ieq(tbl, actual)
@@ -87,7 +89,8 @@ else:
                ('B', 2),
                ('C', 2),
                (u'é', datetime(2012, 1, 1)))
-        f = NamedTemporaryFile()
+        f = NamedTemporaryFile(delete=False)
+        f.close()
         etl.wrap(tbl).toxlsx(f.name, 'Sheet1')
         actual = etl.fromxlsx(f.name, 'Sheet1')
         ieq(tbl, actual)

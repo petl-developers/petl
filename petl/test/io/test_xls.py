@@ -66,7 +66,8 @@ else:
                   ('A', 1),
                   ('B', 2),
                   ('C', 2))
-        f = NamedTemporaryFile()
+        f = NamedTemporaryFile(delete=False)
+        f.close()
         toxls(expect, f.name, 'Sheet1')
         actual = fromxls(f.name, 'Sheet1')
         ieq(expect, actual)
@@ -75,9 +76,9 @@ else:
     def test_toxls_date():
         expect = (('foo', 'bar'),
                   (u'é', datetime(2012, 1, 1)),
-                  (u'éé', datetime(2013, 2, 22)),
-        )
-        f = NamedTemporaryFile()
+                  (u'éé', datetime(2013, 2, 22)))
+        f = NamedTemporaryFile(delete=False)
+        f.close()
         toxls(expect, f.name, 'Sheet1',
               styles={'bar': xlwt.easyxf(num_format_str='DD/MM/YYYY')})
         actual = fromxls(f.name, 'Sheet1')
@@ -88,9 +89,9 @@ else:
                   ('A', 1),
                   ('B', 2),
                   ('C', 2))
-        f = NamedTemporaryFile()
+        f = NamedTemporaryFile(delete=False)
+        f.close()
         etl.wrap(expect).toxls(f.name, 'Sheet1')
         actual = etl.fromxls(f.name, 'Sheet1')
         ieq(expect, actual)
         ieq(expect, actual)
-
