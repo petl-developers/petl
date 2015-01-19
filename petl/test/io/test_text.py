@@ -151,25 +151,24 @@ def test_totext_gz():
            epilogue=epilogue)
 
     # check what it did
-    f = gzip.open(fn, 'rb')
-    o = io.TextIOWrapper(f, encoding='ascii', newline='')
+    o = gzip.open(fn, 'rb')
     try:
         actual = o.read()
         expect = (
-            "{| class='wikitable'\n"
-            "|-\n"
-            "! foo\n"
-            "! bar\n"
-            "|-\n"
-            "| a\n"
-            "| 1\n"
-            "|-\n"
-            "| b\n"
-            "| 2\n"
-            "|-\n"
-            "| c\n"
-            "| 2\n"
-            "|}\n"
+            b"{| class='wikitable'\n"
+            b"|-\n"
+            b"! foo\n"
+            b"! bar\n"
+            b"|-\n"
+            b"| a\n"
+            b"| 1\n"
+            b"|-\n"
+            b"| b\n"
+            b"| 2\n"
+            b"|-\n"
+            b"| c\n"
+            b"| 2\n"
+            b"|}\n"
         )
         eq_(expect, actual)
     finally:

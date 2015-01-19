@@ -4,6 +4,8 @@ from __future__ import absolute_import, print_function, division
 
 import sys
 import os
+import tempfile
+
 
 from petl.test.helpers import ieq
 import petl as etl
@@ -22,13 +24,9 @@ else:
     from whoosh.fields import *
     import datetime
 
-    dirname = os.path.join('tmp', 'whoosh')
-    if not os.path.exists('tmp'):
-        os.mkdir('tmp')
-    if not os.path.exists(dirname):
-        os.mkdir(dirname)
-
     def test_fromindex_dirname():
+
+        dirname = tempfile.mkdtemp()
 
         schema = Schema(title=TEXT(stored=True), path=ID(stored=True),
                         content=TEXT)
@@ -50,6 +48,8 @@ else:
 
     def test_fromindex_index():
 
+        dirname = tempfile.mkdtemp()
+
         schema = Schema(title=TEXT(stored=True), path=ID(stored=True),
                         content=TEXT)
 
@@ -70,6 +70,7 @@ else:
 
     def test_fromindex_docnum_field():
 
+        dirname = tempfile.mkdtemp()
         schema = Schema(title=TEXT(stored=True), path=ID(stored=True),
                         content=TEXT)
 
@@ -90,6 +91,8 @@ else:
 
     def test_toindex_dirname():
 
+        dirname = tempfile.mkdtemp()
+
         # name fields in ascending order as whoosh sorts fields on the way out
         tbl = (('f0', 'f1', 'f2', 'f3', 'f4'),
                (u'AAA', 12, 4.3, True, datetime.datetime.now()),
@@ -108,6 +111,8 @@ else:
         ieq(tbl, actual)
 
     def test_toindex_index():
+
+        dirname = tempfile.mkdtemp()
 
         # name fields in ascending order as whoosh sorts fields on the way out
         tbl = (('f0', 'f1', 'f2', 'f3', 'f4'),
@@ -129,6 +134,8 @@ else:
 
     def test_appendindex_dirname():
 
+        dirname = tempfile.mkdtemp()
+
         # name fields in ascending order as whoosh sorts fields on the way out
         tbl = (('f0', 'f1', 'f2', 'f3', 'f4'),
                (u'AAA', 12, 4.3, True, datetime.datetime.now()),
@@ -149,6 +156,8 @@ else:
         ieq(expect, actual)
 
     def test_appendindex_index():
+
+        dirname = tempfile.mkdtemp()
 
         # name fields in ascending order as whoosh sorts fields on the way out
         tbl = (('f0', 'f1', 'f2', 'f3', 'f4'),
@@ -172,6 +181,7 @@ else:
 
     def test_searchindex():
 
+        dirname = tempfile.mkdtemp()
         schema = Schema(title=TEXT(stored=True), path=ID(stored=True),
                         content=TEXT)
 
@@ -201,6 +211,7 @@ else:
 
     def test_integration():
 
+        dirname = tempfile.mkdtemp()
         schema = Schema(title=TEXT(stored=True), path=ID(stored=True),
                         content=TEXT)
 
