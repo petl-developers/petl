@@ -4,6 +4,7 @@ from __future__ import absolute_import, print_function, division
 from tempfile import NamedTemporaryFile
 import gzip
 import os
+import io
 
 
 from petl.test.helpers import ieq, eq_
@@ -13,11 +14,11 @@ from petl.io.text import fromtext, totext
 def test_fromtext():
 
     # initial data
-    f = NamedTemporaryFile(delete=False, mode='wt')
-    f.write('foo\tbar\n')
-    f.write('a\t1\n')
-    f.write('b\t2\n')
-    f.write('c\t3\n')
+    f = NamedTemporaryFile(delete=False, mode='wb')
+    f.write(b'foo\tbar\n')
+    f.write(b'a\t1\n')
+    f.write(b'b\t2\n')
+    f.write(b'c\t3\n')
     f.close()
 
     actual = fromtext(f.name, encoding='ascii')
@@ -32,10 +33,10 @@ def test_fromtext():
 
 def test_fromtext_lineterminators():
 
-    data = ['foo,bar',
-            'a,1',
-            'b,2',
-            'c,2']
+    data = [b'foo,bar',
+            b'a,1',
+            b'b,2',
+            b'c,2']
 
     expect = (('lines',),
               ('foo,bar',),
@@ -43,8 +44,8 @@ def test_fromtext_lineterminators():
               ('b,2',),
               ('c,2',))
 
-    for lt in '\r', '\n', '\r\n':
-        f = NamedTemporaryFile(mode='wt', delete=False)
+    for lt in b'\r', b'\n', b'\r\n':
+        f = NamedTemporaryFile(mode='wb', delete=False)
         f.write(lt.join(data))
         f.close()
         actual = fromtext(f.name, encoding='ascii')
@@ -59,36 +60,41 @@ def test_totext():
              ('b', 2),
              ('c', 2))
     f = NamedTemporaryFile(delete=False)
-    prologue = """{| class="wikitable"
-|-
-! foo
-! bar
-"""
-    template = """|-
-| {foo}
-| {bar}
-"""
-    epilogue = "|}"
+    f.close()
+    prologue = (
+        "{| class='wikitable'\n"
+        "|-\n"
+        "! foo\n"
+        "! bar\n"
+    )
+    template = (
+        "|-\n"
+        "| {foo}\n"
+        "| {bar}\n"
+    )
+    epilogue = "|}\n"
     totext(table, f.name, encoding='ascii', template=template,
            prologue=prologue, epilogue=epilogue)
 
     # check what it did
-    with open(f.name, 'r') as o:
+    with io.open(f.name, mode='rt', encoding='ascii', newline='') as o:
         actual = o.read()
-        expect = """{| class="wikitable"
-|-
-! foo
-! bar
-|-
-| a
-| 1
-|-
-| b
-| 2
-|-
-| c
-| 2
-|}"""
+        expect = (
+            "{| class='wikitable'\n"
+            "|-\n"
+            "! foo\n"
+            "! bar\n"
+            "|-\n"
+            "| a\n"
+            "| 1\n"
+            "|-\n"
+            "| b\n"
+            "| 2\n"
+            "|-\n"
+            "| c\n"
+            "| 2\n"
+            "|}\n"
+        )
         eq_(expect, actual)
 
 
@@ -99,12 +105,12 @@ def test_fromtext_gz():
     f.close()
     fn = f.name + '.gz'
     os.rename(f.name, fn)
-    f = gzip.open(fn, 'wt')
+    f = gzip.open(fn, 'wb')
     try:
-        f.write('foo\tbar\n')
-        f.write('a\t1\n')
-        f.write('b\t2\n')
-        f.write('c\t3\n')
+        f.write(b'foo\tbar\n')
+        f.write(b'a\t1\n')
+        f.write(b'b\t2\n')
+        f.write(b'c\t3\n')
     finally:
         f.close()
 
@@ -126,40 +132,45 @@ def test_totext_gz():
              ('b', 2),
              ('c', 2))
     f = NamedTemporaryFile(delete=False)
-    fn = f.name + '.gz'
     f.close()
+    fn = f.name + '.gz'
     os.rename(f.name, fn)
-    prologue = """{| class="wikitable"
-|-
-! foo
-! bar
-"""
-    template = """|-
-| {foo}
-| {bar}
-"""
-    epilogue = "|}"
+    prologue = (
+        "{| class='wikitable'\n"
+        "|-\n"
+        "! foo\n"
+        "! bar\n"
+    )
+    template = (
+        "|-\n"
+        "| {foo}\n"
+        "| {bar}\n"
+    )
+    epilogue = "|}\n"
     totext(table, fn, encoding='ascii', template=template, prologue=prologue,
            epilogue=epilogue)
 
     # check what it did
-    o = gzip.open(fn, 'rt')
+    f = gzip.open(fn, 'rb')
+    o = io.TextIOWrapper(f, encoding='ascii', newline='')
     try:
         actual = o.read()
-        expect = """{| class="wikitable"
-|-
-! foo
-! bar
-|-
-| a
-| 1
-|-
-| b
-| 2
-|-
-| c
-| 2
-|}"""
+        expect = (
+            "{| class='wikitable'\n"
+            "|-\n"
+            "! foo\n"
+            "! bar\n"
+            "|-\n"
+            "| a\n"
+            "| 1\n"
+            "|-\n"
+            "| b\n"
+            "| 2\n"
+            "|-\n"
+            "| c\n"
+            "| 2\n"
+            "|}\n"
+        )
         eq_(expect, actual)
     finally:
         o.close()
