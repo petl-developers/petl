@@ -1,6 +1,7 @@
 from __future__ import absolute_import, print_function, division
 
 
+import os
 import heapq
 from tempfile import NamedTemporaryFile
 import itertools
@@ -114,9 +115,9 @@ def sort(table, key=None, reverse=False, buffersize=None, tempdir=None,
 Table.sort = sort
 
 
-def iterchunk(f):
+def _iterchunk(fn):
     # reopen so iterators from file cache are independent
-    with open(f.name, 'rb') as f:
+    with open(fn, 'rb') as f:
         try:
             while True:
                 yield pickle.load(f)
@@ -215,9 +216,7 @@ class SortView(Table):
         self._getkey = None
 
     def clearcache(self):
-        self._clearcache()
-
-    def _clearcache(self):
+        debug('clear cache')
         self._hdrcache = None
         self._memcache = None
         self._filecache = None
@@ -235,21 +234,21 @@ class SortView(Table):
             return self._iternocache(source, key, reverse)
 
     def _iterfrommemcache(self):
-        debug('iterate from mem cache')
+        debug('iterate from memory cache')
         yield tuple(self._hdrcache)
         for row in self._memcache:
             yield tuple(row)
 
     def _iterfromfilecache(self):
-        debug('iterate from file cache: %r', [f for f in self._filecache])
+        debug('iterate from file cache: %r', [f.name for f in self._filecache])
         yield tuple(self._hdrcache)
-        chunkiters = [iterchunk(f) for f in self._filecache]
+        chunkiters = [_iterchunk(f.name) for f in self._filecache]
         for row in _mergesorted(self._getkey, self.reverse, *chunkiters):
             yield tuple(row)
 
     def _iternocache(self, source, key, reverse):
         debug('iterate without cache')
-        self._clearcache()
+        self.clearcache()
         it = iter(source)
 
         hdr = next(it)
@@ -261,7 +260,7 @@ class SortView(Table):
         else:
             indices = range(len(hdr))
         # now use field indices to construct a _getkey function
-        # N.B., this will probably raise an exception on short rows
+        # TODO check if this raises an exception on short rows
         getkey = comparable_itemgetter(*indices)
 
         # TODO support native comparison
@@ -272,6 +271,7 @@ class SortView(Table):
 
         # have we exhausted the source iterator?
         if self.buffersize is None or len(rows) < self.buffersize:
+            # yes, table fits within sort buffer
 
             if self.cache:
                 debug('caching mem')
@@ -284,38 +284,59 @@ class SortView(Table):
                 yield tuple(row)
 
         else:
+            # no, table is too big, need to sort in chunks
 
             chunkfiles = []
 
             while rows:
 
                 # dump the chunk
-                f = NamedTemporaryFile(dir=self.tempdir)
-                for row in rows:
-                    pickle.dump(row, f, protocol=-1)
-                f.flush()
-                # N.B., do not close the file! Closing will delete
-                # the file, and we might want to keep it around
-                # if it can be cached. We'll let garbage collection
-                # deal with this, i.e., when no references to the
-                # chunk files exist any more, garbage collection
-                # should be an implicit close, which will cause file
-                # deletion.
-                chunkfiles.append(f)
+                with NamedTemporaryFile(dir=self.tempdir, delete=False,
+                                        mode='wb') as f:
+                    # N.B., we **don't** want the file to be deleted on close,
+                    # but we **do** want the file to be deleted when self
+                    # is garbage collected, or when the program exits. When
+                    # all references to the wrapper are gone, the file should
+                    # get deleted.
+                    wrapper = _NamedTempFileDeleteOnGC(f.name)
+                    debug('created temporary chunk file %s' % f.name)
+                    for row in rows:
+                        pickle.dump(row, f, protocol=-1)
+                    f.flush()
+                    chunkfiles.append(wrapper)
 
                 # grab the next chunk
                 rows = list(itertools.islice(it, 0, self.buffersize))
                 rows.sort(key=getkey, reverse=reverse)
 
             if self.cache:
-                debug('caching files %r', chunkfiles)
+                debug('caching files')
                 self._hdrcache = hdr
                 self._filecache = chunkfiles
                 self._getkey = getkey
 
-            chunkiters = [iterchunk(f) for f in chunkfiles]
+            chunkiters = [_iterchunk(f.name) for f in chunkfiles]
             for row in _mergesorted(getkey, reverse, *chunkiters):
                 yield tuple(row)
+
+
+class _NamedTempFileDeleteOnGC(object):
+
+    def __init__(self, name):
+        self.name = name
+
+    def delete(self, unlink=os.unlink):
+        debug('deleting %s' % self.name)
+        unlink(self.name)
+
+    def __del__(self):
+        self.delete()
+
+    def __str__(self):
+        return self.name
+
+    def __repr__(self):
+        return self.name
 
 
 def mergesort(*tables, **kwargs):
