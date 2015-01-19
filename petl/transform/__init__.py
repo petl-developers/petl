@@ -17,8 +17,7 @@ from petl.transform.selects import select, selectop, selectcontains, selecteq, \
     selectfalse, selectge, selectgt, selectin, selectis, selectisinstance, \
     selectisnot, selectle, selectlt, selectne, selectnone, selectnotin, \
     selectnotnone, selectrangeclosed, selectrangeopen, selectrangeopenleft, \
-    selectrangeopenright, selectre, selecttrue, selectusingcontext, \
-    rowlenselect, facet
+    selectrangeopenright, selecttrue, selectusingcontext, rowlenselect, facet
 
 from petl.transform.joins import join, leftjoin, rightjoin, outerjoin, \
     crossjoin, antijoin, lookupjoin, unjoin

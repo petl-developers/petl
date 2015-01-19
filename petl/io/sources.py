@@ -11,6 +11,7 @@ import subprocess
 import logging
 
 
+from petl.errors import ArgumentError
 from petl.compat import urlopen, StringIO, BytesIO, string_types, PY2
 
 
@@ -84,7 +85,7 @@ class StdinSource(object):
     @contextmanager
     def open(self, mode='r'):
         if not mode.startswith('r'):
-            raise Exception('source is read-only')
+            raise ArgumentError('source is read-only')
         yield sys.stdin
 
 
@@ -93,7 +94,7 @@ class StdoutSource(object):
     @contextmanager
     def open(self, mode):
         if mode.startswith('r'):
-            raise Exception('source is write-only')
+            raise ArgumentError('source is write-only')
         yield sys.stdout
 
 
@@ -106,7 +107,7 @@ class URLSource(object):
     @contextmanager
     def open(self, mode='r'):
         if not mode.startswith('r'):
-            raise Exception('source is read-only')
+            raise ArgumentError('source is read-only')
         f = urlopen(*self.args, **self.kwargs)
         try:
             yield f
@@ -130,7 +131,7 @@ class MemorySource(object):
                     else:
                         self.buffer = StringIO(self.s)
                 else:
-                    raise Exception('no string data supplied')
+                    raise ArgumentError('no string data supplied')
             elif 'w' in mode:
                 if self.buffer is not None:
                     self.buffer.close()
@@ -168,7 +169,7 @@ class PopenSource(object):
     @contextmanager
     def open(self, mode='r'):
         if not mode.startswith('r'):
-            raise Exception('source is read-only')
+            raise ArgumentError('source is read-only')
         self.kwargs['stdout'] = subprocess.PIPE
         proc = subprocess.Popen(*self.args, **self.kwargs)
         try:

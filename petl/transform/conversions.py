@@ -4,7 +4,7 @@ from __future__ import absolute_import, print_function, division
 from petl.compat import next, integer_types, string_types, text_type
 
 
-from petl.errors import FieldSelectionError
+from petl.errors import ArgumentError, FieldSelectionError
 from petl.util.base import Table, expr, header, Record
 from petl.util.parsers import numparser
 
@@ -296,7 +296,7 @@ class FieldConvertView(Table):
         elif isinstance(converters, (tuple, list)):
             self.converters = dict([(i, v) for i, v in enumerate(converters)])
         else:
-            raise Exception('unexpected converters: %r' % converters)
+            raise ArgumentError('unexpected converters: %r' % converters)
         self.failonerror = failonerror
         self.errorvalue = errorvalue
         self.where = where
@@ -353,8 +353,9 @@ def iterfieldconvert(source, converters, failonerror, errorvalue, where,
         elif c is None:
             pass  # ignore
         else:
-            raise Exception('unexpected converter specification on field %r: '
-                            '%r' % (k, c))
+            raise ArgumentError(
+                'unexpected converter specification on field %r: %r' % (k, c)
+            )
 
     # define a function to transform a value
     def transform_value(i, v, *args):

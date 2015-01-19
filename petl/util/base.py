@@ -562,7 +562,7 @@ class Record(tuple):
         elif f in self.flds:
             idx = self.flds.index(f)
         else:
-            raise Exception('item ' + repr(f) +
+            raise ArgumentError('item ' + repr(f) +
                             ' not in fields ' + repr(self.flds))
         try:
             return super(Record, self).__getitem__(idx)
@@ -576,7 +576,7 @@ class Record(tuple):
             except IndexError:  # handle short rows
                 return self.missing
         else:
-            raise Exception('item ' + repr(f) +
+            raise ArgumentError('item ' + repr(f) +
                             ' not in fields ' + repr(self.flds))
 
 

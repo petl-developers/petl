@@ -7,6 +7,7 @@ from petl.compat import next, string_types, callable, text_type
 from petl.comparison import Comparable
 
 
+from petl.errors import ArgumentError
 from petl.util.base import asindices, expr, Table, values, Record
 
 
@@ -63,7 +64,7 @@ def select(table, *args, **kwargs):
     complement = kwargs.get('complement', False)
 
     if len(args) == 0:
-        raise Exception('missing positional argument')
+        raise ArgumentError('missing positional argument')
     elif len(args) == 1:
         where = args[0]
         if isinstance(where, string_types):
@@ -330,43 +331,6 @@ def selectrangeclosed(table, field, minv, maxv, complement=False):
 
 
 Table.selectrangeclosed = selectrangeclosed
-
-
-def selectre(table, field, pattern, flags=0, complement=False):
-    """
-    Select rows where a regular expression search using the given pattern on
-    the given field returns a match. E.g.::
-
-        >>> import petl as etl
-        >>> table1 = [['foo', 'bar', 'baz'],
-        ...           ['aa', 4, 9.3],
-        ...           ['aaa', 2, 88.2],
-        ...           ['b', 1, 23.3],
-        ...           ['ccc', 8, 42.0],
-        ...           ['bb', 7, 100.9],
-        ...           ['c', 2]]
-        >>> table2 = etl.selectre(table1, 'foo', '[ab]{2}')
-        >>> table2
-        +-------+-----+-------+
-        | foo   | bar | baz   |
-        +=======+=====+=======+
-        | 'aa'  |   4 |   9.3 |
-        +-------+-----+-------+
-        | 'aaa' |   2 |  88.2 |
-        +-------+-----+-------+
-        | 'bb'  |   7 | 100.9 |
-        +-------+-----+-------+
-
-    See also :func:`petl.transform.regex.search`.
-
-    """
-
-    prog = re.compile(pattern, flags)
-    test = lambda v: prog.search(v) is not None
-    return select(table, field, test, complement=complement)
-
-
-Table.selectre = selectre
 
 
 def selecttrue(table, field, complement=False):

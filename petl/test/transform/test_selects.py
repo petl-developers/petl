@@ -4,7 +4,7 @@ from __future__ import absolute_import, print_function, division
 from petl.test.helpers import ieq, eq_
 from petl.comparison import Comparable
 from petl.transform.selects import select, selectin, selectcontains, \
-    rowlenselect, selectre, selectusingcontext, facet, selectgt, selectlt
+    rowlenselect, selectusingcontext, facet, selectgt, selectlt
 
 
 def test_select():
@@ -241,24 +241,6 @@ def test_recordselect():
               ('a', 2, 88.2))
     ieq(expect, actual)
     ieq(expect, actual)  # check can iterate twice
-
-
-def test_selectre():
-    
-    table = (('foo', 'bar', 'baz'),
-             ('aa', 4, 9.3),
-             ('aaa', 2, 88.2),
-             ('b', 1, 23.3),
-             ('ccc', 8, 42.0),
-             ('bb', 7, 100.9),
-             ('c', 2))
-    actual = selectre(table, 'foo', '[ab]{2}')
-    expect = (('foo', 'bar', 'baz'),
-              ('aa', 4, 9.3),
-              ('aaa', 2, 88.2),
-              ('bb', 7, 100.9))
-    ieq(expect, actual)
-    ieq(expect, actual)
 
 
 def test_selectusingcontext():

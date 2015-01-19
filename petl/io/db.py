@@ -7,6 +7,7 @@ from petl.compat import next, text_type, string_types
 
 
 # internal dependencies
+from petl.errors import ArgumentError
 from petl.util.base import Table
 from petl.io.db_utils import _is_dbapi_connection, _is_dbapi_cursor, \
     _is_sqlalchemy_connection, _is_sqlalchemy_engine, _is_sqlalchemy_session, \
@@ -134,7 +135,7 @@ class DbView(Table):
 
         # some other sort of duck...
         else:
-            raise Exception('unsupported database object type: %r' % self.dbo)
+            raise ArgumentError('unsupported database object type: %r' % self.dbo)
 
         return _iter(self.dbo, self.query, *self.args, **self.kwargs)
 
@@ -348,7 +349,7 @@ def _todb(table, dbo, tablename, schema=None, commit=True, truncate=False):
 
     # some other sort of duck...
     else:
-        raise Exception('unsupported database object type: %r' % dbo)
+        raise ArgumentError('unsupported database object type: %r' % dbo)
 
 
 SQL_TRUNCATE_QUERY = 'DELETE FROM %s'

@@ -6,6 +6,7 @@ import operator
 from petl.compat import next, string_types, text_type
 
 
+from petl.errors import ArgumentError
 from petl.util.base import Table, asindices
 from petl.transform.basics import TransformError
 from petl.transform.conversions import convert
@@ -107,7 +108,7 @@ def itercapture(source, field, pattern, newfields, include_original, flags,
     elif field in flds:
         field_index = flds.index(field)
     else:
-        raise Exception('field invalid: must be either field name or index')
+        raise ArgumentError('field invalid: must be either field name or index')
 
     # determine output fields
     outhdr = list(flds)
@@ -205,7 +206,7 @@ def itersplit(source, field, pattern, newfields, include_original, maxsplit,
     elif field in flds:
         field_index = flds.index(field)
     else:
-        raise Exception('field invalid: must be either field name or index')
+        raise ArgumentError('field invalid: must be either field name or index')
 
     # determine output fields
     outhdr = list(flds)
@@ -288,7 +289,7 @@ def search(table, *args, **kwargs):
         field = args[0]
         pattern = args[1]
     else:
-        raise Exception('expected 1 or 2 arguments')
+        raise ArgumentError('expected 1 or 2 positional arguments')
     return SearchView(table, pattern, field=field, **kwargs)
 
 
@@ -319,16 +320,14 @@ def itersearch(table, pattern, field, flags, complement):
     if field is None:
         # search whole row
         test = lambda r: any(prog.search(text_type(v)) for v in r)
-    elif isinstance(field, string_types):
-        # search single field
-        index = flds.index(field)
-        test = lambda r: prog.search(text_type(r[index]))
-    else:  # list or tuple or ...
-        # search selection of fields
+    else:
         indices = asindices(hdr, field)
-        getvals = operator.itemgetter(*indices)
-        test = lambda r: any(prog.search(text_type(v)) for v in getvals(r))
-
+        if len(indices) == 1:
+            index = indices[0]
+            test = lambda r: prog.search(text_type(r[index]))
+        else:
+            getvals = operator.itemgetter(*indices)
+            test = lambda r: any(prog.search(text_type(v)) for v in getvals(r))
     # complement==False, return rows that match
     if not complement:
         for row in it:

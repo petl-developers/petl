@@ -21,6 +21,9 @@ To verify the installation, the test suite can be run with `nose
     $ pip install nose
     $ nosetests -v petl
 
+:mod:`petl` is compatible with Python versions 2.6, 2.7 and 3.4, and
+has been tested under Linux and Windows operating systems.
+
 .. _intro_dependencies:
 
 Dependencies and extensions
@@ -34,6 +37,23 @@ packages. This is indicated in the relevant parts of the documentation.
 
 Some domain-specific and/or experimental extensions to :mod:`petl` are
 available from the `petlx <http://petlx.readthedocs.org>`_ package.
+
+.. _intro_design_goals:
+
+Design goals
+------------
+
+This package is designed primarily for convenience and ease of use,
+especially when working interactively with data that are unfamiliar,
+heterogeneous and/or of mixed quality.
+
+:mod:`petl` transformation pipelines make minimal use of system memory
+and can scale to millions of rows if speed is not a priority. However
+if you are working with large datasets and/or performance-critical
+applications then other packages may be more suitable, e.g., see
+`pandas <http://pandas.pydata.org/>`_, `pytables
+<https://pytables.github.io/>`_, `bcolz <http://bcolz.blosc.org/>`_
+and `blaze <http://blaze.pydata.org/>`_. See also :doc:`related_work`.
 
 .. _intro_pipelines:
 

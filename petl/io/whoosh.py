@@ -6,6 +6,7 @@ import operator
 from petl.compat import string_types, izip
 
 
+from petl.errors import ArgumentError
 from petl.util.base import Table, dicts
 
 
@@ -85,7 +86,8 @@ def itertextindex(index_or_dirname, indexname, docnum_field):
         index = index_or_dirname
         needs_closing = False
     else:
-        raise Exception('expected string or index, found %r' % index_or_dirname)
+        raise ArgumentError('expected string or index, found %r'
+                            % index_or_dirname)
 
     try:
 
@@ -179,8 +181,8 @@ def totextindex(table, index_or_dirname, schema=None, indexname=None,
         index = index_or_dirname
         needs_closing = False
     else:
-        raise Exception('expected string or index, found %r'
-                        % index_or_dirname)
+        raise ArgumentError('expected string or index, found %r'
+                            % index_or_dirname)
 
     writer = index.writer()
     try:
@@ -233,8 +235,8 @@ def appendtextindex(table, index_or_dirname, indexname=None, merge=True,
         index = index_or_dirname
         needs_closing = False
     else:
-        raise Exception('expected string or index, found %r'
-                        % index_or_dirname)
+        raise ArgumentError('expected string or index, found %r'
+                            % index_or_dirname)
 
     writer = index.writer()
     try:
@@ -243,7 +245,7 @@ def appendtextindex(table, index_or_dirname, indexname=None, merge=True,
             writer.add_document(**d)
         writer.commit(merge=merge, optimize=optimize)
 
-    except Exception as e:
+    except Exception:
         writer.cancel()
         raise
 
@@ -420,8 +422,8 @@ def itersearchindex(index_or_dirname, query, limit, pagenum, pagelen, indexname,
         index = index_or_dirname
         needs_closing = False
     else:
-        raise Exception('expected string or index, found %r'
-                        % index_or_dirname)
+        raise ArgumentError('expected string or index, found %r'
+                            % index_or_dirname)
 
     try:
 
@@ -447,7 +449,7 @@ def itersearchindex(index_or_dirname, query, limit, pagenum, pagelen, indexname,
         elif isinstance(query, whoosh.query.Query):
             pass
         else:
-            raise Exception(
+            raise ArgumentError(
                 'expected string or whoosh.query.Query, found %r' % query
             )
 

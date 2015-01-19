@@ -6,6 +6,7 @@ import operator
 from petl.compat import OrderedDict, next, string_types, reduce, text_type
 
 
+from petl.errors import ArgumentError
 from petl.util.base import Table, iterpeek, rowgroupby
 from petl.transform.sorts import sort, mergesort
 from petl.transform.basics import cut
@@ -188,7 +189,7 @@ def aggregate(table, key, aggregation=None, value=None, presorted=False,
                                   presorted=presorted, buffersize=buffersize, 
                                   tempdir=tempdir, cache=cache)
     else:
-        raise Exception('expected aggregation is callable, list, tuple, dict '
+        raise ArgumentError('expected aggregation is callable, list, tuple, dict '
                         'or None')
 
 
@@ -256,7 +257,10 @@ class MultiAggregateView(Table):
         elif isinstance(aggregation, dict):
             self.aggregation = aggregation
         else:
-            raise Exception('expected aggregation is None, list, tuple or dict')
+            raise ArgumentError(
+                'expected aggregation is None, list, tuple or dict, found %r'
+                % aggregation
+            )
 
     def __iter__(self):
         return itermultiaggregate(self.source, self.key, self.aggregation)
@@ -286,7 +290,7 @@ def itermultiaggregate(source, key, aggregation):
         elif len(agg) == 2:
             pass  # no need to normalise
         else:
-            raise Exception('invalid aggregation: %r, %r' % (outfld, agg))
+            raise ArgumentError('invalid aggregation: %r, %r' % (outfld, agg))
 
     # determine output header
     if isinstance(key, (list, tuple)):

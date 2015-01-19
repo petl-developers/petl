@@ -5,6 +5,7 @@ from contextlib import contextmanager
 from petl.compat import string_types
 
 
+from petl.errors import ArgumentError
 from petl.util.base import Table, iterpeek, data
 from petl.io.numpy import guessdtype
 
@@ -129,7 +130,7 @@ def _get_hdf5_table(source, where, name, mode='r'):
     else:
 
         # invalid source
-        raise Exception('invalid source argument, expected file name or '
+        raise ArgumentError('invalid source argument, expected file name or '
                         'tables.File or tables.Table object, found: %r'
                         % source)
 
@@ -162,8 +163,8 @@ def _get_hdf5_file(source, mode='r'):
     else:
 
         # invalid source
-        raise Exception('invalid source argument, expected file name or '
-                        'tables.File object, found: %r' % source)
+        raise ArgumentError('invalid source argument, expected file name or '
+                            'tables.File object, found: %r' % source)
 
     try:
         yield h5file

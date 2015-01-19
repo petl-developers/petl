@@ -14,6 +14,7 @@ import logging
 from petl.compat import long, text_type
 
 
+from petl.errors import ArgumentError
 from petl.util.materialise import columns
 from petl.transform.basics import head
 from petl.io.db_utils import _is_dbapi_connection, _is_dbapi_cursor, \
@@ -294,7 +295,7 @@ def _execute(sql, dbo, commit):
 
     # some other sort of duck...
     else:
-        raise Exception('unsupported database object type: %r' % dbo)
+        raise ArgumentError('unsupported database object type: %r' % dbo)
 
 
 def _execute_dbapi_connection(sql, connection, commit):

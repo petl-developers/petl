@@ -5,6 +5,7 @@ import operator
 from petl.compat import OrderedDict, next, string_types, text_type
 
 
+from petl.errors import ArgumentError
 from petl.util.base import Table, expr, rowgroupby, Record
 from petl.transform.sorts import sort
 
@@ -105,9 +106,9 @@ def iterfieldmap(source, mappings, failonerror, errorvalue):
             elif isinstance(fm, dict):
                 mapfuns[outfld] = composedict(fm, srcfld)
             else:
-                raise Exception('expected callable or dict')
+                raise ArgumentError('expected callable or dict')
         else:
-            raise Exception('invalid mapping', outfld, m)
+            raise ArgumentError('invalid mapping %r: %r' % (outfld, m))
 
     # wrap rows as records
     it = (Record(row, flds) for row in it)

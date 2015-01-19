@@ -127,6 +127,9 @@ instead).
 The following functions have been renamed: `isordered` (renamed to
 `issorted`), `StringSource` (renamed to `MemorySource`).
 
+The function `selectre` has been removed as it duplicates
+functionality, use :func:`petl.transform.regex.search` instead.
+
 Sorting and comparison
 ~~~~~~~~~~~~~~~~~~~~~~
 
@@ -198,6 +201,7 @@ functionality previously available from the `petlx`_ package:
 * :ref:`io_numpy`
 * :ref:`io_pandas`
 * :ref:`io_pytables`
+* :ref:`io_whoosh`
 
 These modules all have dependencies on third party packages, but these
 have been kept as optional dependencies so are not required for

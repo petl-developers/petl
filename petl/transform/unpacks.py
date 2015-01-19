@@ -5,6 +5,7 @@ import itertools
 from petl.compat import next, text_type
 
 
+from petl.errors import ArgumentError
 from petl.util.base import Table
 
 
@@ -71,7 +72,7 @@ def iterunpack(source, field, newfields, include_original, missing):
         field_index = field
         field = flds[field_index]
     else:
-        raise Exception('field invalid: must be either field name or index')
+        raise ArgumentError('field invalid: must be either field name or index')
 
     # determine output fields
     outhdr = list(flds)
@@ -87,8 +88,8 @@ def iterunpack(source, field, newfields, include_original, missing):
     elif newfields is None:
         nunpack = 0
     else:
-        raise Exception('newfields argument must be list or tuple of field '
-                        'names, or int (number of values to unpack)')
+        raise ArgumentError('newfields argument must be list or tuple of field '
+                            'names, or int (number of values to unpack)')
     yield tuple(outhdr)
 
     # construct the output data

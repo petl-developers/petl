@@ -78,7 +78,6 @@ Selecting rows
 .. autofunction:: petl.transform.selects.selectis
 .. autofunction:: petl.transform.selects.selectisnot
 .. autofunction:: petl.transform.selects.selectisinstance
-.. autofunction:: petl.transform.selects.selectre
 .. autofunction:: petl.transform.selects.selecttrue
 .. autofunction:: petl.transform.selects.selectfalse
 .. autofunction:: petl.transform.selects.selectnone

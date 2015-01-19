@@ -6,6 +6,7 @@ import operator
 from petl.compat import next
 
 
+from petl.errors import ArgumentError
 from petl.comparison import comparable_itemgetter, Comparable
 from petl.util.base import Table, asindices, rowgetter, rowgroupby, \
     header, data
@@ -39,7 +40,7 @@ def keys_from_args(left, right, key, lkey, rkey):
         # left and right keys specified
         pass
     else:
-        raise Exception(
+        raise ArgumentError(
             'bad key arguments: either specify key, or specify both lkey and '
             'rkey, or provide no key/lkey/rkey arguments at all (natural join)'
         )

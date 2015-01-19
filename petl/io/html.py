@@ -8,6 +8,7 @@ from petl.compat import text_type, numeric_types, next, PY2, izip_longest, \
 
 
 # internal dependencies
+from petl.errors import ArgumentError
 from petl.util.base import Table, Record
 from petl.io.base import getcodec
 from petl.io.sources import write_source_from_arg
@@ -231,7 +232,8 @@ def _get_tr_css(row, tr_style):
         elif callable(tr_style):
             return tr_style(row)
         else:
-            raise Exception('expected string or callable, got %r' % tr_style)
+            raise ArgumentError('expected string or callable, got %r'
+                                % tr_style)
     # fall back to default style
     return ''
 
@@ -251,10 +253,11 @@ def _get_td_css(h, v, td_styles):
                 elif callable(s):
                     return s(v)
                 else:
-                    raise Exception('expected string or callable, got %r' % s)
+                    raise ArgumentError('expected string or callable, got %r'
+                                        % s)
         else:
-            raise Exception('expected string, callable or dict, got %r'
-                            % td_styles)
+            raise ArgumentError('expected string, callable or dict, got %r'
+                                % td_styles)
     # fall back to default style
     if isinstance(v, numeric_types) and not isinstance(v, bool):
         return 'text-align: right'
