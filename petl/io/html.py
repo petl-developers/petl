@@ -65,7 +65,8 @@ def tohtml(table, source=None, encoding=None, errors=None, caption=None,
         else:
             f = io.TextIOWrapper(buf,
                                  encoding=encoding,
-                                 errors=errors)
+                                 errors=errors,
+                                 newline='')
 
         # write the table
         try:
@@ -155,7 +156,8 @@ class TeeHTMLView(Table):
             else:
                 f = io.TextIOWrapper(buf,
                                      encoding=encoding,
-                                     errors=errors)
+                                     errors=errors,
+                                     newline='')
 
             # write the table
             try:

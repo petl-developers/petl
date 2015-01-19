@@ -21,31 +21,32 @@ def test_tohtml():
     tohtml(table, f.name, encoding='ascii', lineterminator='\n')
 
     # check what it did
-    with io.open(f.name, 'rt', encoding='ascii', newline=None) as o:
+    with io.open(f.name, mode='rt', encoding='ascii', newline='') as o:
         actual = o.read()
-        expect = u"""<table class='petl'>
-<thead>
-<tr>
-<th>foo</th>
-<th>bar</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>a</td>
-<td style='text-align: right'>1</td>
-</tr>
-<tr>
-<td>b</td>
-<td>(1, 2)</td>
-</tr>
-<tr>
-<td>c</td>
-<td>False</td>
-</tr>
-</tbody>
-</table>
-"""
+        expect = (
+            u"<table class='petl'>\n"
+            u"<thead>\n"
+            u"<tr>\n"
+            u"<th>foo</th>\n"
+            u"<th>bar</th>\n"
+            u"</tr>\n"
+            u"</thead>\n"
+            u"<tbody>\n"
+            u"<tr>\n"
+            u"<td>a</td>\n"
+            u"<td style='text-align: right'>1</td>\n"
+            u"</tr>\n"
+            u"<tr>\n"
+            u"<td>b</td>\n"
+            u"<td>(1, 2)</td>\n"
+            u"</tr>\n"
+            u"<tr>\n"
+            u"<td>c</td>\n"
+            u"<td>False</td>\n"
+            u"</tr>\n"
+            u"</tbody>\n"
+            u"</table>\n"
+        )
         eq_(expect, actual)
 
 
@@ -60,26 +61,27 @@ def test_tohtml_caption():
            lineterminator='\n')
 
     # check what it did
-    with io.open(f.name, 'rt', encoding='ascii', newline=None) as o:
+    with io.open(f.name, mode='rt', encoding='ascii', newline='') as o:
         actual = o.read()
-        expect = u"""<table class='petl'>
-<caption>my table</caption>
-<thead>
-<tr>
-<th>foo</th>
-<th>bar</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>a</td>
-<td style='text-align: right'>1</td>
-</tr>
-<tr>
-<td>b</td>
-<td>(1, 2)</td>
-</tr>
-</tbody>
-</table>
-"""
+        expect = (
+            u"<table class='petl'>\n"
+            u"<caption>my table</caption>\n"
+            u"<thead>\n"
+            u"<tr>\n"
+            u"<th>foo</th>\n"
+            u"<th>bar</th>\n"
+            u"</tr>\n"
+            u"</thead>\n"
+            u"<tbody>\n"
+            u"<tr>\n"
+            u"<td>a</td>\n"
+            u"<td style='text-align: right'>1</td>\n"
+            u"</tr>\n"
+            u"<tr>\n"
+            u"<td>b</td>\n"
+            u"<td>(1, 2)</td>\n"
+            u"</tr>\n"
+            u"</tbody>\n"
+            u"</table>\n"
+        )
         eq_(expect, actual)
