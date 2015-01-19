@@ -1,6 +1,7 @@
 from __future__ import absolute_import, print_function, division
 
 
+import os
 from datetime import datetime
 from petl.compat import next
 
@@ -208,7 +209,10 @@ def test_sort_buffered_tempdir():
                    ('D', 10))
     result = sort(table, 'bar')
     ieq(expectation, result)
-    result = sort(table, 'bar', buffersize=2, tempdir='/tmp')
+    tempdir = 'tmp'
+    if not os.path.exists(tempdir):
+        os.mkdir(tempdir)
+    result = sort(table, 'bar', buffersize=2, tempdir=tempdir)
     ieq(expectation, result)
 
 
