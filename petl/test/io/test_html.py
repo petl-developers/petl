@@ -2,6 +2,7 @@ from __future__ import absolute_import, print_function, division
 
 
 from tempfile import NamedTemporaryFile
+import io
 from petl.test.helpers import eq_
 
 
@@ -20,9 +21,9 @@ def test_tohtml():
     tohtml(table, f.name, encoding='ascii', lineterminator='\n')
 
     # check what it did
-    with open(f.name, 'rb') as o:
+    with io.open(f.name, 'rt', encoding='ascii', newline=None) as o:
         actual = o.read()
-        expect = b"""<table class='petl'>
+        expect = u"""<table class='petl'>
 <thead>
 <tr>
 <th>foo</th>
@@ -59,9 +60,9 @@ def test_tohtml_caption():
            lineterminator='\n')
 
     # check what it did
-    with open(f.name, 'rb') as o:
+    with io.open(f.name, 'rt', encoding='ascii', newline=None) as o:
         actual = o.read()
-        expect = b"""<table class='petl'>
+        expect = u"""<table class='petl'>
 <caption>my table</caption>
 <thead>
 <tr>
