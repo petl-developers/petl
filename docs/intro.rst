@@ -230,7 +230,7 @@ simple transformation pipelines directly from the operating system
 shell. E.g.::
 
     $ petl "dummytable().tocsv()" > example.csv
-    $ cat example.csv | petl "fromcsv().cut('foo', 'baz').selectgt('baz', 0.5).head().data().totsv()"
+    $ cat example.csv | petl "fromcsv().cut('foo', 'baz').convert('baz', float).selectgt('baz', 0.5).head().data().totsv()"
 
 The ``petl`` script is extremely simple, it expects a single
 positional argument, which is evaluated as Python code but with all of
