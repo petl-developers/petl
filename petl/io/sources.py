@@ -82,6 +82,22 @@ class ZipSource(object):
             zf.close()
 
 
+class Uncloseable(object):
+
+    def __init__(self, inner):
+        object.__setattr__(self, '_inner', inner)
+
+    def __getattr__(self, item):
+        return getattr(self._inner, item)
+
+    def __setattr__(self, key, value):
+        setattr(self._inner, key, value)
+
+    def close(self):
+        debug('Uncloseable: close called')
+        pass
+
+
 class StdinSource(object):
 
     @contextmanager
@@ -101,32 +117,38 @@ class StdinSource(object):
         #         yield sys.__stdin__
 
 
-class Uncloseable(object):
+# try to establish a stdout binary stream
+try:
+    # try to access a buffer
+    stdout_binary = sys.stdout.buffer
+except AttributeError:
+    try:
+        # try to re-open underlying file descriptor
+        stdout_binary = os.fdopen(sys.stdout.fileno(), 'ab', 0)
+    except (AttributeError, OSError):
+        try:
+            # fall back to original stdout
+            
 
-    def __init__(self, inner):
-        object.__setattr__(self, '_inner', inner)
 
-    def __getattr__(self, item):
-        return getattr(self._inner, item)
-
-    def __setattr__(self, key, value):
-        setattr(self._inner, key, value)
-
-    def close(self):
-        debug('uncloseable: close called')
-        pass
-
+if hasattr(sys.stdout, 'buffer'):
+    stdout_binary = sys.stdout.buffer
+elif hasattr(sys.stdout, 'fileno'):
+    stdout_binary = os.fdopen(sys.stdout.fileno(), 'ab', 0)
+elif hasattr(sys.__stdout__, 'buffer'):
+    stdout_binary = sys.__stdout__.buffer
+elif
 
 if PY2:
 
     if hasattr(sys.stdout, 'fileno'):
-        _stdout = sys.stdout
+        stdout = sys.stdout
     else:
         # fall back to original stdout
-        _stdout = sys.__stdout__
+        stdout = sys.__stdout__
     try:
         # open once only
-        _stdout_binary = os.fdopen(_stdout.fileno(), 'ab', 0)
+        stdout_binary = os.fdopen(stdout.fileno(), 'ab', 0)
     except Exception as e:
         warning('stdout is unavailable: %s' % e)
 
@@ -138,9 +160,9 @@ class StdoutSource(object):
         if mode.startswith('r'):
             raise ArgumentError('source is write-only')
         if 'b' in mode:
-            yield _stdout_binary
+            yield stdout
         else:
-            yield _stdout
+            yield stdout
 
 
 class URLSource(object):
