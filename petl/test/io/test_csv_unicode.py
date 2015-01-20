@@ -12,12 +12,13 @@ from petl.io.csv import fromcsv, tocsv, appendcsv
 
 def test_fromcsv():
 
-    data = u'''name,id
-Արամ Խաչատրյան,1
-Johann Strauß,2
-Вагиф Сәмәдоғлу,3
-章子怡,4
-'''
+    data = (
+        u"name,id\n"
+        u"Արամ Խաչատրյան,1\n"
+        u"Johann Strauß,2\n"
+        u"Вагиф Сәмәдоғлу,3\n"
+        u"章子怡,4\n"
+    )
     fn = NamedTemporaryFile().name
     uf = io.open(fn, encoding='utf-8', mode='wt')
     uf.write(data)
@@ -64,13 +65,14 @@ def test_tocsv():
     fn = NamedTemporaryFile().name
     tocsv(tbl, fn, encoding='utf-8', lineterminator='\n')
 
-    expect = u'''name,id
-Արամ Խաչատրյան,1
-Johann Strauß,2
-Вагиф Сәмәдоғлу,3
-章子怡,4
-'''
-    uf = io.open(fn, encoding='utf-8', mode='rt')
+    expect = (
+        u"name,id\n"
+        u"Արամ Խաչատրյան,1\n"
+        u"Johann Strauß,2\n"
+        u"Вагиф Сәмәдоғлу,3\n"
+        u"章子怡,4\n"
+    )
+    uf = io.open(fn, encoding='utf-8', mode='rt', newline='')
     actual = uf.read()
     eq_(expect, actual)
 
@@ -82,24 +84,26 @@ Johann Strauß,2
            (u'章子怡', 4))
     tocsv(tbl, fn, encoding='utf-8', lineterminator='\n', write_header=False)
 
-    expect = u'''Արամ Խաչատրյան,1
-Johann Strauß,2
-Вагиф Сәмәдоғлу,3
-章子怡,4
-'''
-    uf = io.open(fn, encoding='utf-8', mode='rt')
+    expect = (
+        u"Արամ Խաչատրյան,1\n"
+        u"Johann Strauß,2\n"
+        u"Вагиф Сәмәдоғлу,3\n"
+        u"章子怡,4\n"
+    )
+    uf = io.open(fn, encoding='utf-8', mode='rt', newline='')
     actual = uf.read()
     eq_(expect, actual)
 
 
 def test_appendcsv():
 
-    data = u'''name,id
-Արամ Խաչատրյան,1
-Johann Strauß,2
-Вагиф Сәмәдоғлу,3
-章子怡,4
-'''
+    data = (
+        u"name,id\n"
+        u"Արամ Խաչատրյան,1\n"
+        u"Johann Strauß,2\n"
+        u"Вагиф Сәмәдоғлу,3\n"
+        u"章子怡,4\n"
+    )
     fn = NamedTemporaryFile().name
     uf = io.open(fn, encoding='utf-8', mode='wt')
     uf.write(data)
@@ -110,14 +114,15 @@ Johann Strauß,2
            (u'ედუარდ შევარდნაძე', 6))
     appendcsv(tbl, fn, encoding='utf-8', lineterminator='\n')
 
-    expect = u'''name,id
-Արամ Խաչատրյան,1
-Johann Strauß,2
-Вагиф Сәмәдоғлу,3
-章子怡,4
-ኃይሌ ገብረሥላሴ,5
-ედუარდ შევარდნაძე,6
-'''
+    expect = (
+        u"name,id\n"
+        u"Արամ Խաչատրյան,1\n"
+        u"Johann Strauß,2\n"
+        u"Вагиф Сәмәдоғлу,3\n"
+        u"章子怡,4\n"
+        u"ኃይሌ ገብረሥላሴ,5\n"
+        u"ედუარდ შევარდნაძე,6\n"
+    )
     uf = io.open(fn, encoding='utf-8', mode='rt')
     actual = uf.read()
     eq_(expect, actual)

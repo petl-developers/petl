@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Module providing some convenience functions for working with SQL databases.
 SQLAlchemy is required, try ``apt-get install python-sqlalchemy``

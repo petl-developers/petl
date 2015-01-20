@@ -1,6 +1,8 @@
+# -*- coding: utf-8 -*-
 from __future__ import absolute_import, print_function, division
 
 
+import os
 import io
 import gzip
 import sys
@@ -86,7 +88,47 @@ class StdinSource(object):
     def open(self, mode='r'):
         if not mode.startswith('r'):
             raise ArgumentError('source is read-only')
-        yield sys.stdin
+        yield Uncloseable(os.fdopen(sys.__stdin__.fileno(), mode, 0))
+        # if 'b' in mode:
+        #     if PY2:
+        #         yield sys.__stdin__
+        #     else:
+        #         yield sys.__stdin__.buffer
+        # else:
+        #     if PY2:
+        #         yield sys.__stdin__
+        #     else:
+        #         yield sys.__stdin__
+
+
+class Uncloseable(object):
+
+    def __init__(self, inner):
+        object.__setattr__(self, '_inner', inner)
+
+    def __getattr__(self, item):
+        return getattr(self._inner, item)
+
+    def __setattr__(self, key, value):
+        setattr(self._inner, key, value)
+
+    def close(self):
+        debug('uncloseable: close called')
+        pass
+
+
+if PY2:
+
+    if hasattr(sys.stdout, 'fileno'):
+        _stdout = sys.stdout
+    else:
+        # fall back to original stdout
+        _stdout = sys.__stdout__
+    try:
+        # open once only
+        _stdout_binary = os.fdopen(_stdout.fileno(), 'ab', 0)
+    except Exception as e:
+        warning('stdout is unavailable: %s' % e)
 
 
 class StdoutSource(object):
@@ -95,7 +137,10 @@ class StdoutSource(object):
     def open(self, mode):
         if mode.startswith('r'):
             raise ArgumentError('source is write-only')
-        yield sys.stdout
+        if 'b' in mode:
+            yield _stdout_binary
+        else:
+            yield _stdout
 
 
 class URLSource(object):

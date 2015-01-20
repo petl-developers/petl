@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from __future__ import absolute_import, print_function, division
 
 
@@ -8,7 +9,7 @@ from petl.compat import PY2
 
 from petl.test.helpers import ieq, eq_
 from petl.io.csv import fromcsv, tocsv, appendcsv, fromtsv, totsv
-from petl.io.sources import StringSource, PopenSource, ZipSource
+from petl.io.sources import StringSource, PopenSource, ZipSource, StdoutSource
 
 
 def test_stringsource():
@@ -65,3 +66,17 @@ def test_zipsource():
     # test
     actual = fromtsv(ZipSource(fn_zip, 'data.tsv'))
     ieq(table, actual)
+
+
+def test_stdoutsource():
+
+    table = [('foo', 'bar'), ('a', 1), ('b', 2)]
+    tocsv(table, StdoutSource(), encoding='ascii')
+
+
+def test_stdoutsource_unicode():
+
+    table = [('foo', 'bar'),
+             (u'Արամ Խաչատրյան', 1),
+             (u'Johann Strauß', 2)]
+    tocsv(table, StdoutSource(), encoding='utf-8')

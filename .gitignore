@@ -11,3 +11,4 @@ example*.*
 .coverage
 tmp*
 env/
+spike*
