@@ -94,63 +94,60 @@ class Uncloseable(object):
         setattr(self._inner, key, value)
 
     def close(self):
-        debug('Uncloseable: close called')
+        debug('Uncloseable: close called (%r)' % self._inner)
         pass
 
 
-class StdinSource(object):
-
-    @contextmanager
-    def open(self, mode='r'):
-        if not mode.startswith('r'):
-            raise ArgumentError('source is read-only')
-        yield Uncloseable(os.fdopen(sys.__stdin__.fileno(), mode, 0))
-        # if 'b' in mode:
-        #     if PY2:
-        #         yield sys.__stdin__
-        #     else:
-        #         yield sys.__stdin__.buffer
-        # else:
-        #     if PY2:
-        #         yield sys.__stdin__
-        #     else:
-        #         yield sys.__stdin__
-
-
-# try to establish a stdout binary stream
-try:
-    # try to access a buffer
-    stdout_binary = sys.stdout.buffer
-except AttributeError:
+def _get_stdout_binary():
     try:
-        # try to re-open underlying file descriptor
-        stdout_binary = os.fdopen(sys.stdout.fileno(), 'ab', 0)
+        return sys.stdout.buffer
+    except AttributeError:
+        pass
+    try:
+        fd = sys.stdout.fileno()
+        return os.fdopen(fd, 'ab', 0)
     except (AttributeError, OSError):
-        try:
-            # fall back to original stdout
-            
-
-
-if hasattr(sys.stdout, 'buffer'):
-    stdout_binary = sys.stdout.buffer
-elif hasattr(sys.stdout, 'fileno'):
-    stdout_binary = os.fdopen(sys.stdout.fileno(), 'ab', 0)
-elif hasattr(sys.__stdout__, 'buffer'):
-    stdout_binary = sys.__stdout__.buffer
-elif
-
-if PY2:
-
-    if hasattr(sys.stdout, 'fileno'):
-        stdout = sys.stdout
-    else:
-        # fall back to original stdout
-        stdout = sys.__stdout__
+        pass
     try:
-        # open once only
-        stdout_binary = os.fdopen(stdout.fileno(), 'ab', 0)
-    except Exception as e:
-        warning('stdout is unavailable: %s' % e)
+        return sys.__stdout__.buffer
+    except AttributeError:
+        pass
+    try:
+        fd = sys.__stdout__.fileno()
+        return os.fdopen(fd, 'ab', 0)
+    except (AttributeError, OSError):
+        pass
+    # fallback
+    return sys.stdout
+
+
+stdout_binary = _get_stdout_binary()
+
+
+def _get_stdin_binary():
+    try:
+        return sys.stdin.buffer
+    except AttributeError:
+        pass
+    try:
+        fd = sys.stdin.fileno()
+        return os.fdopen(fd, 'rb', 0)
+    except (AttributeError, OSError):
+        pass
+    try:
+        return sys.__stdin__.buffer
+    except AttributeError:
+        pass
+    try:
+        fd = sys.__stdin__.fileno()
+        return os.fdopen(fd, 'rb', 0)
+    except (AttributeError, OSError):
+        pass
+    # fallback
+    return sys.stdin
+
+
+stdin_binary = _get_stdin_binary()
 
 
 class StdoutSource(object):
@@ -160,9 +157,21 @@ class StdoutSource(object):
         if mode.startswith('r'):
             raise ArgumentError('source is write-only')
         if 'b' in mode:
-            yield stdout
+            yield Uncloseable(stdout_binary)
         else:
-            yield stdout
+            yield Uncloseable(sys.stdout)
+
+
+class StdinSource(object):
+
+    @contextmanager
+    def open(self, mode='r'):
+        if not mode.startswith('r'):
+            raise ArgumentError('source is read-only')
+        if 'b' in mode:
+            yield Uncloseable(stdin_binary)
+        else:
+            yield Uncloseable(sys.stdin)
 
 
 class URLSource(object):
@@ -212,7 +221,7 @@ class MemorySource(object):
                         self.buffer = BytesIO()
                     else:
                         self.buffer = StringIO()
-            yield self.buffer
+            yield Uncloseable(self.buffer)
         except:
             raise
         finally:
