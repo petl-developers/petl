@@ -2,7 +2,6 @@ from __future__ import absolute_import, print_function, division
 
 
 import operator
-import re
 from petl.compat import next, string_types, callable, text_type
 from petl.comparison import Comparable
 

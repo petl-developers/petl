@@ -3,7 +3,7 @@ from __future__ import absolute_import, print_function, division
 
 import re
 import operator
-from petl.compat import next, string_types, text_type
+from petl.compat import next, text_type
 
 
 from petl.errors import ArgumentError

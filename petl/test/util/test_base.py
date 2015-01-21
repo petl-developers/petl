@@ -1,6 +1,7 @@
 from __future__ import absolute_import, print_function, division
 
 
+from petl.errors import ArgumentError
 from petl.test.helpers import ieq, eq_
 from petl.compat import next
 from petl.util.base import header, fieldnames, data, dicts, records, \
@@ -84,6 +85,26 @@ def test_records():
     o = next(it)
     eq_('b', o.foo)
     eq_(2, o.bar)
+
+
+def test_records_errors():
+    table = (('foo', 'bar'), ('a', 1), ('b', 2))
+    actual = records(table)
+    # access items
+    it = iter(actual)
+    o = next(it)
+    try:
+        o['baz']
+    except ArgumentError:
+        pass
+    else:
+        raise Exception('expected exception not raised')
+    try:
+        o.baz
+    except ArgumentError:
+        pass
+    else:
+        raise Exception('expected exception not raised')
 
 
 def test_records_unevenrows():
