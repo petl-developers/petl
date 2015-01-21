@@ -298,6 +298,7 @@ def test_sort_buffered_cleanup_open_iterator():
     filenames = _get_names(result._filecache)
     for fn in filenames:
         assert os.path.exists(fn), fn
+    debug(filenames)
     debug('open an iterator')
     it = iter(result)
     next(it)

@@ -245,7 +245,7 @@ class SortView(Table):
         # create a reference to the filecache here, so cleanup happens in the
         # correct order
         filecache = self._filecache
-        filenames = [f.name for f in filecache]
+        filenames = list(map(operator.attrgetter('name'), filecache))
         debug('iterate from file cache: %r', filenames)
         yield tuple(self._hdrcache)
         chunkiters = [_iterchunk(fn) for fn in filenames]
@@ -261,6 +261,7 @@ class SortView(Table):
             del chunkiters
             del rows
             del filecache
+            debug('exiting generator')
 
     def _iternocache(self, source, key, reverse):
         debug('iterate without cache')
