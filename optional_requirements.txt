@@ -1,3 +1,6 @@
+psycopg2
+pymysql
+sqlalchemy
 openpyxl
 xlrd
 xlwt-future
