@@ -132,7 +132,7 @@ def _get_stdin_binary():
     try:
         fd = sys.stdin.fileno()
         return os.fdopen(fd, 'rb', 0)
-    except (AttributeError, OSError):
+    except (AttributeError, OSError, ValueError):
         pass
     try:
         return sys.__stdin__.buffer
