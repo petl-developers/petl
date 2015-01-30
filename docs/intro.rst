@@ -333,9 +333,12 @@ package:
 * Alexander Stauber
 * Andrew Kim (`andrewakim <https://github.com/andrewakim>`_)
 * Caleb Lloyd (`caleblloyd <https://github.com/caleblloyd>`_)
+* César Roldán (`ihuro <https://github.com/ihuro>`_)
 * Florent Xicluna (`florentx <https://github.com/florentx>`_)
 * Jonathan Camile (`deytao <https://github.com/deytao>`_)
+* Jonathan Moss (`a-musing-moose <https://github.com/a-musing-moose>`_)
 * Kenneth Borthwick
+* Krisztián Fekete (`krisztianfekete <https://github.com/krisztianfekete>`_)
 * Michael Rea (`rea725 <https://github.com/rea725>`_)
 * Olivier Macchioni (`omacchioni <https://github.com/omacchioni>`_)
 * Olivier Poitrey (`rs <https://github.com/rs>`_)
