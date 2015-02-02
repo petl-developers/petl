@@ -106,7 +106,7 @@ def _get_stdout_binary():
     try:
         fd = sys.stdout.fileno()
         return os.fdopen(fd, 'ab', 0)
-    except (AttributeError, OSError):
+    except Exception:
         pass
     try:
         return sys.__stdout__.buffer
@@ -115,7 +115,7 @@ def _get_stdout_binary():
     try:
         fd = sys.__stdout__.fileno()
         return os.fdopen(fd, 'ab', 0)
-    except (AttributeError, OSError):
+    except Exception:
         pass
     # fallback
     return sys.stdout
@@ -132,7 +132,7 @@ def _get_stdin_binary():
     try:
         fd = sys.stdin.fileno()
         return os.fdopen(fd, 'rb', 0)
-    except (AttributeError, OSError, ValueError):
+    except Exception:
         pass
     try:
         return sys.__stdin__.buffer
@@ -141,7 +141,7 @@ def _get_stdin_binary():
     try:
         fd = sys.__stdin__.fileno()
         return os.fdopen(fd, 'rb', 0)
-    except (AttributeError, OSError):
+    except Exception:
         pass
     # fallback
     return sys.stdin
