@@ -379,8 +379,8 @@ class DistinctView(Table):
         if presorted:
             self.table = table
         else:
-            self.table = sort(table, buffersize=buffersize, tempdir=tempdir,
-                              cache=cache)
+            self.table = sort(table, key=key, buffersize=buffersize,
+                              tempdir=tempdir, cache=cache)
         self.key = key
         self.count = count
 

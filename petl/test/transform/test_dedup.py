@@ -217,6 +217,21 @@ def test_key_distinct():
     ieq(expect, result)
 
 
+def test_key_distinct_2():
+    # test for https://github.com/alimanfoo/petl/issues/318
+
+    tbl = (('a', 'b'),
+           ('x', '1'),
+           ('x', '3'),
+           ('y', '1'))
+
+    result = distinct(tbl, key='b')
+    expect = (('a', 'b'),
+              ('x', '1'),
+              ('x', '3'))
+    ieq(expect, result)
+
+
 def test_key_distinct_count():
 
     table = (('foo', 'bar', 'baz'),
