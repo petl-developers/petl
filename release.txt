@@ -9,7 +9,8 @@ git tag -a v$version -m v$version
 git push
 git push --tags
 # update pypi
-python setup.py register sdist upload
+python setup.py register sdist
+twine upload dist/petl-${version}.tar.gz
 # increment version and add .dev0 in src/petl/__init__.py
 git commit -a -m 'increment version'; git push
 # activate version at rtfd
