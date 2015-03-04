@@ -3,7 +3,15 @@ from __future__ import absolute_import, print_function, division
 
 
 # standard library dependencies
-from xml.etree import ElementTree
+try:
+  from lxml import etree
+except ImportError:
+    try:
+    # normal ElementTree install
+        import xml.etree.ElementTree as etree
+    except ImportError:
+        print("Failed to import ElementTree from any known place")
+
 from operator import attrgetter
 import itertools
 from petl.compat import string_types, text_type
@@ -158,7 +166,7 @@ class XmlView(Table):
 
         with self.source.open('rb') as xmlf:
 
-            tree = ElementTree.parse(xmlf)
+            tree = etree.parse(xmlf)
             if not hasattr(tree, 'iterfind'):
                 # Python 2.6 compatibility
                 tree.iterfind = tree.findall

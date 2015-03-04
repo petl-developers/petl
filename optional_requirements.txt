@@ -11,3 +11,4 @@ numexpr
 tables
 intervaltree
 whoosh
+lxml
