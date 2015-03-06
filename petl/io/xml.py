@@ -4,13 +4,10 @@ from __future__ import absolute_import, print_function, division
 
 # standard library dependencies
 try:
-  from lxml import etree
+    # prefer lxml as it supports XPath
+    from lxml import etree
 except ImportError:
-    try:
-    # normal ElementTree install
-        import xml.etree.ElementTree as etree
-    except ImportError:
-        print("Failed to import ElementTree from any known place")
+    import xml.etree.ElementTree as etree
 
 from operator import attrgetter
 import itertools

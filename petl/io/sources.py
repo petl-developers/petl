@@ -54,8 +54,13 @@ class BZ2Source(object):
         self.filename = filename
         self.kwargs = kwargs
 
+    @contextmanager
     def open(self, mode='r'):
-        return bz2.BZ2File(self.filename, mode, **self.kwargs)
+        source = bz2.BZ2File(self.filename, mode, **self.kwargs)
+        try:
+            yield source
+        finally:
+            source.close()
 
 
 class ZipSource(object):
