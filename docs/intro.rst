@@ -323,7 +323,7 @@ table.
 Acknowledgments
 ---------------
 
-This package is primarily developed and maintained by Alistair Miles
+This package is maintained by Alistair Miles
 <alimanfoo@googlemail.com> with funding from the `MRC Centre for
 Genomics and Global Health <http://www.cggh.org>`_.
 
