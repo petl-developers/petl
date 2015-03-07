@@ -345,7 +345,7 @@ package:
 * Peder Jakobsen (`pjakobsen <https://github.com/pjakobsen>`_)
 * Phillip Knaus (`phillipknaus <https://github.com/phillipknauss>`_)
 * Richard Pearson (`podpearson <https://github.com/podpearson>`_)
-* Robert DeSimone (`icenine457 <https://github.com/icenine457>`_
+* Robert DeSimone (`icenine457 <https://github.com/icenine457>`_)
 * Roger Woodley (`rogerkwoodley <https://github.com/rogerkwoodley>`_)
 * `adamsdarlingtower <https://github.com/adamsdarlingtower>`_
 * `imazor <https://github.com/imazor>`_
