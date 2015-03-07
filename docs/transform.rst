@@ -177,8 +177,8 @@ Deduplicating rows
 
 .. _transform_reductions:
 
-Reducing rows
--------------
+Reducing rows (aggregation)
+---------------------------
 
 .. autofunction:: petl.transform.reductions.aggregate
 .. autofunction:: petl.transform.reductions.rowreduce
