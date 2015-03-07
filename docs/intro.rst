@@ -327,7 +327,7 @@ This package is maintained by Alistair Miles
 <alimanfoo@googlemail.com> with funding from the `MRC Centre for
 Genomics and Global Health <http://www.cggh.org>`_.
 
-The following people have also contributed to the development of this
+The following people have contributed to the development of this
 package:
 
 * Alexander Stauber
