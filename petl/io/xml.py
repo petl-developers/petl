@@ -55,9 +55,11 @@ def fromxml(source, *args, **kwargs):
         | 'c' | '2' |
         +-----+-----+
 
-        >>> # if the data values are stored in an attribute, provide the
-        ... # attribute name as an extra positional argument
-        ... d = '''<table>
+
+    If the data values are stored in an attribute, provide the attribute
+    name as an extra positional argument::
+
+        >>> d = '''<table>
         ...     <tr>
         ...         <td v='foo'/><td v='bar'/>
         ...     </tr>
@@ -87,9 +89,10 @@ def fromxml(source, *args, **kwargs):
         | 'c' | '2' |
         +-----+-----+
 
-        >>> # data values can also be extracted by providing a mapping of field
-        ... # names to element paths
-        ... d = '''<table>
+    Data values can also be extracted by providing a mapping of field
+    names to element paths::
+
+        >>> d = '''<table>
         ...     <row>
         ...         <foo>a</foo><baz><bar v='1'/><bar v='3'/></baz>
         ...     </row>
@@ -117,7 +120,10 @@ def fromxml(source, *args, **kwargs):
         | '2'        | 'c' |
         +------------+-----+
 
-    Note that the implementation is currently *not* streaming, i.e.,
+    If `lxml <http://lxml.de/>`_ is installed, full XPath expressions can be
+    used.
+
+    Note that the implementation is currently **not** streaming, i.e.,
     the whole document is loaded into memory.
 
     If multiple elements match a given field, all values are reported as a

@@ -132,8 +132,8 @@ def _get_hdf5_table(source, where, name, mode='r'):
 
         # invalid source
         raise ArgumentError('invalid source argument, expected file name or '
-                        'tables.File or tables.Table object, found: %r'
-                        % source)
+                            'tables.File or tables.Table object, found: %r'
+                            % source)
 
     try:
         yield h5tbl
