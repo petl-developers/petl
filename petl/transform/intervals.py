@@ -391,7 +391,7 @@ def facetintervalrecordlookup(table, key, start='start', stop='stop',
     """
 
     trees = facetrecordtrees(table, key, start=start, stop=stop)
-    out = dict
+    out = dict()
     for k in trees:
         out[k] = IntervalTreeLookup(trees[k], include_stop=include_stop)
     return out
