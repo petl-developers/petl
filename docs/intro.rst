@@ -334,6 +334,7 @@ package:
 * Andrew Kim (`andrewakim <https://github.com/andrewakim>`_)
 * Caleb Lloyd (`caleblloyd <https://github.com/caleblloyd>`_)
 * César Roldán (`ihuro <https://github.com/ihuro>`_)
+* Chris Lasher (`gotgenes <https://github.com/gotgenes>`_)
 * Florent Xicluna (`florentx <https://github.com/florentx>`_)
 * Jonathan Camile (`deytao <https://github.com/deytao>`_)
 * Jonathan Moss (`a-musing-moose <https://github.com/a-musing-moose>`_)
@@ -347,6 +348,7 @@ package:
 * Richard Pearson (`podpearson <https://github.com/podpearson>`_)
 * Robert DeSimone (`icenine457 <https://github.com/icenine457>`_)
 * Roger Woodley (`rogerkwoodley <https://github.com/rogerkwoodley>`_)
+* Zach Palchick (`zpalchik <https://github.com/zpalchick>`_)
 * `adamsdarlingtower <https://github.com/adamsdarlingtower>`_
 * `imazor <https://github.com/imazor>`_
 * `james-unified <https://github.com/james-unified>`_
