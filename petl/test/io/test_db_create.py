@@ -138,7 +138,7 @@ try:
                     password=password,
                     database=database)
 except Exception as e:
-    print('SKIP mysql create tests: %s' % e, file=sys.stderr)
+    print('SKIP pymysql create tests: %s' % e, file=sys.stderr)
 else:
 
     def test_mysql_create():
@@ -189,7 +189,7 @@ try:
         % (host, database, user, password)
     )
 except Exception as e:
-    print('SKIP postgresql create tests: %s' % e, file=sys.stderr)
+    print('SKIP psycopg2 create tests: %s' % e, file=sys.stderr)
 else:
 
     def test_postgresql_create():

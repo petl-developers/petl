@@ -163,14 +163,18 @@ def _iter_dbapi_cursor(cursor, query, *args, **kwargs):
     cursor.execute(query, *args, **kwargs)
     # fetch one row before iterating, to force population of cursor.description
     # which may be postponed if using server-side cursors
-    first_row = cursor.fetchone()
+    it = iter(cursor)
+    try:
+        first_row = next(it)
+    except StopIteration:
+        first_row = None
     # fields should be available now
     hdr = [d[0] for d in cursor.description]
     yield tuple(hdr)
     if first_row is None:
         raise StopIteration
     yield first_row
-    for row in cursor:
+    for row in it:
         yield row  # don't wrap, return whatever the database engine returns
 
 

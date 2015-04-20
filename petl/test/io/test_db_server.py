@@ -28,33 +28,38 @@ def _test_dbo(write_dbo, read_dbo=None):
     actual = etl.fromdb(read_dbo, 'SELECT * FROM test')
 
     debug('verify empty to start with...')
-    ieq(expect_empty, actual)
     debug(etl.look(actual))
+    ieq(expect_empty, actual)
 
     debug('write some data and verify...')
     etl.todb(expect, write_dbo, 'test')
-    ieq(expect, actual)
     debug(etl.look(actual))
+    ieq(expect, actual)
 
     debug('append some data and verify...')
     etl.appenddb(expect, write_dbo, 'test')
-    ieq(expect_appended, actual)
     debug(etl.look(actual))
+    ieq(expect_appended, actual)
 
     debug('overwrite and verify...')
     etl.todb(expect, write_dbo, 'test')
-    ieq(expect, actual)
     debug(etl.look(actual))
+    ieq(expect, actual)
 
     debug('cut, overwrite and verify')
     etl.todb(etl.cut(expect, 'bar', 'foo'), write_dbo, 'test')
-    ieq(expect, actual)
     debug(etl.look(actual))
+    ieq(expect, actual)
 
     debug('cut, append and verify')
     etl.appenddb(etl.cut(expect, 'bar', 'foo'), write_dbo, 'test')
-    ieq(expect_appended, actual)
     debug(etl.look(actual))
+    ieq(expect_appended, actual)
+
+    debug('try a single row')
+    etl.todb(etl.head(expect, 1), write_dbo, 'test')
+    debug(etl.look(actual))
+    ieq(etl.head(expect, 1), actual)
 
 
 def _test_with_schema(dbo, schema):
@@ -132,7 +137,7 @@ try:
                     password=password,
                     database=database)
 except Exception as e:
-    print('SKIP mysql tests: %s' % e, file=sys.stderr)
+    print('SKIP pymysql tests: %s' % e, file=sys.stderr)
 else:
 
     def test_mysql():
@@ -185,6 +190,66 @@ else:
 
 
 try:
+    import MySQLdb
+    import sqlalchemy
+    MySQLdb.connect(host=host,
+                    user=user,
+                    passwd=password,
+                    db=database)
+except Exception as e:
+    print('SKIP MySQLdb tests: %s' % e, file=sys.stderr)
+else:
+
+    def test_mysql():
+
+        import MySQLdb
+        connect = MySQLdb.connect
+
+        # assume database already created
+        dbapi_connection = connect(host=host,
+                                   user=user,
+                                   passwd=password,
+                                   db=database)
+
+        # exercise using a dbapi_connection
+        _setup_mysql(dbapi_connection)
+        _test_dbo(dbapi_connection)
+
+        # exercise using a dbapi_cursor
+        _setup_mysql(dbapi_connection)
+        dbapi_cursor = dbapi_connection.cursor()
+        _test_dbo(dbapi_cursor)
+        dbapi_cursor.close()
+
+        # exercise sqlalchemy dbapi_connection
+        _setup_mysql(dbapi_connection)
+        from sqlalchemy import create_engine
+        sqlalchemy_engine = create_engine('mysql+mysqldb://%s:%s@%s/%s' %
+                                          (user, password, host, database))
+        sqlalchemy_connection = sqlalchemy_engine.connect()
+        sqlalchemy_connection.execute('SET SQL_MODE=ANSI_QUOTES')
+        _test_dbo(sqlalchemy_connection)
+        sqlalchemy_connection.close()
+
+        # exercise sqlalchemy session
+        _setup_mysql(dbapi_connection)
+        from sqlalchemy.orm import sessionmaker
+        Session = sessionmaker(bind=sqlalchemy_engine)
+        sqlalchemy_session = Session()
+        _test_dbo(sqlalchemy_session)
+        sqlalchemy_session.close()
+
+        # other exercises
+        _test_with_schema(dbapi_connection, database)
+        utf8_connection = connect(host=host, user=user,
+                                  passwd=password,
+                                  db=database,
+                                  charset='utf8')
+        utf8_connection.cursor().execute('SET SQL_MODE=ANSI_QUOTES')
+        _test_unicode(utf8_connection)
+
+
+try:
     import psycopg2
     import sqlalchemy
     psycopg2.connect(
@@ -192,7 +257,7 @@ try:
         % (host, database, user, password)
     )
 except Exception as e:
-    print('SKIP postgresql tests: %s' % e, file=sys.stderr)
+    print('SKIP psycopg2 tests: %s' % e, file=sys.stderr)
 else:
 
     def test_postgresql():
