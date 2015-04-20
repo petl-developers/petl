@@ -241,14 +241,14 @@ def todb(table, dbo, tablename, schema=None, commit=True,
     The parameter `dbo` may also be an SQLAlchemy engine, session or
     connection object.
 
-    The parameter `dbo` may also be a string, in which case it is interpreted as
-    the name of a file containing an :mod:`sqlite3` database.
+    The parameter `dbo` may also be a string, in which case it is interpreted
+    as the name of a file containing an :mod:`sqlite3` database.
 
     If ``create=True`` this function will attempt to automatically create a
     database table before loading the data. This functionality requires
     `SQLAlchemy <http://www.sqlalchemy.org/>`_ to be installed.
 
-    Keyword arguments:
+    **Keyword arguments:**
 
     table : table container
         Table data to load
@@ -274,10 +274,43 @@ def todb(table, dbo, tablename, schema=None, commit=True,
         Custom table metadata (only relevant if create=True)
     dialect : string
         One of {'access', 'sybase', 'sqlite', 'informix', 'firebird', 'mysql',
-        'oracle', 'maxdb', 'postgresql', 'mssql'} (only relevant if create=True)
+        'oracle', 'maxdb', 'postgresql', 'mssql'} (only relevant if
+        create=True)
     sample : int
         Number of rows to sample when inferring types etc. Set to 0 to use the
         whole table (only relevant if create=True)
+
+    .. note::
+
+        This function is in principle compatible with any DB-API 2.0
+        compliant database driver. However, at the time of writing some DB-API
+        2.0 implementations, including cx_Oracle and MySQL's
+        Connector/Python, are not compatible with this function, because they
+        only accept a list argument to the cursor.executemany() function
+        called internally by :mod:`petl`. This can be worked around by
+        proxying the cursor objects, e.g.::
+
+            >>> import cx_Oracle
+            >>> connection = cx_Oracle.Connection(...)
+            >>> class CursorProxy(object):
+            ...     def __init__(self, cursor):
+            ...         self._cursor = cursor
+            ...     def executemany(self, statement, parameters, **kwargs):
+            ...         # convert parameters to a list
+            ...         parameters = list(parameters)
+            ...         # pass through to proxied cursor
+            ...         return self._cursor.executemany(statement, parameters, **kwargs)
+            ...     def __getattr__(self, item):
+            ...         return getattr(self._cursor, item)
+            ...
+            >>> def get_cursor():
+            ...     return CursorProxy(connection.cursor())
+            ...
+            >>> import petl as etl
+            >>> etl.todb(tbl, get_cursor, ...)
+
+        Note however that this does imply loading the entire table into
+        memory as a list prior to inserting into the database.
 
     """
 
