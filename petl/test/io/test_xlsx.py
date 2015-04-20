@@ -65,7 +65,7 @@ else:
                ('B', 2),
                ('C', 2),
                (u'é', datetime(2012, 1, 1)))
-        f = NamedTemporaryFile(delete=False)
+        f = NamedTemporaryFile(delete=False, suffix='.xlsx')
         f.close()
         toxlsx(tbl, f.name, 'Sheet1')
         actual = fromxlsx(f.name, 'Sheet1')
@@ -77,7 +77,7 @@ else:
                ('B', 2),
                ('C', 2),
                (u'é', datetime(2012, 1, 1)))
-        f = NamedTemporaryFile(delete=False)
+        f = NamedTemporaryFile(delete=False, suffix='.xlsx')
         f.close()
         toxlsx(tbl, f.name)
         actual = fromxlsx(f.name)
@@ -89,7 +89,7 @@ else:
                ('B', 2),
                ('C', 2),
                (u'é', datetime(2012, 1, 1)))
-        f = NamedTemporaryFile(delete=False)
+        f = NamedTemporaryFile(delete=False, suffix='.xlsx')
         f.close()
         etl.wrap(tbl).toxlsx(f.name, 'Sheet1')
         actual = etl.fromxlsx(f.name, 'Sheet1')
