@@ -164,7 +164,7 @@ class UnicodeWriter:
         self.encoder = codec.incrementalencoder(errors)
 
     def writerow(self, row):
-        self.writer.writerow([unicode(s).encode('utf-8') for s in row])
+        self.writer.writerow([unicode(s).encode('utf-8') if not s==None else None for s in row])
         # Fetch UTF-8 output from the queue ...
         data = self.queue.getvalue()
         data = data.decode('utf-8')
