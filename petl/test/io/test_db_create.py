@@ -69,7 +69,7 @@ def _test_create(dbo):
              ('a', 1),
              ('b', 2),
              ('c', 2))
-    todb(table, dbo, 'foo " bar`', create=True, drop=True)
+    todb(table, dbo, 'foo " bar`', create=True)
     actual = fromdb(dbo, 'SELECT * FROM "foo "" bar`"')
     ieq(table, actual)
 
@@ -80,6 +80,7 @@ def _setup_mysql(dbapi_connection):
     # deal with quote compatibility
     cursor.execute('SET SQL_MODE=ANSI_QUOTES')
     cursor.execute('DROP TABLE IF EXISTS test_create')
+    cursor.execute('DROP TABLE IF EXISTS "foo "" bar`"')
     cursor.close()
     dbapi_connection.commit()
 
@@ -88,6 +89,7 @@ def _setup_generic(dbapi_connection):
     # setup table
     cursor = dbapi_connection.cursor()
     cursor.execute('DROP TABLE IF EXISTS test_create')
+    cursor.execute('DROP TABLE IF EXISTS "foo "" bar`"')
     cursor.close()
     dbapi_connection.commit()
 

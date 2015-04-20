@@ -54,4 +54,4 @@ DONE look truncate
 
 DONE display truncate
 
-TODO review all issues
+DONE review all issues

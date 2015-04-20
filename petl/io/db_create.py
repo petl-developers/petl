@@ -184,7 +184,7 @@ def make_create_table_statement(table, tablename, schema=None,
         sql_dialect = None
 
     return text_type(sqlalchemy.schema.CreateTable(sql_table)
-                     .compile(dialect=sql_dialect)).strip() + ';'
+                     .compile(dialect=sql_dialect)).strip()
 
 
 def create_table(table, dbo, tablename, schema=None, commit=True,
@@ -228,7 +228,7 @@ def create_table(table, dbo, tablename, schema=None, commit=True,
 
 def drop_table(dbo, tablename, schema=None, commit=True):
     """
-    Drop a database table if it exists.
+    Drop a database table.
 
     Keyword arguments:
 
@@ -249,7 +249,7 @@ def drop_table(dbo, tablename, schema=None, commit=True):
     if schema is not None:
         tablename = _quote(schema) + '.' + tablename
 
-    sql = u'DROP TABLE IF EXISTS %s;' % tablename
+    sql = u'DROP TABLE %s' % tablename
     _execute(sql, dbo, commit)
 
 
