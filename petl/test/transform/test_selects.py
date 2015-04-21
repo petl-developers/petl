@@ -113,6 +113,15 @@ def test_select_empty():
     ieq(expect, actual)
 
 
+def test_select_falsey():
+    table = (('foo',), 
+             ([],),
+             ('',))
+    expect = (('foo',),)
+    actual = select(table, '{foo}')
+    ieq(expect, actual)
+
+
 def test_selectgt():
 
     table = (('foo', 'bar', 'baz'),
