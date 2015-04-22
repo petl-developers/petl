@@ -121,7 +121,7 @@ def iterfieldselect(source, field, where, complement, missing):
             v = getv(row)
         except IndexError:
             v = missing
-        if where(v) != complement:  # XOR
+        if bool(where(v)) != complement:  # XOR
             yield tuple(row)
 
 
@@ -132,7 +132,7 @@ def iterrowselect(source, where, missing, complement):
     yield tuple(hdr)
     it = (Record(row, flds, missing=missing) for row in it)
     for row in it:
-        if where(row) != complement:  # XOR
+        if bool(where(row)) != complement:  # XOR
             yield tuple(row)  # need to convert back to tuple?
 
 
