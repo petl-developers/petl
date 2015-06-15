@@ -126,3 +126,26 @@ def test_appendcsv():
     uf = io.open(fn, encoding='utf-8', mode='rt')
     actual = uf.read()
     eq_(expect, actual)
+
+
+def test_tocsv_none():
+
+    tbl = ((u'col1', u'colNone'),
+           (u'a', 1),
+           (u'b', None),
+           (u'c', None),
+           (u'd', 4))
+    fn = NamedTemporaryFile().name
+    tocsv(tbl, fn, encoding='utf-8', lineterminator='\n')
+
+    expect = (
+        u'col1,colNone\n'
+        u'a,1\n'
+        u'b,\n'
+        u'c,\n'
+        u'd,4\n'
+    )
+
+    uf = io.open(fn, encoding='utf-8', mode='rt', newline='')
+    actual = uf.read()
+    eq_(expect, actual)
