@@ -168,6 +168,9 @@ def test_rename():
     result = rename(table, {'foo': 'foofoo', 'bar': 'barbar'})
     assert fieldnames(result) == ('foofoo', 'barbar')
 
+    result = rename(table, {0: 'baz', 1: 'quux'})
+    assert fieldnames(result) == ('baz', 'quux')
+
     result = rename(table)
     result['foo'] = 'spong'
     assert fieldnames(result) == ('spong', 'bar')
