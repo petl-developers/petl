@@ -335,6 +335,7 @@ package:
 * Caleb Lloyd (`caleblloyd <https://github.com/caleblloyd>`_)
 * César Roldán (`ihuro <https://github.com/ihuro>`_)
 * Chris Lasher (`gotgenes <https://github.com/gotgenes>`_)
+* Dustin Engstrom (`engstrom <https://github.com/engstrom>`_)
 * Florent Xicluna (`florentx <https://github.com/florentx>`_)
 * Jonathan Camile (`deytao <https://github.com/deytao>`_)
 * Jonathan Moss (`a-musing-moose <https://github.com/a-musing-moose>`_)
@@ -352,6 +353,7 @@ package:
 * `adamsdarlingtower <https://github.com/adamsdarlingtower>`_
 * `imazor <https://github.com/imazor>`_
 * `james-unified <https://github.com/james-unified>`_
+* `Mgutjahr <https://github.com/Mgutjahr>`_
 * `shayh <https://github.com/shayh>`_
 * `thatneat <https://github.com/thatneat>`_
 * `titusz <https://github.com/titusz>`_
