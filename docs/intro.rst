@@ -344,6 +344,7 @@ package:
 * Michael Rea (`rea725 <https://github.com/rea725>`_)
 * Olivier Macchioni (`omacchioni <https://github.com/omacchioni>`_)
 * Olivier Poitrey (`rs <https://github.com/rs>`_)
+* Paul Jensen (`psnj <https://github.com/psnj>`_)
 * Peder Jakobsen (`pjakobsen <https://github.com/pjakobsen>`_)
 * Phillip Knaus (`phillipknaus <https://github.com/phillipknauss>`_)
 * Richard Pearson (`podpearson <https://github.com/podpearson>`_)
