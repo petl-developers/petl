@@ -47,6 +47,9 @@ def rename(table, *args, **kwargs):
     The field to rename can be specified as an index (i.e., integer representing
     field position).
 
+    If any nonexistent fields are specified, the default behaviour is to raise
+    a `FieldSelectionError`. However, if `strict` keyword argument is `False`, any
+    nonexistent fields specified will be silently ignored.
     """
 
     return RenameView(table, *args, **kwargs)
