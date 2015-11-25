@@ -289,6 +289,13 @@ Note that this convention does not place any restrictions on the
 lengths of header and data rows. A table may contain a header row
 and/or data rows of varying lengths.
 
+.. _intro_extending:
+
+Extensions - integrating custom data sources
+--------------------------------------------
+
+@@TODO
+
 .. _intro_caching:
 
 Caching
