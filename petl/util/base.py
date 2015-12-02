@@ -355,7 +355,7 @@ def fieldnames(table):
 
     """
 
-    return tuple(str(f) for f in header(table))
+    return tuple(text_type(f) for f in header(table))
 
 
 Table.fieldnames = fieldnames
@@ -453,7 +453,7 @@ def iterdicts(table, *sliceargs, **kwargs):
 
 
 def asdict(hdr, row, missing=None):
-    flds = [str(f) for f in hdr]
+    flds = [text_type(f) for f in hdr]
     try:
         # list comprehension should be faster
         items = [(flds[i], row[i]) for i in range(len(flds))]
