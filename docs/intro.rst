@@ -294,7 +294,11 @@ and/or data rows of varying lengths.
 Extensions - integrating custom data sources
 --------------------------------------------
 
-@@TODO
+The :mod:`petl.io` module has functions for extracting data from a number of
+different data sources. However, it is also straightforward to write an
+extension that enables integration with other data sources. For an object to
+be usable with :mod:`petl` it has to implement the **table container**
+convention described above. Here is a simple example, @@TODO
 
 .. _intro_caching:
 
