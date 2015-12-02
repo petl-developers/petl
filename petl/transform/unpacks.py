@@ -83,7 +83,7 @@ def iterunpack(source, field, newfields, include_original, missing):
         nunpack = len(newfields)
     elif isinstance(newfields, int):
         nunpack = newfields
-        newfields = [str(field) + str(i+1) for i in range(newfields)]
+        newfields = [text_type(field) + text_type(i+1) for i in range(newfields)]
         outhdr.extend(newfields)
     elif newfields is None:
         nunpack = 0

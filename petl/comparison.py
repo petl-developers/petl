@@ -79,7 +79,7 @@ class Comparable(object):
         return str(self.obj)
 
     def __unicode__(self):
-        return str(self.obj)
+        return text_type(self.obj)
 
     def __repr__(self):
         return 'Comparable(' + repr(self.obj) + ')'

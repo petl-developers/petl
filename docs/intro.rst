@@ -338,6 +338,7 @@ The following people have contributed to the development of this
 package:
 
 * Alexander Stauber
+* Andreas Porevopoulos (`sv1jsb <https://github.com/sv1jsb>`_)
 * Andrew Kim (`andrewakim <https://github.com/andrewakim>`_)
 * Caleb Lloyd (`caleblloyd <https://github.com/caleblloyd>`_)
 * César Roldán (`ihuro <https://github.com/ihuro>`_)

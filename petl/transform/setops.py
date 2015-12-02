@@ -91,9 +91,9 @@ def itercomplement(ta, tb):
     # coerce rows to tuples to ensure hashable and comparable
     ita = (tuple(row) for row in iter(ta))
     itb = (tuple(row) for row in iter(tb))
-    aflds = tuple(str(f) for f in next(ita))
+    ahdr = tuple(next(ita))
     next(itb)  # ignore b fields
-    yield aflds
+    yield ahdr
 
     try:
         a = next(ita)

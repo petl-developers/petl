@@ -233,7 +233,7 @@ class ValuesView(IterContainer):
 
     def __repr__(self):
         vreprs = list(map(repr, islice(self, 6)))
-        r = str(self.field) + ': '
+        r = text_type(self.field) + ': '
         r += ', '.join(vreprs[:5])
         if len(vreprs) > 5:
             r += ', ...'

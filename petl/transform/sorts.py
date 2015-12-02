@@ -545,7 +545,7 @@ def issorted(table, key=None, reverse=False, strict=False):
         op = operator.ge
 
     it = iter(table)
-    flds = [str(f) for f in next(it)]
+    flds = [text_type(f) for f in next(it)]
     if key is None:
         prev = next(it)
         for curr in it:
