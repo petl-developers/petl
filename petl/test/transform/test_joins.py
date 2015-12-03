@@ -746,7 +746,6 @@ def _test_rightjoin_lkey_only(rightjoin_impl):
     table2 = (('id', 'color', 'cost'),
               (1, 'blue', 12),
               (1, 'red', 8),
-              (2, 'yellow', 15),
               (2, 'orange', 5),
               (3, 'purple', 4),
               (4, 'chartreuse', 42))
@@ -755,9 +754,7 @@ def _test_rightjoin_lkey_only(rightjoin_impl):
     expect = (('id', 'color', 'cost'),
               (1, 'blue', 12),
               (1, 'red', 8),
-              (2, 'yellow', 15),
               (2, 'orange', 5),
-              (2, 'yellow', 15),
               (2, 'orange', 5),
               (3, 'purple', 4),
               (3, 'purple', 4),
