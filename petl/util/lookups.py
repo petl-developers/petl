@@ -6,7 +6,30 @@ from petl.compat import text_type
 
 
 from petl.errors import DuplicateKeyError
-from petl.util.base import Table, asindices, asdict, Record
+from petl.util.base import Table, asindices, asdict, Record, rowgetter
+
+
+def _setup_lookup(table, key, value):
+
+    # obtain iterator and header row
+    it = iter(table)
+    hdr = next(it)
+
+    # prepare key getter
+    keyindices = asindices(hdr, key)
+    assert len(keyindices) > 0, 'no key selected'
+    getkey = operator.itemgetter(*keyindices)
+
+    # prepare value getter
+    if value is None:
+        # default value is complete row
+        getvalue = rowgetter(*range(len(hdr)))
+    else:
+        valueindices = asindices(hdr, value)
+        assert len(valueindices) > 0, 'no value selected'
+        getvalue = operator.itemgetter(*valueindices)
+
+    return it, getkey, getvalue
 
 
 def lookup(table, key, value=None, dictionary=None):
@@ -61,17 +84,10 @@ def lookup(table, key, value=None, dictionary=None):
     if dictionary is None:
         dictionary = dict()
 
-    it = iter(table)
-    hdr = next(it)
-    flds = list(map(text_type, hdr))
-    if value is None:
-        value = flds  # default value is complete row
-    keyindices = asindices(hdr, key)
-    assert len(keyindices) > 0, 'no key selected'
-    valueindices = asindices(hdr, value)
-    assert len(valueindices) > 0, 'no value selected'
-    getkey = operator.itemgetter(*keyindices)
-    getvalue = operator.itemgetter(*valueindices)
+    # setup
+    it, getkey, getvalue = _setup_lookup(table, key, value)
+
+    # build lookup dictionary
     for row in it:
         k = getkey(row)
         v = getvalue(row)
@@ -82,6 +98,7 @@ def lookup(table, key, value=None, dictionary=None):
             dictionary[k] = l
         else:
             dictionary[k] = [v]
+
     return dictionary
 
 
@@ -144,17 +161,10 @@ def lookupone(table, key, value=None, dictionary=None, strict=False):
     if dictionary is None:
         dictionary = dict()
 
-    it = iter(table)
-    hdr = next(it)
-    flds = list(map(text_type, hdr))
-    if value is None:
-        value = flds
-    keyindices = asindices(hdr, key)
-    assert len(keyindices) > 0, 'no key selected'
-    valueindices = asindices(hdr, value)
-    assert len(valueindices) > 0, 'no value selected'
-    getkey = operator.itemgetter(*keyindices)
-    getvalue = operator.itemgetter(*valueindices)
+    # setup
+    it, getkey, getvalue = _setup_lookup(table, key, value)
+
+    # build lookup dictionary
     for row in it:
         k = getkey(row)
         if strict and k in dictionary:
@@ -162,6 +172,7 @@ def lookupone(table, key, value=None, dictionary=None, strict=False):
         elif k not in dictionary:
             v = getvalue(row)
             dictionary[k] = v
+
     return dictionary
 
 

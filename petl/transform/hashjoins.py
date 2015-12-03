@@ -283,7 +283,8 @@ def iterhashrightjoin(left, right, lkey, rkey, missing, llookup, lprefix,
     if rprefix is None:
         outhdr.extend(rgetv(rhdr))
     else:
-        outhdr.extend([(text_type(rprefix) + text_type(f)) for f in rgetv(rhdr)])
+        outhdr.extend([(text_type(rprefix) + text_type(f))
+                       for f in rgetv(rhdr)])
     yield tuple(outhdr)
 
     # define a function to join rows
