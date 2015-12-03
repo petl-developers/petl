@@ -999,13 +999,14 @@ def iteraddfieldusingcontext(table, field, query):
     hdr = tuple(next(it))
     flds = list(map(text_type, hdr))
     yield hdr + (field,)
+    flds.append(field)
     it = (Record(row, flds) for row in it)
     prv = None
     cur = next(it)
     for nxt in it:
         v = query(prv, cur, nxt)
         yield tuple(cur) + (v,)
-        prv = cur
+        prv = Record(tuple(cur) + (v,), flds)
         cur = nxt
     # handle last row
     v = query(prv, cur, None)
