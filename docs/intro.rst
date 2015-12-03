@@ -36,7 +36,9 @@ Some of the functions in this package require installation of third party
 packages. This is indicated in the relevant parts of the documentation.
 
 Some domain-specific and/or experimental extensions to :mod:`petl` are
-available from the `petlx <http://petlx.readthedocs.org>`_ package.
+available from the petlx_ package.
+
+.. _petlx: http://petlx.readthedocs.org
 
 .. _intro_design_goals:
 
@@ -295,10 +297,66 @@ Extensions - integrating custom data sources
 --------------------------------------------
 
 The :mod:`petl.io` module has functions for extracting data from a number of
-different data sources. However, it is also straightforward to write an
+well-known data sources. However, it is also straightforward to write an
 extension that enables integration with other data sources. For an object to
-be usable with :mod:`petl` it has to implement the **table container**
-convention described above. Here is a simple example, @@TODO
+be usable as a :mod:`petl` table it has to implement the **table container**
+convention described above. Below is the source code for an
+:class:`ArrayView` class which allows integration of :mod:`petl` with numpy
+arrays. This class is included within the :mod:`petl.io.numpy`
+module but also provides an example of how other data sources might be
+integrated::
+
+    >>> import petl as etl
+    >>> class ArrayView(etl.Table):
+    ...     def __init__(self, a):
+    ...         # assume that a is a numpy array
+    ...         self.a = a
+    ...     def __iter__(self):
+    ...         # yield the header row
+    ...         header = tuple(self.a.dtype.names)
+    ...         yield header
+    ...         # yield the data rows
+    ...         for row in self.a:
+    ...             yield tuple(row)
+    ...
+
+Now this class enables the use of numpy arrays with :mod:`petl` functions,
+e.g.::
+
+    >>> import numpy as np
+    >>> a = np.array([('apples', 1, 2.5),
+    ...               ('oranges', 3, 4.4),
+    ...               ('pears', 7, 0.1)],
+    ...              dtype='U8, i4,f4')
+    >>> t1 = ArrayView(a)
+    >>> t1
+    +-----------+----+-----------+
+    | f0        | f1 | f2        |
+    +===========+====+===========+
+    | 'apples'  | 1  | 2.5       |
+    +-----------+----+-----------+
+    | 'oranges' | 3  | 4.4000001 |
+    +-----------+----+-----------+
+    | 'pears'   | 7  | 0.1       |
+    +-----------+----+-----------+
+
+    >>> t2 = t1.cut('f0', 'f2').convert('f0', 'upper').addfield('f3', lambda row: row.f2 * 2)
+    >>> t2
+    +-----------+-----------+---------------------+
+    | f0        | f2        | f3                  |
+    +===========+===========+=====================+
+    | 'APPLES'  | 2.5       |                 5.0 |
+    +-----------+-----------+---------------------+
+    | 'ORANGES' | 4.4000001 |  8.8000001907348633 |
+    +-----------+-----------+---------------------+
+    | 'PEARS'   | 0.1       | 0.20000000298023224 |
+    +-----------+-----------+---------------------+
+
+If you develop an extension for a data source that you think would also be
+useful for others, please feel free to submit a PR to the
+`petl GitHub repository <https://github.com/alimanfoo/petl>`_, or if it
+is a domain-specific data source, the
+`petlx GitHub repository <https://github.com/alimanfoo/petlx>`_.
 
 .. _intro_caching:
 
