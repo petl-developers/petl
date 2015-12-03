@@ -195,8 +195,6 @@ def _test_join_rkey_only(join_impl):
     table2 = (('id', ),
               (1, ),
               (2, ),
-              (2, ),
-              (3, ),
               (3, ),
               (5, ))
 
@@ -205,10 +203,7 @@ def _test_join_rkey_only(join_impl):
               (1, 'blue', 12),
               (1, 'red', 8),
               (2, 'yellow', 15),
-              (2, 'yellow', 15),
               (2, 'orange', 5),
-              (2, 'orange', 5),
-              (3, 'purple', 4),
               (3, 'purple', 4))
     ieq(expect, actual)
 
@@ -716,7 +711,6 @@ def _test_rightjoin_rkey_only(rightjoin_impl):
               (1, 'blue', 12),
               (1, 'red', 8),
               (2, 'yellow', 15),
-              (2, 'orange', 5),
               (3, 'purple', 4),
               (4, 'chartreuse', 42))
 
@@ -734,8 +728,6 @@ def _test_rightjoin_rkey_only(rightjoin_impl):
               (1, 'red', 8),
               (2, 'yellow', 15),
               (2, 'yellow', 15),
-              (2, 'orange', 5),
-              (2, 'orange', 5),
               (3, 'purple', 4),
               (3, 'purple', 4),
               (5, None, None))
