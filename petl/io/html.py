@@ -15,7 +15,7 @@ from petl.io.base import getcodec
 from petl.io.sources import write_source_from_arg
 
 
-def tohtml(table, source=None, encoding=None, errors=None, caption=None,
+def tohtml(table, source=None, encoding=None, errors='strict', caption=None,
            vrepr=text_type, lineterminator='\n', index_header=False,
            tr_style=None, td_styles=None, truncate=None):
     """
@@ -99,7 +99,7 @@ def tohtml(table, source=None, encoding=None, errors=None, caption=None,
 Table.tohtml = tohtml
 
 
-def teehtml(table, source=None, encoding=None, errors=None, caption=None,
+def teehtml(table, source=None, encoding=None, errors='strict', caption=None,
             vrepr=text_type, lineterminator='\n', index_header=False,
             tr_style=None, td_styles=None, truncate=None):
     """
@@ -120,7 +120,7 @@ Table.teehtml = teehtml
 
 
 class TeeHTMLView(Table):
-    def __init__(self, table, source=None, encoding=None, errors=None,
+    def __init__(self, table, source=None, encoding=None, errors='strict',
                  caption=None, vrepr=text_type, lineterminator='\n',
                  index_header=False, tr_style=None, td_styles=None,
                  truncate=None):

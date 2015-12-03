@@ -67,7 +67,7 @@ def teecsv_impl(table, source, **kwargs):
 class TeeCSVView(Table):
 
     def __init__(self, table, source=None, encoding=None,
-                 errors=None, write_header=True, **csvargs):
+                 errors='strict', write_header=True, **csvargs):
         self.table = table
         self.source = source
         self.write_header = write_header
