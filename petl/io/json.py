@@ -107,6 +107,17 @@ def fromdicts(dicts, header=None):
         +-----+-----+
         |   2 | 'c' |
         +-----+-----+
+        >>> table2 = etl.fromdicts(x for x in dicts)
+        >>> table2
+        +-----+-----+
+        | bar | foo |
+        +=====+=====+
+        |   1 | 'a' |
+        +-----+-----+
+        |   2 | 'b' |
+        +-----+-----+
+        |   2 | 'c' |
+        +-----+-----+
 
     See also :func:`petl.io.json.fromjson`.
 
@@ -118,7 +129,9 @@ def fromdicts(dicts, header=None):
 class DictsView(Table):
 
     def __init__(self, dicts, header=None):
-        self.dicts = dicts
+        # If header is unknown, we'll have to iterate inputs once to fix that,
+        # so listify to prevent consuming generator inputs.
+        self.dicts = list(dicts) if header is None else dicts
         self.header = header
 
     def __iter__(self):
