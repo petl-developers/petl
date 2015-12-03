@@ -182,6 +182,62 @@ def _test_join_multiple(join_impl):
     ieq(expect, actual)
 
 
+def _test_join_rkey_only(join_impl):
+
+    table1 = (('id', 'color', 'cost'),
+              (1, 'blue', 12),
+              (1, 'red', 8),
+              (2, 'yellow', 15),
+              (2, 'orange', 5),
+              (3, 'purple', 4),
+              (4, 'chartreuse', 42))
+
+    table2 = (('id', ),
+              (1, ),
+              (2, ),
+              (3, ),
+              (5, ))
+
+    actual = join_impl(table1, table2, key='id')
+    expect = (('id', 'color', 'cost'),
+              (1, 'blue', 12),
+              (1, 'red', 8),
+              (2, 'yellow', 15),
+              (2, 'orange', 5),
+              (3, 'purple', 4))
+    ieq(expect, actual)
+
+def _test_join_lkey_only(join_impl):
+
+    table1 = (('id', ),
+              (1, ),
+              (2, ),
+              (2, ),
+              (3, ),
+              (3, ),
+              (5, ))
+
+    table2 = (('id', 'color', 'cost'),
+              (1, 'blue', 12),
+              (1, 'red', 8),
+              (2, 'yellow', 15),
+              (2, 'orange', 5),
+              (3, 'purple', 4),
+              (4, 'chartreuse', 42))
+
+    actual = join_impl(table1, table2, key='id')
+    expect = (('id', 'color', 'cost'),
+              (1, 'blue', 12),
+              (1, 'red', 8),
+              (2, 'yellow', 15),
+              (2, 'orange', 5),
+              (2, 'yellow', 15),
+              (2, 'orange', 5),
+              (3, 'purple', 4),
+              (3, 'purple', 4))
+    ieq(expect, actual)
+
+
 def _test_join(join_impl):
     _test_join_basic(join_impl)
     _test_join_compound_keys(join_impl)
@@ -190,6 +246,8 @@ def _test_join(join_impl):
     _test_join_prefix(join_impl)
     _test_join_lrkey(join_impl)
     _test_join_multiple(join_impl)
+    _test_join_rkey_only(join_impl)
+    _test_join_lkey_only(join_impl)
 
 
 def test_join():
@@ -387,6 +445,67 @@ def _test_leftjoin_lrkey(leftjoin_impl):
                (7, 'orange', None))
     ieq(expect3, table3)
 
+def _test_leftjoin_rkey_only(leftjoin_impl):
+
+    table1 = (('id', 'color', 'cost'),
+              (1, 'blue', 12),
+              (1, 'red', 8),
+              (2, 'yellow', 15),
+              (2, 'orange', 5),
+              (3, 'purple', 4),
+              (4, 'chartreuse', 42))
+
+    table2 = (('id', ),
+              (1, ),
+              (2, ),
+              (2, ),
+              (3, ),
+              (3, ))
+
+    actual = leftjoin_impl(table1, table2, key='id')
+    expect = (('id', 'color', 'cost'),
+              (1, 'blue', 12),
+              (1, 'red', 8),
+              (2, 'yellow', 15),
+              (2, 'yellow', 15),
+              (2, 'orange', 5),
+              (2, 'orange', 5),
+              (3, 'purple', 4),
+              (3, 'purple', 4),
+              (4, 'chartreuse', 42))
+    ieq(expect, actual)
+
+def _test_leftjoin_lkey_only(leftjoin_impl):
+
+    table1 = (('id', ),
+              (1, ),
+              (2, ),
+              (2, ),
+              (3, ),
+              (3, ),
+              (5, ))
+
+    table2 = (('id', 'color', 'cost'),
+              (1, 'blue', 12),
+              (1, 'red', 8),
+              (2, 'yellow', 15),
+              (2, 'orange', 5),
+              (3, 'purple', 4),
+              (4, 'chartreuse', 42))
+
+    actual = leftjoin_impl(table1, table2, key='id')
+    expect = (('id', 'color', 'cost'),
+              (1, 'blue', 12),
+              (1, 'red', 8),
+              (2, 'yellow', 15),
+              (2, 'orange', 5),
+              (2, 'yellow', 15),
+              (2, 'orange', 5),
+              (3, 'purple', 4),
+              (3, 'purple', 4),
+              (5, None, None))
+    ieq(expect, actual)
+
 
 def _test_leftjoin(leftjoin_impl):
     _test_leftjoin_1(leftjoin_impl)
@@ -397,6 +516,8 @@ def _test_leftjoin(leftjoin_impl):
     _test_leftjoin_multiple(leftjoin_impl)
     _test_leftjoin_prefix(leftjoin_impl)
     _test_leftjoin_lrkey(leftjoin_impl)
+    _test_leftjoin_rkey_only(leftjoin_impl)
+    _test_leftjoin_lkey_only(leftjoin_impl)
 
 
 def test_leftjoin():
@@ -584,6 +705,63 @@ def _test_rightjoin_multiple(rightjoin_impl):
     ieq(sort(expect), sort(actual))
 
 
+def _test_rightjoin_rkey_only(rightjoin_impl):
+
+    table1 = (('id', 'color', 'cost'),
+              (1, 'blue', 12),
+              (1, 'red', 8),
+              (2, 'yellow', 15),
+              (3, 'purple', 4),
+              (4, 'chartreuse', 42))
+
+    table2 = (('id', ),
+              (1, ),
+              (2, ),
+              (2, ),
+              (3, ),
+              (3, ),
+              (5, ))
+
+    actual = rightjoin_impl(table1, table2, key='id')
+    expect = (('id', 'color', 'cost'),
+              (1, 'blue', 12),
+              (1, 'red', 8),
+              (2, 'yellow', 15),
+              (2, 'yellow', 15),
+              (3, 'purple', 4),
+              (3, 'purple', 4),
+              (5, None, None))
+    ieq(expect, actual)
+
+def _test_rightjoin_lkey_only(rightjoin_impl):
+
+    table1 = (('id', ),
+              (1, ),
+              (2, ),
+              (2, ),
+              (3, ),
+              (3, ),
+              (5, ))
+
+    table2 = (('id', 'color', 'cost'),
+              (1, 'blue', 12),
+              (1, 'red', 8),
+              (2, 'orange', 5),
+              (3, 'purple', 4),
+              (4, 'chartreuse', 42))
+
+    actual = rightjoin_impl(table1, table2, key='id')
+    expect = (('id', 'color', 'cost'),
+              (1, 'blue', 12),
+              (1, 'red', 8),
+              (2, 'orange', 5),
+              (2, 'orange', 5),
+              (3, 'purple', 4),
+              (3, 'purple', 4),
+              (4, 'chartreuse', 42))
+    ieq(expect, actual)
+
+
 def _test_rightjoin(rightjoin_impl):
     _test_rightjoin_1(rightjoin_impl)
     _test_rightjoin_2(rightjoin_impl)
@@ -592,6 +770,8 @@ def _test_rightjoin(rightjoin_impl):
     _test_rightjoin_prefix(rightjoin_impl)
     _test_rightjoin_lrkey(rightjoin_impl)
     _test_rightjoin_multiple(rightjoin_impl)
+    _test_rightjoin_rkey_only(rightjoin_impl)
+    _test_rightjoin_lkey_only(rightjoin_impl)
 
 
 def test_rightjoin():
@@ -784,6 +964,70 @@ def test_outerjoin_multiple():
 
     ieq(expect, actual)
 
+def test_outerjoin_rkey_only():
+
+    table1 = (('id', 'color', 'cost'),
+              (1, 'blue', 12),
+              (1, 'red', 8),
+              (2, 'yellow', 15),
+              (2, 'orange', 5),
+              (3, 'purple', 4),
+              (4, 'chartreuse', 42))
+
+    table2 = (('id', ),
+              (1, ),
+              (2, ),
+              (2, ),
+              (3, ),
+              (3, ),
+              (5, ))
+
+    actual = outerjoin(table1, table2, key='id')
+    expect = (('id', 'color', 'cost'),
+              (1, 'blue', 12),
+              (1, 'red', 8),
+              (2, 'yellow', 15),
+              (2, 'yellow', 15),
+              (2, 'orange', 5),
+              (2, 'orange', 5),
+              (3, 'purple', 4),
+              (3, 'purple', 4),
+              (4, 'chartreuse', 42),
+              (5, None, None))
+    ieq(expect, actual)
+
+def test_outerjoin_lkey_only():
+
+    table1 = (('id', ),
+              (1, ),
+              (2, ),
+              (2, ),
+              (3, ),
+              (3, ),
+              (5, ))
+
+    table2 = (('id', 'color', 'cost'),
+              (1, 'blue', 12),
+              (1, 'red', 8),
+              (2, 'yellow', 15),
+              (2, 'orange', 5),
+              (3, 'purple', 4),
+              (4, 'chartreuse', 42))
+
+    actual = outerjoin(table1, table2, key='id')
+    expect = (('id', 'color', 'cost'),
+              (1, 'blue', 12),
+              (1, 'red', 8),
+              (2, 'yellow', 15),
+              (2, 'orange', 5),
+              (2, 'yellow', 15),
+              (2, 'orange', 5),
+              (3, 'purple', 4),
+              (3, 'purple', 4),
+              (4, 'chartreuse', 42),
+              (5, None, None))
+    ieq(expect, actual)
+
 
 def test_crossjoin():
 
@@ -829,6 +1073,42 @@ def test_crossjoin_prefix():
                (2, 'red', 3, 'square'))
     ieq(expect3, table3)
 
+
+def test_crossjoin_rkey_only():
+
+    table1 = (('id', 'colour'),
+              (1, 'blue'),
+              (2, 'red'))
+
+    table2 = (('id', ),
+              (1, ),
+              (3, ))
+
+    actual = crossjoin(table1, table2, key='id')
+    expect = (('id', 'colour', 'id'),
+              (1, 'blue', 1),
+              (1, 'blue', 3),
+              (2, 'red', 1),
+              (2, 'red', 3))
+    ieq(expect, actual)
+
+def test_crossjoin_lkey_only():
+
+    table1 = (('id', ),
+              (1, ),
+              (3, ))
+
+    table2 = (('id', 'colour'),
+              (1, 'blue'),
+              (2, 'red'))
+
+    actual = crossjoin(table1, table2, key='id')
+    expect = (('id', 'id', 'colour'),
+              (1, 1, 'blue'),
+              (1, 2, 'red'),
+              (3, 1, 'blue'),
+              (3, 2, 'red'))
+    ieq(expect, actual)
 
 def _test_antijoin_basics(antijoin_impl):
 
@@ -888,10 +1168,51 @@ def _test_antijoin_lrkey(antijoin_impl):
     ieq(expect3, table3)
 
 
+def _test_antijoin_rkey_only(antijoin_impl):
+
+    table1 = (('id', 'colour'),
+              (0, 'black'),
+              (1, 'blue'),
+              (2, 'red'),
+              (4, 'yellow'),
+              (5, 'white'))
+
+    table2 = (('id', ),
+              (1, ),
+              (3, ))
+
+    actual = antijoin_impl(table1, table2, key='id')
+    expect = (('id', 'colour'),
+               (0, 'black'),
+               (2, 'red'),
+               (4, 'yellow'),
+               (5, 'white'))
+    ieq(expect, actual)
+
+def _test_antijoin_lkey_only(antijoin_impl):
+
+    table1 = (('id', ),
+              (1, ),
+              (3, ))
+
+    table2 = (('id', 'colour'),
+              (0, 'black'),
+              (1, 'blue'),
+              (2, 'red'),
+              (4, 'yellow'),
+              (5, 'white'))
+
+    actual = antijoin_impl(table1, table2, key='id')
+    expect = (('id',),
+              (3, ))
+    ieq(expect, actual)
+
 def _test_antijoin(antijoin_impl):
     _test_antijoin_basics(antijoin_impl)
     _test_antijoin_empty(antijoin_impl)
     _test_antijoin_lrkey(antijoin_impl)
+    _test_antijoin_rkey_only(antijoin_impl)
+    _test_antijoin_lkey_only(antijoin_impl)
 
 
 def test_antijoin():
@@ -992,12 +1313,60 @@ def _test_lookupjoin_lrkey(lookupjoin_impl):
               (3, 'purple', 4, 'ellipse', 'small'))
     ieq(expect, actual)
 
+def _test_lookupjoin_rkey_only(lookupjoin_impl):
+
+    table1 = (('id', 'color', 'cost'),
+              (1, 'blue', 12),
+              (2, 'red', 8),
+              (3, 'purple', 4))
+
+    table2 = (('id', ),
+              (1, ),
+              (1, ),
+              (2, ),
+              (2, ),
+              (3, ),
+              (5, ))
+
+    actual = lookupjoin_impl(table1, table2, key='id')
+    expect = (('id', 'color', 'cost'),
+              (1, 'blue', 12),
+              (2, 'red', 8),
+              (3, 'purple', 4))
+    ieq(expect, actual)
+
+def _test_lookupjoin_lkey_only(lookupjoin_impl):
+
+    table1 = (('id', ),
+              (1, ),
+              (2, ),
+              (3, ),
+              (5, ))
+
+    table2 = (('id', 'color', 'cost'),
+              (1, 'blue', 12),
+              (1, 'blue', 24),
+              (2, 'red', 8),
+              (2, 'red', 16),
+              (3, 'purple', 4),
+              (3, 'purple', 8))
+
+    actual = lookupjoin_impl(table1, table2, key='id')
+    expect = (('id', 'color', 'cost'),
+              (1, 'blue', 12),
+              (2, 'red', 8),
+              (3, 'purple', 4),
+              (5, None, None))
+    ieq(expect, actual)
+
 
 def _test_lookupjoin(lookupjoin_impl):
     _test_lookupjoin_1(lookupjoin_impl)
     _test_lookupjoin_2(lookupjoin_impl)
     _test_lookupjoin_prefix(lookupjoin_impl)
     _test_lookupjoin_lrkey(lookupjoin_impl)
+    _test_lookupjoin_rkey_only(lookupjoin_impl)
+    _test_lookupjoin_lkey_only(lookupjoin_impl)
 
 
 def test_lookupjoin():

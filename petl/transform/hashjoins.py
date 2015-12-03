@@ -73,8 +73,18 @@ def iterhashjoin(left, right, lkey, rkey, rlookup, lprefix, rprefix):
     # (in the output, we only include key fields from the left table - we
     # don't want to duplicate fields)
     rvind = [i for i in range(len(rhdr)) if i not in rkind]
-    rgetv = rowgetter(*rvind)
-    
+    # If right table only has the key, we do not need to get values
+    if rvind:
+        rgetv = rowgetter(*rvind)
+    else:
+        rgetv = lambda row: None
+
+    # define a function to extend rows where the sequence might yield None
+    def extend_row(row, extend_seq):
+        if extend_seq:
+            row.extend(extend_seq)
+        return row
+
     # determine the output fields
     if lprefix is None:
         outhdr = list(lhdr)
@@ -82,9 +92,9 @@ def iterhashjoin(left, right, lkey, rkey, rlookup, lprefix, rprefix):
         outhdr = [(text_type(lprefix) + text_type(f))
                   for f in lhdr]
     if rprefix is None:
-        outhdr.extend(rgetv(rhdr))
+        outhdr = extend_row(outhdr, rgetv(rhdr))
     else:
-        outhdr.extend([(text_type(rprefix) + text_type(f)) for f in rgetv(rhdr)])
+        outhdr = extend_row(outhdr, [(text_type(rprefix) + text_type(f)) for f in rgetv(rhdr)])
     yield tuple(outhdr)
 
     # define a function to join rows
@@ -93,7 +103,7 @@ def iterhashjoin(left, right, lkey, rkey, rlookup, lprefix, rprefix):
             # start with the left row
             _outrow = list(_lrow)
             # extend with non-key values from the right row
-            _outrow.extend(rgetv(rrow))
+            _outrow = extend_row(_outrow, rgetv(rrow))
             yield tuple(_outrow)
 
     for lrow in lit:
@@ -170,8 +180,18 @@ def iterhashleftjoin(left, right, lkey, rkey, missing, rlookup, lprefix,
     # (in the output, we only include key fields from the left table - we
     # don't want to duplicate fields)
     rvind = [i for i in range(len(rhdr)) if i not in rkind]
-    rgetv = rowgetter(*rvind)
-    
+    # If right table only has the key, we do not need to get values
+    if rvind:
+        rgetv = rowgetter(*rvind)
+    else:
+        rgetv = lambda row: None
+
+    # define a function to extend rows where the sequence might yield None
+    def extend_row(row, extend_seq):
+        if extend_seq:
+            row.extend(extend_seq)
+        return row
+
     # determine the output fields
     if lprefix is None:
         outhdr = list(lhdr)
@@ -179,9 +199,9 @@ def iterhashleftjoin(left, right, lkey, rkey, missing, rlookup, lprefix,
         outhdr = [(text_type(lprefix) + text_type(f))
                   for f in lhdr]
     if rprefix is None:
-        outhdr.extend(rgetv(rhdr))
+        outhdr = extend_row(outhdr, rgetv(rhdr))
     else:
-        outhdr.extend([(text_type(rprefix) + text_type(f)) for f in rgetv(rhdr)])
+        outhdr = extend_row(outhdr, [(text_type(rprefix) + text_type(f)) for f in rgetv(rhdr)])
     yield tuple(outhdr)
 
     # define a function to join rows
@@ -190,7 +210,7 @@ def iterhashleftjoin(left, right, lkey, rkey, missing, rlookup, lprefix,
             # start with the left row
             _outrow = list(_lrow)
             # extend with non-key values from the right row
-            _outrow.extend(rgetv(rrow))
+            _outrow = extend_row(_outrow, rgetv(rrow))
             yield tuple(_outrow)
 
     for lrow in lit:
@@ -202,7 +222,7 @@ def iterhashleftjoin(left, right, lkey, rkey, missing, rlookup, lprefix,
         else:
             outrow = list(lrow)  # start with the left row
             # extend with missing values in place of the right row
-            outrow.extend([missing] * len(rvind))
+            outrow = extend_row(outrow, [missing] * len(rvind))
             yield tuple(outrow)
         
         
@@ -272,8 +292,18 @@ def iterhashrightjoin(left, right, lkey, rkey, missing, llookup, lprefix,
     # (in the output, we only include key fields from the left table - we
     # don't want to duplicate fields)
     rvind = [i for i in range(len(rhdr)) if i not in rkind]
-    rgetv = rowgetter(*rvind)
-    
+    # If right table only has the key, we do not need to get values
+    if rvind:
+        rgetv = rowgetter(*rvind)
+    else:
+        rgetv = lambda row: None
+
+    # define a function to extend rows where the sequence might yield None
+    def extend_row(row, extend_seq):
+        if extend_seq:
+            row.extend(extend_seq)
+        return row
+
     # determine the output fields
     if lprefix is None:
         outhdr = list(lhdr)
@@ -281,18 +311,28 @@ def iterhashrightjoin(left, right, lkey, rkey, missing, llookup, lprefix,
         outhdr = [(text_type(lprefix) + text_type(f))
                   for f in lhdr]
     if rprefix is None:
-        outhdr.extend(rgetv(rhdr))
+        outhdr = extend_row(outhdr, rgetv(rhdr))
     else:
-        outhdr.extend([(text_type(rprefix) + text_type(f)) for f in rgetv(rhdr)])
+        outhdr = extend_row(outhdr, [(text_type(rprefix) + text_type(f)) for f in rgetv(rhdr)])
     yield tuple(outhdr)
+
+    # To support single-value tables, the left row might be an iterable or string/int/float
+    # Guard against these cases
+    def clean_list(row):
+        if isinstance(row, str):
+            return [row]
+        elif hasattr(row, '__iter__'):
+            return list(row)
+        else:
+            return [row]
 
     # define a function to join rows
     def joinrows(_rrow, _lrows):
         for lrow in _lrows:
             # start with the left row
-            _outrow = list(lrow)
+            _outrow = clean_list(lrow)
             # extend with non-key values from the right row
-            _outrow.extend(rgetv(_rrow))
+            _outrow = extend_row(_outrow, rgetv(_rrow))
             yield tuple(_outrow)
 
     for rrow in rit:
@@ -308,7 +348,7 @@ def iterhashrightjoin(left, right, lkey, rkey, missing, llookup, lprefix,
             for li, ri in zip(lkind, rkind):
                 outrow[li] = rrow[ri]
             # extend with non-key values from the right row  
-            outrow.extend(rgetv(rrow))
+            outrow = extend_row(outrow, rgetv(rrow))
             yield tuple(outrow)
         
         
@@ -429,7 +469,17 @@ def iterhashlookupjoin(left, right, lkey, rkey, missing, lprefix, rprefix):
     # (in the output, we only include key fields from the left table - we
     # don't want to duplicate fields)
     rvind = [i for i in range(len(rhdr)) if i not in rkind]
-    rgetv = rowgetter(*rvind)
+    # If right table only has the key, we do not need to get values
+    if rvind:
+        rgetv = rowgetter(*rvind)
+    else:
+        rgetv = lambda row: None
+
+    # define a function to extend rows where the sequence might yield None
+    def extend_row(row, extend_seq):
+        if extend_seq:
+            row.extend(extend_seq)
+        return row
 
     # determine the output fields
     if lprefix is None:
@@ -438,10 +488,9 @@ def iterhashlookupjoin(left, right, lkey, rkey, missing, lprefix, rprefix):
         outhdr = [(text_type(lprefix) + text_type(f))
                   for f in lhdr]
     if rprefix is None:
-        outhdr.extend(rgetv(rhdr))
+        outhdr = extend_row(outhdr, rgetv(rhdr))
     else:
-        outhdr.extend([(text_type(rprefix) + text_type(f))
-                       for f in rgetv(rhdr)])
+        outhdr = extend_row(outhdr, [(text_type(rprefix) + text_type(f)) for f in rgetv(rhdr)])
     yield tuple(outhdr)
 
     # define a function to join rows
@@ -449,7 +498,7 @@ def iterhashlookupjoin(left, right, lkey, rkey, missing, lprefix, rprefix):
         # start with the left row
         _outrow = list(_lrow)
         # extend with non-key values from the right row
-        _outrow.extend(rgetv(_rrow))
+        _outrow = extend_row(_outrow, rgetv(_rrow))
         return tuple(_outrow)
 
     for lrow in lit:
@@ -460,5 +509,5 @@ def iterhashlookupjoin(left, right, lkey, rkey, missing, lprefix, rprefix):
         else:
             outrow = list(lrow)  # start with the left row
             # extend with missing values in place of the right row
-            outrow.extend([missing] * len(rvind))
+            outrow = extend_row(outrow, [missing] * len(rvind))
             yield tuple(outrow)
