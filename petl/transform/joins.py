@@ -346,7 +346,17 @@ def iterjoin(left, right, lkey, rkey, leftouter=False, rightouter=False,
     # (in the output, we only include key fields from the left table - we
     # don't want to duplicate fields)
     rvind = [i for i in range(len(rhdr)) if i not in rkind]
-    rgetv = rowgetter(*rvind)
+    # If right table only has the key, we do not need to get values
+    if rvind:
+        rgetv = rowgetter(*rvind)
+    else:
+        rgetv = lambda row: None
+
+    # define a function to extend rows where the sequence might yield None
+    def extend_row(row, extend_seq):
+        if extend_seq:
+            row.extend(extend_seq)
+        return row
 
     # determine the output fields
     if lprefix is None:
@@ -354,9 +364,9 @@ def iterjoin(left, right, lkey, rkey, leftouter=False, rightouter=False,
     else:
         outhdr = [(str(lprefix) + str(f)) for f in lhdr]
     if rprefix is None:
-        outhdr.extend(rgetv(rhdr))
+        outhdr = extend_row(outhdr, rgetv(rhdr))
     else:
-        outhdr.extend([(str(rprefix) + str(f)) for f in rgetv(rhdr)])
+        outhdr = extend_row(outhdr, [(str(rprefix) + str(f)) for f in rgetv(rhdr)])
     yield tuple(outhdr)
 
     # define a function to join two groups of rows
@@ -365,7 +375,7 @@ def iterjoin(left, right, lkey, rkey, leftouter=False, rightouter=False,
             for lrow in _lrowgrp:
                 outrow = list(lrow)  # start with the left row
                 # extend with missing values in place of the right row
-                outrow.extend([missing] * len(rvind))
+                outrow = extend_row(outrow, [missing] * len(rvind))
                 yield tuple(outrow)
         elif _lrowgrp is None:
             for rrow in _rrowgrp:
@@ -375,7 +385,7 @@ def iterjoin(left, right, lkey, rkey, leftouter=False, rightouter=False,
                 for li, ri in zip(lkind, rkind):
                     outrow[li] = rrow[ri]
                 # extend with non-key values from the right row
-                outrow.extend(rgetv(rrow))
+                outrow = extend_row(outrow, rgetv(rrow))
                 yield tuple(outrow)
         else:
             _rrowgrp = list(_rrowgrp)  # may need to iterate more than once
@@ -384,7 +394,7 @@ def iterjoin(left, right, lkey, rkey, leftouter=False, rightouter=False,
                     # start with the left row
                     outrow = list(lrow)
                     # extend with non-key values from the right row
-                    outrow.extend(rgetv(rrow))
+                    outrow = extend_row(outrow, rgetv(rrow))
                     yield tuple(outrow)
 
     # construct group iterators for both tables
