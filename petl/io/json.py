@@ -10,7 +10,7 @@ from petl.compat import PY2
 
 
 # internal dependencies
-from petl.util.base import data, Table, dicts as _dicts
+from petl.util.base import data, Table, dicts as _dicts, iterpeek
 from petl.io.sources import read_source_from_arg, write_source_from_arg
 
 
@@ -88,7 +88,7 @@ class JsonView(Table):
                     f.detach()
 
 
-def fromdicts(dicts, header=None):
+def fromdicts(dicts, header=None, sample=1000):
     """
     View a sequence of Python :class:`dict` as a table. E.g.::
 
@@ -119,37 +119,42 @@ def fromdicts(dicts, header=None):
         |   2 | 'c' |
         +-----+-----+
 
+    If `header` is not specified, `sample` items from `dicts` will be
+    inspected to discovery dictionary keys.
+
     See also :func:`petl.io.json.fromjson`.
 
     """
 
-    return DictsView(dicts, header=header)
+    return DictsView(dicts, header=header, sample=sample)
 
 
 class DictsView(Table):
 
-    def __init__(self, dicts, header=None):
-        # If header is unknown, we'll have to iterate inputs once to fix that,
-        # so listify to prevent consuming generator inputs.
-        self.dicts = list(dicts) if header is None else dicts
+    def __init__(self, dicts, header=None, sample=1000):
+        self.dicts = dicts
         self.header = header
+        self.sample = sample
 
     def __iter__(self):
-        result = self.dicts
+        it = iter(self.dicts)
+
+        # determine header row
         if self.header is None:
             # determine fields
             hdr = set()
-            for o in result:
+            peek, it = iterpeek(it, self.sample)
+            for o in peek:
                 if hasattr(o, 'keys'):
                     hdr |= set(o.keys())
             hdr = sorted(hdr)
         else:
             hdr = self.header
         yield tuple(hdr)
-        # output data rows
-        for o in result:
-            row = tuple(o[f] if f in o else None for f in hdr)
-            yield row
+
+        # generate data rows
+        for o in it:
+            yield tuple(o[f] if f in o else None for f in hdr)
 
 
 def tojson(table, source=None, prefix=None, suffix=None, *args, **kwargs):

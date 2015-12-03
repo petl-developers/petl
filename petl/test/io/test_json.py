@@ -110,6 +110,21 @@ def test_fromdicts_3():
     ieq(expect, actual)  # verify can iterate twice
 
 
+def test_fromdicts_onepass():
+
+    # check that fromdicts() only makes a single pass through the data
+    data = iter([{'foo': 'a', 'bar': 1},
+                 {'foo': 'b', 'bar': 2},
+                 {'foo': 'c', 'bar': 2}])
+    actual = fromdicts(data)
+    # N.B., fields come out in sorted order
+    expect = (('bar', 'foo'),
+              (1, 'a'),
+              (2, 'b'),
+              (2, 'c'))
+    ieq(expect, actual)
+
+
 def test_tojson():
 
     # exercise function

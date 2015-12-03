@@ -308,9 +308,9 @@ def rowgetter(*indices):
     if len(indices) == 0:
         return lambda row: tuple()
     elif len(indices) == 1:
-        # if only one index, we cannot use itemgetter, because we want a singleton
-        # sequence to be returned, but itemgetter with a single argument returns the
-        # value itself, so let's define a function
+        # if only one index, we cannot use itemgetter, because we want a
+        # singleton sequence to be returned, but itemgetter with a single
+        # argument returns the value itself, so let's define a function
         index = indices[0]
         return lambda row: (row[index],)  # note comma - singleton tuple
     # if more than one index, use itemgetter, it should be the most efficient
