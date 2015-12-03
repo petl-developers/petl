@@ -32,7 +32,7 @@ def toarray(table, dtype=None, count=-1, sample=1000):
         >>> a = etl.toarray(table)
         >>> a
         array([('apples', 1, 2.5), ('oranges', 3, 4.4), ('pears', 7, 0.1)],
-              dtype=[('foo', '<U7'), ('bar', '<i8'), ('baz', '<f8')])
+              dtype=(numpy.record, [('foo', '<U7'), ('bar', '<i8'), ('baz', '<f8')]))
         >>> # the dtype can be specified as a string
         ... a = etl.toarray(table, dtype='a4, i2, f4')
         >>> a

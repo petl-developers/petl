@@ -309,7 +309,7 @@ class PrefixHeaderView(Table):
     def __iter__(self):
         it = iter(self.table)
         hdr = next(it)
-        outhdr = tuple((str(self.prefix) + str(f)) for f in hdr)
+        outhdr = tuple((text_type(self.prefix) + text_type(f)) for f in hdr)
         yield outhdr
         for row in it:
             yield row
@@ -333,7 +333,7 @@ class SuffixHeaderView(Table):
     def __iter__(self):
         it = iter(self.table)
         hdr = next(it)
-        outhdr = tuple((str(f) + str(self.suffix)) for f in hdr)
+        outhdr = tuple((text_type(f) + text_type(self.suffix)) for f in hdr)
         yield outhdr
         for row in it:
             yield row

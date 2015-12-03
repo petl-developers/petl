@@ -5,7 +5,7 @@ import datetime
 import random
 import time
 from functools import partial
-from petl.compat import xrange, OrderedDict
+from petl.compat import xrange, OrderedDict, text_type
 
 
 from petl.util.base import Table
@@ -158,7 +158,7 @@ class DummyTable(Table):
             self.seed = seed
 
     def __setitem__(self, item, value):
-        self.fields[str(item)] = value
+        self.fields[text_type(item)] = value
 
     def __iter__(self):
         nr = self.numrows
@@ -169,7 +169,7 @@ class DummyTable(Table):
         random.seed(seed)
 
         # construct header row
-        hdr = tuple(str(f) for f in fields.keys())
+        hdr = tuple(text_type(f) for f in fields.keys())
         yield hdr
 
         # construct data rows

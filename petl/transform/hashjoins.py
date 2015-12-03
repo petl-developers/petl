@@ -2,7 +2,7 @@ from __future__ import absolute_import, print_function, division
 
 
 import operator
-from petl.compat import next
+from petl.compat import next, text_type
 
 
 from petl.util.base import Table, asindices, rowgetter, iterpeek
@@ -78,7 +78,7 @@ def iterhashjoin(left, right, lkey, rkey, rlookup, lprefix, rprefix):
         rgetv = rowgetter(*rvind)
     else:
         rgetv = lambda row: None
-    
+
     # define a function to extend rows where the sequence might yield None
     def extend_row(row, extend_seq):
         if extend_seq:
@@ -89,12 +89,12 @@ def iterhashjoin(left, right, lkey, rkey, rlookup, lprefix, rprefix):
     if lprefix is None:
         outhdr = list(lhdr)
     else:
-        outhdr = [(str(lprefix) + str(f))
+        outhdr = [(text_type(lprefix) + text_type(f))
                   for f in lhdr]
     if rprefix is None:
         outhdr = extend_row(outhdr, rgetv(rhdr))
     else:
-        outhdr = extend_row(outhdr, [(str(rprefix) + str(f)) for f in rgetv(rhdr)])
+        outhdr = extend_row(outhdr, [(text_type(rprefix) + text_type(f)) for f in rgetv(rhdr)])
     yield tuple(outhdr)
 
     # define a function to join rows
@@ -185,7 +185,7 @@ def iterhashleftjoin(left, right, lkey, rkey, missing, rlookup, lprefix,
         rgetv = rowgetter(*rvind)
     else:
         rgetv = lambda row: None
-    
+
     # define a function to extend rows where the sequence might yield None
     def extend_row(row, extend_seq):
         if extend_seq:
@@ -196,12 +196,12 @@ def iterhashleftjoin(left, right, lkey, rkey, missing, rlookup, lprefix,
     if lprefix is None:
         outhdr = list(lhdr)
     else:
-        outhdr = [(str(lprefix) + str(f))
+        outhdr = [(text_type(lprefix) + text_type(f))
                   for f in lhdr]
     if rprefix is None:
         outhdr = extend_row(outhdr, rgetv(rhdr))
     else:
-        outhdr = extend_row(outhdr, [(str(rprefix) + str(f)) for f in rgetv(rhdr)])
+        outhdr = extend_row(outhdr, [(text_type(rprefix) + text_type(f)) for f in rgetv(rhdr)])
     yield tuple(outhdr)
 
     # define a function to join rows
@@ -297,7 +297,7 @@ def iterhashrightjoin(left, right, lkey, rkey, missing, llookup, lprefix,
         rgetv = rowgetter(*rvind)
     else:
         rgetv = lambda row: None
-    
+
     # define a function to extend rows where the sequence might yield None
     def extend_row(row, extend_seq):
         if extend_seq:
@@ -308,12 +308,12 @@ def iterhashrightjoin(left, right, lkey, rkey, missing, llookup, lprefix,
     if lprefix is None:
         outhdr = list(lhdr)
     else:
-        outhdr = [(str(lprefix) + str(f))
+        outhdr = [(text_type(lprefix) + text_type(f))
                   for f in lhdr]
     if rprefix is None:
         outhdr = extend_row(outhdr, rgetv(rhdr))
     else:
-        outhdr = extend_row(outhdr, [(str(rprefix) + str(f)) for f in rgetv(rhdr)])
+        outhdr = extend_row(outhdr, [(text_type(rprefix) + text_type(f)) for f in rgetv(rhdr)])
     yield tuple(outhdr)
 
     # To support single-value tables, the left row might be an iterable or string/int/float
@@ -485,12 +485,12 @@ def iterhashlookupjoin(left, right, lkey, rkey, missing, lprefix, rprefix):
     if lprefix is None:
         outhdr = list(lhdr)
     else:
-        outhdr = [(str(lprefix) + str(f))
+        outhdr = [(text_type(lprefix) + text_type(f))
                   for f in lhdr]
     if rprefix is None:
         outhdr = extend_row(outhdr, rgetv(rhdr))
     else:
-        outhdr = extend_row(outhdr, [(str(rprefix) + str(f)) for f in rgetv(rhdr)])
+        outhdr = extend_row(outhdr, [(text_type(rprefix) + text_type(f)) for f in rgetv(rhdr)])
     yield tuple(outhdr)
 
     # define a function to join rows

@@ -51,6 +51,7 @@ Some helper classes are also available for writing to other types of
 file-like sources, e.g., writing to a Zip file or string buffer, see
 the section on :ref:`io_helpers` below for more information.
 
+.. module:: petl.io.csv
 .. _io_csv:
 
 Delimited files
@@ -66,6 +67,7 @@ Delimited files
 .. autofunction:: petl.io.csv.teetsv
 
 
+.. module:: petl.io.pickle
 .. _io_pickle:
 
 Pickle files
@@ -77,6 +79,7 @@ Pickle files
 .. autofunction:: petl.io.pickle.teepickle
 
 
+.. module:: petl.io.text
 .. _io_text:
 
 Text files
@@ -88,6 +91,7 @@ Text files
 .. autofunction:: petl.io.text.teetext
 
 
+.. module:: petl.io.xml
 .. _io_xml:
 
 XML files
@@ -98,6 +102,7 @@ XML files
 For writing to an XML file, see :func:`petl.io.text.totext`.
 
 
+.. module:: petl.io.html
 .. _io_html:
 
 HTML files
@@ -107,6 +112,7 @@ HTML files
 .. autofunction:: petl.io.html.teehtml
 
 
+.. module:: petl.io.json
 .. _io_json:
 
 JSON files
@@ -118,6 +124,7 @@ JSON files
 .. autofunction:: petl.io.json.tojsonarrays
 
 
+.. module:: petl.io.db
 .. _io_db:
 
 Databases
@@ -136,6 +143,7 @@ Databases
 .. autofunction:: petl.io.db.appenddb
 
 
+.. module:: petl.io.xls
 .. _io_xls:
 
 Excel .xls files (xlrd/xlwt)
@@ -154,6 +162,7 @@ Excel .xls files (xlrd/xlwt)
 .. autofunction:: petl.io.xls.toxls
 
 
+.. module:: petl.io.xlsx
 .. _io_xlsx:
 
 Excel .xlsx files (openpyxl)
@@ -171,6 +180,7 @@ Excel .xlsx files (openpyxl)
 .. autofunction:: petl.io.xlsx.toxlsx
 
 
+.. module:: petl.io.numpy
 .. _io_numpy:
 
 Arrays (NumPy)
@@ -189,6 +199,7 @@ Arrays (NumPy)
 .. autofunction:: petl.io.numpy.valuestoarray
 
 
+.. module:: petl.io.pandas
 .. _io_pandas:
 
 DataFrames (pandas)
@@ -205,6 +216,7 @@ DataFrames (pandas)
 .. autofunction:: petl.io.pandas.todataframe
 
 
+.. module:: petl.io.pytables
 .. _io_pytables:
 
 HDF5 files (PyTables)
@@ -230,6 +242,7 @@ HDF5 files (PyTables)
 .. autofunction:: petl.io.pytables.appendhdf5
 
 
+.. module:: petl.io.whoosh
 .. _io_whoosh:
 
 Text indexes (Whoosh)
@@ -248,6 +261,7 @@ Text indexes (Whoosh)
 .. autofunction:: petl.io.whoosh.totextindex
 .. autofunction:: petl.io.whoosh.appendtextindex
 
+.. module:: petl.io.sources
 .. _io_helpers:
 
 I/O helper classes

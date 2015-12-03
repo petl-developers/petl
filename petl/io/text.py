@@ -13,7 +13,7 @@ from petl.io.base import getcodec
 from petl.io.sources import read_source_from_arg, write_source_from_arg
 
 
-def fromtext(source=None, encoding=None, errors=None, strip=None,
+def fromtext(source=None, encoding=None, errors='strict', strip=None,
              header=('lines',)):
     """
     Extract a table from lines in the given text file. E.g.::
@@ -66,7 +66,7 @@ def fromtext(source=None, encoding=None, errors=None, strip=None,
 class TextView(Table):
 
     def __init__(self, source, header=('lines',), encoding=None,
-                 errors=None, strip=None):
+                 errors='strict', strip=None):
         self.source = source
         self.header = header
         self.encoding = encoding
@@ -101,7 +101,7 @@ class TextView(Table):
                     f.detach()
 
 
-def totext(table, source=None, encoding=None, errors=None, template=None,
+def totext(table, source=None, encoding=None, errors='strict', template=None,
            prologue=None, epilogue=None):
     """
     Write the table to a text file. E.g.::
@@ -153,7 +153,7 @@ def totext(table, source=None, encoding=None, errors=None, template=None,
 Table.totext = totext
 
 
-def appendtext(table, source=None, encoding=None, errors=None, template=None,
+def appendtext(table, source=None, encoding=None, errors='strict', template=None,
                prologue=None, epilogue=None):
     """
     Append the table to a text file.
@@ -209,7 +209,7 @@ def _writetext(table, source, mode, encoding, errors, template, prologue,
                 f.detach()
 
 
-def teetext(table, source=None, encoding=None, errors=None, template=None,
+def teetext(table, source=None, encoding=None, errors='strict', template=None,
             prologue=None, epilogue=None):
     """
     Return a table that writes rows to a text file as they are iterated over.
@@ -226,7 +226,7 @@ Table.teetext = teetext
 
 class TeeTextView(Table):
 
-    def __init__(self, table, source=None, encoding=None, errors=None,
+    def __init__(self, table, source=None, encoding=None, errors='strict',
                  template=None, prologue=None, epilogue=None):
         self.table = table
         self.source = source
