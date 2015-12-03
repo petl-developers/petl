@@ -73,8 +73,18 @@ def iterhashjoin(left, right, lkey, rkey, rlookup, lprefix, rprefix):
     # (in the output, we only include key fields from the left table - we
     # don't want to duplicate fields)
     rvind = [i for i in range(len(rhdr)) if i not in rkind]
-    rgetv = rowgetter(*rvind)
+    # If right table only has the key, we do not need to get values
+    if rvind:
+        rgetv = rowgetter(*rvind)
+    else:
+        rgetv = lambda row: None
     
+    # define a function to extend rows where the sequence might yield None
+    def extend_row(row, extend_seq):
+        if extend_seq:
+            row.extend(extend_seq)
+        return row
+
     # determine the output fields
     if lprefix is None:
         outhdr = list(lhdr)
@@ -82,9 +92,9 @@ def iterhashjoin(left, right, lkey, rkey, rlookup, lprefix, rprefix):
         outhdr = [(str(lprefix) + str(f))
                   for f in lhdr]
     if rprefix is None:
-        outhdr.extend(rgetv(rhdr))
+        outhdr = extend_row(outhdr, rgetv(rhdr))
     else:
-        outhdr.extend([(str(rprefix) + str(f)) for f in rgetv(rhdr)])
+        outhdr = extend_row(outhdr, [(str(rprefix) + str(f)) for f in rgetv(rhdr)])
     yield tuple(outhdr)
 
     # define a function to join rows
@@ -93,7 +103,7 @@ def iterhashjoin(left, right, lkey, rkey, rlookup, lprefix, rprefix):
             # start with the left row
             _outrow = list(_lrow)
             # extend with non-key values from the right row
-            _outrow.extend(rgetv(rrow))
+            _outrow = extend_row(_outrow, rgetv(rrow))
             yield tuple(_outrow)
 
     for lrow in lit:
