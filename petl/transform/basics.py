@@ -433,6 +433,9 @@ def stack(*tables, **kwargs):
     return StackView(tables, **kwargs)
 
 
+Table.stack = stack
+
+
 class StackView(Table):
 
     def __init__(self, sources, missing=None, trim=True, pad=True):

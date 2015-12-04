@@ -1,6 +1,17 @@
 Changes
 =======
 
+Version 1.1.0
+-------------
+
+* Added function :func:`petl.transform.basics.stack` as a simpler
+  alternative to :func:`petl.transform.basics.cat`. Also behaviour of
+  :func:`petl.transform.basics.cat` has changed for tables where the header
+  row contains duplicate fields. This was part of addressing a bug in
+  :func:`petl.transform.basics.addfield` for tables where the header
+  contains duplicate fields
+  (`#327 <https://github.com/alimanfoo/petl/issues/327>`_).
+
 Version 1.0
 -----------
 
@@ -20,7 +31,7 @@ Text file encoding
 ~~~~~~~~~~~~~~~~~~
 
 Version 1.0 unifies the API for working with ASCII and non-ASCII
-encoded text files, including CSV and HTML. 
+encoded text files, including CSV and HTML.
 
 The following functions now accept an 'encoding' argument, which
 defaults to the value of ``locale.getpreferredencoding()`` (usually
@@ -43,7 +54,7 @@ The functionality previously available through the `petl.fluent` and
 `petl.interactive` modules is now available through the root petl
 module.
 
-This means two things. 
+This means two things.
 
 First, is is now possible to use either functional or fluent (i.e.,
 object-oriented) styles of programming with the root :mod:`petl`
