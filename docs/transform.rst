@@ -35,6 +35,7 @@ Header manipulations
 .. autofunction:: petl.transform.headers.pushheader
 .. autofunction:: petl.transform.headers.prefixheader
 .. autofunction:: petl.transform.headers.suffixheader
+.. autofunction:: petl.transform.headers.sortheader
 .. autofunction:: petl.transform.headers.skip
 
 
