@@ -13,11 +13,12 @@ from petl.transform.conversions import convert, convertall, replace, \
 
 from petl.transform.sorts import sort, mergesort, issorted
 
-from petl.transform.selects import select, selectop, selectcontains, selecteq, \
-    selectfalse, selectge, selectgt, selectin, selectis, selectisinstance, \
-    selectisnot, selectle, selectlt, selectne, selectnone, selectnotin, \
-    selectnotnone, selectrangeclosed, selectrangeopen, selectrangeopenleft, \
-    selectrangeopenright, selecttrue, selectusingcontext, rowlenselect, facet
+from petl.transform.selects import select, selectop, selectcontains, \
+    selecteq, selectfalse, selectge, selectgt, selectin, selectis, \
+    selectisinstance, selectisnot, selectle, selectlt, selectne, selectnone, \
+    selectnotin, selectnotnone, selectrangeclosed, selectrangeopen, \
+    selectrangeopenleft, selectrangeopenright, selecttrue, \
+    selectusingcontext, rowlenselect, facet, biselect
 
 from petl.transform.joins import join, leftjoin, rightjoin, outerjoin, \
     crossjoin, antijoin, lookupjoin, unjoin
