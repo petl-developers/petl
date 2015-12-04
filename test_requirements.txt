@@ -1,2 +1,4 @@
 nose
 tox
+IPython
+jupyter
