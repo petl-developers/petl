@@ -349,6 +349,9 @@ def sortheader(table, reverse=False, missing=None):
     return SortHeaderView(table, reverse, missing)
 
 
+Table.sortheader = sortheader
+
+
 class SortHeaderView(Table):
 
     def __init__(self, table, reverse, missing):
