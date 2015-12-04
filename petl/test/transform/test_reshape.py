@@ -28,6 +28,10 @@ def test_melt_1():
     result = melt(table, key='id')
     ieq(expectation, result)
 
+    # use field index as key
+    result = melt(table, key=0)
+    ieq(expectation, result)
+
     result = melt(table, key='id', variablefield='variable', valuefield='value')
     ieq(expectation, result)
 
@@ -54,6 +58,7 @@ def test_melt_2():
                    (2, 16, 'height', 53.2),
                    (3, 12, 'height', 34.5))
     result = melt(table, key=('id', 'time'), variables='height')
+    print(result)
     ieq(expectation, result)
 
 

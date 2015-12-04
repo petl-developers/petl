@@ -9,7 +9,7 @@ from petl.compat import next, text_type
 
 from petl.comparison import comparable_itemgetter
 from petl.util.base import Table, rowgetter, values, itervalues, \
-    header, data
+    header, data, asindices
 from petl.transform.sorts import sort
 
 
@@ -106,34 +106,38 @@ class MeltView(Table):
 
 
 def itermelt(source, key, variables, variablefield, valuefield):
+    if key is None and variables is None:
+        raise ValueError('either key or variables must be specified')
+
     it = iter(source)
-
-    # normalise some stuff
     hdr = next(it)
-    flds = list(map(text_type, hdr))
 
-    if key and not isinstance(key, (list, tuple)):
-        key = (key,)  # normalise to a tuple
-    if variables and not isinstance(variables, (list, tuple)):
-        # shouldn't expect this, but ... ?
-        variables = (variables,)  # normalise to a tuple
+    # determine key and variable field indices
+    key_indices = variables_indices = None
+    if key is not None:
+        key_indices = asindices(hdr, key)
+    if variables is not None:
+        if not isinstance(variables, (list, tuple)):
+            variables = (variables,)
+        variables_indices = asindices(hdr, variables)
 
-    if not key:
+    if key is None:
         # assume key is fields not in variables
-        key = [f for f in flds if f not in variables]
-    if not variables:
+        key_indices = [i for i in range(len(hdr))
+                       if i not in variables_indices]
+    if variables is None:
         # assume variables are fields not in key
-        variables = [f for f in flds if f not in key]
+        variables_indices = [i for i in range(len(hdr))
+                             if i not in key_indices]
+        variables = [hdr[i] for i in variables_indices]
+
+    getkey = rowgetter(*key_indices)
 
     # determine the output fields
-    outhdr = list(key)
+    outhdr = [hdr[i] for i in key_indices]
     outhdr.append(variablefield)
     outhdr.append(valuefield)
     yield tuple(outhdr)
-
-    key_indices = [flds.index(k) for k in key]
-    getkey = rowgetter(*key_indices)
-    variables_indices = [flds.index(v) for v in variables]
 
     # construct the output data
     for row in it:
