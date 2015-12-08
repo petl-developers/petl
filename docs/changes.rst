@@ -1,6 +1,11 @@
 Changes
 =======
 
+Version 1.1.0
+-------------
+
+* Added :func:`petl.transform.reductions.groupselectlast`.
+
 Version 1.0
 -----------
 
