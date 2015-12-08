@@ -1,6 +1,12 @@
 Changes
 =======
 
+Version 1.1.0
+-------------
+
+* Added keyword `strict` to functions in the :mod:`petl.transform.setops`
+  module to enforce strict set-like behaviour.
+
 Version 1.0
 -----------
 
