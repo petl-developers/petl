@@ -1,6 +1,11 @@
 Changes
 =======
 
+Version 1.1.0
+-------------
+
+* Added function :func:`petl.transform.selects.biselect`.
+
 Version 1.0
 -----------
 
