@@ -1,6 +1,14 @@
 Changes
 =======
 
+Version 1.1.0
+-------------
+
+* Change in behaviour of :func:`petl.io.json.fromdicts` to preserving
+  ordering of keys if ordered dicts are used. Also added
+  :func:`petl.transform.headers.sortheader` to deal with unordered
+  cases.
+
 Version 1.0
 -----------
 
