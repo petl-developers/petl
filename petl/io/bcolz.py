@@ -3,13 +3,13 @@ from __future__ import absolute_import, print_function, division
 import itertools
 
 
-from petl.compat import string_types
+from petl.compat import string_types, text_type
 from petl.util.base import Table, iterpeek
 from petl.io.numpy import construct_dtype
 
 
 def frombcolz(source, expression=None, outcols=None, limit=None, skip=0):
-    """Extract a table from a `bcolz <http://bcolz.blosc.org/>`_ ctable, e.g.::
+    """Extract a table from a bcolz ctable, e.g.::
 
         >>> import petl as etl
         >>> import bcolz
@@ -31,6 +31,12 @@ def frombcolz(source, expression=None, outcols=None, limit=None, skip=0):
         +-----------+-----+-----+
         | 'pears'   |   7 | 0.1 |
         +-----------+-----+-----+
+
+    If `expression` is provided it will be executed by bcolz and only
+    matching rows returned, e.g.::
+
+        >>> tbl2 = etl.frombcolz(ctbl, expression='bar > 1')
+        >>> tbl2
 
     .. versionadded:: 1.1.0
 
@@ -81,7 +87,7 @@ class BcolzView(Table):
 
 
 def tobcolz(table, dtype=None, sample=1000, **kwargs):
-    """Load data into a `bcolz <http://bcolz.blosc.org/>`_ ctable, e.g.::
+    """Load data into a bcolz ctable, e.g.::
 
         >>> import petl as etl
         >>> table = [('foo', 'bar', 'baz'),
@@ -102,6 +108,8 @@ def tobcolz(table, dtype=None, sample=1000, **kwargs):
           cparams := cparams(clevel=5, shuffle=True, cname='blosclz')
         ['apples' 'oranges' 'pears']
 
+    Other keyword arguments are passed through to the ctable constructor.
+
     .. versionadded:: 1.1.0
 
     """
@@ -114,7 +122,7 @@ def tobcolz(table, dtype=None, sample=1000, **kwargs):
     hdr = next(it)
     # numpy is fussy about having tuples, need to make sure
     it = (tuple(row) for row in it)
-    flds = list(map(str, hdr))
+    flds = list(map(text_type, hdr))
     dtype = construct_dtype(flds, peek, dtype)
 
     # create ctable
@@ -136,4 +144,44 @@ def tobcolz(table, dtype=None, sample=1000, **kwargs):
     return ctbl
 
 
-# TODO appendbcolz
+def appendbcolz(table, obj, check_names=True):
+    """Append data into a bcolz ctable. The `obj` argument can be either an
+    existing ctable or the name of a directory were an on-disk ctable is
+    stored.
+
+    .. versionadded:: 1.1.0
+
+    """
+
+    import bcolz
+    import numpy as np
+
+    if isinstance(obj, string_types):
+        ctbl = bcolz.open(obj, mode='a')
+    else:
+        assert hasattr(obj, 'append') and hasattr(obj, 'names'), \
+            'expected rootdir or ctable, found %r' % obj
+        ctbl = obj
+
+    # setup
+    dtype = ctbl.dtype
+    it = iter(table)
+    hdr = next(it)
+    flds = list(map(text_type, hdr))
+
+    # check names match
+    if check_names:
+        assert tuple(flds) == tuple(ctbl.names), 'column names do not match'
+
+    # fill chunk-wise
+    chunklen = sum(ctbl.cols[name].chunklen
+                   for name in ctbl.names) // len(ctbl.names)
+    while True:
+        data = list(itertools.islice(it, chunklen))
+        data = np.array(data, dtype=dtype)
+        ctbl.append(data)
+        if len(data) < chunklen:
+            break
+
+    ctbl.flush()
+    return ctbl

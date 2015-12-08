@@ -242,6 +242,23 @@ HDF5 files (PyTables)
 .. autofunction:: petl.io.pytables.appendhdf5
 
 
+.. module:: petl.io.bcolz
+.. _io_bcolz:
+
+Bcolz ctables
+-------------
+
+.. note::
+
+    The following functions require `bcolz <bcolz.blosc.org>`_
+    to be installed, e.g.::
+
+        $ pip install bcolz
+
+.. autofunction:: petl.io.bcolz.frombcolz
+.. autofunction:: petl.io.bcolz.tobcolz
+.. autofunction:: petl.io.bcolz.appendbcolz
+
 .. module:: petl.io.whoosh
 .. _io_whoosh:
 
@@ -250,7 +267,8 @@ Text indexes (Whoosh)
 
 .. note::
 
-    The following functions require `Whoosh <https://TODO>`_
+    The following functions require
+    `Whoosh <https://pypi.python.org/pypi/Whoosh/>`_
     to be installed, e.g.::
 
         $ pip install whoosh

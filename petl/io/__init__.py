@@ -32,4 +32,4 @@ from petl.io.pytables import fromhdf5, fromhdf5sorted, tohdf5, appendhdf5
 from petl.io.whoosh import fromtextindex, searchtextindex, \
     searchtextindexpage, totextindex, appendtextindex
 
-from petl.io.bcolz import frombcolz, tobcolz
+from petl.io.bcolz import frombcolz, tobcolz, appendbcolz

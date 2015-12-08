@@ -5,7 +5,7 @@ import tempfile
 
 
 from petl.test.helpers import ieq, eq_
-from petl.io.bcolz import frombcolz, tobcolz
+from petl.io.bcolz import frombcolz, tobcolz, appendbcolz
 
 
 try:
@@ -54,3 +54,23 @@ else:
         eq_(t[0], tuple(ctbl.names))
         ieq(t[1:], (tuple(r) for r in ctbl.iter()))
         eq_(2, ctbl.cols[ctbl.names[0]].chunklen)
+
+    def test_appendbcolz():
+        t = [('foo', 'bar', 'baz'),
+             ('apples', 1, 2.5),
+             ('oranges', 3, 4.4),
+             ('pears', 7, .1)]
+
+        # append to in-memory ctable
+        ctbl = tobcolz(t)
+        appendbcolz(t, ctbl)
+        eq_(t[0], tuple(ctbl.names))
+        ieq(t[1:] + t[1:], (tuple(r) for r in ctbl.iter()))
+
+        # append to on-disk ctable
+        rootdir = tempfile.mkdtemp()
+        tobcolz(t, rootdir=rootdir)
+        appendbcolz(t, rootdir)
+        ctbl = bcolz.open(rootdir, mode='r')
+        eq_(t[0], tuple(ctbl.names))
+        ieq(t[1:] + t[1:], (tuple(r) for r in ctbl.iter()))
