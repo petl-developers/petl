@@ -1,6 +1,11 @@
 Changes
 =======
 
+Version 1.1.0
+-------------
+
+* Added functions for working with bcolz ctables, see :mod:`petl.io.bcolz`.
+
 Version 1.0
 -----------
 
