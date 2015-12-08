@@ -1,6 +1,11 @@
 Changes
 =======
 
+Version 1.1.0
+-------------
+
+* Added `epilogue` argument to :func:`petl.util.vis.display`.
+
 Version 1.0
 -----------
 
