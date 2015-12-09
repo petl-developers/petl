@@ -4,6 +4,13 @@ Changes
 Version 1.1.0
 -------------
 
+* Added function :func:`petl.transform.basics.stack` as a simpler
+  alternative to :func:`petl.transform.basics.cat`. Also behaviour of
+  :func:`petl.transform.basics.cat` has changed for tables where the header
+  row contains duplicate fields. This was part of addressing a bug in
+  :func:`petl.transform.basics.addfield` for tables where the header
+  contains duplicate fields
+  (`#327 <https://github.com/alimanfoo/petl/issues/327>`_).
 * Added :func:`petl.io.base.fromcolumns`
   (`#316 <https://github.com/alimanfoo/petl/issues/316>`_).
 * Added functions for working with bcolz ctables, see :mod:`petl.io.bcolz`.

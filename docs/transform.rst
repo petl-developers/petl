@@ -16,6 +16,7 @@ Basic transformations
 .. autofunction:: petl.transform.basics.cutout
 .. autofunction:: petl.transform.basics.movefield
 .. autofunction:: petl.transform.basics.cat
+.. autofunction:: petl.transform.basics.stack
 .. autofunction:: petl.transform.basics.skipcomments
 .. autofunction:: petl.transform.basics.addfield
 .. autofunction:: petl.transform.basics.addcolumn
