@@ -51,7 +51,7 @@ heterogeneous and/or of mixed quality.
 
 :mod:`petl` transformation pipelines make minimal use of system memory
 and can scale to millions of rows if speed is not a priority. However
-if you are working with large datasets and/or performance-critical
+if you are working with very large datasets and/or performance-critical
 applications then other packages may be more suitable, e.g., see
 `pandas <http://pandas.pydata.org/>`_, `pytables
 <https://pytables.github.io/>`_, `bcolz <http://bcolz.blosc.org/>`_

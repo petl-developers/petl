@@ -4,12 +4,20 @@ Changes
 Version 1.1.0
 -------------
 
-* Change in behaviour of :func:`petl.io.json.fromdicts` to preserving
-  ordering of keys if ordered dicts are used. Also added
-  :func:`petl.transform.headers.sortheader` to deal with unordered
-  cases.
-* Added function :func:`petl.transform.selects.biselect`.
-* Added `epilogue` argument to :func:`petl.util.vis.display`.
+* Fixed :func:`petl.transform.reshape.melt` to work with non-string key
+  argument (`#209 <https://github.com/alimanfoo/petl/issues/209>`_).
+* Added example to docstring of :func:`petl.transform.dedup.conflicts` to
+  illustrate how to analyse the source of conflicts when rows are merged from
+  multiple tables
+  (`#256 <https://github.com/alimanfoo/petl/issues/256>`_).
+* Added functions for working with bcolz ctables, see :mod:`petl.io.bcolz`
+  (`#310 <https://github.com/alimanfoo/petl/issues/310>`_).
+* Added :func:`petl.io.base.fromcolumns`
+  (`#316 <https://github.com/alimanfoo/petl/issues/316>`_).
+* Added :func:`petl.transform.reductions.groupselectlast`.
+  (`#319 <https://github.com/alimanfoo/petl/issues/319>`_).
+* Added example in docstring for :class:`petl.io.sources.MemorySource`
+  (`#323 <https://github.com/alimanfoo/petl/issues/323>`_).
 * Added function :func:`petl.transform.basics.stack` as a simpler
   alternative to :func:`petl.transform.basics.cat`. Also behaviour of
   :func:`petl.transform.basics.cat` has changed for tables where the header
@@ -17,12 +25,35 @@ Version 1.1.0
   :func:`petl.transform.basics.addfield` for tables where the header
   contains duplicate fields
   (`#327 <https://github.com/alimanfoo/petl/issues/327>`_).
-* Added :func:`petl.io.base.fromcolumns`
-  (`#316 <https://github.com/alimanfoo/petl/issues/316>`_).
-* Added functions for working with bcolz ctables, see :mod:`petl.io.bcolz`.
+* Change in behaviour of :func:`petl.io.json.fromdicts` to preserve
+  ordering of keys if ordered dicts are used. Also added
+  :func:`petl.transform.headers.sortheader` to deal with unordered
+  cases
+  (`#332 <https://github.com/alimanfoo/petl/issues/332>`_).
 * Added keyword `strict` to functions in the :mod:`petl.transform.setops`
-  module to enforce strict set-like behaviour.
-* Added :func:`petl.transform.reductions.groupselectlast`.
+  module to enable users to enforce strict set-like behaviour if desired
+  (`#333 <https://github.com/alimanfoo/petl/issues/333>`_).
+* Added `epilogue` argument to :func:`petl.util.vis.display` to enable further
+  customisation of content of table display in Jupyter notebooks
+  (`#337 <https://github.com/alimanfoo/petl/issues/337>`_).
+* Added :func:`petl.transform.selects.biselect` as a convenience for
+  obtaining two tables, one with rows matching a condition, the other with
+  rows not matching the condition
+  (`#339 <https://github.com/alimanfoo/petl/issues/339>`_).
+* Changed :func:`petl.io.json.fromdicts` to avoid making two passes through
+  the data
+  (`#341 <https://github.com/alimanfoo/petl/issues/341>`_).
+* Changed :func:`petl.transform.basics.addfieldusingcontext` to enable
+  running calculations
+  (`#343 <https://github.com/alimanfoo/petl/issues/343>`_).
+* Fix behaviour of join functions when tables have no non-key fields
+  (`#345 <https://github.com/alimanfoo/petl/issues/345>`_).
+* Fix incorrect default value for 'errors' argument when using codec module
+  (`#347 <https://github.com/alimanfoo/petl/issues/347>`_).
+* Added some documentation on how to write extension classes, see :doc:`intro`
+  (`#349 <https://github.com/alimanfoo/petl/issues/349>`_).
+* Fix issue with unicode field names
+  (`#350 <https://github.com/alimanfoo/petl/issues/350>`_).
 
 Version 1.0
 -----------

@@ -4,6 +4,7 @@ Transform - transforming tables
 ===============================
 
 
+.. module:: petl.transform.basics
 .. _transform_basics:
 
 Basic transformations
@@ -25,6 +26,7 @@ Basic transformations
 .. autofunction:: petl.transform.basics.annex
 
 
+.. module:: petl.transform.headers
 .. _transform_headers:
 
 Header manipulations
@@ -40,6 +42,7 @@ Header manipulations
 .. autofunction:: petl.transform.headers.skip
 
 
+.. module:: petl.transform.conversions
 .. _transform_conversions:
 
 Converting values
@@ -57,6 +60,7 @@ Converting values
 .. autofunction:: petl.transform.conversions.update
 
 
+.. module:: petl.transform.selects
 .. _transform_selects:
 
 Selecting rows
@@ -90,6 +94,7 @@ Selecting rows
 .. autofunction:: petl.transform.selects.biselect
 
 
+.. module:: petl.transform.regex
 .. _transform_regex:
 
 Regular expressions
@@ -102,6 +107,7 @@ Regular expressions
 .. autofunction:: petl.transform.regex.capture
 
 
+.. module:: petl.transform.unpacks
 .. _transform_unpacks:
 
 Unpacking compound values
@@ -111,6 +117,7 @@ Unpacking compound values
 .. autofunction:: petl.transform.unpacks.unpackdict
 
 
+.. module:: petl.transform.maps
 .. _transform_maps:
 
 Transforming rows
@@ -122,6 +129,7 @@ Transforming rows
 .. autofunction:: petl.transform.maps.rowgroupmap
 
 
+.. module:: petl.transform.sorts
 .. _transform_sorts:
 
 Sorting
@@ -132,6 +140,7 @@ Sorting
 .. autofunction:: petl.transform.sorts.issorted
 
 
+.. module:: petl.transform.joins
 .. _transform_joins:
 
 Joins
@@ -152,6 +161,7 @@ Joins
 .. autofunction:: petl.transform.hashjoins.hashantijoin
 
 
+.. module:: petl.transform.setops
 .. _transform_setops:
 
 Set operations
@@ -166,6 +176,7 @@ Set operations
 .. autofunction:: petl.transform.setops.hashintersection
 
 
+.. module:: petl.transform.dedup
 .. _transform_dedup:
 
 Deduplicating rows
@@ -178,6 +189,7 @@ Deduplicating rows
 .. autofunction:: petl.transform.dedup.isunique
 
 
+.. module:: petl.transform.reductions
 .. _transform_reductions:
 
 Reducing rows (aggregation)
@@ -195,6 +207,7 @@ Reducing rows (aggregation)
 .. autofunction:: petl.transform.reductions.groupselectmax
 
 
+.. module:: petl.transform.reshape
 .. _transform_reshape:
 
 Reshaping tables
@@ -208,6 +221,7 @@ Reshaping tables
 .. autofunction:: petl.transform.reshape.unflatten
 
 
+.. module:: petl.transform.fills
 .. _transform_fills:
 
 Filling missing values
@@ -218,6 +232,7 @@ Filling missing values
 .. autofunction:: petl.transform.fills.fillleft
 
 
+.. module:: petl.transform.validation
 .. _transform_validation:
 
 Validation
@@ -226,6 +241,7 @@ Validation
 .. autofunction:: petl.transform.validation.validate
 
 
+.. module:: petl.transform.intervals
 .. _transform_intervals:
 
 Intervals (intervaltree)
