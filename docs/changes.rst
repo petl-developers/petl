@@ -4,6 +4,8 @@ Changes
 Version 1.1.0
 -------------
 
+* Added :func:`petl.io.base.fromcolumns`
+  (`#316 <https://github.com/alimanfoo/petl/issues/316>`_).
 * Added functions for working with bcolz ctables, see :mod:`petl.io.bcolz`.
 * Added keyword `strict` to functions in the :mod:`petl.transform.setops`
   module to enforce strict set-like behaviour.
@@ -28,7 +30,7 @@ Text file encoding
 ~~~~~~~~~~~~~~~~~~
 
 Version 1.0 unifies the API for working with ASCII and non-ASCII
-encoded text files, including CSV and HTML. 
+encoded text files, including CSV and HTML.
 
 The following functions now accept an 'encoding' argument, which
 defaults to the value of ``locale.getpreferredencoding()`` (usually
@@ -51,7 +53,7 @@ The functionality previously available through the `petl.fluent` and
 `petl.interactive` modules is now available through the root petl
 module.
 
-This means two things. 
+This means two things.
 
 First, is is now possible to use either functional or fluent (i.e.,
 object-oriented) styles of programming with the root :mod:`petl`
