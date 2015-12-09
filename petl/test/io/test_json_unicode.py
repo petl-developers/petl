@@ -27,5 +27,5 @@ def test_json_unicode():
         assert a[0] == b['id']
         assert a[1] == b['name']
 
-    actual = fromjson(fn)
+    actual = fromjson(fn, header=['id', 'name'])
     ieq(tbl, actual)
