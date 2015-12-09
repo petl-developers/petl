@@ -188,6 +188,7 @@ Reducing rows (aggregation)
 .. autofunction:: petl.transform.reductions.fold
 .. autofunction:: petl.transform.reductions.groupcountdistinctvalues
 .. autofunction:: petl.transform.reductions.groupselectfirst
+.. autofunction:: petl.transform.reductions.groupselectlast
 .. autofunction:: petl.transform.reductions.groupselectmin
 .. autofunction:: petl.transform.reductions.groupselectmax
 

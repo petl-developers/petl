@@ -27,7 +27,7 @@ from petl.transform.hashjoins import hashjoin, hashleftjoin, hashrightjoin, \
 
 from petl.transform.reductions import rowreduce, mergeduplicates,\
     aggregate, groupcountdistinctvalues, groupselectfirst, groupselectmax, \
-    groupselectmin, merge, fold, Conflict
+    groupselectmin, merge, fold, Conflict, groupselectlast
 
 from petl.transform.fills import filldown, fillright, fillleft
 
