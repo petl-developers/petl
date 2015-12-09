@@ -4,6 +4,7 @@ Changes
 Version 1.1.0
 -------------
 
+* Added function :func:`petl.transform.selects.biselect`.
 * Added `epilogue` argument to :func:`petl.util.vis.display`.
 * Added function :func:`petl.transform.basics.stack` as a simpler
   alternative to :func:`petl.transform.basics.cat`. Also behaviour of

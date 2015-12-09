@@ -86,6 +86,7 @@ Selecting rows
 .. autofunction:: petl.transform.selects.selectusingcontext
 .. autofunction:: petl.transform.selects.rowlenselect
 .. autofunction:: petl.transform.selects.facet
+.. autofunction:: petl.transform.selects.biselect
 
 
 .. _transform_regex:
