@@ -37,6 +37,13 @@ def frombcolz(source, expression=None, outcols=None, limit=None, skip=0):
 
         >>> tbl2 = etl.frombcolz(ctbl, expression='bar > 1')
         >>> tbl2
+        +-----------+-----+-----+
+        | foo       | bar | baz |
+        +===========+=====+=====+
+        | 'oranges' |   3 | 4.4 |
+        +-----------+-----+-----+
+        | 'pears'   |   7 | 0.1 |
+        +-----------+-----+-----+
 
     .. versionadded:: 1.1.0
 
