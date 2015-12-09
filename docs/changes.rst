@@ -4,6 +4,10 @@ Changes
 Version 1.1.0
 -------------
 
+* Change in behaviour of :func:`petl.io.json.fromdicts` to preserving
+  ordering of keys if ordered dicts are used. Also added
+  :func:`petl.transform.headers.sortheader` to deal with unordered
+  cases.
 * Added function :func:`petl.transform.selects.biselect`.
 * Added `epilogue` argument to :func:`petl.util.vis.display`.
 * Added function :func:`petl.transform.basics.stack` as a simpler
