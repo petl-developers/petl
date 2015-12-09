@@ -5,6 +5,9 @@ Version 1.1.0
 -------------
 
 * Added functions for working with bcolz ctables, see :mod:`petl.io.bcolz`.
+* Added keyword `strict` to functions in the :mod:`petl.transform.setops`
+  module to enforce strict set-like behaviour.
+* Added :func:`petl.transform.reductions.groupselectlast`.
 
 Version 1.0
 -----------
