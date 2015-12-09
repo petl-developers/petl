@@ -420,7 +420,7 @@ package:
 * Richard Pearson (`podpearson <https://github.com/podpearson>`_)
 * Robert DeSimone (`icenine457 <https://github.com/icenine457>`_)
 * Roger Woodley (`rogerkwoodley <https://github.com/rogerkwoodley>`_)
-* Zach Palchick (`zpalchik <https://github.com/zpalchick>`_)
+* Zach Palchick (`palchicz <https://github.com/palchicz>`_)
 * `adamsdarlingtower <https://github.com/adamsdarlingtower>`_
 * `imazor <https://github.com/imazor>`_
 * `james-unified <https://github.com/james-unified>`_
