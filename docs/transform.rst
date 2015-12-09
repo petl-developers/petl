@@ -16,6 +16,7 @@ Basic transformations
 .. autofunction:: petl.transform.basics.cutout
 .. autofunction:: petl.transform.basics.movefield
 .. autofunction:: petl.transform.basics.cat
+.. autofunction:: petl.transform.basics.stack
 .. autofunction:: petl.transform.basics.skipcomments
 .. autofunction:: petl.transform.basics.addfield
 .. autofunction:: petl.transform.basics.addcolumn
@@ -187,6 +188,7 @@ Reducing rows (aggregation)
 .. autofunction:: petl.transform.reductions.fold
 .. autofunction:: petl.transform.reductions.groupcountdistinctvalues
 .. autofunction:: petl.transform.reductions.groupselectfirst
+.. autofunction:: petl.transform.reductions.groupselectlast
 .. autofunction:: petl.transform.reductions.groupselectmin
 .. autofunction:: petl.transform.reductions.groupselectmax
 

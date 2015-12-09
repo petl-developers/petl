@@ -197,6 +197,31 @@ class URLSource(object):
 
 
 class MemorySource(object):
+    """Memory data source. E.g.::
+
+        >>> import petl as etl
+        >>> data = b'foo,bar\\na,1\\nb,2\\nc,2\\n'
+        >>> source = etl.MemorySource(data)
+        >>> tbl = etl.fromcsv(source)
+        >>> tbl
+        +-----+-----+
+        | foo | bar |
+        +=====+=====+
+        | 'a' | '1' |
+        +-----+-----+
+        | 'b' | '2' |
+        +-----+-----+
+        | 'c' | '2' |
+        +-----+-----+
+
+        >>> sink = etl.MemorySource()
+        >>> tbl.tojson(sink)
+        >>> sink.getvalue()
+        b'[{"foo": "a", "bar": "1"}, {"foo": "b", "bar": "2"}, {"foo": "c", "bar": "2"}]'
+
+    Also supports appending.
+
+    """
 
     def __init__(self, s=None):
         self.s = s

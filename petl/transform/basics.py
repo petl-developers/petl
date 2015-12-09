@@ -98,15 +98,15 @@ def cut(table, *args, **kwargs):
 
     Note that any short rows will be padded with `None` values (or whatever is
     provided via the `missing` keyword argument).
-    
+
     See also :func:`petl.transform.basics.cutout`.
-    
+
     """
 
     # support passing a single list or tuple of fields
     if len(args) == 1 and isinstance(args[0], (list, tuple)):
         args = args[0]
-            
+
     return CutView(table, args, **kwargs)
 
 
@@ -114,40 +114,40 @@ Table.cut = cut
 
 
 class CutView(Table):
-    
+
     def __init__(self, source, spec, missing=None):
         self.source = source
         self.spec = spec
         self.missing = missing
-        
+
     def __iter__(self):
         return itercut(self.source, self.spec, self.missing)
-    
-        
+
+
 def itercut(source, spec, missing=None):
     it = iter(source)
     spec = tuple(spec)  # make sure no-one can change midstream
-    
+
     # convert field selection into field indices
     hdr = next(it)
     indices = asindices(hdr, spec)
 
-    # define a function to transform each row in the source data 
+    # define a function to transform each row in the source data
     # according to the field selection
     transform = rowgetter(*indices)
-    
+
     # yield the transformed header
     yield transform(hdr)
-    
+
     # construct the transformed data
     for row in it:
         try:
-            yield transform(row) 
+            yield transform(row)
         except IndexError:
             # row is short, let's be kind and fill in any missing fields
             yield tuple(row[i] if i < len(row) else missing for i in indices)
 
-    
+
 def cutout(table, *args, **kwargs):
     """
     Remove fields. E.g.::
@@ -174,9 +174,9 @@ def cutout(table, *args, **kwargs):
         +-----+------+
         | 'E' | None |
         +-----+------+
-        
+
     See also :func:`petl.transform.basics.cut`.
-    
+
     """
 
     return CutOutView(table, args, **kwargs)
@@ -186,45 +186,45 @@ Table.cutout = cutout
 
 
 class CutOutView(Table):
-    
+
     def __init__(self, source, spec, missing=None):
         self.source = source
         self.spec = spec
         self.missing = missing
-        
+
     def __iter__(self):
         return itercutout(self.source, self.spec, self.missing)
-    
-        
+
+
 def itercutout(source, spec, missing=None):
     it = iter(source)
     spec = tuple(spec)  # make sure no-one can change midstream
-    
+
     # convert field selection into field indices
     hdr = next(it)
     indicesout = asindices(hdr, spec)
     indices = [i for i in range(len(hdr)) if i not in indicesout]
-    
-    # define a function to transform each row in the source data 
+
+    # define a function to transform each row in the source data
     # according to the field selection
     transform = rowgetter(*indices)
-    
+
     # yield the transformed header
     yield transform(hdr)
-    
+
     # construct the transformed data
     for row in it:
         try:
-            yield transform(row) 
+            yield transform(row)
         except IndexError:
             # row is short, let's be kind and fill in any missing fields
             yield tuple(row[i] if i < len(row) else missing for i in indices)
 
-    
+
 def cat(*tables, **kwargs):
     """
-    Concatenate data from two or more tables. E.g.::
-    
+    Concatenate tables. E.g.::
+
         >>> import petl as etl
         >>> table1 = [['foo', 'bar'],
         ...           [1, 'A'],
@@ -303,9 +303,9 @@ def cat(*tables, **kwargs):
         +------+------+------+-----+------+
         | None | None | None | 'D' | None |
         +------+------+------+-----+------+
-    
-    Note that the tables do not need to share exactly the same fields, any 
-    missing fields will be padded with `None` or whatever is provided via the 
+
+    Note that the tables do not need to share exactly the same fields, any
+    missing fields will be padded with `None` or whatever is provided via the
     `missing` keyword argument.
 
     Note that this function can be used with a single table argument, in which
@@ -314,75 +314,160 @@ def cat(*tables, **kwargs):
     the value of the `missing` keyword argument.
 
     By default, the fields for the output table will be determined as the
-    union of all fields found in the input tables. Use the `header` keyword 
-    argument to override this behaviour and specify a fixed set of fields for 
-    the output table. 
-    
+    union of all fields found in the input tables. Use the `header` keyword
+    argument to override this behaviour and specify a fixed set of fields for
+    the output table.
+
     """
-    
+
     return CatView(tables, **kwargs)
 
 
 Table.cat = cat
 
-    
+
 class CatView(Table):
-    
+
     def __init__(self, sources, missing=None, header=None):
         self.sources = sources
         self.missing = missing
-        if header is not None:
-            header = tuple(header)  # ensure hashable
         self.header = header
 
     def __iter__(self):
         return itercat(self.sources, self.missing, self.header)
-    
+
 
 def itercat(sources, missing, header):
     its = [iter(t) for t in sources]
-    source_hdrs = [next(it) for it in its]
-    source_flds = [list(map(text_type, hdr)) for hdr in source_hdrs]
+    hdrs = [list(next(it)) for it in its]
 
     if header is None:
         # determine output fields by gathering all fields found in the sources
-        outflds = list()
-        for flds in source_flds:
-            for f in flds:
-                if f not in outflds:
+        outhdr = list(hdrs[0])
+        for hdr in hdrs[1:]:
+            for h in hdr:
+                if h not in outhdr:
                     # add any new fields as we find them
-                    outflds.append(f)
+                    outhdr.append(h)
     else:
         # predetermined output fields
-        outflds = header
-    yield tuple(outflds)
+        outhdr = header
+    yield tuple(outhdr)
 
     # output data rows
-    for source_index, it in enumerate(its):
+    for hdr, it in zip(hdrs, its):
 
-        flds = source_flds[source_index]
-        
         # now construct and yield the data rows
         for row in it:
-            try:
-                # should be quickest to do this way
-                yield tuple(row[flds.index(f)] if f in flds else missing
-                            for f in outflds)
-            except IndexError:
-                # handle short rows
-                outrow = [missing] * len(outflds)
-                for i, f in enumerate(flds):
-                    try:
-                        outrow[outflds.index(f)] = row[i]
-                    except IndexError:
-                        pass  # be relaxed about short rows
-                yield tuple(outrow)
+            outrow = list()
+            for h in outhdr:
+                val = missing
+                try:
+                    val = row[hdr.index(h)]
+                except IndexError:
+                    # short row
+                    pass
+                except ValueError:
+                    # field not in table
+                    pass
+                outrow.append(val)
+            yield tuple(outrow)
+
+
+def stack(*tables, **kwargs):
+    """Concatenate tables, without trying to match headers. E.g.::
+
+        >>> import petl as etl
+        >>> table1 = [['foo', 'bar'],
+        ...           [1, 'A'],
+        ...           [2, 'B']]
+        >>> table2 = [['bar', 'baz'],
+        ...           ['C', True],
+        ...           ['D', False]]
+        >>> table3 = etl.stack(table1, table2)
+        >>> table3
+        +-----+-------+
+        | foo | bar   |
+        +=====+=======+
+        |   1 | 'A'   |
+        +-----+-------+
+        |   2 | 'B'   |
+        +-----+-------+
+        | 'C' | True  |
+        +-----+-------+
+        | 'D' | False |
+        +-----+-------+
+
+        >>> # can also be used to square up a single table with uneven rows
+        ... table4 = [['foo', 'bar', 'baz'],
+        ...           ['A', 1, 2],
+        ...           ['B', '2', '3.4'],
+        ...           [u'B', u'3', u'7.8', True],
+        ...           ['D', 'xyz', 9.0],
+        ...           ['E', None]]
+        >>> table5 = etl.stack(table4)
+        >>> table5
+        +-----+-------+-------+
+        | foo | bar   | baz   |
+        +=====+=======+=======+
+        | 'A' |     1 |     2 |
+        +-----+-------+-------+
+        | 'B' | '2'   | '3.4' |
+        +-----+-------+-------+
+        | 'B' | '3'   | '7.8' |
+        +-----+-------+-------+
+        | 'D' | 'xyz' |   9.0 |
+        +-----+-------+-------+
+        | 'E' | None  | None  |
+        +-----+-------+-------+
+
+    Similar to :func:`petl.transform.basics.cat` except that no attempt is
+    made to align fields from different tables. Data rows are simply emitted
+    in order, trimmed or padded to the length of the header row from the
+    first table.
+
+    .. versionadded:: 1.1.0
+
+    """
+
+    return StackView(tables, **kwargs)
+
+
+Table.stack = stack
+
+
+class StackView(Table):
+
+    def __init__(self, sources, missing=None, trim=True, pad=True):
+        self.sources = sources
+        self.missing = missing
+        self.trim = trim
+        self.pad = pad
+
+    def __iter__(self):
+        return iterstack(self.sources, self.missing, self.trim, self.pad)
+
+
+def iterstack(sources, missing, trim, pad):
+    its = [iter(t) for t in sources]
+    hdrs = [next(it) for it in its]
+    hdr = hdrs[0]
+    n = len(hdr)
+    yield tuple(hdr)
+    for it in its:
+        for row in it:
+            outrow = tuple(row)
+            if trim:
+                outrow = outrow[:n]
+            if pad and len(outrow) < n:
+                outrow += (missing,) * (n - len(outrow))
+            yield outrow
 
 
 def addfield(table, field, value=None, index=None, missing=None):
     """
     Add a field with a fixed or calculated value. E.g.::
-    
+
         >>> import petl as etl
         >>> table1 = [['foo', 'bar'],
         ...           ['M', 12],
@@ -426,17 +511,17 @@ Table.addfield = addfield
 
 
 class AddFieldView(Table):
-    
+
     def __init__(self, source, field, value=None, index=None, missing=None):
         # ensure rows are all the same length
-        self.source = cat(source, missing=missing)
+        self.source = stack(source, missing=missing)
         self.field = field
         self.value = value
         self.index = index
-        
+
     def __iter__(self):
         return iteraddfield(self.source, self.field, self.value, self.index)
-    
+
 
 def iteraddfield(source, field, value, index):
     it = iter(source)
@@ -446,7 +531,7 @@ def iteraddfield(source, field, value, index):
     # determine index of new field
     if index is None:
         index = len(hdr)
-        
+
     # construct output fields
     outhdr = list(hdr)
     outhdr.insert(index, field)
@@ -465,12 +550,12 @@ def iteraddfield(source, field, value, index):
             outrow = list(row)
             outrow.insert(index, value)
             yield tuple(outrow)
-        
-    
+
+
 def rowslice(table, *sliceargs):
     """
     Choose a subsequence of data rows. E.g.::
-    
+
         >>> import petl as etl
         >>> table1 = [['foo', 'bar'],
         ...           ['a', 1],
@@ -511,7 +596,7 @@ def rowslice(table, *sliceargs):
         +-----+-----+
         | 'f' |  42 |
         +-----+-----+
-        
+
     Positional arguments are used to slice the data rows. The `sliceargs` are
     passed through to :func:`itertools.islice`.
 
@@ -527,19 +612,19 @@ Table.rowslice = rowslice
 
 
 class RowSliceView(Table):
-    
+
     def __init__(self, source, *sliceargs):
         self.source = source
         if not sliceargs:
             self.sliceargs = (None,)
         else:
             self.sliceargs = sliceargs
-        
+
     def __iter__(self):
         return iterrowslice(self.source, self.sliceargs)
 
 
-def iterrowslice(source, sliceargs):    
+def iterrowslice(source, sliceargs):
     it = iter(source)
     yield tuple(next(it))  # fields
     for row in islice(it, *sliceargs):
@@ -575,7 +660,7 @@ def head(table, n=5):
 
     See also :func:`petl.transform.basics.tail`,
     :func:`petl.transform.basics.rowslice`.
-    
+
     """
 
     return rowslice(table, n)
@@ -583,7 +668,7 @@ def head(table, n=5):
 
 Table.head = head
 
-        
+
 def tail(table, n=5):
     """
     Select the last `n` data rows. E.g.::
@@ -613,7 +698,7 @@ def tail(table, n=5):
         +-----+-----+
         | 'q' |   2 |
         +-----+-----+
-        
+
     See also :func:`petl.transform.basics.head`,
     :func:`petl.transform.basics.rowslice`.
 
@@ -626,11 +711,11 @@ Table.tail = tail
 
 
 class TailView(Table):
-    
+
     def __init__(self, source, n):
         self.source = source
         self.n = n
-        
+
     def __iter__(self):
         return itertail(self.source, self.n)
 
@@ -651,7 +736,7 @@ def skipcomments(table, prefix):
     """
     Skip any row where the first value is a string and starts with
     `prefix`. E.g.::
-    
+
         >>> import petl as etl
         >>> table1 = [['##aaa', 'bbb', 'ccc'],
         ...           ['##mmm',],
@@ -681,13 +766,13 @@ Table.skipcomments = skipcomments
 
 
 class SkipCommentsView(Table):
-    
+
     def __init__(self, source, prefix):
         self.source = source
         self.prefix = prefix
-        
+
     def __iter__(self):
-        return iterskipcomments(self.source, self.prefix)   
+        return iterskipcomments(self.source, self.prefix)
 
 
 def iterskipcomments(source, prefix):
@@ -769,7 +854,7 @@ def annex(*tables, **kwargs):
     See also :func:`petl.transform.joins.join`.
 
     """
-    
+
     return AnnexView(tables, **kwargs)
 
 
@@ -777,14 +862,14 @@ Table.annex = annex
 
 
 class AnnexView(Table):
-    
+
     def __init__(self, tables, missing=None):
         self.tables = tables
         self.missing = missing
-        
+
     def __iter__(self):
         return iterannex(self.tables, self.missing)
-    
+
 
 def iterannex(tables, missing):
     its = [iter(t) for t in tables]
@@ -806,8 +891,8 @@ def iterannex(tables, missing):
                     row = row[:lh]
             outrow.extend(row)
         yield tuple(outrow)
-          
-    
+
+
 def addrownumbers(table, start=1, step=1):
     """
     Add a field of row numbers. E.g.::
@@ -832,7 +917,7 @@ def addrownumbers(table, start=1, step=1):
     Parameters `start` and `step` control the numbering.
 
     """
-    
+
     return AddRowNumbersView(table, start, step)
 
 
@@ -840,7 +925,7 @@ Table.addrownumbers = addrownumbers
 
 
 class AddRowNumbersView(Table):
-    
+
     def __init__(self, table, start=1, step=1):
         self.table = table
         self.start = start
@@ -848,7 +933,7 @@ class AddRowNumbersView(Table):
 
     def __iter__(self):
         return iteraddrownumbers(self.table, self.start, self.step)
-    
+
 
 def iteraddrownumbers(table, start, step):
     it = iter(table)
@@ -860,12 +945,12 @@ def iteraddrownumbers(table, start, step):
         outrow = [n]
         outrow.extend(row)
         yield tuple(outrow)
-        
+
 
 def addcolumn(table, field, col, index=None, missing=None):
     """
     Add a column of data to the table. E.g.::
-    
+
         >>> import petl as etl
         >>> table1 = [['foo', 'bar'],
         ...           ['A', 1],
@@ -884,7 +969,7 @@ def addcolumn(table, field, col, index=None, missing=None):
     Use the `index` parameter to control the position of the new column.
 
     """
-    
+
     return AddColumnView(table, field, col, index=index, missing=missing)
 
 
@@ -892,19 +977,19 @@ Table.addcolumn = addcolumn
 
 
 class AddColumnView(Table):
-    
+
     def __init__(self, table, field, col, index=None, missing=None):
         self._table = table
         self._field = field
         self._col = col
         self._index = index
         self._missing = missing
-        
+
     def __iter__(self):
-        return iteraddcolumn(self._table, self._field, self._col, 
+        return iteraddcolumn(self._table, self._field, self._col,
                              self._index, self._missing)
-    
-    
+
+
 def iteraddcolumn(table, field, col, index, missing):
     it = iter(table)
     hdr = next(it)
@@ -912,12 +997,12 @@ def iteraddcolumn(table, field, col, index, missing):
     # determine position of new column
     if index is None:
         index = len(hdr)
-    
+
     # construct output header
     outhdr = list(hdr)
     outhdr.insert(index, field)
     yield tuple(outhdr)
-    
+
     # construct output data
     for row, val in izip_longest(it, col, fillvalue=missing):
         # run out of rows?
@@ -926,8 +1011,8 @@ def iteraddcolumn(table, field, col, index, missing):
         outrow = list(row)
         outrow.insert(index, val)
         yield tuple(outrow)
-        
-        
+
+
 class TransformError(Exception):
     pass
 

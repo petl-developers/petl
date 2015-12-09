@@ -2,7 +2,7 @@ from __future__ import absolute_import, print_function, division
 
 from petl.transform.basics import cut, cutout, movefield, cat, annex, \
     addfield, addfieldusingcontext, addrownumbers, addcolumn, rowslice, head, \
-    tail, skipcomments
+    tail, skipcomments, stack
 
 from petl.transform.headers import rename, setheader, extendheader, \
     pushheader, skip, prefixheader, suffixheader
@@ -27,7 +27,7 @@ from petl.transform.hashjoins import hashjoin, hashleftjoin, hashrightjoin, \
 
 from petl.transform.reductions import rowreduce, mergeduplicates,\
     aggregate, groupcountdistinctvalues, groupselectfirst, groupselectmax, \
-    groupselectmin, merge, fold, Conflict
+    groupselectmin, merge, fold, Conflict, groupselectlast
 
 from petl.transform.fills import filldown, fillright, fillleft
 
