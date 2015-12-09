@@ -11,18 +11,18 @@ from petl.compat import PY2
 
 from petl.test.helpers import ieq, eq_
 import petl as etl
-from petl.io.sources import StringSource, PopenSource, ZipSource, \
+from petl.io.sources import MemorySource, PopenSource, ZipSource, \
     StdoutSource, GzipSource, BZ2Source
 
 
-def test_stringsource():
+def test_memorysource():
     tbl1 = (('foo', 'bar'),
             ('a', '1'),
             ('b', '2'),
             ('c', '2'))
 
     # test writing to a string buffer
-    ss = StringSource()
+    ss = MemorySource()
     etl.tocsv(tbl1, ss)
     expect = "foo,bar\r\na,1\r\nb,2\r\nc,2\r\n"
     if not PY2:
@@ -31,7 +31,7 @@ def test_stringsource():
     eq_(expect, actual)
 
     # test reading from a string buffer
-    tbl2 = etl.fromcsv(StringSource(actual))
+    tbl2 = etl.fromcsv(MemorySource(actual))
     ieq(tbl1, tbl2)
     ieq(tbl1, tbl2)
 
@@ -42,6 +42,20 @@ def test_stringsource():
     if not PY2:
         expect = expect.encode('ascii')
     eq_(expect, actual)
+
+
+def test_memorysource_2():
+
+    data = 'foo,bar\r\na,1\r\nb,2\r\nc,2\r\n'
+    if not PY2:
+        data = data.encode('ascii')
+    actual = etl.fromcsv(MemorySource(data))
+    expect = (('foo', 'bar'),
+              ('a', '1'),
+              ('b', '2'),
+              ('c', '2'))
+    ieq(expect, actual)
+    ieq(expect, actual)
 
 
 def test_popensource():

@@ -8,7 +8,7 @@ from petl.compat import string_types
 
 from petl.errors import ArgumentError
 from petl.util.base import Table, iterpeek, data
-from petl.io.numpy import guessdtype
+from petl.io.numpy import infer_dtype
 
 
 def fromhdf5(source, where=None, name=None, condition=None,
@@ -333,7 +333,7 @@ def tohdf5(table, source, where=None, name=None, create=False, drop=False,
             if description is None:
                 peek, it = iterpeek(it, sample)
                 # use a numpy dtype
-                description = guessdtype(peek)
+                description = infer_dtype(peek)
 
             # create the table
             h5file.create_table(where, name, description,

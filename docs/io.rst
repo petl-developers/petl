@@ -54,6 +54,11 @@ the section on :ref:`io_helpers` below for more information.
 .. module:: petl.io.csv
 .. _io_csv:
 
+Python objects
+--------------
+
+.. autofunction:: petl.io.base.fromcolumns
+
 Delimited files
 ---------------
 
@@ -131,12 +136,12 @@ Databases
 ---------
 
 .. note::
-   
+
     The automatic table creation feature of :func:`petl.io.db.todb`
     requires `SQLAlchemy <http://www.sqlalchemy.org/>`_ to be installed, e.g.::
 
         $ pip install sqlalchemy
-     
+
 
 .. autofunction:: petl.io.db.fromdb
 .. autofunction:: petl.io.db.todb
@@ -149,7 +154,7 @@ Databases
 Excel .xls files (xlrd/xlwt)
 ----------------------------
 
-.. note:: 
+.. note::
 
     The following functions require `xlrd
     <https://pypi.python.org/pypi/xlrd>`_ and `xlwt
@@ -205,7 +210,7 @@ Arrays (NumPy)
 DataFrames (pandas)
 -------------------
 
-.. note:: 
+.. note::
 
     The following functions require `pandas
     <http://pandas.pydata.org/>`_ to be installed, e.g.::
@@ -222,7 +227,7 @@ DataFrames (pandas)
 HDF5 files (PyTables)
 ---------------------
 
-.. note:: 
+.. note::
 
     The following functions require `PyTables
     <https://pytables.github.io/index.html>`_ to be installed, e.g.::
@@ -242,6 +247,23 @@ HDF5 files (PyTables)
 .. autofunction:: petl.io.pytables.appendhdf5
 
 
+.. module:: petl.io.bcolz
+.. _io_bcolz:
+
+Bcolz ctables
+-------------
+
+.. note::
+
+    The following functions require `bcolz <bcolz.blosc.org>`_
+    to be installed, e.g.::
+
+        $ pip install bcolz
+
+.. autofunction:: petl.io.bcolz.frombcolz
+.. autofunction:: petl.io.bcolz.tobcolz
+.. autofunction:: petl.io.bcolz.appendbcolz
+
 .. module:: petl.io.whoosh
 .. _io_whoosh:
 
@@ -250,7 +272,8 @@ Text indexes (Whoosh)
 
 .. note::
 
-    The following functions require `Whoosh <https://TODO>`_
+    The following functions require
+    `Whoosh <https://pypi.python.org/pypi/Whoosh/>`_
     to be installed, e.g.::
 
         $ pip install whoosh
