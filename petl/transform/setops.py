@@ -2,13 +2,6 @@ from __future__ import absolute_import, print_function, division
 
 
 from petl.compat import Counter, next
-import logging
-logger = logging.getLogger(__name__)
-warning = logger.warning
-info = logger.info
-debug = logger.debug
-
-
 from petl.comparison import Comparable
 from petl.util.base import header, Table
 from petl.transform.sorts import sort
@@ -16,7 +9,7 @@ from petl.transform.basics import cut
 
 
 def complement(a, b, presorted=False, buffersize=None, tempdir=None,
-               cache=True):
+               cache=True, strict=False):
     """
     Return rows in `a` that are not in `b`. E.g.::
 
@@ -61,10 +54,49 @@ def complement(a, b, presorted=False, buffersize=None, tempdir=None,
     `buffersize`, `tempdir` and `cache` arguments under the
     :func:`petl.transform.sorts.sort` function.
 
+    Note that the default behaviour is not strictly set-like, because 
+    duplicate rows are counted separately, e.g.::
+    
+        >>> a = [['foo', 'bar'],
+        ...      ['A', 1],
+        ...      ['B', 2],
+        ...      ['B', 2],
+        ...      ['C', 7]]
+        >>> b = [['foo', 'bar'],
+        ...      ['B', 2]]
+        >>> aminusb = etl.complement(a, b)
+        >>> aminusb
+        +-----+-----+
+        | foo | bar |
+        +=====+=====+
+        | 'A' |   1 |
+        +-----+-----+
+        | 'B' |   2 |
+        +-----+-----+
+        | 'C' |   7 |
+        +-----+-----+
+
+    This behaviour can be changed with the `strict` keyword argument, e.g.::
+
+        >>> aminusb = etl.complement(a, b, strict=True)
+        >>> aminusb
+        +-----+-----+
+        | foo | bar |
+        +=====+=====+
+        | 'A' |   1 |
+        +-----+-----+
+        | 'C' |   7 |
+        +-----+-----+
+
+    .. versionchanged:: 1.1.0
+    
+    If `strict` is `True` then strict set-like behaviour is used, i.e., 
+    only rows in `a` not found in `b` are returned.
+
     """
 
     return ComplementView(a, b, presorted=presorted, buffersize=buffersize,
-                          tempdir=tempdir, cache=cache)
+                          tempdir=tempdir, cache=cache, strict=strict)
 
 
 Table.complement = complement
@@ -73,7 +105,7 @@ Table.complement = complement
 class ComplementView(Table):
 
     def __init__(self, a, b, presorted=False, buffersize=None, tempdir=None,
-                 cache=True):
+                 cache=True, strict=False):
         if presorted:
             self.a = a
             self.b = b
@@ -82,12 +114,13 @@ class ComplementView(Table):
                           cache=cache)
             self.b = sort(b, buffersize=buffersize, tempdir=tempdir,
                           cache=cache)
+        self.strict = strict
 
     def __iter__(self):
-        return itercomplement(self.a, self.b)
+        return itercomplement(self.a, self.b, self.strict)
 
 
-def itercomplement(ta, tb):
+def itercomplement(ta, tb, strict):
     # coerce rows to tuples to ensure hashable and comparable
     ita = (tuple(row) for row in iter(ta))
     itb = (tuple(row) for row in iter(tb))
@@ -98,46 +131,42 @@ def itercomplement(ta, tb):
     try:
         a = next(ita)
     except StopIteration:
-        debug('a is empty, nothing to yield')
         pass
     else:
         try:
             b = next(itb)
         except StopIteration:
-            debug('b is empty, just iterate through a')
             yield a
             for row in ita:
                 yield row
         else:
             # we want the elements in a that are not in b
             while True:
-                debug('current rows: %r %r', a, b)
                 if b is None or Comparable(a) < Comparable(b):
                     yield a
-                    debug('advance a')
                     try:
                         a = next(ita)
                     except StopIteration:
                         break
                 elif a == b:
-                    debug('advance both')
                     try:
                         a = next(ita)
                     except StopIteration:
                         break
-                    try:
-                        b = next(itb)
-                    except StopIteration:
-                        b = None
+                    if not strict:
+                        try:
+                            b = next(itb)
+                        except StopIteration:
+                            b = None
                 else:
-                    debug('advance b')
                     try:
                         b = next(itb)
                     except StopIteration:
                         b = None
 
 
-def recordcomplement(a, b, buffersize=None, tempdir=None, cache=True):
+def recordcomplement(a, b, buffersize=None, tempdir=None, cache=True,
+                     strict=False):
     """
     Find records in `a` that are not in `b`. E.g.::
 
@@ -189,13 +218,14 @@ def recordcomplement(a, b, buffersize=None, tempdir=None, cache=True):
     # make sure fields are in the same order
     bv = cut(b, *ha)
     return complement(a, bv, buffersize=buffersize, tempdir=tempdir,
-                      cache=cache)
+                      cache=cache, strict=strict)
 
 
 Table.recordcomplement = recordcomplement
 
 
-def diff(a, b, presorted=False, buffersize=None, tempdir=None, cache=True):
+def diff(a, b, presorted=False, buffersize=None, tempdir=None, cache=True,
+         strict=False):
     """
     Find the difference between rows in two tables. Returns a pair of tables.
     E.g.::
@@ -241,22 +271,26 @@ def diff(a, b, presorted=False, buffersize=None, tempdir=None, cache=True):
     `buffersize`, `tempdir` and `cache` arguments under the
     :func:`petl.transform.sorts.sort` function.
 
+    .. versionchanged:: 1.1.0
+
+    If `strict` is `True` then strict set-like behaviour is used.
+
     """
 
     if not presorted:
         a = sort(a)
         b = sort(b)
     added = complement(b, a, presorted=True, buffersize=buffersize,
-                       tempdir=tempdir, cache=cache)
+                       tempdir=tempdir, cache=cache, strict=strict)
     subtracted = complement(a, b, presorted=True, buffersize=buffersize,
-                            tempdir=tempdir, cache=cache)
+                            tempdir=tempdir, cache=cache, strict=strict)
     return added, subtracted
 
 
 Table.diff = diff
 
 
-def recorddiff(a, b, buffersize=None, tempdir=None, cache=True):
+def recorddiff(a, b, buffersize=None, tempdir=None, cache=True, strict=False):
     """
     Find the difference between records in two tables. E.g.::
 
@@ -297,12 +331,16 @@ def recorddiff(a, b, buffersize=None, tempdir=None, cache=True):
     See also the discussion of the `buffersize`, `tempdir` and `cache`
     arguments under the :func:`petl.transform.sorts.sort` function.
 
+    .. versionchanged:: 1.1.0
+
+    If `strict` is `True` then strict set-like behaviour is used.
+
     """
 
     added = recordcomplement(b, a, buffersize=buffersize, tempdir=tempdir,
-                             cache=cache)
+                             cache=cache, strict=strict)
     subtracted = recordcomplement(a, b, buffersize=buffersize, tempdir=tempdir,
-                                  cache=cache)
+                                  cache=cache, strict=strict)
     return added, subtracted
 
 
@@ -389,7 +427,7 @@ def iterintersection(a, b):
         pass
 
 
-def hashcomplement(a, b):
+def hashcomplement(a, b, strict=False):
     """
     Alternative implementation of :func:`petl.transform.setops.complement`,
     where the complement is executed by constructing an in-memory set for all
@@ -398,10 +436,15 @@ def hashcomplement(a, b):
 
     May be faster and/or more resource efficient where the right table is small
     and the left table is large.
+    
+    .. versionchanged:: 1.1.0
+    
+    If `strict` is `True` then strict set-like behaviour is used, i.e., 
+    only rows in `a` not found in `b` are returned.
 
     """
 
-    return HashComplementView(a, b)
+    return HashComplementView(a, b, strict=strict)
 
 
 Table.hashcomplement = hashcomplement
@@ -409,15 +452,16 @@ Table.hashcomplement = hashcomplement
 
 class HashComplementView(Table):
 
-    def __init__(self, a, b):
+    def __init__(self, a, b, strict=False):
         self.a = a
         self.b = b
+        self.strict = strict
 
     def __iter__(self):
-        return iterhashcomplement(self.a, self.b)
+        return iterhashcomplement(self.a, self.b, self.strict)
 
 
-def iterhashcomplement(a, b):
+def iterhashcomplement(a, b, strict):
     ita = iter(a)
     ahdr = next(ita)
     yield tuple(ahdr)
@@ -429,7 +473,8 @@ def iterhashcomplement(a, b):
     for ar in ita:
         t = tuple(ar)
         if bcnt[t] > 0:
-            bcnt[t] -= 1
+            if not strict:
+                bcnt[t] -= 1
         else:
             yield t
 
