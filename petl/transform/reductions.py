@@ -421,6 +421,8 @@ def mergeduplicates(table, key, missing=None, presorted=False, buffersize=None,
     `buffersize`, `tempdir` and `cache` arguments under the
     :func:`petl.transform.sorts.sort` function.
 
+    See also :func:`petl.transform.dedup.conflicts`.
+
     """
 
     return MergeDuplicatesView(table, key, missing=missing, presorted=presorted,
