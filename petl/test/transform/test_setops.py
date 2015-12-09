@@ -94,12 +94,19 @@ def _test_complement_4(complement_impl):
     table2 = (('foo', 'bar'),
               ('B', 2))
 
+    result = complement_impl(table1, table2)
     expectation = (('foo', 'bar'),
                    ('A', 1),
                    ('B', 2),
                    ('C', 7))
+    ieq(expectation, result)
+    ieq(expectation, result)
 
-    result = complement_impl(table1, table2)
+    # strict behaviour
+    result = complement_impl(table1, table2, strict=True)
+    expectation = (('foo', 'bar'),
+                   ('A', 1),
+                   ('C', 7))
     ieq(expectation, result)
     ieq(expectation, result)
 
@@ -265,12 +272,19 @@ def test_recordcomplement_4():
     table2 = (('bar', 'foo'),
               (2, 'B'))
 
+    result = recordcomplement(table1, table2)
     expectation = (('foo', 'bar'),
                    ('A', 1),
                    ('B', 2),
                    ('C', 7))
+    ieq(expectation, result)
+    ieq(expectation, result)
 
-    result = recordcomplement(table1, table2)
+    # strict behaviour
+    result = recordcomplement(table1, table2, strict=True)
+    expectation = (('foo', 'bar'),
+                   ('A', 1),
+                   ('C', 7))
     ieq(expectation, result)
     ieq(expectation, result)
 

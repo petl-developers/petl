@@ -6,6 +6,10 @@ Version 1.1.0
 
 * Added :func:`petl.io.base.fromcolumns`
   (`#316 <https://github.com/alimanfoo/petl/issues/316>`_).
+* Added functions for working with bcolz ctables, see :mod:`petl.io.bcolz`.
+* Added keyword `strict` to functions in the :mod:`petl.transform.setops`
+  module to enforce strict set-like behaviour.
+* Added :func:`petl.transform.reductions.groupselectlast`.
 
 Version 1.0
 -----------
