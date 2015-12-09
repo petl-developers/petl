@@ -4,6 +4,7 @@ Changes
 Version 1.1.0
 -------------
 
+* Added `epilogue` argument to :func:`petl.util.vis.display`.
 * Added function :func:`petl.transform.basics.stack` as a simpler
   alternative to :func:`petl.transform.basics.cat`. Also behaviour of
   :func:`petl.transform.basics.cat` has changed for tables where the header
