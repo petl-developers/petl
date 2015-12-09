@@ -376,8 +376,10 @@ def distinct(table, key=None, count=None, presorted=False, buffersize=None,
     If the `key` keyword argument is passed, the comparison is done on the
     given key instead of the full row.
 
-    See also :func:`petl.transform.dedup.duplicates` and
-    :func:`petl.transform.dedup.unique`.
+    See also :func:`petl.transform.dedup.duplicates`,
+    :func:`petl.transform.dedup.unique`,
+    :func:`petl.transform.reductions.groupselectfirst`,
+    :func:`petl.transform.reductions.groupselectlast`.
 
     """
 

@@ -346,14 +346,83 @@ Table.groupcountdistinctvalues = groupcountdistinctvalues
 
 def groupselectfirst(table, key, presorted=False, buffersize=None,
                      tempdir=None, cache=True):
-    """Group by the `key` field then return the first row within each group."""
+    """Group by the `key` field then return the first row within each group.
+    E.g.::
 
-    _reducer = lambda k, rows: next(rows)
+        >>> import petl as etl
+        >>> table1 = [['foo', 'bar', 'baz'],
+        ...           ['A', 1, True],
+        ...           ['C', 7, False],
+        ...           ['B', 2, False],
+        ...           ['C', 9, True]]
+        >>> table2 = etl.groupselectfirst(table1, key='foo')
+        >>> table2
+        +-----+-----+-------+
+        | foo | bar | baz   |
+        +=====+=====+=======+
+        | 'A' |   1 | True  |
+        +-----+-----+-------+
+        | 'B' |   2 | False |
+        +-----+-----+-------+
+        | 'C' |   7 | False |
+        +-----+-----+-------+
+
+    See also :func:`petl.transform.reductions.groupselectlast`,
+    :func:`petl.transform.dedup.distinct`.
+
+    """
+
+    def _reducer(k, rows):
+        return next(rows)
+
     return rowreduce(table, key, reducer=_reducer, presorted=presorted,
                      buffersize=buffersize, tempdir=tempdir, cache=cache)
 
 
 Table.groupselectfirst = groupselectfirst
+
+
+def groupselectlast(table, key, presorted=False, buffersize=None,
+                    tempdir=None, cache=True):
+    """Group by the `key` field then return the last row within each group.
+    E.g.::
+
+        >>> import petl as etl
+        >>> table1 = [['foo', 'bar', 'baz'],
+        ...           ['A', 1, True],
+        ...           ['C', 7, False],
+        ...           ['B', 2, False],
+        ...           ['C', 9, True]]
+        >>> table2 = etl.groupselectlast(table1, key='foo')
+        >>> table2
+        +-----+-----+-------+
+        | foo | bar | baz   |
+        +=====+=====+=======+
+        | 'A' |   1 | True  |
+        +-----+-----+-------+
+        | 'B' |   2 | False |
+        +-----+-----+-------+
+        | 'C' |   9 | True  |
+        +-----+-----+-------+
+
+    See also :func:`petl.transform.reductions.groupselectfirst`,
+    :func:`petl.transform.dedup.distinct`.
+
+    .. versionadded:: 1.1.0
+
+    """
+
+    def _reducer(k, rows):
+        row = None
+        for row in rows:
+            pass
+        return row
+
+    return rowreduce(table, key, reducer=_reducer, presorted=presorted,
+                     buffersize=buffersize, tempdir=tempdir, cache=cache)
+
+
+Table.groupselectlast = groupselectlast
 
 
 def groupselectmin(table, key, value, presorted=False, buffersize=None,
