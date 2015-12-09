@@ -4,7 +4,7 @@ from __future__ import division, print_function, absolute_import
 
 import locale
 import codecs
-
+from petl.compat import izip_longest
 
 from petl.util.base import Table
 
@@ -56,5 +56,5 @@ def itercolumns(cols, header):
     if header is None:
         header = ['f%s' % i for i in range(len(cols))]
     yield tuple(header)
-    for row in zip(*cols):
+    for row in izip_longest(*cols):
         yield row
