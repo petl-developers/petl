@@ -533,6 +533,20 @@ def test_addrownumbers():
     ieq(expect, actual)
 
 
+def test_addrownumbers_field_name():
+
+    table1 = (('foo', 'bar'),
+              ('A', 9),
+              ('C', 2))
+
+    expect = (('id', 'foo', 'bar'),
+              (1, 'A', 9),
+              (2, 'C', 2))
+    actual = addrownumbers(table1, field='id')
+    ieq(expect, actual)
+    ieq(expect, actual)
+
+
 def test_addcolumn():
 
     table1 = (('foo', 'bar'),

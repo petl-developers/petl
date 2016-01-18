@@ -893,7 +893,7 @@ def iterannex(tables, missing):
         yield tuple(outrow)
 
 
-def addrownumbers(table, start=1, step=1):
+def addrownumbers(table, start=1, step=1, field='row'):
     """
     Add a field of row numbers. E.g.::
 
@@ -918,7 +918,7 @@ def addrownumbers(table, start=1, step=1):
 
     """
 
-    return AddRowNumbersView(table, start, step)
+    return AddRowNumbersView(table, start, step, field)
 
 
 Table.addrownumbers = addrownumbers
@@ -926,19 +926,20 @@ Table.addrownumbers = addrownumbers
 
 class AddRowNumbersView(Table):
 
-    def __init__(self, table, start=1, step=1):
+    def __init__(self, table, start=1, step=1, field='row'):
         self.table = table
         self.start = start
         self.step = step
+        self.field = field
 
     def __iter__(self):
-        return iteraddrownumbers(self.table, self.start, self.step)
+        return iteraddrownumbers(self.table, self.start, self.step, self.field)
 
 
-def iteraddrownumbers(table, start, step):
+def iteraddrownumbers(table, start, step, field):
     it = iter(table)
     hdr = next(it)
-    outhdr = ['row']
+    outhdr = [field]
     outhdr.extend(hdr)
     yield tuple(outhdr)
     for row, n in izip(it, count(start, step)):
