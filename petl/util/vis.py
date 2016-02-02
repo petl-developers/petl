@@ -533,7 +533,8 @@ def _vis_overflow(table, limit):
 
 
 def _display_html(table, limit=0, vrepr=None, index_header=None, caption=None,
-                  tr_style=None, td_styles=None, encoding=None, truncate=None):
+                  tr_style=None, td_styles=None, encoding=None,
+                  truncate=None, epilogue=None):
 
     # determine defaults
     if limit == 0:
@@ -552,7 +553,9 @@ def _display_html(table, limit=0, vrepr=None, index_header=None, caption=None,
            td_styles=td_styles, truncate=truncate)
     output = text_type(buf.getvalue(), encoding)
 
-    if overflow:
+    if epilogue:
+        output += '<p>%s</p>' % epilogue
+    elif overflow:
         output += '<p><strong>...</strong></p>'
 
     return output
@@ -562,17 +565,19 @@ Table._repr_html_ = _display_html
 
 
 def display(table, limit=0, vrepr=None, index_header=None, caption=None,
-            tr_style=None, td_styles=None, encoding=None, truncate=None):
+            tr_style=None, td_styles=None, encoding=None, truncate=None,
+            epilogue=None):
     """
     Display a table inline within an IPython notebook.
-    
+
     """
 
     from IPython.core.display import display_html
     html = _display_html(table, limit=limit, vrepr=vrepr,
                          index_header=index_header, caption=caption,
                          tr_style=tr_style, td_styles=td_styles,
-                         encoding=encoding, truncate=truncate)
+                         encoding=encoding, truncate=truncate,
+                         epilogue=epilogue)
     display_html(html, raw=True)
 
 

@@ -51,7 +51,13 @@ Some helper classes are also available for writing to other types of
 file-like sources, e.g., writing to a Zip file or string buffer, see
 the section on :ref:`io_helpers` below for more information.
 
+.. module:: petl.io.csv
 .. _io_csv:
+
+Python objects
+--------------
+
+.. autofunction:: petl.io.base.fromcolumns
 
 Delimited files
 ---------------
@@ -66,6 +72,7 @@ Delimited files
 .. autofunction:: petl.io.csv.teetsv
 
 
+.. module:: petl.io.pickle
 .. _io_pickle:
 
 Pickle files
@@ -77,6 +84,7 @@ Pickle files
 .. autofunction:: petl.io.pickle.teepickle
 
 
+.. module:: petl.io.text
 .. _io_text:
 
 Text files
@@ -88,6 +96,7 @@ Text files
 .. autofunction:: petl.io.text.teetext
 
 
+.. module:: petl.io.xml
 .. _io_xml:
 
 XML files
@@ -98,6 +107,7 @@ XML files
 For writing to an XML file, see :func:`petl.io.text.totext`.
 
 
+.. module:: petl.io.html
 .. _io_html:
 
 HTML files
@@ -107,6 +117,7 @@ HTML files
 .. autofunction:: petl.io.html.teehtml
 
 
+.. module:: petl.io.json
 .. _io_json:
 
 JSON files
@@ -118,30 +129,32 @@ JSON files
 .. autofunction:: petl.io.json.tojsonarrays
 
 
+.. module:: petl.io.db
 .. _io_db:
 
 Databases
 ---------
 
 .. note::
-   
+
     The automatic table creation feature of :func:`petl.io.db.todb`
     requires `SQLAlchemy <http://www.sqlalchemy.org/>`_ to be installed, e.g.::
 
         $ pip install sqlalchemy
-     
+
 
 .. autofunction:: petl.io.db.fromdb
 .. autofunction:: petl.io.db.todb
 .. autofunction:: petl.io.db.appenddb
 
 
+.. module:: petl.io.xls
 .. _io_xls:
 
 Excel .xls files (xlrd/xlwt)
 ----------------------------
 
-.. note:: 
+.. note::
 
     The following functions require `xlrd
     <https://pypi.python.org/pypi/xlrd>`_ and `xlwt
@@ -154,6 +167,7 @@ Excel .xls files (xlrd/xlwt)
 .. autofunction:: petl.io.xls.toxls
 
 
+.. module:: petl.io.xlsx
 .. _io_xlsx:
 
 Excel .xlsx files (openpyxl)
@@ -171,6 +185,7 @@ Excel .xlsx files (openpyxl)
 .. autofunction:: petl.io.xlsx.toxlsx
 
 
+.. module:: petl.io.numpy
 .. _io_numpy:
 
 Arrays (NumPy)
@@ -189,12 +204,13 @@ Arrays (NumPy)
 .. autofunction:: petl.io.numpy.valuestoarray
 
 
+.. module:: petl.io.pandas
 .. _io_pandas:
 
 DataFrames (pandas)
 -------------------
 
-.. note:: 
+.. note::
 
     The following functions require `pandas
     <http://pandas.pydata.org/>`_ to be installed, e.g.::
@@ -205,12 +221,13 @@ DataFrames (pandas)
 .. autofunction:: petl.io.pandas.todataframe
 
 
+.. module:: petl.io.pytables
 .. _io_pytables:
 
 HDF5 files (PyTables)
 ---------------------
 
-.. note:: 
+.. note::
 
     The following functions require `PyTables
     <https://pytables.github.io/index.html>`_ to be installed, e.g.::
@@ -230,6 +247,24 @@ HDF5 files (PyTables)
 .. autofunction:: petl.io.pytables.appendhdf5
 
 
+.. module:: petl.io.bcolz
+.. _io_bcolz:
+
+Bcolz ctables
+-------------
+
+.. note::
+
+    The following functions require `bcolz <bcolz.blosc.org>`_
+    to be installed, e.g.::
+
+        $ pip install bcolz
+
+.. autofunction:: petl.io.bcolz.frombcolz
+.. autofunction:: petl.io.bcolz.tobcolz
+.. autofunction:: petl.io.bcolz.appendbcolz
+
+.. module:: petl.io.whoosh
 .. _io_whoosh:
 
 Text indexes (Whoosh)
@@ -237,7 +272,8 @@ Text indexes (Whoosh)
 
 .. note::
 
-    The following functions require `Whoosh <https://TODO>`_
+    The following functions require
+    `Whoosh <https://pypi.python.org/pypi/Whoosh/>`_
     to be installed, e.g.::
 
         $ pip install whoosh
@@ -248,6 +284,7 @@ Text indexes (Whoosh)
 .. autofunction:: petl.io.whoosh.totextindex
 .. autofunction:: petl.io.whoosh.appendtextindex
 
+.. module:: petl.io.sources
 .. _io_helpers:
 
 I/O helper classes

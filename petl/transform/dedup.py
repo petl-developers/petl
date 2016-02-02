@@ -257,7 +257,22 @@ def conflicts(table, key, missing=None, include=None, exclude=None,
     One or more fields can be ignored when determining conflicts by providing
     the `exclude` keyword argument. Alternatively, fields to use when
     determining conflicts can be specified explicitly with the `include`
-    keyword argument.
+    keyword argument. This provides a simple mechanism for analysing the
+    source of conflicting rows from multiple tables, e.g.::
+
+        >>> table1 = [['foo', 'bar'], [1, 'a'], [2, 'b']]
+        >>> table2 = [['foo', 'bar'], [1, 'a'], [2, 'c']]
+        >>> table3 = etl.cat(etl.addfield(table1, 'source', 1),
+        ...                  etl.addfield(table2, 'source', 2))
+        >>> table4 = etl.conflicts(table3, key='foo', exclude='source')
+        >>> table4
+        +-----+-----+--------+
+        | foo | bar | source |
+        +=====+=====+========+
+        |   2 | 'b' |      1 |
+        +-----+-----+--------+
+        |   2 | 'c' |      2 |
+        +-----+-----+--------+
 
     If `presorted` is True, it is assumed that the data are already sorted by
     the given key, and the `buffersize`, `tempdir` and `cache` arguments are
@@ -361,8 +376,10 @@ def distinct(table, key=None, count=None, presorted=False, buffersize=None,
     If the `key` keyword argument is passed, the comparison is done on the
     given key instead of the full row.
 
-    See also :func:`petl.transform.dedup.duplicates` and
-    :func:`petl.transform.dedup.unique`.
+    See also :func:`petl.transform.dedup.duplicates`,
+    :func:`petl.transform.dedup.unique`,
+    :func:`petl.transform.reductions.groupselectfirst`,
+    :func:`petl.transform.reductions.groupselectlast`.
 
     """
 

@@ -2,10 +2,10 @@ from __future__ import absolute_import, print_function, division
 
 from petl.transform.basics import cut, cutout, movefield, cat, annex, \
     addfield, addfieldusingcontext, addrownumbers, addcolumn, rowslice, head, \
-    tail, skipcomments
+    tail, skipcomments, stack
 
 from petl.transform.headers import rename, setheader, extendheader, \
-    pushheader, skip, prefixheader, suffixheader
+    pushheader, skip, prefixheader, suffixheader, sortheader
 
 from petl.transform.conversions import convert, convertall, replace, \
     replaceall, update, convertnumbers, format, formatall, interpolate, \
@@ -13,11 +13,12 @@ from petl.transform.conversions import convert, convertall, replace, \
 
 from petl.transform.sorts import sort, mergesort, issorted
 
-from petl.transform.selects import select, selectop, selectcontains, selecteq, \
-    selectfalse, selectge, selectgt, selectin, selectis, selectisinstance, \
-    selectisnot, selectle, selectlt, selectne, selectnone, selectnotin, \
-    selectnotnone, selectrangeclosed, selectrangeopen, selectrangeopenleft, \
-    selectrangeopenright, selecttrue, selectusingcontext, rowlenselect, facet
+from petl.transform.selects import select, selectop, selectcontains, \
+    selecteq, selectfalse, selectge, selectgt, selectin, selectis, \
+    selectisinstance, selectisnot, selectle, selectlt, selectne, selectnone, \
+    selectnotin, selectnotnone, selectrangeclosed, selectrangeopen, \
+    selectrangeopenleft, selectrangeopenright, selecttrue, \
+    selectusingcontext, rowlenselect, facet, biselect
 
 from petl.transform.joins import join, leftjoin, rightjoin, outerjoin, \
     crossjoin, antijoin, lookupjoin, unjoin
@@ -27,7 +28,7 @@ from petl.transform.hashjoins import hashjoin, hashleftjoin, hashrightjoin, \
 
 from petl.transform.reductions import rowreduce, mergeduplicates,\
     aggregate, groupcountdistinctvalues, groupselectfirst, groupselectmax, \
-    groupselectmin, merge, fold, Conflict
+    groupselectmin, merge, fold, Conflict, groupselectlast
 
 from petl.transform.fills import filldown, fillright, fillleft
 

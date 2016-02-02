@@ -7,7 +7,7 @@ from petl.util.base import iterpeek, ValuesView, Table
 from petl.util.materialise import columns
 
 
-def guessdtype(table):
+def infer_dtype(table):
     import numpy as np
     # get numpy to infer dtype
     it = iter(table)
@@ -16,6 +16,39 @@ def guessdtype(table):
     rows = tuple(it)
     dtype = np.rec.array(rows).dtype
     dtype.names = flds
+    return dtype
+
+
+def construct_dtype(flds, peek, dtype):
+    import numpy as np
+
+    if dtype is None:
+        dtype = infer_dtype(peek)
+
+    elif isinstance(dtype, string_types):
+        # insert field names from source table
+        typestrings = [s.strip() for s in dtype.split(',')]
+        dtype = [(f, t) for f, t in zip(flds, typestrings)]
+
+    elif (isinstance(dtype, dict) and
+          ('names' not in dtype or 'formats' not in dtype)):
+        # allow for partial specification of dtype
+        cols = columns(peek)
+        newdtype = {'names': [], 'formats': []}
+        for f in flds:
+            newdtype['names'].append(f)
+            if f in dtype and isinstance(dtype[f], tuple):
+                # assume fully specified
+                newdtype['formats'].append(dtype[f][0])
+            elif f not in dtype:
+                # not specified at all
+                a = np.array(cols[f])
+                newdtype['formats'].append(a.dtype)
+            else:
+                # assume directly specified, just need to add offset
+                newdtype['formats'].append(dtype[f])
+        dtype = newdtype
+
     return dtype
 
 
@@ -32,7 +65,7 @@ def toarray(table, dtype=None, count=-1, sample=1000):
         >>> a = etl.toarray(table)
         >>> a
         array([('apples', 1, 2.5), ('oranges', 3, 4.4), ('pears', 7, 0.1)],
-              dtype=[('foo', '<U7'), ('bar', '<i8'), ('baz', '<f8')])
+              dtype=(numpy.record, [('foo', '<U7'), ('bar', '<i8'), ('baz', '<f8')]))
         >>> # the dtype can be specified as a string
         ... a = etl.toarray(table, dtype='a4, i2, f4')
         >>> a
@@ -55,36 +88,7 @@ def toarray(table, dtype=None, count=-1, sample=1000):
     peek, it = iterpeek(it, sample)
     hdr = next(it)
     flds = list(map(str, hdr))
-
-    if dtype is None:
-        dtype = guessdtype(peek)
-
-    elif isinstance(dtype, string_types):
-        # insert field names from source table
-        typestrings = [s.strip() for s in dtype.split(',')]
-        dtype = [(f, t) for f, t in zip(flds, typestrings)]
-
-    elif (isinstance(dtype, dict)
-          and ('names' not in dtype or 'formats' not in dtype)):
-        # allow for partial specification of dtype
-        cols = columns(peek)
-        newdtype = {'names': [], 'formats': []}
-        for f in flds:
-            newdtype['names'].append(f)
-            if f in dtype and isinstance(dtype[f], tuple):
-                # assume fully specified
-                newdtype['formats'].append(dtype[f][0])
-            elif f not in dtype:
-                # not specified at all
-                a = np.array(cols[f])
-                newdtype['formats'].append(a.dtype)
-            else:
-                # assume directly specified, just need to add offset
-                newdtype['formats'].append(dtype[f])
-        dtype = newdtype
-
-    else:
-        pass  # leave dtype as-is
+    dtype = construct_dtype(flds, peek, dtype)
 
     # numpy is fussy about having tuples, need to make sure
     it = (tuple(row) for row in it)

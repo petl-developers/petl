@@ -4,7 +4,7 @@ from __future__ import absolute_import, print_function, division
 from petl.test.helpers import ieq
 from petl import join, leftjoin, rightjoin, outerjoin, crossjoin, antijoin, \
     lookupjoin, hashjoin, hashleftjoin, hashrightjoin, hashantijoin, \
-    hashlookupjoin, unjoin, sort
+    hashlookupjoin, unjoin, sort, cut
 
 
 def _test_join_basic(join_impl):
@@ -115,6 +115,31 @@ def _test_join_empty(join_impl):
     ieq(expect3, table3)
 
 
+def _test_join_novaluefield(join_impl):
+
+    table1 = (('id', 'colour'),
+              (1, 'blue'),
+              (2, 'red'),
+              (3, 'purple'))
+    table2 = (('id', 'shape'),
+              (1, 'circle'),
+              (3, 'square'),
+              (4, 'ellipse'))
+
+    expect = (('id', 'colour', 'shape'),
+              (1, 'blue', 'circle'),
+              (3, 'purple', 'square'))
+
+    actual = join_impl(table1, table2, key='id')
+    ieq(expect, actual)
+    actual = join_impl(cut(table1, 'id'), table2, key='id')
+    ieq(cut(expect, 'id', 'shape'), actual)
+    actual = join_impl(table1, cut(table2, 'id'), key='id')
+    ieq(cut(expect, 'id', 'colour'), actual)
+    actual = join_impl(cut(table1, 'id'), cut(table2, 'id'), key='id')
+    ieq(cut(expect, 'id'), actual)
+
+
 def _test_join_prefix(join_impl):
 
     table1 = (('id', 'colour'),
@@ -187,6 +212,7 @@ def _test_join(join_impl):
     _test_join_compound_keys(join_impl)
     _test_join_string_key(join_impl)
     _test_join_empty(join_impl)
+    _test_join_novaluefield(join_impl)
     _test_join_prefix(join_impl)
     _test_join_lrkey(join_impl)
     _test_join_multiple(join_impl)
@@ -314,6 +340,35 @@ def _test_leftjoin_empty(leftjoin_impl):
     ieq(expect3, table3)
 
 
+def _test_leftjoin_novaluefield(leftjoin_impl):
+
+    table1 = (('id', 'colour'),
+              (1, 'blue'),
+              (2, 'red'),
+              (3, 'purple'),
+              (5, 'yellow'),
+              (7, 'orange'))
+    table2 = (('id', 'shape'),
+              (1, 'circle'),
+              (3, 'square'),
+              (4, 'ellipse'))
+    expect = (('id', 'colour', 'shape'),
+              (1, 'blue', 'circle'),
+              (2, 'red', None),
+              (3, 'purple', 'square'),
+              (5, 'yellow', None,),
+              (7, 'orange', None))
+    
+    actual = leftjoin_impl(table1, table2, key='id')
+    ieq(expect, actual)
+    actual = leftjoin_impl(cut(table1, 'id'), table2, key='id')
+    ieq(cut(expect, 'id', 'shape'), actual)
+    actual = leftjoin_impl(table1, cut(table2, 'id'), key='id')
+    ieq(cut(expect, 'id', 'colour'), actual)
+    actual = leftjoin_impl(cut(table1, 'id'), cut(table2, 'id'), key='id')
+    ieq(cut(expect, 'id'), actual)
+
+
 def _test_leftjoin_multiple(leftjoin_impl):
 
     table1 = (('id', 'color', 'cost'),
@@ -394,6 +449,7 @@ def _test_leftjoin(leftjoin_impl):
     _test_leftjoin_3(leftjoin_impl)
     _test_leftjoin_compound_keys(leftjoin_impl)
     _test_leftjoin_empty(leftjoin_impl)
+    _test_leftjoin_novaluefield(leftjoin_impl)
     _test_leftjoin_multiple(leftjoin_impl)
     _test_leftjoin_prefix(leftjoin_impl)
     _test_leftjoin_lrkey(leftjoin_impl)
@@ -506,6 +562,34 @@ def _test_rightjoin_empty(rightjoin_impl):
     ieq(expect3, table3)
 
 
+def _test_rightjoin_novaluefield(rightjoin_impl):
+    table1 = (('id', 'colour'),
+              (1, 'blue'),
+              (2, 'red'),
+              (3, 'purple'))
+    table2 = (('id', 'shape'),
+              (0, 'triangle'),
+              (1, 'circle'),
+              (3, 'square'),
+              (4, 'ellipse'),
+              (5, 'pentagon'))
+    expect = (('id', 'colour', 'shape'),
+              (0, None, 'triangle'),
+              (1, 'blue', 'circle'),
+              (3, 'purple', 'square'),
+              (4, None, 'ellipse'),
+              (5, None, 'pentagon'))
+
+    actual = rightjoin_impl(table1, table2, key='id')
+    ieq(expect, actual)
+    actual = rightjoin_impl(cut(table1, 'id'), table2, key='id')
+    ieq(cut(expect, 'id', 'shape'), actual)
+    actual = rightjoin_impl(table1, cut(table2, 'id'), key='id')
+    ieq(cut(expect, 'id', 'colour'), actual)
+    actual = rightjoin_impl(cut(table1, 'id'), cut(table2, 'id'), key='id')
+    ieq(cut(expect, 'id'), actual)
+
+
 def _test_rightjoin_prefix(rightjoin_impl):
     table1 = (('id', 'colour'),
               (1, 'blue'),
@@ -589,6 +673,7 @@ def _test_rightjoin(rightjoin_impl):
     _test_rightjoin_2(rightjoin_impl)
     _test_rightjoin_3(rightjoin_impl)
     _test_rightjoin_empty(rightjoin_impl)
+    _test_rightjoin_novaluefield(rightjoin_impl)
     _test_rightjoin_prefix(rightjoin_impl)
     _test_rightjoin_lrkey(rightjoin_impl)
     _test_rightjoin_multiple(rightjoin_impl)
@@ -697,6 +782,36 @@ def test_outerjoin_empty():
                (5, 'yellow', None),
                (7, 'white', None))
     ieq(expect3, table3)
+
+
+def test_outerjoin_novaluefield():
+    table1 = (('id', 'colour'),
+              (0, 'black'),
+              (1, 'blue'),
+              (2, 'red'),
+              (3, 'purple'),
+              (5, 'yellow'),
+              (7, 'white'))
+    table2 = (('id', 'shape'),
+              (1, 'circle'),
+              (3, 'square'),
+              (4, 'ellipse'))
+    expect = (('id', 'colour', 'shape'),
+              (0, 'black', None),
+              (1, 'blue', 'circle'),
+              (2, 'red', None),
+              (3, 'purple', 'square'),
+              (4, None, 'ellipse'),
+              (5, 'yellow', None),
+              (7, 'white', None))
+    actual = outerjoin(table1, table2, key='id')
+    ieq(expect, actual)
+    actual = outerjoin(cut(table1, 'id'), table2, key='id')
+    ieq(cut(expect, 'id', 'shape'), actual)
+    actual = outerjoin(table1, cut(table2, 'id'), key='id')
+    ieq(cut(expect, 'id', 'colour'), actual)
+    actual = outerjoin(cut(table1, 'id'), cut(table2, 'id'), key='id')
+    ieq(cut(expect, 'id'), actual)
 
 
 def test_outerjoin_prefix():
@@ -813,6 +928,28 @@ def test_crossjoin_empty():
     ieq(expect3, table3)
 
 
+def test_crossjoin_novaluefield():
+    table1 = (('id', 'colour'),
+              (1, 'blue'),
+              (2, 'red'))
+    table2 = (('id', 'shape'),
+              (1, 'circle'),
+              (3, 'square'))
+    expect = (('id', 'colour', 'id', 'shape'),
+              (1, 'blue', 1, 'circle'),
+              (1, 'blue', 3, 'square'),
+              (2, 'red', 1, 'circle'),
+              (2, 'red', 3, 'square'))
+    actual = crossjoin(table1, table2, key='id')
+    ieq(expect, actual)
+    actual = crossjoin(cut(table1, 'id'), table2, key='id')
+    ieq(cut(expect, 0, 2, 'shape'), actual)
+    actual = crossjoin(table1, cut(table2, 'id'), key='id')
+    ieq(cut(expect, 0, 'colour', 2), actual)
+    actual = crossjoin(cut(table1, 'id'), cut(table2, 'id'), key='id')
+    ieq(cut(expect, 0, 2), actual)
+
+
 def test_crossjoin_prefix():
 
     table1 = (('id', 'colour'),
@@ -868,6 +1005,31 @@ def _test_antijoin_empty(antijoin_impl):
     ieq(expect, actual)
 
 
+def _test_antijoin_novaluefield(antijoin_impl):
+    table1 = (('id', 'colour'),
+              (0, 'black'),
+              (1, 'blue'),
+              (2, 'red'),
+              (4, 'yellow'),
+              (5, 'white'))
+    table2 = (('id', 'shape'),
+              (1, 'circle'),
+              (3, 'square'))
+    expect = (('id', 'colour'),
+              (0, 'black'),
+              (2, 'red'),
+              (4, 'yellow'),
+              (5, 'white'))
+    actual = antijoin_impl(table1, table2, key='id')
+    ieq(expect, actual)
+    actual = antijoin_impl(cut(table1, 'id'), table2, key='id')
+    ieq(cut(expect, 'id'), actual)
+    actual = antijoin_impl(table1, cut(table2, 'id'), key='id')
+    ieq(expect, actual)
+    actual = antijoin_impl(cut(table1, 'id'), cut(table2, 'id'), key='id')
+    ieq(cut(expect, 'id'), actual)
+
+
 def _test_antijoin_lrkey(antijoin_impl):
 
     table1 = (('id', 'colour'),
@@ -891,6 +1053,7 @@ def _test_antijoin_lrkey(antijoin_impl):
 def _test_antijoin(antijoin_impl):
     _test_antijoin_basics(antijoin_impl)
     _test_antijoin_empty(antijoin_impl)
+    _test_antijoin_novaluefield(antijoin_impl)
     _test_antijoin_lrkey(antijoin_impl)
 
 
@@ -993,11 +1156,35 @@ def _test_lookupjoin_lrkey(lookupjoin_impl):
     ieq(expect, actual)
 
 
+def _test_lookupjoin_novaluefield(lookupjoin_impl):
+    table1 = (('id', 'color', 'cost'),
+              (1, 'blue', 12),
+              (2, 'red', 8),
+              (3, 'purple', 4))
+    table2 = (('id', 'shape', 'size'),
+              (1, 'circle', 'big'),
+              (2, 'square', 'tiny'),
+              (3, 'ellipse', 'small'))
+    expect = (('id', 'color', 'cost', 'shape', 'size'),
+              (1, 'blue', 12, 'circle', 'big'),
+              (2, 'red', 8, 'square', 'tiny'),
+              (3, 'purple', 4, 'ellipse', 'small'))
+    actual = lookupjoin_impl(table1, table2, key='id')
+    ieq(expect, actual)
+    actual = lookupjoin_impl(cut(table1, 'id'), table2, key='id')
+    ieq(cut(expect, 'id', 'shape', 'size'), actual)
+    actual = lookupjoin_impl(table1, cut(table2, 'id'), key='id')
+    ieq(cut(expect, 'id', 'color', 'cost'), actual)
+    actual = lookupjoin_impl(cut(table1, 'id'), cut(table2, 'id'), key='id')
+    ieq(cut(expect, 'id'), actual)
+
+
 def _test_lookupjoin(lookupjoin_impl):
     _test_lookupjoin_1(lookupjoin_impl)
     _test_lookupjoin_2(lookupjoin_impl)
     _test_lookupjoin_prefix(lookupjoin_impl)
     _test_lookupjoin_lrkey(lookupjoin_impl)
+    _test_lookupjoin_novaluefield(lookupjoin_impl)
 
 
 def test_lookupjoin():

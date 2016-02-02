@@ -2,7 +2,7 @@ from __future__ import absolute_import, print_function, division
 
 
 import operator
-from petl.compat import next
+from petl.compat import next, text_type
 
 
 from petl.util.base import Table, asindices, rowgetter, iterpeek
@@ -79,12 +79,12 @@ def iterhashjoin(left, right, lkey, rkey, rlookup, lprefix, rprefix):
     if lprefix is None:
         outhdr = list(lhdr)
     else:
-        outhdr = [(str(lprefix) + str(f))
+        outhdr = [(text_type(lprefix) + text_type(f))
                   for f in lhdr]
     if rprefix is None:
         outhdr.extend(rgetv(rhdr))
     else:
-        outhdr.extend([(str(rprefix) + str(f)) for f in rgetv(rhdr)])
+        outhdr.extend([(text_type(rprefix) + text_type(f)) for f in rgetv(rhdr)])
     yield tuple(outhdr)
 
     # define a function to join rows
@@ -176,12 +176,12 @@ def iterhashleftjoin(left, right, lkey, rkey, missing, rlookup, lprefix,
     if lprefix is None:
         outhdr = list(lhdr)
     else:
-        outhdr = [(str(lprefix) + str(f))
+        outhdr = [(text_type(lprefix) + text_type(f))
                   for f in lhdr]
     if rprefix is None:
         outhdr.extend(rgetv(rhdr))
     else:
-        outhdr.extend([(str(rprefix) + str(f)) for f in rgetv(rhdr)])
+        outhdr.extend([(text_type(rprefix) + text_type(f)) for f in rgetv(rhdr)])
     yield tuple(outhdr)
 
     # define a function to join rows
@@ -278,12 +278,13 @@ def iterhashrightjoin(left, right, lkey, rkey, missing, llookup, lprefix,
     if lprefix is None:
         outhdr = list(lhdr)
     else:
-        outhdr = [(str(lprefix) + str(f))
+        outhdr = [(text_type(lprefix) + text_type(f))
                   for f in lhdr]
     if rprefix is None:
         outhdr.extend(rgetv(rhdr))
     else:
-        outhdr.extend([(str(rprefix) + str(f)) for f in rgetv(rhdr)])
+        outhdr.extend([(text_type(rprefix) + text_type(f))
+                       for f in rgetv(rhdr)])
     yield tuple(outhdr)
 
     # define a function to join rows
@@ -435,12 +436,12 @@ def iterhashlookupjoin(left, right, lkey, rkey, missing, lprefix, rprefix):
     if lprefix is None:
         outhdr = list(lhdr)
     else:
-        outhdr = [(str(lprefix) + str(f))
+        outhdr = [(text_type(lprefix) + text_type(f))
                   for f in lhdr]
     if rprefix is None:
         outhdr.extend(rgetv(rhdr))
     else:
-        outhdr.extend([(str(rprefix) + str(f))
+        outhdr.extend([(text_type(rprefix) + text_type(f))
                        for f in rgetv(rhdr)])
     yield tuple(outhdr)
 

@@ -233,7 +233,7 @@ class ValuesView(IterContainer):
 
     def __repr__(self):
         vreprs = list(map(repr, islice(self, 6)))
-        r = str(self.field) + ': '
+        r = text_type(self.field) + ': '
         r += ', '.join(vreprs[:5])
         if len(vreprs) > 5:
             r += ', ...'
@@ -305,14 +305,12 @@ def rowitemgetter(hdr, spec):
 
 
 def rowgetter(*indices):
-
-    # guard condition
-    assert len(indices) > 0, 'indices is empty'
-
-    # if only one index, we cannot use itemgetter, because we want a singleton
-    # sequence to be returned, but itemgetter with a single argument returns the
-    # value itself, so let's define a function
-    if len(indices) == 1:
+    if len(indices) == 0:
+        return lambda row: tuple()
+    elif len(indices) == 1:
+        # if only one index, we cannot use itemgetter, because we want a
+        # singleton sequence to be returned, but itemgetter with a single
+        # argument returns the value itself, so let's define a function
         index = indices[0]
         return lambda row: (row[index],)  # note comma - singleton tuple
     # if more than one index, use itemgetter, it should be the most efficient
@@ -355,7 +353,7 @@ def fieldnames(table):
 
     """
 
-    return tuple(str(f) for f in header(table))
+    return tuple(text_type(f) for f in header(table))
 
 
 Table.fieldnames = fieldnames
@@ -453,7 +451,7 @@ def iterdicts(table, *sliceargs, **kwargs):
 
 
 def asdict(hdr, row, missing=None):
-    flds = [str(f) for f in hdr]
+    flds = [text_type(f) for f in hdr]
     try:
         # list comprehension should be faster
         items = [(flds[i], row[i]) for i in range(len(flds))]

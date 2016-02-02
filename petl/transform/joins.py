@@ -3,7 +3,7 @@ from __future__ import absolute_import, print_function, division
 
 import itertools
 import operator
-from petl.compat import next
+from petl.compat import next, text_type
 
 
 from petl.errors import ArgumentError
@@ -352,11 +352,11 @@ def iterjoin(left, right, lkey, rkey, leftouter=False, rightouter=False,
     if lprefix is None:
         outhdr = list(lhdr)
     else:
-        outhdr = [(str(lprefix) + str(f)) for f in lhdr]
+        outhdr = [(text_type(lprefix) + text_type(f)) for f in lhdr]
     if rprefix is None:
         outhdr.extend(rgetv(rhdr))
     else:
-        outhdr.extend([(str(rprefix) + str(f)) for f in rgetv(rhdr)])
+        outhdr.extend([(text_type(rprefix) + text_type(f)) for f in rgetv(rhdr)])
     yield tuple(outhdr)
 
     # define a function to join two groups of rows
@@ -501,7 +501,7 @@ def itercrossjoin(sources, prefix):
     for i, s in enumerate(sources):
         if prefix:
             # use one-based numbering
-            outhdr.extend([str(i+1) + '_' + str(f) for f in header(s)])
+            outhdr.extend([text_type(i+1) + '_' + text_type(f) for f in header(s)])
         else:
             outhdr.extend(header(s))
     yield tuple(outhdr)
@@ -736,11 +736,11 @@ def iterlookupjoin(left, right, lkey, rkey, missing=None, lprefix=None,
     if lprefix is None:
         outhdr = list(lhdr)
     else:
-        outhdr = [(str(lprefix) + str(f)) for f in lhdr]
+        outhdr = [(text_type(lprefix) + text_type(f)) for f in lhdr]
     if rprefix is None:
         outhdr.extend(rgetv(rhdr))
     else:
-        outhdr.extend([(str(rprefix) + str(f)) for f in rgetv(rhdr)])
+        outhdr.extend([(text_type(rprefix) + text_type(f)) for f in rgetv(rhdr)])
     yield tuple(outhdr)
 
     # define a function to join two groups of rows

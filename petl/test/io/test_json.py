@@ -7,7 +7,7 @@ import json
 
 
 from petl.test.helpers import ieq
-from petl.io.json import fromjson, fromdicts, tojson, tojsonarrays
+from petl import fromjson, fromdicts, tojson, tojsonarrays
 
 
 def test_fromjson_1():
@@ -19,12 +19,11 @@ def test_fromjson_1():
     f.write(data)
     f.close()
 
-    actual = fromjson(f.name)
-    # N.B., fields come out in sorted order
-    expect = (('bar', 'foo'),
-              (1, 'a'),
-              (2, 'b'),
-              (2, 'c'))
+    actual = fromjson(f.name, header=['foo', 'bar'])
+    expect = (('foo', 'bar'),
+              ('a', 1),
+              ('b', 2),
+              ('c', 2))
     ieq(expect, actual)
     ieq(expect, actual)  # verify can iterate twice
 
@@ -38,8 +37,7 @@ def test_fromjson_2():
     f.write(data)
     f.close()
 
-    actual = fromjson(f.name)
-    # N.B., fields come out in sorted order
+    actual = fromjson(f.name, header=['bar', 'baz', 'foo'])
     expect = (('bar', 'baz', 'foo'),
               (1, None, 'a'),
               (None, None, 'b'),
@@ -71,12 +69,11 @@ def test_fromdicts_1():
     data = [{'foo': 'a', 'bar': 1},
             {'foo': 'b', 'bar': 2},
             {'foo': 'c', 'bar': 2}]
-    actual = fromdicts(data)
-    # N.B., fields come out in sorted order
-    expect = (('bar', 'foo'),
-              (1, 'a'),
-              (2, 'b'),
-              (2, 'c'))
+    actual = fromdicts(data, header=['foo', 'bar'])
+    expect = (('foo', 'bar'),
+              ('a', 1),
+              ('b', 2),
+              ('c', 2))
     ieq(expect, actual)
     ieq(expect, actual)  # verify can iterate twice
 
@@ -86,8 +83,7 @@ def test_fromdicts_2():
     data = [{'foo': 'a', 'bar': 1},
             {'foo': 'b'},
             {'foo': 'c', 'bar': 2, 'baz': True}]
-    actual = fromdicts(data)
-    # N.B., fields come out in sorted order
+    actual = fromdicts(data, header=['bar', 'baz', 'foo'])
     expect = (('bar', 'baz', 'foo'),
               (1, None, 'a'),
               (None, None, 'b'),
@@ -108,6 +104,35 @@ def test_fromdicts_3():
               ('c', 2))
     ieq(expect, actual)
     ieq(expect, actual)  # verify can iterate twice
+
+
+def test_fromdicts_onepass():
+
+    # check that fromdicts() only makes a single pass through the data
+    data = iter([{'foo': 'a', 'bar': 1},
+                 {'foo': 'b', 'bar': 2},
+                 {'foo': 'c', 'bar': 2}])
+    actual = fromdicts(data, header=['foo', 'bar'])
+    expect = (('foo', 'bar'),
+              ('a', 1),
+              ('b', 2),
+              ('c', 2))
+    ieq(expect, actual)
+
+
+def test_fromdicts_ordered():
+
+    from petl.compat import OrderedDict
+    data = [OrderedDict([('foo', 'a'), ('bar', 1)]),
+            OrderedDict([('foo', 'b')]),
+            OrderedDict([('foo', 'c'), ('bar', 2), ('baz', True)])]
+    actual = fromdicts(data)
+    # N.B., fields come out in original order
+    expect = (('foo', 'bar', 'baz'),
+              ('a', 1, None),
+              ('b', None, None),
+              ('c', 2, True))
+    ieq(expect, actual)
 
 
 def test_tojson():

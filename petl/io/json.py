@@ -10,7 +10,7 @@ from petl.compat import PY2
 
 
 # internal dependencies
-from petl.util.base import data, Table, dicts as _dicts
+from petl.util.base import data, Table, dicts as _dicts, iterpeek
 from petl.io.sources import read_source_from_arg, write_source_from_arg
 
 
@@ -30,21 +30,31 @@ def fromjson(source, *args, **kwargs):
         ...     f.write(data)
         ...
         74
-        >>> table1 = etl.fromjson('example.json')
+        >>> table1 = etl.fromjson('example.json', header=['foo', 'bar'])
         >>> table1
         +-----+-----+
-        | bar | foo |
+        | foo | bar |
         +=====+=====+
-        |   1 | 'a' |
+        | 'a' |   1 |
         +-----+-----+
-        |   2 | 'b' |
+        | 'b' |   2 |
         +-----+-----+
-        |   2 | 'c' |
+        | 'c' |   2 |
         +-----+-----+
 
     If your JSON file does not fit this structure, you will need to parse it
     via :func:`json.load` and select the array to treat as the data, see also
     :func:`petl.io.json.fromdicts`.
+
+    .. versionchanged:: 1.1.0
+
+    If no `header` is specified, fields will be discovered by sampling keys
+    from the first `sample` objects in `source`. The header will be
+    constructed from keys in the order discovered. Note that this
+    ordering may not be stable, and therefore it may be advisable to specify
+    an explicit `header` or to use another function like
+    :func:`petl.transform.headers.sortheader` on the resulting table to
+    guarantee stability.
 
     """
 
@@ -56,10 +66,11 @@ class JsonView(Table):
 
     def __init__(self, source, *args, **kwargs):
         self.source = source
-        self.args = args
-        self.kwargs = kwargs
         self.missing = kwargs.pop('missing', None)
         self.header = kwargs.pop('header', None)
+        self.sample = kwargs.pop('sample', 1000)
+        self.args = args
+        self.kwargs = kwargs
 
     def __iter__(self):
         with self.source.open('rb') as f:
@@ -68,27 +79,16 @@ class JsonView(Table):
                 f = io.TextIOWrapper(f, encoding='utf-8', newline='',
                                      write_through=True)
             try:
-                result = json.load(f, *self.args, **self.kwargs)
-                if self.header is None:
-                    # determine fields
-                    hdr = set()
-                    for o in result:
-                        if hasattr(o, 'keys'):
-                            hdr |= set(o.keys())
-                    hdr = sorted(hdr)
-                else:
-                    hdr = self.header
-                yield tuple(hdr)
-                # output data rows
-                for o in result:
-                    row = tuple(o[f] if f in o else None for f in hdr)
+                dicts = json.load(f, *self.args, **self.kwargs)
+                for row in iterdicts(dicts, self.header, self.sample,
+                                     self.missing):
                     yield row
             finally:
                 if not PY2:
                     f.detach()
 
 
-def fromdicts(dicts, header=None):
+def fromdicts(dicts, header=None, sample=1000, missing=None):
     """
     View a sequence of Python :class:`dict` as a table. E.g.::
 
@@ -96,47 +96,67 @@ def fromdicts(dicts, header=None):
         >>> dicts = [{"foo": "a", "bar": 1},
         ...          {"foo": "b", "bar": 2},
         ...          {"foo": "c", "bar": 2}]
-        >>> table1 = etl.fromdicts(dicts)
+        >>> table1 = etl.fromdicts(dicts, header=['foo', 'bar'])
         >>> table1
         +-----+-----+
-        | bar | foo |
+        | foo | bar |
         +=====+=====+
-        |   1 | 'a' |
+        | 'a' |   1 |
         +-----+-----+
-        |   2 | 'b' |
+        | 'b' |   2 |
         +-----+-----+
-        |   2 | 'c' |
+        | 'c' |   2 |
         +-----+-----+
+
+    If `header` is not specified, `sample` items from `dicts` will be
+    inspected to discovery dictionary keys. Note that the order in which
+    dictionary keys are discovered may not be stable,
 
     See also :func:`petl.io.json.fromjson`.
 
+    .. versionchanged:: 1.1.0
+
+    If no `header` is specified, fields will be discovered by sampling keys
+    from the first `sample` dictionaries in `dicts`. The header will be
+    constructed from keys in the order discovered. Note that this
+    ordering may not be stable, and therefore it may be advisable to specify
+    an explicit `header` or to use another function like
+    :func:`petl.transform.headers.sortheader` on the resulting table to
+    guarantee stability.
+
     """
 
-    return DictsView(dicts, header=header)
+    return DictsView(dicts, header=header, sample=sample, missing=missing)
 
 
 class DictsView(Table):
 
-    def __init__(self, dicts, header=None):
+    def __init__(self, dicts, header=None, sample=1000, missing=None):
         self.dicts = dicts
         self.header = header
+        self.sample = sample
+        self.missing = missing
 
     def __iter__(self):
-        result = self.dicts
-        if self.header is None:
-            # determine fields
-            hdr = set()
-            for o in result:
-                if hasattr(o, 'keys'):
-                    hdr |= set(o.keys())
-            hdr = sorted(hdr)
-        else:
-            hdr = self.header
-        yield tuple(hdr)
-        # output data rows
-        for o in result:
-            row = tuple(o[f] if f in o else None for f in hdr)
-            yield row
+        return iterdicts(self.dicts, self.header, self.sample, self.missing)
+
+
+def iterdicts(dicts, header, sample, missing):
+    it = iter(dicts)
+
+    # determine header row
+    if header is None:
+        # discover fields
+        header = list()
+        peek, it = iterpeek(it, sample)
+        for o in peek:
+            if hasattr(o, 'keys'):
+                header += [k for k in o.keys() if k not in header]
+    yield tuple(header)
+
+    # generate data rows
+    for o in it:
+        yield tuple(o[f] if f in o else missing for f in header)
 
 
 def tojson(table, source=None, prefix=None, suffix=None, *args, **kwargs):

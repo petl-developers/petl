@@ -6,7 +6,7 @@ from petl.compat import next, text_type
 from petl.errors import FieldSelectionError
 
 
-from petl.util.base import Table
+from petl.util.base import Table, asindices, rowgetter
 
 
 def rename(table, *args, **kwargs):
@@ -309,7 +309,7 @@ class PrefixHeaderView(Table):
     def __iter__(self):
         it = iter(self.table)
         hdr = next(it)
-        outhdr = tuple((str(self.prefix) + str(f)) for f in hdr)
+        outhdr = tuple((text_type(self.prefix) + text_type(f)) for f in hdr)
         yield outhdr
         for row in it:
             yield row
@@ -333,7 +333,48 @@ class SuffixHeaderView(Table):
     def __iter__(self):
         it = iter(self.table)
         hdr = next(it)
-        outhdr = tuple((str(f) + str(self.suffix)) for f in hdr)
+        outhdr = tuple((text_type(f) + text_type(self.suffix)) for f in hdr)
         yield outhdr
         for row in it:
             yield row
+
+
+def sortheader(table, reverse=False, missing=None):
+    """Re-order columns so the header is sorted.
+
+    .. versionadded:: 1.1.0
+
+    """
+
+    return SortHeaderView(table, reverse, missing)
+
+
+Table.sortheader = sortheader
+
+
+class SortHeaderView(Table):
+
+    def __init__(self, table, reverse, missing):
+        self.table = table
+        self.reverse = reverse
+        self.missing = missing
+
+    def __iter__(self):
+        it = iter(self.table)
+        hdr = next(it)
+        shdr = sorted(hdr)
+        indices = asindices(hdr, shdr)
+        transform = rowgetter(*indices)
+
+        # yield the transformed header
+        yield tuple(shdr)
+
+        # construct the transformed data
+        missing = self.missing
+        for row in it:
+            try:
+                yield transform(row)
+            except IndexError:
+                # row is short, let's be kind and fill in any missing fields
+                yield tuple(row[i] if i < len(row) else missing
+                            for i in indices)
