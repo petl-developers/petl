@@ -255,7 +255,7 @@ Bcolz ctables
 
 .. note::
 
-    The following functions require `bcolz <bcolz.blosc.org>`_
+    The following functions require `bcolz <http://bcolz.blosc.org>`_
     to be installed, e.g.::
 
         $ pip install bcolz
