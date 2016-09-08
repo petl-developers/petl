@@ -60,6 +60,11 @@ class XLSXView(Table):
                                 row_offset=self.row_offset,
                                 column_offset=self.column_offset):
             yield tuple(cell.value for cell in row)
+        try:
+            wb._archive.close()
+        except AttributeError as e:
+            # just here in case openpyxl stops exposing an _archive property.
+            pass
 
 
 def toxlsx(tbl, filename, sheet=None, encoding=None):
