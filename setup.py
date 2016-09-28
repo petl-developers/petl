@@ -2,7 +2,7 @@ from __future__ import print_function, absolute_import, division
 
 
 from ast import literal_eval
-from distutils.core import setup
+from setuptools import setup
 
 
 def get_version(source='petl/__init__.py'):
