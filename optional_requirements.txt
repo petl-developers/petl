@@ -5,7 +5,7 @@ bcolz==0.12.1
 tables==3.2.2
 intervaltree==2.1.0
 lxml==3.5.0
-openpyxl==2.3.1
+openpyxl==2.4.0
 pandas==0.17.1
 psycopg2==2.6.1
 PyMySQL==0.6.7

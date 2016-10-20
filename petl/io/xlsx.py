@@ -48,7 +48,7 @@ class XLSXView(Table):
     def __iter__(self):
         import openpyxl
         wb = openpyxl.load_workbook(filename=self.filename,
-                                    use_iterators=True, **self.kwargs)
+                                    read_only=True, **self.kwargs)
         if self.sheet is None:
             ws = wb.get_sheet_by_name(wb.get_sheet_names()[0])
         elif isinstance(self.sheet, int):
@@ -76,7 +76,7 @@ def toxlsx(tbl, filename, sheet=None, encoding=None):
     import openpyxl
     if encoding is None:
         encoding = locale.getpreferredencoding()
-    wb = openpyxl.Workbook(optimized_write=True, encoding=encoding)
+    wb = openpyxl.Workbook(write_only=True, encoding=encoding)
     ws = wb.create_sheet(title=sheet)
     for row in tbl:
         ws.append(row)
