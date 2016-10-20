@@ -76,7 +76,7 @@ def toxlsx(tbl, filename, sheet=None, encoding=None):
     import openpyxl
     if encoding is None:
         encoding = locale.getpreferredencoding()
-    wb = openpyxl.Workbook(write_only=True, encoding=encoding)
+    wb = openpyxl.Workbook(write_only=True)
     ws = wb.create_sheet(title=sheet)
     for row in tbl:
         ws.append(row)
