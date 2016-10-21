@@ -4,5 +4,5 @@ python:
   - "3.4"
   - "2.7"
   - "2.6"
-install: pip install -r ci_requirements.txt --use-mirrors
+install: pip install -r ci_requirements.txt
 script: nosetests -v
