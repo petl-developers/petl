@@ -4,9 +4,10 @@ python:
   - "3.4"
   - "2.7"
   - "2.6"
+before_install:
+  - sudo apt-get -qq update
+  - sudo apt-get build-dep -y python3-h5py
 install: 
-  - apt-get build-dep python-h5py
-  # ensure fresh pip and setuptools
   - pip install -U pip setuptools wheel
   - pip install -r ci_requirements.txt
 script: nosetests -v
