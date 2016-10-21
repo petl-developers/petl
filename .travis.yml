@@ -4,5 +4,8 @@ python:
   - "3.4"
   - "2.7"
   - "2.6"
-install: pip install -r ci_requirements.txt
+install: 
+  - apt-get build-dep python-h5py
+  - pip install -U pip setuptools wheel
+  - pip install -r ci_requirements.txt
 script: nosetests -v
