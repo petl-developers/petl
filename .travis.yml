@@ -6,7 +6,7 @@ python:
   - "2.6"
 before_install:
   - sudo apt-get -qq update
-  - sudo apt-get build-dep -y python3-h5py
+  - sudo apt-get build-dep -y python-h5py
 install: 
   - pip install -U pip setuptools wheel
   - pip install -r ci_requirements.txt
