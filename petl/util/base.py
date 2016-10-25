@@ -12,7 +12,7 @@ from petl.compat import imap, izip, izip_longest, ifilter, ifilterfalse, \
     next, string_types, text_type
 
 
-from petl.errors import FieldSelectionError, ArgumentError
+from petl.errors import FieldSelectionError
 from petl.comparison import comparable_itemgetter
 
 
@@ -560,7 +560,7 @@ class Record(tuple):
         elif f in self.flds:
             idx = self.flds.index(f)
         else:
-            raise ArgumentError('item ' + repr(f) +
+            raise KeyError('item ' + repr(f) +
                                 ' not in fields ' + repr(self.flds))
         try:
             return super(Record, self).__getitem__(idx)
@@ -574,7 +574,7 @@ class Record(tuple):
             except IndexError:  # handle short rows
                 return self.missing
         else:
-            raise ArgumentError('item ' + repr(f) +
+            raise AttributeError('item ' + repr(f) +
                                 ' not in fields ' + repr(self.flds))
 
 
