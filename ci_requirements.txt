@@ -1,7 +1,7 @@
 Cython==0.24.1
 numpy==1.11.2
 numexpr==2.6.1
-bcolz==1.1.0
+#bcolz==1.1.0
 tables==3.3.0
 intervaltree==2.1.0
 lxml==3.6.4
