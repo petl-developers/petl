@@ -95,13 +95,13 @@ def test_records_errors():
     o = next(it)
     try:
         o['baz']
-    except ArgumentError:
+    except KeyError:
         pass
     else:
         raise Exception('expected exception not raised')
     try:
         o.baz
-    except ArgumentError:
+    except AttributeError:
         pass
     else:
         raise Exception('expected exception not raised')
