@@ -15,3 +15,7 @@ extension modules for ``petl``.
 .. image:: https://travis-ci.org/alimanfoo/petl.svg?branch=master
     :target: https://travis-ci.org/alimanfoo/petl
     :alt: continuous integration build status
+
+.. image:: https://zenodo.org/badge/2233194.svg
+   :target: https://zenodo.org/badge/latestdoi/2233194
+   
