@@ -151,6 +151,24 @@ Databases
 .. module:: petl.io.xls
 .. _io_xls:
 
+Google sheet files (gsheet)
+----------------------------
+
+.. note::
+
+    The following functions require `gspread
+    <https://github.com/burnash/gspread>`_  to be installed,
+    e.g.::
+
+        $ pip install gspread
+
+.. autofunction:: petl.io.gsheet.fromgsheet
+.. autofunction:: petl.io.gsheet.togsheet
+
+
+.. module:: petl.io.gsheet
+.. _io_gsheet:
+
 Excel .xls files (xlrd/xlwt)
 ----------------------------
 

@@ -13,3 +13,5 @@ SQLAlchemy==1.1.2
 Whoosh==2.7.4
 xlrd==1.0.0
 xlwt-future==0.8.0
+gspread==0.6.2
+oauth2client==4.0.0
