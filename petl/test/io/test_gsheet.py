@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, print_function, division
 
+import sys
+import os
 
 import petl as etl
 from petl.io.gsheet import fromgsheet, togsheet
@@ -9,8 +11,9 @@ from petl.test.helpers import ieq
 """
 In order to run these tests, follow the steps described at
 http://gspread.readthedocs.io/en/latest/oauth2.html to create a json
-authorization file. Change `JSON_PATH` to point to the created local file.
-Afterwards, create a spreadsheet modeled after this:
+authorization file. Point `JSON_PATH` to local file or put the path in the
+env variable at `GSHEET_JSON_PATH`.
+Afterwards, create a spreadsheet modeled on:
 https://docs.google.com/spreadsheets/d/12oFimWB81Jk7dzjdnH8WiYnSo4rl6Xe1xdOadbvAsJI/edit#gid=0
 and share it with the service_account specified in the JSON file.
 """
@@ -19,7 +22,8 @@ SCOPE = [
     'https://spreadsheets.google.com/feeds',
     'https://www.googleapis.com/auth/drive.file'
 ]
-JSON_PATH = 'path/to/your/auth/json/here.json'
+
+JSON_PATH = os.getenv("GSHEET_JSON_PATH", 'default/fallback.json')
 
 try:
     # noinspection PyUnresolvedReferences
