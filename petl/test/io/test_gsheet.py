@@ -3,6 +3,7 @@ from __future__ import absolute_import, print_function, division
 
 import sys
 import os
+import datetime
 
 import petl as etl
 from petl.io.gsheet import fromgsheet, togsheet
@@ -13,9 +14,6 @@ In order to run these tests, follow the steps described at
 http://gspread.readthedocs.io/en/latest/oauth2.html to create a json
 authorization file. Point `JSON_PATH` to local file or put the path in the
 env variable at `GSHEET_JSON_PATH`.
-Afterwards, create a spreadsheet modeled on:
-https://docs.google.com/spreadsheets/d/12oFimWB81Jk7dzjdnH8WiYnSo4rl6Xe1xdOadbvAsJI/edit#gid=0
-and share it with the service_account specified in the JSON file.
 """
 
 SCOPE = [
@@ -29,92 +27,110 @@ try:
     # noinspection PyUnresolvedReferences
     import gspread
     from oauth2client.service_account import ServiceAccountCredentials as sac
+    import uuid
 except ImportError as e:
     print('SKIP gsheet tests: %s' % e, file=sys.stderr)
 else:
+    args = [ # straight copy test
+            ((('foo', 'bar'),
+              ('A', '1'),
+              ('B', '2'),
+              ('C', '2'),
+              (u'é', '1/1/2012')),
+             None,
+             None,
+            (('foo', 'bar'),
+             ('A', '1'),
+             ('B', '2'),
+             ('C', '2'),
+             (u'é', '1/1/2012'))),
 
-    def test_fromgsheet():
-        filename = 'test'
-        credentials = sac.from_json_keyfile_name(JSON_PATH, SCOPE)
-        tbl = fromgsheet(filename, credentials, sheet='Sheet1')
-        expect = (('foo', 'bar'),
-                  ('A', '1'),
-                  ('B', '2'),
-                  ('C', '2'),
-                  (u'é', '1/1/2012'))
-        ieq(expect, tbl)
+          # Uneven row test
+          ((('foo', 'bar'),
+            ('A', '1'),
+            ('B', '2', '3'),
+            ('C', '2'),
+            (u'é', '1/1/2012')),
+            None,
+            None,
+           (('foo', 'bar', ''),
+            ('A', '1', ''),
+            ('B', '2', '3'),
+            ('C', '2', ''),
+            (u'é', '1/1/2012', ''))),
 
-    def test_fromgsheet_int():
-        filename = 'test'
-        credentials = sac.from_json_keyfile_name(JSON_PATH, SCOPE)
-        tbl = fromgsheet(filename, credentials, sheet=0)
-        expect = (('foo', 'bar'),
-                  ('A', '1'),
-                  ('B', '2'),
-                  ('C', '2'),
-                  (u'é', '1/1/2012'))
-        ieq(expect, tbl)
+          # datetime to string representation test
+          ((('foo', 'bar'),
+            ('A', '1'),
+            ('B', '2'),
+            ('C', '2'),
+            (u'é', datetime.date(2012,1,1))),
+            'Sheet1',
+            None,
+           (('foo', 'bar'),
+            ('A', '1'),
+            ('B', '2'),
+            ('C', '2'),
+            (u'é', '2012-01-01'))),
 
-    def test_fromgsheet_key():
-        filename = '12oFimWB81Jk7dzjdnH8WiYnSo4rl6Xe1xdOadbvAsJI'
-        credentials = sac.from_json_keyfile_name(JSON_PATH, SCOPE)
-        tbl = fromgsheet(filename, credentials, sheet='Sheet1', filekey=True)
-        expect = (('foo', 'bar'),
-                  ('A', '1'),
-                  ('B', '2'),
-                  ('C', '2'),
-                  (u'é', '1/1/2012'))
-        ieq(expect, tbl)
+          # empty table test
+          ((),
+           None,
+           None,
+           ()),
 
-    def test_fromgsheet_nosheet():
-        filename = 'test'
-        credentials = sac.from_json_keyfile_name(JSON_PATH, SCOPE)
-        tbl = fromgsheet(filename, credentials)
-        expect = (('foo', 'bar'),
-                  ('A', '1'),
-                  ('B', '2'),
-                  ('C', '2'),
-                  (u'é', '1/1/2012'))
-        ieq(expect, tbl)
+          # range_string specified test
+           ((('foo', 'bar'),
+             ('A', '1'),
+             ('B', '2'),
+             ('C', '2'),
+             (u'é', datetime.date(2012,1,1))),
+             None,
+             'B1:B4',
+            (('bar',),
+             ('1',),
+             ('2',),
+             ('2',))),
 
-    def test_fromgsheet_range():
-        filename = 'test'
-        credentials = sac.from_json_keyfile_name(JSON_PATH, SCOPE)
-        tbl = fromgsheet(filename, credentials, sheet='Sheet2',
-                         range_string='B2:C6')
-        expect = (('foo', 'bar'),
-                  ('A', '1'),
-                  ('B', '2'),
-                  ('C', '2'),
-                  (u'é', '1/1/2012'))
-        ieq(expect, tbl)
+          # range_string+sheet specified test
+           ((('foo', 'bar'),
+             ('A', '1'),
+             ('B', '2'),
+             ('C', '2'),
+             (u'é', datetime.date(2012,1,1))),
+             u'random_stuff-in+_名字',
+             'B1:B4',
+            (('bar',),
+             ('1',),
+             ('2',),
+             ('2',)))
+        ]
+    def test_gsheet():
+        def test_tofromgsheet(table, worksheet, range_string, expected_result):
+            filename = 'test-{}'.format(str(uuid.uuid4()))
+            credentials = sac.from_json_keyfile_name(JSON_PATH, SCOPE)
 
-    def test_togsheet():
-        credentials = sac.from_json_keyfile_name(JSON_PATH, SCOPE)
-        tbl = (('foo', 'bar'),
-               ('A', '1'),
-               ('B', '2'),
-               ('C', '2'),
-               (u'é', '1/1/2012'))
-        filename = 'test_togsheet'
-        togsheet(tbl, filename, credentials, sheet='Sheet1')
-        actual = fromgsheet(filename, credentials, sheet='Sheet1')
-        ieq(tbl, actual)
-        # clean up created table
-        client = gspread.authorize(credentials)
-        client.del_spreadsheet(client.open(filename).id)
+            # test to from gsheet
+            togsheet(table, filename, credentials, worksheet_title=worksheet)
+            result = fromgsheet(filename,
+                                credentials,
+                                worksheet_title=worksheet,
+                                range_string=range_string)
+            # make sure the expected_result matches the result
+            ieq(result, expected_result)
 
-    def test_togsheet_nosheet():
-        credentials = sac.from_json_keyfile_name(JSON_PATH, SCOPE)
-        tbl = (('foo', 'bar'),
-               ('A', '1'),
-               ('B', '2'),
-               ('C', '2'),
-               (u'é', '1/1/2012'))
-        filename = 'test_togsheet_nosheet'
-        togsheet(tbl, filename, credentials)
-        actual = fromgsheet(filename, credentials)
-        ieq(tbl, actual)
-        # clean up created table
-        client = gspread.authorize(credentials)
-        client.del_spreadsheet(client.open(filename).id)
+            # test open by key
+            client = gspread.authorize(credentials)
+            # get spreadsheet id (key) of previously created sheet
+            filekey = client.open(filename).id
+            key_result = fromgsheet(filekey,
+                                    credentials,
+                                    worksheet_title=worksheet,
+                                    range_string=range_string)
+            ieq(key_result, expected_result)
+            # clean up created table
+            client.del_spreadsheet(filekey)
+
+
+        for argset in args:
+            test_tofromgsheet(*argset)
