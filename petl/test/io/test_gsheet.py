@@ -39,72 +39,73 @@ else:
               (u'é', '1/1/2012')),
              None,
              None,
-            (('foo', 'bar'),
-             ('A', '1'),
-             ('B', '2'),
-             ('C', '2'),
-             (u'é', '1/1/2012'))),
+             (('foo', 'bar'),
+              ('A', '1'),
+              ('B', '2'),
+              ('C', '2'),
+              (u'é', '1/1/2012'))),
 
           # Uneven row test
-          ((('foo', 'bar'),
-            ('A', '1'),
-            ('B', '2', '3'),
-            ('C', '2'),
-            (u'é', '1/1/2012')),
-            None,
-            None,
-           (('foo', 'bar', ''),
-            ('A', '1', ''),
-            ('B', '2', '3'),
-            ('C', '2', ''),
-            (u'é', '1/1/2012', ''))),
+            ((('foo', 'bar'),
+              ('A', '1'),
+              ('B', '2', '3'),
+              ('C', '2'),
+              (u'é', '1/1/2012')),
+              None,
+              None,
+              (('foo', 'bar', ''),
+               ('A', '1', ''),
+               ('B', '2', '3'),
+               ('C', '2', ''),
+               (u'é', '1/1/2012', ''))),
 
           # datetime to string representation test
-          ((('foo', 'bar'),
-            ('A', '1'),
-            ('B', '2'),
-            ('C', '2'),
-            (u'é', datetime.date(2012,1,1))),
-            'Sheet1',
-            None,
-           (('foo', 'bar'),
-            ('A', '1'),
-            ('B', '2'),
-            ('C', '2'),
-            (u'é', '2012-01-01'))),
+            ((('foo', 'bar'),
+              ('A', '1'),
+              ('B', '2'),
+              ('C', '2'),
+              (u'é', datetime.date(2012,1,1))),
+             'Sheet1',
+             None,
+             (('foo', 'bar'),
+              ('A', '1'),
+              ('B', '2'),
+              ('C', '2'),
+              (u'é', '2012-01-01'))),
 
           # empty table test
-          ((),
-           None,
-           None,
-           ()),
+            ((),
+             None,
+             None,
+             ()),
 
           # range_string specified test
-           ((('foo', 'bar'),
-             ('A', '1'),
-             ('B', '2'),
-             ('C', '2'),
-             (u'é', datetime.date(2012,1,1))),
+            ((('foo', 'bar'),
+              ('A', '1'),
+              ('B', '2'),
+              ('C', '2'),
+              (u'é', datetime.date(2012,1,1))),
              None,
              'B1:B4',
-            (('bar',),
-             ('1',),
-             ('2',),
-             ('2',))),
+             (('bar',),
+              ('1',),
+              ('2',),
+              ('2',))),
 
           # range_string+sheet specified test
-           ((('foo', 'bar'),
-             ('A', '1'),
-             ('B', '2'),
-             ('C', '2'),
-             (u'é', datetime.date(2012,1,1))),
+            ((('foo', 'bar'),
+              ('A', '1'),
+              ('B', '2'),
+              ('C', '2'),
+              (u'é', datetime.date(2012,1,1))),
              u'random_stuff-in+_名字',
              'B1:B4',
-            (('bar',),
-             ('1',),
-             ('2',),
-             ('2',)))
+             (('bar',),
+              ('1',),
+              ('2',),
+              ('2',)))
         ]
+
     def test_gsheet():
         def test_tofromgsheet(table, worksheet, range_string, expected_result):
             filename = 'test-{}'.format(str(uuid.uuid4()))
@@ -132,5 +133,6 @@ else:
             client.del_spreadsheet(filekey)
 
 
-        for argset in args:
-            test_tofromgsheet(*argset)
+        # yield a test for each tuple of arguments in order to display with nose
+        for arg_tuple in args:
+            yield (test_tofromgsheet, *arg_tuple)
