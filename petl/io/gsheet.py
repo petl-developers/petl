@@ -3,6 +3,7 @@ from __future__ import absolute_import, print_function, division
 
 
 from petl.util.base import Table
+from petl.compat import text_type
 
 
 def fromgsheet(filename, credentials, forcename=False, worksheet_title=None,
@@ -78,7 +79,8 @@ class GoogleSheetView(Table):
         elif isinstance(self.worksheet_title, int):
             ws = wb.get_worksheet(self.worksheet_title)
         else:
-            ws = wb.worksheet(str(self.worksheet_title))
+            # use text_type for cross version compatibility
+            ws = wb.worksheet(text_type(self.worksheet_title))
 
         # grab the range or grab the whole sheet
         if self.range_string:

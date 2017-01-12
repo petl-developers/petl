@@ -135,4 +135,9 @@ else:
 
         # yield a test for each tuple of arguments in order to display with nose
         for arg_tuple in args:
-            yield (test_tofromgsheet, *arg_tuple)
+            table, worksheet, range_string, expected_result = arg_tuple
+            yield (test_tofromgsheet,
+                   table,
+                   worksheet,
+                   range_string,
+                   expected_result)
