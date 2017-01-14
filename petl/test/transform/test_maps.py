@@ -3,7 +3,7 @@ from __future__ import absolute_import, print_function, division
 
 from petl.compat import OrderedDict
 from petl.test.failonerror import test_failonerror
-from petl.test.helpers import ieq, eq_
+from petl.test.helpers import ieq
 from petl.transform.maps import fieldmap, rowmap, rowmapmany
 
 from functools import partial
@@ -91,6 +91,16 @@ def test_fieldmap_empty():
     ieq(expect, actual)
 
 
+def test_fieldmap_failonerror():
+    input_  = (('foo',), ('A',), (1,))
+    mapper_ = {'bar': ('foo', lambda v: v.lower())}
+    expect_ = (('bar',), ('a',), (None,))
+
+    test_failonerror(
+            input_fn=partial(fieldmap, input_, mapper_),
+            expected_output=expect_)
+
+
 def test_rowmap():
     table = (('id', 'sex', 'age', 'height', 'weight'),
              (1, 'male', 16, 1.45, 62.0),
@@ -148,6 +158,17 @@ def test_rowmap_empty():
                                               'age_months', 'bmi'])
     expect = (('subject_id', 'gender', 'age_months', 'bmi'),)
     ieq(expect, actual)
+
+
+def test_rowmap_failonerror():
+    input_  = (('foo',), ('A',), (1,), ('B',))
+    mapper  = lambda r: [r[0].lower()]
+    # exceptions in rowmappers do not generate an output row
+    expect_ = (('foo',), ('a',), ('b',))
+
+    test_failonerror(
+            input_fn=partial(rowmap, input_, mapper, header=('foo',)),
+            expected_output=expect_)
 
 
 def test_recordmap():
@@ -225,6 +246,16 @@ def test_rowmapmany():
     ieq(expect, actual)  # can iteratate twice?
 
 
+def test_rowmapmany_failonerror():
+    input_  = (('foo',), ('A',), (1,), ('B',))
+    mapper  = lambda r: [r[0].lower()]
+    expect_ = (('foo',), ('a',), ('b',),)
+
+    test_failonerror(
+            input_fn=partial(rowmapmany, input_, mapper, header=('foo',)),
+            expected_output=expect_)
+
+
 def test_recordmapmany():
     table = (('id', 'sex', 'age', 'height', 'weight'),
              (1, 'male', 16, 1.45, 62.0),
@@ -255,36 +286,4 @@ def test_recordmapmany():
               (4, 'age_months', 21 * 12))
     ieq(expect, actual)
     ieq(expect, actual)  # can iteratate twice?
-
-
-
-def test_fieldmap_failonerror():
-    input_  = (('foo',), ('A',), (1,))
-    mapper_ = {'bar': ('foo', lambda v: v.lower())}
-    expect_ = (('bar',), ('a',), (None,))
-
-    test_failonerror(
-            input_fn=partial(fieldmap, input_, mapper_),
-            expected_output=expect_)
-
-
-def test_rowmap_failonerror():
-    input_  = (('foo',), ('A',), (1,), ('B',))
-    mapper  = lambda r: [r[0].lower()]
-    # exceptions in rowmappers do not generate an output row
-    expect_ = (('foo',), ('a',), ('b',))
-
-    test_failonerror(
-            input_fn=partial(rowmap, input_, mapper, header=('foo',)),
-            expected_output=expect_)
-
-
-def test_rowmapmany_failonerror():
-    input_  = (('foo',), ('A',), (1,), ('B',))
-    mapper  = lambda r: [r[0].lower()]
-    expect_ = (('foo',), ('a',), ('b',),)
-
-    test_failonerror(
-            input_fn=partial(rowmapmany, input_, mapper, header=('foo',)),
-            expected_output=expect_)
 
