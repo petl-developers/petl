@@ -16,4 +16,4 @@ display_limit = 5
 display_index_header = False
 display_vrepr = text_type
 sort_buffersize = 100000
-failonerror=False
+failonerror=False # False, True, 'yield_exceptions'
