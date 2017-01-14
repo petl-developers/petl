@@ -1,7 +1,8 @@
 from __future__ import absolute_import, print_function, division
-
+from functools import partial
 
 from petl.test.helpers import ieq
+from petl.test.failonerror import test_failonerror
 from petl.transform.conversions import convert, convertall, convertnumbers, \
     replace, update, format, interpolate
 
@@ -289,6 +290,14 @@ def test_convert_where():
     ieq(expect, actual)
 
 
+def test_convert_failonerror():
+    test_failonerror(
+            input_fn=partial(convert,
+                (('foo',), ('A',), (1,)),
+                {'foo': 'lower'}),
+            expected_output=(('foo',), ('a',), (None,)))
+
+
 def test_replace_where():
 
     tbl1 = (('foo', 'bar'),
@@ -363,3 +372,4 @@ def test_interpolate():
     actual = interpolate(table, 'bar', '%02d')
     ieq(expect, actual)
     ieq(expect, actual)
+

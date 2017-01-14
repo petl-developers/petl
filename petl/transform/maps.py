@@ -5,6 +5,7 @@ import operator
 from petl.compat import OrderedDict, next, string_types, text_type
 
 
+import petl.config as config
 from petl.errors import ArgumentError
 from petl.util.base import Table, expr, rowgroupby, Record
 from petl.transform.sorts import sort
@@ -70,7 +71,7 @@ class FieldMapView(Table):
             self.mappings = OrderedDict()
         else:
             self.mappings = mappings
-        self.failonerror = failonerror
+        self.failonerror = failonerror or config.failonerror
         self.errorvalue = errorvalue
 
     def __setitem__(self, key, value):
@@ -118,7 +119,9 @@ def iterfieldmap(source, mappings, failonerror, errorvalue):
             try:
                 val = mapfuns[outfld](row)
             except Exception as e:
-                if failonerror:
+                if failonerror == 'yield_exceptions':
+                    val = e
+                elif failonerror:
                     raise e
                 else:
                     val = errorvalue
@@ -195,7 +198,7 @@ class RowMapView(Table):
         self.source = source
         self.rowmapper = rowmapper
         self.header = header
-        self.failonerror = failonerror
+        self.failonerror = failonerror or config.failonerror
 
     def __iter__(self):
         return iterrowmap(self.source, self.rowmapper, self.header,
@@ -213,7 +216,9 @@ def iterrowmap(source, rowmapper, header, failonerror):
             outrow = rowmapper(row)
             yield tuple(outrow)
         except Exception as e:
-            if failonerror:
+            if failonerror == 'yield_exceptions':
+                yield e
+            elif failonerror:
                 raise e
 
 
@@ -283,7 +288,7 @@ class RowMapManyView(Table):
         self.source = source
         self.rowgenerator = rowgenerator
         self.header = header
-        self.failonerror = failonerror
+        self.failonerror = failonerror or config.failonerror
 
     def __iter__(self):
         return iterrowmapmany(self.source, self.rowgenerator, self.header,
@@ -301,7 +306,9 @@ def iterrowmapmany(source, rowgenerator, header, failonerror):
             for outrow in rowgenerator(row):
                 yield tuple(outrow)
         except Exception as e:
-            if failonerror:
+            if failonerror == 'yield_exceptions':
+                yield e
+            elif failonerror:
                 raise e
             else:
                 pass

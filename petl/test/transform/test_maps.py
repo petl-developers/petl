@@ -2,7 +2,7 @@ from __future__ import absolute_import, print_function, division
 
 
 from petl.compat import OrderedDict
-from petl.test.helpers import ieq
+from petl.test.helpers import ieq, eq_
 from petl.transform.maps import fieldmap, rowmap, rowmapmany
 
 
@@ -252,3 +252,224 @@ def test_recordmapmany():
               (4, 'age_months', 21 * 12))
     ieq(expect, actual)
     ieq(expect, actual)  # can iteratate twice?
+
+
+'''
+def test_fieldmap_errors_default_config():
+    table1 = (('foo',), ('A',), (1,))
+    mappings = {}
+    mappings['bar'] = 'foo', lambda v: v.lower()
+
+    # test the default config setting: failonerror == False
+    eq_(config.failonerror, False)
+
+    # test that by default, a bad fieldmap does not raise an exception,
+    # and that values for the failed fieldmap are returned as None
+    table2 = fieldmap(table1, mappings)
+    expect2 = (('bar',), ('a',), (None,))
+    ieq(expect2, table2)
+    ieq(expect2, table2)
+
+    # test that when called with failonerror=False, a bad fieldmap does
+    # not raise an exception, and that values for the failed fieldmap
+    # are returned as None
+    table3 = fieldmap(table1, mappings, failonerror=False)
+    ieq(expect2, table3)
+    ieq(expect2, table3)
+
+    # test that when called with failonerror=True, a bad fieldmap
+    # raises an exception
+    try:
+        table4 = fieldmap(table1, mappings, failonerror=True)
+        table4.nrows()
+    except AttributeError:
+        pass
+    else:
+        assert False, 'exception expected'
+
+    # test that when called with failonerror='yield_exceptions', a bad
+    # fieldmap does not raise an exception, and an Exception for the
+    # failed fieldmap is returned in the result.
+    table5 = fieldmap(table1, mappings, failonerror='yield_exceptions')
+    expect5 = (('bar',), ('a',))
+    ieq(expect5, table5.head(1))
+    ieq(expect5, table5.head(1))
+    d = table5.dicts()
+    assert isinstance(list(d)[1]['bar'], AttributeError)
+
+
+def test_fieldmap_errors_config():
+    # save config setting
+    saved_config_failonerror = config.failonerror
+
+    table1 = (('foo',), ('A',), (1,))
+    mappings = {}
+    mappings['bar'] = 'foo', lambda v: v.lower()
+
+    # when config failonerror == True, and neither failonerror nor
+    # errorvalue are provided, a bad conversion raises an exception
+    config.failonerror = True
+    try:
+        table2 = fieldmap(table1, mappings)
+        table2.nrows()
+    except AttributeError:
+        pass
+    else:
+        assert False, 'exception expected'
+
+    # when config failonerror == 'yield_exceptions', and neither
+    # failonerror nor errorvalue are provided, a bad conversion does not
+    # raise an exception, and an Exception for the failed conversion is
+    # returned in the result.
+    config.failonerror = 'yield_exceptions'
+    table3 = fieldmap(table1, mappings)
+    expect3 = (('bar',), ('a',))
+    ieq(expect3, table3.head(1))
+    ieq(expect3, table3.head(1))
+    d = table3.dicts()
+    assert isinstance(list(d)[1]['bar'], AttributeError)
+
+    # when config failonerror is an invalid value, but still truthy, it
+    # behaves the same as if == True
+    config.failonerror = 'bogus'
+    try:
+        table4 = fieldmap(table1, mappings)
+        table4.nrows()
+    except AttributeError:
+        pass
+    else:
+        assert False, 'exception expected'
+
+    # when config failonerror is None, it behaves the same as if ==
+    # False
+    config.failonerror = None
+    table5 = fieldmap(table1, mappings)
+    expect5 = (('bar',),
+              ('a',),
+              (None,))
+    ieq(expect5, table5)
+    ieq(expect5, table5)
+
+    # restore config setting
+    config.failonerror = saved_config_failonerror
+
+'''
+'''
+
+def test_rowmap_errors_default_config():
+    table1 = (('foo',), ('A',), (1,))
+    rowmapper = lambda r: [[r[0].lower()]]
+    # test the default config setting: failonerror == False
+    eq_(config.failonerror, False)
+
+    # test that by default, a bad rowmap does not raise an exception,
+    # and that values for the failed rowmap are returned as None
+    table2 = rowmap(table1, rowmapper, header=['bar'])
+    expect2 = (('bar',), ('a',), (None,))
+    ieq(expect2, table2)
+    ieq(expect2, table2)
+
+    # test that when called with failonerror=False, a bad fieldmap does
+    # not raise an exception, and that values for the failed fieldmap
+    # are returned as None
+    table3 = fieldmap(table1, mappings, failonerror=False)
+    ieq(expect2, table3)
+    ieq(expect2, table3)
+
+    # test that when called with failonerror=True, a bad fieldmap
+    # raises an exception
+    try:
+        table4 = fieldmap(table1, mappings, failonerror=True)
+        table4.nrows()
+    except AttributeError:
+        pass
+    else:
+        assert False, 'exception expected'
+
+    # test that when called with failonerror='yield_exceptions', a bad
+    # fieldmap does not raise an exception, and an Exception for the
+    # failed fieldmap is returned in the result.
+    table5 = fieldmap(table1, mappings, failonerror='yield_exceptions')
+    expect5 = (('bar',), ('a',))
+    ieq(expect5, table5.head(1))
+    ieq(expect5, table5.head(1))
+    d = table5.dicts()
+    assert isinstance(list(d)[1]['bar'], AttributeError)
+
+
+def test_fieldmap_errors_config():
+    # save config setting
+    saved_config_failonerror = config.failonerror
+
+    table1 = (('foo',), ('A',), (1,))
+    mappings = {}
+    mappings['bar'] = 'foo', lambda v: v.lower()
+
+    # when config failonerror == True, and neither failonerror nor
+    # errorvalue are provided, a bad conversion raises an exception
+    config.failonerror = True
+    try:
+        table2 = fieldmap(table1, mappings)
+        table2.nrows()
+    except AttributeError:
+        pass
+    else:
+        assert False, 'exception expected'
+
+    # when config failonerror == 'yield_exceptions', and neither
+    # failonerror nor errorvalue are provided, a bad conversion does not
+    # raise an exception, and an Exception for the failed conversion is
+    # returned in the result.
+    config.failonerror = 'yield_exceptions'
+    table3 = fieldmap(table1, mappings)
+    expect3 = (('bar',), ('a',))
+    ieq(expect3, table3.head(1))
+    ieq(expect3, table3.head(1))
+    d = table3.dicts()
+    assert isinstance(list(d)[1]['bar'], AttributeError)
+
+    # when config failonerror is an invalid value, but still truthy, it
+    # behaves the same as if == True
+    config.failonerror = 'bogus'
+    try:
+        table4 = fieldmap(table1, mappings)
+        table4.nrows()
+    except AttributeError:
+        pass
+    else:
+        assert False, 'exception expected'
+
+    # when config failonerror is None, it behaves the same as if ==
+    # False
+    config.failonerror = None
+    table5 = fieldmap(table1, mappings)
+    expect5 = (('bar',),
+              ('a',),
+              (None,))
+    ieq(expect5, table5)
+    ieq(expect5, table5)
+
+    # restore config setting
+    config.failonerror = saved_config_failonerror
+'''
+'''
+
+def rowmap(table, rowmapper, header, failonerror=False):
+    return RowMapView(table, rowmapper, header, failonerror=failonerror)
+
+def rowmapmany(table, rowgenerator, header, failonerror=False):
+    return RowMapManyView(table, rowgenerator, header, failonerror=failonerror)
+
+
+table2 = fieldmap(table1, mappings)
+def test_fieldmap_errors_default_config():
+    table1 = (('foo',), ('A',), (1,))
+    mappings = {}
+    mappings['bar'] = 'foo', lambda v: v.lower()
+
+table2 = rowmap(table1, rowmapper, header=['bar'])
+    table1 = (('foo',), ('A',), (1,))
+    rowmapper = lambda r: [[r[0].lower()]]
+
+table2 = rowmapmany(table1, rowgenerator, header=['bar'])
+'''
