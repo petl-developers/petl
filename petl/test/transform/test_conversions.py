@@ -1,10 +1,11 @@
 from __future__ import absolute_import, print_function, division
-from functools import partial
 
-from petl.test.helpers import ieq
 from petl.test.failonerror import test_failonerror
+from petl.test.helpers import ieq
 from petl.transform.conversions import convert, convertall, convertnumbers, \
     replace, update, format, interpolate
+
+from functools import partial
 
 
 def test_convert():
@@ -291,11 +292,13 @@ def test_convert_where():
 
 
 def test_convert_failonerror():
+    input_  = (('foo',), ('A',), (1,))
+    cvt_    = {'foo': 'lower'}
+    expect_ = (('foo',), ('a',), (None,))
+
     test_failonerror(
-            input_fn=partial(convert,
-                (('foo',), ('A',), (1,)),
-                {'foo': 'lower'}),
-            expected_output=(('foo',), ('a',), (None,)))
+            input_fn=partial(convert, input_, cvt_),
+            expected_output=expect_)
 
 
 def test_replace_where():

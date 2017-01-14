@@ -6,10 +6,9 @@ from nose.tools import assert_raises, nottest
 
 @nottest
 def test_failonerror(input_fn, expected_output):
-    """
-    In the input rows, the first row should process through the
+    """In the input rows, the first row should process through the
     transformation cleanly.  The second row should generate an
-    exception.  There are no requirements on any rows past that."""
+    exception.  There are no requirements for any other rows."""
     #=========================================================
     # Test function parameters with default config settings
     #=========================================================

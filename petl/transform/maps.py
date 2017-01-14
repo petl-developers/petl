@@ -217,7 +217,7 @@ def iterrowmap(source, rowmapper, header, failonerror):
             yield tuple(outrow)
         except Exception as e:
             if failonerror == 'yield_exceptions':
-                yield e
+                yield tuple([e])
             elif failonerror:
                 raise e
 
@@ -307,7 +307,7 @@ def iterrowmapmany(source, rowgenerator, header, failonerror):
                 yield tuple(outrow)
         except Exception as e:
             if failonerror == 'yield_exceptions':
-                yield e
+                yield tuple([e])
             elif failonerror:
                 raise e
             else:
