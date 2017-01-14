@@ -1,5 +1,6 @@
 from __future__ import absolute_import, print_function, division
 
+
 from petl.test.failonerror import test_failonerror
 from petl.test.helpers import ieq
 from petl.transform.conversions import convert, convertall, convertnumbers, \

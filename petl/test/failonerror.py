@@ -102,4 +102,3 @@ def test_failonerror(input_fn, expected_output):
     # restore config setting
     config.failonerror = saved_config_failonerror
 
-
