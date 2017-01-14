@@ -45,10 +45,7 @@ def test_failonerror(input_fn, expected_output):
     ieq(expect5, table5.head(1))
     ieq(expect5, table5.head(1))
     excp = table5[2][0]
-    try:
-        assert isinstance(excp, Exception)
-    except Exception as e:
-        raise Exception(type(excp), excp) from e
+    assert isinstance(excp, Exception)
 
     #=========================================================
     # Test config settings
@@ -59,13 +56,9 @@ def test_failonerror(input_fn, expected_output):
     # When config.failonerror == True, a bad conversion raises an
     # exception
     config.failonerror = True
-    try:
+    with assert_raises(Exception) as cm:
         table6 = input_fn()
         table6.nrows()
-    except AttributeError:
-        pass
-    else:
-        assert False, 'exception expected'
 
     # When config.failonerror == 'yield_exceptions', a bad conversion
     # does not raise an exception, and an Exception for the failed
@@ -76,21 +69,14 @@ def test_failonerror(input_fn, expected_output):
     ieq(expect7, table7.head(1))
     ieq(expect7, table7.head(1))
     excp = table7[2][0]
-    try:
-        assert isinstance(excp, Exception)
-    except Exception as e:
-        raise Exception(type(excp), excp) from e
+    assert isinstance(excp, Exception)
 
     # When config.failonerror is an invalid value, but still truthy, it
     # behaves the same as if == True
     config.failonerror = 'invalid'
-    try:
+    with assert_raises(Exception) as cm:
         table8 = input_fn()
         table8.nrows()
-    except AttributeError:
-        pass
-    else:
-        assert False, 'exception expected'
 
     # When config.failonerror is None, it behaves the same as if
     # config.failonerror is False
