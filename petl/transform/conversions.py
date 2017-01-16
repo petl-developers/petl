@@ -166,6 +166,9 @@ def convert(table, *args, **kwargs):
     arguments to the conversion function (so, i.e., the conversion function
     should accept two arguments).
 
+    Also accepts `failonerror` and `errorvalue` keyword arguments,
+    documented under :func:`petl.config.failonerror`
+
     """
 
     converters = None
@@ -287,7 +290,7 @@ Table.convertnumbers = convertnumbers
 
 class FieldConvertView(Table):
 
-    def __init__(self, source, converters=None, failonerror=False,
+    def __init__(self, source, converters=None, failonerror=None,
                  errorvalue=None, where=None, pass_row=False):
         self.source = source
         if converters is None:
@@ -298,7 +301,8 @@ class FieldConvertView(Table):
             self.converters = dict([(i, v) for i, v in enumerate(converters)])
         else:
             raise ArgumentError('unexpected converters: %r' % converters)
-        self.failonerror = failonerror or config.failonerror
+        self.failonerror = (config.failonerror if failonerror is None
+                                else failonerror)
         self.errorvalue = errorvalue
         self.where = where
         self.pass_row = pass_row

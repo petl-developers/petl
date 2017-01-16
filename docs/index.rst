@@ -36,6 +36,7 @@ see the :ref:`genindex`.
    io
    transform
    util
+   config
    changes
    contributing
    related_work

@@ -97,6 +97,22 @@ def test_failonerror(input_fn, expected_output):
     ieq(expected_output, table9)
     ieq(expected_output, table9)
 
+    # A False keyword parameter overrides config.failonerror == True
+    config.failonerror = True
+    table10 = input_fn(failonerror=False)
+    ieq(expected_output, table10)
+    ieq(expected_output, table10)
+
+    # A None keyword parameter uses config.failonerror == True
+    config.failonerror = True
+    try:
+        table11 = input_fn(failonerror=None)
+        table11.nrows()
+    except Exception:
+        pass
+    else:
+        raise Exception('expected exception not raised')
+
     # restore config setting
     config.failonerror = saved_config_failonerror
 
