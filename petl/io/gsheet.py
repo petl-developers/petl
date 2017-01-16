@@ -16,10 +16,10 @@ def fromgsheet(filename, credentials, forcename=False, worksheet_title=None,
     NOTE: Only the top level of google drive will be searched for the filename
     due to API limitations.
 
-    Credentials are used to authenticate with the google apis.
+    `credentials` are used to authenticate with the google apis.
     For more info visit: http://gspread.readthedocs.io/en/latest/oauth2.html
 
-    Set `forcename` to `True` in order to treat filename as a name
+    Set `forcename` to `True` in order to treat `filename` as a name
 
     N.B., the worksheet name is case sensitive.
 
@@ -104,18 +104,16 @@ def togsheet(tbl, filename, credentials, worksheet_title=None,
     """
     Write a table to a new google sheet.
 
-    filename will be the title of the sheet when uploaded to google sheets.
+    `filename` will be the title of the workbook when uploaded to google sheets.
 
-    credentials are used to authenticate with the google apis.
+    `credentials` are used to authenticate with the google apis.
     For more info, visit: http://gspread.readthedocs.io/en/latest/oauth2.html
 
-    If worksheet_title is specified, the first worksheet in the spreadsheet
-    will be renamed to the value of worksheet_title.
+    If `worksheet_title` is specified, the first worksheet in the spreadsheet
+    will be renamed to the value of `worksheet_title`.
 
     The spreadsheet will be shared with all emails in `share_emails` with
     `role` permissions granted.
-
-    set the permissions of all `share_emails` as `role`.
     For more info, visit: https://developers.google.com/drive/v3/web/manage-sharing
 
     Note: necessary scope for using togsheet is:
