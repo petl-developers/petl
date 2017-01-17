@@ -134,20 +134,15 @@ def togsheet(tbl, filename, credentials, worksheet_title=None,
     import gspread
     gspread_client = gspread.authorize(credentials)
     spreadsheet = gspread_client.create(filename)
-    rows = len(tbl)
-    # get the max length and add [0] to take care of empty iterables
-    cols = max([0] + [len(row) for row in tbl])
-    # output to first sheet
     worksheet = spreadsheet.sheet1
-    # match row and column length
-    worksheet.resize(rows=rows, cols=cols)
+    # make smallest table possible
+    worksheet.resize(rows=1, cols=1)
     # rename sheet if set
     if worksheet_title:
         worksheet.update_title(title=worksheet_title)
-    # gspread indices start at 1, therefore row/col index starts at 1
-    for x, row in enumerate(tbl, start=1):
-        for y, val in enumerate(row, start=1):
-            worksheet.update_cell(x, y, val)
+    # gspread indices start at 1, therefore row index insert starts at 1
+    for index, row in enumerate(tbl, start=1):
+        worksheet.insert_row(row, index)
     # specify the user account to share to
     for user_email in share_emails:
         spreadsheet.share(user_email, perm_type='user', role=role)
