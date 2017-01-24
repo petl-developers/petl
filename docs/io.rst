@@ -223,6 +223,7 @@ Google sheet files (gsheet)
 
 .. autofunction:: petl.io.gsheet.fromgsheet
 .. autofunction:: petl.io.gsheet.togsheet
+.. autofunction:: petl.io.gsheet.appendgsheet
 
 
 .. module:: petl.io.gsheet
