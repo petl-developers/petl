@@ -36,4 +36,4 @@ from petl.io.whoosh import fromtextindex, searchtextindex, \
 
 from petl.io.bcolz import frombcolz, tobcolz, appendbcolz
 
-from petl.io.gsheet import fromgsheet, togsheet
+from petl.io.gsheet import fromgsheet, togsheet, appendgsheet

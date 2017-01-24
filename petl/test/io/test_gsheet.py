@@ -6,7 +6,7 @@ import os
 import datetime
 
 import petl as etl
-from petl.io.gsheet import fromgsheet, togsheet
+from petl.io.gsheet import fromgsheet, togsheet, appendgsheet
 from petl.test.helpers import ieq
 
 """
@@ -140,4 +140,66 @@ else:
                    table,
                    worksheet,
                    range_string,
+                   expected_result)
+
+    append_args = [
+            # appending to the first sheet
+            ((('foo', 'bar'),
+              ('A', '1'),
+              ('B', '2'),
+              ('C', '2'),
+              (u'é', datetime.date(2012,1,1))),
+              u'Sheet1',
+              (('foo', 'bar'),
+               ('A', '1'),
+               ('B', '2'),
+               ('C', '2'),
+               (u'é', '2012-01-01'),
+               ('foo', 'bar'),
+               ('A', '1'),
+               ('B', '2'),
+               ('C', '2'))),
+
+            # appending to a new sheet
+            ((('foo', 'bar'),
+              ('A', '1'),
+              ('B', '2'),
+              ('C', '2'),
+              (u'é', datetime.date(2012,1,1))),
+             u'testing_time',
+             (('foo', 'bar'),
+              ('A', '1'),
+              ('B', '2'),
+              ('C', '2')))
+
+    ]
+
+
+    def test_appendgsheet():
+
+        def test_toappendfrom(table, append_worksheet, expected_result):
+            filename = 'test-{}'.format(str(uuid.uuid4()))
+            credentials = sac.from_json_keyfile_name(JSON_PATH, SCOPE)
+
+            togsheet(table, filename, credentials)
+            appendgsheet(table[:-1],
+                        filename,
+                        credentials,
+                        worksheet_title=append_worksheet)
+            result = fromgsheet(filename,
+                                credentials,
+                                worksheet_title=append_worksheet)
+            ieq(result, expected_result)
+            # get client to get information
+            client = gspread.authorize(credentials)
+            # get spreadsheet id (key) of previously created sheet
+            filekey = client.open(filename).id
+            # then delete the file
+            client.del_spreadsheet(filekey)
+
+        for append_arg_tuple in append_args:
+            table, append_ws, expected_result = append_arg_tuple
+            yield (test_toappendfrom,
+                   table,
+                   append_ws,
                    expected_result)
