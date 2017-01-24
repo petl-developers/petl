@@ -148,4 +148,37 @@ def togsheet(tbl, filename, credentials, worksheet_title=None,
         spreadsheet.share(user_email, perm_type='user', role=role)
 
 
+def appendgsheet(tbl, filename, credentials, worksheet_title="Sheet1"):
+    """
+    Append a table to an existing google shoot at either a new worksheet
+    or the end of an existing worksheet
+
+    `filename` is the name of the workbook to append to.
+
+    `credentials` are used to authenticate with the google apis.
+    For more info, visit: http://gspread.readthedocs.io/en/latest/oauth2.html
+
+    `worksheet_title` is the title of the worksheet to append to or create if
+    the worksheet does not exist. NOTE: sheet index cannot be used, and None is
+    not an option.
+    """
+    import gspread
+    gspread_client = gspread.authorize(credentials)
+    # be able to give filename or key for file
+    try:
+        wb = gspread_client.open_by_key(filename)
+    except gspread.exceptions.SpreadsheetNotFound:
+        wb = gspread_client.open(filename)
+    # check to see if worksheet_title exists, if so append, otherwise create
+    if worksheet_title in [worksheet.title for worksheet in wb.worksheets()]:
+        worksheet = wb.worksheet(text_type(worksheet_title))
+    else:
+        worksheet = wb.add_worksheet(text_type(worksheet_title), 1, 1)
+    # efficiency loss, but get_all_values() will only return meaningful rows,
+    # therefore len(rows) + 1 gives the earliest open insert index
+    start_point = len(worksheet.get_all_values()) + 1
+    for index, row in enumerate(tbl, start=start_point):
+        worksheet.insert_row(row, index)
+
+
 Table.togsheet = togsheet
