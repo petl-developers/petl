@@ -24,6 +24,10 @@ debug = logger.debug
 
 
 class FileSource(object):
+    """
+    Wraps a file-like source. Can be initialized with a file path string, or any
+    callable that returns a context-managed file-like object.
+    """
 
     def __init__(self, path_or_opener, **kwargs):
         self.path_or_opener = path_or_opener
