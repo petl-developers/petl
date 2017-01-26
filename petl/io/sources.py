@@ -25,12 +25,17 @@ debug = logger.debug
 
 class FileSource(object):
 
-    def __init__(self, filename, **kwargs):
-        self.filename = filename
+    def __init__(self, path_or_opener, **kwargs):
+        self.path_or_opener = path_or_opener
         self.kwargs = kwargs
 
     def open(self, mode='r'):
-        return io.open(self.filename, mode, **self.kwargs)
+        if callable(self.path_or_opener):
+            opener = self.path_or_opener()
+            if not hasattr(opener, '__exit__'):
+                raise ArgumentError('File opener must be a context manager')
+            return opener
+        return io.open(self.path_or_opener, mode, **self.kwargs)
 
 
 class GzipSource(object):
