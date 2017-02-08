@@ -13,7 +13,10 @@ from petl.util.statistics import onlinestats
 
 def progress(table, batchsize=1000, prefix="", out=None):
     """
-    Report progress on rows passing through to a log. E.g.::
+    Report progress on rows passing through to a file or file-like object
+    (defaults to sys.stderr)
+
+    E.g.::
 
         >>> import petl as etl
         >>> table = etl.dummytable(100000)
@@ -37,13 +40,16 @@ def progress(table, batchsize=1000, prefix="", out=None):
     return ProgressView(table, batchsize, prefix, out)
 
 
-def log_progress(table, batchsize=1000, prefix="", out=None, level=logging.INFO):
+def log_progress(table, batchsize=1000, prefix="", logger=None, level=logging.INFO):
     """
-    Report progress on rows passing through. E.g.::
+    Report progress on rows passing through to a python logger. If logger is
+    none, a new logger will be created that, by default, streams to stdout
+
+    E.g.::
 
         >>> import petl as etl
         >>> table = etl.dummytable(100000)
-        >>> table.progress(10000).tocsv('example.csv')
+        >>> table.log_progress(10000).tocsv('example.csv')
         10000 rows in 0.13s (78363 row/s); batch in 0.13s (78363 row/s)
         20000 rows in 0.22s (91679 row/s); batch in 0.09s (110448 row/s)
         30000 rows in 0.31s (96573 row/s); batch in 0.09s (108114 row/s)
@@ -60,7 +66,7 @@ def log_progress(table, batchsize=1000, prefix="", out=None, level=logging.INFO)
 
     """
 
-    return LoggingProgressView(table, batchsize, prefix, out, level=level)
+    return LoggingProgressView(table, batchsize, prefix, logger, level=level)
 
 
 Table.progress = progress
@@ -179,12 +185,12 @@ class LoggingProgressView(ProgressViewBase):
     Reports progress to a logger, log handler, or log adapter
     """
 
-    def __init__(self, inner, batchsize, prefix, out, level=logging.INFO):
-        if out is None:
+    def __init__(self, inner, batchsize, prefix, logger, level=logging.INFO):
+        if logger is None:
             self.logger = logging.getLogger(__name__)
             self.logger.setLevel(level)
         else:
-            self.logger = out
+            self.logger = logger
         self.level = level
         super(LoggingProgressView, self).__init__(inner, batchsize, prefix)
 
