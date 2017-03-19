@@ -552,6 +552,106 @@ def iteraddfield(source, field, value, index):
             yield tuple(outrow)
 
 
+def addfields(table, field_defs, missing=None):
+    """
+    Add fields with fixed or calculated values. E.g.::
+
+        >>> import petl as etl
+        >>> table1 = [['foo', 'bar'],
+        ...           ['M', 12],
+        ...           ['F', 34],
+        ...           ['-', 56]]
+        >>> # using a fixed value or a calculation
+        ... table2 = etl.addfields(table1,
+                                   [('baz', 42),
+                                    ('luhrmann', lambda rec: rec['bar'] * 2)])
+        >>> table2
+        +-----+-----+-----+----------+
+        | foo | bar | baz | luhrmann |
+        +=====+=====+=====+==========+
+        | 'M' |  12 |  42 |       24 |
+        +-----+-----+-----+----------+
+        | 'F' |  34 |  42 |       68 |
+        +-----+-----+-----+----------+
+        | '-' |  56 |  42 |      112 |
+        +-----+-----+-----+----------+
+
+        >>> # you can specify an index as a 3rd item in each tuple -- indicies
+        ... # are evaluated in order.
+        ... table2 = etl.addfields(table1,
+                                   [('baz', 42, 0),
+                                    ('luhrmann', lambda rec: rec['bar'] * 2, 0)])
+        >>> table2
+        +----------+-----+-----+-----+
+        | luhrmann | baz | foo | bar |
+        +==========+=====+=====+=====+
+        |       24 |  42 | 'M' |  12 |
+        +----------+-----+-----+-----+
+        |       68 |  42 | 'F' |  34 |
+        +----------+-----+-----+-----+
+        |      112 |  42 | '-' |  56 |
+        +----------+-----+-----+-----+
+
+    """
+
+    return AddFieldsView(table, field_defs, missing=missing)
+
+
+Table.addfields = addfields
+
+
+class AddFieldsView(Table):
+
+    def __init__(self, source, field_defs, missing=None):
+        # ensure rows are all the same length
+        self.source = stack(source, missing=missing)
+        # convert tuples to FieldDefinitions, if necessary
+        self.field_defs = field_defs
+
+    def __iter__(self):
+        return iteraddfields(self.source, self.field_defs)
+
+
+def iteraddfields(source, field_defs):
+    it = iter(source)
+    hdr = next(it)
+    flds = list(map(text_type, hdr))
+
+    # initialize output fields and indices
+    outhdr = list(hdr)
+    value_indexes = []
+
+    for fdef in field_defs:
+        # determine the defined field index
+        if len(fdef) == 2:
+            name, value = fdef
+            index = len(outhdr)
+        else:
+            name, value, index = fdef
+
+        # insert the name into the header at the appropriate index
+        outhdr.insert(index, name)
+
+        # remember the value/index pairs for later
+        value_indexes.append((value, index))
+    yield tuple(outhdr)
+
+    for row in it:
+        outrow = list(row)
+
+        # add each defined field into the row at the appropriate index
+        for value, index in value_indexes:
+            if callable(value):
+                # wrap row as record if using calculated value
+                row = Record(row, flds)
+                v = value(row)
+                outrow.insert(index, v)
+            else:
+                outrow.insert(index, value)
+
+        yield tuple(outrow)
+
+
 def rowslice(table, *sliceargs):
     """
     Choose a subsequence of data rows. E.g.::
