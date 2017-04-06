@@ -17,7 +17,8 @@ else:
         teecsv_impl
 
 
-def fromcsv(source=None, encoding=None, errors='strict', **csvargs):
+def fromcsv(source=None, encoding=None, errors='strict', header=None, 
+            **csvargs):
     """
     Extract a table from a delimited file. E.g.::
 
@@ -57,11 +58,12 @@ def fromcsv(source=None, encoding=None, errors='strict', **csvargs):
 
     source = read_source_from_arg(source)
     csvargs.setdefault('dialect', 'excel')
-    return fromcsv_impl(source=source, encoding=encoding, errors=errors,
-                        **csvargs)
+    return fromcsv_impl(source=source, encoding=encoding, errors=errors, 
+                        header=header, **csvargs)
 
 
-def fromtsv(source=None, encoding=None, errors='strict', **csvargs):
+def fromtsv(source=None, encoding=None, errors='strict', header=None, 
+            **csvargs):
     """
     Convenience function, as :func:`petl.io.csv.fromcsv` but with different
     default dialect (tab delimited).
