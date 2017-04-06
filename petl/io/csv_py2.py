@@ -18,7 +18,7 @@ def fromcsv_impl(source, **kwargs):
 
 class CSVView(Table):
 
-    def __init__(self, source=None, encoding=None, errors='strict', header=None **csvargs):
+    def __init__(self, source=None, encoding=None, errors='strict', header=None, **csvargs):
             self.source = source
             self.encoding = encoding
             self.errors = errors
