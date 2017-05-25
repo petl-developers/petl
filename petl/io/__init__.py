@@ -23,7 +23,7 @@ from petl.io.db import fromdb, todb, appenddb
 
 from petl.io.xls import fromxls, toxls
 
-from petl.io.xlsx import fromxlsx, toxlsx
+from petl.io.xlsx import fromxlsx, toxlsx, appendxlsx
 
 from petl.io.numpy import fromarray, toarray, torecarray
 

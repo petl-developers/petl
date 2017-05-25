@@ -84,3 +84,22 @@ def toxlsx(tbl, filename, sheet=None, encoding=None):
 
 
 Table.toxlsx = toxlsx
+
+
+def appendxlsx(tbl, filename, sheet, encoding=None):
+    """
+    Appends a sheet to an existing Excel .xlsx file.
+
+    """
+
+    import openpyxl
+    if encoding is None:
+        encoding = locale.getpreferredencoding()
+    wb = openpyxl.load_workbook(filename=filename)
+    ws = wb.create_sheet(title=sheet)
+    for row in tbl:
+        ws.append(row)
+    wb.save(filename)
+
+
+Table.appendxlsx = appendxlsx
