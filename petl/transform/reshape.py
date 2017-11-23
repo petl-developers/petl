@@ -402,7 +402,7 @@ def iterrecast(source, key, variablefield, valuefield,
         yield tuple(out_row)
 
 
-def transpose(table):
+def transpose(table, columns = []):
     """
     Transpose rows into columns. E.g.::
 
@@ -425,7 +425,7 @@ def transpose(table):
 
     """
 
-    return TransposeView(table)
+    return TransposeView(table, columns)
 
 
 Table.transpose = transpose
@@ -433,18 +433,24 @@ Table.transpose = transpose
 
 class TransposeView(Table):
 
-    def __init__(self, source):
+    def __init__(self, source, columns):
         self.source = source
+        self.columns = columns
 
     def __iter__(self):
-        return itertranspose(self.source)
+        return itertranspose(self.source, self.columns)
 
 
-def itertranspose(source):
+def itertranspose(source, columns):
+    
     hdr = header(source)
     its = [iter(source) for _ in hdr]
     for i in range(len(hdr)):
-        yield tuple(row[i] for row in its[i])
+        if len(columns) != 0:
+            if i in columns:
+                yield tuple(row[i] for row in its[i])
+        else:
+            yield tuple(row[i] for row in its[i])
 
 
 def pivot(table, f1, f2, f3, aggfun, missing=None,
