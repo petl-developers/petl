@@ -52,7 +52,8 @@ class XLSXView(Table):
                                     read_only=self.read_only,
                                     **self.kwargs)
         if self.sheet is None:
-            ws = wb.get_sheet_by_name(wb.get_sheet_names()[0])
+	    #  ws = wb.get_sheet_by_name(wb.get_sheet_names()[0])
+            ws = wb[wb.sheetnames[0]] # This version avoids the deprecation warnings.
         elif isinstance(self.sheet, int):
             ws = wb.get_sheet_by_name(wb.get_sheet_names()[self.sheet])
         else:
