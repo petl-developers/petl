@@ -37,18 +37,20 @@ def fromxlsx(filename, sheet=None, range_string=None, row_offset=0,
 class XLSXView(Table):
     
     def __init__(self, filename, sheet=None, range_string=None,
-                 row_offset=0, column_offset=0, **kwargs):
+                 row_offset=0, column_offset=0, read_only=True, **kwargs):
         self.filename = filename
         self.sheet = sheet
         self.range_string = range_string
         self.row_offset = row_offset
         self.column_offset = column_offset
+        self.read_only = read_only
         self.kwargs = kwargs
 
     def __iter__(self):
         import openpyxl
         wb = openpyxl.load_workbook(filename=self.filename,
-                                    read_only=True, **self.kwargs)
+                                    read_only=self.read_only,
+                                    **self.kwargs)
         if self.sheet is None:
             ws = wb.get_sheet_by_name(wb.get_sheet_names()[0])
         elif isinstance(self.sheet, int):
