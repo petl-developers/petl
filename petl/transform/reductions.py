@@ -527,7 +527,7 @@ def itermergeduplicates(table, key, missing):
     # determine output fields
     if isinstance(key, string_types):
         outhdr = [key]
-        keyflds = set([key])
+        keyflds = {key}
     else:
         outhdr = list(key)
         keyflds = set(key)
