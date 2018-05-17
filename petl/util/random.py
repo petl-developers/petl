@@ -4,8 +4,9 @@ from __future__ import absolute_import, print_function, division
 import datetime
 import random
 import time
+from collections import OrderedDict
 from functools import partial
-from petl.compat import xrange, OrderedDict, text_type
+from petl.compat import xrange, text_type
 
 
 from petl.util.base import Table
