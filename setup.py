@@ -28,6 +28,7 @@ setup(
     description='A Python package for extracting, transforming and loading '
                 'tables of data.',
     long_description=open('README.txt').read(),
+    python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*',
     classifiers=['Intended Audience :: Developers',
                  'License :: OSI Approved :: MIT License',
                  'Programming Language :: Python :: 2',
