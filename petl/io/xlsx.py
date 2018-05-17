@@ -50,11 +50,11 @@ class XLSXView(Table):
         wb = openpyxl.load_workbook(filename=self.filename,
                                     read_only=True, **self.kwargs)
         if self.sheet is None:
-            ws = wb.get_sheet_by_name(wb.get_sheet_names()[0])
+            ws = wb[wb.sheetnames[0]]
         elif isinstance(self.sheet, int):
-            ws = wb.get_sheet_by_name(wb.get_sheet_names()[self.sheet])
+            ws = wb[wb.sheetnames[self.sheet]]
         else:
-            ws = wb.get_sheet_by_name(str(self.sheet))
+            ws = wb[str(self.sheet)]
 
         for row in ws.iter_rows(range_string=self.range_string,
                                 row_offset=self.row_offset,
