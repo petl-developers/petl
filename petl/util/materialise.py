@@ -86,9 +86,9 @@ def facetcolumns(table, key, missing=None):
         ...          ['b', 3]]
         >>> fc = etl.facetcolumns(table, 'foo')
         >>> fc['a']
-        {'foo': ['a'], 'baz': [True], 'bar': [1]}
+        {'foo': ['a'], 'bar': [1], 'baz': [True]}
         >>> fc['b']
-        {'foo': ['b', 'b'], 'baz': [True, None], 'bar': [2, 3]}
+        {'foo': ['b', 'b'], 'bar': [2, 3], 'baz': [True, None]}
 
     """
 
