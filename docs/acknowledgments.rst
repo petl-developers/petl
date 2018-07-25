@@ -46,3 +46,6 @@ the development of this package:
 * `thatneat <https://github.com/thatneat>`_
 * `titusz <https://github.com/titusz>`_
 * `zigen <https://github.com/zigen>`_
+
+Development of petl has been supported by an open source license for
+`PyCharm <https://www.jetbrains.com/pycharm/>`_.
