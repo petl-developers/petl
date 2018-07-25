@@ -16,11 +16,11 @@ extension modules for ``petl``.
     :target: https://travis-ci.org/petl-developers/petl
     :alt: continuous integration build status
 
-.. image:: https://readthedocs.org/projects/petl/badge/?version=stable
-    :target: http://petl.readthedocs.io/en/stable/?badge=stable
-
 .. image:: https://ci.appveyor.com/api/projects/status/nttbwesq6p4bd5qr?svg=true
     :target: https://ci.appveyor.com/project/petl-developers/petl
+
+.. image:: https://readthedocs.org/projects/petl/badge/?version=stable
+    :target: http://petl.readthedocs.io/en/stable/?badge=stable
 
 .. image:: https://coveralls.io/repos/github/petl-developers/petl/badge.svg?branch=master
     :target: https://coveralls.io/github/petl-developers/petl?branch=master
