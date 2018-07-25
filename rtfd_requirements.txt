@@ -1,0 +1,5 @@
+setuptools
+setuptools_scm
+sphinx
+sphinx-issues
+mock

@@ -1,6 +1,35 @@
 Changes
 =======
 
+Version 1.2.0
+-------------
+
+Please note that this version drops support for Python 2.6 (:issue:`443`,
+:issue:`444` - :user:`hugovk`).
+
+* Function :func:`petl.transform.basics.addrownumbers` now supports a "field"
+  argument to allow specifying the name of the new field to be added
+  (:issue:`366`, :issue:`367` - :user:`thatneat`).
+* Fix to :func:`petl.io.xlsx.fromxslx` to ensure that the underlying workbook is
+  closed after iteration is complete (:issue:`387` - :user:`mattkatz`).
+* Resolve compatibility issues with newer versions of openpyxl
+  (:issue:`393`, :issue:`394` - :user:`henryrizzi`).
+* Fix deprecation warnings from openpyxl (:issue:`447`, :issue:`445` -
+  :user:`scardine`; :issue:`449` - :user:`alimanfoo`).
+* Changed exceptions to use standard exception classes instead of ArgumentError
+  (:issue:`396` - :user:`bmaggard`).
+* Add support for non-numeric quoting in CSV files (:issue:`377`, :issue:`378`
+  - :user:`vilos`).
+* Fix bug in handling of mode in MemorySource (:issue:`403` - :user:`bmaggard`).
+* Added a get() method to the Record class (:issue:`401`, :issue:`402` -
+  :user:`dusktreader`).
+* Added ability to make constraints optional, i.e., support validation on
+  optional fields (:issue:`399`, :issue:`400` - :user:`dusktreader`).
+* Added support for CSV files without a header row (:issue:`421` -
+  :user:`LupusUmbrae`).
+* Documentation fixes (:issue:`379` - :user:`DeanWay`; :issue:`381` -
+  :user:`PabloCastellano`).
+
 Version 1.1.0
 -------------
 
