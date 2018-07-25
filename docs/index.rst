@@ -38,6 +38,7 @@ see the :ref:`genindex`.
    util
    changes
    contributing
+   acknowledgments
    related_work
 
 Indices and tables
