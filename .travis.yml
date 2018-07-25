@@ -1,12 +1,13 @@
 language: python
 python:
+  - "3.6"
   - "3.5"
   - "3.4"
   - "2.7"
 before_install:
   - sudo apt-get -qq update
   - sudo apt-get build-dep -y python-h5py
-install: 
+install:
   - pip install -U pip setuptools wheel
   - pip install -r ci_requirements.txt
 script: nosetests -v
