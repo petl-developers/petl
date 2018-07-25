@@ -220,7 +220,7 @@ HTML table if returned from a cell in an IPython notebook. The functions
 :func:`petl.util.vis.display` and :func:`petl.util.vis.displayall` also
 provide more control over rendering of tables within an IPython notebook.
 
-For examples of usage see the `repr_html notebook <http://nbviewer.ipython.org/github/alimanfoo/petl/blob/v1.0/repr_html.ipynb>`_.
+For examples of usage see the `repr_html notebook <http://nbviewer.ipython.org/github/petl-developers/petl/blob/v1.0/repr_html.ipynb>`_.
 
 .. _intro_executable:
 
@@ -354,9 +354,9 @@ e.g.::
 
 If you develop an extension for a data source that you think would also be
 useful for others, please feel free to submit a PR to the
-`petl GitHub repository <https://github.com/alimanfoo/petl>`_, or if it
+`petl GitHub repository <https://github.com/petl-developers/petl>`_, or if it
 is a domain-specific data source, the
-`petlx GitHub repository <https://github.com/alimanfoo/petlx>`_.
+`petlx GitHub repository <https://github.com/petl-developers/petlx>`_.
 
 .. _intro_caching:
 
