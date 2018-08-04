@@ -111,3 +111,20 @@ If you are able, please run tox and ensure that all the above tests pass
 before making a pull request.
 
 Thanks!
+
+Guidelines for core developers
+------------------------------
+
+Before merging a pull request that includes new or modified code, all
+items in the `PR checklist <https://github.com/petl-developers/petl/blob/master/.github/PULL_REQUEST_TEMPLATE.md>`_
+should be complete.
+
+Pull requests containing new and/or modified code that is anything
+other than a trivial bug fix should be approved by at least one core
+developer before being merged. If a core developer is making a PR
+themselves, it is OK to merge their own PR if they first allow some
+reasonable time (e.g., at least one working day) for other core devs
+to raise any objections, e.g., by posting a comment like "merging soon
+if no objections" on the PR. If the PR contains substantial new
+features or modifications, the PR author might want to allow a little
+more time to ensure other core devs have an opportunity to see it.
