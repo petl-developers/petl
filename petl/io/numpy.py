@@ -69,8 +69,7 @@ def toarray(table, dtype=None, count=-1, sample=1000):
         >>> # the dtype can be specified as a string
         ... a = etl.toarray(table, dtype='a4, i2, f4')
         >>> a
-        array([(b'appl', 1, 2.5), (b'oran', 3, 4.400000095367432),
-               (b'pear', 7, 0.10000000149011612)],
+        array([(b'appl', 1, 2.5), (b'oran', 3, 4.4), (b'pear', 7, 0.1)],
               dtype=[('foo', 'S4'), ('bar', '<i2'), ('baz', '<f4')])
         >>> # the dtype can also be partially specified
         ... a = etl.toarray(table, dtype={'foo': 'a4'})
@@ -82,7 +81,7 @@ def toarray(table, dtype=None, count=-1, sample=1000):
     examined to infer an appropriate dtype.
 
     """
-    
+
     import numpy as np
     it = iter(table)
     peek, it = iterpeek(it, sample)
@@ -126,26 +125,26 @@ def fromarray(a):
         ...              dtype='U8, i4,f4')
         >>> table = etl.fromarray(a)
         >>> table
-        +-----------+----+-----------+
-        | f0        | f1 | f2        |
-        +===========+====+===========+
-        | 'apples'  | 1  | 2.5       |
-        +-----------+----+-----------+
-        | 'oranges' | 3  | 4.4000001 |
-        +-----------+----+-----------+
-        | 'pears'   | 7  | 0.1       |
-        +-----------+----+-----------+
-    
+        +-----------+----+-----+
+        | f0        | f1 | f2  |
+        +===========+====+=====+
+        | 'apples'  | 1  | 2.5 |
+        +-----------+----+-----+
+        | 'oranges' | 3  | 4.4 |
+        +-----------+----+-----+
+        | 'pears'   | 7  | 0.1 |
+        +-----------+----+-----+
+
     """
-    
+
     return ArrayView(a)
 
 
 class ArrayView(Table):
-    
+
     def __init__(self, a):
         self.a = a
-        
+
     def __iter__(self):
         yield tuple(self.a.dtype.names)
         for row in self.a:

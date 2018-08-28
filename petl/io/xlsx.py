@@ -12,7 +12,7 @@ def fromxlsx(filename, sheet=None, range_string=None, row_offset=0,
              column_offset=0, **kwargs):
     """
     Extract a table from a sheet in an Excel .xlsx file.
-    
+
     N.B., the sheet name is case sensitive.
 
     The `sheet` argument can be omitted, in which case the first sheet in
@@ -35,7 +35,7 @@ def fromxlsx(filename, sheet=None, range_string=None, row_offset=0,
 
 
 class XLSXView(Table):
-    
+
     def __init__(self, filename, sheet=None, range_string=None,
                  row_offset=0, column_offset=0, read_only=True, **kwargs):
         self.filename = filename
@@ -52,20 +52,25 @@ class XLSXView(Table):
                                     read_only=self.read_only,
                                     **self.kwargs)
         if self.sheet is None:
-	    #  ws = wb.get_sheet_by_name(wb.get_sheet_names()[0])
-            ws = wb[wb.sheetnames[0]] # This version avoids the deprecation warnings.
-        elif isinstance(self.sheet, int):
-            ws = wb.get_sheet_by_name(wb.get_sheet_names()[self.sheet])
-        else:
-            ws = wb.get_sheet_by_name(str(self.sheet))
+            ws = wb[wb.sheetnames[0]]
 
-        for row in ws.iter_rows(range_string=self.range_string,
-                                row_offset=self.row_offset,
-                                column_offset=self.column_offset):
+        elif isinstance(self.sheet, int):
+            ws = wb[wb.sheetnames[self.sheet]]
+        else:
+            ws = wb[str(self.sheet)]
+
+        if self.range_string is not None:
+            rows = ws[self.range_string]
+        else:
+            rows = ws.iter_rows(row_offset=self.row_offset,
+                                column_offset=self.column_offset)
+
+        for row in rows:
             yield tuple(cell.value for cell in row)
+
         try:
             wb._archive.close()
-        except AttributeError as e:
+        except AttributeError:
             # just here in case openpyxl stops exposing an _archive property.
             pass
 

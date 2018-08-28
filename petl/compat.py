@@ -4,28 +4,13 @@ from __future__ import absolute_import, print_function, division
 import sys
 
 
-############################
-# Python 2.6 compatibility #
-############################
-
-try:
-    from collections import Counter, OrderedDict
-except ImportError:
-    from petl.py26_backports import Counter, OrderedDict
-
-try:
-    from itertools import count, compress, combinations_with_replacement
-except ImportError:
-    from petl.py26_backports import count, compress, \
-        combinations_with_replacement
-
 
 ##########################
 # Python 3 compatibility #
 ##########################
 
-PY2 = sys.version_info[0] == 2
-PY3 = sys.version_info[0] == 3
+PY2 = sys.version_info.major == 2
+PY3 = sys.version_info.major == 3
 
 if PY2:
     from itertools import ifilter, ifilterfalse, imap, izip, izip_longest

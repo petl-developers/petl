@@ -172,7 +172,7 @@ def _iter_dbapi_cursor(cursor, query, *args, **kwargs):
     hdr = [d[0] for d in cursor.description]
     yield tuple(hdr)
     if first_row is None:
-        raise StopIteration
+        return
     yield first_row
     for row in it:
         yield row  # don't wrap, return whatever the database engine returns

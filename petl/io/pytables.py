@@ -19,17 +19,17 @@ def fromhdf5(source, where=None, name=None, condition=None,
         >>> import petl as etl
         >>> import tables
         >>> # set up a new hdf5 table to demonstrate with
-        ... h5file = tables.openFile('example.h5', mode='w',
-        ...                          title='Example file')
-        >>> h5file.createGroup('/', 'testgroup', 'Test Group')
+        ... h5file = tables.open_file('example.h5', mode='w',
+        ...                           title='Example file')
+        >>> h5file.create_group('/', 'testgroup', 'Test Group')
         /testgroup (Group) 'Test Group'
           children := []
         >>> class FooBar(tables.IsDescription):
         ...     foo = tables.Int32Col(pos=0)
         ...     bar = tables.StringCol(6, pos=2)
         ...
-        >>> h5table = h5file.createTable('/testgroup', 'testtable', FooBar,
-        ...                              'Test Table')
+        >>> h5table = h5file.create_table('/testgroup', 'testtable', FooBar,
+        ...                               'Test Table')
         >>> # load some data into the table
         ... table1 = (('foo', 'bar'),
         ...           (1, b'asdfgh'),
@@ -59,10 +59,10 @@ def fromhdf5(source, where=None, name=None, condition=None,
         >>> # alternatively just specify path to table node
         ... table1 = etl.fromhdf5('example.h5', '/testgroup/testtable')
         >>> # ...or use an existing tables.File object
-        ... h5file = tables.openFile('example.h5')
+        ... h5file = tables.open_file('example.h5')
         >>> table1 = etl.fromhdf5(h5file, '/testgroup/testtable')
         >>> # ...or use an existing tables.Table object
-        ... h5tbl = h5file.getNode('/testgroup/testtable')
+        ... h5tbl = h5file.get_node('/testgroup/testtable')
         >>> table1 = etl.fromhdf5(h5tbl)
         >>> # use a condition to filter data
         ... table2 = etl.fromhdf5(h5tbl, condition='foo < 3')
@@ -78,14 +78,14 @@ def fromhdf5(source, where=None, name=None, condition=None,
         >>> h5file.close()
 
     """
-    
-    return HDF5View(source, where=where, name=name, 
+
+    return HDF5View(source, where=where, name=name,
                     condition=condition, condvars=condvars,
                     start=start, stop=stop, step=step)
 
 
 class HDF5View(Table):
-    
+
     def __init__(self, source, where=None, name=None, condition=None,
                  condvars=None, start=None, stop=None, step=None):
         self.source = source
@@ -96,11 +96,11 @@ class HDF5View(Table):
         self.start = start
         self.stop = stop
         self.step = step
-        
+
     def __iter__(self):
-        return iterhdf5(self.source, self.where, self.name, self.condition, 
+        return iterhdf5(self.source, self.where, self.name, self.condition,
                         self.condvars, self.start, self.stop, self.step)
-    
+
 
 @contextmanager
 def _get_hdf5_table(source, where, name, mode='r'):
@@ -142,7 +142,7 @@ def _get_hdf5_table(source, where, name, mode='r'):
         if needs_closing:
             h5file.close()
 
-    
+
 @contextmanager
 def _get_hdf5_file(source, mode='r'):
     import tables
@@ -181,10 +181,10 @@ def iterhdf5(source, where, name, condition, condvars, start, stop, step):
         # header row
         hdr = tuple(h5tbl.colnames)
         yield hdr
-        
+
         # determine how to iterate over the table
         if condition is not None:
-            it = h5tbl.where(condition, condvars=condvars, 
+            it = h5tbl.where(condition, condvars=condvars,
                              start=start, stop=stop, step=step)
 
         else:
@@ -195,23 +195,23 @@ def iterhdf5(source, where, name, condition, condvars, start, stop, step):
             yield row[:]  # access row as a tuple
 
 
-def fromhdf5sorted(source, where=None, name=None, sortby=None, checkCSI=False, 
+def fromhdf5sorted(source, where=None, name=None, sortby=None, checkCSI=False,
                    start=None, stop=None, step=None):
     """
     Provides access to an HDF5 table, sorted by an indexed column, e.g.::
-    
+
         >>> import petl as etl
         >>> import tables
         >>> # set up a new hdf5 table to demonstrate with
-        ... h5file = tables.openFile('example.h5', mode='w', title='Test file')
-        >>> h5file.createGroup('/', 'testgroup', 'Test Group')
+        ... h5file = tables.open_file('example.h5', mode='w', title='Test file')
+        >>> h5file.create_group('/', 'testgroup', 'Test Group')
         /testgroup (Group) 'Test Group'
           children := []
         >>> class FooBar(tables.IsDescription):
         ...     foo = tables.Int32Col(pos=0)
         ...     bar = tables.StringCol(6, pos=2)
         ...
-        >>> h5table = h5file.createTable('/testgroup', 'testtable', FooBar, 'Test Table')
+        >>> h5table = h5file.create_table('/testgroup', 'testtable', FooBar, 'Test Table')
         >>> # load some data into the table
         ... table1 = (('foo', 'bar'),
         ...           (3, b'asdfgh'),
@@ -222,7 +222,7 @@ def fromhdf5sorted(source, where=None, name=None, sortby=None, checkCSI=False,
         ...         h5table.row[f] = row[i]
         ...     h5table.row.append()
         ...
-        >>> h5table.cols.foo.createCSIndex()  # CS index is required
+        >>> h5table.cols.foo.create_csindex()  # CS index is required
         0
         >>> h5file.flush()
         >>> h5file.close()
@@ -242,15 +242,15 @@ def fromhdf5sorted(source, where=None, name=None, sortby=None, checkCSI=False,
         +-----+-----------+
 
     """
-    
+
     assert sortby is not None, 'no column specified to sort by'
-    return HDF5SortedView(source, where=where, name=name, 
+    return HDF5SortedView(source, where=where, name=name,
                           sortby=sortby, checkCSI=checkCSI,
                           start=start, stop=stop, step=step)
 
 
 class HDF5SortedView(Table):
-    
+
     def __init__(self, source, where=None, name=None, sortby=None,
                  checkCSI=False, start=None, stop=None, step=None):
         self.source = source
@@ -261,11 +261,11 @@ class HDF5SortedView(Table):
         self.start = start
         self.stop = stop
         self.step = step
-        
+
     def __iter__(self):
         return iterhdf5sorted(self.source, self.where, self.name, self.sortby,
                               self.checkCSI, self.start, self.stop, self.step)
-    
+
 
 def iterhdf5sorted(source, where, name, sortby, checkCSI, start, stop, step):
 
@@ -274,7 +274,7 @@ def iterhdf5sorted(source, where, name, sortby, checkCSI, start, stop, step):
         # header row
         hdr = tuple(h5tbl.colnames)
         yield hdr
-        
+
         it = h5tbl.itersorted(sortby,
                               checkCSI=checkCSI,
                               start=start,
@@ -282,10 +282,10 @@ def iterhdf5sorted(source, where, name, sortby, checkCSI, start, stop, step):
                               step=step)
         for row in it:
             yield row[:]  # access row as a tuple
-            
+
 
 def tohdf5(table, source, where=None, name=None, create=False, drop=False,
-           description=None, title='', filters=None, expectedrows=10000, 
+           description=None, title='', filters=None, expectedrows=10000,
            chunkshape=None, byteorder=None, createparents=False,
            sample=1000):
     """
@@ -317,7 +317,7 @@ def tohdf5(table, source, where=None, name=None, create=False, drop=False,
 
     import tables
     it = iter(table)
-    
+
     if create:
         with _get_hdf5_file(source, mode='a') as h5file:
 
@@ -348,7 +348,7 @@ def tohdf5(table, source, where=None, name=None, create=False, drop=False,
 
         # truncate the existing table
         h5table.truncate(0)
-        
+
         # load the data
         _insert(it, h5table)
 
@@ -360,7 +360,7 @@ def appendhdf5(table, source, where=None, name=None):
     """
     As :func:`petl.io.hdf5.tohdf5` but don't truncate the target table before
     loading.
-    
+
     """
 
     with _get_hdf5_table(source, where, name, mode='a') as h5table:
@@ -380,4 +380,4 @@ def _insert(table, h5table):
             # and hd5 table, but field names don't need to match
             h5table.row[f] = row[i]
         h5table.row.append()
-    h5table.flush() 
+    h5table.flush()

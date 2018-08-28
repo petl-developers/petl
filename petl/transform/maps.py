@@ -2,7 +2,8 @@ from __future__ import absolute_import, print_function, division
 
 
 import operator
-from petl.compat import OrderedDict, next, string_types, text_type
+from collections import OrderedDict
+from petl.compat import next, string_types, text_type
 
 
 from petl.errors import ArgumentError

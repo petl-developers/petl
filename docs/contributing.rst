@@ -29,8 +29,8 @@ suite with::
     $ pip install nose
     $ nosetests -v
 
-Currently :mod:`petl` supports Python 2.6, Python 2.7 and Python 3.4,
-so the tests should pass under all three Python versions.
+Currently :mod:`petl` supports Python 2.7, 3.4, 3.5 and 3.6
+so the tests should pass under all these Python versions.
 
 Dependencies
 ------------
@@ -65,7 +65,7 @@ Running doctests
 ----------------
 
 Doctests in docstrings should (almost) all be runnable, and should
-pass if run with Python 3.4. Doctests can be run with `nose
+pass if run with Python 3.6. Doctests can be run with `nose
 <https://nose.readthedocs.org/>`_. See the tox.ini file for example
 doctest commands.
 
@@ -85,12 +85,12 @@ Automatically running all tests
 
 All of the above tests can be run automatically using `tox
 <https://tox.readthedocs.org/>`_. You will need binaries for Python
-2.6, Python 2.7 and Python 3.4 available on your system.
+2.7 and 3.6 available on your system.
 
 To run all tests **without** installing any of the optional
 dependencies, do::
 
-    $ tox -e py26,py27,py34,doctests
+    $ tox -e py27,py36,doctests
 
 To run the entire test suite, including installation of **all**
 optional dependencies, do::
@@ -111,3 +111,20 @@ If you are able, please run tox and ensure that all the above tests pass
 before making a pull request.
 
 Thanks!
+
+Guidelines for core developers
+------------------------------
+
+Before merging a pull request that includes new or modified code, all
+items in the `PR checklist <https://github.com/petl-developers/petl/blob/master/.github/PULL_REQUEST_TEMPLATE.md>`_
+should be complete.
+
+Pull requests containing new and/or modified code that is anything
+other than a trivial bug fix should be approved by at least one core
+developer before being merged. If a core developer is making a PR
+themselves, it is OK to merge their own PR if they first allow some
+reasonable time (e.g., at least one working day) for other core devs
+to raise any objections, e.g., by posting a comment like "merging soon
+if no objections" on the PR. If the PR contains substantial new
+features or modifications, the PR author might want to allow a little
+more time to ensure other core devs have an opportunity to see it.
