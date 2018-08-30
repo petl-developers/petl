@@ -37,7 +37,7 @@ def fromxlsx(filename, sheet=None, range_string=None, row_offset=0,
 class XLSXView(Table):
 
     def __init__(self, filename, sheet=None, range_string=None,
-                 row_offset=0, column_offset=0, read_only=True, **kwargs):
+                 row_offset=0, column_offset=0, read_only=False, **kwargs):
         self.filename = filename
         self.sheet = sheet
         self.range_string = range_string
