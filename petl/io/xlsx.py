@@ -9,7 +9,7 @@ from petl.util.base import Table
 
 
 def fromxlsx(filename, sheet=None, range_string=None, row_offset=0,
-             column_offset=0, **kwargs):
+             column_offset=0, read_only=False, **kwargs):
     """
     Extract a table from a sheet in an Excel .xlsx file.
 
@@ -24,6 +24,11 @@ def fromxlsx(filename, sheet=None, range_string=None, row_offset=0,
     The `row_offset` and `column_offset` arguments can be used to
     specify offsets.
 
+    The `read_only` argument determines how openpyxl returns the loaded 
+    workbook. Default is `False` as it prevents some LibreOffice files
+    from getting truncated at 65536 rows. `True` should be faster if the
+    file use is read-only and the files are made with Microsoft Excel.
+
     Any other keyword arguments are passed through to
     :func:`openpyxl.load_workbook()`.
 
@@ -31,11 +36,12 @@ def fromxlsx(filename, sheet=None, range_string=None, row_offset=0,
 
     return XLSXView(filename, sheet=sheet, range_string=range_string,
                     row_offset=row_offset, column_offset=column_offset,
+                    read_only=read_only,
                     **kwargs)
 
 
 class XLSXView(Table):
-
+    
     def __init__(self, filename, sheet=None, range_string=None,
                  row_offset=0, column_offset=0, read_only=False, **kwargs):
         self.filename = filename
@@ -53,7 +59,6 @@ class XLSXView(Table):
                                     **self.kwargs)
         if self.sheet is None:
             ws = wb[wb.sheetnames[0]]
-
         elif isinstance(self.sheet, int):
             ws = wb[wb.sheetnames[self.sheet]]
         else:
