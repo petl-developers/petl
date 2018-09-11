@@ -1,6 +1,11 @@
 Changes
 =======
 
+Version X.X
+-----------
+
+Documentation improvements by :user:`gamesbook` (:issue:`458`).
+
 Version 1.2.0
 -------------
 
