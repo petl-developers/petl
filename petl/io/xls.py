@@ -13,6 +13,8 @@ def fromxls(filename, sheet=None, use_view=True):
     """
     Extract a table from a sheet in an Excel .xls file.
     
+    Sheet is identified by its name or index number.
+    
     N.B., the sheet name is case sensitive.
 
     """
