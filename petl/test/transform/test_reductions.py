@@ -4,7 +4,7 @@ from __future__ import absolute_import, print_function, division
 import operator
 
 
-from petl.compat import OrderedDict
+from collections import OrderedDict
 from petl.test.helpers import ieq
 from petl.util import strjoin
 from petl.transform.reductions import rowreduce, aggregate, \

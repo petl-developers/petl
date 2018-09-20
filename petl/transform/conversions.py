@@ -371,7 +371,7 @@ def iterfieldconvert(source, converters, failonerror, errorvalue, where,
             try:
                 return converter_functions[i](v, *args)
             except Exception as e:
-                if failonerror == 'yield_exceptions':
+                if failonerror == 'inline':
                     return e
                 elif failonerror:
                     raise e

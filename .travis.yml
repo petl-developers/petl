@@ -1,13 +1,17 @@
+branches:
+  only:
+  - master
 language: python
 python:
+  - "3.6"
   - "3.5"
   - "3.4"
   - "2.7"
-  - "2.6"
 before_install:
   - sudo apt-get -qq update
   - sudo apt-get build-dep -y python-h5py
-install: 
-  - pip install -U pip setuptools wheel
-  - pip install -r ci_requirements.txt
-script: nosetests -v
+install:
+  - pip install -U pip setuptools wheel tox-travis coveralls
+script: tox
+after_success:
+  - coveralls

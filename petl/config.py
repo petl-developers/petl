@@ -16,7 +16,7 @@ display_limit = 5
 display_index_header = False
 display_vrepr = text_type
 sort_buffersize = 100000
-failonerror=False # False, True, 'yield_exceptions'
+failonerror=False # False, True, 'inline'
 """
 Controls what happens when unhandled exceptions are raised in a
 transformation:
@@ -26,5 +26,5 @@ transformation:
 
     - If `True`, the first unhandled exception is raised.
 
-    - If `'yield_exceptions'`, unhandled exceptions are returned.
+    - If `'inline'`, unhandled exceptions are returned.
 """

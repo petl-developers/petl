@@ -1,7 +1,8 @@
 from __future__ import absolute_import, print_function, division
 
 
-from petl.compat import Counter, string_types, maketrans
+from collections import Counter
+from petl.compat import string_types, maketrans
 
 
 from petl.util.base import values, Table, data, wrap
@@ -66,7 +67,7 @@ def valuecounter(table, *field, **kwargs):
         ...          ['b', True],
         ...          ['c', False]]
         >>> etl.valuecounter(table, 'foo')
-        Counter({'b': 2, 'c': 1, 'a': 1})
+        Counter({'b': 2, 'a': 1, 'c': 1})
 
     The `field` argument can be a single field name or index (starting from
     zero) or a tuple of field names and/or indexes.
@@ -112,9 +113,9 @@ def valuecounts(table, *field, **kwargs):
         +-----+-------+-------+-----------+
         | foo | bar   | count | frequency |
         +=====+=======+=======+===========+
-        | 'b' | False |     2 |       0.4 |
-        +-----+-------+-------+-----------+
         | 'a' | True  |     2 |       0.4 |
+        +-----+-------+-------+-----------+
+        | 'b' | False |     2 |       0.4 |
         +-----+-------+-------+-----------+
         | 'b' | None  |     1 |       0.2 |
         +-----+-------+-------+-----------+
@@ -272,7 +273,7 @@ def typecounter(table, field):
         >>> etl.typecounter(table, 'bar')
         Counter({'str': 3, 'int': 2})
         >>> etl.typecounter(table, 'baz')
-        Counter({'str': 2, 'int': 1, 'NoneType': 1, 'float': 1})
+        Counter({'str': 2, 'int': 1, 'float': 1, 'NoneType': 1})
 
     The `field` argument can be a field name or index (starting from zero).
 
@@ -326,13 +327,13 @@ def typecounts(table, field):
         +============+=======+===========+
         | 'int'      |     1 |       0.2 |
         +------------+-------+-----------+
-        | 'NoneType' |     1 |       0.2 |
-        +------------+-------+-----------+
         | 'bytes'    |     1 |       0.2 |
+        +------------+-------+-----------+
+        | 'str'      |     1 |       0.2 |
         +------------+-------+-----------+
         | 'float'    |     1 |       0.2 |
         +------------+-------+-----------+
-        | 'str'      |     1 |       0.2 |
+        | 'NoneType' |     1 |       0.2 |
         +------------+-------+-----------+
 
     The `field` argument can be a field name or index (starting from zero).

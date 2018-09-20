@@ -6,10 +6,10 @@ from itertools import islice, chain, cycle, product,\
     permutations, combinations, takewhile, dropwhile, \
     starmap, groupby, tee
 import operator
-from collections import namedtuple
+from collections import Counter, namedtuple, OrderedDict
+from itertools import compress, combinations_with_replacement
 from petl.compat import imap, izip, izip_longest, ifilter, ifilterfalse, \
-    Counter, OrderedDict, compress, combinations_with_replacement, reduce, \
-    next, string_types, text_type
+    reduce, next, string_types, text_type
 
 
 from petl.errors import FieldSelectionError

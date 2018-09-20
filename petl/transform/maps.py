@@ -2,7 +2,8 @@ from __future__ import absolute_import, print_function, division
 
 
 import operator
-from petl.compat import OrderedDict, next, string_types, text_type
+from collections import OrderedDict
+from petl.compat import next, string_types, text_type
 
 
 import petl.config as config
@@ -122,7 +123,7 @@ def iterfieldmap(source, mappings, failonerror, errorvalue):
             try:
                 val = mapfuns[outfld](row)
             except Exception as e:
-                if failonerror == 'yield_exceptions':
+                if failonerror == 'inline':
                     val = e
                 elif failonerror:
                     raise e
@@ -222,7 +223,7 @@ def iterrowmap(source, rowmapper, header, failonerror):
             outrow = rowmapper(row)
             yield tuple(outrow)
         except Exception as e:
-            if failonerror == 'yield_exceptions':
+            if failonerror == 'inline':
                 yield tuple([e])
             elif failonerror:
                 raise e
@@ -316,7 +317,7 @@ def iterrowmapmany(source, rowgenerator, header, failonerror):
             for outrow in rowgenerator(row):
                 yield tuple(outrow)
         except Exception as e:
-            if failonerror == 'yield_exceptions':
+            if failonerror == 'inline':
                 yield tuple([e])
             elif failonerror:
                 raise e

@@ -2,8 +2,9 @@ from __future__ import absolute_import, print_function, division
 
 
 import operator
+from collections import OrderedDict
 from itertools import islice
-from petl.compat import izip_longest, text_type, OrderedDict, next
+from petl.compat import izip_longest, text_type, next
 
 
 from petl.util.base import asindices, Table
@@ -85,9 +86,9 @@ def facetcolumns(table, key, missing=None):
         ...          ['b', 3]]
         >>> fc = etl.facetcolumns(table, 'foo')
         >>> fc['a']
-        {'foo': ['a'], 'baz': [True], 'bar': [1]}
+        {'foo': ['a'], 'bar': [1], 'baz': [True]}
         >>> fc['b']
-        {'foo': ['b', 'b'], 'baz': [True, None], 'bar': [2, 3]}
+        {'foo': ['b', 'b'], 'bar': [2, 3], 'baz': [True, None]}
 
     """
 

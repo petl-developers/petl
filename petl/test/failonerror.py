@@ -41,11 +41,11 @@ def test_failonerror(input_fn, expected_output):
     else:
         raise Exception('expected exception not raised')
 
-    # When called with failonerror='yield_exceptions', a bad conversion
+    # When called with failonerror='inline', a bad conversion
     # does not raise an exception, and an Exception for the failed
     # conversion is returned in the result.
     expect5 = expected_output[0], expected_output[1]
-    table5 = input_fn(failonerror='yield_exceptions')
+    table5 = input_fn(failonerror='inline')
     ieq(expect5, table5.head(1))
     ieq(expect5, table5.head(1))
     excp = table5[2][0]
@@ -68,11 +68,11 @@ def test_failonerror(input_fn, expected_output):
     else:
         raise Exception('expected exception not raised')
 
-    # When config.failonerror == 'yield_exceptions', a bad conversion
+    # When config.failonerror == 'inline', a bad conversion
     # does not raise an exception, and an Exception for the failed
     # conversion is returned in the result.
     expect7 = expected_output[0], expected_output[1]
-    config.failonerror = 'yield_exceptions'
+    config.failonerror = 'inline'
     table7 = input_fn()
     ieq(expect7, table7.head(1))
     ieq(expect7, table7.head(1))
