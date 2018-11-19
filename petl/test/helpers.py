@@ -8,14 +8,11 @@ from nose.tools import eq_, assert_almost_equal
 def ieq(expect, actual, cast=None):
     ie = iter(expect)
     ia = iter(actual)
-    try:
-        for e, a in izip_longest(ie, ia, fillvalue=None):
-            if cast:
-                a = cast(a)
-            eq_(e, a)
-    except:
-        return
- 
+    for e, a in izip_longest(ie, ia, fillvalue=None):
+        if cast:
+            a = cast(a)
+        eq_(e, a)
+        
     
 def test_iassertequal():
     x = ['a', 'b']
