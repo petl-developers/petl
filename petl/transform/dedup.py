@@ -202,8 +202,12 @@ def iterunique(source, key):
     # N.B., this may raise an exception on short rows, depending on
     # the field selection
     getkey = operator.itemgetter(*indices)
-    
-    prev = next(it)
+
+    try:
+        prev = next(it)
+    except StopIteration:
+        return
+
     prev_key = getkey(prev)
     prev_comp_ne = True
     
