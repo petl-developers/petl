@@ -309,6 +309,8 @@ def read_source_from_arg(source):
         if any(map(source.startswith, ['http://', 'https://', 'ftp://'])):
             if source.endswith('.gz') or source.endswith('.bgz'):
                 return GzipSource(source, remote=True)
+            elif source.endswith('.bz2'):
+                return BZ2Source(source, remote=True)
             else:
                 return URLSource(source)
         elif source.endswith('.gz') or source.endswith('.bgz'):
