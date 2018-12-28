@@ -35,13 +35,20 @@ class FileSource(object):
 
 class GzipSource(object):
 
-    def __init__(self, filename, **kwargs):
+    def __init__(self, filename, remote=False, **kwargs):
         self.filename = filename
+        self.remote = remote
         self.kwargs = kwargs
 
     @contextmanager
     def open(self, mode='r'):
-        source = gzip.open(self.filename, mode, **self.kwargs)
+        if self.remote:
+            if not mode.startswith('r'):
+                raise ArgumentError('source is read-only')
+            filehandle = urlopen(self.filename)
+        else:
+            filehandle = self.filename
+        source = gzip.open(filehandle, mode, **self.kwargs)
         try:
             yield source
         finally:
@@ -50,13 +57,20 @@ class GzipSource(object):
 
 class BZ2Source(object):
 
-    def __init__(self, filename, **kwargs):
+    def __init__(self, filename, remote=False, **kwargs):
         self.filename = filename
+        self.remote = remote
         self.kwargs = kwargs
 
     @contextmanager
     def open(self, mode='r'):
-        source = bz2.BZ2File(self.filename, mode, **self.kwargs)
+        if self.remote:
+            if not mode.startswith('r'):
+                raise ArgumentError('source is read-only')
+            filehandle = urlopen(self.filename)
+        else:
+            filehandle = self.filename
+        source = bz2.BZ2File(filehandle, mode, **self.kwargs)
         try:
             yield source
         finally:
@@ -247,7 +261,7 @@ class MemorySource(object):
                     self.buffer = StringIO()
             elif 'a' in mode:
                 if self.buffer is None:
-                    if 'b' in mode:
+                    if 'b' in self.buffer:
                         self.buffer = BytesIO()
                     else:
                         self.buffer = StringIO()
@@ -293,7 +307,10 @@ def read_source_from_arg(source):
         return StdinSource()
     elif isinstance(source, string_types):
         if any(map(source.startswith, ['http://', 'https://', 'ftp://'])):
-            return URLSource(source)
+            if source.endswith('.gz') or source.endswith('.bgz'):
+                return GzipSource(source, remote=True)
+            else:
+                return URLSource(source)
         elif source.endswith('.gz') or source.endswith('.bgz'):
             return GzipSource(source)
         elif source.endswith('.bz2'):
