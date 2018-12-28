@@ -201,11 +201,11 @@ def dictlookup(table, key, dictionary=None):
         ...           ['b', 3, False]]
         >>> lkp = etl.dictlookup(table2, ('foo', 'bar'))
         >>> lkp[('a', 1)]
-        [{'foo': 'a', 'baz': True, 'bar': 1}]
+        [{'foo': 'a', 'bar': 1, 'baz': True}]
         >>> lkp[('b', 2)]
-        [{'foo': 'b', 'baz': False, 'bar': 2}]
+        [{'foo': 'b', 'bar': 2, 'baz': False}]
         >>> lkp[('b', 3)]
-        [{'foo': 'b', 'baz': True, 'bar': 3}, {'foo': 'b', 'baz': False, 'bar': 3}]
+        [{'foo': 'b', 'bar': 3, 'baz': True}, {'foo': 'b', 'bar': 3, 'baz': False}]
         >>> # data can be loaded into an existing dictionary-like
         ... # object, including persistent dictionaries created via the
         ... # shelve module
@@ -279,11 +279,11 @@ def dictlookupone(table, key, dictionary=None, strict=False):
         ...           ['b', 3, False]]
         >>> lkp = etl.dictlookupone(table2, ('foo', 'bar'))
         >>> lkp[('a', 1)]
-        {'foo': 'a', 'baz': True, 'bar': 1}
+        {'foo': 'a', 'bar': 1, 'baz': True}
         >>> lkp[('b', 2)]
-        {'foo': 'b', 'baz': False, 'bar': 2}
+        {'foo': 'b', 'bar': 2, 'baz': False}
         >>> lkp[('b', 3)]
-        {'foo': 'b', 'baz': True, 'bar': 3}
+        {'foo': 'b', 'bar': 3, 'baz': True}
         >>> # data can be loaded into an existing dictionary-like
         ... # object, including persistent dictionaries created via the
         ... # shelve module

@@ -67,7 +67,7 @@ def test_dicts_shortrows():
 
 
 def test_records():
-    table = (('foo', 'bar'), ('a', 1), ('b', 2))
+    table = (('foo', 'bar'), ('a', 1), ('b', 2), ('c', 3))
     actual = records(table)
     # access items
     it = iter(actual)
@@ -85,6 +85,13 @@ def test_records():
     o = next(it)
     eq_('b', o.foo)
     eq_(2, o.bar)
+    # access with get() method
+    it = iter(actual)
+    o = next(it)
+    eq_('a', o.get('foo'))
+    eq_(1, o.get('bar'))
+    eq_(None, o.get('baz'))
+    eq_('qux', o.get('baz', default='qux'))
 
 
 def test_records_errors():
@@ -95,13 +102,13 @@ def test_records_errors():
     o = next(it)
     try:
         o['baz']
-    except ArgumentError:
+    except KeyError:
         pass
     else:
         raise Exception('expected exception not raised')
     try:
         o.baz
-    except ArgumentError:
+    except AttributeError:
         pass
     else:
         raise Exception('expected exception not raised')

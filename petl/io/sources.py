@@ -247,7 +247,7 @@ class MemorySource(object):
                     self.buffer = StringIO()
             elif 'a' in mode:
                 if self.buffer is None:
-                    if 'b' in self.buffer:
+                    if 'b' in mode:
                         self.buffer = BytesIO()
                     else:
                         self.buffer = StringIO()

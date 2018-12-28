@@ -2,7 +2,7 @@ from __future__ import print_function, absolute_import, division
 
 
 from ast import literal_eval
-from distutils.core import setup
+from setuptools import setup
 
 
 def get_version(source='petl/__init__.py'):
@@ -28,11 +28,14 @@ setup(
     description='A Python package for extracting, transforming and loading '
                 'tables of data.',
     long_description=open('README.txt').read(),
+    python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*',
     classifiers=['Intended Audience :: Developers',
                  'License :: OSI Approved :: MIT License',
-                 'Programming Language :: Python :: 2.6',
+                 'Programming Language :: Python :: 2',
                  'Programming Language :: Python :: 2.7',
+                 'Programming Language :: Python :: 3',
                  'Programming Language :: Python :: 3.4',
+                 'Programming Language :: Python :: 3.5',
                  'Topic :: Software Development :: Libraries :: Python Modules'
                  ]
 )

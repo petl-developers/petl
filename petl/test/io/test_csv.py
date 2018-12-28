@@ -61,6 +61,26 @@ def test_fromcsv_lineterminators():
         ieq(expect, actual)
 
 
+def test_fromcsv_quoted():
+    import csv
+    data = [b'"foo","bar"',
+            b'"a",1',
+            b'"b",2',
+            b'"c",2']
+    f = NamedTemporaryFile(mode='wb', delete=False)
+    f.write(b'\n'.join(data))
+    f.close()
+
+    expect = (('foo', 'bar'),
+              ('a', 1),
+              ('b', 2),
+              ('c', 2))
+    actual = fromcsv(f.name, quoting=csv.QUOTE_NONNUMERIC)
+    debug(actual)
+    ieq(expect, actual)
+    ieq(expect, actual)  # verify can iterate twice
+
+
 def test_fromtsv():
 
     data = [b'foo\tbar',
@@ -270,3 +290,22 @@ def test_tocsv_appendcsv_gz():
         eq_(expect, actual)
     finally:
         o.close()
+        
+def test_fromcsv_header():
+
+    header = ['foo', 'bar']
+    data = [b'a,1',
+            b'b,2',
+            b'c,2']
+    f = NamedTemporaryFile(mode='wb', delete=False)
+    f.write(b'\n'.join(data))
+    f.close()
+
+    expect = (('foo', 'bar'),
+              ('a', '1'),
+              ('b', '2'),
+              ('c', '2'))
+    actual = fromcsv(f.name, encoding='ascii', header=header)
+    debug(actual)
+    ieq(expect, actual)
+    ieq(expect, actual)  # verify can iterate twice

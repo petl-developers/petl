@@ -3,7 +3,8 @@ from __future__ import absolute_import, print_function, division
 
 import itertools
 import operator
-from petl.compat import OrderedDict, next, string_types, reduce, text_type
+from collections import OrderedDict
+from petl.compat import next, string_types, reduce, text_type
 
 
 from petl.errors import ArgumentError
@@ -427,9 +428,9 @@ Table.groupselectlast = groupselectlast
 
 def groupselectmin(table, key, value, presorted=False, buffersize=None,
                    tempdir=None, cache=True):
-    """Group by the `key` field then return the row with the maximum of the
+    """Group by the `key` field then return the row with the minimum of the
     `value` field within each group. N.B., will only return one row for each
-    group, even if multiple rows have the same (maximum) value."""
+    group, even if multiple rows have the same (minimum) value."""
 
     return groupselectfirst(sort(table, value, reverse=False), key,
                             presorted=presorted, buffersize=buffersize,
@@ -441,7 +442,7 @@ Table.groupselectmin = groupselectmin
     
 def groupselectmax(table, key, value, presorted=False, buffersize=None,
                    tempdir=None, cache=True):
-    """Group by the `key` field then return the row with the minimum of the
+    """Group by the `key` field then return the row with the maximum of the
     `value` field within each group. N.B., will only return one row for each
     group, even if multiple rows have the same (maximum) value."""
 
@@ -526,7 +527,7 @@ def itermergeduplicates(table, key, missing):
     # determine output fields
     if isinstance(key, string_types):
         outhdr = [key]
-        keyflds = set([key])
+        keyflds = {key}
     else:
         outhdr = list(key)
         keyflds = set(key)

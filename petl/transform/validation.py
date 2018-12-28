@@ -21,7 +21,8 @@ def validate(table, constraints=None, header=None):
         ...     dict(name='foo_int', field='foo', test=int),
         ...     dict(name='bar_date', field='bar', test=etl.dateparser('%Y-%m-%d')),
         ...     dict(name='baz_enum', field='baz', assertion=lambda v: v in ['Y', 'N']),
-        ...     dict(name='not_none', assertion=lambda row: None not in row)
+        ...     dict(name='not_none', assertion=lambda row: None not in row),
+        ...     dict(name='qux_int', field='qux', test=int, optional=True),
         ... ]
         >>> # now validate a table
         ... table = (('foo', 'bar', 'bazzz'),
@@ -65,7 +66,7 @@ def validate(table, constraints=None, header=None):
 
     Returns a table of validation problems.
 
-    """
+    """  # noqa
 
     return ProblemsView(table, constraints=constraints, header=header)
 
@@ -82,6 +83,27 @@ class ProblemsView(Table):
 
     def __iter__(self):
         return iterproblems(self.table, self.constraints, self.header)
+
+
+def normalize_constraints(constraints, flds):
+    """
+    This method renders local constraints such that return value is:
+      * a list, not None
+      * a list of dicts
+      * a list of non-optional constraints or optional with defined field
+
+    .. note:: We use a new variable 'local_constraints' because the constraints
+              parameter may be a mutable collection, and we do not wish to
+              cause side-effects by modifying it locally
+    """
+    local_constraints = constraints or []
+    local_constraints = [dict(**c) for c in local_constraints]
+    local_constraints = [
+        c for c in local_constraints
+        if c.get('field') in flds or
+        not c.get('optional')
+    ]
+    return local_constraints
 
 
 def iterproblems(table, constraints, expected_header):
@@ -103,17 +125,16 @@ def iterproblems(table, constraints, expected_header):
             yield ('__header__', 0, None, None, type(e).__name__)
         flds = expected_flds
 
+    local_constraints = normalize_constraints(constraints, flds)
+
     # setup getters
-    if constraints:
-        constraints = [dict(**c) for c in constraints]  # ensure list of dicts
-        for constraint in constraints:
-            if 'getter' not in constraint:
-                if 'field' in constraint:
-                    # should ensure FieldSelectionError if bad field in
-                    # constraint
-                    indices = asindices(flds, constraint['field'])
-                    getter = operator.itemgetter(*indices)
-                    constraint['getter'] = getter
+    for constraint in local_constraints:
+        if 'getter' not in constraint:
+            if 'field' in constraint:
+                # should ensure FieldSelectionError if bad field in constraint
+                indices = asindices(flds, constraint['field'])
+                getter = operator.itemgetter(*indices)
+                constraint['getter'] = getter
 
     # generate problems
     expected_len = len(flds)
@@ -129,30 +150,29 @@ def iterproblems(table, constraints, expected_header):
             yield ('__len__', i+1, None, l, type(e).__name__)
 
         # user defined constraints
-        if constraints:
-            row = Record(row, flds)
-            for constraint in constraints:
-                name = constraint.get('name', None)
-                field = constraint.get('field', None)
-                assertion = constraint.get('assertion', None)
-                test = constraint.get('test', None)
-                getter = constraint.get('getter', lambda x: x)
-                try:
-                    target = getter(row)
-                except Exception as e:
-                    # getting target value failed, report problem
-                    yield (name, i+1, field, None, type(e).__name__)
-                else:
-                    value = target if field else None
-                    if test is not None:
-                        try:
-                            test(target)
-                        except Exception as e:
-                            # test raised exception, report problem
-                            yield (name, i+1, field, value, type(e).__name__)
-                    if assertion is not None:
-                        try:
-                            assert assertion(target)
-                        except Exception as e:
-                            # assertion raised exception, report problem
-                            yield (name, i+1, field, value, type(e).__name__)
+        row = Record(row, flds)
+        for constraint in local_constraints:
+            name = constraint.get('name', None)
+            field = constraint.get('field', None)
+            assertion = constraint.get('assertion', None)
+            test = constraint.get('test', None)
+            getter = constraint.get('getter', lambda x: x)
+            try:
+                target = getter(row)
+            except Exception as e:
+                # getting target value failed, report problem
+                yield (name, i+1, field, None, type(e).__name__)
+            else:
+                value = target if field else None
+                if test is not None:
+                    try:
+                        test(target)
+                    except Exception as e:
+                        # test raised exception, report problem
+                        yield (name, i+1, field, value, type(e).__name__)
+                if assertion is not None:
+                    try:
+                        assert assertion(target)
+                    except Exception as e:
+                        # assertion raised exception, report problem
+                        yield (name, i+1, field, value, type(e).__name__)

@@ -12,3 +12,5 @@ example*.*
 tmp*
 env/
 spike*
+petl.egg-info
+

@@ -17,9 +17,9 @@ def test_typeset():
 
     actual = typeset(table, 'foo')
     if PY2:
-        expect = set(['str', 'unicode'])
+        expect = {'str', 'unicode'}
     else:
-        expect = set(['bytes', 'str'])
+        expect = {'bytes', 'str'}
     eq_(expect, actual)
 
 
@@ -32,8 +32,8 @@ def test_diffheaders():
               ('a', 1, .3))
 
     add, sub = diffheaders(table1, table2)
-    eq_(set(['quux']), add)
-    eq_(set(['foo']), sub)
+    eq_({'quux'}, add)
+    eq_({'foo'}, sub)
 
 
 def test_diffvalues():
@@ -47,7 +47,7 @@ def test_diffvalues():
               (3, 'c'))
 
     add, sub = diffvalues(table1, table2, 'foo')
-    eq_(set(['c']), add)
-    eq_(set(['b']), sub)
+    eq_({'c'}, add)
+    eq_({'b'}, sub)
 
 
