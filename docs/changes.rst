@@ -4,8 +4,8 @@ Changes
 Version X.X
 -----------
 
-* Added support from reading from remote sources with gzip or bz2 compression 
-  (:issue:`463` - :user:`Marketing1by1`).
+* Added support for reading from remote sources with gzip or bz2 compression 
+  (:issue:`463` - :user:`H-Max`).
 
 * Documentation improvements by :user:`gamesbook` (:issue:`458`).
 
