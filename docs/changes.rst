@@ -4,7 +4,9 @@ Changes
 Version X.X
 -----------
 
-Documentation improvements by :user:`gamesbook` (:issue:`458`).
+* Documentation improvements by :user:`gamesbook` (:issue:`458`).
+* Updated :func:`petl.io.xlsx.fromxlsx` for compatibility with
+  openpyxl 2.6+.
 
 Version 1.2.0
 -------------

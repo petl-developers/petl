@@ -59,8 +59,12 @@ class XLSXView(Table):
         if self.range_string is not None:
             rows = ws[self.range_string]
         else:
-            rows = ws.iter_rows(row_offset=self.row_offset,
-                                column_offset=self.column_offset)
+            ws_max_row = ws.max_row or 0
+            ws_max_column = ws.max_column or 0
+            rows = ws.iter_rows(min_row=self.row_offset+1,
+                                max_row=ws_max_row+self.row_offset,
+                                min_col=self.column_offset+1,
+                                max_col=ws_max_column+self.column_offset)
 
         for row in rows:
             yield tuple(cell.value for cell in row)

@@ -33,6 +33,19 @@ else:
         ieq(expect, tbl)
         ieq(expect, tbl)
 
+    def test_fromxlsx_offset():
+        filename = pkg_resources.resource_filename(
+            'petl', 'test/resources/test.xlsx'
+        )
+        tbl = fromxlsx(filename, 'Sheet1', row_offset=1, column_offset=1)
+        print(tbl.lookall())
+        expect = ((1, None),
+                  (2, None),
+                  (2, None),
+                  (datetime(2012, 1, 1, 0, 0), None))
+        ieq(expect, tbl)
+        ieq(expect, tbl)
+
     def test_fromxlsx_nosheet():
         filename = pkg_resources.resource_filename(
             'petl', 'test/resources/test.xlsx'
