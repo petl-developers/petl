@@ -39,10 +39,10 @@ else:
         )
         tbl = fromxlsx(filename, 'Sheet1', row_offset=1, column_offset=1)
         print(tbl.lookall())
-        expect = ((1, None),
-                  (2, None),
-                  (2, None),
-                  (datetime(2012, 1, 1, 0, 0), None))
+        expect = ((1,),
+                  (2,),
+                  (2,),
+                  (datetime(2012, 1, 1, 0, 0),))
         ieq(expect, tbl)
         ieq(expect, tbl)
 

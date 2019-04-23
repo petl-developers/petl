@@ -62,9 +62,7 @@ class XLSXView(Table):
             ws_max_row = ws.max_row or 0
             ws_max_column = ws.max_column or 0
             rows = ws.iter_rows(min_row=self.row_offset+1,
-                                max_row=ws_max_row+self.row_offset,
-                                min_col=self.column_offset+1,
-                                max_col=ws_max_column+self.column_offset)
+                                min_col=self.column_offset+1)
 
         for row in rows:
             yield tuple(cell.value for cell in row)
