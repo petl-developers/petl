@@ -59,8 +59,6 @@ class XLSXView(Table):
         if self.range_string is not None:
             rows = ws[self.range_string]
         else:
-            ws_max_row = ws.max_row or 0
-            ws_max_column = ws.max_column or 0
             rows = ws.iter_rows(min_row=self.row_offset+1,
                                 min_col=self.column_offset+1)
 
