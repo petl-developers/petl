@@ -4,9 +4,13 @@ Changes
 Version X.X
 -----------
 
-* Documentation improvements by :user:`gamesbook` (:issue:`458`).
 * Updated :func:`petl.io.xlsx.fromxlsx` for compatibility with
-  openpyxl 2.6+.
+  openpyxl 2.6+ (:issue:`465` - :user:`chrullrich`).
+
+* Added support for reading from remote sources with gzip or bz2 compression 
+  (:issue:`463` - :user:`H-Max`).
+
+* Documentation improvements by :user:`gamesbook` (:issue:`458`).
 
 Version 1.2.0
 -------------
