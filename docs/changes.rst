@@ -4,6 +4,11 @@ Changes
 Version 1.3.0
 -------------
 
+.. note::
+    The parameters to the :func:`petl.io.xlsx.fromxlsx` function have changed
+    in this release. The parameters ``row_offset`` and ``col_offset`` are no longer
+    supported. Please use ``min_row``, ``min_col``, ``max_row`` and ``max_col`` instead.
+
 * A new configuration option `failonerror` has been added to the :mod:`petl.config` 
   module. This option affects various transformation functions including 
   :func:`petl.transform.conversions.convert`, :func:`petl.transform.maps.fieldmap`, 
@@ -24,7 +29,10 @@ Version 1.3.0
 * Pass through keyword arguments to :func:`xlrd.open_workbook`. By :user:`gjunqueira`,
   :issue:`470`, :issue:`473`.
 
-* Fixes for upstream API changes in openpyxl and intervaltree modules. The arguments
+* Added new function :func:`petl.io.xlsx.appendxlsx`. By :user:`victormpa` and :user:`alimanfoo`,
+  :issue:`424`, :issue:`475`.
+
+* Fixes for upstream API changes in openpyxl and intervaltree modules. N.B., the arguments
   to :func:`petl.io.xlsx.fromxlsx` have changed for specifying row and column offsets
   to match openpyxl. (:issue:`472` - :user:`alimanfoo`).
   
@@ -39,6 +47,7 @@ Version 1.3.0
   :issue:`466`.
 
 * Documentation improvements by :user:`gamesbook` (:issue:`458`).
+
 
 Version 1.2.0
 -------------

@@ -14,9 +14,7 @@ from petl.util.statistics import onlinestats
 def progress(table, batchsize=1000, prefix="", out=None):
     """
     Report progress on rows passing through to a file or file-like object
-    (defaults to sys.stderr)
-
-    E.g.::
+    (defaults to sys.stderr). E.g.::
 
         >>> import petl as etl
         >>> table = etl.dummytable(100000)
@@ -43,9 +41,7 @@ def progress(table, batchsize=1000, prefix="", out=None):
 def log_progress(table, batchsize=1000, prefix="", logger=None, level=logging.INFO):
     """
     Report progress on rows passing through to a python logger. If logger is
-    none, a new logger will be created that, by default, streams to stdout
-
-    E.g.::
+    none, a new logger will be created that, by default, streams to stdout. E.g.::
 
         >>> import petl as etl
         >>> table = etl.dummytable(100000)
