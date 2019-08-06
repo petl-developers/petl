@@ -1,7 +1,7 @@
 from __future__ import absolute_import, print_function, division
 
-
-from petl.compat import Counter, next
+from collections import Counter
+from petl.compat import next
 from petl.comparison import Comparable
 from petl.util.base import header, Table
 from petl.transform.sorts import sort

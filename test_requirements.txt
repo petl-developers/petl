@@ -1,2 +1,4 @@
 nose
 tox
+coveralls
+coverage

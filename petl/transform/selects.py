@@ -470,6 +470,26 @@ def facet(table, key):
         | 'c' |   2 |      |
         +-----+-----+------+
 
+        >>> # works with compound keys too
+        >>> table2 = [['foo', 'bar', 'baz'],
+        ...           ['a', 1, True],
+        ...           ['b', 2, False],
+        ...           ['b', 3, True],
+        ...           ['b', 3, False]]
+        >>> foobar = etl.facet(table2, ('foo', 'bar'))
+
+        >>> sorted(foobar.keys())
+        [('a', 1), ('b', 2), ('b', 3)]
+
+        >>> foobar[('b', 3)]
+        +-----+-----+-------+
+        | foo | bar | baz   |
+        +=====+=====+=======+
+        | 'b' |   3 | True  |
+        +-----+-----+-------+
+        | 'b' |   3 | False |
+        +-----+-----+-------+
+
     See also :func:`petl.util.materialise.facetcolumns`.
 
     """

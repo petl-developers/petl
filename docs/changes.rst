@@ -1,59 +1,120 @@
 Changes
 =======
 
+Version 1.3.0
+-------------
+
+* A new configuration option `failonerror` has been added to the :mod:`petl.config` 
+  module. This option affects various transformation functions including 
+  :func:`petl.transform.conversions.convert`, :func:`petl.transform.maps.fieldmap`, 
+  :func:`petl.transform.maps.rowmap` and :func:`petl.transform.maps.rowmapmany`. 
+  The option can have values `True` (raise any exceptions encountered during conversion), 
+  `False` (silently use a given `errorvalue` if any exceptions arise during conversion) or 
+  `"inline"` (use any exceptions as the output value). The default value is `False` which 
+  maintains compatibility with previous releases. By :user:`bmaggard`, :issue:`460`, 
+  :issue:`406`, :issue:`365`.
+
+* Pass through keyword arguments to :func:`xlrd.open_workbook`. By :user:`gjunqueira`,
+  :issue:`470`, :issue:`473`.
+
+* Fixes for upstream API changes in openpyxl and intervaltree modules. The arguments
+  to :func:`petl.io.xlsx.fromxlsx` have changed for specifying row and column offsets
+  to match openpyxl. (:issue:`472` - :user:`alimanfoo`).
+  
+* Exposed `read_only` argument in :func:`petl.io.xlsx.fromxlsx` and set default to 
+  False to prevent truncation of files created by LibreOffice. By :user:`mbelmadani`, 
+  :issue:`457`.
+
+* Added support for reading from remote sources with gzip or bz2 compression 
+  (:issue:`463` - :user:`H-Max`).
+  
+* Changed keyed sorts so that comparisons are only by keys. By :user:`DiegoEPaez`, 
+  :issue:`466`.
+
+* Documentation improvements by :user:`gamesbook` (:issue:`458`).
+
+Version 1.2.0
+-------------
+
+Please note that this version drops support for Python 2.6 (:issue:`443`,
+:issue:`444` - :user:`hugovk`).
+
+* Function :func:`petl.transform.basics.addrownumbers` now supports a "field"
+  argument to allow specifying the name of the new field to be added
+  (:issue:`366`, :issue:`367` - :user:`thatneat`).
+* Fix to :func:`petl.io.xlsx.fromxslx` to ensure that the underlying workbook is
+  closed after iteration is complete (:issue:`387` - :user:`mattkatz`).
+* Resolve compatibility issues with newer versions of openpyxl
+  (:issue:`393`, :issue:`394` - :user:`henryrizzi`).
+* Fix deprecation warnings from openpyxl (:issue:`447`, :issue:`445` -
+  :user:`scardine`; :issue:`449` - :user:`alimanfoo`).
+* Changed exceptions to use standard exception classes instead of ArgumentError
+  (:issue:`396` - :user:`bmaggard`).
+* Add support for non-numeric quoting in CSV files (:issue:`377`, :issue:`378`
+  - :user:`vilos`).
+* Fix bug in handling of mode in MemorySource (:issue:`403` - :user:`bmaggard`).
+* Added a get() method to the Record class (:issue:`401`, :issue:`402` -
+  :user:`dusktreader`).
+* Added ability to make constraints optional, i.e., support validation on
+  optional fields (:issue:`399`, :issue:`400` - :user:`dusktreader`).
+* Added support for CSV files without a header row (:issue:`421` -
+  :user:`LupusUmbrae`).
+* Documentation fixes (:issue:`379` - :user:`DeanWay`; :issue:`381` -
+  :user:`PabloCastellano`).
+
 Version 1.1.0
 -------------
 
 * Fixed :func:`petl.transform.reshape.melt` to work with non-string key
-  argument (`#209 <https://github.com/alimanfoo/petl/issues/209>`_).
+  argument (`#209 <https://github.com/petl-developers/petl/issues/209>`_).
 * Added example to docstring of :func:`petl.transform.dedup.conflicts` to
   illustrate how to analyse the source of conflicts when rows are merged from
   multiple tables
-  (`#256 <https://github.com/alimanfoo/petl/issues/256>`_).
+  (`#256 <https://github.com/petl-developers/petl/issues/256>`_).
 * Added functions for working with bcolz ctables, see :mod:`petl.io.bcolz`
-  (`#310 <https://github.com/alimanfoo/petl/issues/310>`_).
+  (`#310 <https://github.com/petl-developers/petl/issues/310>`_).
 * Added :func:`petl.io.base.fromcolumns`
-  (`#316 <https://github.com/alimanfoo/petl/issues/316>`_).
+  (`#316 <https://github.com/petl-developers/petl/issues/316>`_).
 * Added :func:`petl.transform.reductions.groupselectlast`.
-  (`#319 <https://github.com/alimanfoo/petl/issues/319>`_).
+  (`#319 <https://github.com/petl-developers/petl/issues/319>`_).
 * Added example in docstring for :class:`petl.io.sources.MemorySource`
-  (`#323 <https://github.com/alimanfoo/petl/issues/323>`_).
+  (`#323 <https://github.com/petl-developers/petl/issues/323>`_).
 * Added function :func:`petl.transform.basics.stack` as a simpler
   alternative to :func:`petl.transform.basics.cat`. Also behaviour of
   :func:`petl.transform.basics.cat` has changed for tables where the header
   row contains duplicate fields. This was part of addressing a bug in
   :func:`petl.transform.basics.addfield` for tables where the header
   contains duplicate fields
-  (`#327 <https://github.com/alimanfoo/petl/issues/327>`_).
+  (`#327 <https://github.com/petl-developers/petl/issues/327>`_).
 * Change in behaviour of :func:`petl.io.json.fromdicts` to preserve
   ordering of keys if ordered dicts are used. Also added
   :func:`petl.transform.headers.sortheader` to deal with unordered
   cases
-  (`#332 <https://github.com/alimanfoo/petl/issues/332>`_).
+  (`#332 <https://github.com/petl-developers/petl/issues/332>`_).
 * Added keyword `strict` to functions in the :mod:`petl.transform.setops`
   module to enable users to enforce strict set-like behaviour if desired
-  (`#333 <https://github.com/alimanfoo/petl/issues/333>`_).
+  (`#333 <https://github.com/petl-developers/petl/issues/333>`_).
 * Added `epilogue` argument to :func:`petl.util.vis.display` to enable further
   customisation of content of table display in Jupyter notebooks
-  (`#337 <https://github.com/alimanfoo/petl/issues/337>`_).
+  (`#337 <https://github.com/petl-developers/petl/issues/337>`_).
 * Added :func:`petl.transform.selects.biselect` as a convenience for
   obtaining two tables, one with rows matching a condition, the other with
   rows not matching the condition
-  (`#339 <https://github.com/alimanfoo/petl/issues/339>`_).
+  (`#339 <https://github.com/petl-developers/petl/issues/339>`_).
 * Changed :func:`petl.io.json.fromdicts` to avoid making two passes through
   the data
-  (`#341 <https://github.com/alimanfoo/petl/issues/341>`_).
+  (`#341 <https://github.com/petl-developers/petl/issues/341>`_).
 * Changed :func:`petl.transform.basics.addfieldusingcontext` to enable
   running calculations
-  (`#343 <https://github.com/alimanfoo/petl/issues/343>`_).
+  (`#343 <https://github.com/petl-developers/petl/issues/343>`_).
 * Fix behaviour of join functions when tables have no non-key fields
-  (`#345 <https://github.com/alimanfoo/petl/issues/345>`_).
+  (`#345 <https://github.com/petl-developers/petl/issues/345>`_).
 * Fix incorrect default value for 'errors' argument when using codec module
-  (`#347 <https://github.com/alimanfoo/petl/issues/347>`_).
+  (`#347 <https://github.com/petl-developers/petl/issues/347>`_).
 * Added some documentation on how to write extension classes, see :doc:`intro`
-  (`#349 <https://github.com/alimanfoo/petl/issues/349>`_).
+  (`#349 <https://github.com/petl-developers/petl/issues/349>`_).
 * Fix issue with unicode field names
-  (`#350 <https://github.com/alimanfoo/petl/issues/350>`_).
+  (`#350 <https://github.com/petl-developers/petl/issues/350>`_).
 
 Version 1.0
 -----------
@@ -135,7 +196,7 @@ from the `petlx.ipython` package. If you are working within the
 IPython notebook these functions give greater control over how tables
 are rendered. For some examples, see:
 
-  http://nbviewer.ipython.org/github/alimanfoo/petl/blob/v1.0/repr_html.ipynb
+  http://nbviewer.ipython.org/github/petl-developers/petl/blob/v1.0/repr_html.ipynb
 
 Database extract/load functions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

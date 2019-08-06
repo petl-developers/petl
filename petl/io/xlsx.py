@@ -8,11 +8,12 @@ import locale
 from petl.util.base import Table
 
 
-def fromxlsx(filename, sheet=None, range_string=None, row_offset=0,
-             column_offset=0, **kwargs):
+def fromxlsx(filename, sheet=None, range_string=None, min_row=None,
+             min_col=None, max_row=None, max_col=None, read_only=False,
+             **kwargs):
     """
     Extract a table from a sheet in an Excel .xlsx file.
-    
+
     N.B., the sheet name is case sensitive.
 
     The `sheet` argument can be omitted, in which case the first sheet in
@@ -21,8 +22,14 @@ def fromxlsx(filename, sheet=None, range_string=None, row_offset=0,
     The `range_string` argument can be used to provide a range string
     specifying a range of cells to extract.
 
-    The `row_offset` and `column_offset` arguments can be used to
-    specify offsets.
+    The `min_row`, `min_col`, `max_row` and `max_col` arguments can be
+    used to limit the range of cells to extract. They will be ignored
+    if `range_string` is provided.
+
+    The `read_only` argument determines how openpyxl returns the loaded 
+    workbook. Default is `False` as it prevents some LibreOffice files
+    from getting truncated at 65536 rows. `True` should be faster if the
+    file use is read-only and the files are made with Microsoft Excel.
 
     Any other keyword arguments are passed through to
     :func:`openpyxl.load_workbook()`.
@@ -30,52 +37,62 @@ def fromxlsx(filename, sheet=None, range_string=None, row_offset=0,
     """
 
     return XLSXView(filename, sheet=sheet, range_string=range_string,
-                    row_offset=row_offset, column_offset=column_offset,
-                    **kwargs)
+                    min_row=min_row, min_col=min_col, max_row=max_row,
+                    max_col=max_col, read_only=read_only, **kwargs)
 
 
 class XLSXView(Table):
     
     def __init__(self, filename, sheet=None, range_string=None,
-                 row_offset=0, column_offset=0, **kwargs):
+                 min_row=None, min_col=None, max_row=None, max_col=None, 
+                 read_only=False, **kwargs):
         self.filename = filename
         self.sheet = sheet
         self.range_string = range_string
-        self.row_offset = row_offset
-        self.column_offset = column_offset
+        self.min_row = min_row
+        self.min_col = min_col
+        self.max_row = max_row
+        self.max_col = max_col
+        self.read_only = read_only
         self.kwargs = kwargs
 
     def __iter__(self):
         import openpyxl
         wb = openpyxl.load_workbook(filename=self.filename,
-                                    read_only=True, **self.kwargs)
+                                    read_only=self.read_only,
+                                    **self.kwargs)
         if self.sheet is None:
-            ws = wb.get_sheet_by_name(wb.get_sheet_names()[0])
+            ws = wb[wb.sheetnames[0]]
         elif isinstance(self.sheet, int):
-            ws = wb.get_sheet_by_name(wb.get_sheet_names()[self.sheet])
+            ws = wb[wb.sheetnames[self.sheet]]
         else:
-            ws = wb.get_sheet_by_name(str(self.sheet))
+            ws = wb[str(self.sheet)]
 
-        for row in ws.iter_rows(range_string=self.range_string,
-                                row_offset=self.row_offset,
-                                column_offset=self.column_offset):
+        if self.range_string is not None:
+            rows = ws[self.range_string]
+        else:
+            rows = ws.iter_rows(min_row=self.min_row,
+                                min_col=self.min_col,
+                                max_row=self.max_row,
+                                max_col=self.max_col)
+
+        for row in rows:
             yield tuple(cell.value for cell in row)
+
         try:
             wb._archive.close()
-        except AttributeError as e:
+        except AttributeError:
             # just here in case openpyxl stops exposing an _archive property.
             pass
 
 
-def toxlsx(tbl, filename, sheet=None, encoding=None):
+def toxlsx(tbl, filename, sheet=None):
     """
     Write a table to a new Excel .xlsx file.
 
     """
 
     import openpyxl
-    if encoding is None:
-        encoding = locale.getpreferredencoding()
     wb = openpyxl.Workbook(write_only=True)
     ws = wb.create_sheet(title=sheet)
     for row in tbl:
