@@ -9,7 +9,7 @@ from petl.compat import izip_longest, next, xrange
 from petl.util.base import Table
 
 
-def fromxls(filename, sheet=None, use_view=True):
+def fromxls(filename, sheet=None, use_view=True, **kwargs):
     """
     Extract a table from a sheet in an Excel .xls file.
     
@@ -19,15 +19,16 @@ def fromxls(filename, sheet=None, use_view=True):
 
     """
     
-    return XLSView(filename, sheet=sheet, use_view=use_view)
+    return XLSView(filename, sheet=sheet, use_view=use_view, **kwargs)
 
 
 class XLSView(Table):
 
-    def __init__(self, filename, sheet=None, use_view=True):
+    def __init__(self, filename, sheet=None, use_view=True, **kwargs):
         self.filename = filename
         self.sheet = sheet
         self.use_view = use_view
+        self.kwargs = kwargs
 
     def __iter__(self):
 
@@ -45,7 +46,8 @@ class XLSView(Table):
 
         else:
             import xlrd
-            with xlrd.open_workbook(filename=self.filename, on_demand=True) as wb:
+            with xlrd.open_workbook(filename=self.filename,
+                                    on_demand=True, **self.kwargs) as wb:
                 if self.sheet is None:
                     ws = wb.sheet_by_index(0)
                 elif isinstance(self.sheet, int):
