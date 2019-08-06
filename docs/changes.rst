@@ -13,6 +13,10 @@ Version 1.3.0
   `"inline"` (use any exceptions as the output value). The default value is `False` which 
   maintains compatibility with previous releases. By :user:`bmaggard`, :issue:`460`, 
   :issue:`406`, :issue:`365`.
+  
+* A new function :func:`petl.util.timing.log_progress` has been added, which behaves
+  in a similar way to :func:`petl.util.timing.progress` but writes to a Python logger.
+  By :user:`dusktreader`, :issue:`408`, :issue:`407`.
 
 * Pass through keyword arguments to :func:`xlrd.open_workbook`. By :user:`gjunqueira`,
   :issue:`470`, :issue:`473`.
