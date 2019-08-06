@@ -4,7 +4,8 @@ from __future__ import absolute_import, print_function, division
 # standard library dependencies
 from itertools import islice, chain
 from collections import deque
-from petl.compat import izip, izip_longest, next, count, string_types, text_type
+from itertools import count
+from petl.compat import izip, izip_longest, next, string_types, text_type
 
 
 # internal dependencies

@@ -127,7 +127,25 @@ def _iterchunk(fn):
     debug('end of iterchunk, closed %s' % fn)
 
 
-_Keyed = namedtuple('Keyed', ['key', 'obj'])
+class _Keyed(namedtuple('Keyed', ['key', 'obj'])):
+    #  Override default behavior of namedtuple comparisons, only keys need to be compared for heapmerge
+    def __eq__(self, other):
+        return self.key == other.key
+
+    def __lt__(self, other):
+        return self.key < other.key
+
+    def __le__(self, other):
+        return self.key <= other.key
+
+    def __ne__(self, other):
+        return self.key != other.key
+
+    def __gt__(self, other):
+        return self.key > other.key
+
+    def __ge__(self, other):
+        return self.key >= other.key
 
 
 def _heapqmergesorted(key=None, *iterables):
