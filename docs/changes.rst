@@ -4,6 +4,16 @@ Changes
 Version 1.3.0
 -------------
 
+* A new configuration option `failonerror` has been added to the :mod:`petl.config` 
+  module. This option affects various transformation functions including 
+  :func:`petl.transform.conversions.convert`, :func:`petl.transform.maps.fieldmap`, 
+  :func:`petl.transform.maps.rowmap` and :func:`petl.transform.maps.rowmapmany`. 
+  The option can have values `True` (raise any exceptions encountered during conversion), 
+  `False` (silently use a given `errorvalue` if any exceptions arise during conversion) or 
+  `"inline"` (use any exceptions as the output value). The default value is `False` which 
+  maintains compatibility with previous releases. By :user:`bmaggard`, :issue:`460`, 
+  :issue:`406`, :issue:`365`.
+
 * Pass through keyword arguments to :func:`xlrd.open_workbook`. By :user:`gjunqueira`,
   :issue:`470`, :issue:`473`.
 
