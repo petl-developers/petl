@@ -19,7 +19,7 @@ def fromgsheet(filename, credentials, forcename=False, worksheet_title=None,
     `credentials` are used to authenticate with the google apis.
     For more info visit: http://gspread.readthedocs.io/en/latest/oauth2.html
 
-    Set `forcename` to `True` in order to treat `filename` as a name
+    Set `forcename` to `True` in order to treat `filename` as a name.
 
     N.B., the worksheet name is case sensitive.
 
@@ -31,12 +31,12 @@ def fromgsheet(filename, credentials, forcename=False, worksheet_title=None,
     extract. (i.e. 'A1:C7').
 
     Example usage follows::
+
         >>> import petl as etl
         >>> from oauth2client.service_account import ServiceAccountCredentials
         >>> scope = ['https://spreadsheets.google.com/feeds']
         >>> credentials = ServiceAccountCredentials.from_json_keyfile_name('path/to/credentials.json', scope)
         >>> tbl = etl.fromgsheet('example', credentials)
-        or
         >>> tbl = etl.fromgsheet('9zDNETemfau0uY8ZJF0YzXEPB_5GQ75JV', credentials)
 
     This module relies heavily on the work by @burnash and his great gspread
@@ -121,6 +121,7 @@ def togsheet(tbl, filename, credentials, worksheet_title=None,
          'https://www.googleapis.com/auth/drive'
 
     Example usage::
+
         >>> import petl as etl
         >>> from oauth2client.service_account import ServiceAccountCredentials
         >>> scope = ['https://spreadsheets.google.com/feeds',
@@ -151,7 +152,7 @@ def togsheet(tbl, filename, credentials, worksheet_title=None,
 def appendgsheet(tbl, filename, credentials, worksheet_title="Sheet1"):
     """
     Append a table to an existing google shoot at either a new worksheet
-    or the end of an existing worksheet
+    or the end of an existing worksheet.
 
     `filename` is the name of the workbook to append to.
 
@@ -161,6 +162,7 @@ def appendgsheet(tbl, filename, credentials, worksheet_title="Sheet1"):
     `worksheet_title` is the title of the worksheet to append to or create if
     the worksheet does not exist. NOTE: sheet index cannot be used, and None is
     not an option.
+
     """
     import gspread
     gspread_client = gspread.authorize(credentials)

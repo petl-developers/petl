@@ -183,9 +183,9 @@ else:
 
             togsheet(table, filename, credentials)
             appendgsheet(table[:-1],
-                        filename,
-                        credentials,
-                        worksheet_title=append_worksheet)
+                         filename,
+                         credentials,
+                         worksheet_title=append_worksheet)
             result = fromgsheet(filename,
                                 credentials,
                                 worksheet_title=append_worksheet)
