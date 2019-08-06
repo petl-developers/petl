@@ -1,6 +1,7 @@
 branches:
   only:
   - master
+  - "/v\\d+\\.\\d+\\.\\d+([abrc]+\\d)?/"
 language: python
 matrix:
   include:
