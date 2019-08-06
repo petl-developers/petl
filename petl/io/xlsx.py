@@ -5,7 +5,7 @@ from __future__ import absolute_import, print_function, division
 import locale
 
 
-from petl.util.base import Table
+from petl.util.base import Table, data
 
 
 def fromxlsx(filename, sheet=None, range_string=None, min_row=None,
@@ -86,7 +86,7 @@ class XLSXView(Table):
             pass
 
 
-def toxlsx(tbl, filename, sheet=None):
+def toxlsx(tbl, filename, sheet=None, write_header=True):
     """
     Write a table to a new Excel .xlsx file.
 
@@ -95,9 +95,38 @@ def toxlsx(tbl, filename, sheet=None):
     import openpyxl
     wb = openpyxl.Workbook(write_only=True)
     ws = wb.create_sheet(title=sheet)
-    for row in tbl:
+    if write_header:
+        rows = tbl
+    else:
+        rows = data(tbl)
+    for row in rows:
         ws.append(row)
     wb.save(filename)
 
 
 Table.toxlsx = toxlsx
+
+
+def appendxlsx(tbl, filename, sheet=None, write_header=False):
+    """
+    Appends rows to an existing Excel .xlsx file.
+    """
+
+    import openpyxl
+    wb = openpyxl.load_workbook(filename=filename, read_only=False)
+    if sheet is None:
+        ws = wb[wb.sheetnames[0]]
+    elif isinstance(sheet, int):
+        ws = wb[wb.sheetnames[sheet]]
+    else:
+        ws = wb[str(sheet)]
+    if write_header:
+        rows = tbl
+    else:
+        rows = data(tbl)
+    for row in rows:
+        ws.append(row)
+    wb.save(filename)
+
+
+Table.appendxlsx = appendxlsx
