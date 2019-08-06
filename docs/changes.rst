@@ -1,8 +1,12 @@
 Changes
 =======
 
-Version X.X
------------
+Version 1.3.0
+-------------
+
+* Fixes for upstream API changes in openpyxl and intervaltree modules. The arguments
+  to :func:`petl.io.xlsx.fromxlsx` have changed for specifying row and column offsets
+  to match openpyxl. (:issue:`472` - :user:`alimanfoo`).
 
 * Added support for reading from remote sources with gzip or bz2 compression 
   (:issue:`463` - :user:`H-Max`).
