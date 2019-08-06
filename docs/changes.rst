@@ -10,6 +10,10 @@ Version 1.3.0
 * Fixes for upstream API changes in openpyxl and intervaltree modules. The arguments
   to :func:`petl.io.xlsx.fromxlsx` have changed for specifying row and column offsets
   to match openpyxl. (:issue:`472` - :user:`alimanfoo`).
+  
+* Exposed `read_only` argument in :func:`petl.io.xlsx.fromxlsx` and set default to 
+  False to prevent truncation of files created by LibreOffice. By :user:`mbelmadani`, 
+  :issue:`457`.
 
 * Added support for reading from remote sources with gzip or bz2 compression 
   (:issue:`463` - :user:`H-Max`).
