@@ -200,7 +200,10 @@ def _search_tree(tree, start, stop, include_stop):
             stop += 1
             start -= 1
         args = (start, stop)
-    results = sorted(tree.search(*args))
+    if len(args) == 2:
+        results = sorted(tree.overlap(*args))
+    else:
+        results = sorted(tree.at(*args))
     return results
 
 
