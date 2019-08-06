@@ -183,6 +183,7 @@ Excel .xlsx files (openpyxl)
 
 .. autofunction:: petl.io.xlsx.fromxlsx
 .. autofunction:: petl.io.xlsx.toxlsx
+.. autofunction:: petl.io.xlsx.appendxlsx
 
 
 .. module:: petl.io.numpy
