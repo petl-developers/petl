@@ -45,6 +45,10 @@ Version 1.3.0
 
 * Added support for reading from remote sources with gzip or bz2 compression 
   (:issue:`463` - :user:`H-Max`).
+
+* The function :func:`petl.transform.dedup.distinct` has been fixed for the case
+  where ``None`` values appear in the table. By :user:`bmaggard`, :issue:`414`,
+  :issue:`412`.
   
 * Changed keyed sorts so that comparisons are only by keys. By :user:`DiegoEPaez`, 
   :issue:`466`.
