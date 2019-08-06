@@ -564,8 +564,8 @@ def addfields(table, field_defs, missing=None):
         ...           ['-', 56]]
         >>> # using a fixed value or a calculation
         ... table2 = etl.addfields(table1,
-                                   [('baz', 42),
-                                    ('luhrmann', lambda rec: rec['bar'] * 2)])
+        ...                        [('baz', 42),
+        ...                         ('luhrmann', lambda rec: rec['bar'] * 2)])
         >>> table2
         +-----+-----+-----+----------+
         | foo | bar | baz | luhrmann |
@@ -580,8 +580,8 @@ def addfields(table, field_defs, missing=None):
         >>> # you can specify an index as a 3rd item in each tuple -- indicies
         ... # are evaluated in order.
         ... table2 = etl.addfields(table1,
-                                   [('baz', 42, 0),
-                                    ('luhrmann', lambda rec: rec['bar'] * 2, 0)])
+        ...                        [('baz', 42, 0),
+        ...                         ('luhrmann', lambda rec: rec['bar'] * 2, 0)])
         >>> table2
         +----------+-----+-----+-----+
         | luhrmann | baz | foo | bar |

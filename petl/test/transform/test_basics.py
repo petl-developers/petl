@@ -376,11 +376,21 @@ def test_addfields():
     ieq(expectation, result)
 
 
-def test_addfield_uneven_rows():
+def test_addfields_uneven_rows():
     table = (('foo', 'bar'),
              ('M',),
              ('F', 34),
              ('-', 56, 'spong'))
+
+    result = addfields(table, [('baz', 42),
+                               ('qux', 100),
+                               ('qux', 200)])
+    expectation = (('foo', 'bar', 'baz', 'qux', 'qux'),
+                   ('M', None, 42, 100, 200),
+                   ('F', 34, 42, 100, 200),
+                   ('-', 56, 42, 100, 200))
+    ieq(expectation, result)
+    ieq(expectation, result)
 
     result = addfields(table, [('baz', 42),
                                ('qux', 100, 0),
