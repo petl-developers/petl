@@ -8,8 +8,8 @@ import locale
 from petl.util.base import Table
 
 
-def fromxlsx(filename, sheet=None, range_string=None, row_offset=0,
-             column_offset=0, **kwargs):
+def fromxlsx(filename, sheet=None, range_string=None, min_row=None,
+             min_col=None, max_row=None, max_col=None, **kwargs):
     """
     Extract a table from a sheet in an Excel .xlsx file.
 
@@ -21,8 +21,9 @@ def fromxlsx(filename, sheet=None, range_string=None, row_offset=0,
     The `range_string` argument can be used to provide a range string
     specifying a range of cells to extract.
 
-    The `row_offset` and `column_offset` arguments can be used to
-    specify offsets.
+    The `min_row`, `min_col`, `max_row` and `max_col` arguments can be
+    used to limit the range of cells to extract. They will be ignored
+    if `range_string` is provided.
 
     Any other keyword arguments are passed through to
     :func:`openpyxl.load_workbook()`.
@@ -30,19 +31,21 @@ def fromxlsx(filename, sheet=None, range_string=None, row_offset=0,
     """
 
     return XLSXView(filename, sheet=sheet, range_string=range_string,
-                    row_offset=row_offset, column_offset=column_offset,
-                    **kwargs)
+                    min_row=min_row, min_col=min_col, max_row=max_row,
+                    max_col=max_col, **kwargs)
 
 
 class XLSXView(Table):
 
     def __init__(self, filename, sheet=None, range_string=None,
-                 row_offset=0, column_offset=0, **kwargs):
+                 min_row=None, min_col=None, max_row=None, max_col=None, **kwargs):
         self.filename = filename
         self.sheet = sheet
         self.range_string = range_string
-        self.row_offset = row_offset
-        self.column_offset = column_offset
+        self.min_row = min_row
+        self.min_col = min_col
+        self.max_row = max_row
+        self.max_col = max_col
         self.kwargs = kwargs
 
     def __iter__(self):
@@ -59,8 +62,10 @@ class XLSXView(Table):
         if self.range_string is not None:
             rows = ws[self.range_string]
         else:
-            rows = ws.iter_rows(row_offset=self.row_offset,
-                                column_offset=self.column_offset)
+            rows = ws.iter_rows(min_row=self.min_row,
+                                min_col=self.min_col,
+                                max_row=self.max_row,
+                                max_col=self.max_col)
 
         for row in rows:
             yield tuple(cell.value for cell in row)

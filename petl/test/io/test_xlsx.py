@@ -59,6 +59,18 @@ else:
         ieq(expect, tbl)
         ieq(expect, tbl)
 
+    def test_fromxlsx_offset():
+        filename = pkg_resources.resource_filename(
+            'petl', 'test/resources/test.xlsx'
+        )
+        tbl = fromxlsx(filename, 'Sheet1', min_row=2, min_col=2)
+        expect = ((1,),
+                  (2,),
+                  (2,),
+                  (datetime(2012, 1, 1, 0, 0),))
+        ieq(expect, tbl)
+        ieq(expect, tbl)
+
     def test_toxlsx():
         tbl = (('foo', 'bar'),
                ('A', 1),
