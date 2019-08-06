@@ -13,4 +13,5 @@ tmp*
 env/
 spike*
 petl.egg-info
-
+petl/version.py
+pip-wheel-metadata

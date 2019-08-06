@@ -2,3 +2,4 @@ nose
 tox
 coveralls
 coverage
+setuptools-scm
