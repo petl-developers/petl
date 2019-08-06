@@ -420,13 +420,14 @@ class DistinctView(Table):
         # the field selection
         getkey = operator.itemgetter(*indices)
 
+        INIT = object()
         if self.count:
             hdr = tuple(hdr) + (self.count,)
             yield hdr
-            previous = None
+            previous = INIT
             n_dup = 1
             for row in it:
-                if previous is None:
+                if previous is INIT:
                     previous = row
                 else:
                     kprev = getkey(previous)
@@ -441,7 +442,7 @@ class DistinctView(Table):
             yield tuple(previous) + (n_dup,)
         else:
             yield tuple(hdr)
-            previous_keys = None
+            previous_keys = INIT
             for row in it:
                 keys = getkey(row)
                 if keys != previous_keys:
