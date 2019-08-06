@@ -21,7 +21,7 @@ from petl.util.counting import parsecounter, parsecounts, typecounter, \
 from petl.util.materialise import listoflists, listoftuples, tupleoflists, \
     tupleoftuples, columns, facetcolumns
 
-from petl.util.timing import progress, clock
+from petl.util.timing import progress, log_progress, clock
 
 from petl.util.statistics import limits, stats
 

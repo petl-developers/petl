@@ -121,8 +121,7 @@ def test_fromdicts_onepass():
 
 
 def test_fromdicts_ordered():
-
-    from petl.compat import OrderedDict
+    from collections import OrderedDict
     data = [OrderedDict([('foo', 'a'), ('bar', 1)]),
             OrderedDict([('foo', 'b')]),
             OrderedDict([('foo', 'c'), ('bar', 2), ('baz', True)])]

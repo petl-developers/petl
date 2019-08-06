@@ -20,6 +20,7 @@ Basic transformations
 .. autofunction:: petl.transform.basics.stack
 .. autofunction:: petl.transform.basics.skipcomments
 .. autofunction:: petl.transform.basics.addfield
+.. autofunction:: petl.transform.basics.addfields
 .. autofunction:: petl.transform.basics.addcolumn
 .. autofunction:: petl.transform.basics.addrownumbers
 .. autofunction:: petl.transform.basics.addfieldusingcontext
@@ -104,6 +105,7 @@ Regular expressions
 .. autofunction:: petl.transform.regex.searchcomplement
 .. autofunction:: petl.transform.regex.sub
 .. autofunction:: petl.transform.regex.split
+.. autofunction:: petl.transform.regex.splitdown
 .. autofunction:: petl.transform.regex.capture
 
 

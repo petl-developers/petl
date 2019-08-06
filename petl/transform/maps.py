@@ -2,15 +2,17 @@ from __future__ import absolute_import, print_function, division
 
 
 import operator
-from petl.compat import OrderedDict, next, string_types, text_type
+from collections import OrderedDict
+from petl.compat import next, string_types, text_type
 
 
+import petl.config as config
 from petl.errors import ArgumentError
 from petl.util.base import Table, expr, rowgroupby, Record
 from petl.transform.sorts import sort
 
 
-def fieldmap(table, mappings=None, failonerror=False, errorvalue=None):
+def fieldmap(table, mappings=None, failonerror=None, errorvalue=None):
     """
     Transform a table, mapping fields arbitrarily between input and output.
     E.g.::
@@ -52,6 +54,8 @@ def fieldmap(table, mappings=None, failonerror=False, errorvalue=None):
     Note also that the mapping value can be an expression string, which will be
     converted to a lambda function via :func:`petl.util.base.expr`.
 
+    The `failonerror` and `errorvalue` keyword arguments are documented
+    under :func:`petl.config.failonerror`
     """
 
     return FieldMapView(table, mappings=mappings, failonerror=failonerror,
@@ -63,14 +67,15 @@ Table.fieldmap = fieldmap
 
 class FieldMapView(Table):
 
-    def __init__(self, source, mappings=None, failonerror=False,
+    def __init__(self, source, mappings=None, failonerror=None,
                  errorvalue=None):
         self.source = source
         if mappings is None:
             self.mappings = OrderedDict()
         else:
             self.mappings = mappings
-        self.failonerror = failonerror
+        self.failonerror = (config.failonerror if failonerror is None
+                                else failonerror)
         self.errorvalue = errorvalue
 
     def __setitem__(self, key, value):
@@ -118,7 +123,9 @@ def iterfieldmap(source, mappings, failonerror, errorvalue):
             try:
                 val = mapfuns[outfld](row)
             except Exception as e:
-                if failonerror:
+                if failonerror == 'inline':
+                    val = e
+                elif failonerror:
                     raise e
                 else:
                     val = errorvalue
@@ -142,7 +149,7 @@ def composedict(d, srcfld):
     return g
 
 
-def rowmap(table, rowmapper, header, failonerror=False):
+def rowmap(table, rowmapper, header, failonerror=None):
     """
     Transform rows via an arbitrary function. E.g.::
 
@@ -181,6 +188,8 @@ def rowmap(table, rowmapper, header, failonerror=False):
     The `rowmapper` function should accept a single row and return a single
     row (list or tuple).
 
+    The `failonerror` keyword argument is documented under
+    :func:`petl.config.failonerror`
     """
 
     return RowMapView(table, rowmapper, header, failonerror=failonerror)
@@ -191,11 +200,12 @@ Table.rowmap = rowmap
 
 class RowMapView(Table):
 
-    def __init__(self, source, rowmapper, header, failonerror=False):
+    def __init__(self, source, rowmapper, header, failonerror=None):
         self.source = source
         self.rowmapper = rowmapper
         self.header = header
-        self.failonerror = failonerror
+        self.failonerror = (config.failonerror if failonerror is None
+                                else failonerror)
 
     def __iter__(self):
         return iterrowmap(self.source, self.rowmapper, self.header,
@@ -213,11 +223,13 @@ def iterrowmap(source, rowmapper, header, failonerror):
             outrow = rowmapper(row)
             yield tuple(outrow)
         except Exception as e:
-            if failonerror:
+            if failonerror == 'inline':
+                yield tuple([e])
+            elif failonerror:
                 raise e
 
 
-def rowmapmany(table, rowgenerator, header, failonerror=False):
+def rowmapmany(table, rowgenerator, header, failonerror=None):
     """
     Map each input row to any number of output rows via an arbitrary
     function. E.g.::
@@ -267,6 +279,9 @@ def rowmapmany(table, rowgenerator, header, failonerror=False):
     The `rowgenerator` function should accept a single row and yield zero or
     more rows (lists or tuples).
 
+    The `failonerror` keyword argument is documented under
+    :func:`petl.config.failonerror`
+
     See also the :func:`petl.transform.reshape.melt` function.
 
     """
@@ -279,11 +294,12 @@ Table.rowmapmany = rowmapmany
 
 class RowMapManyView(Table):
 
-    def __init__(self, source, rowgenerator, header, failonerror=False):
+    def __init__(self, source, rowgenerator, header, failonerror=None):
         self.source = source
         self.rowgenerator = rowgenerator
         self.header = header
-        self.failonerror = failonerror
+        self.failonerror = (config.failonerror if failonerror is None
+                                else failonerror)
 
     def __iter__(self):
         return iterrowmapmany(self.source, self.rowgenerator, self.header,
@@ -301,7 +317,9 @@ def iterrowmapmany(source, rowgenerator, header, failonerror):
             for outrow in rowgenerator(row):
                 yield tuple(outrow)
         except Exception as e:
-            if failonerror:
+            if failonerror == 'inline':
+                yield tuple([e])
+            elif failonerror:
                 raise e
             else:
                 pass

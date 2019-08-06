@@ -9,7 +9,7 @@ from tempfile import NamedTemporaryFile
 
 
 import petl as etl
-from petl.io.xlsx import fromxlsx, toxlsx
+from petl.io.xlsx import fromxlsx, toxlsx, appendxlsx
 from petl.test.helpers import ieq
 
 
@@ -59,7 +59,21 @@ else:
         ieq(expect, tbl)
         ieq(expect, tbl)
 
-    def test_toxlsx():
+    def test_fromxlsx_offset():
+        filename = pkg_resources.resource_filename(
+            'petl', 'test/resources/test.xlsx'
+        )
+        tbl = fromxlsx(filename, 'Sheet1', min_row=2, min_col=2)
+        expect = ((1,),
+                  (2,),
+                  (2,),
+                  (datetime(2012, 1, 1, 0, 0),))
+        ieq(expect, tbl)
+        ieq(expect, tbl)
+
+    def test_toxlsx_appendxlsx():
+
+        # setup
         tbl = (('foo', 'bar'),
                ('A', 1),
                ('B', 2),
@@ -67,9 +81,16 @@ else:
                (u'é', datetime(2012, 1, 1)))
         f = NamedTemporaryFile(delete=False, suffix='.xlsx')
         f.close()
+
+        # test toxlsx
         toxlsx(tbl, f.name, 'Sheet1')
         actual = fromxlsx(f.name, 'Sheet1')
         ieq(tbl, actual)
+
+        # test appendxlsx
+        appendxlsx(tbl, f.name, 'Sheet1')
+        expect = etl.cat(tbl, tbl)
+        ieq(expect, actual)
 
     def test_toxlsx_nosheet():
         tbl = (('foo', 'bar'),
@@ -91,6 +112,11 @@ else:
                (u'é', datetime(2012, 1, 1)))
         f = NamedTemporaryFile(delete=False, suffix='.xlsx')
         f.close()
-        etl.wrap(tbl).toxlsx(f.name, 'Sheet1')
+        tbl = etl.wrap(tbl)
+        tbl.toxlsx(f.name, 'Sheet1')
         actual = etl.fromxlsx(f.name, 'Sheet1')
         ieq(tbl, actual)
+        tbl.appendxlsx(f.name, 'Sheet1')
+        expect = tbl.cat(tbl)
+        ieq(expect, actual)
+

@@ -70,6 +70,7 @@ Timing
 ------
 
 .. autofunction:: petl.util.timing.progress
+.. autofunction:: petl.util.timing.log_progress
 .. autofunction:: petl.util.timing.clock
 
 

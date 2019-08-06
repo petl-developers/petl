@@ -1,7 +1,7 @@
 from __future__ import absolute_import, print_function, division
 
 
-__version__ = '1.1.1'
+__version__ = '1.2.0'
 
 
 from petl import comparison

@@ -105,14 +105,15 @@ def tobcolz(table, dtype=None, sample=1000, **kwargs):
         >>> ctbl
         ctable((3,), [('foo', '<U7'), ('bar', '<i8'), ('baz', '<f8')])
           nbytes: 132; cbytes: 1023.98 KB; ratio: 0.00
-          cparams := cparams(clevel=5, shuffle=True, cname='blosclz')
+          cparams := cparams(clevel=5, shuffle=1, cname='lz4', quantize=0)
         [('apples', 1, 2.5) ('oranges', 3, 4.4) ('pears', 7, 0.1)]
         >>> ctbl.names
         ['foo', 'bar', 'baz']
         >>> ctbl['foo']
         carray((3,), <U7)
-          nbytes: 84; cbytes: 511.98 KB; ratio: 0.00
-          cparams := cparams(clevel=5, shuffle=True, cname='blosclz')
+          nbytes := 84; cbytes := 511.98 KB; ratio: 0.00
+          cparams := cparams(clevel=5, shuffle=1, cname='lz4', quantize=0)
+          chunklen := 18724; chunksize: 524272; blocksize: 0
         ['apples' 'oranges' 'pears']
 
     Other keyword arguments are passed through to the ctable constructor.

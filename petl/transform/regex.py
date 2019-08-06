@@ -380,3 +380,81 @@ def searchcomplement(table, *args, **kwargs):
 
 
 Table.searchcomplement = searchcomplement
+
+
+def splitdown(table, field, pattern, maxsplit=0, flags=0):
+    """
+    Split a field into multiple rows using a regular expression. E.g.:
+
+        >>> import petl as etl
+        >>> table1 = [['name', 'roles'],
+        ...           ['Jane Doe', 'president,engineer,tailor,lawyer'],
+        ...           ['John Doe', 'rocket scientist,optometrist,chef,knight,sailor']]
+        >>> table2 = etl.splitdown(table1, 'roles', ',')
+        >>> table2.lookall()
+        +------------+--------------------+
+        | name       | roles              |
+        +============+====================+
+        | 'Jane Doe' | 'president'        |
+        +------------+--------------------+
+        | 'Jane Doe' | 'engineer'         |
+        +------------+--------------------+
+        | 'Jane Doe' | 'tailor'           |
+        +------------+--------------------+
+        | 'Jane Doe' | 'lawyer'           |
+        +------------+--------------------+
+        | 'John Doe' | 'rocket scientist' |
+        +------------+--------------------+
+        | 'John Doe' | 'optometrist'      |
+        +------------+--------------------+
+        | 'John Doe' | 'chef'             |
+        +------------+--------------------+
+        | 'John Doe' | 'knight'           |
+        +------------+--------------------+
+        | 'John Doe' | 'sailor'           |
+        +------------+--------------------+
+    
+    """
+
+    return SplitDownView(table, field, pattern, maxsplit, flags)
+
+
+Table.splitdown = splitdown
+
+
+class SplitDownView(Table):
+
+    def __init__(self, table, field, pattern, maxsplit=0, flags=0):
+        self.table = table
+        self.field = field
+        self.pattern = pattern
+        self.maxsplit = maxsplit
+        self.flags = flags
+
+    def __iter__(self):
+        return itersplitdown(self.table, self.field, self.pattern,
+                             self.maxsplit, self.flags)
+
+
+def itersplitdown(table, field, pattern, maxsplit, flags):
+
+    prog = re.compile(pattern, flags)
+    it = iter(table)
+    hdr = next(it)
+    flds = list(map(text_type, hdr))
+
+    if isinstance(field, int) and field < len(hdr):
+        field_index = field
+        field = hdr[field_index]
+    elif field in flds:
+        field_index = flds.index(field)
+    else:
+        raise ArgumentError('field invalid: must be either field name or index')
+
+    yield tuple(hdr)
+
+    for row in it:
+        value = row[field_index]
+        for v in prog.split(value, maxsplit):
+            yield tuple(v if i == field_index else row[i] for i in range(len(hdr)))
+

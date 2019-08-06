@@ -4,6 +4,7 @@ from __future__ import absolute_import, print_function, division
 from petl.compat import next, integer_types, string_types, text_type
 
 
+import petl.config as config
 from petl.errors import ArgumentError, FieldSelectionError
 from petl.util.base import Table, expr, header, Record
 from petl.util.parsers import numparser
@@ -165,6 +166,9 @@ def convert(table, *args, **kwargs):
     arguments to the conversion function (so, i.e., the conversion function
     should accept two arguments).
 
+    Also accepts `failonerror` and `errorvalue` keyword arguments,
+    documented under :func:`petl.config.failonerror`
+
     """
 
     converters = None
@@ -286,7 +290,7 @@ Table.convertnumbers = convertnumbers
 
 class FieldConvertView(Table):
 
-    def __init__(self, source, converters=None, failonerror=False,
+    def __init__(self, source, converters=None, failonerror=None,
                  errorvalue=None, where=None, pass_row=False):
         self.source = source
         if converters is None:
@@ -297,7 +301,8 @@ class FieldConvertView(Table):
             self.converters = dict([(i, v) for i, v in enumerate(converters)])
         else:
             raise ArgumentError('unexpected converters: %r' % converters)
-        self.failonerror = failonerror
+        self.failonerror = (config.failonerror if failonerror is None
+                                else failonerror)
         self.errorvalue = errorvalue
         self.where = where
         self.pass_row = pass_row
@@ -366,7 +371,9 @@ def iterfieldconvert(source, converters, failonerror, errorvalue, where,
             try:
                 return converter_functions[i](v, *args)
             except Exception as e:
-                if failonerror:
+                if failonerror == 'inline':
+                    return e
+                elif failonerror:
                     raise e
                 else:
                     return errorvalue

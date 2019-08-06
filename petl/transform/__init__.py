@@ -2,7 +2,7 @@ from __future__ import absolute_import, print_function, division
 
 from petl.transform.basics import cut, cutout, movefield, cat, annex, \
     addfield, addfieldusingcontext, addrownumbers, addcolumn, rowslice, head, \
-    tail, skipcomments, stack
+    tail, skipcomments, stack, addfields
 
 from petl.transform.headers import rename, setheader, extendheader, \
     pushheader, skip, prefixheader, suffixheader, sortheader
@@ -33,7 +33,7 @@ from petl.transform.reductions import rowreduce, mergeduplicates,\
 from petl.transform.fills import filldown, fillright, fillleft
 
 from petl.transform.regex import capture, split, search, searchcomplement, \
-    sub
+    sub, splitdown
 
 from petl.transform.reshape import melt, recast, transpose, pivot, flatten, \
     unflatten

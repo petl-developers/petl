@@ -5,7 +5,7 @@ from petl.test.helpers import ieq
 from petl.util import expr, empty, coalesce
 from petl.transform.basics import cut, cat, addfield, rowslice, head, tail, \
     cutout, skipcomments, annex, addrownumbers, addcolumn, \
-    addfieldusingcontext, movefield, stack
+    addfieldusingcontext, movefield, stack, addfields
 
 
 def test_cut():
@@ -355,6 +355,50 @@ def test_addfield_dupfield():
                    ('M', 12, 42),
                    ('F', 34, 42),
                    ('-', 56, 42))
+    ieq(expectation, result)
+    ieq(expectation, result)
+
+
+def test_addfields():
+    table = (('foo', 'bar'),
+             ('M', 12),
+             ('F', 34),
+             ('-', 56))
+
+    result = addfields(table, [('baz', 42),
+                               ('qux', lambda row: '%s,%s' % (row.foo, row.bar)),
+                               ('fiz', lambda rec: rec['bar'] * 2, 0)])
+    expectation = (('fiz', 'foo', 'bar', 'baz', 'qux'),
+                   (24, 'M', 12, 42, 'M,12'),
+                   (68, 'F', 34, 42, 'F,34'),
+                   (112, '-', 56, 42, '-,56'))
+    ieq(expectation, result)
+    ieq(expectation, result)
+
+
+def test_addfields_uneven_rows():
+    table = (('foo', 'bar'),
+             ('M',),
+             ('F', 34),
+             ('-', 56, 'spong'))
+
+    result = addfields(table, [('baz', 42),
+                               ('qux', 100),
+                               ('qux', 200)])
+    expectation = (('foo', 'bar', 'baz', 'qux', 'qux'),
+                   ('M', None, 42, 100, 200),
+                   ('F', 34, 42, 100, 200),
+                   ('-', 56, 42, 100, 200))
+    ieq(expectation, result)
+    ieq(expectation, result)
+
+    result = addfields(table, [('baz', 42),
+                               ('qux', 100, 0),
+                               ('qux', 200, 0)])
+    expectation = (('qux', 'qux', 'foo', 'bar', 'baz'),
+                   (200, 100, 'M', None, 42),
+                   (200, 100, 'F', 34, 42),
+                   (200, 100, '-', 56, 42))
     ieq(expectation, result)
     ieq(expectation, result)
 
