@@ -20,6 +20,7 @@ Basic transformations
 .. autofunction:: petl.transform.basics.stack
 .. autofunction:: petl.transform.basics.skipcomments
 .. autofunction:: petl.transform.basics.addfield
+.. autofunction:: petl.transform.basics.addfields
 .. autofunction:: petl.transform.basics.addcolumn
 .. autofunction:: petl.transform.basics.addrownumbers
 .. autofunction:: petl.transform.basics.addfieldusingcontext

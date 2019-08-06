@@ -26,6 +26,9 @@ Version 1.3.0
 * Added new function :func:`petl.transform.regex.splitdown` for splitting a value into
   multiple rows. By :user:`John-Dennert`, :issue:`430`, :issue:`386`.
 
+* Added new function :func:`petl.transform.basics.addfields` to add multiple new fields
+  at a time. By :user:`mjumbewu`, :issue:`417`.
+
 * Pass through keyword arguments to :func:`xlrd.open_workbook`. By :user:`gjunqueira`,
   :issue:`470`, :issue:`473`.
 
