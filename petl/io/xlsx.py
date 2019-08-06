@@ -30,19 +30,21 @@ def fromxlsx(filename, sheet=None, range_string=None, row_offset=0,
     """
 
     return XLSXView(filename, sheet=sheet, range_string=range_string,
-                    row_offset=row_offset, column_offset=column_offset,
+                    min_row=row_offset, min_col=column_offset,
                     **kwargs)
 
 
 class XLSXView(Table):
 
     def __init__(self, filename, sheet=None, range_string=None,
-                 row_offset=0, column_offset=0, **kwargs):
+                 min_row=None, min_col=None, max_row=None, max_col=None, **kwargs):
         self.filename = filename
         self.sheet = sheet
         self.range_string = range_string
-        self.row_offset = row_offset
-        self.column_offset = column_offset
+        self.min_row = min_row
+        self.min_col = min_col
+        self.max_row = max_row
+        self.max_col = max_col
         self.kwargs = kwargs
 
     def __iter__(self):
@@ -59,8 +61,10 @@ class XLSXView(Table):
         if self.range_string is not None:
             rows = ws[self.range_string]
         else:
-            rows = ws.iter_rows(row_offset=self.row_offset,
-                                column_offset=self.column_offset)
+            rows = ws.iter_rows(min_row=self.min_row,
+                                min_col=self.min_col,
+                                max_row=self.max_row,
+                                max_col=self.max_col)
 
         for row in rows:
             yield tuple(cell.value for cell in row)
