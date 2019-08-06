@@ -77,16 +77,14 @@ class XLSXView(Table):
             pass
 
 
-def toxlsx(tbl, filename, sheet=None, encoding=None):
+def toxlsx(tbl, filename, sheet=None):
     """
     Write a table to a new Excel .xlsx file.
 
     """
 
     import openpyxl
-    if encoding is None:
-        encoding = locale.getpreferredencoding()
-    wb = openpyxl.Workbook(encoding=encoding, write_only=True)
+    wb = openpyxl.Workbook(write_only=True)
     ws = wb.create_sheet(title=sheet)
     for row in tbl:
         ws.append(row)
