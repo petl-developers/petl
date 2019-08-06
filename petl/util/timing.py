@@ -18,7 +18,7 @@ def progress(table, batchsize=1000, prefix="", out=None):
 
         >>> import petl as etl
         >>> table = etl.dummytable(100000)
-        >>> table.progress(10000).tocsv('example.csv')
+        >>> table.progress(10000).tocsv('example.csv')  # doctest: +SKIP
         10000 rows in 0.13s (78363 row/s); batch in 0.13s (78363 row/s)
         20000 rows in 0.22s (91679 row/s); batch in 0.09s (110448 row/s)
         30000 rows in 0.31s (96573 row/s); batch in 0.09s (108114 row/s)
@@ -45,7 +45,7 @@ def log_progress(table, batchsize=1000, prefix="", logger=None, level=logging.IN
 
         >>> import petl as etl
         >>> table = etl.dummytable(100000)
-        >>> table.log_progress(10000).tocsv('example.csv')
+        >>> table.log_progress(10000).tocsv('example.csv')  # doctest: +SKIP
         10000 rows in 0.13s (78363 row/s); batch in 0.13s (78363 row/s)
         20000 rows in 0.22s (91679 row/s); batch in 0.09s (110448 row/s)
         30000 rows in 0.31s (96573 row/s); batch in 0.09s (108114 row/s)
@@ -205,7 +205,7 @@ def clock(table):
         >>> t2 = etl.convert(c1, 'foo', lambda v: v**2)
         >>> c2 = etl.clock(t2)
         >>> p = etl.progress(c2, 10000)
-        >>> etl.tocsv(p, 'example.csv')
+        >>> etl.tocsv(p, 'example.csv')  # doctest: +SKIP
         10000 rows in 0.23s (44036 row/s); batch in 0.23s (44036 row/s)
         20000 rows in 0.38s (52167 row/s); batch in 0.16s (63979 row/s)
         30000 rows in 0.54s (55749 row/s); batch in 0.15s (64624 row/s)
@@ -218,13 +218,13 @@ def clock(table):
         100000 rows in 1.62s (61703 row/s); batch in 0.15s (65012 row/s)
         100000 rows in 1.62s (61700 row/s); batches in 0.16 +/- 0.02s [0.15-0.23] (62528 +/- 6173 rows/s [44036-65012])
         >>> # time consumed retrieving rows from t1
-        ... c1.time
+        ... c1.time  # doctest: +SKIP
         0.7243089999999492
         >>> # time consumed retrieving rows from t2
-        ... c2.time
+        ... c2.time  # doctest: +SKIP
         1.1704209999999766
         >>> # actual time consumed by the convert step
-        ... c2.time - c1.time
+        ... c2.time - c1.time  # doctest: +SKIP
         0.4461120000000274
 
     See also :func:`petl.util.timing.progress`.
@@ -247,7 +247,10 @@ class ClockView(Table):
         it = iter(self.wrapped)
         while True:
             before = time.clock()
-            row = next(it)
+            try:
+                row = next(it)
+            except StopIteration:
+                return
             after = time.clock()
             self.time += (after - before)
             yield row
