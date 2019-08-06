@@ -17,6 +17,9 @@ Version 1.3.0
 
 * Added support for reading from remote sources with gzip or bz2 compression 
   (:issue:`463` - :user:`H-Max`).
+  
+* Changed keyed sorts so that comparisons are only by keys. By :user:`DiegoEPaez`, 
+  :issue:`466`.
 
 * Documentation improvements by :user:`gamesbook` (:issue:`458`).
 
