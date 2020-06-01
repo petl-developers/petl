@@ -659,7 +659,7 @@ def expr(s):
 
     """
 
-    prog = re.compile('\{([^}]+)\}')
+    prog = re.compile(r'\{([^}]+)\}')
 
     def repl(matchobj):
         return "rec['%s']" % matchobj.group(1)
