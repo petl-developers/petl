@@ -1,14 +1,14 @@
 Changes
 =======
 
-Version 1.3.1
+Version 1.4.0
 -------------
 
 * Added functions :func:`petl.io.avro.fromavro`, :func:`petl.io.avro.toavro`,
   and :func:`petl.io.avro.appendavro` for reading and writing to 
   `Apache Avro <https://avro.apache.org/docs/current/spec.html>` files. Avro
   generally is faster and safer than text formats like Json, XML or CSV.
-  By :user:`juarezr`, :issue:`000`.
+  By :user:`juarezr`, :issue:`490`.
 
 
 Version 1.3.0

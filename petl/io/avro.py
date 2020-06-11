@@ -85,7 +85,7 @@ def fromavro(source, limit=None, skip=0, **avro_args):
         | 'Ted' |      23 |  51 |
         +-------+---------+-----+
 
-    .. versionadded:: 1.3.1
+    .. versionadded:: 1.4.0
 
     """
 
@@ -186,7 +186,7 @@ def toavro(table, target, schema=None, sample=9,
         | 'Ted' |      23 |  51 |
         +-------+---------+-----+
 
-    .. versionadded:: 1.3.1
+    .. versionadded:: 1.4.0
 
     .. _Apache Avro: https://avro.apache.org/docs/current/spec.html
     .. _reference: https://avro.apache.org/docs/current/spec.html#schemas
@@ -225,7 +225,7 @@ def appendavro(table, target, schema=None, sample=9, **avro_args):
 
     See :meth:`petl.io.avro.toavro` method for more information and examples.
 
-    .. versionadded:: 1.3.1
+    .. versionadded:: 1.4.0
 
     """
     target2 = write_source_from_arg(target)
