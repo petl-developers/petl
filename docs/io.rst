@@ -288,6 +288,52 @@ Text indexes (Whoosh)
 .. module:: petl.io.sources
 .. _io_helpers:
 
+Avro files (fastavro)
+----------------------------
+
+.. note::
+
+    The following functions require `fastavro
+    <https://github.com/fastavro/fastavro>`_ to be
+    installed, e.g.::
+
+        $ pip install fastavro
+
+.. autofunction:: petl.io.avro.fromavro
+.. autofunction:: petl.io.avro.toavro
+.. autofunction:: petl.io.avro.appendavro
+
+.. literalinclude:: ../petl/test/io/test_avro_schemas.py
+   :name: logical_schema
+   :language: python
+   :caption: Avro schema for logical types 
+   :start-after: begin_logical_schema
+   :end-before: end_logical_schema
+
+.. literalinclude:: ../petl/test/io/test_avro_schemas.py
+   :name: nullable_schema
+   :language: python
+   :caption: Avro schema with nullable fields
+   :start-after: begin_nullable_schema
+   :end-before: end_nullable_schema
+
+.. literalinclude:: ../petl/test/io/test_avro_schemas.py
+   :name: array_schema
+   :language: python
+   :caption: Avro schema with array values in fields
+   :start-after: begin_array_schema
+   :end-before: end_array_schema
+
+.. literalinclude:: ../petl/test/io/test_avro_schemas.py
+   :name: complex_schema
+   :language: python
+   :caption: Example of recursive complex Avro schema
+   :start-after: begin_complex_schema
+   :end-before: end_complex_schema
+
+.. module:: petl.io.avro
+.. _io_avro:
+
 I/O helper classes
 ------------------
 

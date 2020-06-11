@@ -35,3 +35,5 @@ from petl.io.whoosh import fromtextindex, searchtextindex, \
     searchtextindexpage, totextindex, appendtextindex
 
 from petl.io.bcolz import frombcolz, tobcolz, appendbcolz
+
+from petl.io.avro import fromavro, toavro, appendavro
