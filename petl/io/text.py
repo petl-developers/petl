@@ -175,7 +175,7 @@ def _writetext(table, source, mode, encoding, errors, template, prologue,
     assert template is not None, 'template is required'
 
     # prepare source
-    source = write_source_from_arg(source)
+    source = write_source_from_arg(source, mode)
 
     with source.open(mode) as buf:
 

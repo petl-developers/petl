@@ -116,7 +116,7 @@ Table.appendpickle = appendpickle
 
 
 def _writepickle(table, source, mode, protocol, write_header):
-    source = write_source_from_arg(source)
+    source = write_source_from_arg(source, mode)
     with source.open(mode) as f:
         it = iter(table)
         hdr = next(it)

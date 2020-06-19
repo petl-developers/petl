@@ -228,7 +228,7 @@ def appendavro(table, target, schema=None, sample=9, **avro_args):
     .. versionadded:: 1.4.0
 
     """
-    target2 = write_source_from_arg(target)
+    target2 = write_source_from_arg(target, mode='ab')
     _write_toavro(table,
                   target=target2,
                   mode='a+b',

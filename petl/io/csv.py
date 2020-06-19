@@ -125,7 +125,7 @@ def appendcsv(table, source=None, encoding=None, errors='strict',
 
     """
 
-    source = write_source_from_arg(source)
+    source = write_source_from_arg(source, mode='ab')
     csvargs.setdefault('dialect', 'excel')
     appendcsv_impl(table, source=source, encoding=encoding, errors=errors,
                    write_header=write_header, **csvargs)
