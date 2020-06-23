@@ -20,6 +20,8 @@ string it is interpreted as follows:
 * string ending with `.bz2` - read from file via bz2 decompression
 * any other string - read directly from file
 
+.. _io_extract_codec:
+
 Some helper classes are also available for reading from other types of
 file-like sources, e.g., reading data from a Zip file, a string or a
 subprocess, see the section on :ref:`io_helpers` below for more
@@ -46,6 +48,8 @@ follows:
 * string ending with `.gz` or `.bgz` - write to file via gzip decompression
 * string ending with `.bz2` - write to file via bz2 decompression
 * any other string - write directly to file
+
+.. _io_load_codec:
 
 Some helper classes are also available for writing to other types of
 file-like sources, e.g., writing to a Zip file or string buffer, see
@@ -285,8 +289,8 @@ Text indexes (Whoosh)
 .. autofunction:: petl.io.whoosh.totextindex
 .. autofunction:: petl.io.whoosh.appendtextindex
 
-.. module:: petl.io.sources
-.. _io_helpers:
+.. module:: petl.io.avro
+.. _io_avro:
 
 Avro files (fastavro)
 ----------------------------
@@ -331,8 +335,8 @@ Avro files (fastavro)
    :start-after: begin_complex_schema
    :end-before: end_complex_schema
 
-.. module:: petl.io.avro
-.. _io_avro:
+.. module:: petl.io.sources
+.. _io_helpers:
 
 I/O helper classes
 ------------------
@@ -364,3 +368,53 @@ for full details.
 .. autoclass:: petl.io.sources.URLSource
 .. autoclass:: petl.io.sources.MemorySource
 .. autoclass:: petl.io.sources.PopenSource
+
+.. _io_remotes:
+
+Remote I/O helper classes
+-------------------------
+
+The following classes are helpers for reading (``from...()``) and writing
+(``to...()``) functions transparently as a file-like source.
+
+There are no need to instantiate them. They are used in the mecanism described
+in :ref:`Extract <io_extract>` and :ref:`Load <io_load>`.
+
+It's possible to read and write just by prefixing the protocol (e.g: `s3://`)
+in the source path of the file.
+
+.. autoclass:: petl.io.source.s3.S3Source
+.. autoclass:: petl.io.source.smb.SMBSource
+
+.. _io_codecs:
+
+Compression I/O helper classes
+------------------------------
+
+The following classes are helpers for decompressing (``from...()``) and 
+compressing (``to...()``) in functions transparently as a file-like source.
+
+There are no need to instantiate them. They are used in the mecanism described
+in :ref:`Extract <io_extract_codec>` and :ref:`Load <io_load_codec>`.
+
+It's possible to compress and decompress just by specifying the file extension
+(e.g: `.csv.xz`) in end of the source filename.
+
+.. autoclass:: petl.io.codec.xz.XZCodec
+.. autoclass:: petl.io.codec.zstd.ZstandardCodec
+.. autoclass:: petl.io.codec.lz4.LZ4Codec
+
+.. _io_custom_helpers:
+
+Custom I/O helper classes
+------------------------------
+
+For creating custom helpers for :ref:`remote I/O <io_remotes>` or
+:ref:`compression <io_codecs>` use the following functions:
+
+.. autofunction:: petl.io.sources.register_reader
+.. autofunction:: petl.io.sources.register_writer
+.. autofunction:: petl.io.sources.register_codec
+
+See the source code of the classes in :mod:`petl.io.sources` module for
+more details.

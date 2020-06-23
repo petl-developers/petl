@@ -298,27 +298,134 @@ class PopenSource(object):
             pass
 
 
+class CompressedSource(object):
+    '''Handle IO from a file-like object and (de)compress with a codec
+    
+    The `source` argument (source class) is the source class that will handle
+    the actual input/output stream. E.g: :class:`petl.io.sources.URLSource`.
+    
+    The `codec` argument (source class) is the source class that will handle
+    the (de)compression of the stream. E.g: :class:`petl.io.sources.GzipSource`.
+    '''
+
+    def __init__(self, source, codec):
+        self.source = source
+        self.codec = codec
+
+    @contextmanager
+    def open(self, mode='rb'):
+        with self.source.open(mode=mode) as filehandle:
+            transcoder = self.codec(filehandle)
+            with transcoder.open(mode=mode) as stream:
+                yield stream
+
+
 _invalid_source_msg = 'invalid source argument, expected None or a string or ' \
                       'an object implementing open(), found %r'
 
 
-def read_source_from_arg(source):
+_READERS = {}
+_CODECS = {}
+_WRITERS = {}
+
+
+def _assert_source_has_open(source_class):
+    source = source_class('test')
+    assert (hasattr(source, 'open')
+            and callable(getattr(source, 'open'))), \
+        _invalid_source_msg % source
+
+
+def _register_handler(handler_type, handler_class, handler_list):
+
+    assert isinstance(handler_type, string_types), _invalid_source_msg % handler_type
+    assert isinstance(handler_class, type), _invalid_source_msg % handler_type
+    _assert_source_has_open(handler_class)
+    handler_list[handler_type] = handler_class
+
+
+def register_codec(extension, handler_class):
+    '''
+    Register handler for automatic compression and decompression for file I/O
+
+    Use of the handler is determined matching the file `extension` with the
+    source specified in ``from...()`` and ``to...()`` functions.
+
+    .. versionadded:: 1.5.0
+    '''
+
+    _register_handler(extension, handler_class, _CODECS)
+
+
+def register_reader(protocol, handler_class):
+    '''
+    Register handler for automatic reading using a remote protocol.
+
+    Use of the handler is determined matching the `protocol` with the scheme 
+    part of the url in ``from...()`` function (e.g: `http://`).
+
+    .. versionadded:: 1.5.0
+    '''
+
+    _register_handler(protocol, handler_class, _READERS)
+
+
+def register_writer(protocol, handler_class):
+    '''
+    Register handler for automatic writing using a remote protocol.
+
+    Use of the handler is determined matching the `protocol` with the scheme 
+    part of the url in ``to...()`` function (e.g: `smb://`).
+
+    .. versionadded:: 1.5.0
+    '''
+
+    _register_handler(protocol, handler_class, _WRITERS)
+
+# Setup default sources
+    
+register_codec('.gz', GzipSource)
+register_codec('.bgz', GzipSource)
+register_codec('.bz2', BZ2Source)
+    
+register_reader('ftp', URLSource)
+register_reader('http', URLSource)
+register_reader('https', URLSource)
+
+
+def _get_codec_for(source):
+    for ext, codec_class in _CODECS.items():
+        if source.endswith(ext):
+            return codec_class
+    return None
+
+
+def _get_handler_from(source, handlers):
+    protocol_index = source.find('://')
+    if protocol_index <= 0:
+        return None
+    protocol = source[:protocol_index]
+    for prefix, handler_class in handlers.items():
+        if prefix == protocol:
+            return handler_class
+    return None
+
+
+def _resolve_source_from_arg(source, handlers, sync_mode):
     if source is None:
         return StdinSource()
     elif isinstance(source, string_types):
-        if any(map(source.startswith, ['http://', 'https://', 'ftp://'])):
-            if source.endswith('.gz') or source.endswith('.bgz'):
-                return GzipSource(source, remote=True)
-            elif source.endswith('.bz2'):
-                return BZ2Source(source, remote=True)
-            else:
-                return URLSource(source)
-        elif source.endswith('.gz') or source.endswith('.bgz'):
-            return GzipSource(source)
-        elif source.endswith('.bz2'):
-            return BZ2Source(source)
-        else:
+        handler = _get_handler_from(source, handlers)
+        codec = _get_codec_for(source)
+        if handler is None:
+            if codec is not None:
+                return codec(source)
             return FileSource(source)
+        io_handler = handler(source)
+        if codec is None:
+            return io_handler
+        handler = CompressedSource(io_handler, codec)
+        return handler
     else:
         assert (hasattr(source, 'open')
                 and callable(getattr(source, 'open'))), \
@@ -326,18 +433,9 @@ def read_source_from_arg(source):
         return source
 
 
-def write_source_from_arg(source):
-    if source is None:
-        return StdoutSource()
-    elif isinstance(source, string_types):
-        if source.endswith('.gz') or source.endswith('.bgz'):
-            return GzipSource(source)
-        elif source.endswith('.bz2'):
-            return BZ2Source(source)
-        else:
-            return FileSource(source)
-    else:
-        assert (hasattr(source, 'open')
-                and callable(getattr(source, 'open'))), \
-            _invalid_source_msg % source
-        return source
+def read_source_from_arg(source):
+    return _resolve_source_from_arg(source, _READERS, 'rb')
+
+
+def write_source_from_arg(source, mode='wb'):
+    return _resolve_source_from_arg(source, _WRITERS, mode)
