@@ -37,3 +37,5 @@ from petl.io.whoosh import fromtextindex, searchtextindex, \
 from petl.io.bcolz import frombcolz, tobcolz, appendbcolz
 
 from petl.io.avro import fromavro, toavro, appendavro
+
+from petl.io.sources import register_codec, register_reader, register_writer

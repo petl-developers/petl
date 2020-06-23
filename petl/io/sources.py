@@ -298,6 +298,28 @@ class PopenSource(object):
             pass
 
 
+class CompressedSource(object):
+    '''Handle IO from a file-like object and (de)compress with a codec
+    
+    The `source` argument (source class) is the source class that will handle
+    the actual input/output stream. E.g: :class:`petl.io.sources.URLSource`.
+    
+    The `codec` argument (source class) is the source class that will handle
+    the (de)compression of the stream. E.g: :class:`petl.io.sources.GzipSource`.
+    '''
+
+    def __init__(self, source, codec):
+        self.source = source
+        self.codec = codec
+
+    @contextmanager
+    def open(self, mode='rb'):
+        with self.source.open(mode=mode) as filehandle:
+            transcoder = self.codec(filehandle)
+            with transcoder.open(mode=mode) as stream:
+                yield stream
+
+
 _invalid_source_msg = 'invalid source argument, expected None or a string or ' \
                       'an object implementing open(), found %r'
 
@@ -307,28 +329,58 @@ _CODECS = {}
 _WRITERS = {}
 
 
-def register_codec(extension, handler_class):
-    '''Allows automatically compressing and decompressing in write and read.'''
+def _assert_source_has_open(source_class):
+    source = source_class('test')
+    assert (hasattr(source, 'open')
+            and callable(getattr(source, 'open'))), \
+        _invalid_source_msg % source
 
-    assert isinstance(extension, string_types), _invalid_source_msg % extension
-    assert isinstance(handler_class, type), _invalid_source_msg % extension
-    _CODECS[extension] = handler_class
+
+def _register_handler(handler_type, handler_class, handler_list):
+
+    assert isinstance(handler_type, string_types), _invalid_source_msg % handler_type
+    assert isinstance(handler_class, type), _invalid_source_msg % handler_type
+    _assert_source_has_open(handler_class)
+    handler_list[handler_type] = handler_class
+
+
+def register_codec(extension, handler_class):
+    '''
+    Register handler for automatic compression and decompression for file I/O
+
+    Use of the handler is determined matching the file `extension` with the
+    source specified in ``from...()`` and ``to...()`` functions.
+
+    .. versionadded:: 1.5.0
+    '''
+
+    _register_handler(extension, handler_class, _CODECS)
 
 
 def register_reader(protocol, handler_class):
-    '''Allows automatically reading data from unsupported filesystems.'''
+    '''
+    Register handler for automatic reading using a remote protocol.
 
-    assert isinstance(protocol, string_types), _invalid_source_msg % protocol
-    assert isinstance(handler_class, type), _invalid_source_msg % protocol
-    _READERS[protocol] = handler_class
+    Use of the handler is determined matching the `protocol` with the scheme 
+    part of the url in ``from...()`` function (e.g: `http://`).
+
+    .. versionadded:: 1.5.0
+    '''
+
+    _register_handler(protocol, handler_class, _READERS)
 
 
 def register_writer(protocol, handler_class):
-    '''Allows automatically writing data to unsupported filesystems.'''
+    '''
+    Register handler for automatic writing using a remote protocol.
 
-    assert isinstance(protocol, string_types), _invalid_source_msg % protocol
-    assert isinstance(handler_class, type), _invalid_source_msg % protocol
-    _WRITERS[protocol] = handler_class
+    Use of the handler is determined matching the `protocol` with the scheme 
+    part of the url in ``to...()`` function (e.g: `smb://`).
+
+    .. versionadded:: 1.5.0
+    '''
+
+    _register_handler(protocol, handler_class, _WRITERS)
 
 # Setup default sources
     
@@ -355,9 +407,7 @@ def _get_handler_from(source, handlers):
     protocol = source[:protocol_index]
     for prefix, handler_class in handlers.items():
         if prefix == protocol:
-            print('# Using protocol: {}'.format(protocol))
             return handler_class
-    print('# No handler for: {}'.format(source))
     return None
 
 
@@ -374,10 +424,8 @@ def _resolve_source_from_arg(source, handlers, sync_mode):
         io_handler = handler(source)
         if codec is None:
             return io_handler
-        # lay a en/decoder over the reader/writer of the protocol
-        stream = io_handler.open(mode=sync_mode)
-        coder = codec(stream)
-        return coder
+        handler = CompressedSource(io_handler, codec)
+        return handler
     else:
         assert (hasattr(source, 'open')
                 and callable(getattr(source, 'open'))), \
