@@ -58,18 +58,18 @@ def _write_read_with_codec(file_ext):
     compressed_avr = _get_temp_file_for('.avro' + file_ext)
 
     tocsv(_table, compressed_csv, encoding='ascii', lineterminator='\n')
-    if PY3:
+    if has_avro:
         toavro(_table, compressed_avr)
 
     csv_actual = fromcsv(compressed_csv, encoding='ascii')
-    if PY3:
+    if has_avro:
         avr_actual = fromavro(compressed_avr)
 
     _show__rows_from("Actual:", csv_actual)
     
     ieq(_table, csv_actual)
     ieq(_table, csv_actual)  # verify can iterate twice
-    if PY3:
+    if has_avro:
         ieq(_table, avr_actual)
         ieq(_table, avr_actual)  # verify can iterate twice
 
