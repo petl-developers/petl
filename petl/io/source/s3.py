@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, print_function, division
 
+import io
 from petl.io.sources import register_reader, register_writer
 from contextlib import contextmanager
 
@@ -8,12 +9,14 @@ from contextlib import contextmanager
 class S3Source(object):
     '''Downloads or uploads to AWS S3 filesystem. E.g.::
 
-        >>> import petl as etl
-        >>> url = b's3://mybucket/prefix/to/myfilename.csv'
-        >>> data = b'foo,bar\\na,1\\nb,2\\nc,2\\n'
-        >>> etl.tocsv(url, data)
-        >>> tbl = etl.fromcsv(source)
-        >>> tbl
+        >>> def example_s3():
+        ...     import petl as etl
+        ...     url = 's3://mybucket/prefix/to/myfilename.csv'
+        ...     data = b'foo,bar\\na,1\\nb,2\\nc,2\\n'
+        ...     etl.tocsv(data, url)
+        ...     tbl = etl.fromcsv(url)
+        ...     
+        >>> example_s3() # doctest: +SKIP
         +-----+-----+
         | foo | bar |
         +=====+=====+

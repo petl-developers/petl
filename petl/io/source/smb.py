@@ -11,12 +11,14 @@ from petl.io.sources import register_reader, register_writer
 class SMBSource(object):
     '''Downloads or uploads to Windows and Samba network drives. E.g.::
 
-        >>> import petl as etl
-        >>> url = b'smb://workgroup;user:password@server:port/share/folder/file.csv'
-        >>> data = b'foo,bar\\na,1\\nb,2\\nc,2\\n'
-        >>> etl.tocsv(url, data)
-        >>> tbl = etl.fromcsv(source)
-        >>> tbl
+        >>> def example_smb():
+        ...     import petl as etl
+        ...     url = 'smb://user:password@server/share/folder/file.csv'
+        ...     data = b'foo,bar\\na,1\\nb,2\\nc,2\\n'
+        ...     etl.tocsv(data, url)
+        ...     tbl = etl.fromcsv(url)
+        ... 
+        >>> example_smb() # doctest: +SKIP
         +-----+-----+
         | foo | bar |
         +=====+=====+
@@ -100,14 +102,16 @@ def _parse_smb_url(url):
         raise ValueError(e + url)
 
     unc_path = parsed.path.replace("/", "\\")
-    server_path = "\\{}{}".format(parsed.hostname, unc_path)
+    server_path = "\\\\{}{}".format(parsed.hostname, unc_path)
+
     if not parsed.username:
         domain, username = None
     elif ';' in parsed.username:
         domain, username = parsed.username.split(';')
     else:
         domain, username = None, parsed.username
-    return domain, parsed.hostname, parsed.port or 445, username, parsed.password, server_path
+    port = 555 if not parsed.port else int(parsed.port)
+    return domain, parsed.hostname, port, username, parsed.password, server_path
 
 # endregion
 
