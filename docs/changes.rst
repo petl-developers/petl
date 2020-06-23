@@ -1,6 +1,29 @@
 Changes
 =======
 
+Version 1.5.0
+-------------
+
+* Added functions :func:`petl.io.sources.register_reader` and
+  :func:`petl.io.sources.register_writer` for registering custom source helpers for
+  hanlding I/O from remote protocols.
+  By :user:`juarezr`, :issue:`491`.
+
+* Added function :func:`petl.io.sources.register_codec` for registering custom
+  helpers for compressing and decompressing files with other algorithms.
+  By :user:`juarezr`, :issue:`491`.
+
+* Added classes :class:`petl.io.codec.xz.XZCodec`, :class:`petl.io.codec.xz.LZ4Codec`
+  and :class:`petl.io.codec.zstd.ZstandardCodec` for compressing files with `XZ` and
+  the "state of art"  `LZ4` and `Zstandard` algorithms.
+  By :user:`juarezr`, :issue:`491`.
+
+* Added classes :class:`petl.io.source.s3.S3Source` and
+  :class:`petl.io.source.smb.SMBSource` reading and writing files to remote
+  servers using int url the protocols `s3://` and `smb://`.
+  By :user:`juarezr`, :issue:`491`.
+
+
 Version 1.4.0
 -------------
 
