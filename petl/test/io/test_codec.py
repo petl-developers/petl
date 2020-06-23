@@ -16,25 +16,25 @@ from petl.util.vis import look
 try:
     import lzma
 except ImportError as e:
-    print('SKIP XZ codec tests: %s' % e, file=sys.stderr)
+    print('SKIP XZ helper tests: %s' % e, file=sys.stderr)
 else:
-    def test_lzma():
+    def test_helper_xz():
         _write_read_with_codec('.xz')
 
 try:
     import lz4.frame
 except ImportError as e:
-    print('SKIP LZ4 codec tests: %s' % e, file=sys.stderr)
+    print('SKIP LZ4 helper tests: %s' % e, file=sys.stderr)
 else:
-    def test_lz4():
+    def test_helper_lz4():
         _write_read_with_codec('.lz4')
 
 try:
     import zstandard as zstd
 except ImportError as e:
-    print('SKIP ZSTANDARD codec tests: %s' % e, file=sys.stderr)
+    print('SKIP ZSTANDARD helper tests: %s' % e, file=sys.stderr)
 else:
-    def test_zstd():
+    def test_helper_zstd():
         _write_read_with_codec('.zstd')
 
 # endregion
