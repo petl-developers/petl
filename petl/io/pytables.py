@@ -17,35 +17,36 @@ def fromhdf5(source, where=None, name=None, condition=None,
     Provides access to an HDF5 table. E.g.::
 
         >>> import petl as etl
-        >>> import tables
+        >>>
         >>> # set up a new hdf5 table to demonstrate with
-        ... h5file = tables.open_file('example.h5', mode='w',
-        ...                           title='Example file')
-        >>> h5file.create_group('/', 'testgroup', 'Test Group')
-        /testgroup (Group) 'Test Group'
-          children := []
-        >>> class FooBar(tables.IsDescription):
-        ...     foo = tables.Int32Col(pos=0)
-        ...     bar = tables.StringCol(6, pos=2)
-        ...
-        >>> h5table = h5file.create_table('/testgroup', 'testtable', FooBar,
-        ...                               'Test Table')
-        >>> # load some data into the table
-        ... table1 = (('foo', 'bar'),
-        ...           (1, b'asdfgh'),
-        ...           (2, b'qwerty'),
-        ...           (3, b'zxcvbn'))
-        >>> for row in table1[1:]:
-        ...     for i, f in enumerate(table1[0]):
-        ...         h5table.row[f] = row[i]
-        ...     h5table.row.append()
-        ...
-        >>> h5file.flush()
-        >>> h5file.close()
+        >>> class FooBar(tables.IsDescription): # doctest: +SKIP
+        ...     foo = tables.Int32Col(pos=0) # doctest: +SKIP
+        ...     bar = tables.StringCol(6, pos=2) # doctest: +SKIP
         >>> #
-        ... # now demonstrate use of fromhdf5
-        ... table1 = etl.fromhdf5('example.h5', '/testgroup', 'testtable')
-        >>> table1
+        >>> def setup_hdfs5_table():
+        ...     import tables
+        ...     h5file = tables.open_file('example.h5', mode='w',
+        ...                               title='Example file')
+        ...     h5file.create_group('/', 'testgroup', 'Test Group')
+        ...     h5table = h5file.create_table('/testgroup', 'testtable', FooBar,
+        ...                                   'Test Table')
+        ...     # load some data into the table
+        ...     table1 = (('foo', 'bar'),
+        ...               (1, b'asdfgh'),
+        ...               (2, b'qwerty'),
+        ...               (3, b'zxcvbn'))
+        ...     for row in table1[1:]:
+        ...         for i, f in enumerate(table1[0]):
+        ...             h5table.row[f] = row[i]
+        ...         h5table.row.append()
+        ...     h5file.flush()
+        ...     h5file.close()
+        >>>
+        >>> setup_hdfs5_table() # doctest: +SKIP
+        >>>
+        >>> # now demonstrate use of fromhdf5
+        >>> table1 = etl.fromhdf5('example.h5', '/testgroup', 'testtable') # doctest: +SKIP
+        >>> table1 # doctest: +SKIP
         +-----+-----------+
         | foo | bar       |
         +=====+===========+
@@ -57,16 +58,16 @@ def fromhdf5(source, where=None, name=None, condition=None,
         +-----+-----------+
 
         >>> # alternatively just specify path to table node
-        ... table1 = etl.fromhdf5('example.h5', '/testgroup/testtable')
+        ... table1 = etl.fromhdf5('example.h5', '/testgroup/testtable') # doctest: +SKIP
         >>> # ...or use an existing tables.File object
-        ... h5file = tables.open_file('example.h5')
-        >>> table1 = etl.fromhdf5(h5file, '/testgroup/testtable')
+        ... h5file = tables.open_file('example.h5') # doctest: +SKIP
+        >>> table1 = etl.fromhdf5(h5file, '/testgroup/testtable') # doctest: +SKIP
         >>> # ...or use an existing tables.Table object
-        ... h5tbl = h5file.get_node('/testgroup/testtable')
-        >>> table1 = etl.fromhdf5(h5tbl)
+        ... h5tbl = h5file.get_node('/testgroup/testtable') # doctest: +SKIP
+        >>> table1 = etl.fromhdf5(h5tbl) # doctest: +SKIP
         >>> # use a condition to filter data
-        ... table2 = etl.fromhdf5(h5tbl, condition='foo < 3')
-        >>> table2
+        ... table2 = etl.fromhdf5(h5tbl, condition='foo < 3') # doctest: +SKIP
+        >>> table2 # doctest: +SKIP
         +-----+-----------+
         | foo | bar       |
         +=====+===========+
@@ -75,7 +76,7 @@ def fromhdf5(source, where=None, name=None, condition=None,
         |   2 | b'qwerty' |
         +-----+-----------+
 
-        >>> h5file.close()
+        >>> h5file.close() # doctest: +SKIP
 
     """
 
@@ -201,36 +202,37 @@ def fromhdf5sorted(source, where=None, name=None, sortby=None, checkCSI=False,
     Provides access to an HDF5 table, sorted by an indexed column, e.g.::
 
         >>> import petl as etl
-        >>> import tables
+        >>>
         >>> # set up a new hdf5 table to demonstrate with
-        ... h5file = tables.open_file('example.h5', mode='w', title='Test file')
-        >>> h5file.create_group('/', 'testgroup', 'Test Group')
-        /testgroup (Group) 'Test Group'
-          children := []
-        >>> class FooBar(tables.IsDescription):
-        ...     foo = tables.Int32Col(pos=0)
-        ...     bar = tables.StringCol(6, pos=2)
-        ...
-        >>> h5table = h5file.create_table('/testgroup', 'testtable', FooBar, 'Test Table')
-        >>> # load some data into the table
-        ... table1 = (('foo', 'bar'),
-        ...           (3, b'asdfgh'),
-        ...           (2, b'qwerty'),
-        ...           (1, b'zxcvbn'))
-        >>> for row in table1[1:]:
-        ...     for i, f in enumerate(table1[0]):
-        ...         h5table.row[f] = row[i]
-        ...     h5table.row.append()
-        ...
-        >>> h5table.cols.foo.create_csindex()  # CS index is required
-        0
-        >>> h5file.flush()
-        >>> h5file.close()
-        >>> #
+        >>> class FooBar(tables.IsDescription): # doctest: +SKIP
+        ...     foo = tables.Int32Col(pos=0) # doctest: +SKIP
+        ...     bar = tables.StringCol(6, pos=2) # doctest: +SKIP
+        >>>
+        >>> def setup_hdfs5_index():
+        ...     import tables
+        ...     h5file = tables.open_file('example.h5', mode='w',
+        ...                               title='Example file')
+        ...     h5file.create_group('/', 'testgroup', 'Test Group')
+        ...     h5table = h5file.create_table('/testgroup', 'testtable', FooBar,
+        ...                                   'Test Table')
+        ...     # load some data into the table
+        ...     table1 = (('foo', 'bar'),
+        ...               (1, b'asdfgh'),
+        ...               (2, b'qwerty'),
+        ...               (3, b'zxcvbn'))
+        ...     for row in table1[1:]:
+        ...         for i, f in enumerate(table1[0]):
+        ...             h5table.row[f] = row[i]
+        ...         h5table.row.append()
+        ...     h5table.cols.foo.create_csindex()  # CS index is required
+        ...     h5file.flush()
+        ...     h5file.close()
+        >>>
+        >>> setup_hdfs5_index() # doctest: +SKIP
+        >>>
         ... # access the data, sorted by the indexed column
-        ... table2 = etl.fromhdf5sorted('example.h5', '/testgroup', 'testtable',
-        ...                             sortby='foo')
-        >>> table2
+        ... table2 = etl.fromhdf5sorted('example.h5', '/testgroup', 'testtable', sortby='foo') # doctest: +SKIP
+        >>> table2 # doctest: +SKIP
         +-----+-----------+
         | foo | bar       |
         +=====+===========+
@@ -301,8 +303,8 @@ def tohdf5(table, source, where=None, name=None, create=False, drop=False,
         ...           (2, b'qwerty'),
         ...           (3, b'zxcvbn'))
         >>> etl.tohdf5(table1, 'example.h5', '/testgroup', 'testtable',
-        ...            drop=True, create=True, createparents=True)
-        >>> etl.fromhdf5('example.h5', '/testgroup', 'testtable')
+        ...            drop=True, create=True, createparents=True) # doctest: +SKIP
+        >>> etl.fromhdf5('example.h5', '/testgroup', 'testtable') # doctest: +SKIP
         +-----+-----------+
         | foo | bar       |
         +=====+===========+
