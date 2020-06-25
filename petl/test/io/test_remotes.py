@@ -96,7 +96,10 @@ def _write_read_into_url(base_url):
 def _write_read_file_into_url(base_url, filename, compression=None):
     if ".avro" in filename and not _has_avro:
         return
+    is_local = base_url.startswith("./")
     if compression is not None:
+        if is_local:
+            return
         filename = filename + "." + compression
         codec = fsspec.utils.infer_compression(filename)
         if codec is None:
@@ -104,9 +107,7 @@ def _write_read_file_into_url(base_url, filename, compression=None):
             return
     print("\n    - %s " % filename, file=sys.stderr, end="")
 
-    if base_url.startswith("./"):
-        if compression is not None:
-            return
+    if is_local:
         source_url = base_url + filename
     else:
         source_url = os.path.join(base_url, filename)
