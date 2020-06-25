@@ -78,7 +78,7 @@ class RemoteSource(object):
     def open_file(self, mode="rb"):
         import fsspec
 
-        fs = fsspec.open(self.url, mode=mode, **self.kwargs)
+        fs = fsspec.open(self.url, mode=mode, compression='infer', **self.kwargs)
         return fs
 
     @contextmanager

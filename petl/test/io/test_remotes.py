@@ -4,7 +4,6 @@ from __future__ import absolute_import, print_function, division
 import sys
 import os
 
-from petl.compat import PY3
 from petl.test.helpers import ieq, eq_
 from petl.io.avro import fromavro, toavro
 from petl.io.csv import fromcsv, tocsv
@@ -77,42 +76,40 @@ def _write_read_from_env_url(env_var_name):
 
 
 def _write_read_into_url(base_url):
+    _write_read_file_into_url(base_url, "filename1.csv")
+    _write_read_file_into_url(base_url, "filename2.avro")
+    _write_read_file_into_url(base_url, "filename3.csv", "gz")
+    _write_read_file_into_url(base_url, "filename4.avro", "gz")
+    _write_read_file_into_url(base_url, "filename5.csv", "xz")
+    _write_read_file_into_url(base_url, "filename6.csv", "zst")
+    _write_read_file_into_url(base_url, "filename7.csv", "lz4")
+    _write_read_file_into_url(base_url, "filename8.csv", "snappy")
+
+
+def _write_read_file_into_url(base_url, filename, compression=None):
+    if ".avro" in filename and not _has_avro:
+        return
+    if compression is not None:
+        filename = filename + "." + compression
+        codec = fsspec.utils.infer_compression(filename)
+        if codec is None:
+            print("\n    - %s SKIPPED " % filename, file=sys.stderr, end="")
+            return
+    print("\n    - %s " % filename, file=sys.stderr, end="")
+
+    source_url = os.path.join(base_url, filename)
     _show__rows_from("Expected:", _table)
 
-    _csv_url = os.path.join(base_url, "filename1.csv")
-    _gzc_url = os.path.join(base_url, "filename3.csv.gz")
-    _gza_url = os.path.join(base_url, "filename4.avro.gz")
-    _avr_url = os.path.join(base_url, "filename2.avro")
+    if ".avro" in filename:
+        toavro(_table, source_url)
+        actual = fromavro(source_url)
+    else:
+        tocsv(_table, source_url, encoding="ascii", lineterminator="\n")
+        actual = fromcsv(source_url, encoding="ascii")
 
-    tocsv(_table, _csv_url, encoding="ascii", lineterminator="\n")
-    if PY3:
-        tocsv(_table, _gzc_url, encoding="ascii", lineterminator="\n")
-    if _has_avro:
-        toavro(_table, _avr_url)
-        if PY3:
-            toavro(_table, _gza_url)
-
-    csv_actual = fromcsv(_csv_url, encoding="ascii")
-    if PY3:
-        gzp_actual = fromcsv(_gzc_url, encoding="ascii")
-    if _has_avro:
-        avr_actual = fromavro(_avr_url)
-        if PY3:
-            gza_actual = fromavro(_gza_url)
-
-    _show__rows_from("Actual:", _csv_url)
-
-    ieq(_table, csv_actual)
-    ieq(_table, csv_actual)  # verify can iterate twice
-    if PY3:
-        ieq(_table, gzp_actual)
-        ieq(_table, gzp_actual)  # verify can iterate twice
-    if _has_avro:
-        ieq(_table, avr_actual)
-        ieq(_table, avr_actual)  # verify can iterate twice
-        if PY3:
-            ieq(_table, gza_actual)
-            ieq(_table, gza_actual)  # verify can iterate twice
+    _show__rows_from("Actual:", actual)
+    ieq(_table, actual)
+    ieq(_table, actual)  # verify can iterate twice
 
 
 def _show__rows_from(label, test_rows, limit=0):

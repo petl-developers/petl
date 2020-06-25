@@ -422,11 +422,7 @@ def _resolve_source_from_arg(source, handlers):
                 return codec(source)
             assert '://' not in source, _invalid_source_msg % source
             return FileSource(source)
-        io_handler = handler(source)
-        if codec is None:
-            return io_handler
-        handler = CompressedSource(io_handler, codec)
-        return handler
+        return handler(source)
     else:
         assert (hasattr(source, 'open')
                 and callable(getattr(source, 'open'))), \
