@@ -4,12 +4,19 @@ from __future__ import absolute_import, print_function, division
 import sys
 import os
 
+from petl.compat import PY3
 from petl.test.helpers import ieq, eq_
 from petl.io.avro import fromavro, toavro
 from petl.io.csv import fromcsv, tocsv
 from petl.util.vis import look
 
 # region Codec test cases
+
+
+def test_helper_local():
+    if PY3:
+        _write_read_into_url("./example.")
+
 
 try:
     import fsspec
@@ -97,7 +104,13 @@ def _write_read_file_into_url(base_url, filename, compression=None):
             return
     print("\n    - %s " % filename, file=sys.stderr, end="")
 
-    source_url = os.path.join(base_url, filename)
+    if base_url.startswith("./"):
+        if compression is not None:
+            return
+        source_url = base_url + filename
+    else:
+        source_url = os.path.join(base_url, filename)
+
     _show__rows_from("Expected:", _table)
 
     if ".avro" in filename:
