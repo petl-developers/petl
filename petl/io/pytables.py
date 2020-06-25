@@ -23,7 +23,7 @@ def fromhdf5(source, where=None, name=None, condition=None,
         ...     foo = tables.Int32Col(pos=0) # doctest: +SKIP
         ...     bar = tables.StringCol(6, pos=2) # doctest: +SKIP
         >>> #
-        >>> def setup_hdfs5_table():
+        >>> def setup_hdf5_table():
         ...     import tables
         ...     h5file = tables.open_file('example.h5', mode='w',
         ...                               title='Example file')
@@ -42,7 +42,7 @@ def fromhdf5(source, where=None, name=None, condition=None,
         ...     h5file.flush()
         ...     h5file.close()
         >>>
-        >>> setup_hdfs5_table() # doctest: +SKIP
+        >>> setup_hdf5_table() # doctest: +SKIP
         >>>
         >>> # now demonstrate use of fromhdf5
         >>> table1 = etl.fromhdf5('example.h5', '/testgroup', 'testtable') # doctest: +SKIP
@@ -208,7 +208,7 @@ def fromhdf5sorted(source, where=None, name=None, sortby=None, checkCSI=False,
         ...     foo = tables.Int32Col(pos=0) # doctest: +SKIP
         ...     bar = tables.StringCol(6, pos=2) # doctest: +SKIP
         >>>
-        >>> def setup_hdfs5_index():
+        >>> def setup_hdf5_index():
         ...     import tables
         ...     h5file = tables.open_file('example.h5', mode='w',
         ...                               title='Example file')
@@ -228,7 +228,7 @@ def fromhdf5sorted(source, where=None, name=None, sortby=None, checkCSI=False,
         ...     h5file.flush()
         ...     h5file.close()
         >>>
-        >>> setup_hdfs5_index() # doctest: +SKIP
+        >>> setup_hdf5_index() # doctest: +SKIP
         >>>
         ... # access the data, sorted by the indexed column
         ... table2 = etl.fromhdf5sorted('example.h5', '/testgroup', 'testtable', sortby='foo') # doctest: +SKIP
