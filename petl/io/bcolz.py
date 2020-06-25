@@ -12,16 +12,19 @@ def frombcolz(source, expression=None, outcols=None, limit=None, skip=0):
     """Extract a table from a bcolz ctable, e.g.::
 
         >>> import petl as etl
-        >>> import bcolz
-        >>> cols = [
-        ...     ['apples', 'oranges', 'pears'],
-        ...     [1, 3, 7],
-        ...     [2.5, 4.4, .1]
-        ... ]
-        >>> names = ('foo', 'bar', 'baz')
-        >>> ctbl = bcolz.ctable(cols, names=names)
-        >>> tbl = etl.frombcolz(ctbl)
-        >>> tbl
+        >>>
+        >>> def example_from_bcolz():
+        ...     import bcolz
+        ...     cols = [
+        ...         ['apples', 'oranges', 'pears'],
+        ...         [1, 3, 7],
+        ...         [2.5, 4.4, .1]
+        ...     ]
+        ...     names = ('foo', 'bar', 'baz')
+        ...     ctbl = bcolz.ctable(cols, names=names)
+        ...     return etl.frombcolz(ctbl)
+        >>>
+        >>> example_from_bcolz() # doctest: +SKIP
         +-----------+-----+-----+
         | foo       | bar | baz |
         +===========+=====+=====+
@@ -35,8 +38,8 @@ def frombcolz(source, expression=None, outcols=None, limit=None, skip=0):
     If `expression` is provided it will be executed by bcolz and only
     matching rows returned, e.g.::
 
-        >>> tbl2 = etl.frombcolz(ctbl, expression='bar > 1')
-        >>> tbl2
+        >>> tbl2 = etl.frombcolz(ctbl, expression='bar > 1') # doctest: +SKIP
+        >>> tbl2 # doctest: +SKIP
         +-----------+-----+-----+
         | foo       | bar | baz |
         +===========+=====+=====+
@@ -97,19 +100,23 @@ def tobcolz(table, dtype=None, sample=1000, **kwargs):
     """Load data into a bcolz ctable, e.g.::
 
         >>> import petl as etl
-        >>> table = [('foo', 'bar', 'baz'),
-        ...          ('apples', 1, 2.5),
-        ...          ('oranges', 3, 4.4),
-        ...          ('pears', 7, .1)]
-        >>> ctbl = etl.tobcolz(table)
-        >>> ctbl
+        >>>
+        >>> def example_to_bcolz():
+        ...     table = [('foo', 'bar', 'baz'),
+        ...              ('apples', 1, 2.5),
+        ...              ('oranges', 3, 4.4),
+        ...              ('pears', 7, .1)]
+        ...     return etl.tobcolz(table)
+        >>> 
+        >>> ctbl = example_to_bcolz() # doctest: +SKIP
+        >>> ctbl # doctest: +SKIP
         ctable((3,), [('foo', '<U7'), ('bar', '<i8'), ('baz', '<f8')])
           nbytes: 132; cbytes: 1023.98 KB; ratio: 0.00
           cparams := cparams(clevel=5, shuffle=1, cname='lz4', quantize=0)
         [('apples', 1, 2.5) ('oranges', 3, 4.4) ('pears', 7, 0.1)]
-        >>> ctbl.names
+        >>> ctbl.names # doctest: +SKIP
         ['foo', 'bar', 'baz']
-        >>> ctbl['foo']
+        >>> ctbl['foo'] # doctest: +SKIP
         carray((3,), <U7)
           nbytes := 84; cbytes := 511.98 KB; ratio: 0.00
           cparams := cparams(clevel=5, shuffle=1, cname='lz4', quantize=0)
