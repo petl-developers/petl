@@ -45,7 +45,7 @@ class RemoteSource(object):
     filesystem. Check the `Built-in Implementations <fs_builtin>`_ for available
     remote implementations.
 
-    Some filesystem can use `URL chaining <fs_chain>`_ for compound I /O.
+    Some filesystem can use `URL chaining <fs_chain>`_ for compound I/O.
 
     .. note::
 
@@ -59,7 +59,7 @@ class RemoteSource(object):
 
             $ pip install s3fs     # AWS S3
             $ pip install gcsfs    # Google Cloud Storage
-            $ pip install abfs     # Azure Blob service
+            $ pip install adlfs    # Azure Blob service
             $ pip install paramiko # SFTP
             $ pip install requests # HTTP, github
 
