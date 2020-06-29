@@ -1,5 +1,5 @@
 
-This PR has the objetive of...
+This PR has the objective of...
 
 ## Changes
 
@@ -29,8 +29,8 @@ Checklist for for pull requests including new code and/or changes to existing co
   * [ ] Ready to review
   * [ ] Ready to merge
 
-### Legend
+### Reference
 
 * [ ] Not done yet
 * [x] Finished
-* [ ] ~~Doesn't apply to this PR~~
+* [x] ~~Doesn't apply to this PR~~
