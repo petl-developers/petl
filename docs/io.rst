@@ -359,13 +359,8 @@ The behaviour of each source can usually be configured by passing arguments
 to the constructor, see the source code of the :mod:`petl.io.sources` module
 for full details.
 
-.. autoclass:: petl.io.sources.FileSource
-.. autoclass:: petl.io.sources.GzipSource
-.. autoclass:: petl.io.sources.BZ2Source
-.. autoclass:: petl.io.sources.ZipSource
 .. autoclass:: petl.io.sources.StdinSource
 .. autoclass:: petl.io.sources.StdoutSource
-.. autoclass:: petl.io.sources.URLSource
 .. autoclass:: petl.io.sources.MemorySource
 .. autoclass:: petl.io.sources.PopenSource
 
@@ -383,26 +378,23 @@ in :ref:`Extract <io_extract>` and :ref:`Load <io_load>`.
 It's possible to read and write just by prefixing the protocol (e.g: `s3://`)
 in the source path of the file.
 
-.. autoclass:: petl.io.source.s3.S3Source
-.. autoclass:: petl.io.source.smb.SMBSource
+.. autoclass:: petl.io.remotes.RemoteSource
+.. autoclass:: petl.io.remotes.SMBSource
 
-.. _io_codecs:
+.. _io_deprecated:
 
-Compression I/O helper classes
-------------------------------
+Deprecated I/O helper classes
+-----------------------------
 
-The following classes are helpers for decompressing (``from...()``) and 
-compressing (``to...()``) in functions transparently as a file-like source.
+The following helpers are deprecated and will be removed in a future version.
 
-There are no need to instantiate them. They are used in the mecanism described
-in :ref:`Extract <io_extract_codec>` and :ref:`Load <io_load_codec>`.
+It's functionality was replaced by helpers in :ref:`Remote helpers <io_remotes>`.
 
-It's possible to compress and decompress just by specifying the file extension
-(e.g: `.csv.xz`) in end of the source filename.
-
-.. autoclass:: petl.io.codec.xz.XZCodec
-.. autoclass:: petl.io.codec.zstd.ZstandardCodec
-.. autoclass:: petl.io.codec.lz4.LZ4Codec
+.. autoclass:: petl.io.sources.FileSource
+.. autoclass:: petl.io.sources.GzipSource
+.. autoclass:: petl.io.sources.BZ2Source
+.. autoclass:: petl.io.sources.ZipSource
+.. autoclass:: petl.io.sources.URLSource
 
 .. _io_custom_helpers:
 
@@ -410,11 +402,10 @@ Custom I/O helper classes
 ------------------------------
 
 For creating custom helpers for :ref:`remote I/O <io_remotes>` or
-:ref:`compression <io_codecs>` use the following functions:
+`compression` use the following functions:
 
 .. autofunction:: petl.io.sources.register_reader
 .. autofunction:: petl.io.sources.register_writer
-.. autofunction:: petl.io.sources.register_codec
 
 See the source code of the classes in :mod:`petl.io.sources` module for
 more details.

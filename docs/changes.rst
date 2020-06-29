@@ -1,6 +1,22 @@
 Changes
 =======
 
+Version 1.6.0
+-------------
+
+* Added class :class:`petl.io.remotes.RemoteSource` using package **fsspec**
+  for reading and writing files in remote servers by using the protocol in the
+  url for selecting the implementation.
+  By :user:`juarezr`, :issue:`494`.
+
+* Removed classes :class:`petl.io.source.s3.S3Source` as it's handled by fsspec
+  By :user:`juarezr`, :issue:`494`.
+
+* Removed classes :class:`petl.io.codec.xz.XZCodec`, :class:`petl.io.codec.xz.LZ4Codec`
+  and :class:`petl.io.codec.zstd.ZstandardCodec` as it's handled by fsspec.
+  By :user:`juarezr`, :issue:`494`.
+
+
 Version 1.5.0
 -------------
 

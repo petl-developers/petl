@@ -411,7 +411,7 @@ def _get_handler_from(source, handlers):
     return None
 
 
-def _resolve_source_from_arg(source, handlers, sync_mode):
+def _resolve_source_from_arg(source, handlers):
     if source is None:
         return StdinSource()
     elif isinstance(source, string_types):
@@ -420,12 +420,9 @@ def _resolve_source_from_arg(source, handlers, sync_mode):
         if handler is None:
             if codec is not None:
                 return codec(source)
+            assert '://' not in source, _invalid_source_msg % source
             return FileSource(source)
-        io_handler = handler(source)
-        if codec is None:
-            return io_handler
-        handler = CompressedSource(io_handler, codec)
-        return handler
+        return handler(source)
     else:
         assert (hasattr(source, 'open')
                 and callable(getattr(source, 'open'))), \
@@ -434,8 +431,8 @@ def _resolve_source_from_arg(source, handlers, sync_mode):
 
 
 def read_source_from_arg(source):
-    return _resolve_source_from_arg(source, _READERS, 'rb')
+    return _resolve_source_from_arg(source, _READERS)
 
 
 def write_source_from_arg(source, mode='wb'):
-    return _resolve_source_from_arg(source, _WRITERS, mode)
+    return _resolve_source_from_arg(source, _WRITERS)
