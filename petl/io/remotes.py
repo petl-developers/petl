@@ -3,10 +3,11 @@ from __future__ import absolute_import, print_function, division
 
 import io
 import logging
+import sys
 from contextlib import contextmanager
 
 from petl.compat import PY3
-from petl.io.sources import register_reader, register_writer
+from petl.io.sources import register_reader, register_writer, get_reader, get_writer
 
 logger = logging.getLogger(__name__)
 
@@ -98,20 +99,27 @@ def _register_filesystems(only_available=False):
     from fsspec.registry import known_implementations
 
     impls = known_implementations.items()
-    q = 0
+    r = w = 0
     for protocol, spec in impls:
-        # use the available for for compatibility reasons until next spring cleaning
-        if protocol.startswith("http"):
-            continue
         if "err" in spec:
             emsg = "# WARN: fsspec {} unavailable: {}".format(protocol, spec["err"])
             logger.warning(emsg)
             if only_available:
+                # otherwise foward the exception on first use when the 
+                # handler can show what package is missing
                 continue
-        register_reader(protocol, RemoteSource)
-        register_writer(protocol, RemoteSource)
-        q += 1
-    logger.debug("# fsspec: registered {} providers".format(q))
+        # when missing a package for fsspec use the available source in petl
+        # E.g: fsspec requires `requests` package installed for handling http and https
+        reader = get_reader(protocol)
+        if not "err" in spec or reader is None:
+            register_reader(protocol, RemoteSource)
+            r += 1
+        writer = get_writer(protocol)
+        if not "err" in spec or writer is None:
+            register_writer(protocol, RemoteSource)
+            w += 1
+    dlog = "# fsspec: registered {} remote readers and {} remote writers"
+    logger.debug(dlog.format(r, w))
 
 
 def _try_register_filesystems():
