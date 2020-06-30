@@ -344,6 +344,14 @@ def _register_handler(handler_type, handler_class, handler_list):
     handler_list[handler_type] = handler_class
 
 
+def _get_handler(handler_type, handler_list):
+
+    if isinstance(handler_type, string_types):
+        if handler_type in handler_list:
+            return handler_list[handler_type]
+    return None
+
+
 def register_codec(extension, handler_class):
     '''
     Register handler for automatic compression and decompression for file I/O
@@ -381,6 +389,35 @@ def register_writer(protocol, handler_class):
     '''
 
     _register_handler(protocol, handler_class, _WRITERS)
+
+
+def get_reader(protocol):
+    '''
+    Retrieve the handler responsible for reading from a remote protocol.
+
+    .. versionadded:: 1.6.1
+    '''
+
+    _get_handler(protocol, _READERS)
+
+def get_writer(protocol):
+    '''
+    Retrieve the handler responsible for writing from a remote protocol.
+
+    .. versionadded:: 1.6.1
+    '''
+
+    _get_handler(protocol, _WRITERS)
+
+def get_codec(protocol):
+    '''
+    Retrieve the handler responsible for compression and decompression for a local file.
+
+    .. versionadded:: 1.6.1
+    '''
+
+    _get_handler(protocol, _CODECS)
+
 
 # Setup default sources
     

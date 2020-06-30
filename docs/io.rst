@@ -406,6 +406,8 @@ For creating custom helpers for :ref:`remote I/O <io_remotes>` or
 
 .. autofunction:: petl.io.sources.register_reader
 .. autofunction:: petl.io.sources.register_writer
+.. autofunction:: petl.io.sources.get_reader
+.. autofunction:: petl.io.sources.get_writer
 
 See the source code of the classes in :mod:`petl.io.sources` module for
 more details.
