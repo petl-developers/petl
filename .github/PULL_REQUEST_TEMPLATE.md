@@ -28,9 +28,3 @@ Checklist for for pull requests including new code and/or changes to existing co
   * [ ] \(Optional) Work in progress
   * [ ] Ready to review
   * [ ] Ready to merge
-
-### Reference
-
-* [ ] Not done yet
-* [x] Finished
-* [x] ~~Doesn't apply to this PR~~
