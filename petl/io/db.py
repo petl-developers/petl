@@ -163,7 +163,10 @@ def _iter_dbapi_cursor(cursor, query, *args, **kwargs):
     cursor.execute(query, *args, **kwargs)
     # fetch one row before iterating, to force population of cursor.description
     # which may be postponed if using server-side cursors
-    it = iter(cursor)
+    try:
+        it = iter(cursor)
+    except TypeError:
+        it = iter(cursor.fetchall())
     try:
         first_row = next(it)
     except StopIteration:
