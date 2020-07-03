@@ -16,6 +16,9 @@ Version 1.6.0
   and :class:`petl.io.codec.zstd.ZstandardCodec` as it's handled by fsspec.
   By :user:`juarezr`, :issue:`494`.
 
+* Fix bug in connection to a JDBC database using jaydebeapi.
+  By :user:`miguelosana`, :issue:`497`.
+
 
 Version 1.5.0
 -------------
