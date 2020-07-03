@@ -395,7 +395,7 @@ def get_reader(protocol):
     '''
     Retrieve the handler responsible for reading from a remote protocol.
 
-    .. versionadded:: 1.6.1
+    .. versionadded:: 1.6.0
     '''
 
     _get_handler(protocol, _READERS)
@@ -404,19 +404,10 @@ def get_writer(protocol):
     '''
     Retrieve the handler responsible for writing from a remote protocol.
 
-    .. versionadded:: 1.6.1
+    .. versionadded:: 1.6.0
     '''
 
     _get_handler(protocol, _WRITERS)
-
-def get_codec(protocol):
-    '''
-    Retrieve the handler responsible for compression and decompression for a local file.
-
-    .. versionadded:: 1.6.1
-    '''
-
-    _get_handler(protocol, _CODECS)
 
 
 # Setup default sources
