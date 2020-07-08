@@ -12,8 +12,8 @@ xlrd==1.2.0
 xlwt==1.3.0
 fastavro>=0.23.4
 smbprotocol>=1.0.1
-fsspec>=0.7.4
-s3fs>=0.2.2
+fsspec>=0.7.4 ; python_version >= '3.4'
+s3fs>=0.2.2 ; python_version >= '3.4'
 # packages bellow need complex local setup
 psycopg2==2.8.3
 bcolz==1.2.1
