@@ -1,6 +1,16 @@
 Changes
 =======
 
+Version 1.6.1
+-------------
+
+* Added `extras_require` for the `petl` pip package.
+  By :user:`juarezr`, :issue:`501`.
+
+* Fix unavoidable warning if fsspec is not installed.
+  By :user:`juarezr`, :issue:`500`.
+
+
 Version 1.6.0
 -------------
 
@@ -15,6 +25,9 @@ Version 1.6.0
 * Removed classes :class:`petl.io.codec.xz.XZCodec`, :class:`petl.io.codec.xz.LZ4Codec`
   and :class:`petl.io.codec.zstd.ZstandardCodec` as it's handled by fsspec.
   By :user:`juarezr`, :issue:`494`.
+
+* Fix bug in connection to a JDBC database using jaydebeapi.
+  By :user:`miguelosana`, :issue:`497`.
 
 
 Version 1.5.0
