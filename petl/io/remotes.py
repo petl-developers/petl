@@ -126,7 +126,7 @@ def _try_register_filesystems():
     try:
         import fsspec
     except ImportError as ie:
-        logger.warning("# Missing fsspec package. Install with: pip install fsspec")
+        logger.debug("# Missing fsspec package. Install with: pip install fsspec")
     else:
         try:
             _register_filesystems()
