@@ -103,7 +103,7 @@ def _register_filesystems(only_available=False):
     for protocol, spec in impls:
         if "err" in spec:
             emsg = "# WARN: fsspec {} unavailable: {}".format(protocol, spec["err"])
-            logger.warning(emsg)
+            logger.debug(emsg)
             if only_available:
                 # otherwise foward the exception on first use when the 
                 # handler can show what package is missing
