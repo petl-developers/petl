@@ -92,6 +92,23 @@ else:
         expect = etl.cat(tbl, tbl)
         ieq(expect, actual)
 
+    def test_toxlsx_nooverwrite():
+        tbl = (('foo', 'bar'),
+               ('A', 1),
+               ('B', 2),
+               ('C', 2),
+               (u'é', datetime(2012, 1, 1)))
+        f = NamedTemporaryFile(delete=False, suffix='.xlsx')
+        f.close()
+
+        # test toxlsx
+        toxlsx(tbl, f.name, 'Sheet1')
+        toxlsx(tbl, f.name, 'Sheet2', overwrite=False)
+        actual = fromxlsx(f.name, 'Sheet1')
+        ieq(tbl, actual)
+        actual = fromxlsx(f.name, 'Sheet2')
+        ieq(tbl, actual)
+
     def test_toxlsx_nosheet():
         tbl = (('foo', 'bar'),
                ('A', 1),

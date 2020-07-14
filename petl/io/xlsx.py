@@ -2,6 +2,7 @@
 from __future__ import absolute_import, print_function, division
 
 
+import os
 import locale
 
 
@@ -86,15 +87,32 @@ class XLSXView(Table):
             pass
 
 
-def toxlsx(tbl, filename, sheet=None, write_header=True):
+def toxlsx(tbl, filename, sheet=None, write_header=True, overwrite=True):
     """
     Write a table to a new Excel .xlsx file.
+
+    N.B., the sheet name is case sensitive.
+
+    The `sheet` argument can be omitted, the new sheet will then get a
+    default name.
+
+    If `overwrite` is True, the contents of the file will be replaced
+    with a single sheet. If the argument is False and the file already
+    exists, an existing sheet of the same name will be replaced or a
+    new sheet added at the end.
 
     """
 
     import openpyxl
-    wb = openpyxl.Workbook(write_only=True)
-    ws = wb.create_sheet(title=sheet)
+    if not overwrite and os.path.exists(filename):
+        wb = openpyxl.load_workbook(filename=filename, read_only=False)
+    else:
+        wb = openpyxl.Workbook(write_only=True)
+    if sheet in wb.sheetnames:
+        ws = wb[str(sheet)]
+        ws.delete_rows(1, ws.max_row)
+    else:
+        ws = wb.create_sheet(title=sheet)
     if write_header:
         rows = tbl
     else:
