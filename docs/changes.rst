@@ -6,7 +6,7 @@ Version 1.6.2
 
 * Fix unavoidable warning if fsspec is installed but some optional package is
   not installed.
-  By :user:`juarezr`, :issue:`502`.
+  By :user:`juarezr`, :issue:`503`.
 
 
 Version 1.6.1
