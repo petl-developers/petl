@@ -4,6 +4,9 @@ Changes
 Version 1.6.2
 -------------
 
+* Fixed boolean type detection in toavro(). By :user:`juarezr`, :issue:`504`.
+
+
 * Fix unavoidable warning if fsspec is installed but some optional package is
   not installed.
   By :user:`juarezr`, :issue:`503`.
