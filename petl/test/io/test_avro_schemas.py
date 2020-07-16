@@ -56,6 +56,7 @@ schema2 = {
             'precision': 12,
             'scale': 3
         }},
+        {'name': 'deny', 'type': 'boolean'},
     ],
 }
 

@@ -309,7 +309,7 @@ class AvroView(Table):
 
 def _write_toavro(table, target, mode, schema, sample,
                   codec='deflate', compression_level=None, **avro_args):
-    if table is None or len(table) <= 0:
+    if table is None:
         return
     # build a schema when not defined by user
     if not schema:
@@ -398,21 +398,15 @@ def _update_field_defs_from(props, row, fields, previous, fill_missing):
 
 
 def _get_definition_from_type_of(prop, val, prev):
-    # TODO: get type for record, enum, map
+    # TODO: get type for enum, map and other python types
     tdef = None
     curr = None
-    if isinstance(val, int):
-        tdef = 'long'
-    elif isinstance(val, float):
-        tdef = 'double'
-    elif isinstance(val, datetime):
+    if isinstance(val, datetime):
         tdef = {'type': 'long', 'logicalType': 'timestamp-millis'}
     elif isinstance(val, time):
         tdef = {'type': 'int', 'logicalType': 'time-millis'}
     elif isinstance(val, date):
         tdef = {'type': 'int', 'logicalType': 'date'}
-    elif isinstance(val, bool):
-        tdef = 'boolean'
     elif isinstance(val, Decimal):
         curr, precision, scale = _get_precision_from_decimal(curr, val, prev)
         tdef = {'type': 'bytes', 'logicalType': 'decimal',
@@ -421,6 +415,12 @@ def _get_definition_from_type_of(prop, val, prev):
         tdef = 'bytes'
     elif isinstance(val, list):
         tdef, curr = _get_definition_from_array(prop, val, prev)
+    elif isinstance(val, bool):
+        tdef = 'boolean'
+    elif isinstance(val, float):
+        tdef = 'double'
+    elif isinstance(val, int):
+        tdef = 'long'
     elif val is not None:
         tdef = 'string'
     else:
