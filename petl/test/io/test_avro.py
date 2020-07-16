@@ -221,15 +221,15 @@ else:
     table01 = [header1[0:2]] + [item[0:2] for item in rows1]
     table10 = [header1] + [item[0:2] + [None] for item in rows1]
 
-    table2 = [[u'name', u'age', u'birthday', u'death', u'insurance'],
+    table2 = [[u'name', u'age', u'birthday', u'death', u'insurance', u'deny'],
               [u'pete', 17, date(2012, 10, 11),
-                  _utc(2018, 10, 14, 15, 16, 17, 18000), Decimal('1.100')],
+                  _utc(2018, 10, 14, 15, 16, 17, 18000), Decimal('1.100'), False],
               [u'mike', 27, date(2002, 11, 12),
-                  _utc(2015, 12, 13, 14, 15, 16, 17000), Decimal('1.010')],
+                  _utc(2015, 12, 13, 14, 15, 16, 17000), Decimal('1.010'), False],
               [u'zack', 37, date(1992, 12, 13),
-                  _utc(2010, 11, 12, 13, 14, 15, 16000), Decimal('123.456')],
+                  _utc(2010, 11, 12, 13, 14, 15, 16000), Decimal('123.456'), True],
               [u'gene', 47, date(1982, 12, 25),
-                  _utc(2009, 10, 11, 12, 13, 14, 15000), Decimal('-1.010')]]
+                  _utc(2009, 10, 11, 12, 13, 14, 15000), Decimal('-1.010'), False]]
 
     table21 = table2[0:3]
     table22 = [table2[0]] + table2[3:]
