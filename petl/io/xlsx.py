@@ -87,32 +87,54 @@ class XLSXView(Table):
             pass
 
 
-def toxlsx(tbl, filename, sheet=None, write_header=True, overwrite=True):
+def toxlsx(tbl, filename, sheet=None, write_header=True, mode="replace"):
     """
     Write a table to a new Excel .xlsx file.
 
     N.B., the sheet name is case sensitive.
 
-    The `sheet` argument can be omitted, the new sheet will then get a
-    default name.
+    The `mode` argument controls how the file and sheet are treated:
 
-    If `overwrite` is True, the contents of the file will be replaced
-    with a single sheet. If the argument is False and the file already
-    exists, an existing sheet of the same name will be replaced or a
-    new sheet added at the end.
+    - `replace`: This is the default. It either replaces or adds a
+      named sheet, or if no sheet name is provided, all sheets
+      (overwrites the entire file).
+    - `overwrite`: Always overwrites the file. This produces a file
+      with a single sheet.
+    - `add`: Adds a new sheet. Raises `ValueError` if a named sheet
+      already exists.
+
+    The `sheet` argument can be omitted in all cases. The new sheet
+    will then get a default name.
+
+    If the file does not exist, it will be created, unless `replace`
+    mode is used with a named sheet. In the latter case, the file
+    must exist and be a valid .xlsx file.
 
     """
 
     import openpyxl
-    if not overwrite and os.path.exists(filename):
-        wb = openpyxl.load_workbook(filename=filename, read_only=False)
-    else:
+
+    if not os.path.exists(filename) or mode == "overwrite" \
+            or (mode == "replace" and sheet is None):
         wb = openpyxl.Workbook(write_only=True)
-    if sheet in wb.sheetnames:
-        ws = wb[str(sheet)]
-        ws.delete_rows(1, ws.max_row)
-    else:
         ws = wb.create_sheet(title=sheet)
+    elif mode == "replace":
+        wb = openpyxl.load_workbook(filename=filename, read_only=False)
+        try:
+            ws = wb[str(sheet)]
+            ws.delete_rows(1, ws.max_row)
+        except KeyError:
+            ws = wb.create_sheet(title=sheet)
+    elif mode == "add":
+        wb = openpyxl.load_workbook(filename=filename, read_only=False)
+        ws = wb.create_sheet(title=sheet)
+
+        # wb.create_sheet(title="foo") creates "foo1" if "foo" exists.
+        if sheet is not None and ws.title != sheet:
+            raise ValueError("Sheet %s already exists in file" % sheet)
+    else:
+        raise ValueError("Unknown mode '%s'" % mode)
+
     if write_header:
         rows = tbl
     else:
