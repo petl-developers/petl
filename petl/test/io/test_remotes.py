@@ -3,11 +3,15 @@ from __future__ import absolute_import, print_function, division
 
 import sys
 import os
+from importlib import import_module
 
 from petl.compat import PY3
 from petl.test.helpers import ieq, eq_
 from petl.io.avro import fromavro, toavro
 from petl.io.csv import fromcsv, tocsv
+from petl.io.json import fromjson, tojson
+from petl.io.xlsx import fromxlsx, toxlsx
+from petl.io.xls import fromxls, toxls
 from petl.util.vis import look
 
 # region Codec test cases
@@ -69,7 +73,7 @@ def _write_read_from_env_matching(prefix):
     if q < 1:
         msg = """SKIPPED
     For testing remote source define a environment variable:
-    $ export PETL_TEST_<protocol>='<protocol>://myuser:mypassword@host:port/path/to/file.ext'"""
+    $ export PETL_TEST_<protocol>='<protocol>://myuser:mypassword@host:port/path/to/folder'"""
         print(msg, file=sys.stderr)
 
 
@@ -83,19 +87,24 @@ def _write_read_from_env_url(env_var_name):
 
 
 def _write_read_into_url(base_url):
-    _write_read_file_into_url(base_url, "filename1.csv")
-    _write_read_file_into_url(base_url, "filename2.avro")
-    _write_read_file_into_url(base_url, "filename3.csv", "gz")
-    _write_read_file_into_url(base_url, "filename4.avro", "gz")
-    _write_read_file_into_url(base_url, "filename5.csv", "xz")
-    _write_read_file_into_url(base_url, "filename6.csv", "zst")
-    _write_read_file_into_url(base_url, "filename7.csv", "lz4")
-    _write_read_file_into_url(base_url, "filename8.csv", "snappy")
+    _write_read_file_into_url(base_url, "filename10.csv")
+    _write_read_file_into_url(base_url, "filename11.csv", "gz")
+    _write_read_file_into_url(base_url, "filename12.csv", "xz")
+    _write_read_file_into_url(base_url, "filename13.csv", "zst")
+    _write_read_file_into_url(base_url, "filename14.csv", "lz4")
+    _write_read_file_into_url(base_url, "filename15.csv", "snappy")
+    _write_read_file_into_url(base_url, "filename20.json")
+    _write_read_file_into_url(base_url, "filename21.json", "gz")
+    _write_read_file_into_url(base_url, "filename30.avro", pkg='fastavro')
+    _write_read_file_into_url(base_url, "filename40.xlsx", pkg='openpyxl')
+    _write_read_file_into_url(base_url, "filename50.xls", pkg='xlwt')
 
 
-def _write_read_file_into_url(base_url, filename, compression=None):
-    if ".avro" in filename and not _has_avro:
-        return
+def _write_read_file_into_url(base_url, filename, compression=None, pkg=None):
+    if pkg is not None:
+        if not _is_installed(pkg):
+            print("\n    - %s SKIPPED " % filename, file=sys.stderr, end="")
+            return
     is_local = base_url.startswith("./")
     if compression is not None:
         if is_local:
@@ -112,18 +121,30 @@ def _write_read_file_into_url(base_url, filename, compression=None):
     else:
         source_url = os.path.join(base_url, filename)
 
-    _show__rows_from("Expected:", _table)
-
+    actual = None
     if ".avro" in filename:
         toavro(_table, source_url)
         actual = fromavro(source_url)
-    else:
+    elif ".xlsx" in filename:
+        toxlsx(_table, source_url, 'test')
+        actual = fromxlsx(source_url, 'test')
+    elif ".xls" in filename:
+        toxls(_table, source_url, 'test')
+        actual = fromxls(source_url, 'test')
+    elif ".json" in filename:
+        tojson(_table, source_url)
+        actual = fromjson(source_url)
+    elif ".csv" in filename:
         tocsv(_table, source_url, encoding="ascii", lineterminator="\n")
         actual = fromcsv(source_url, encoding="ascii")
 
-    _show__rows_from("Actual:", actual)
-    ieq(_table, actual)
-    ieq(_table, actual)  # verify can iterate twice
+    if actual is not None:
+        _show__rows_from("Expected:", _table)
+        _show__rows_from("Actual:", actual)
+        ieq(_table, actual)
+        ieq(_table, actual)  # verify can iterate twice
+    else:
+        print("\n    - %s SKIPPED " % filename, file=sys.stderr, end="")
 
 
 def _show__rows_from(label, test_rows, limit=0):
@@ -131,20 +152,18 @@ def _show__rows_from(label, test_rows, limit=0):
     print(look(test_rows, limit=limit))
 
 
-def _test_avro_too():
+def _is_installed(package_name):
     try:
-        import fastavro
-
-        return True
-    except:
+        mod = import_module(package_name)
+        return mod is not None
+    except Exception as exm:
+        print(exm, file=sys.stderr)
         return False
 
 
 # endregion
 
 # region Mockup data
-
-_has_avro = _test_avro_too()
 
 _table = (
     (u"name", u"friends", u"age"),
