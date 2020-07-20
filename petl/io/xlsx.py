@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, print_function, division
 
-
 import locale
 
-
 from petl.util.base import Table, data
+from petl.io.sources import read_source_from_arg, write_source_from_arg
 
 
 def fromxlsx(filename, sheet=None, range_string=None, min_row=None,
@@ -58,9 +57,11 @@ class XLSXView(Table):
 
     def __iter__(self):
         import openpyxl
-        wb = openpyxl.load_workbook(filename=self.filename,
-                                    read_only=self.read_only,
-                                    **self.kwargs)
+        source = read_source_from_arg(self.filename)
+        with source.open('rb') as source2:
+            wb = openpyxl.load_workbook(filename=source2,
+                                        read_only=self.read_only,
+                                        **self.kwargs)
         if self.sheet is None:
             ws = wb[wb.sheetnames[0]]
         elif isinstance(self.sheet, int):
@@ -101,7 +102,9 @@ def toxlsx(tbl, filename, sheet=None, write_header=True):
         rows = data(tbl)
     for row in rows:
         ws.append(row)
-    wb.save(filename)
+    target = write_source_from_arg(filename)
+    with target.open('wb') as target2:
+        wb.save(target2)
 
 
 Table.toxlsx = toxlsx
@@ -113,7 +116,9 @@ def appendxlsx(tbl, filename, sheet=None, write_header=False):
     """
 
     import openpyxl
-    wb = openpyxl.load_workbook(filename=filename, read_only=False)
+    source = read_source_from_arg(filename)
+    with source.open('rb') as source2:
+        wb = openpyxl.load_workbook(filename=source2, read_only=False)
     if sheet is None:
         ws = wb[wb.sheetnames[0]]
     elif isinstance(sheet, int):
@@ -126,7 +131,9 @@ def appendxlsx(tbl, filename, sheet=None, write_header=False):
         rows = data(tbl)
     for row in rows:
         ws.append(row)
-    wb.save(filename)
+    target = write_source_from_arg(filename)
+    with target.open('wb') as target2:
+        wb.save(target2)
 
 
 Table.appendxlsx = appendxlsx
