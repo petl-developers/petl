@@ -111,10 +111,11 @@ class View(object):
     #: :class:`SheetView` for the views of sheets returned.
     class_ = SheetView
 
-    def __init__(self, path, class_=None):
+    def __init__(self, file_contents, class_=None, **kwargs):
         self.class_ = class_ or self.class_
         from xlrd import open_workbook
-        self.book = open_workbook(path, formatting_info=0, on_demand=True)
+        self.book = open_workbook(file_contents=file_contents, 
+                                  on_demand=True, **kwargs)
 
     def __getitem__(self, item):
         """
