@@ -79,7 +79,7 @@ else:
                ('B', 2),
                ('C', 2),
                (u'é', datetime(2012, 1, 1)))
-        f = NamedTemporaryFile(delete=False, suffix='.xlsx')
+        f = NamedTemporaryFile(delete=True, suffix='.xlsx')
         f.close()
 
         # test toxlsx
@@ -129,6 +129,19 @@ else:
         f.close()
 
         toxlsx(tbl, f.name, 'Sheet1', mode="overwrite")
+        toxlsx(tbl, f.name, 'Sheet1', mode="replace")
+        wb = openpyxl.load_workbook(f.name, read_only=True)
+        eq_(1, len(wb.sheetnames))
+
+    def test_toxlsx_replace_sheet_nofile():
+        tbl = (('foo', 'bar'),
+               ('A', 1),
+               ('B', 2),
+               ('C', 2),
+               (u'é', datetime(2012, 1, 1)))
+        f = NamedTemporaryFile(delete=True, suffix='.xlsx')
+        f.close()
+
         toxlsx(tbl, f.name, 'Sheet1', mode="replace")
         wb = openpyxl.load_workbook(f.name, read_only=True)
         eq_(1, len(wb.sheetnames))
@@ -195,7 +208,7 @@ else:
                ('B', 2),
                ('C', 2),
                (u'é', datetime(2012, 1, 1)))
-        f = NamedTemporaryFile(delete=False, suffix='.xlsx')
+        f = NamedTemporaryFile(delete=True, suffix='.xlsx')
         f.close()
         tbl = etl.wrap(tbl)
         tbl.toxlsx(f.name, 'Sheet1')
