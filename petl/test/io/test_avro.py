@@ -101,6 +101,17 @@ else:
     def test_appendavro10():
         _append_to_avro_file(table11, table12, schema1)
 
+    def test_toavro_troubleshooting():
+        wrong_schema = dict(schema0)
+        schema_fields = wrong_schema['fields']
+        for field in schema_fields:
+            field['type'] =  ['null', 'string']
+        try:
+            _write_temp_avro_file(table1, wrong_schema)
+        except ValueError:
+            return
+        assert False, 'Failed schema conversion'
+
     # endregion
 
     # region Execution
@@ -113,11 +124,18 @@ else:
         _assert_rows_are_equals(test_expect2, test_actual, print_tables)
         return test_filename
 
-    def _write_to_avro_file(test_rows, test_schema, test_expect=None, print_tables=True):
-        _show__expect_rows(test_rows, print_tables)
+    def _write_temp_avro_file(test_rows, test_schema):
         test_filename = _get_tempfile_path()
         print("Writing avro file:", test_filename)
         toavro(test_rows, test_filename, schema=test_schema)
+        return test_filename
+
+    def _write_to_avro_file(test_rows, test_schema, test_expect=None, print_tables=True):
+        _show__expect_rows(test_rows, print_tables)
+        test_filename = _write_temp_avro_file(test_rows, test_schema)
+        # test_filename = _get_tempfile_path()
+        # print("Writing avro file:", test_filename)
+        # toavro(test_rows, test_filename, schema=test_schema)
 
         test_actual = fromavro(test_filename)
         test_expect2 = test_rows if test_expect is None else test_expect

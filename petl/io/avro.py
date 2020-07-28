@@ -10,7 +10,8 @@ from decimal import Decimal
 from petl.compat import izip, izip_longest, text_type, PY3
 from petl.io.sources import read_source_from_arg, write_source_from_arg
 from petl.transform.headers import skip, setheader
-from petl.util.base import Table, dicts, fieldnames, iterpeek
+from petl.util.base import Table, dicts, fieldnames, iterpeek, wrap
+# from petl.util.vis import lookall
 
 # region API
 
@@ -322,15 +323,25 @@ def _write_toavro(table, target, mode, schema, sample,
 
     with target.open(mode) as target_file:
         # delay the import of fastavro for not breaking when unused
-        import fastavro
-        parsed_schema = fastavro.parse_schema(schema)
-        # this could raise a error when any value is not of supported tupe
-        fastavro.writer(fo=target_file,
+        from fastavro import parse_schema
+        from fastavro.write import Writer
+
+        parsed_schema = parse_schema(schema)
+        writer = Writer(fo=target_file,
                         schema=parsed_schema,
-                        records=rows,
                         codec=codec,
-                        codec_compression_level=compression_level,
+                        compression_level=compression_level,
                         **avro_args)
+
+        for record in rows:
+            try:
+                writer.write(record)
+            except ValueError as err:
+                # help throubleshooting with details
+                details = _get_current_row_details(record, schema)
+                raise_again(err, details)
+        # finish writing
+        writer.flush()
 
 # endregion Implementation
 
@@ -505,12 +516,40 @@ def _fix_missing_headers(table, schema):
     # table2: try not advance iterators
     sample, table2 = iterpeek(table, 2)
     cols = fieldnames(sample)
-    fields = schema.get('fields')
-    if len(cols) >= len(fields):
+    headers = _get_schema_header_names(schema)
+    if len(cols) >= len(headers):
         return table2
-    header = [field.get('name') for field in fields]
-    table3 = setheader(table2, header)
+    table3 = setheader(table2, headers)
     return table3
+
+
+def _get_current_row_details(record, schema):
+    '''show last row when failed writing for throubleshooting'''
+    headers = _get_schema_header_names(schema)
+    if isinstance(record, dict):
+        table = [headers, list(record.values())]
+    else:
+        table = [headers, record]
+    example = wrap(table)
+    details = "failed writing row: \n%s\n" % example.look()
+    return details
+
+
+def _get_schema_header_names(schema):
+    fields = schema.get('fields')
+    if fields is None:
+        return []
+    header = [field.get('name') for field in fields]
+    return header
+
+def raise_again(exception, details):
+    traceback = sys.exc_info()[2]
+    err = "%s%s" % (details, exception)
+    if PY3:
+        raise ValueError(err).with_traceback(traceback)
+    else:
+        err2 = "%s\n%s" % (traceback, err)
+        raise ValueError(err)
 
 
 def _ordered_dict_iterator(table):
