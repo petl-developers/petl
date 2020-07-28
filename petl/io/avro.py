@@ -338,7 +338,7 @@ def _write_toavro(table, target, mode, schema, sample,
             except ValueError as err:
                 # help throubleshooting with details
                 details = _get_current_row_details(record, schema)
-                raise_again(err, details)
+                _raiserror(err, details)
         # finish writing
         writer.flush()
 
@@ -529,8 +529,8 @@ def _get_current_row_details(record, schema):
         table = [headers, list(record.values())]
     else:
         table = [headers, record]
-    example = wrap(table)
-    details = "failed writing row: \n%s\n" % example.look()
+    example = wrap(table).look()
+    details = "failed writing: \n%s\nwith schema: \n%s\n" % (example, schema)
     return details
 
 
@@ -541,7 +541,7 @@ def _get_schema_header_names(schema):
     header = [field.get('name') for field in fields]
     return header
 
-def raise_again(exception, details):
+def _raiserror(exception, details):
     traceback = sys.exc_info()[2]
     err = "%s%s" % (details, exception)
     if PY3:
