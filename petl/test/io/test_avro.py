@@ -133,10 +133,6 @@ else:
     def _write_to_avro_file(test_rows, test_schema, test_expect=None, print_tables=True):
         _show__expect_rows(test_rows, print_tables)
         test_filename = _write_temp_avro_file(test_rows, test_schema)
-        # test_filename = _get_tempfile_path()
-        # print("Writing avro file:", test_filename)
-        # toavro(test_rows, test_filename, schema=test_schema)
-
         test_actual = fromavro(test_filename)
         test_expect2 = test_rows if test_expect is None else test_expect
         _assert_rows_are_equals(test_expect2, test_actual, print_tables)

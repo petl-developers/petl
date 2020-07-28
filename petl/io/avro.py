@@ -11,7 +11,6 @@ from petl.compat import izip, izip_longest, text_type, PY3
 from petl.io.sources import read_source_from_arg, write_source_from_arg
 from petl.transform.headers import skip, setheader
 from petl.util.base import Table, dicts, fieldnames, iterpeek, wrap
-# from petl.util.vis import lookall
 
 # region API
 
