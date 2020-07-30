@@ -7,7 +7,7 @@ from collections import OrderedDict
 from datetime import datetime, date, time
 from decimal import Decimal
 
-from petl.compat import izip, izip_longest, text_type, string_types, PY3
+from petl.compat import izip_longest, text_type, string_types, PY3
 from petl.io.sources import read_source_from_arg, write_source_from_arg
 from petl.transform.headers import skip, setheader
 from petl.util.base import Table, dicts, fieldnames, iterpeek, wrap
@@ -15,7 +15,7 @@ from petl.util.base import Table, dicts, fieldnames, iterpeek, wrap
 # region API
 
 
-def fromavro(source, limit=None, skip=0, **avro_args):
+def fromavro(source, limit=None, skips=0, **avro_args):
     """Extract a table from the records of a avro file.
 
     The `source` argument (string or file-like or fastavro.reader) can either
@@ -92,7 +92,7 @@ def fromavro(source, limit=None, skip=0, **avro_args):
     source2 = read_source_from_arg(source)
     return AvroView(source=source2,
                     limit=limit,
-                    skip=skip,
+                    skips=skips,
                     **avro_args)
 
 
@@ -242,10 +242,10 @@ def appendavro(table, target, schema=None, sample=9, **avro_args):
 class AvroView(Table):
     '''Read rows from avro file with their types and logical types'''
 
-    def __init__(self, source, limit, skip, **avro_args):
+    def __init__(self, source, limit, skips, **avro_args):
         self.source = source
         self.limit = limit
-        self.skip = skip
+        self.skip = skips
         self.avro_args = avro_args
         self.avro_schema = None
 
@@ -457,7 +457,6 @@ def _get_definition_from_record(prop, val, fprev, dprev, fill_missing):
         fprev = OrderedDict()
     if dprev is None:
         dprev = OrderedDict()
-    
     props = list(val.keys())
     row = list(val.values())
 
@@ -475,9 +474,9 @@ def _get_definition_from_record(prop, val, fprev, dprev, fill_missing):
 
 def _get_precision_from_decimal(curr, val, prev):
     if val is None:
-        prec = scale = bytes_req = num = 0
+        prec = scale = 0
     else:
-        prec, scale, bytes_req, num = precision_and_scale(val)
+        prec, scale, _, _ = precision_and_scale(val)
     if prev is not None:
         # get the greatests precision and scale of the sample
         prec0, scale0 = prev.get('precision'), prev.get('scale')
@@ -508,7 +507,7 @@ def precision_and_scale(numeric_value):
 
 def _fix_missing_headers(table, schema):
     '''add missing columns headers from schema'''
-    if schema is None or not 'fields' in schema:
+    if schema is None or 'fields' not in schema:
         return table
     # table2: try not advance iterators
     sample, table2 = iterpeek(table, 2)
@@ -540,6 +539,7 @@ def _get_schema_header_names(schema):
         return []
     header = [field.get('name') for field in fields]
     return header
+
 
 def _raise_error(details):
     if PY3:

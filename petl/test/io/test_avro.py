@@ -4,7 +4,7 @@ from __future__ import absolute_import, print_function, division
 import sys
 import math
 
-from datetime import datetime, date, time
+from datetime import datetime, date
 from decimal import Decimal
 from tempfile import NamedTemporaryFile
 
@@ -12,7 +12,7 @@ from nose.tools import eq_
 
 from petl.compat import izip_longest, PY3
 from petl.transform.basics import cat
-from petl.util.base import dicts, records
+from petl.util.base import dicts
 from petl.util.vis import look
 
 from petl.io.avro import fromavro, toavro, appendavro
@@ -105,7 +105,7 @@ else:
         wrong_schema = dict(schema0)
         schema_fields = wrong_schema['fields']
         for field in schema_fields:
-            field['type'] =  ['null', 'string']
+            field['type'] = ['null', 'string']
         try:
             _write_temp_avro_file(table1, wrong_schema)
         except ValueError:
@@ -195,7 +195,6 @@ else:
 
     def _decs(float_value, rounding=12):
         return Decimal(str(round(float_value, rounding)))
-
 
     def _utc(year, month, day, hour=0, minute=0, second=0, microsecond=0):
         u = datetime(year, month, day, hour, minute, second, microsecond)
