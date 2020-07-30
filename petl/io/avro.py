@@ -7,7 +7,7 @@ from collections import OrderedDict
 from datetime import datetime, date, time
 from decimal import Decimal
 
-from petl.compat import izip, izip_longest, text_type, PY3
+from petl.compat import izip, izip_longest, text_type, string_types, PY3
 from petl.io.sources import read_source_from_arg, write_source_from_arg
 from petl.transform.headers import skip, setheader
 from petl.util.base import Table, dicts, fieldnames, iterpeek, wrap
@@ -193,9 +193,8 @@ def toavro(table, target, schema=None, sample=9,
     .. _documentation : https://fastavro.readthedocs.io/en/latest/writer.html
 
     """
-    target2 = write_source_from_arg(target)
     _write_toavro(table,
-                  target=target2,
+                  target=target,
                   mode='wb',
                   schema=schema,
                   sample=sample,
@@ -228,9 +227,8 @@ def appendavro(table, target, schema=None, sample=9, **avro_args):
     .. versionadded:: 1.4.0
 
     """
-    target2 = write_source_from_arg(target, mode='ab')
     _write_toavro(table,
-                  target=target2,
+                  target=target,
                   mode='a+b',
                   schema=schema,
                   sample=sample,
@@ -316,11 +314,11 @@ def _write_toavro(table, target, mode, schema, sample,
         schema, table2 = _build_schema_from_values(table, sample)
     else:
         table2 = _fix_missing_headers(table, schema)
-
     # fastavro expects a iterator of dicts
     rows = dicts(table2) if PY3 else _ordered_dict_iterator(table2)
 
-    with target.open(mode) as target_file:
+    target2 = write_source_from_arg(target, mode=mode)
+    with target2.open(mode) as target_file:
         # delay the import of fastavro for not breaking when unused
         from fastavro import parse_schema
         from fastavro.write import Writer
@@ -331,14 +329,14 @@ def _write_toavro(table, target, mode, schema, sample,
                         codec=codec,
                         compression_level=compression_level,
                         **avro_args)
-
+        num = 1
         for record in rows:
             try:
                 writer.write(record)
+                num = num + 1
             except ValueError as err:
-                # help throubleshooting with details
-                details = _get_current_row_details(record, schema)
-                _raiserror(err, details)
+                details = _get_error_details(target, num, err, record, schema)
+                _raise_error(details)
         # finish writing
         writer.flush()
 
@@ -522,7 +520,7 @@ def _fix_missing_headers(table, schema):
     return table3
 
 
-def _get_current_row_details(record, schema):
+def _get_error_details(target, num, err, record, schema):
     '''show last row when failed writing for throubleshooting'''
     headers = _get_schema_header_names(schema)
     if isinstance(record, dict):
@@ -530,7 +528,9 @@ def _get_current_row_details(record, schema):
     else:
         table = [headers, record]
     example = wrap(table).look()
-    details = "failed writing: \n%s\nwith schema: \n%s\n" % (example, schema)
+    dest = " output: %s" % target if isinstance(target, string_types) else ''
+    printed = "failed writing on row #%d: %s\n%s\n schema: %s\n%s"
+    details = printed % (num, err, dest, schema, example)
     return details
 
 
@@ -541,13 +541,13 @@ def _get_schema_header_names(schema):
     header = [field.get('name') for field in fields]
     return header
 
-def _raiserror(exception, details):
-    traceback = sys.exc_info()[2]
-    err = "%s%s" % (details, exception)
+def _raise_error(details):
     if PY3:
-        raise ValueError(err).with_traceback(traceback)
+        raise ValueError(details).with_traceback(sys.exc_info()[2])
     else:
-        err2 = "%s\n%s" % (traceback, err)
+        import traceback
+        stacktrace = traceback.format_exc(sys.exc_info())
+        err = "%s%s" % (stacktrace, details)
         raise ValueError(err)
 
 
