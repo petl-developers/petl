@@ -101,14 +101,27 @@ else:
     def test_appendavro10():
         _append_to_avro_file(table11, table12, schema1)
 
-    def test_toavro_troubleshooting():
-        wrong_schema = dict(schema0)
-        schema_fields = wrong_schema['fields']
+    def test_toavro_troubleshooting10():
+        nullable_schema = dict(schema0)
+        schema_fields = nullable_schema['fields']
         for field in schema_fields:
             field['type'] = ['null', 'string']
         try:
-            _write_temp_avro_file(table1, wrong_schema)
-        except ValueError:
+            _write_temp_avro_file(table1, nullable_schema)
+        except ValueError as vex:
+            bob = "%s" % vex
+            assert 'Bob' in bob
+            return
+        assert False, 'Failed schema conversion'
+
+    def test_toavro_troubleshooting11():
+        table0 = list(table1)
+        table0[3][1] = None
+        try:
+            _write_temp_avro_file(table0, schema1)
+        except TypeError as tex:
+            joe = "%s" % tex
+            assert 'Joe' in joe
             return
         assert False, 'Failed schema conversion'
 
