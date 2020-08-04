@@ -334,9 +334,12 @@ def _write_toavro(table, target, mode, schema, sample,
             try:
                 writer.write(record)
                 num = num + 1
-            except ValueError as err:
-                details = _get_error_details(target, num, err, record, schema)
-                _raise_error(details)
+            except ValueError as verr:
+                vmsg = _get_error_details(target, num, verr, record, schema)
+                _raise_error(ValueError, vmsg)
+            except TypeError as terr:
+                tmsg = _get_error_details(target, num, terr, record, schema)
+                _raise_error(TypeError, tmsg)
         # finish writing
         writer.flush()
 
@@ -541,14 +544,18 @@ def _get_schema_header_names(schema):
     return header
 
 
-def _raise_error(details):
-    if PY3:
-        raise ValueError(details).with_traceback(sys.exc_info()[2])
-    else:
-        import traceback
-        stacktrace = traceback.format_exc(sys.exc_info())
-        err = "%s%s" % (stacktrace, details)
-        raise ValueError(err)
+def _raise_error(ErrorType, new_message):
+    """Works like raise Excetion(msg) from prev_exp in python3."""
+    exinf = sys.exc_info()
+    tracebk = exinf[2]
+    try:
+        if PY3:
+            raise ErrorType(new_message).with_traceback(tracebk)
+        # Python2 compatibility workaround
+        exec('raise ErrorType, new_message, tracebk')
+    finally:
+        exinf = None
+        tracebk = None  # noqa: F841
 
 
 def _ordered_dict_iterator(table):
