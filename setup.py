@@ -17,11 +17,12 @@ setup(
     python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*',
     setup_requires=["setuptools>18.0", "setuptools-scm>1.5.4"],
     extras_require={
-        'avro': ['fastavro>=0.23.4'],
+        'avro': ['fastavro>=0.24.0'],
         'bcolz': ['bcolz>=1.2.1'],
         'db': ['SQLAlchemy>=1.3.6'],
         'hdf5': ['cython>=0.29.13', 'numpy>=1.16.4', 'numexpr>=2.6.9', 
                  'tables>=3.5.2'],
+        'http': ['aiohttp>=3.6.2', 'requests'],
         'interval': ['intervaltree>=3.0.2'],
         'numpy': ['numpy>=1.16.4'],
         'pandas': ['pandas>=0.24.2'],
