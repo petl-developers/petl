@@ -88,17 +88,17 @@ def _write_read_from_env_url(env_var_name):
 
 
 def _write_read_into_url(base_url):
-    # _write_read_file_into_url(base_url, "filename10.csv")
-    # _write_read_file_into_url(base_url, "filename11.csv", "gz")
-    # _write_read_file_into_url(base_url, "filename12.csv", "xz")
-    # _write_read_file_into_url(base_url, "filename13.csv", "zst")
-    # _write_read_file_into_url(base_url, "filename14.csv", "lz4")
-    # _write_read_file_into_url(base_url, "filename15.csv", "snappy")
-    # _write_read_file_into_url(base_url, "filename20.json")
-    # _write_read_file_into_url(base_url, "filename21.json", "gz")
-    # _write_read_file_into_url(base_url, "filename30.avro", pkg='fastavro')
+    _write_read_file_into_url(base_url, "filename10.csv")
+    _write_read_file_into_url(base_url, "filename11.csv", "gz")
+    _write_read_file_into_url(base_url, "filename12.csv", "xz")
+    _write_read_file_into_url(base_url, "filename13.csv", "zst")
+    _write_read_file_into_url(base_url, "filename14.csv", "lz4")
+    _write_read_file_into_url(base_url, "filename15.csv", "snappy")
+    _write_read_file_into_url(base_url, "filename20.json")
+    _write_read_file_into_url(base_url, "filename21.json", "gz")
+    _write_read_file_into_url(base_url, "filename30.avro", pkg='fastavro')
     _write_read_file_into_url(base_url, "filename40.xlsx", pkg='openpyxl')
-    # _write_read_file_into_url(base_url, "filename50.xls", pkg='xlwt')
+    _write_read_file_into_url(base_url, "filename50.xls", pkg='xlwt')
 
 
 def _write_read_file_into_url(base_url, filename, compression=None, pkg=None):
