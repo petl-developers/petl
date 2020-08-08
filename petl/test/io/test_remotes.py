@@ -3,6 +3,7 @@ from __future__ import absolute_import, print_function, division
 
 import sys
 import os
+import time
 from importlib import import_module
 
 from petl.compat import PY3
@@ -87,17 +88,17 @@ def _write_read_from_env_url(env_var_name):
 
 
 def _write_read_into_url(base_url):
-    _write_read_file_into_url(base_url, "filename10.csv")
-    _write_read_file_into_url(base_url, "filename11.csv", "gz")
-    _write_read_file_into_url(base_url, "filename12.csv", "xz")
-    _write_read_file_into_url(base_url, "filename13.csv", "zst")
-    _write_read_file_into_url(base_url, "filename14.csv", "lz4")
-    _write_read_file_into_url(base_url, "filename15.csv", "snappy")
-    _write_read_file_into_url(base_url, "filename20.json")
-    _write_read_file_into_url(base_url, "filename21.json", "gz")
-    _write_read_file_into_url(base_url, "filename30.avro", pkg='fastavro')
+    # _write_read_file_into_url(base_url, "filename10.csv")
+    # _write_read_file_into_url(base_url, "filename11.csv", "gz")
+    # _write_read_file_into_url(base_url, "filename12.csv", "xz")
+    # _write_read_file_into_url(base_url, "filename13.csv", "zst")
+    # _write_read_file_into_url(base_url, "filename14.csv", "lz4")
+    # _write_read_file_into_url(base_url, "filename15.csv", "snappy")
+    # _write_read_file_into_url(base_url, "filename20.json")
+    # _write_read_file_into_url(base_url, "filename21.json", "gz")
+    # _write_read_file_into_url(base_url, "filename30.avro", pkg='fastavro')
     _write_read_file_into_url(base_url, "filename40.xlsx", pkg='openpyxl')
-    _write_read_file_into_url(base_url, "filename50.xls", pkg='xlwt')
+    # _write_read_file_into_url(base_url, "filename50.xls", pkg='xlwt')
 
 
 def _write_read_file_into_url(base_url, filename, compression=None, pkg=None):
@@ -126,8 +127,9 @@ def _write_read_file_into_url(base_url, filename, compression=None, pkg=None):
         toavro(_table, source_url)
         actual = fromavro(source_url)
     elif ".xlsx" in filename:
-        toxlsx(_table, source_url, 'test')
-        actual = fromxlsx(source_url, 'test')
+        toxlsx(_table, source_url, 'test1', mode='overwrite')
+        toxlsx(_table2, source_url, 'test2', mode='add')
+        actual = fromxlsx(source_url, 'test1')
     elif ".xls" in filename:
         toxls(_table, source_url, 'test')
         actual = fromxls(source_url, 'test')
@@ -171,6 +173,14 @@ _table = (
     (u"Jim", "13", "69"),
     (u"Joe", "86", "17"),
     (u"Ted", "23", "51"),
+)
+
+_table2 = (
+    (u"name", u"friends", u"age"),
+    (u"Giannis", "31", "12"),
+    (u"James", "38", "8"),
+    (u"Stephen", "28", "4"),
+    (u"Jason", "23", "12"),
 )
 
 # endregion

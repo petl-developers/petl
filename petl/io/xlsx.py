@@ -110,32 +110,8 @@ def toxlsx(tbl, filename, sheet=None, write_header=True, mode="replace"):
     mode is used with a named sheet. In the latter case, the file
     must exist and be a valid .xlsx file.
     """
-    import openpyxl
-    if mode == "overwrite" or (mode == "replace" and sheet is None):
-        wb = openpyxl.Workbook(write_only=True)
-        ws = wb.create_sheet(title=sheet)
-    elif mode == "replace":
-        if PY3:
-            FileNotFound = FileNotFoundError
-        else:
-            FileNotFound = IOError
-        try:
-            wb = openpyxl.load_workbook(filename=filename, read_only=False)
-        except FileNotFound:
-            wb = openpyxl.Workbook(write_only=True)
-        try:
-            ws = wb[str(sheet)]
-            ws.delete_rows(1, ws.max_row)
-        except KeyError:
-            ws = wb.create_sheet(title=sheet)
-    elif mode == "add":
-        wb = openpyxl.load_workbook(filename=filename, read_only=False)
-        ws = wb.create_sheet(title=sheet)
-        # wb.create_sheet(title="foo") creates "foo1" if "foo" exists.
-        if sheet is not None and ws.title != sheet:
-            raise ValueError("Sheet %s already exists in file" % sheet)
-    else:
-        raise ValueError("Unknown mode '%s'" % mode)
+    wb = _load_or_create_workbook(filename, mode, sheet)
+    ws = _insert_sheet_on_workbook(mode, sheet, wb)
     if write_header:
         rows = tbl
     else:
@@ -145,6 +121,45 @@ def toxlsx(tbl, filename, sheet=None, write_header=True, mode="replace"):
     target = write_source_from_arg(filename)
     with target.open('wb') as target2:
         wb.save(target2)
+
+
+def _load_or_create_workbook(filename, mode, sheet):
+    if PY3:
+        FileNotFound = FileNotFoundError
+    else:
+        FileNotFound = IOError
+
+    import openpyxl
+    wb = None
+    if mode != "overwrite" and (mode != "replace" or sheet is not None):
+        try:
+            source = read_source_from_arg(filename)
+            with source.open('rb') as source2:
+                wb = openpyxl.load_workbook(filename=source2, read_only=False)
+        except FileNotFound:
+            wb = None
+    if wb is None:
+        wb = openpyxl.Workbook(write_only=True)
+    return wb
+
+
+def _insert_sheet_on_workbook(mode, sheet, wb):
+    if mode == "replace":
+        try:
+            ws = wb[str(sheet)]
+            ws.delete_rows(1, ws.max_row)
+        except KeyError:
+            ws = wb.create_sheet(title=sheet)
+    elif mode == "add":
+        ws = wb.create_sheet(title=sheet)
+        # it creates a sheet named "foo1" if "foo" exists.
+        if sheet is not None and ws.title != sheet:
+            raise ValueError("Sheet %s already exists in file" % sheet)
+    elif mode == "overwrite":
+        ws = wb.create_sheet(title=sheet)
+    else:
+        raise ValueError("Unknown mode '%s'" % mode)
+    return ws
 
 
 Table.toxlsx = toxlsx
