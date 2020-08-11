@@ -3,7 +3,6 @@ from __future__ import absolute_import, print_function, division
 
 import sys
 import os
-import time
 from importlib import import_module
 
 from petl.compat import PY3

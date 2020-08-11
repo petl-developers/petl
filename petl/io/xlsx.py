@@ -131,7 +131,7 @@ def _load_or_create_workbook(filename, mode, sheet):
 
     import openpyxl
     wb = None
-    if mode != "overwrite" and (mode != "replace" or sheet is not None):
+    if not (mode == "overwrite" or (mode == "replace" and sheet is None)):
         try:
             source = read_source_from_arg(filename)
             with source.open('rb') as source2:
