@@ -1,11 +1,25 @@
 Changes
 =======
 
+Version 1.6.3
+-------------
+
+* Allowed reading and writing Excel files in remote sources.
+  By :user:`juarezr`, :issue:`506`.
+
+* Allow `toxlsx()` to add or replace a worksheet. 
+  By :user:`churlrich`, :issue:`502`.
+
+* Improved avro: improve message on schema or data mismatch. 
+  By :user:`juarezr`, :issue:`507`.
+
+* Fixed build for failed test case. By :user:`juarezr`, :issue:`508`.
+
+
 Version 1.6.2
 -------------
 
 * Fixed boolean type detection in toavro(). By :user:`juarezr`, :issue:`504`.
-
 
 * Fix unavoidable warning if fsspec is installed but some optional package is
   not installed.
