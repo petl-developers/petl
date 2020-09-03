@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, print_function, division
 
-import io
 import logging
 import sys
 from contextlib import contextmanager
@@ -16,10 +15,10 @@ logger = logging.getLogger(__name__)
 
 class RemoteSource(object):
     """Read or write directly from files in remote filesystems.
-    
+
     This source handles many filesystems that are selected based on the
     protocol passed in the `url` argument.
-    
+
     The url should be specified in `to..()` and `from...()` functions. E.g.::
 
         >>> import petl as etl
@@ -68,7 +67,7 @@ class RemoteSource(object):
 
     .. _fsspec: https://filesystem-spec.readthedocs.io/en/latest/
     .. _fs_builtin: https://filesystem-spec.readthedocs.io/en/latest/api.html#built-in-implementations
-    .. _fs_known: https://filesystem-spec.readthedocs.io/en/latest/api.html#built-in-implementations
+    .. _fs_known: https://filesystem-spec.readthedocs.io/en/latest/api.html#other-known-implementations
     .. _fs_chain: https://filesystem-spec.readthedocs.io/en/latest/features.html#url-chaining
     """
 
@@ -78,8 +77,9 @@ class RemoteSource(object):
 
     def open_file(self, mode="rb"):
         import fsspec
-
-        fs = fsspec.open(self.url, mode=mode, compression='infer', **self.kwargs)
+        # auto_mkdir=True can fail in some filesystems or without permission for full path
+        # E.g: s3fs tries to create a bucket when writing into a folder does not exists
+        fs = fsspec.open(self.url, mode=mode, compression='infer', auto_mkdir=False, **self.kwargs)
         return fs
 
     @contextmanager
@@ -101,7 +101,8 @@ def _register_filesystems(only_available=False):
     impls = known_implementations.items()
     r = w = 0
     for protocol, spec in impls:
-        if "err" in spec:
+        missing_deps = "err" in spec
+        if missing_deps:
             emsg = "# WARN: fsspec {} unavailable: {}".format(protocol, spec["err"])
             logger.debug(emsg)
             if only_available:
@@ -111,21 +112,21 @@ def _register_filesystems(only_available=False):
         # when missing a package for fsspec use the available source in petl
         # E.g: fsspec requires `requests` package installed for handling http and https
         reader = get_reader(protocol)
-        if not "err" in spec or reader is None:
+        if not missing_deps or reader is None:
             register_reader(protocol, RemoteSource)
             r += 1
         writer = get_writer(protocol)
-        if not "err" in spec or writer is None:
+        if not missing_deps or writer is None:
             register_writer(protocol, RemoteSource)
             w += 1
-    dlog = "# fsspec: registered {} remote readers and {} remote writers"
-    logger.debug(dlog.format(r, w))
+    dlog = "# fsspec: registered %s remote readers and %s remote writers"
+    logger.debug(dlog, r, w)
 
 
 def _try_register_filesystems():
     try:
         import fsspec
-    except ImportError as ie:
+    except ImportError:
         logger.debug("# Missing fsspec package. Install with: pip install fsspec")
     else:
         try:
@@ -200,13 +201,13 @@ class SMBSource(object):
 
 def _open_file_smbprotocol(url, mode="rb", **kwargs):
 
-    domain, host, port, user, passwd, server_path = _parse_smb_url(url)
+    _domain, host, port, user, passwd, server_path = _parse_smb_url(url)
     import smbclient
 
     try:
         # register the server with explicit credentials
         if user:
-            session = smbclient.register_session(
+            smbclient.register_session(
                 host, username=user, password=passwd, port=port
             )
         # Read an existing file as bytes
@@ -223,7 +224,7 @@ def _parse_smb_url(url):
 
     if not url:
         raise ValueError("SMB error: no host given")
-    elif not url.startswith("smb://"):
+    if not url.startswith("smb://"):
         raise ValueError(e + url)
 
     if PY3:
@@ -238,7 +239,8 @@ def _parse_smb_url(url):
     server_path = "\\\\{}{}".format(parsed.hostname, unc_path)
 
     if not parsed.username:
-        domain, username = None
+        domain = None
+        username = None
     elif ";" in parsed.username:
         domain, username = parsed.username.split(";")
     else:

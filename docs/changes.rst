@@ -1,6 +1,13 @@
 Changes
 =======
 
+Version 1.6.4
+-------------
+
+* Fixed exception when writing to S3 with ``fsspec`` ``auto_mkdir=True``.
+  By :user:`juarezr`, :issue:`512`.
+
+
 Version 1.6.3
 -------------
 
