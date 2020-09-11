@@ -61,29 +61,26 @@ class XLSXView(Table):
             wb = openpyxl.load_workbook(filename=source2,
                                         read_only=self.read_only,
                                         **self.kwargs)
-        if self.sheet is None:
-            ws = wb[wb.sheetnames[0]]
-        elif isinstance(self.sheet, int):
-            ws = wb[wb.sheetnames[self.sheet]]
-        else:
-            ws = wb[str(self.sheet)]
-
-        if self.range_string is not None:
-            rows = ws[self.range_string]
-        else:
-            rows = ws.iter_rows(min_row=self.min_row,
-                                min_col=self.min_col,
-                                max_row=self.max_row,
-                                max_col=self.max_col)
-
-        for row in rows:
-            yield tuple(cell.value for cell in row)
-
-        try:
-            wb._archive.close()
-        except AttributeError:
-            # just here in case openpyxl stops exposing an _archive property.
-            pass
+            if self.sheet is None:
+                ws = wb[wb.sheetnames[0]]
+            elif isinstance(self.sheet, int):
+                ws = wb[wb.sheetnames[self.sheet]]
+            else:
+                ws = wb[str(self.sheet)]
+            if self.range_string is not None:
+                rows = ws[self.range_string]
+            else:
+                rows = ws.iter_rows(min_row=self.min_row,
+                                    min_col=self.min_col,
+                                    max_row=self.max_row,
+                                    max_col=self.max_col)
+            for row in rows:
+                yield tuple(cell.value for cell in row)
+            try:
+                wb._archive.close()
+            except AttributeError:
+                # just here in case openpyxl stops exposing an _archive property.
+                pass
 
 
 def toxlsx(tbl, filename, sheet=None, write_header=True, mode="replace"):
@@ -174,21 +171,21 @@ def appendxlsx(tbl, filename, sheet=None, write_header=False):
     source = read_source_from_arg(filename)
     with source.open('rb') as source2:
         wb = openpyxl.load_workbook(filename=source2, read_only=False)
-    if sheet is None:
-        ws = wb[wb.sheetnames[0]]
-    elif isinstance(sheet, int):
-        ws = wb[wb.sheetnames[sheet]]
-    else:
-        ws = wb[str(sheet)]
-    if write_header:
-        rows = tbl
-    else:
-        rows = data(tbl)
-    for row in rows:
-        ws.append(row)
-    target = write_source_from_arg(filename)
-    with target.open('wb') as target2:
-        wb.save(target2)
+        if sheet is None:
+            ws = wb[wb.sheetnames[0]]
+        elif isinstance(sheet, int):
+            ws = wb[wb.sheetnames[sheet]]
+        else:
+            ws = wb[str(sheet)]
+        if write_header:
+            rows = tbl
+        else:
+            rows = data(tbl)
+        for row in rows:
+            ws.append(row)
+        target = write_source_from_arg(filename)
+        with target.open('wb') as target2:
+            wb.save(target2)
 
 
 Table.appendxlsx = appendxlsx
