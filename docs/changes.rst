@@ -1,6 +1,14 @@
 Changes
 =======
 
+Version 1.6.5
+-------------
+
+* Fixed fromxlsx with read_only crashes.
+  By :user:`juarezr`, :issue:`514`.
+
+
+
 Version 1.6.4
 -------------
 
