@@ -33,6 +33,19 @@ else:
         ieq(expect, tbl)
         ieq(expect, tbl)
 
+    def test_fromxlsx_read_only():
+        filename = pkg_resources.resource_filename(
+            'petl', 'test/resources/test.xlsx'
+        )
+        tbl = fromxlsx(filename, sheet='Sheet1', read_only=True)
+        expect = (('foo', 'bar'),
+                  ('A', 1),
+                  ('B', 2),
+                  ('C', 2),
+                  (u'é', datetime(2012, 1, 1)))
+        ieq(expect, tbl)
+        ieq(expect, tbl)
+
     def test_fromxlsx_nosheet():
         filename = pkg_resources.resource_filename(
             'petl', 'test/resources/test.xlsx'
