@@ -7,6 +7,7 @@ import sys
 import time
 
 
+from petl.compat import PY3
 from petl.util.base import Table
 from petl.util.statistics import onlinestats
 
@@ -246,11 +247,11 @@ class ClockView(Table):
         self.time = 0
         it = iter(self.wrapped)
         while True:
-            before = time.clock()
+            before = time.perf_counter() if PY3 else time.clock()
             try:
                 row = next(it)
             except StopIteration:
                 return
-            after = time.clock()
+            after = time.perf_counter() if PY3 else time.clock()
             self.time += (after - before)
             yield row

@@ -1,12 +1,18 @@
 Changes
 =======
 
+Version 1.6.6
+-------------
+
+* fix compatibility with python3.8 in `petl.timings.clock()`.
+  By :user:`juarezr`, :issue:`484`.
+
+
 Version 1.6.5
 -------------
 
 * Fixed fromxlsx with read_only crashes.
   By :user:`juarezr`, :issue:`514`.
-
 
 
 Version 1.6.4
