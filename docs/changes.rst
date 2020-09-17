@@ -4,6 +4,9 @@ Changes
 Version 1.6.6
 -------------
 
+* Added python version 3.8 and 3.9 to tox.ini for using in newer distros.
+  By :user:`juarezr`, :issue:`517`.
+
 * fix compatibility with python3.8 in `petl.timings.clock()`.
   By :user:`juarezr`, :issue:`484`.
 * add json lines support. By :user:`fahadsiddiqui`.
