@@ -42,6 +42,34 @@ def fromjson(source, *args, **kwargs):
         | 'c' |   2 |
         +-----+-----+
 
+    Setting argument `lines` to `True` will enable :func:`etl.fromjson` to
+    infer the document as a JSON lines document. For more details about JSON lines
+    please visit https://jsonlines.org/.
+
+        >>> import petl as etl
+        >>> data_with_jlines = '''
+        ... {"name": "Gilbert", "wins": [["straight", "7♣"], ["one pair", "10♥"]]}
+        ... {"name": "Alexa", "wins": [["two pair", "4♠"], ["two pair", "9♠"]]}
+        ... {"name": "May", "wins": []}
+        ... {"name": "Deloise", "wins": [["three of a kind", "5♣"]]}
+        ... '''
+        >>> with open('example.json', 'w') as f:
+        ...     f.write(data_with_jlines)
+        ...
+        >>> table2 = etl.fromjson('example.json', lines=True)
+        >>> table2
+        +---------+-------------------------------------------+
+        | name    | wins                                      |
+        +=========+===========================================+
+        | Gilbert | [['straight', '7♣'], ['one pair', '10♥']] |
+        +---------+-------------------------------------------+
+        | Alexa   | [['two pair', '4♠'], ['two pair', '9♠']]  |
+        +---------+-------------------------------------------+
+        | May     | []                                        |
+        +---------+-------------------------------------------+
+        | Deloise | [['three of a kind', '5♣']]               |
+        +---------+-------------------------------------------+
+
     If your JSON file does not fit this structure, you will need to parse it
     via :func:`json.load` and select the array to treat as the data, see also
     :func:`petl.io.json.fromdicts`.
@@ -69,6 +97,7 @@ class JsonView(Table):
         self.missing = kwargs.pop('missing', None)
         self.header = kwargs.pop('header', None)
         self.sample = kwargs.pop('sample', 1000)
+        self.lines = kwargs.pop('lines', False)
         self.args = args
         self.kwargs = kwargs
 
@@ -79,7 +108,10 @@ class JsonView(Table):
                 f = io.TextIOWrapper(f, encoding='utf-8', newline='',
                                      write_through=True)
             try:
-                dicts = json.load(f, *self.args, **self.kwargs)
+                if self.lines:
+                    dicts = [json.loads(jline) for jline in f.read().splitlines()]
+                else:
+                    dicts = json.load(f, *self.args, **self.kwargs)
                 for row in iterdicts(dicts, self.header, self.sample,
                                      self.missing):
                     yield row
