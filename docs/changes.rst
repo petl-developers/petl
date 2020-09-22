@@ -1,6 +1,13 @@
 Changes
 =======
 
+Version 1.6.7
+-------------
+
+* add json lines support.
+  By :user:`fahadsiddiqui`, :issue:`484`.
+
+
 Version 1.6.6
 -------------
 
