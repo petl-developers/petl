@@ -1,18 +1,12 @@
 Changes
 =======
 
-Version 1.6.7
--------------
-
-* add json lines support.
-  By :user:`fahadsiddiqui`.
-
-
 Version 1.6.6
 -------------
 
 * fix compatibility with python3.8 in `petl.timings.clock()`.
   By :user:`juarezr`, :issue:`484`.
+* add json lines support. By :user:`fahadsiddiqui`.
 
 
 Version 1.6.5
