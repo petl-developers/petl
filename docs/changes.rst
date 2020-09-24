@@ -1,6 +1,13 @@
 Changes
 =======
 
+Version 1.6.7
+-------------
+
+* Reduced memory footprint for JSONL files, huge improvement.
+  By :user:`fahadsiddiqui`, :issue:`522`.
+
+
 Version 1.6.6
 -------------
 
