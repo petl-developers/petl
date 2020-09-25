@@ -1,6 +1,6 @@
 .. module:: petl
 
-petl - Extract, Transform and Load (Tables of Data)
+petl - Extract, Transform and Load
 ===================================================
 
 :mod:`petl` is a general purpose Python package for extracting, transforming
