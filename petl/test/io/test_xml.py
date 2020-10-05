@@ -276,59 +276,57 @@ def test_fromxml_entity():
     _INSERTED = '<tr>&inserted;</tr>'
 
     _TABLE1 = (('foo', 'bar'),
-            ('a', '1'),
-            ('b', '2'),
-            ('c', '3'))
+               ('a', '1'),
+               ('b', '2'),
+               ('c', '3'))
 
-    _EXPECT_IT = (('X', '9'),)
+    temp_file1 = _write_test_file(_DATA1)
 
-    _EXPECT_NO = ((None, None),)
+    actual11 = fromxml(temp_file1, 'tr', 'td')
+    _compare(_TABLE1, actual11)
 
     try:
         from lxml import etree
-        parser_off = etree.XMLParser(resolve_entities=False)
-        parser_onn = etree.XMLParser(resolve_entities=True)
-        found_lxml = True
     except:
-        found_lxml = False
+        return
 
     data_file_tmp = _write_temp_file(_DATA2)
     doc_type_temp = _DOCTYPE % data_file_tmp
     doc_type_miss = _DOCTYPE % '/tmp/doesnotexist'
 
-    temp_file1 = _write_test_file(_DATA1)
+    _EXPECT_IT = (('X', '9'),)
+    _EXPECT_NO = ((None, None),)
+
     temp_file2 = _write_test_file(_DATA1, pre=doc_type_temp, pos=_INSERTED)
     temp_file3 = _write_test_file(_DATA1, pre=doc_type_miss, pos=_INSERTED)
 
-    actual11 = fromxml(temp_file1, 'tr', 'td')
-    _compare(_TABLE1, actual11)
+    parser_off = etree.XMLParser(resolve_entities=False)
+    parser_onn = etree.XMLParser(resolve_entities=True)
 
-    if found_lxml:
-        actual12 = fromxml(temp_file1, 'tr', 'td', parser=parser_off)
-        _compare(_TABLE1, actual12)
+    actual12 = fromxml(temp_file1, 'tr', 'td', parser=parser_off)
+    _compare(_TABLE1, actual12)
 
     actual21 = fromxml(temp_file2, 'tr', 'td')
     _compare(_TABLE1 + _EXPECT_NO, actual21)
 
-    if found_lxml:
-        actual22 = fromxml(temp_file2, 'tr', 'td', parser=parser_off)
-        _compare(_TABLE1 + _EXPECT_NO, actual22)
+    actual22 = fromxml(temp_file2, 'tr', 'td', parser=parser_off)
+    _compare(_TABLE1 + _EXPECT_NO, actual22)
 
-        actual23 = fromxml(temp_file2, 'tr', 'td', parser=parser_onn)
-        _compare(_TABLE1 + _EXPECT_IT, actual23)
+    actual23 = fromxml(temp_file2, 'tr', 'td', parser=parser_onn)
+    _compare(_TABLE1 + _EXPECT_IT, actual23)
 
     actual31 = fromxml(temp_file3, 'tr', 'td')
     _compare(_TABLE1 + _EXPECT_NO, actual31)
 
-    if found_lxml:
-        actual32 = fromxml(temp_file3, 'tr', 'td', parser=parser_off)
-        _compare(_TABLE1 + _EXPECT_NO, actual32)
-        try:
-            actual33 = fromxml(temp_file3, 'tr', 'td', parser=parser_onn)
-            for _ in actual33:
-                pass
-        except etree.XMLSyntaxError:
-            # print('XMLSyntaxError', ex, file=sys.stderr)
+    actual32 = fromxml(temp_file3, 'tr', 'td', parser=parser_off)
+    _compare(_TABLE1 + _EXPECT_NO, actual32)
+
+    try:
+        actual33 = fromxml(temp_file3, 'tr', 'td', parser=parser_onn)
+        for _ in actual33:
             pass
-        else:
-            assert True, 'Error testing XML'
+    except etree.XMLSyntaxError:
+        # print('XMLSyntaxError', ex, file=sys.stderr)
+        pass
+    else:
+        assert True, 'Error testing XML'
