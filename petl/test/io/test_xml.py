@@ -284,9 +284,13 @@ def test_fromxml_entity():
 
     _EXPECT_NO = ((None, None),)
 
-    from lxml import etree
-    parser_off = etree.XMLParser(resolve_entities=False)
-    parser_onn = etree.XMLParser(resolve_entities=True)
+    try:
+        from lxml import etree
+        parser_off = etree.XMLParser(resolve_entities=False)
+        parser_onn = etree.XMLParser(resolve_entities=True)
+        found_lxml = True
+    except:
+        found_lxml = False
 
     data_file_tmp = _write_temp_file(_DATA2)
     doc_type_temp = _DOCTYPE % data_file_tmp
@@ -299,30 +303,32 @@ def test_fromxml_entity():
     actual11 = fromxml(temp_file1, 'tr', 'td')
     _compare(_TABLE1, actual11)
 
-    actual12 = fromxml(temp_file1, 'tr', 'td', parser=parser_off)
-    _compare(_TABLE1, actual12)
+    if found_lxml:
+        actual12 = fromxml(temp_file1, 'tr', 'td', parser=parser_off)
+        _compare(_TABLE1, actual12)
 
     actual21 = fromxml(temp_file2, 'tr', 'td')
     _compare(_TABLE1 + _EXPECT_NO, actual21)
 
-    actual22 = fromxml(temp_file2, 'tr', 'td', parser=parser_off)
-    _compare(_TABLE1 + _EXPECT_NO, actual22)
+    if found_lxml:
+        actual22 = fromxml(temp_file2, 'tr', 'td', parser=parser_off)
+        _compare(_TABLE1 + _EXPECT_NO, actual22)
 
-    actual23 = fromxml(temp_file2, 'tr', 'td', parser=parser_onn)
-    _compare(_TABLE1 + _EXPECT_IT, actual23)
+        actual23 = fromxml(temp_file2, 'tr', 'td', parser=parser_onn)
+        _compare(_TABLE1 + _EXPECT_IT, actual23)
 
     actual31 = fromxml(temp_file3, 'tr', 'td')
     _compare(_TABLE1 + _EXPECT_NO, actual31)
 
-    actual32 = fromxml(temp_file3, 'tr', 'td', parser=parser_off)
-    _compare(_TABLE1 + _EXPECT_NO, actual32)
-
-    try:
-        actual33 = fromxml(temp_file3, 'tr', 'td', parser=parser_onn)
-        for _ in actual33:
+    if found_lxml:
+        actual32 = fromxml(temp_file3, 'tr', 'td', parser=parser_off)
+        _compare(_TABLE1 + _EXPECT_NO, actual32)
+        try:
+            actual33 = fromxml(temp_file3, 'tr', 'td', parser=parser_onn)
+            for _ in actual33:
+                pass
+        except etree.XMLSyntaxError:
+            # print('XMLSyntaxError', ex, file=sys.stderr)
             pass
-    except etree.XMLSyntaxError:
-        # print('XMLSyntaxError', ex, file=sys.stderr)
-        pass
-    else:
-        assert True, 'Error testing XML'
+        else:
+            assert True, 'Error testing XML'
