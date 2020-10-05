@@ -133,8 +133,11 @@ def fromxml(source, *args, **kwargs):
     or list of paths can be provided, e.g.,
     ``fromxml('example.html', './/tr', ('th', 'td'))``.
 
-    Optionally a custom parser can be provided, e.g.,
-    ``etl.fromxml('example1.xml', 'tr', 'td', parser=my_parser)``.
+    Optionally a custom parser can be provided, e.g.::
+
+        >>> from lxml import etree # doctest: +SKIP
+        ... my_parser = etree.XMLParser(resolve_entities=False) # doctest: +SKIP
+        ... table4 = etl.fromxml('example1.xml', 'tr', 'td', parser=my_parser) # doctest: +SKIP
 
     """
 
