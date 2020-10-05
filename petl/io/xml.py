@@ -133,6 +133,9 @@ def fromxml(source, *args, **kwargs):
     or list of paths can be provided, e.g.,
     ``fromxml('example.html', './/tr', ('th', 'td'))``.
 
+    Optionally a custom parser can be provided, e.g.,
+    ``etl.fromxml('example1.xml', 'tr', 'td', parser=my_parser)``.
+
     """
 
     source = read_source_from_arg(source)
@@ -162,14 +165,15 @@ class XmlView(Table):
         else:
             assert False, 'bad parameters'
         self.missing = kwargs.get('missing', None)
+        self.user_parser = kwargs.get('parser', None)
 
     def __iter__(self):
         vmatch = self.vmatch
         vdict = self.vdict
 
         with self.source.open('rb') as xmlf:
-
-            tree = etree.parse(xmlf)
+            parser2 = _create_xml_parser(self.user_parser)
+            tree = etree.parse(xmlf, parser=parser2)
             if not hasattr(tree, 'iterfind'):
                 # Python 2.6 compatibility
                 tree.iterfind = tree.findall
@@ -217,6 +221,20 @@ class XmlView(Table):
                 for rowelm in tree.iterfind(self.rmatch):
                     yield tuple(vgetters[f](rowelm.findall(vmatches[f]))
                                 for f in flds)
+
+
+def _create_xml_parser(user_parser):
+    if user_parser is not None:
+        return user_parser
+    try:
+        # Default lxml parser.
+        # This will throw an error if parser is not set and lxml could not be imported
+        # because Python's built XML parser doesn't like the `resolve_entities` kwarg.
+        # return etree.XMLParser(resolve_entities=False)
+        return etree.XMLParser(resolve_entities=False)
+    except TypeError:
+        # lxml not available
+        return None
 
 
 def element_text_getter(missing):
