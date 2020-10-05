@@ -17,19 +17,19 @@ def test_fromxml():
     # initial data
     f = NamedTemporaryFile(delete=False, mode='wt')
     data = """<table>
-    <tr>
-        <td>foo</td><td>bar</td>
-    </tr>
-    <tr>
-        <td>a</td><td>1</td>
-    </tr>
-    <tr>
-        <td>b</td><td>2</td>
-    </tr>
-    <tr>
-        <td>c</td><td>2</td>
-    </tr>
-</table>"""
+        <tr>
+            <td>foo</td><td>bar</td>
+        </tr>
+        <tr>
+            <td>a</td><td>1</td>
+        </tr>
+        <tr>
+            <td>b</td><td>2</td>
+        </tr>
+        <tr>
+            <td>c</td><td>2</td>
+        </tr>
+      </table>"""
     f.write(data)
     f.close()
 
@@ -47,19 +47,19 @@ def test_fromxml_2():
     # initial data
     f = NamedTemporaryFile(delete=False, mode='wt')
     data = """<table>
-    <tr>
-        <td v='foo'/><td v='bar'/>
-    </tr>
-    <tr>
-        <td v='a'/><td v='1'/>
-    </tr>
-    <tr>
-        <td v='b'/><td v='2'/>
-    </tr>
-    <tr>
-        <td v='c'/><td v='2'/>
-    </tr>
-</table>"""
+        <tr>
+            <td v='foo'/><td v='bar'/>
+        </tr>
+        <tr>
+            <td v='a'/><td v='1'/>
+        </tr>
+        <tr>
+            <td v='b'/><td v='2'/>
+        </tr>
+        <tr>
+            <td v='c'/><td v='2'/>
+        </tr>
+      </table>"""
     f.write(data)
     f.close()
 
@@ -77,16 +77,16 @@ def test_fromxml_3():
     # initial data
     f = NamedTemporaryFile(delete=False, mode='wt')
     data = """<table>
-    <row>
-        <foo>a</foo><baz><bar v='1'/></baz>
-    </row>
-    <row>
-        <foo>b</foo><baz><bar v='2'/></baz>
-    </row>
-    <row>
-        <foo>c</foo><baz><bar v='2'/></baz>
-    </row>
-</table>"""
+        <row>
+            <foo>a</foo><baz><bar v='1'/></baz>
+        </row>
+        <row>
+            <foo>b</foo><baz><bar v='2'/></baz>
+        </row>
+        <row>
+            <foo>c</foo><baz><bar v='2'/></baz>
+        </row>
+      </table>"""
     f.write(data)
     f.close()
 
@@ -105,16 +105,16 @@ def test_fromxml_4():
     # initial data
     f = NamedTemporaryFile(delete=False, mode='wt')
     data = """<table>
-    <row>
-        <foo>a</foo><baz><bar>1</bar><bar>3</bar></baz>
-    </row>
-    <row>
-        <foo>b</foo><baz><bar>2</bar></baz>
-    </row>
-    <row>
-        <foo>c</foo><baz><bar>2</bar></baz>
-    </row>
-</table>"""
+        <row>
+            <foo>a</foo><baz><bar>1</bar><bar>3</bar></baz>
+        </row>
+        <row>
+            <foo>b</foo><baz><bar>2</bar></baz>
+        </row>
+        <row>
+            <foo>c</foo><baz><bar>2</bar></baz>
+        </row>
+      </table>"""
     f.write(data)
     f.close()
 
@@ -133,16 +133,16 @@ def test_fromxml_5():
     # initial data
     f = NamedTemporaryFile(delete=False, mode='wt')
     data = """<table>
-    <row>
-        <foo>a</foo><baz><bar v='1'/><bar v='3'/></baz>
-    </row>
-    <row>
-        <foo>b</foo><baz><bar v='2'/></baz>
-    </row>
-    <row>
-        <foo>c</foo><baz><bar v='2'/></baz>
-    </row>
-</table>"""
+        <row>
+            <foo>a</foo><baz><bar v='1'/><bar v='3'/></baz>
+        </row>
+        <row>
+            <foo>b</foo><baz><bar v='2'/></baz>
+        </row>
+        <row>
+            <foo>c</foo><baz><bar v='2'/></baz>
+        </row>
+      </table>"""
     f.write(data)
     f.close()
 
@@ -159,27 +159,27 @@ def test_fromxml_5():
 def test_fromxml_6():
 
     data = """<table class='petl'>
-<thead>
-<tr>
-<th>foo</th>
-<th>bar</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>a</td>
-<td style='text-align: right'>2</td>
-</tr>
-<tr>
-<td>b</td>
-<td style='text-align: right'>1</td>
-</tr>
-<tr>
-<td>c</td>
-<td style='text-align: right'>3</td>
-</tr>
-</tbody>
-</table>"""
+        <thead>
+        <tr>
+        <th>foo</th>
+        <th>bar</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+        <td>a</td>
+        <td style='text-align: right'>2</td>
+        </tr>
+        <tr>
+        <td>b</td>
+        <td style='text-align: right'>1</td>
+        </tr>
+        <tr>
+        <td>c</td>
+        <td style='text-align: right'>3</td>
+        </tr>
+        </tbody>
+      </table>"""
     f = NamedTemporaryFile(delete=False, mode='wt')
     f.write(data)
     f.close()
@@ -194,15 +194,15 @@ def test_fromxml_6():
     ieq(expect, actual)  # verify can iterate twice
 
 
-url = 'http://feeds.bbci.co.uk/news/rss.xml'
-# check internet connection
-try:
-    urlopen(url)
-except Exception as e:
-    print('SKIP test_fromxml_url: %s' % e, file=sys.stderr)
-else:
-
-    def test_fromxml_url():
-
-            tbl = fromxml(url, './/item', 'title')
-            assert nrows(tbl) > 0
+def test_fromxml_url():
+    # check internet connection
+    try:
+        url = 'http://raw.githubusercontent.com/petl-developers/petl/master/.pydevproject'
+        urlopen(url)
+    except Exception as e:
+        print('SKIP test_fromxml_url: %s' % e, file=sys.stderr)
+    else:
+        actual = fromxml(url, 'pydev_property', {'name': ( '.', 'name'), 'prop': '.'})
+        assert nrows(actual) > 0
+        expect = fromxml('.pydevproject', 'pydev_property', {'name': ( '.', 'name'), 'prop': '.'})
+        ieq(expect, actual)
