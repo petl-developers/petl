@@ -1,6 +1,13 @@
 Changes
 =======
 
+Version 1.6.8
+-------------
+
+* Allow using a custom/restricted xml parser in `fromxml()`.
+  By :user:`juarezr`, :issue:`527`.
+
+
 Version 1.6.7
 -------------
 
