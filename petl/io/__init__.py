@@ -13,7 +13,7 @@ from petl.io.pickle import frompickle, topickle, appendpickle, teepickle
 
 from petl.io.text import fromtext, totext, appendtext, teetext
 
-from petl.io.xml import fromxml
+from petl.io.xml import fromxml, toxml
 
 from petl.io.html import tohtml, teehtml
 
