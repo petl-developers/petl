@@ -9,8 +9,7 @@ import sys
 from petl.test.helpers import ieq
 from petl.util import nrows, look
 from petl.io.xml import fromxml
-from petl.compat import urlopen, izip_longest
-from nose.tools import eq_
+from petl.compat import urlopen
 
 
 def test_fromxml():
@@ -226,35 +225,11 @@ def _write_test_file(data, pre='', pos=''):
 
 def _compare(expected, actual):
     try:
-        _eq_rows(expected, actual)
+        ieq(expected, actual)
     except Exception as ex:
         print('Expected:\n', look(expected), file=sys.stderr)
         print('  Actual:\n', look(actual), file=sys.stderr)
         raise ex
-
-
-def _eq_rows(expect, actual, cast=None):
-    '''test when values are equals for eacfh row and column'''
-    ie = iter(expect)
-    ia = iter(actual)
-    for re, ra in izip_longest(ie, ia, fillvalue=None):
-        if cast:
-            ra = cast(ra)
-        for ve, va in izip_longest(re, ra, fillvalue=None):
-            if isinstance(ve, list):
-                for je, ja in izip_longest(ve, va, fillvalue=None):
-                    _eq2(je, ja, re, ra)
-            elif not isinstance(ve, dict):
-                _eq2(ve, va, re, ra)
-
-
-def _eq2(ve, va, re, ra):
-    try:
-        eq_(ve, va)
-    except AssertionError as ea:
-        print('\nrow: ', re, ' != ', ra)
-        print('val: ', ve, ' != ', va)
-        raise ea
 
 
 def test_fromxml_entity():

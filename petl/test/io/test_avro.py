@@ -8,12 +8,12 @@ from datetime import datetime, date
 from decimal import Decimal
 from tempfile import NamedTemporaryFile
 
-from nose.tools import eq_
-
-from petl.compat import izip_longest, PY3
+from petl.compat import PY3
 from petl.transform.basics import cat
 from petl.util.base import dicts
 from petl.util.vis import look
+
+from petl.test.helpers import ieq
 
 from petl.io.avro import fromavro, toavro, appendavro
 
@@ -173,8 +173,8 @@ else:
             _show__rows_from('Actual:', test_actual)
             avro_schema = test_actual.get_avro_schema()
             print('\nSchema:\n', avro_schema)
-        _eq_rows(test_expect, test_actual)
-        _eq_rows(test_expect, test_actual)  # verify can iterate twice
+        ieq(test_expect, test_actual)
+        ieq(test_expect, test_actual)  # verify can iterate twice
 
     def _show__expect_rows(test_rows, print_tables=True, limit=0):
         if print_tables:
@@ -183,28 +183,6 @@ else:
     def _show__rows_from(label, test_rows, limit=0):
         print(label)
         print(look(test_rows, limit=limit))
-
-    def _eq_rows(expect, actual, cast=None):
-        '''test when values are equals for eacfh row and column'''
-        ie = iter(expect)
-        ia = iter(actual)
-        for re, ra in izip_longest(ie, ia, fillvalue=None):
-            if cast:
-                ra = cast(ra)
-            for ve, va in izip_longest(re, ra, fillvalue=None):
-                if isinstance(ve, list):
-                    for je, ja in izip_longest(ve, va, fillvalue=None):
-                        _eq2(je, ja, re, ra)
-                elif not isinstance(ve, dict):
-                    _eq2(ve, va, re, ra)
-
-    def _eq2(ve, va, re, ra):
-        try:
-            eq_(ve, va)
-        except AssertionError as ea:
-            print('\nrow: ', re, ' != ', ra)
-            print('val: ', ve, ' != ', va)
-            raise ea
 
     def _decs(float_value, rounding=12):
         return Decimal(str(round(float_value, rounding)))
