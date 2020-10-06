@@ -1,6 +1,13 @@
 Changes
 =======
 
+Version 1.7.0
+-------------
+
+* Added `toxml()` as convenience wrapper over `totext()`.
+  By :user:`juarezr`, :issue:`529`.
+
+
 Version 1.6.8
 -------------
 
