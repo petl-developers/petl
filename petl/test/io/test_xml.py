@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, print_function, division
 
-
-from tempfile import NamedTemporaryFile
 import sys
-
+from collections import OrderedDict
+from tempfile import NamedTemporaryFile
 
 from petl.test.helpers import ieq
 from petl.util import nrows, look
-from petl.io.xml import fromxml
+from petl.io.xml import fromxml, toxml
 from petl.compat import urlopen
 
 
@@ -208,28 +207,42 @@ def test_fromxml_url():
         ieq(expect, actual)
 
 
-def _write_temp_file(data):
+def _write_temp_file(content, out=None):
     with NamedTemporaryFile(delete=False, mode='wt') as f:
-        f.write(data)
+        f.write(content)
         res = f.name
         f.close()
-    # txt = open(res, 'r').read()
-    # print('TEST %s:\n%s' % (res, txt), file=sys.stderr)
+    if out is not None:
+        outf = sys.stderr if out else sys.stdout
+        print('TEST %s:\n%s' % (res, content), file=outf)
     return res
+
+
+def _dump_file(filename, out=None):
+    if out is not None:
+        outf = sys.stderr if out else sys.stdout
+        print('FILE:\n%s' % open(filename).read(), file=outf)
+
+
+def _dump_both(expected, actual, out=None):
+    if out is not None:
+        outf = sys.stderr if out else sys.stdout
+        print('EXPECTED:\n', look(expected), file=outf)
+        print('ACTUAL:\n', look(actual), file=outf)
+
+
+def _compare(expected, actual, out=None):
+    try:
+        _dump_both(expected, actual, out)
+        ieq(expected, actual)
+    except Exception as ex:
+        _dump_both(expected, actual, False)
+        raise ex
 
 
 def _write_test_file(data, pre='', pos=''):
     content = pre + '<table>' + data + pos + '</table>'
     return _write_temp_file(content)
-
-
-def _compare(expected, actual):
-    try:
-        ieq(expected, actual)
-    except Exception as ex:
-        print('Expected:\n', look(expected), file=sys.stderr)
-        print('  Actual:\n', look(actual), file=sys.stderr)
-        raise ex
 
 
 def test_fromxml_entity():
@@ -305,3 +318,292 @@ def test_fromxml_entity():
         pass
     else:
         assert True, 'Error testing XML'
+
+
+def _check_toxml(table, expected, check=(), dump=None, **kwargs):
+    with NamedTemporaryFile(delete=True, suffix='.xml') as f:
+        filename = f.name
+
+    toxml(table, filename, **kwargs)
+    _dump_file(filename, dump)
+    if check:
+        try:
+            actual = fromxml(filename, *check)
+            _compare(expected, actual, dump)
+        except Exception as ex:
+            _dump_file(filename, False)
+            raise ex
+
+
+_HEAD1 = (('ABCD', 'N123'),)
+_BODY1 = (('a', '1'),
+          ('b', '2'),
+          ('c', '3'))
+_TABLE1 = _HEAD1 + _BODY1
+
+
+def test_toxml00():
+    _check_toxml(
+        _TABLE1, _TABLE1,
+        check=('//tr', ('th', 'td'))
+    )
+
+
+def test_toxml01():
+    _check_toxml(
+        _TABLE1, _TABLE1,
+        check=('//tr', ('th', 'td')),
+        root='table',
+        head='thead/tr/th',
+        rows='tbody/tr/td'
+    )
+
+
+def test_toxml02():
+    _check_toxml(
+        _TABLE1, _BODY1,
+        check=('.//row', 'col'),
+        root='matrix',
+        rows='row/col'
+    )
+
+
+def test_toxml03():
+    _check_toxml(
+        _TABLE1, _BODY1,
+        check=('line', 'cell'),
+        rows='plan/line/cell'
+    )
+
+
+def test_toxml04():
+    _check_toxml(
+        _TABLE1, _BODY1,
+        check=('.//line', 'cell'),
+        rows='dir/file/book/plan/line/cell'
+    )
+
+
+def test_toxml05():
+    _check_toxml(
+        _TABLE1, _TABLE1,
+        check=('.//x', 'y'),
+        root='a',
+        head='h/k/x/y',
+        rows='r/v/x/y'
+    )
+
+
+def test_toxml06():
+    _check_toxml(
+        _TABLE1, _TABLE1,
+        check=('.//row', 'col'),
+        root='table',
+        head='head/row/col',
+        rows='row/col'
+    )
+
+
+def test_toxml07():
+    _check_toxml(
+        _TABLE1, _TABLE1,
+        check=('.//field-list', 'field-name'),
+        root='root-tag',
+        head='head-tag/field-list/field-name',
+        rows='body-row/field-list/field-name'
+    )
+
+
+def test_toxml08():
+    _check_toxml(
+        _TABLE1, _TABLE1,
+        check=('.//field.list', 'field.name'),
+        root='root.tag',
+        head='head.tag/field.list/field.name',
+        rows='body.row/field.list/field.name'
+    )
+
+
+def test_toxml09():
+    _check_toxml(
+        _TABLE1, _BODY1,
+        check=('.//tr/td', '*'),
+        style='name',
+        root='table',
+        rows='tbody/tr/td'
+    )
+
+
+def test_toxml10():
+    _check_toxml(
+        _TABLE1, _BODY1,
+        check=('.//tr/td', '*'),
+        style='name',
+        root='table',
+        head='thead/tr/th',
+        rows='tbody/tr/td'
+    )
+
+
+_ATTRIB_COLS = {'ABCD': ('.', 'ABCD'), 'N123': ('.', 'N123')}
+
+
+def test_toxml11():
+    _check_toxml(
+        _TABLE1, _TABLE1,
+        check=('.//tr/td', _ATTRIB_COLS),
+        style='attribute',
+        root='table',
+        rows='tbody/tr/td'
+    )
+
+
+def test_toxml12():
+    _check_toxml(
+        _TABLE1, _TABLE1,
+        check=('.//tr/td', _ATTRIB_COLS),
+        style='attribute',
+        root='table',
+        head='thead/tr/th',
+        rows='tbody/tr/td'
+    )
+
+
+def test_toxml13():
+    _check_toxml(
+        _TABLE1, _BODY1,
+        check=('//tr', ('td', 'th')),
+        style=' <tr><td>{ABCD}</td><td>{N123}</td></tr>\n',
+        root='table',
+        rows='tbody'
+    )
+
+
+def test_toxml131():
+    _check_toxml(
+        _TABLE1, _TABLE1,
+        check=('.//tr', ('th', 'td')),
+        style=' <tr><td>{ABCD}</td><td>{N123}</td></tr>\n',
+        root='table',
+        head='thead/tr/td',
+        rows='tbody'
+    )
+
+
+def test_toxml14():
+    table1 = [['foo', 'bar'],
+              ['a', 1],
+              ['b', 2]]
+
+    _check_toxml(
+        table1, table1,
+        style='attribute',
+        rows='row/col'
+    )
+    _check_toxml(
+        table1, table1,
+        style='name',
+        rows='row/col'
+    )
+
+
+_ROW_A0 = (('A', '0'),)
+_ROW_Z9 = (('Z', '9'),)
+_TAB_ABZ = _ROW_A0 + _BODY1 + _ROW_Z9
+_TAB_HAZ = _HEAD1 + _ROW_A0 + _BODY1 + _ROW_Z9
+_TAG_A0 = ' <row><col>A</col><col>0</col></row>'
+_TAG_Z9 = ' <row><col>Z</col><col>9</col></row>'
+_TAG_TOP = '<table>\n'
+_TAG_END = '\n</table>'
+
+
+def test_toxml15():
+    _check_toxml(
+        _TABLE1, _TAB_ABZ,
+        check=('row', 'col'),
+        root='table',
+        rows='row/col',
+        prologue=_TAG_A0, 
+        epilogue=_TAG_Z9
+    )
+
+
+def test_toxml16():
+    _check_toxml(
+        _TABLE1, _TAB_HAZ,
+        check=('//row', 'col'),
+        root='table',
+        head='thead/row/col',
+        rows='tbody/row/col',
+        prologue=_TAG_A0, 
+        epilogue=_TAG_Z9
+    )
+
+
+def test_toxml17():
+    _check_toxml(
+        _TABLE1, _TAB_ABZ,
+        check=('row', 'col'),
+        rows='row/col',
+        prologue=_TAG_TOP + _TAG_A0, 
+        epilogue=_TAG_Z9 + _TAG_END
+    )
+
+
+def test_toxml18():
+    _TAB_AHZ = _ROW_A0 + _HEAD1 + _BODY1 + _ROW_Z9
+    _check_toxml(
+        _TABLE1, _TAB_AHZ,
+        check=('//row', 'col'),
+        head='thead/row/col',
+        rows='row/col',
+        prologue=_TAG_TOP + _TAG_A0, 
+        epilogue=_TAG_Z9 + _TAG_END
+    )
+
+
+def test_toxml19():
+    _check_toxml(
+        _TABLE1, _BODY1,
+        check=('//line', 'cell'),
+        rows='tbody/line/cell',
+        prologue=_TAG_TOP + _TAG_A0, 
+        epilogue=_TAG_Z9 + _TAG_END
+    )
+
+
+def test_toxml20():
+    _check_toxml(
+        _TABLE1, _TABLE1,
+        check=('//line', 'cell'),
+        root='book',
+        head='thead/line/cell',
+        rows='tbody/line/cell',
+        prologue=_TAG_TOP + _TAG_A0,
+        epilogue=_TAG_Z9 + _TAG_END
+    )
+
+
+def test_toxml21():
+    _check_toxml(
+        _TABLE1, _TAB_HAZ,
+        check=('//row', 'col'),
+        root='book',
+        head='thead/row/col',
+        rows='tbody/row/col',
+        prologue=_TAG_TOP + _TAG_A0,
+        epilogue=_TAG_Z9 + _TAG_END
+    )
+
+
+def test_toxml22():
+    _check_toxml(
+        _TABLE1, _TAB_HAZ,
+        check=('.//tr/td', _ATTRIB_COLS),
+        style='attribute',
+        root='table',
+        rows='tbody/tr/td',
+        # dump=True,
+        prologue='<td ABCD="A" N123="0" />', 
+        epilogue='<td ABCD="Z" N123="9" />'
+    )
