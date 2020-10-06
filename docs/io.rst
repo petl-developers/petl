@@ -107,8 +107,7 @@ XML files
 ---------
 
 .. autofunction:: petl.io.xml.fromxml
-
-For writing to an XML file, see :func:`petl.io.text.totext`.
+.. autofunction:: petl.io.xml.toxml
 
 
 .. module:: petl.io.html
