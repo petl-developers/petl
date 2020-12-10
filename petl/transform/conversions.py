@@ -166,6 +166,25 @@ def convert(table, *args, **kwargs):
     arguments to the conversion function (so, i.e., the conversion function
     should accept two arguments).
 
+    When multiple fields are converted in a single call, the conversions
+    are independent of each other. Each conversion sees the original row::
+
+        >>> # multiple conversions do not affect each other
+        ... table13 = etl.convert(table1, {
+        ...                           "foo": lambda foo, row: row.bar,
+        ...                           "bar": lambda bar, row: row.foo,
+        ...                       }, pass_row=True)
+        >>> table13
+        +-------+-----+-----+
+        | foo   | bar | baz |
+        +=======+=====+=====+
+        | '2.4' | 'A' |  12 |
+        +-------+-----+-----+
+        | '5.7' | 'B' |  34 |
+        +-------+-----+-----+
+        | '1.2' | 'C' |  56 |
+        +-------+-----+-----+
+
     Also accepts `failonerror` and `errorvalue` keyword arguments,
     documented under :func:`petl.config.failonerror`
 
