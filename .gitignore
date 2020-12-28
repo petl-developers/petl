@@ -6,7 +6,7 @@ MANIFEST
 dist
 .ipynb_checkpoints/
 .idea
-.vscode
+# .vscode
 .tox/
 example*.*
 .coverage
