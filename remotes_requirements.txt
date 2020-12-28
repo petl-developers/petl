@@ -1,0 +1,9 @@
+# packages for testing remote sources
+
+fastavro>=0.24.2 ; python_version >= '3.4'
+smbprotocol>=1.0.1
+paramiko>=2.7.1
+requests; python_version >= '3.4'
+fsspec>=0.7.4 ; python_version >= '3.4'
+aiohttp>=3.6.2 ; python_version >= '3.5.3'
+s3fs>=0.2.2 ; python_version >= '3.4'
