@@ -24,11 +24,11 @@ def fromjson(source, *args, **kwargs):
         ... {"foo": "b", "bar": 2},
         ... {"foo": "c", "bar": 2}]
         ... '''
-        >>> with open('example.json', 'w') as f:
+        >>> with open('example.file1.json', 'w') as f:
         ...     f.write(data)
         ...
         74
-        >>> table1 = etl.fromjson('example.json', header=['foo', 'bar'])
+        >>> table1 = etl.fromjson('example.file1.json', header=['foo', 'bar'])
         >>> table1
         +-----+-----+
         | foo | bar |
@@ -50,11 +50,11 @@ def fromjson(source, *args, **kwargs):
         ... {"name": "May", "wins": []}
         ... {"name": "Deloise", "wins": [["three of a kind", "5S"]]}'''
         ...
-        >>> with open('example2.json', 'w') as f:
+        >>> with open('example.file2.json', 'w') as f:
         ...     f.write(data_with_jlines)
         ...
         223
-        >>> table2 = etl.fromjson('example2.json', lines=True)
+        >>> table2 = etl.fromjson('example.file2.json', lines=True)
         >>> table2
         +-----------+-------------------------------------------+
         | name      | wins                                      |
@@ -214,9 +214,9 @@ def tojson(table, source=None, prefix=None, suffix=None, *args, **kwargs):
         ...           ['a', 1],
         ...           ['b', 2],
         ...           ['c', 2]]
-        >>> etl.tojson(table1, 'example.json', sort_keys=True)
+        >>> etl.tojson(table1, 'example.file3.json', sort_keys=True)
         >>> # check what it did
-        ... print(open('example.json').read())
+        ... print(open('example.file3.json').read())
         [{"bar": 1, "foo": "a"}, {"bar": 2, "foo": "b"}, {"bar": 2, "foo": "c"}]
 
     Note that this is currently not streaming, all data is loaded into memory
@@ -241,9 +241,9 @@ def tojsonarrays(table, source=None, prefix=None, suffix=None,
         ...           ['a', 1],
         ...           ['b', 2],
         ...           ['c', 2]]
-        >>> etl.tojsonarrays(table1, 'example.json')
+        >>> etl.tojsonarrays(table1, 'example.file4.json')
         >>> # check what it did
-        ... print(open('example.json').read())
+        ... print(open('example.file4.json').read())
         [["a", 1], ["b", 2], ["c", 2]]
 
     Note that this is currently not streaming, all data is loaded into memory

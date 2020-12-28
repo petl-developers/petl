@@ -66,12 +66,12 @@ def fromavro(source, limit=None, skips=0, **avro_args):
         ...
         >>> import fastavro
         >>> parsed_schema1 = fastavro.parse_schema(schema1)
-        >>> with open('example-file-to-read.avro', 'wb') as f1:
+        >>> with open('example.file1.avro', 'wb') as f1:
         ...     fastavro.writer(f1, parsed_schema1, records1)
         ...
         >>> # now demonstrate the use of fromavro()
         >>> import petl as etl
-        >>> tbl1 = etl.fromavro('example-file-to-read.avro')
+        >>> tbl1 = etl.fromavro('example.file1.avro')
         >>> tbl1
         +-------+---------+-----+
         | name  | friends | age |
@@ -169,10 +169,10 @@ def toavro(table, target, schema=None, sample=9,
         ...
         >>> # now demonstrate what writing with toavro()
         >>> import petl as etl
-        >>> etl.toavro(table2, 'example-file-to-write.avro', schema=schema2)
+        >>> etl.toavro(table2, 'example.file2.avro', schema=schema2)
         ...
         >>> # this was what was saved above
-        >>> tbl2 = etl.fromavro('example-file-to-write.avro')
+        >>> tbl2 = etl.fromavro('example.file2.avro')
         >>> tbl2
         +-------+---------+-----+
         | name  | friends | age |
