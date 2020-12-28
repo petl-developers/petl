@@ -361,7 +361,6 @@ def register_codec(extension, handler_class):
 
     .. versionadded:: 1.5.0
     '''
-
     _register_handler(extension, handler_class, _CODECS)
 
 
@@ -369,12 +368,11 @@ def register_reader(protocol, handler_class):
     '''
     Register handler for automatic reading using a remote protocol.
 
-    Use of the handler is determined matching the `protocol` with the scheme 
+    Use of the handler is determined matching the `protocol` with the scheme
     part of the url in ``from...()`` function (e.g: `http://`).
 
     .. versionadded:: 1.5.0
     '''
-
     _register_handler(protocol, handler_class, _READERS)
 
 
@@ -382,12 +380,11 @@ def register_writer(protocol, handler_class):
     '''
     Register handler for automatic writing using a remote protocol.
 
-    Use of the handler is determined matching the `protocol` with the scheme 
+    Use of the handler is determined matching the `protocol` with the scheme
     part of the url in ``to...()`` function (e.g: `smb://`).
 
     .. versionadded:: 1.5.0
     '''
-
     _register_handler(protocol, handler_class, _WRITERS)
 
 
@@ -397,8 +394,8 @@ def get_reader(protocol):
 
     .. versionadded:: 1.6.0
     '''
+    return _get_handler(protocol, _READERS)
 
-    _get_handler(protocol, _READERS)
 
 def get_writer(protocol):
     '''
@@ -406,16 +403,15 @@ def get_writer(protocol):
 
     .. versionadded:: 1.6.0
     '''
-
-    _get_handler(protocol, _WRITERS)
+    return _get_handler(protocol, _WRITERS)
 
 
 # Setup default sources
-    
+
 register_codec('.gz', GzipSource)
 register_codec('.bgz', GzipSource)
 register_codec('.bz2', BZ2Source)
-    
+
 register_reader('ftp', URLSource)
 register_reader('http', URLSource)
 register_reader('https', URLSource)
@@ -459,8 +455,26 @@ def _resolve_source_from_arg(source, handlers):
 
 
 def read_source_from_arg(source):
+    '''
+    Retrieve a open stream for reading from the source provided.
+
+    The result stream will be open by a handler that would return raw bytes and
+    transparently take care of the descompression, remote authentication,
+    network transfer, format decoding, and data extraction.
+
+    .. versionadded:: 1.4.0
+    '''
     return _resolve_source_from_arg(source, _READERS)
 
 
 def write_source_from_arg(source, mode='wb'):
+    '''
+    Retrieve a open stream for writing to the source provided.
+
+    The result stream will be open by a handler that would write raw bytes and
+    transparently take care of the compression, remote authentication,
+    network transfer, format encoding, and data writing.
+
+    .. versionadded:: 1.4.0
+    '''
     return _resolve_source_from_arg(source, _WRITERS)
