@@ -22,14 +22,14 @@ class RemoteSource(object):
     The url should be specified in `to..()` and `from...()` functions. E.g.::
 
         >>> import petl as etl
-        >>> 
+        >>>
         >>> def example_s3():
         ...     url = 's3://mybucket/prefix/to/myfilename.csv'
         ...     data = b'foo,bar\\na,1\\nb,2\\nc,2\\n'
-        ... 
+        ...
         ...     etl.tocsv(data, url)
         ...     tbl = etl.fromcsv(url)
-        ...     
+        ...
         >>> example_s3() # doctest: +SKIP
         +-----+-----+
         | foo | bar |
@@ -94,45 +94,46 @@ class RemoteSource(object):
 
 
 def _register_filesystems(only_available=False):
-    """Search for python packages supporting remote filesystems."""
+    """Register all known fsspec implementations as remote source."""
+    from fsspec.registry import known_implementations, registry
+    # https://filesystem-spec.readthedocs.io/en/latest/api.html#built-in-implementations
+    # https://filesystem-spec.readthedocs.io/en/latest/api.html#other-known-implementations
+    _register_filesystems_from(known_implementations, only_available)
+    # https://filesystem-spec.readthedocs.io/en/latest/api.html#fsspec.registry.register_implementation
+    _register_filesystems_from(registry, only_available)
 
-    from fsspec.registry import known_implementations
 
-    impls = known_implementations.items()
-    r = w = 0
-    for protocol, spec in impls:
+def _register_filesystems_from(fsspec_registry, only_available):
+    """Register each fsspec provider from this registry as remote source."""
+    for protocol, spec in fsspec_registry.items():
         missing_deps = "err" in spec
-        if missing_deps:
-            emsg = "# WARN: fsspec {} unavailable: {}".format(protocol, spec["err"])
-            logger.debug(emsg)
-            if only_available:
-                # otherwise foward the exception on first use when the 
-                # handler can show what package is missing
-                continue
-        # when missing a package for fsspec use the available source in petl
+        if missing_deps and only_available:
+            # this could lead to only buit-in implementations available
+            # Other Known Implementations are reported with 'err' even even
+            # the package is installed
+            continue
+        # When missing a package for fsspec use the available source in petl
         # E.g: fsspec requires `requests` package installed for handling http and https
-        reader = get_reader(protocol)
-        if not missing_deps or reader is None:
+        # but petl has URLSource that can work with urlib
+        has_reader = get_reader(protocol)
+        if not missing_deps or has_reader is None:
             register_reader(protocol, RemoteSource)
-            r += 1
-        writer = get_writer(protocol)
-        if not missing_deps or writer is None:
+        has_writer = get_writer(protocol)
+        if not missing_deps or has_writer is None:
             register_writer(protocol, RemoteSource)
-            w += 1
-    dlog = "# fsspec: registered %s remote readers and %s remote writers"
-    logger.debug(dlog, r, w)
 
 
 def _try_register_filesystems():
     try:
-        import fsspec
+        # pylint: disable=unused-import
+        import fsspec  # noqa: F401
     except ImportError:
         logger.debug("# Missing fsspec package. Install with: pip install fsspec")
     else:
         try:
             _register_filesystems()
         except Exception as ex:
-            raise Exception("# ERROR: failed to register fsspec filesystems", ex)
+            raise ImportError("# ERROR: failed to register fsspec filesystems", ex)
 
 
 if PY3:
@@ -152,7 +153,7 @@ class SMBSource(object):
         ...     data = b'foo,bar\\na,1\\nb,2\\nc,2\\n'
         ...     etl.tocsv(data, url)
         ...     tbl = etl.fromcsv(url)
-        ... 
+        ...
         >>> example_smb() # doctest: +SKIP
         +-----+-----+
         | foo | bar |
@@ -167,7 +168,7 @@ class SMBSource(object):
     The argument `url` (str) must have a URI with format:
     `smb://workgroup;user:password@server:port/share/folder/file.csv`.
 
-    Note that you need to pass in a valid hostname or IP address for the host 
+    Note that you need to pass in a valid hostname or IP address for the host
     component of the URL. Do not use the Windows/NetBIOS machine name for the
     host component.
 
