@@ -19,46 +19,52 @@ from petl.util.vis import look
 
 def test_helper_local():
     if PY3:
-        _write_read_into_url("./example.")
+        _ensure_dir("./tmp")
+        _write_read_into_url("./tmp/example.")
 
 
-try:
-    import fsspec
-except ImportError as e:
-    print("SKIP FSSPEC helper tests: %s" % e, file=sys.stderr)
-else:
-
-    def test_helper_fsspec():
-        # _write_read_from_env_url('PETL_TEST_S3')
+def test_helper_fsspec():
+    try:
+        # pylint: disable=unused-import
+        import fsspec  # noqa: F401
+    except ImportError as e:
+        print("SKIP FSSPEC helper tests: %s" % e, file=sys.stderr)
+    else:
         _write_read_from_env_matching("PETL_TEST_")
 
 
-try:
-    import smbclient
-except ImportError as e:
-    print("SKIP SMB helper tests: %s" % e, file=sys.stderr)
-else:
-
-    def test_helper_smb():
+def test_helper_smb():
+    try:
+        # pylint: disable=unused-import
+        import smbclient  # noqa: F401
+    except ImportError as e:
+        print("SKIP SMB helper tests: %s" % e, file=sys.stderr)
+    else:
         _write_read_from_env_url("PETL_SMB_URL")
 
-    def test_helper_smb_url_parse():
-        from petl.io.remotes import _parse_smb_url
 
-        url = r"smb://workgroup;user:password@server:444/share/folder/file.csv"
-        domain, host, port, user, passwd, server_path = _parse_smb_url(url)
-        print("Parsed:", domain, host, port, user, passwd, server_path)
-        eq_(domain, r"workgroup")
-        eq_(host, r"server")
-        eq_(port, 444)
-        eq_(user, r"user")
-        eq_(passwd, r"password")
-        eq_(server_path, "\\\\server\\share\\folder\\file.csv")
+def test_helper_smb_url_parse():
+    from petl.io.remotes import _parse_smb_url
+
+    url = r"smb://workgroup;user:password@server:444/share/folder/file.csv"
+    domain, host, port, user, passwd, server_path = _parse_smb_url(url)
+    print("Parsed:", domain, host, port, user, passwd, server_path)
+    eq_(domain, r"workgroup")
+    eq_(host, r"server")
+    eq_(port, 444)
+    eq_(user, r"user")
+    eq_(passwd, r"password")
+    eq_(server_path, "\\\\server\\share\\folder\\file.csv")
 
 
 # endregion
 
 # region Execution
+
+
+def _ensure_dir(directory):
+    if not os.path.exists(directory):
+        os.makedirs(directory)
 
 
 def _write_read_from_env_matching(prefix):
@@ -100,27 +106,31 @@ def _write_read_into_url(base_url):
     _write_read_file_into_url(base_url, "filename50.xls", pkg='xlwt')
 
 
-def _write_read_file_into_url(base_url, filename, compression=None, pkg=None):
-    if pkg is not None:
-        if not _is_installed(pkg):
-            print("\n    - %s SKIPPED " % filename, file=sys.stderr, end="")
-            return
+def _build_source_url_from(base_url, filename, compression=None):
     is_local = base_url.startswith("./")
     if compression is not None:
         if is_local:
-            return
+            return None
         filename = filename + "." + compression
+        import fsspec
         codec = fsspec.utils.infer_compression(filename)
         if codec is None:
             print("\n    - %s SKIPPED " % filename, file=sys.stderr, end="")
-            return
+            return None
     print("\n    - %s " % filename, file=sys.stderr, end="")
-
     if is_local:
         source_url = base_url + filename
     else:
         source_url = os.path.join(base_url, filename)
+    return source_url
 
+
+def _write_read_file_into_url(base_url, filename, compression=None, pkg=None):
+    if not _is_installed(pkg, filename):
+        return
+    source_url = _build_source_url_from(base_url, filename, compression)
+    if source_url is None:
+        return
     actual = None
     if ".avro" in filename:
         toavro(_table, source_url)
@@ -153,10 +163,16 @@ def _show__rows_from(label, test_rows, limit=0):
     print(look(test_rows, limit=limit))
 
 
-def _is_installed(package_name):
+def _is_installed(package_name, message=None):
+    if package_name is None:
+        return True  # Not required
     try:
         mod = import_module(package_name)
-        return mod is not None
+        found = mod is not None
+        if not found:
+            msg = message or package_name
+            print("\n    - %s SKIPPED " % msg, file=sys.stderr, end="")
+        return found
     except Exception as exm:
         print(exm, file=sys.stderr)
         return False
