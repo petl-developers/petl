@@ -1,0 +1,57 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Nose: Test File",
+            "type": "python",
+            "request": "launch",
+            "stopOnEntry": false,
+            "program": "${workspaceRoot}/.vscode/run_nose.py",
+            "cwd": "${workspaceRoot}",
+            "args": [
+                "-v", // additional nose parameters –
+                "${file}", // currently selected file
+            ],
+            "env": {
+                "PETL": "Rocks",
+                // docker run -it --name samba -p 139:139 -p 445:445 -d "dperson/samba" -p -u "user1;pass1" -s "public;/public-dir;yes;no;yes;all"
+                // "PETL_TEST_SMB": "smb://WORKGROUP;user1:pass1@localhost/public/",
+                // docker run -it --name sftp -p 22:22 -d atmoz/sftp user2:pass2:::public
+                // "PETL_TEST_SFTP": "sftp://user1:pass1@localhost/public/"
+            }
+        },
+        {
+            "name": "Nose: Test Function",
+            "type": "python",
+            "request": "launch",
+            "stopOnEntry": false,
+            "program": "${workspaceRoot}/.vscode/run_nose.py",
+            "cwd": "${workspaceRoot}",
+            "args": [
+                "-v", // additional nose parameters –
+                "--testmatch=${input:testfilter}",
+                "${file}", // currently selected file
+            ],
+            "env": {
+                "PETL": "Rocks",
+                // "PETL_TEST_SMB": "smb://WORKGROUP;user1:pass1@localhost/public/",
+                // "PETL_TEST_SFTP": "sftp://user1:pass1@localhost/public/"
+            }
+        },
+        {
+            "name": "Python: Debug File",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal"
+        },
+    ],
+    "inputs": [
+        {
+            "id": "testfilter",
+            "description": "Function for testing",
+            "type": "promptString",
+            "default": ""
+        }
+    ]
+}
