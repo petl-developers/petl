@@ -7,6 +7,12 @@ Version 1.7.0
 * Added `toxml()` as convenience wrapper over `totext()`.
   By :user:`juarezr`, :issue:`529`.
 
+* Document behavior of multi-field convert-with-row.
+  By :user:`chrullrich`, :issue:`532`.
+
+* Allow user defined sources from fsspec for :ref:`remote I/O <io_remotes>`.
+  By :user:`juarezr`, :issue:`533`.
+
 
 Version 1.6.8
 -------------
@@ -28,15 +34,17 @@ Version 1.6.6
 * Added python version 3.8 and 3.9 to tox.ini for using in newer distros.
   By :user:`juarezr`, :issue:`517`.
 
-* fix compatibility with python3.8 in `petl.timings.clock()`.
+* Fixed compatibility with python3.8 in `petl.timings.clock()`.
   By :user:`juarezr`, :issue:`484`.
-* add json lines support. By :user:`fahadsiddiqui`.
+
+* Added json lines support in `fromjson()`. 
+  By :user:`fahadsiddiqui`, :issue:`521`.
 
 
 Version 1.6.5
 -------------
 
-* Fixed fromxlsx with read_only crashes.
+* Fixed `fromxlsx()` with read_only crashes.
   By :user:`juarezr`, :issue:`514`.
 
 
