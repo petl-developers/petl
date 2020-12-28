@@ -345,7 +345,7 @@ _TABLE1 = _HEAD1 + _BODY1
 def test_toxml00():
     _check_toxml(
         _TABLE1, _TABLE1,
-        check=('//tr', ('th', 'td'))
+        check=('.//tr', ('th', 'td'))
     )
 
 
@@ -531,7 +531,7 @@ def test_toxml15():
 def test_toxml16():
     _check_toxml(
         _TABLE1, _TAB_HAZ,
-        check=('//row', 'col'),
+        check=('.//row', 'col'),
         root='table',
         head='thead/row/col',
         rows='tbody/row/col',
@@ -565,7 +565,7 @@ def test_toxml18():
 def test_toxml19():
     _check_toxml(
         _TABLE1, _BODY1,
-        check=('//line', 'cell'),
+        check=('.//line', 'cell'),
         rows='tbody/line/cell',
         prologue=_TAG_TOP + _TAG_A0, 
         epilogue=_TAG_Z9 + _TAG_END
