@@ -40,11 +40,11 @@ def fromxml(source, *args, **kwargs):
         ...         <td>c</td><td>2</td>
         ...     </tr>
         ... </table>'''
-        >>> with open('example1.xml', 'w') as f:
+        >>> with open('example.file1.xml', 'w') as f:
         ...     f.write(d)
         ...
         212
-        >>> table1 = etl.fromxml('example1.xml', 'tr', 'td')
+        >>> table1 = etl.fromxml('example.file1.xml', 'tr', 'td')
         >>> table1
         +-----+-----+
         | foo | bar |
@@ -74,11 +74,11 @@ def fromxml(source, *args, **kwargs):
         ...         <td v='c'/><td v='2'/>
         ...     </tr>
         ... </table>'''
-        >>> with open('example2.xml', 'w') as f:
+        >>> with open('example.file2.xml', 'w') as f:
         ...     f.write(d)
         ...
         220
-        >>> table2 = etl.fromxml('example2.xml', 'tr', 'td', 'v')
+        >>> table2 = etl.fromxml('example.file2.xml', 'tr', 'td', 'v')
         >>> table2
         +-----+-----+
         | foo | bar |
@@ -104,11 +104,11 @@ def fromxml(source, *args, **kwargs):
         ...         <foo>c</foo><baz><bar v='2'/></baz>
         ...     </row>
         ... </table>'''
-        >>> with open('example3.xml', 'w') as f:
+        >>> with open('example.file3.xml', 'w') as f:
         ...     f.write(d)
         ...
         223
-        >>> table3 = etl.fromxml('example3.xml', 'row',
+        >>> table3 = etl.fromxml('example.file3.xml', 'row',
         ...                      {'foo': 'foo', 'bar': ('baz/bar', 'v')})
         >>> table3
         +------------+-----+
@@ -132,13 +132,13 @@ def fromxml(source, *args, **kwargs):
 
     If there is more than one element name used for row values, a tuple
     or list of paths can be provided, e.g.,
-    ``fromxml('example.html', './/tr', ('th', 'td'))``.
+    ``fromxml('example.file.html', './/tr', ('th', 'td'))``.
 
     Optionally a custom parser can be provided, e.g.::
 
         >>> from lxml import etree # doctest: +SKIP
         ... my_parser = etree.XMLParser(resolve_entities=False) # doctest: +SKIP
-        ... table4 = etl.fromxml('example1.xml', 'tr', 'td', parser=my_parser) # doctest: +SKIP
+        ... table4 = etl.fromxml('example.file1.xml', 'tr', 'td', parser=my_parser) # doctest: +SKIP
 
     """
 
@@ -314,9 +314,9 @@ def toxml(table, target=None,
         >>> table1 = [['foo', 'bar'],
         ...           ['a', 1],
         ...           ['b', 2]]
-        >>> etl.toxml(table1, 'example4.xml')
+        >>> etl.toxml(table1, 'example.file4.xml')
         >>> # see what we did is similar a html table:
-        >>> print(open('example4.xml').read())
+        >>> print(open('example.file4.xml').read())
         <?xml version="1.0" encoding="UTF-8"?>
         <table><thead>
          <tr><th>foo</th><th>bar</th></tr>
@@ -325,23 +325,23 @@ def toxml(table, target=None,
          <tr><td>b</td><td>2</td></tr>
         </tbody></table>
         >>> # define the nesting in xml file:
-        >>> etl.toxml(table1, 'example5.xml', rows='plan/line/cell')
-        >>> print(open('example5.xml').read())
+        >>> etl.toxml(table1, 'example.file5.xml', rows='plan/line/cell')
+        >>> print(open('example.file5.xml').read())
         <?xml version="1.0" encoding="UTF-8"?>
         <plan>
          <line><cell>a</cell><cell>1</cell></line>
          <line><cell>b</cell><cell>2</cell></line>
         </plan>
         >>> # choose other style:
-        >>> etl.toxml(table1, 'example6.xml', rows='row/col', style='attribute')
-        >>> print(open('example6.xml').read())
+        >>> etl.toxml(table1, 'example.file6.xml', rows='row/col', style='attribute')
+        >>> print(open('example.file6.xml').read())
         <?xml version="1.0" encoding="UTF-8"?>
         <row>
          <col foo="a" bar="1" />
          <col foo="b" bar="2" />
         </row>
-        >>> etl.toxml(table1, 'example6.xml', rows='row/col', style='name')
-        >>> print(open('example6.xml').read())
+        >>> etl.toxml(table1, 'example.file6.xml', rows='row/col', style='name')
+        >>> print(open('example.file6.xml').read())
         <?xml version="1.0" encoding="UTF-8"?>
         <row>
          <col><foo>a</foo><bar>1</bar></col>
