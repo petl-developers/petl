@@ -196,14 +196,16 @@ def test_fromxml_6():
 def test_fromxml_url():
     # check internet connection
     try:
-        url = 'http://raw.githubusercontent.com/petl-developers/petl/master/.pydevproject'
+        url = 'http://raw.githubusercontent.com/petl-developers/petl/master/petl/test/resources/test.xml'
         urlopen(url)
+        import pkg_resources
+        filename = pkg_resources.resource_filename('petl', 'test/resources/test.xml')
     except Exception as e:
         print('SKIP test_fromxml_url: %s' % e, file=sys.stderr)
     else:
         actual = fromxml(url, 'pydev_property', {'name': ( '.', 'name'), 'prop': '.'})
         assert nrows(actual) > 0
-        expect = fromxml('.pydevproject', 'pydev_property', {'name': ( '.', 'name'), 'prop': '.'})
+        expect = fromxml(filename, 'pydev_property', {'name': ( '.', 'name'), 'prop': '.'})
         ieq(expect, actual)
 
 
