@@ -6,11 +6,17 @@ import sys
 from datetime import datetime
 from tempfile import NamedTemporaryFile
 
-import pkg_resources
-
 import petl as etl
 from petl.io.xlsx import fromxlsx, toxlsx, appendxlsx
 from petl.test.helpers import ieq, eq_
+
+
+def _get_test_xlsx():
+    try:
+        import pkg_resources
+        return pkg_resources.resource_filename('petl', 'test/resources/test.xlsx')
+    except:
+        return None
 
 
 try:
@@ -21,9 +27,9 @@ except ImportError as e:
 else:
 
     def test_fromxlsx():
-        filename = pkg_resources.resource_filename(
-            'petl', 'test/resources/test.xlsx'
-        )
+        filename = _get_test_xlsx()
+        if filename is None:
+            return
         tbl = fromxlsx(filename, 'Sheet1')
         expect = (('foo', 'bar'),
                   ('A', 1),
@@ -34,9 +40,9 @@ else:
         ieq(expect, tbl)
 
     def test_fromxlsx_read_only():
-        filename = pkg_resources.resource_filename(
-            'petl', 'test/resources/test.xlsx'
-        )
+        filename = _get_test_xlsx()
+        if filename is None:
+            return
         tbl = fromxlsx(filename, sheet='Sheet1', read_only=True)
         expect = (('foo', 'bar'),
                   ('A', 1),
@@ -47,9 +53,9 @@ else:
         ieq(expect, tbl)
 
     def test_fromxlsx_nosheet():
-        filename = pkg_resources.resource_filename(
-            'petl', 'test/resources/test.xlsx'
-        )
+        filename = _get_test_xlsx()
+        if filename is None:
+            return
         tbl = fromxlsx(filename)
         expect = (('foo', 'bar'),
                   ('A', 1),
@@ -60,9 +66,9 @@ else:
         ieq(expect, tbl)
 
     def test_fromxlsx_range():
-        filename = pkg_resources.resource_filename(
-            'petl', 'test/resources/test.xlsx'
-        )
+        filename = _get_test_xlsx()
+        if filename is None:
+            return
         tbl = fromxlsx(filename, 'Sheet2', range_string='B2:C6')
         expect = (('foo', 'bar'),
                   ('A', 1),
@@ -73,9 +79,9 @@ else:
         ieq(expect, tbl)
 
     def test_fromxlsx_offset():
-        filename = pkg_resources.resource_filename(
-            'petl', 'test/resources/test.xlsx'
-        )
+        filename = _get_test_xlsx()
+        if filename is None:
+            return
         tbl = fromxlsx(filename, 'Sheet1', min_row=2, min_col=2)
         expect = ((1,),
                   (2,),

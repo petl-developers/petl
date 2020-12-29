@@ -3,14 +3,20 @@ from __future__ import division, print_function, absolute_import
 
 
 import sys
-import pkg_resources
 from datetime import datetime
 from tempfile import NamedTemporaryFile
-
 
 import petl as etl
 from petl.io.xls import fromxls, toxls
 from petl.test.helpers import ieq
+
+
+def _get_test_xls():
+    try:
+        import pkg_resources
+        return pkg_resources.resource_filename('petl', 'test/resources/test.xls')
+    except:
+        return None
 
 
 try:
@@ -23,9 +29,9 @@ except ImportError as e:
 else:
 
     def test_fromxls():
-        filename = pkg_resources.resource_filename(
-            'petl', 'test/resources/test.xls'
-        )
+        filename = _get_test_xls()
+        if filename is None:
+            return
         tbl = fromxls(filename, 'Sheet1')
         expect = (('foo', 'bar'),
                   ('A', 1),
@@ -36,9 +42,9 @@ else:
         ieq(expect, tbl)
 
     def test_fromxls_nosheet():
-        filename = pkg_resources.resource_filename(
-            'petl', 'test/resources/test.xls'
-        )
+        filename = _get_test_xls()
+        if filename is None:
+            return
         tbl = fromxls(filename)
         expect = (('foo', 'bar'),
                   ('A', 1),
@@ -49,9 +55,9 @@ else:
         ieq(expect, tbl)
 
     def test_fromxls_use_view():
-        filename = pkg_resources.resource_filename(
-            'petl', 'test/resources/test.xls'
-        )
+        filename = _get_test_xls()
+        if filename is None:
+            return
         tbl = fromxls(filename, 'Sheet1', use_view=False)
         expect = (('foo', 'bar'),
                   ('A', 1),
