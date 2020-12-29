@@ -1,6 +1,13 @@
 Changes
 =======
 
+Version 1.7.1
+-------------
+
+* Fixing conda packaging failures.
+  By :user:`juarezr`, :issue:`534`.
+
+
 Version 1.7.0
 -------------
 
