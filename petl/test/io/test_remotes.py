@@ -48,7 +48,7 @@ def test_helper_smb_url_parse():
 
     url = r"smb://workgroup;user:password@server:444/share/folder/file.csv"
     domain, host, port, user, passwd, server_path = _parse_smb_url(url)
-    print("Parsed:", domain, host, port, user, passwd, server_path)
+    # print("Parsed:", domain, host, port, user, passwd, server_path)
     eq_(domain, r"workgroup")
     eq_(host, r"server")
     eq_(port, 444)
