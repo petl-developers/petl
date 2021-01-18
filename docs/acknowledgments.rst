@@ -14,6 +14,7 @@ the development of this package:
 * Chris Lasher (`gotgenes <https://github.com/gotgenes>`_)
 * Dean Way (`DeanWay <https://github.com/DeanWay>`_)
 * Dustin Engstrom (`engstrom <https://github.com/engstrom>`_)
+* Fahad Siddiqui (`fahadsiddiqui <https://github.com/fahadsiddiqui>`_)
 * Florent Xicluna (`florentx <https://github.com/florentx>`_)
 * Henry Rizzi (`henryrizzi <https://github.com/henryrizzi>`_)
 * Jonathan Camile (`deytao <https://github.com/deytao>`_)
