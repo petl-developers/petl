@@ -89,7 +89,7 @@ def iterrowreduce(source, key, reducer, header):
         
 
 def aggregate(table, key, aggregation=None, value=None, presorted=False,
-              buffersize=None, tempdir=None, cache=True):
+              buffersize=None, tempdir=None, cache=True, field='value'):
     """Group rows under the given key then apply aggregation functions.
     E.g.::
 
@@ -183,7 +183,7 @@ def aggregate(table, key, aggregation=None, value=None, presorted=False,
         return SimpleAggregateView(table, key, aggregation=aggregation, 
                                    value=value, presorted=presorted, 
                                    buffersize=buffersize, tempdir=tempdir, 
-                                   cache=cache)
+                                   cache=cache, field=field)
     elif aggregation is None or isinstance(aggregation, (list, tuple, dict)):
         # ignore value arg
         return MultiAggregateView(table, key, aggregation=aggregation,  
@@ -200,7 +200,8 @@ Table.aggregate = aggregate
 class SimpleAggregateView(Table):
     
     def __init__(self, table, key, aggregation=list, value=None, 
-                 presorted=False, buffersize=None, tempdir=None, cache=True):
+                 presorted=False, buffersize=None, tempdir=None,
+                 cache=True, field='value'):
         if presorted:
             self.table = table
         else:
@@ -209,13 +210,14 @@ class SimpleAggregateView(Table):
         self.key = key
         self.aggregation = aggregation
         self.value = value
+        self.field = field
         
     def __iter__(self):
         return itersimpleaggregate(self.table, self.key, self.aggregation, 
-                                   self.value)
+                                   self.value, self.field)
 
 
-def itersimpleaggregate(table, key, aggregation, value):
+def itersimpleaggregate(table, key, aggregation, value, field):
 
     # special case counting
     if aggregation == len:
@@ -223,11 +225,11 @@ def itersimpleaggregate(table, key, aggregation, value):
 
     # determine output header
     if isinstance(key, (list, tuple)):
-        outhdr = tuple(key) + ('value',)
+        outhdr = tuple(key) + (field,)
     elif callable(key):
-        outhdr = ('key', 'value')
+        outhdr = ('key', field)
     else:
-        outhdr = (key, 'value')
+        outhdr = (key, field)
     yield outhdr
 
     # generate data
