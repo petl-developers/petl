@@ -1,6 +1,13 @@
 Changes
 =======
 
+Version 1.7.2
+-------------
+
+* Allow specifying output field name for simple aggregation
+  By :user:`bmaggard`, :issue:`370`.
+
+
 Version 1.7.1
 -------------
 
