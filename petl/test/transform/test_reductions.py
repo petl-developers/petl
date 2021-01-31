@@ -126,6 +126,13 @@ def test_aggregate_simple():
     ieq(expect4, table4)
     ieq(expect4, table4)
     
+    table5 = aggregate(table1, 'foo', len, field='bar')
+    expect5 = (('foo', 'bar'),
+               ('a', 2),
+               ('b', 3),
+               ('c', 1))
+    ieq(expect5, table5)
+    ieq(expect5, table5)
     
 def test_aggregate_multifield():
     
