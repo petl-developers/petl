@@ -19,6 +19,7 @@ the development of this package:
 * Henry Rizzi (`henryrizzi <https://github.com/henryrizzi>`_)
 * Jonathan Camile (`deytao <https://github.com/deytao>`_)
 * Jonathan Moss (`a-musing-moose <https://github.com/a-musing-moose>`_)
+* Juarez Rudsatz (`juarezr <https://github.com/juarezr>`_)
 * Kenneth Borthwick
 * Krisztián Fekete (`krisztianfekete <https://github.com/krisztianfekete>`_)
 * Matt Katz (`mattkatz <https://github.com/mattkatz>`_)
