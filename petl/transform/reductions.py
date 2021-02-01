@@ -9,6 +9,8 @@ from petl.compat import next, string_types, reduce, text_type
 
 from petl.errors import ArgumentError
 from petl.util.base import Table, iterpeek, rowgroupby
+from petl.util.base import values
+from petl.util.counting import nrows
 from petl.transform.sorts import sort, mergesort
 from petl.transform.basics import cut
 from petl.transform.dedup import distinct
@@ -90,7 +92,7 @@ def iterrowreduce(source, key, reducer, header):
 
 def aggregate(table, key, aggregation=None, value=None, presorted=False,
               buffersize=None, tempdir=None, cache=True, field='value'):
-    """Group rows under the given key then apply aggregation functions.
+    """Apply aggregation functions.
     E.g.::
 
         >>> import petl as etl
@@ -115,6 +117,14 @@ def aggregate(table, key, aggregation=None, value=None, presorted=False,
         | 'c' |     1 |
         +-----+-------+
 
+        >>> # aggregate whole rows without a key
+        >>> etl.aggregate(table1, None, len)
+        +-------+
+        | value |
+        +=======+
+        |     6 |
+        +-------+
+
         >>> # aggregate single field
         ... table3 = etl.aggregate(table1, 'foo', sum, 'bar')
         >>> table3
@@ -127,6 +137,14 @@ def aggregate(table, key, aggregation=None, value=None, presorted=False,
         +-----+-------+
         | 'c' |     4 |
         +-----+-------+
+
+        >>> # aggregate single field without a key
+        >>> etl.aggregate(table1, None, sum, 'bar')
+        +-------+
+        | value |
+        +=======+
+        |    27 |
+        +-------+
 
         >>> # alternative signature using keyword args
         ... table4 = etl.aggregate(table1, key=('foo', 'bar'),
@@ -145,6 +163,15 @@ def aggregate(table, key, aggregation=None, value=None, presorted=False,
         +-----+-----+-------------------------+
         | 'c' |   4 | [(4, True)]             |
         +-----+-----+-------------------------+
+
+        >>> # alternative signature using keyword args without a key
+        >>> etl.aggregate(table1, key=None,
+        ...                 aggregation=list, value=('bar', 'baz'))
+        +-----------------------------------------------------------------------+
+        | value                                                                 |
+        +=======================================================================+
+        | [(3, True), (7, False), (2, True), (2, False), (9, False), (4, True)] |
+        +-----------------------------------------------------------------------+
 
         >>> # aggregate multiple fields
         ... from collections import OrderedDict
@@ -171,11 +198,21 @@ def aggregate(table, key, aggregation=None, value=None, presorted=False,
         | 'c' |     1 |      4 |      4 |      4 | [4]       | [(4, True)]                         | '4'       |
         +-----+-------+--------+--------+--------+-----------+-------------------------------------+-----------+
 
+        >>> # aggregate multiple fields without a key
+        >>> etl.aggregate(table1, None, aggregation)
+        +-------+--------+--------+--------+--------------------+-----------------------------------------------------------------------+--------------------+
+        | count | minbar | maxbar | sumbar | listbar            | listbarbaz                                                            | bars               |
+        +=======+========+========+========+====================+=======================================================================+====================+
+        |     6 |      2 |      9 |     27 | [3, 7, 2, 2, 9, 4] | [(3, True), (7, False), (2, True), (2, False), (9, False), (4, True)] | '3, 7, 2, 2, 9, 4' |
+        +-------+--------+--------+--------+--------------------+-----------------------------------------------------------------------+--------------------+
+
     If `presorted` is True, it is assumed that the data are already sorted by
     the given key, and the `buffersize`, `tempdir` and `cache` arguments are 
     ignored. Otherwise, the data are sorted, see also the discussion of the 
     `buffersize`, `tempdir` and `cache` arguments under the
     :func:`petl.transform.sorts.sort` function.
+
+    If `key` is None, sorting is not necessary.
 
     """
 
@@ -202,7 +239,7 @@ class SimpleAggregateView(Table):
     def __init__(self, table, key, aggregation=list, value=None, 
                  presorted=False, buffersize=None, tempdir=None,
                  cache=True, field='value'):
-        if presorted:
+        if presorted or key is None:
             self.table = table
         else:
             self.table = sort(table, key, buffersize=buffersize, 
@@ -220,7 +257,7 @@ class SimpleAggregateView(Table):
 def itersimpleaggregate(table, key, aggregation, value, field):
 
     # special case counting
-    if aggregation == len:
+    if aggregation == len and key is not None:
         aggregation = lambda g: sum(1 for _ in g)  # count length of iterable
 
     # determine output header
@@ -228,6 +265,8 @@ def itersimpleaggregate(table, key, aggregation, value, field):
         outhdr = tuple(key) + (field,)
     elif callable(key):
         outhdr = ('key', field)
+    elif key is None:
+        outhdr = field,
     else:
         outhdr = (key, field)
     yield outhdr
@@ -236,6 +275,12 @@ def itersimpleaggregate(table, key, aggregation, value, field):
     if isinstance(key, (list, tuple)):
         for k, grp in rowgroupby(table, key, value):
             yield tuple(k) + (aggregation(grp),)
+    elif key is None:
+        # special case counting
+        if aggregation == len:
+            yield nrows(table),
+        else:
+            yield aggregation(values(table, value)),
     else:
         for k, grp in rowgroupby(table, key, value):
             yield k, aggregation(grp)
@@ -245,7 +290,7 @@ class MultiAggregateView(Table):
     
     def __init__(self, source, key, aggregation=None, presorted=False, 
                  buffersize=None, tempdir=None, cache=True):
-        if presorted:
+        if presorted or key is None:
             self.source = source
         else:
             self.source = sort(source, key, buffersize=buffersize, 
@@ -300,18 +345,27 @@ def itermultiaggregate(source, key, aggregation):
         outhdr = list(key)
     elif callable(key):
         outhdr = ['key']
+    elif key is None:
+        outhdr = []
     else:
         outhdr = [key]
     for outfld in aggregation:
         outhdr.append(outfld)
     yield tuple(outhdr)
-    
+
+    if key is None:
+        grouped = rowgroupby(it, lambda x: None)
+    else:
+        grouped = rowgroupby(it, key)
+
     # generate data
-    for k, rows in rowgroupby(it, key):
+    for k, rows in grouped:
         rows = list(rows)  # may need to iterate over these more than once
         # handle compound key
         if isinstance(key, (list, tuple)):
             outrow = list(k)
+        elif key is None:
+            outrow = []
         else:
             outrow = [k]
         for outfld in aggregation:
@@ -332,7 +386,7 @@ def itermultiaggregate(source, key, aggregation):
                 aggval = aggfun(vals)
                 outrow.append(aggval)
         yield tuple(outrow)
-            
+
 
 def groupcountdistinctvalues(table, key, value):
     """Group by the `key` field then count the number of distinct values in the
