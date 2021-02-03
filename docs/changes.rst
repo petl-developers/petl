@@ -4,6 +4,9 @@ Changes
 Version 1.7.2
 -------------
 
+* Allow aggregation over the entire table (without a key)
+  By :user:`bmaggard`.
+
 * Allow specifying output field name for simple aggregation
   By :user:`bmaggard`, :issue:`370`.
 
