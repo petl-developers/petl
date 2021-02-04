@@ -5,11 +5,13 @@ Version 1.7.2
 -------------
 
 * Allow aggregation over the entire table (without a key)
-  By :user:`bmaggard`.
+  By :user:`bmaggard`, :issue:`541`.
 
 * Allow specifying output field name for simple aggregation
   By :user:`bmaggard`, :issue:`370`.
 
+* Bumped version of package dependency on lxml from 4.4.0 to 4.6.2
+  By :user:`juarezr`, :issue:`536`.
 
 Version 1.7.1
 -------------
