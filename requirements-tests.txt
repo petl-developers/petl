@@ -1,3 +1,5 @@
+wheel
+setuptools
 nose
 tox
 coveralls

@@ -1,0 +1,7 @@
+# packages required for testing petl with databases
+
+cryptography 
+pymysql 
+SQLAlchemy>=1.3.6
+psycopg2-binary
+# PyMySQL==0.9.3
