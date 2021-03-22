@@ -154,6 +154,21 @@ def convert(table, *args, **kwargs):
         +-----+-------+--------------------+
         | 'C' | '1.2' |               67.2 |
         +-----+-------+--------------------+
+        >>> # conversion can use a custom function
+        >>> def my_func(val, row):
+        ...     return float(row.bar) + row.baz
+        ... 
+        >>> table13 = etl.convert(table1, 'foo', my_func, pass_row=True)
+        >>> table13
+        +------+-------+-----+
+        | foo  | bar   | baz |
+        +======+=======+=====+
+        | 14.4 | '2.4' |  12 |
+        +------+-------+-----+
+        | 39.7 | '5.7' |  34 |
+        +------+-------+-----+
+        | 57.2 | '1.2' |  56 |
+        +------+-------+-----+
 
     Note that either field names or indexes can be given.
 
