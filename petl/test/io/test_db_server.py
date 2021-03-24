@@ -179,6 +179,14 @@ else:
         _test_dbo(sqlalchemy_session)
         sqlalchemy_session.close()
 
+        # exercise sqlalchemy engine
+        _setup_mysql(dbapi_connection)
+        sqlalchemy_engine2 = create_engine('mysql+pymysql://%s:%s@%s/%s' %
+                                           (user, password, host, database))
+        sqlalchemy_engine2.execute('SET SQL_MODE=ANSI_QUOTES')
+        _test_dbo(sqlalchemy_engine2)
+        sqlalchemy_engine2.dispose()
+
         # other exercises
         _test_with_schema(dbapi_connection, database)
         utf8_connection = connect(host=host, user=user,
