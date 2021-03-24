@@ -183,7 +183,7 @@ def _iter_dbapi_cursor(cursor, query, *args, **kwargs):
 
 
 def _iter_sqlalchemy_engine(engine, query, *args, **kwargs):
-    return _iter_sqlalchemy_connection(engine.contextual_connect(), query,
+    return _iter_sqlalchemy_connection(engine.connect(), query,
                                        *args, **kwargs)
 
 
@@ -541,7 +541,7 @@ def _todb_dbapi_cursor(table, cursor, tablename, schema=None, commit=True,
 def _todb_sqlalchemy_engine(table, engine, tablename, schema=None, commit=True,
                             truncate=False):
 
-    _todb_sqlalchemy_connection(table, engine.contextual_connect(), tablename,
+    _todb_sqlalchemy_connection(table, engine.connect(), tablename,
                                 schema=schema, commit=commit, truncate=truncate)
 
 

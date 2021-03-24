@@ -22,7 +22,7 @@ def _is_dbapi_cursor(dbo):
 
 
 def _is_sqlalchemy_engine(dbo):
-    return (_hasmethods(dbo, 'execute', 'contextual_connect', 'raw_connection')
+    return (_hasmethods(dbo, 'execute', 'connect', 'raw_connection')
             and _hasprop(dbo, 'driver'))
 
 

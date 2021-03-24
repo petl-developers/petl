@@ -370,7 +370,7 @@ def _execute_sqlalchemy_connection(sql, connection, commit):
 
 
 def _execute_sqlalchemy_engine(sql, engine, commit):
-    _execute_sqlalchemy_connection(sql, engine.contextual_connect(), commit)
+    _execute_sqlalchemy_connection(sql, engine.connect(), commit)
 
 
 def _execute_sqlalchemy_session(sql, session, commit):
