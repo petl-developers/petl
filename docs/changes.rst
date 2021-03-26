@@ -1,6 +1,15 @@
 Changes
 =======
 
+Version 1.7.3
+-------------
+
+* Fixed SQLAlchemy 1.4 removed the Engine.contextual_connect method
+  By :user:`juarezr`, :issue:`545`.
+
+* How to use convert with custom function and reference row
+  By :user:`javidy`, :issue:`542`.
+
 Version 1.7.2
 -------------
 
