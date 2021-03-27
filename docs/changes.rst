@@ -1,6 +1,12 @@
 Changes
 =======
 
+Version 1.7.4
+-------------
+
+* Use python 3.6 instead of 2.7 for deploy on travis-ci. No python changes.
+  By :user:`juarezr`, :issue:`550`.
+
 Version 1.7.3
 -------------
 
