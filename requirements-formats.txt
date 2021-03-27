@@ -2,7 +2,7 @@ Cython<0.29.21,>=0.29.13
 numpy<=1.19.2,>=1.16.4
 numexpr<=2.7.1,>=2.6.9
 intervaltree==3.0.2
-lxml==4.6.2
+lxml==4.6.3
 openpyxl==2.6.2
 pandas<=1.1.2,>=0.24.2 ; python_version < '3.9'
 tables
