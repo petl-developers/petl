@@ -3,14 +3,14 @@ branches:
   - master
   - "/v\\d+\\.\\d+\\.\\d+([abrc]+\\d)?/"
 language: python
-matrix:
+jobs:
   include:
-  - python: 2.7
   - python: 3.6
   - python: 3.7
   - python: 3.8
-    dist: xenial
-    sudo: false
+  - python: 3.9
+  - python: 2.7
+  # - python: pypy3
 before_install:
 - sudo apt-get -qq update
 - sudo apt-get build-dep -y python-h5py
