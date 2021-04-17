@@ -74,7 +74,7 @@ Building the documentation
 
 Documentation is built with `sphinx <http://sphinx-doc.org/>`_. To build::
 
-    $ pip install sphinx
+    $ pip install -r requirements-docs.txt
     $ cd docs
     $ make html
 
@@ -90,7 +90,7 @@ All of the above tests can be run automatically using `tox
 To run all tests **without** installing any of the optional
 dependencies, do::
 
-    $ tox -e py27,py36,doctests
+    $ tox -e py27,py36,docs
 
 To run the entire test suite, including installation of **all**
 optional dependencies, do::
