@@ -163,12 +163,12 @@ class DictsView(Table):
 
     def __init__(self, dicts, header=None, sample=1000, missing=None):
         self.dicts = dicts
-        self.header = header
+        self._header = header
         self.sample = sample
         self.missing = missing
 
     def __iter__(self):
-        return iterdicts(self.dicts, self.header, self.sample, self.missing)
+        return iterdicts(self.dicts, self._header, self.sample, self.missing)
 
 
 def iterjlines(f, header, missing):
