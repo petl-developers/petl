@@ -170,3 +170,11 @@ def test_tojsonarrays():
     assert result[1][1] == 2
     assert result[2][0] == 'c'
     assert result[2][1] == 2
+
+
+def test_fromdicts_header_does_not_raise():
+    data = [{'foo': 'a', 'bar': 1},
+            {'foo': 'b', 'bar': 2},
+            {'foo': 'c', 'bar': 2}]
+    actual = fromdicts(data)
+    assert actual.header() == ("foo", "bar")
