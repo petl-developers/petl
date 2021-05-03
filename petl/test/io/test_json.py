@@ -177,4 +177,4 @@ def test_fromdicts_header_does_not_raise():
             {'foo': 'b', 'bar': 2},
             {'foo': 'c', 'bar': 2}]
     actual = fromdicts(data)
-    assert actual.header() == ("foo", "bar")
+    assert actual.header()
