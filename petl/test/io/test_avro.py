@@ -25,7 +25,7 @@ if PY3:
 
 try:
     import fastavro
-    # import fastavro depedencies
+    # import fastavro dependencies
     import pytz
 except ImportError as e:
     print('SKIP avro tests: %s' % e, file=sys.stderr)

@@ -459,7 +459,7 @@ def read_source_from_arg(source):
     Retrieve a open stream for reading from the source provided.
 
     The result stream will be open by a handler that would return raw bytes and
-    transparently take care of the descompression, remote authentication,
+    transparently take care of the decompression, remote authentication,
     network transfer, format decoding, and data extraction.
 
     .. versionadded:: 1.4.0
