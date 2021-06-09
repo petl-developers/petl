@@ -1159,7 +1159,7 @@ def addfieldusingcontext(table, field, query):
         +-----+-----+------+------+
 
     The `field` parameter is the name of the field to be added. The `query`
-    parameter is a function operating on the curent, previous and next rows
+    parameter is a function operating on the current, previous and next rows
     and returning the value.
 
     """
