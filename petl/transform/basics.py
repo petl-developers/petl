@@ -1,6 +1,3 @@
-from __future__ import absolute_import, print_function, division
-
-
 # standard library dependencies
 from itertools import islice, chain
 from collections import deque

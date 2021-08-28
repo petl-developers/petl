@@ -1,6 +1,3 @@
-from __future__ import division, print_function, absolute_import
-
-
 import petl as etl
 # setup a file to demonstrate with
 d = '''<table>

@@ -1,6 +1,3 @@
-from __future__ import absolute_import, print_function, division
-
-
 from petl.test.helpers import ieq, eq_
 from petl.comparison import Comparable
 from petl.transform.selects import select, selectin, selectcontains, \

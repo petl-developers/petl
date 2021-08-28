@@ -1,6 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import absolute_import, print_function, division
-
 from petl.compat import PY3
 from petl.util.base import Table, data
 from petl.io.sources import read_source_from_arg, write_source_from_arg

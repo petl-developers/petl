@@ -1,7 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import division, print_function, absolute_import
-
-
 import sys
 from datetime import datetime
 from tempfile import NamedTemporaryFile
@@ -37,7 +33,7 @@ else:
                   ('A', 1),
                   ('B', 2),
                   ('C', 2),
-                  (u'é', datetime(2012, 1, 1)))
+                  ('é', datetime(2012, 1, 1)))
         ieq(expect, tbl)
         ieq(expect, tbl)
 
@@ -50,7 +46,7 @@ else:
                   ('A', 1),
                   ('B', 2),
                   ('C', 2),
-                  (u'é', datetime(2012, 1, 1)))
+                  ('é', datetime(2012, 1, 1)))
         ieq(expect, tbl)
         ieq(expect, tbl)
 
@@ -63,7 +59,7 @@ else:
                   ('A', 1),
                   ('B', 2),
                   ('C', 2),
-                  (u'é', 40909.0))
+                  ('é', 40909.0))
         ieq(expect, tbl)
         ieq(expect, tbl)
 
@@ -81,8 +77,8 @@ else:
 
     def test_toxls_date():
         expect = (('foo', 'bar'),
-                  (u'é', datetime(2012, 1, 1)),
-                  (u'éé', datetime(2013, 2, 22)))
+                  ('é', datetime(2012, 1, 1)),
+                  ('éé', datetime(2013, 2, 22)))
         f = NamedTemporaryFile(delete=False)
         f.close()
         toxls(expect, f.name, 'Sheet1',

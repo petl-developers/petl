@@ -1,5 +1,3 @@
-from __future__ import absolute_import, print_function, division
-
 import sys
 
 from nose.tools import eq_, assert_almost_equal

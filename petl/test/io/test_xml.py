@@ -1,6 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import absolute_import, print_function, division
-
 import sys
 from collections import OrderedDict
 from tempfile import NamedTemporaryFile
@@ -216,7 +213,7 @@ def _write_temp_file(content, out=None):
         f.close()
     if out is not None:
         outf = sys.stderr if out else sys.stdout
-        print('TEST %s:\n%s' % (res, content), file=outf)
+        print(f'TEST {res}:\n{content}', file=outf)
     return res
 
 

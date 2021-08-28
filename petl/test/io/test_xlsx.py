@@ -1,7 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import absolute_import, print_function, division
-
-
 import sys
 from datetime import datetime
 from tempfile import NamedTemporaryFile
@@ -35,7 +31,7 @@ else:
                   ('A', 1),
                   ('B', 2),
                   ('C', 2),
-                  (u'é', datetime(2012, 1, 1)))
+                  ('é', datetime(2012, 1, 1)))
         ieq(expect, tbl)
         ieq(expect, tbl)
 
@@ -48,7 +44,7 @@ else:
                   ('A', 1),
                   ('B', 2),
                   ('C', 2),
-                  (u'é', datetime(2012, 1, 1)))
+                  ('é', datetime(2012, 1, 1)))
         ieq(expect, tbl)
         ieq(expect, tbl)
 
@@ -61,7 +57,7 @@ else:
                   ('A', 1),
                   ('B', 2),
                   ('C', 2),
-                  (u'é', datetime(2012, 1, 1)))
+                  ('é', datetime(2012, 1, 1)))
         ieq(expect, tbl)
         ieq(expect, tbl)
 
@@ -74,7 +70,7 @@ else:
                   ('A', 1),
                   ('B', 2),
                   ('C', 2),
-                  (u'é', datetime(2012, 1, 1)))
+                  ('é', datetime(2012, 1, 1)))
         ieq(expect, tbl)
         ieq(expect, tbl)
 
@@ -97,7 +93,7 @@ else:
                ('A', 1),
                ('B', 2),
                ('C', 2),
-               (u'é', datetime(2012, 1, 1)))
+               ('é', datetime(2012, 1, 1)))
         f = NamedTemporaryFile(delete=True, suffix='.xlsx')
         f.close()
 
@@ -116,7 +112,7 @@ else:
                ('A', 1),
                ('B', 2),
                ('C', 2),
-               (u'é', datetime(2012, 1, 1)))
+               ('é', datetime(2012, 1, 1)))
         f = NamedTemporaryFile(delete=True, suffix='.xlsx')
         f.close()
         toxlsx(tbl, f.name)
@@ -128,7 +124,7 @@ else:
                ('A', 1),
                ('B', 2),
                ('C', 2),
-               (u'é', datetime(2012, 1, 1)))
+               ('é', datetime(2012, 1, 1)))
         f = NamedTemporaryFile(delete=True, suffix='.xlsx')
         f.close()
         tbl = etl.wrap(tbl)
@@ -144,7 +140,7 @@ else:
                ('A', 1),
                ('B', 2),
                ('C', 2),
-               (u'é', datetime(2012, 1, 1)))
+               ('é', datetime(2012, 1, 1)))
         f = NamedTemporaryFile(delete=False, suffix='.xlsx')
         f.close()
 
@@ -157,7 +153,7 @@ else:
                ('A', 1),
                ('B', 2),
                ('C', 2),
-               (u'é', datetime(2012, 1, 1)))
+               ('é', datetime(2012, 1, 1)))
         f = NamedTemporaryFile(delete=True, suffix='.xlsx')
         f.close()
 
@@ -171,7 +167,7 @@ else:
                ('A', 1),
                ('B', 2),
                ('C', 2),
-               (u'é', datetime(2012, 1, 1)))
+               ('é', datetime(2012, 1, 1)))
         f = NamedTemporaryFile(delete=True, suffix='.xlsx')
         f.close()
 
@@ -185,7 +181,7 @@ else:
                ('A', 1),
                ('B', 2),
                ('C', 2),
-               (u'é', datetime(2012, 1, 1)))
+               ('é', datetime(2012, 1, 1)))
         f = NamedTemporaryFile(delete=True, suffix='.xlsx')
         f.close()
 
@@ -198,7 +194,7 @@ else:
                ('A', 1),
                ('B', 2),
                ('C', 2),
-               (u'é', datetime(2012, 1, 1)))
+               ('é', datetime(2012, 1, 1)))
         f = NamedTemporaryFile(delete=True, suffix='.xlsx')
         f.close()
 
@@ -212,7 +208,7 @@ else:
                ('A', 1),
                ('B', 2),
                ('C', 2),
-               (u'é', datetime(2012, 1, 1)))
+               ('é', datetime(2012, 1, 1)))
         f = NamedTemporaryFile(delete=True, suffix='.xlsx')
         f.close()
 
@@ -226,7 +222,7 @@ else:
                ('A', 1),
                ('B', 2),
                ('C', 2),
-               (u'é', datetime(2012, 1, 1)))
+               ('é', datetime(2012, 1, 1)))
         f = NamedTemporaryFile(delete=True, suffix='.xlsx')
         f.close()
 

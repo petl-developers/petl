@@ -1,6 +1,3 @@
-from __future__ import absolute_import, print_function, division
-
-
 from petl.errors import ArgumentError
 from petl.test.helpers import ieq, eq_
 from petl.compat import next
@@ -24,7 +21,7 @@ def test_fieldnames():
     expect = ('foo', 'bar')
     eq_(expect, actual)
 
-    class CustomField(object):
+    class CustomField:
 
         def __init__(self, key, description):
             self.key = key
@@ -34,7 +31,7 @@ def test_fieldnames():
             return self.key
 
         def __repr__(self):
-            return 'CustomField(%r, %r)' % (self.key, self.description)
+            return f'CustomField({self.key!r}, {self.description!r})'
 
     table = ((CustomField('foo', 'Get some foo.'),
               CustomField('bar', 'A lot of bar.')),

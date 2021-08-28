@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # <nbformat>3.0</nbformat>
 
 # <codecell>
@@ -54,7 +53,7 @@ tbl4
 
 # <codecell>
 
-class CustomTransformer(object):
+class CustomTransformer:
     
     def __init__(self, source):
         self.source = source

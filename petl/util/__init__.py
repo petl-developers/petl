@@ -1,6 +1,3 @@
-from __future__ import absolute_import, print_function, division
-
-
 from petl.util.base import Table, Record, values, header, data, \
     fieldnames, records, dicts, namedtuples, expr, rowgroupby, empty, wrap
 

@@ -1,7 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import absolute_import, print_function, division
-
-
 import os
 import io
 import gzip
@@ -23,17 +19,17 @@ info = logger.info
 debug = logger.debug
 
 
-class FileSource(object):
+class FileSource:
 
     def __init__(self, filename, **kwargs):
         self.filename = filename
         self.kwargs = kwargs
 
     def open(self, mode='r'):
-        return io.open(self.filename, mode, **self.kwargs)
+        return open(self.filename, mode, **self.kwargs)
 
 
-class GzipSource(object):
+class GzipSource:
 
     def __init__(self, filename, remote=False, **kwargs):
         self.filename = filename
@@ -55,7 +51,7 @@ class GzipSource(object):
             source.close()
 
 
-class BZ2Source(object):
+class BZ2Source:
 
     def __init__(self, filename, remote=False, **kwargs):
         self.filename = filename
@@ -77,7 +73,7 @@ class BZ2Source(object):
             source.close()
 
 
-class ZipSource(object):
+class ZipSource:
 
     def __init__(self, filename, membername, pwd=None, **kwargs):
         self.filename = filename
@@ -101,7 +97,7 @@ class ZipSource(object):
             zf.close()
 
 
-class Uncloseable(object):
+class Uncloseable:
 
     def __init__(self, inner):
         object.__setattr__(self, '_inner', inner)
@@ -169,7 +165,7 @@ def _get_stdin_binary():
 stdin_binary = _get_stdin_binary()
 
 
-class StdoutSource(object):
+class StdoutSource:
 
     @contextmanager
     def open(self, mode):
@@ -181,7 +177,7 @@ class StdoutSource(object):
             yield Uncloseable(sys.stdout)
 
 
-class StdinSource(object):
+class StdinSource:
 
     @contextmanager
     def open(self, mode='r'):
@@ -193,7 +189,7 @@ class StdinSource(object):
             yield Uncloseable(sys.stdin)
 
 
-class URLSource(object):
+class URLSource:
 
     def __init__(self, *args, **kwargs):
         self.args = args
@@ -210,7 +206,7 @@ class URLSource(object):
             f.close()
 
 
-class MemorySource(object):
+class MemorySource:
     """Memory data source. E.g.::
 
         >>> import petl as etl
@@ -280,7 +276,7 @@ class MemorySource(object):
 StringSource = MemorySource
 
 
-class PopenSource(object):
+class PopenSource:
 
     def __init__(self, *args, **kwargs):
         self.args = args
@@ -298,7 +294,7 @@ class PopenSource(object):
             pass
 
 
-class CompressedSource(object):
+class CompressedSource:
     '''Handle IO from a file-like object and (de)compress with a codec
     
     The `source` argument (source class) is the source class that will handle

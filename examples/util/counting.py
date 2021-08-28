@@ -1,6 +1,3 @@
-from __future__ import division, print_function, absolute_import
-
-
 # nrows()
 #########
 
@@ -52,8 +49,8 @@ etl.valuecounts(table, 'foo', 'bar')
 import petl as etl
 table = [['foo', 'bar', 'baz'],
          ['A', 'aaa', 2],
-         ['B', u'2', '3.4'],
-         [u'B', u'3', u'7.8', True],
+         ['B', '2', '3.4'],
+         ['B', '3', '7.8', True],
          ['D', '3.7', 9.0],
          ['E', 42]]
 counter, errors = etl.parsecounter(table, 'bar')
@@ -67,8 +64,8 @@ errors.most_common()
 import petl as etl
 table = [['foo', 'bar', 'baz'],
          ['A', 'aaa', 2],
-         ['B', u'2', '3.4'],
-         [u'B', u'3', u'7.8', True],
+         ['B', '2', '3.4'],
+         ['B', '3', '7.8', True],
          ['D', '3.7', 9.0],
          ['E', 42]]
 etl.parsecounts(table, 'bar')
@@ -80,9 +77,9 @@ etl.parsecounts(table, 'bar')
 import petl as etl
 table = [['foo', 'bar', 'baz'],
          ['A', 1, 2],
-         ['B', u'2', '3.4'],
-         [u'B', u'3', u'7.8', True],
-         ['D', u'xyz', 9.0],
+         ['B', '2', '3.4'],
+         ['B', '3', '7.8', True],
+         ['D', 'xyz', 9.0],
          ['E', 42]]
 etl.typecounter(table, 'foo').most_common()
 etl.typecounter(table, 'bar').most_common()
@@ -97,7 +94,7 @@ table = [['foo', 'bar', 'baz'],
          [b'A', 1, 2],
          [b'B', '2', b'3.4'],
          ['B', '3', '7.8', True],
-         ['D', u'xyz', 9.0],
+         ['D', 'xyz', 9.0],
          ['E', 42]]
 etl.typecounts(table, 'foo')
 etl.typecounts(table, 'bar')
@@ -112,8 +109,8 @@ table = [['foo', 'bar'],
          ['Mr. Foo', '123-1254'],
          ['Mrs. Bar', '234-1123'],
          ['Mr. Spo', '123-1254'],
-         [u'Mr. Baz', u'321 1434'],
-         [u'Mrs. Baz', u'321 1434'],
+         ['Mr. Baz', '321 1434'],
+         ['Mrs. Baz', '321 1434'],
          ['Mr. Quux', '123-1254-XX']]
 etl.stringpatterns(table, 'foo')
 etl.stringpatterns(table, 'bar')
@@ -126,7 +123,7 @@ import petl as etl
 table = [['foo', 'bar', 'baz'],
          ['A', 1, 2],
          ['B', '2', '3.4'],
-         [u'B', u'3', u'7.8', True],
+         ['B', '3', '7.8', True],
          ['D', 'xyz', 9.0],
          ['E', None],
          ['F', 9]]

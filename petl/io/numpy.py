@@ -1,7 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import division, print_function, absolute_import
-
-
 from petl.compat import next, string_types
 from petl.util.base import iterpeek, ValuesView, Table
 from petl.util.materialise import columns

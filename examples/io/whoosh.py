@@ -1,7 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import absolute_import, print_function, division
-
-
 # fromtextindex()
 #################
 
@@ -17,10 +13,10 @@ if not os.path.exists(dirname):
 
 index = create_in(dirname, schema)
 writer = index.writer()
-writer.add_document(title=u"First document", path=u"/a",
-                    content=u"This is the first document we've added!")
-writer.add_document(title=u"Second document", path=u"/b",
-                    content=u"The second one is even more interesting!")
+writer.add_document(title="First document", path="/a",
+                    content="This is the first document we've added!")
+writer.add_document(title="Second document", path="/b",
+                    content="The second one is even more interesting!")
 writer.commit()
 # extract documents as a table
 table = etl.fromtextindex(dirname)
@@ -68,11 +64,11 @@ if not os.path.exists(dirname):
 
 index = create_in('example.whoosh', schema)
 writer = index.writer()
-writer.add_document(title=u"Oranges", path=u"/a",
-                    content=u"This is the first document we've added!")
-writer.add_document(title=u"Apples", path=u"/b",
-                    content=u"The second document is even more "
-                            u"interesting!")
+writer.add_document(title="Oranges", path="/a",
+                    content="This is the first document we've added!")
+writer.add_document(title="Apples", path="/b",
+                    content="The second document is even more "
+                            "interesting!")
 writer.commit()
 # demonstrate the use of searchtextindex()
 table1 = etl.searchtextindex('example.whoosh', 'oranges')

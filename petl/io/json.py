@@ -1,6 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import absolute_import, print_function, division
-
 # standard library dependencies
 import io
 import json
@@ -106,13 +103,11 @@ class JsonView(Table):
                                      write_through=True)
             try:
                 if self.lines:
-                    for row in iterjlines(f, self.header, self.missing):
-                        yield row
+                    yield from iterjlines(f, self.header, self.missing)
                 else:
                     dicts = json.load(f, *self.args, **self.kwargs)
-                    for row in iterdicts(dicts, self.header, self.sample,
-                                         self.missing):
-                        yield row
+                    yield from iterdicts(dicts, self.header, self.sample,
+                                         self.missing)
             finally:
                 if not PY2:
                     f.detach()

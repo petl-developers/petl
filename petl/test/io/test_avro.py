@@ -1,6 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import absolute_import, print_function, division
-
 import sys
 import math
 
@@ -210,12 +207,12 @@ else:
 
     # region Mockup data
 
-    header1 = [u'name', u'friends', u'age']
+    header1 = ['name', 'friends', 'age']
 
-    rows1 = [[u'Bob', 42, 33],
-             [u'Jim', 13, 69],
-             [u'Joe', 86, 17],
-             [u'Ted', 23, 51]]
+    rows1 = [['Bob', 42, 33],
+             ['Jim', 13, 69],
+             ['Joe', 86, 17],
+             ['Ted', 23, 51]]
 
     table1 = [header1] + rows1
 
@@ -225,60 +222,60 @@ else:
     table01 = [header1[0:2]] + [item[0:2] for item in rows1]
     table10 = [header1] + [item[0:2] + [None] for item in rows1]
 
-    table2 = [[u'name', u'age', u'birthday', u'death', u'insurance', u'deny'],
-              [u'pete', 17, date(2012, 10, 11),
+    table2 = [['name', 'age', 'birthday', 'death', 'insurance', 'deny'],
+              ['pete', 17, date(2012, 10, 11),
                   _utc(2018, 10, 14, 15, 16, 17, 18000), Decimal('1.100'), False],
-              [u'mike', 27, date(2002, 11, 12),
+              ['mike', 27, date(2002, 11, 12),
                   _utc(2015, 12, 13, 14, 15, 16, 17000), Decimal('1.010'), False],
-              [u'zack', 37, date(1992, 12, 13),
+              ['zack', 37, date(1992, 12, 13),
                   _utc(2010, 11, 12, 13, 14, 15, 16000), Decimal('123.456'), True],
-              [u'gene', 47, date(1982, 12, 25),
+              ['gene', 47, date(1982, 12, 25),
                   _utc(2009, 10, 11, 12, 13, 14, 15000), Decimal('-1.010'), False]]
 
     table21 = table2[0:3]
     table22 = [table2[0]] + table2[3:]
 
-    table3 = [[u'name', u'age', u'birthday', u'death'],
-              [u'pete', 17, date(2012, 10, 11),
+    table3 = [['name', 'age', 'birthday', 'death'],
+              ['pete', 17, date(2012, 10, 11),
                   _utc(2018, 10, 14, 15, 16, 17, 18000)],
-              [u'mike', 27, date(2002, 11, 12),
+              ['mike', 27, date(2002, 11, 12),
                   _utc(2015, 12, 13, 14, 15, 16, 17000)],
-              [u'zack', 37, date(1992, 12, 13),
+              ['zack', 37, date(1992, 12, 13),
                   _utc(2010, 11, 12, 13, 14, 15, 16000)],
-              [u'gene', 47, date(1982, 12, 25),
+              ['gene', 47, date(1982, 12, 25),
                   _utc(2009, 10, 11, 12, 13, 14, 15000)]]
 
-    table4 = [[u'name', u'friends', u'age', u'birthday'],
-              [u'Bob', 42, 33, date(2012, 10, 11)],
-              [u'Jim', 13, 69, None],
+    table4 = [['name', 'friends', 'age', 'birthday'],
+              ['Bob', 42, 33, date(2012, 10, 11)],
+              ['Jim', 13, 69, None],
               [None, 86, 17, date(1992, 12, 13)],
-              [u'Ted', 23, None, date(1982, 12, 25)]]
+              ['Ted', 23, None, date(1982, 12, 25)]]
 
-    table5 = [[u'palette', u'colors'],
-              [u'red', [u'red', u'salmon', u'crimson', u'firebrick', u'coral']],
-              [u'pink', [u'pink', u'rose']],
-              [u'purple', [u'purple', u'violet', u'fuchsia',
-                           u'magenta', u'indigo', u'orchid', u'lavender']],
-              [u'green', [u'green', u'lime', u'seagreen',
-                          u'grass', u'olive', u'forest', u'teal']],
-              [u'blue', [u'blue', u'cyan', u'aqua', u'aquamarine',
-                         u'turquoise', u'royal', u'sky', u'navy']],
-              [u'gold',  [u'gold', u'yellow', u'khaki',
-                          u'mocassin', u'papayawhip', u'lemonchiffon']],
-              [u'black',  None]]
+    table5 = [['palette', 'colors'],
+              ['red', ['red', 'salmon', 'crimson', 'firebrick', 'coral']],
+              ['pink', ['pink', 'rose']],
+              ['purple', ['purple', 'violet', 'fuchsia',
+                           'magenta', 'indigo', 'orchid', 'lavender']],
+              ['green', ['green', 'lime', 'seagreen',
+                          'grass', 'olive', 'forest', 'teal']],
+              ['blue', ['blue', 'cyan', 'aqua', 'aquamarine',
+                         'turquoise', 'royal', 'sky', 'navy']],
+              ['gold',  ['gold', 'yellow', 'khaki',
+                          'mocassin', 'papayawhip', 'lemonchiffon']],
+              ['black',  None]]
 
-    header6 = [u'array_string', u'array_record', u'nulable_date',
-               u'multi_union_time', u'array_bytes_decimal', u'array_fixed_decimal']
+    header6 = ['array_string', 'array_record', 'nulable_date',
+               'multi_union_time', 'array_bytes_decimal', 'array_fixed_decimal']
 
-    rows61 = [[u'a', u'b', u'c'],
-              [{u'f1': u'1', u'f2': Decimal('654.321')}],
+    rows61 = [['a', 'b', 'c'],
+              [{'f1': '1', 'f2': Decimal('654.321')}],
               date(2020, 1, 10),
               _utc(2020, 12, 19, 18, 17, 16, 15000),
               [Decimal('123.456')],
               [Decimal('987.654')], ]
 
-    rows62 = [[u'a', u'b', u'c'],
-              [{u'f1': u'1', u'f2': Decimal('654.321')}],
+    rows62 = [['a', 'b', 'c'],
+              [{'f1': '1', 'f2': Decimal('654.321')}],
               date(2020, 1, 10),
               _utc(2020, 12, 19, 18, 17, 16, 15000),
               [Decimal('123.456'), Decimal('456.789')],
@@ -292,7 +289,7 @@ else:
 
     table60 = [header6, [rows61[0], rows61[1], ]]
 
-    header7 = [u'col', u'sqrt_pow_ij']
+    header7 = ['col', 'sqrt_pow_ij']
 
     rows70 = [[j, [round(math.sqrt(math.pow(i*j, i+j)), 9)
                    for i in range(1, j+1)]] for j in range(1, 7)]
@@ -303,28 +300,28 @@ else:
     table70 = [header7] + rows70
     table71 = [header7] + rows71
 
-    header8 = [u'number', u'properties']
+    header8 = ['number', 'properties']
 
     rows8 = [[_decs(x), { 
-                    u'atan': _decs(math.atan(x)),
-                    u'sin': math.sin(x), 
-                    u'cos': math.cos(x), 
-                    u'tan': math.tan(x), 
-                    u'square': x*x, 
-                    u'sqrt': math.sqrt(x), 
-                    u'log': math.log(x), 
-                    u'log10': math.log10(x), 
-                    u'exp': math.log10(x), 
-                    u'power_x': x**x, 
-                    u'power_minus_x': x**-x, 
+                    'atan': _decs(math.atan(x)),
+                    'sin': math.sin(x), 
+                    'cos': math.cos(x), 
+                    'tan': math.tan(x), 
+                    'square': x*x, 
+                    'sqrt': math.sqrt(x), 
+                    'log': math.log(x), 
+                    'log10': math.log10(x), 
+                    'exp': math.log10(x), 
+                    'power_x': x**x, 
+                    'power_minus_x': x**-x, 
                 }] for x in range(1, 12)]
 
     table8 = [header8] + rows8
 
-    rows9 = [[1, { u'name': u'Bob', u'age': 20 }],
-             [2, { u'name': u'Ted', u'budget': _decs(54321.25) }],
-             [2, { u'name': u'Jim', u'color': u'blue' }],
-             [2, { u'name': u'Joe', u'alias': u'terminator' }]]
+    rows9 = [[1, { 'name': 'Bob', 'age': 20 }],
+             [2, { 'name': 'Ted', 'budget': _decs(54321.25) }],
+             [2, { 'name': 'Jim', 'color': 'blue' }],
+             [2, { 'name': 'Joe', 'alias': 'terminator' }]]
 
     table9 = [header8] + rows9
 

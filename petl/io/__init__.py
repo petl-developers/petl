@@ -1,5 +1,3 @@
-from __future__ import absolute_import, print_function, division
-
 from petl.io.base import fromcolumns
 
 from petl.io.sources import FileSource, GzipSource, BZ2Source, ZipSource, \

@@ -1,6 +1,3 @@
-from __future__ import absolute_import, print_function, division
-
-
 import itertools
 from petl.compat import next, text_type
 from petl.errors import FieldSelectionError
@@ -311,8 +308,7 @@ class PrefixHeaderView(Table):
         hdr = next(it)
         outhdr = tuple((text_type(self.prefix) + text_type(f)) for f in hdr)
         yield outhdr
-        for row in it:
-            yield row
+        yield from it
 
 
 def suffixheader(table, suffix):
@@ -335,8 +331,7 @@ class SuffixHeaderView(Table):
         hdr = next(it)
         outhdr = tuple((text_type(f) + text_type(self.suffix)) for f in hdr)
         yield outhdr
-        for row in it:
-            yield row
+        yield from it
 
 
 def sortheader(table, reverse=False, missing=None):

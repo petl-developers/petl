@@ -1,6 +1,3 @@
-from __future__ import absolute_import, print_function, division
-
-
 from collections import Counter
 from petl.compat import string_types, maketrans
 

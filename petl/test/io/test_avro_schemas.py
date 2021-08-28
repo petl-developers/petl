@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 # begin_nullable_schema
 
 schema0 = {

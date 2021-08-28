@@ -1,6 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import absolute_import, division, print_function
-
 import sys
 import math
 from collections import OrderedDict
@@ -258,8 +255,7 @@ class AvroView(Table):
             avro_reader = self._open_reader(source_file)
             header = self._decode_schema(avro_reader)
             yield header
-            for row in self._read_rows_from(avro_reader, header):
-                yield row
+            yield from self._read_rows_from(avro_reader, header)
 
     def _open_reader(self, source_file):
         '''This could raise a error when the file is corrupt or is not avro'''

@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import absolute_import, print_function, division
 import itertools
 
 
@@ -92,8 +90,7 @@ class BcolzView(Table):
             it = ctbl.where(self.expression, outcols=self.outcols, skip=self.skip,
                            limit=self.limit)
 
-        for row in it:
-            yield row
+        yield from it
 
 
 def tobcolz(table, dtype=None, sample=1000, **kwargs):

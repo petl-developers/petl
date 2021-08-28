@@ -1,6 +1,3 @@
-from __future__ import absolute_import, print_function, division
-
-
 import abc
 import logging
 import sys
@@ -169,7 +166,7 @@ class ProgressView(ProgressViewBase):
             self.file_object = sys.stderr
         else:
             self.file_object = out
-        super(ProgressView, self).__init__(inner, batchsize, prefix)
+        super().__init__(inner, batchsize, prefix)
 
     def print_message(self, message):
         print(message, file=self.file_object)
@@ -189,7 +186,7 @@ class LoggingProgressView(ProgressViewBase):
         else:
             self.logger = logger
         self.level = level
-        super(LoggingProgressView, self).__init__(inner, batchsize, prefix)
+        super().__init__(inner, batchsize, prefix)
 
     def print_message(self, message):
         self.logger.log(self.level, message)

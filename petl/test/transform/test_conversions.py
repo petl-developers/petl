@@ -1,6 +1,3 @@
-from __future__ import absolute_import, print_function, division
-
-
 from petl.test.failonerror import test_failonerror
 from petl.test.helpers import ieq
 from petl.transform.conversions import convert, convertall, convertnumbers, \
@@ -14,7 +11,7 @@ def test_convert():
     table1 = (('foo', 'bar', 'baz'),
               ('A', 1, 2),
               ('B', '2', '3.4'),
-              (u'B', u'3', u'7.8', True),
+              ('B', '3', '7.8', True),
               ('D', 'xyz', 9.0),
               ('E', None))
 
@@ -23,7 +20,7 @@ def test_convert():
     expect2 = (('foo', 'bar', 'baz'),
                ('a', 1, 2),
                ('b', '2', '3.4'),
-               (u'b', u'3', u'7.8', True),
+               ('b', '3', '7.8', True),
                ('d', 'xyz', 9.0),
                ('e', None))
     ieq(expect2, table2)
@@ -39,7 +36,7 @@ def test_convert():
     expect4 = (('foo', 'bar', 'baz'),
                ('A', 1, 2),
                ('BB', '2', '3.4'),
-               (u'BB', u'3', u'7.8', True),
+               ('BB', '3', '7.8', True),
                ('D', 'xyz', 9.0),
                ('E', None))
     ieq(expect4, table4)
@@ -49,7 +46,7 @@ def test_convert():
     expect5 = (('foo', 'bar', 'baz'),
                ('A', '1', '2'),
                ('B', '2', '3.4'),
-               (u'B', u'3', u'7.8', True),
+               ('B', '3', '7.8', True),
                ('D', 'xyz', '9.0'),
                ('E', 'None'))
     ieq(expect5, table5)
@@ -59,7 +56,7 @@ def test_convert():
     expect6 = (('foo', 'bar', 'baz'),
                ('Z', 1, 2),
                ('Y', '2', '3.4'),
-               (u'Y', u'3', u'7.8', True),
+               ('Y', '3', '7.8', True),
                ('D', 'xyz', 9.0),
                ('E', None))
     ieq(expect6, table6)
@@ -77,7 +74,7 @@ def test_convert_indexes():
     table1 = (('foo', 'bar', 'baz'),
               ('A', 1, 2),
               ('B', '2', '3.4'),
-              (u'B', u'3', u'7.8', True),
+              ('B', '3', '7.8', True),
               ('D', 'xyz', 9.0),
               ('E', None))
 
@@ -86,7 +83,7 @@ def test_convert_indexes():
     expect2 = (('foo', 'bar', 'baz'),
                ('a', 1, 2),
                ('b', '2', '3.4'),
-               (u'b', u'3', u'7.8', True),
+               ('b', '3', '7.8', True),
                ('d', 'xyz', 9.0),
                ('e', None))
     ieq(expect2, table2)
@@ -102,7 +99,7 @@ def test_convert_indexes():
     expect4 = (('foo', 'bar', 'baz'),
                ('A', 1, 2),
                ('BB', '2', '3.4'),
-               (u'BB', u'3', u'7.8', True),
+               ('BB', '3', '7.8', True),
                ('D', 'xyz', 9.0),
                ('E', None))
     ieq(expect4, table4)
@@ -115,7 +112,7 @@ def test_convert_indexes():
     expect5 = (('foo', 'bar', 'baz'),
                ('A', '1', '2'),
                ('B', '2', '3.4'),
-               (u'B', u'3', u'7.8', True),
+               ('B', '3', '7.8', True),
                ('D', 'xyz', '9.0'),
                ('E', 'None'))
     ieq(expect5, table5a)
@@ -128,7 +125,7 @@ def test_convert_indexes():
     expect6 = (('foo', 'bar', 'baz'),
                ('Z', 1, 2),
                ('Y', '2', '3.4'),
-               (u'Y', u'3', u'7.8', True),
+               ('Y', '3', '7.8', True),
                ('D', 'xyz', 9.0),
                ('E', None))
     ieq(expect6, table6)
@@ -139,7 +136,7 @@ def test_fieldconvert():
     table1 = (('foo', 'bar', 'baz'),
               ('A', 1, 2),
               ('B', '2', '3.4'),
-              (u'B', u'3', u'7.8', True),
+              ('B', '3', '7.8', True),
               ('D', 'xyz', 9.0),
               ('E', None))
 
@@ -174,7 +171,7 @@ def test_fieldconvert():
     expect7 = (('foo', 'bar', 'baz'),
                ('A', 1, 2),
                ('BB', '2', '3.4'),
-               (u'BB', u'3', u'7.8', True),
+               ('BB', '3', '7.8', True),
                ('D', 'xyz', 9.0),
                ('E', None))
     ieq(expect7, table7)
@@ -196,7 +193,7 @@ def test_fieldconvert():
     expect9 = (('foo', 'bar', 'baz'),
                ('A', 1, 2.0),
                ('B', '2', 3.4),
-               ('B', u'3', 7.8, True),  # N.B., long rows are preserved
+               ('B', '3', 7.8, True),  # N.B., long rows are preserved
                ('D', 'xyz', 9.0),
                ('E', None))  # N.B., short rows are preserved
     ieq(expect9, table9)
@@ -325,7 +322,7 @@ def test_update():
     table1 = (('foo', 'bar', 'baz'),
               ('A', 1, 2),
               ('B', '2', '3.4'),
-              (u'B', u'3', u'7.8', True),
+              ('B', '3', '7.8', True),
               ('D', 'xyz', 9.0),
               ('E', None))
 
@@ -333,7 +330,7 @@ def test_update():
     expect2 = (('foo', 'bar', 'baz'),
                ('X', 1, 2),
                ('X', '2', '3.4'),
-               ('X', u'3', u'7.8', True),
+               ('X', '3', '7.8', True),
                ('X', 'xyz', 9.0),
                ('X', None))
     ieq(expect2, table2)

@@ -1,5 +1,3 @@
-from __future__ import absolute_import, print_function, division
-
 from collections import OrderedDict
 
 from petl.test.failonerror import test_failonerror

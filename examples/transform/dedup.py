@@ -1,6 +1,3 @@
-from __future__ import division, print_function, absolute_import
-
-
 # duplicates()
 ##############
 
@@ -28,7 +25,7 @@ table1 = [['foo', 'bar', 'baz'],
           ['A', 1, 2],
           ['B', '2', '3.4'],
           ['D', 'xyz', 9.0],
-          ['B', u'3', u'7.8'],
+          ['B', '3', '7.8'],
           ['B', '2', 42],
           ['E', None, None],
           ['D', 4, 12.3],

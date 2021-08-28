@@ -1,6 +1,3 @@
-from __future__ import absolute_import, print_function, division
-
-
 from petl.test.helpers import ieq
 from petl.util import expr, empty, coalesce
 from petl.transform.basics import cut, cat, addfield, rowslice, head, tail, \
@@ -13,7 +10,7 @@ def test_cut():
     table = (('foo', 'bar', 'baz'),
              ('A', 1, 2),
              ('B', '2', '3.4'),
-             (u'B', u'3', u'7.8', True),
+             ('B', '3', '7.8', True),
              ('D', 'xyz', 9.0),
              ('E', None))
 
@@ -21,7 +18,7 @@ def test_cut():
     expectation = (('foo',),
                    ('A',),
                    ('B',),
-                   (u'B',),
+                   ('B',),
                    ('D',),
                    ('E',))
     ieq(expectation, cut1)
@@ -30,7 +27,7 @@ def test_cut():
     expectation = (('foo', 'baz'),
                    ('A', 2),
                    ('B', '3.4'),
-                   (u'B', u'7.8'),
+                   ('B', '7.8'),
                    ('D', 9.0),
                    ('E', None))
     ieq(expectation, cut2)
@@ -39,7 +36,7 @@ def test_cut():
     expectation = (('foo', 'baz'),
                    ('A', 2),
                    ('B', '3.4'),
-                   (u'B', u'7.8'),
+                   ('B', '7.8'),
                    ('D', 9.0),
                    ('E', None))
     ieq(expectation, cut3)
@@ -48,7 +45,7 @@ def test_cut():
     expectation = (('bar', 'foo'),
                    (1, 'A'),
                    ('2', 'B'),
-                   (u'3', u'B'),
+                   ('3', 'B'),
                    ('xyz', 'D'),
                    (None, 'E'))
     ieq(expectation, cut4)
@@ -57,7 +54,7 @@ def test_cut():
     expectation = (('foo', 'baz'),
                    ('A', 2),
                    ('B', '3.4'),
-                   (u'B', u'7.8'),
+                   ('B', '7.8'),
                    ('D', 9.0),
                    ('E', None))
     ieq(expectation, cut5)
@@ -75,7 +72,7 @@ def test_cutout():
     table = (('foo', 'bar', 'baz'),
              ('A', 1, 2),
              ('B', '2', '3.4'),
-             (u'B', u'3', u'7.8', True),
+             ('B', '3', '7.8', True),
              ('D', 'xyz', 9.0),
              ('E', None))
 
@@ -83,7 +80,7 @@ def test_cutout():
     expectation = (('foo',),
                    ('A',),
                    ('B',),
-                   (u'B',),
+                   ('B',),
                    ('D',),
                    ('E',))
     ieq(expectation, cut1)
@@ -92,7 +89,7 @@ def test_cutout():
     expectation = (('foo', 'baz'),
                    ('A', 2),
                    ('B', '3.4'),
-                   (u'B', u'7.8'),
+                   ('B', '7.8'),
                    ('D', 9.0),
                    ('E', None))
     ieq(expectation, cut2)
@@ -101,7 +98,7 @@ def test_cutout():
     expectation = (('foo', 'baz'),
                    ('A', 2),
                    ('B', '3.4'),
-                   (u'B', u'7.8'),
+                   ('B', '7.8'),
                    ('D', 9.0),
                    ('E', None))
     ieq(expectation, cut3)
@@ -130,7 +127,7 @@ def test_cat():
     table3 = (('foo', 'bar', 'baz'),
               ('A', 1, 2),
               ('B', '2', '3.4'),
-              (u'B', u'3', u'7.8', True),
+              ('B', '3', '7.8', True),
               ('D', 'xyz', 9.0),
               ('E', None))
 
@@ -138,7 +135,7 @@ def test_cat():
     expectation = (('foo', 'bar', 'baz'),
                    ('A', 1, 2),
                    ('B', '2', '3.4'),
-                   (u'B', u'3', u'7.8'),
+                   ('B', '3', '7.8'),
                    ('D', 'xyz', 9.0),
                    ('E', None, None))
     ieq(expectation, cat3)
@@ -152,7 +149,7 @@ def test_cat():
                    (None, 'D', False),
                    ('A', 1, 2),
                    ('B', '2', '3.4'),
-                   (u'B', u'3', u'7.8'),
+                   ('B', '3', '7.8'),
                    ('D', 'xyz', 9.0),
                    ('E', None, None))
     ieq(expectation, cat4)
@@ -266,7 +263,7 @@ def test_addfield():
     ieq(expectation, result)
     ieq(expectation, result)
 
-    result = addfield(table, 'baz', lambda row: '%s,%s' % (row.foo, row.bar))
+    result = addfield(table, 'baz', lambda row: f'{row.foo},{row.bar}')
     expectation = (('foo', 'bar', 'baz'),
                    ('M', 12, 'M,12'),
                    ('F', 34, 'F,34'),
@@ -366,7 +363,7 @@ def test_addfields():
              ('-', 56))
 
     result = addfields(table, [('baz', 42),
-                               ('qux', lambda row: '%s,%s' % (row.foo, row.bar)),
+                               ('qux', lambda row: f'{row.foo},{row.bar}'),
                                ('fiz', lambda rec: rec['bar'] * 2, 0)])
     expectation = (('fiz', 'foo', 'bar', 'baz', 'qux'),
                    (24, 'M', 12, 42, 'M,12'),
@@ -408,7 +405,7 @@ def test_rowslice():
     table = (('foo', 'bar', 'baz'),
              ('A', 1, 2),
              ('B', '2', '3.4'),
-             (u'B', u'3', u'7.8', True),
+             ('B', '3', '7.8', True),
              ('D', 'xyz', 9.0),
              ('E', None))
 

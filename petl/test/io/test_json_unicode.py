@@ -1,7 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import absolute_import, print_function, division
-
-
 import json
 from tempfile import NamedTemporaryFile
 
@@ -12,11 +8,11 @@ from petl.io.json import tojson, fromjson
 
 def test_json_unicode():
 
-    tbl = ((u'id', u'name'),
-           (1, u'Արամ Խաչատրյան'),
-           (2, u'Johann Strauß'),
-           (3, u'Вагиф Сәмәдоғлу'),
-           (4, u'章子怡'),
+    tbl = (('id', 'name'),
+           (1, 'Արամ Խաչատրյան'),
+           (2, 'Johann Strauß'),
+           (3, 'Вагиф Сәмәдоғлу'),
+           (4, '章子怡'),
            )
     fn = NamedTemporaryFile().name
     tojson(tbl, fn)

@@ -1,13 +1,10 @@
-from __future__ import absolute_import, print_function, division
-
-
 import operator
 
 
 from petl.compat import text_type, binary_type, numeric_types
 
 
-class Comparable(object):
+class Comparable:
     """Wrapper class to allow for flexible comparison of objects of different
     types, preserving the relaxed sorting behaviour of Python 2 with
     additional flexibility to allow for comparison of arbitrary objects with

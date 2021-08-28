@@ -1,15 +1,12 @@
-from __future__ import division, print_function, absolute_import
-
-
 # typeset()
 ###########
 
 import petl as etl
 table = [['foo', 'bar', 'baz'],
          ['A', 1, '2'],
-         ['B', u'2', '3.4'],
-         [u'B', u'3', '7.8', True],
-         ['D', u'xyz', 9.0],
+         ['B', '2', '3.4'],
+         ['B', '3', '7.8', True],
+         ['D', 'xyz', 9.0],
          ['E', 42]]
 sorted(etl.typeset(table, 'foo'))
 sorted(etl.typeset(table, 'bar'))

@@ -1,6 +1,3 @@
-from __future__ import absolute_import, print_function, division
-
-
 from operator import itemgetter, attrgetter
 from petl.compat import text_type
 
@@ -207,7 +204,7 @@ def _search_tree(tree, start, stop, include_stop):
     return results
 
 
-class IntervalTreeLookup(object):
+class IntervalTreeLookup:
     
     def __init__(self, tree, include_stop=False):
         self.tree = tree
@@ -268,7 +265,7 @@ def intervallookupone(table, start='start', stop='stop', value=None,
 Table.intervallookupone = intervallookupone
 
 
-class IntervalTreeLookupOne(object):
+class IntervalTreeLookupOne:
     
     def __init__(self, tree, strict=True, include_stop=False):
         self.tree = tree
@@ -936,7 +933,7 @@ def iterintervalsubtract(left, right, lstart, lstop, rstart, rstop, lkey, rkey,
             if not rrows:
                 yield tuple(lrow)
             else:
-                rivs = sorted([getrcoords(rrow) for rrow in rrows],
+                rivs = sorted((getrcoords(rrow) for rrow in rrows),
                               key=itemgetter(0))  # sort by start
                 for x, y in _subtract(start, stop, rivs):
                     out = list(lrow)
@@ -963,7 +960,7 @@ def iterintervalsubtract(left, right, lstart, lstop, rstart, rstop, lkey, rkey,
             if not rrows:
                 yield tuple(lrow)
             else:
-                rivs = sorted([getrcoords(rrow) for rrow in rrows],
+                rivs = sorted((getrcoords(rrow) for rrow in rrows),
                               key=itemgetter(0))  # sort by start
                 for x, y in _subtract(start, stop, rivs):
                     out = list(lrow)

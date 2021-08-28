@@ -1,5 +1,3 @@
-from __future__ import division, print_function, absolute_import
-
 example_data = """foo,bar,baz
 a,1,3.4
 b,2,7.4

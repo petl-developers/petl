@@ -1,7 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import absolute_import, print_function, division
-
-
 import gzip
 import bz2
 import zipfile
@@ -95,8 +91,8 @@ def test_stdoutsource():
 def test_stdoutsource_unicode():
 
     tbl = [('foo', 'bar'),
-           (u'Արամ Խաչատրյան', 1),
-           (u'Johann Strauß', 2)]
+           ('Արամ Խաչատրյան', 1),
+           ('Johann Strauß', 2)]
     etl.tocsv(tbl, StdoutSource(), encoding='utf-8')
     etl.tohtml(tbl, StdoutSource(), encoding='utf-8')
     etl.topickle(tbl, StdoutSource())

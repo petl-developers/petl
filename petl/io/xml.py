@@ -1,7 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import absolute_import, print_function, division
-
-
 # standard library dependencies
 try:
     # prefer lxml as it supports XPath
@@ -194,8 +190,8 @@ class XmlView(Table):
                         velms = rowelm.findall(vmatch)
                     else:
                         # match multiple paths
-                        velms = itertools.chain(*[rowelm.findall(enm)
-                                                  for enm in vmatch])
+                        velms = itertools.chain(*(rowelm.findall(enm)
+                                                  for enm in vmatch))
                     yield tuple(getv(velm)
                                 for velm in velms)
 
@@ -380,18 +376,18 @@ def _build_xml_header(style, props, root, head, rows, prologue, encoding):
         th1 = _build_nesting(head, False, nested)
         col = _build_cols(style, props, head, False)
         th2 = _build_nesting(head, True, nested)
-        thd = '{0}\n{1}{2}'.format(th1, col, th2)
+        thd = f'{th1}\n{col}{th2}'
     else:
         thd = ''
     tbd = _build_nesting(rows, False, nested)
     if prologue and prologue.startswith('<?xml'):
-        thb = '{0}{1}{2}\n'.format(tab, thd, tbd)
+        thb = f'{tab}{thd}{tbd}\n'
         return prologue + thb
     enc = encoding.upper() if encoding else 'UTF-8'
     xml = '<?xml version="1.0" encoding="%s"?>' % enc
     pre = prologue + '\n' if prologue and not root else ''
     pos = '\n' + prologue if prologue and root else ''
-    res = '{0}\n{1}{2}{3}{4}{5}\n'.format(xml, pre, tab, thd, tbd, pos)
+    res = f'{xml}\n{pre}{tab}{thd}{tbd}{pos}\n'
     return res
 
 
@@ -453,5 +449,5 @@ def _build_cols_attribs(props, path):
     fmt = '{0}="{{{0}}}"'
     cols = [fmt.format(e) for e in props]
     atts = ' '.join(cols)
-    res = ' <{0} {1} />\n'.format(row, atts)
+    res = f' <{row} {atts} />\n'
     return res

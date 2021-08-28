@@ -1,7 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import absolute_import, print_function, division
-
-
 # standard library dependencies
 import logging
 from petl.compat import next, text_type, string_types
@@ -144,8 +140,7 @@ class DbView(Table):
 def _iter_dbapi_mkcurs(mkcurs, query, *args, **kwargs):
     cursor = mkcurs()
     try:
-        for row in _iter_dbapi_cursor(cursor, query, *args, **kwargs):
-            yield row
+        yield from _iter_dbapi_cursor(cursor, query, *args, **kwargs)
     finally:
         cursor.close()
 
@@ -153,8 +148,7 @@ def _iter_dbapi_mkcurs(mkcurs, query, *args, **kwargs):
 def _iter_dbapi_connection(connection, query, *args, **kwargs):
     cursor = connection.cursor()
     try:
-        for row in _iter_dbapi_cursor(cursor, query, *args, **kwargs):
-            yield row
+        yield from _iter_dbapi_cursor(cursor, query, *args, **kwargs)
     finally:
         cursor.close()
 
@@ -178,8 +172,7 @@ def _iter_dbapi_cursor(cursor, query, *args, **kwargs):
     if first_row is None:
         return
     yield first_row
-    for row in it:
-        yield row  # don't wrap, return whatever the database engine returns
+    yield from it
 
 
 def _iter_sqlalchemy_engine(engine, query, *args, **kwargs):
@@ -192,16 +185,14 @@ def _iter_sqlalchemy_connection(connection, query, *args, **kwargs):
     results = connection.execute(query, *args, **kwargs)
     hdr = results.keys()
     yield tuple(hdr)
-    for row in results:
-        yield row
+    yield from results
 
 
 def _iter_sqlalchemy_session(session, query, *args, **kwargs):
     results = session.execute(query, *args, **kwargs)
     hdr = results.keys()
     yield tuple(hdr)
-    for row in results:
-        yield row
+    yield from results
 
 
 def todb(table, dbo, tablename, schema=None, commit=True,

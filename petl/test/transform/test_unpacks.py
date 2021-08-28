@@ -1,6 +1,3 @@
-from __future__ import absolute_import, print_function, division
-
-
 from petl.test.helpers import ieq
 from petl.transform.unpacks import unpack, unpackdict
 

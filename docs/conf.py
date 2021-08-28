@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # petl documentation build configuration file, created by
 # sphinx-quickstart on Fri Aug 19 11:16:43 2011.
@@ -47,8 +46,8 @@ issues_github_path = 'petl-developers/petl'
 master_doc = 'index'
 
 # General information about the project.
-project = u'petl'
-copyright = u'2014, Alistair Miles'
+project = 'petl'
+copyright = '2014, Alistair Miles'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -185,8 +184,8 @@ htmlhelp_basename = 'petldoc'
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'petl.tex', u'petl Documentation',
-   u'Alistair Miles', 'manual'),
+  ('index', 'petl.tex', 'petl Documentation',
+   'Alistair Miles', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -218,8 +217,8 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'petl', u'petl Documentation',
-     [u'Alistair Miles'], 1)
+    ('index', 'petl', 'petl Documentation',
+     ['Alistair Miles'], 1)
 ]
 
 

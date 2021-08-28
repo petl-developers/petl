@@ -1,6 +1,3 @@
-from __future__ import absolute_import, print_function, division
-
-
 from petl.test.helpers import ieq
 from petl.transform.dedup import duplicates, unique, conflicts, distinct, \
     isunique
@@ -12,7 +9,7 @@ def test_duplicates():
              ('A', 1, 2),
              ('B', '2', '3.4'),
              ('D', 'xyz', 9.0),
-             ('B', u'3', u'7.8', True),
+             ('B', '3', '7.8', True),
              ('B', '2', 42),
              ('E', None),
              ('D', 4, 12.3))
@@ -20,7 +17,7 @@ def test_duplicates():
     result = duplicates(table, 'foo')
     expectation = (('foo', 'bar', 'baz'),
                    ('B', '2', '3.4'),
-                   ('B', u'3', u'7.8', True),
+                   ('B', '3', '7.8', True),
                    ('B', '2', 42),
                    ('D', 'xyz', 9.0),
                    ('D', 4, 12.3))
@@ -62,7 +59,7 @@ def test_unique():
              ('A', 1, 2),
              ('B', '2', '3.4'),
              ('D', 'xyz', 9.0),
-             ('B', u'3', u'7.8', True),
+             ('B', '3', '7.8', True),
              ('B', '2', 42),
              ('E', None),
              ('D', 4, 12.3),
@@ -80,7 +77,7 @@ def test_unique():
     result = unique(table, key=('foo', 'bar'))
     expectation = (('foo', 'bar', 'baz'),
                    ('A', 1, 2),
-                   ('B', u'3', u'7.8', True),
+                   ('B', '3', '7.8', True),
                    ('D', 4, 12.3),
                    ('D', 'xyz', 9.0),
                    ('E', None),
@@ -117,7 +114,7 @@ def test_conflicts():
              ('A', 1, 2),
              ('B', '2', None),
              ('D', 'xyz', 9.4),
-             ('B', None, u'7.8', True),
+             ('B', None, '7.8', True),
              ('E', None),
              ('D', 'xyz', 12.3),
              ('A', 2, None))

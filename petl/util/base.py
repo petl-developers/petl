@@ -1,6 +1,3 @@
-from __future__ import absolute_import, print_function, division
-
-
 import re
 from itertools import islice, chain, cycle, product,\
     permutations, combinations, takewhile, dropwhile, \
@@ -16,7 +13,7 @@ from petl.errors import FieldSelectionError
 from petl.comparison import comparable_itemgetter
 
 
-class IterContainer(object):
+class IterContainer:
 
     def __contains__(self, item):
         for o in self:
@@ -169,7 +166,7 @@ class Table(IterContainer):
         if isinstance(item, string_types):
             return ValuesView(self, item)
         else:
-            return super(Table, self).__getitem__(item)
+            return super().__getitem__(item)
 
 
 def values(table, *field, **kwargs):
@@ -547,7 +544,7 @@ def asnamedtuple(nt, row, missing=None):
 class Record(tuple):
 
     def __new__(cls, row, flds, missing=None):
-        t = super(Record, cls).__new__(cls, row)
+        t = super().__new__(cls, row)
         return t
 
     def __init__(self, row, flds, missing=None):
@@ -563,14 +560,14 @@ class Record(tuple):
             raise KeyError('item ' + repr(f) +
                                 ' not in fields ' + repr(self.flds))
         try:
-            return super(Record, self).__getitem__(idx)
+            return super().__getitem__(idx)
         except IndexError:  # handle short rows
             return self.missing
 
     def __getattr__(self, f):
         if f in self.flds:
             try:
-                return super(Record, self).__getitem__(self.flds.index(f))
+                return super().__getitem__(self.flds.index(f))
             except IndexError:  # handle short rows
                 return self.missing
         else:

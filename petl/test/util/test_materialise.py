@@ -1,6 +1,3 @@
-from __future__ import absolute_import, print_function, division
-
-
 from petl.test.helpers import eq_
 from petl.util.materialise import columns, facetcolumns
 

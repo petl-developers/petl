@@ -1,6 +1,3 @@
-from __future__ import absolute_import, print_function, division
-
-
 import operator
 
 
@@ -44,7 +41,7 @@ def test_rowreduce_fieldnameaccess():
               ('c', 4))
     
     def sumbar(key, records):
-        return [key, sum([rec['bar'] for rec in records])]
+        return [key, sum(rec['bar'] for rec in records)]
         
     table2 = rowreduce(table1, key='foo', reducer=sumbar, 
                        header=['foo', 'barsum'])
@@ -436,7 +433,7 @@ def test_mergeduplicates():
              ('A', 1, 2),
              ('B', '2', None),
              ('D', 'xyz', 9.4),
-             ('B', None, u'7.8', True),
+             ('B', None, '7.8', True),
              ('E', None, 42.),
              ('D', 'xyz', 12.3),
              ('A', 2, None))
@@ -445,7 +442,7 @@ def test_mergeduplicates():
     result = mergeduplicates(table, 'foo', missing=None)
     expectation = (('foo', 'bar', 'baz'),
                    ('A', Conflict([1, 2]), 2),
-                   ('B', '2', u'7.8'),
+                   ('B', '2', '7.8'),
                    ('D', 'xyz', Conflict([9.4, 12.3])),
                    ('E', None, 42.))
     ieq(expectation, result)

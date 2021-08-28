@@ -1,6 +1,3 @@
-from __future__ import absolute_import, print_function, division
-
-
 from petl.version import version as __version__
 from petl import comparison
 from petl.comparison import Comparable

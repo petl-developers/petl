@@ -1,6 +1,3 @@
-from __future__ import absolute_import, print_function, division
-
-
 from petl.compat import PY2
 from petl.test.helpers import ieq, eq_
 from petl.util.counting import valuecount, valuecounter, valuecounts, \
@@ -107,9 +104,9 @@ def test_typecounts():
 
     table = (('foo', 'bar', 'baz'),
              (b'A', 1, 2.),
-             (b'B', u'2', 3.4),
-             (u'B', u'3', 7.8, True),
-             (b'D', u'xyz', 9.0),
+             (b'B', '2', 3.4),
+             ('B', '3', 7.8, True),
+             (b'D', 'xyz', 9.0),
              (b'E', 42))
 
     actual = typecounts(table, 'foo')

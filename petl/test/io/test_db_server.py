@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import absolute_import, print_function, division
 import sys
 import logging
 
@@ -86,11 +84,11 @@ def _test_with_schema(dbo, schema):
 
 
 def _test_unicode(dbo):
-    expect = ((u'name', u'id'),
-              (u'Արամ Խաչատրյան', 1),
-              (u'Johann Strauß', 2),
-              (u'Вагиф Сәмәдоғлу', 3),
-              (u'章子怡', 4),
+    expect = (('name', 'id'),
+              ('Արամ Խաչատրյան', 1),
+              ('Johann Strauß', 2),
+              ('Вагиф Сәмәдоғлу', 3),
+              ('章子怡', 4),
               )
     actual = etl.fromdb(dbo, 'SELECT * FROM test_unicode')
 

@@ -1,6 +1,3 @@
-from __future__ import division, print_function, absolute_import
-
-
 # cut()
 #######
 
@@ -54,7 +51,7 @@ table3
 table4 = [['foo', 'bar', 'baz'],
           ['A', 1, 2],
           ['B', '2', '3.4'],
-          [u'B', u'3', u'7.8', True],
+          ['B', '3', '7.8', True],
           ['D', 'xyz', 9.0],
           ['E', None]]
 table5 = etl.cat(table4)

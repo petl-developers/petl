@@ -1,7 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import absolute_import, print_function, division
-
-
 from tempfile import NamedTemporaryFile
 
 
@@ -93,11 +89,11 @@ def test_teecsv_write_header():
 
 def test_teecsv_unicode():
 
-    t1 = ((u'name', u'id'),
-          (u'Արամ Խաչատրյան', 1),
-          (u'Johann Strauß', 2),
-          (u'Вагиф Сәмәдоғлу', 3),
-          (u'章子怡', 4))
+    t1 = (('name', 'id'),
+          ('Արամ Խաչատրյան', 1),
+          ('Johann Strauß', 2),
+          ('Вагиф Сәмәдоғлу', 3),
+          ('章子怡', 4))
 
     f1 = NamedTemporaryFile(delete=False)
     f2 = NamedTemporaryFile(delete=False)
@@ -116,11 +112,11 @@ def test_teecsv_unicode():
 
 def test_teecsv_unicode_write_header():
 
-    t1 = ((u'name', u'id'),
-          (u'Արամ Խաչատրյան', u'1'),
-          (u'Johann Strauß', u'2'),
-          (u'Вагиф Сәмәдоғлу', u'3'),
-          (u'章子怡', u'4'))
+    t1 = (('name', 'id'),
+          ('Արամ Խաչատրյան', '1'),
+          ('Johann Strauß', '2'),
+          ('Вагиф Сәмәдоғлу', '3'),
+          ('章子怡', '4'))
 
     f1 = NamedTemporaryFile(delete=False)
     f2 = NamedTemporaryFile(delete=False)
@@ -140,11 +136,11 @@ def test_teecsv_unicode_write_header():
 
 def test_teetsv_unicode():
 
-    t1 = ((u'name', u'id'),
-          (u'Արամ Խաչատրյան', 1),
-          (u'Johann Strauß', 2),
-          (u'Вагиф Сәмәдоғлу', 3),
-          (u'章子怡', 4),)
+    t1 = (('name', 'id'),
+          ('Արամ Խաչատրյան', 1),
+          ('Johann Strauß', 2),
+          ('Вагиф Сәмәдоғлу', 3),
+          ('章子怡', 4),)
 
     f1 = NamedTemporaryFile(delete=False)
     f2 = NamedTemporaryFile(delete=False)
@@ -191,17 +187,17 @@ def test_teetext():
 
 def test_teetext_unicode():
 
-    t1 = ((u'foo', u'bar'),
-          (u'Արամ Խաչատրյան', 2),
-          (u'Johann Strauß', 1),
-          (u'Вагиф Сәмәдоғлу', 3))
+    t1 = (('foo', 'bar'),
+          ('Արամ Խաչատրյան', 2),
+          ('Johann Strauß', 1),
+          ('Вагиф Сәмәдоғлу', 3))
 
     f1 = NamedTemporaryFile(delete=False)
     f2 = NamedTemporaryFile(delete=False)
 
-    prologue = u'foo,bar\n'
-    template = u'{foo},{bar}\n'
-    epilogue = u'章子怡,4'
+    prologue = 'foo,bar\n'
+    template = '{foo},{bar}\n'
+    epilogue = '章子怡,4'
     (etl
      .wrap(t1)
      .teetext(f1.name,
@@ -212,7 +208,7 @@ def test_teetext_unicode():
      .selectgt('bar', 1)
      .topickle(f2.name))
 
-    ieq(t1 + ((u'章子怡', 4),),
+    ieq(t1 + (('章子怡', 4),),
         etl.fromcsv(f1.name, encoding='utf-8').convertnumbers())
     ieq(etl.wrap(t1).selectgt('bar', 1),
         etl.frompickle(f2.name))
@@ -235,10 +231,10 @@ def test_teehtml():
 
 def test_teehtml_unicode():
 
-    t1 = ((u'foo', u'bar'),
-          (u'Արամ Խաչատրյան', 2),
-          (u'Johann Strauß', 1),
-          (u'Вагиф Сәмәдоғлу', 3))
+    t1 = (('foo', 'bar'),
+          ('Արամ Խաչատրյան', 2),
+          ('Johann Strauß', 1),
+          ('Вагиф Сәмәдоғлу', 3))
 
     f1 = NamedTemporaryFile(delete=False)
     f2 = NamedTemporaryFile(delete=False)

@@ -1,6 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import absolute_import, print_function, division
-
 import logging
 import sys
 from contextlib import contextmanager
@@ -13,7 +10,7 @@ logger = logging.getLogger(__name__)
 # region RemoteSource
 
 
-class RemoteSource(object):
+class RemoteSource:
     """Read or write directly from files in remote filesystems.
 
     This source handles many filesystems that are selected based on the
@@ -144,7 +141,7 @@ if PY3:
 # region SMBSource
 
 
-class SMBSource(object):
+class SMBSource:
     """Downloads or uploads to Windows and Samba network drives. E.g.::
 
         >>> def example_smb():
@@ -237,7 +234,7 @@ def _parse_smb_url(url):
         raise ValueError(e + url)
 
     unc_path = parsed.path.replace("/", "\\")
-    server_path = "\\\\{}{}".format(parsed.hostname, unc_path)
+    server_path = f"\\\\{parsed.hostname}{unc_path}"
 
     if not parsed.username:
         domain = None

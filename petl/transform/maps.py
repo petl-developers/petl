@@ -1,6 +1,3 @@
-from __future__ import absolute_import, print_function, division
-
-
 import operator
 from collections import OrderedDict
 from petl.compat import next, string_types, text_type
@@ -113,7 +110,7 @@ def iterfieldmap(source, mappings, failonerror, errorvalue):
             else:
                 raise ArgumentError('expected callable or dict')
         else:
-            raise ArgumentError('invalid mapping %r: %r' % (outfld, m))
+            raise ArgumentError(f'invalid mapping {outfld!r}: {m!r}')
 
     # wrap rows as records
     it = (Record(row, flds) for row in it)
@@ -361,5 +358,4 @@ class RowGroupMapView(Table):
 def iterrowgroupmap(source, key, mapper, header):
     yield tuple(header)
     for key, rows in rowgroupby(source, key):
-        for row in mapper(key, rows):
-            yield row
+        yield from mapper(key, rows)

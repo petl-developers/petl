@@ -1,6 +1,3 @@
-from __future__ import absolute_import, print_function, division
-
-
 import itertools
 import operator
 from collections import OrderedDict
@@ -338,7 +335,7 @@ def itermultiaggregate(source, key, aggregation):
         elif len(agg) == 2:
             pass  # no need to normalise
         else:
-            raise ArgumentError('invalid aggregation: %r, %r' % (outfld, agg))
+            raise ArgumentError(f'invalid aggregation: {outfld!r}, {agg!r}')
 
     # determine output header
     if isinstance(key, (list, tuple)):
@@ -599,8 +596,8 @@ def itermergeduplicates(table, key, missing):
             outrow = [k]
         else:
             outrow = list(k)
-        mergedvals = [set(row[i] for row in grp
-                          if len(row) > i and row[i] != missing)
+        mergedvals = [{row[i] for row in grp
+                          if len(row) > i and row[i] != missing}
                       for i in valfldidxs]
         normedvals = [vals.pop() if len(vals) == 1
                       else missing if len(vals) == 0
@@ -656,7 +653,7 @@ Table.merge = merge
 class Conflict(frozenset):
 
     def __new__(cls, items):
-        s = super(Conflict, cls).__new__(cls, items)
+        s = super().__new__(cls, items)
         return s
 
 

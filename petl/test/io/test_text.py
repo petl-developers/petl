@@ -1,7 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import absolute_import, print_function, division
-
-
 from tempfile import NamedTemporaryFile
 import gzip
 import os
@@ -78,7 +74,7 @@ def test_totext():
            prologue=prologue, epilogue=epilogue)
 
     # check what it did
-    with io.open(f.name, mode='rt', encoding='ascii', newline='') as o:
+    with open(f.name, mode='rt', encoding='ascii', newline='') as o:
         actual = o.read()
         expect = (
             "{| class='wikitable'\n"

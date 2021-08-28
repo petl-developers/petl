@@ -1,6 +1,3 @@
-from __future__ import absolute_import, print_function, division
-
-
 import itertools
 import collections
 import operator
@@ -582,8 +579,7 @@ class FlattenView(Table):
 
     def __iter__(self):
         for row in data(self.table):
-            for value in row:
-                yield value
+            yield from row
 
 
 def unflatten(*args, **kwargs):

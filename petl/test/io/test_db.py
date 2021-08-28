@@ -1,7 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import absolute_import, print_function, division
-
-
 import sqlite3
 from tempfile import NamedTemporaryFile
 from petl.compat import next

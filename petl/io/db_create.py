@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Module providing some convenience functions for working with SQL databases.
 SQLAlchemy is required, try ``apt-get install python-sqlalchemy``
@@ -103,7 +102,7 @@ def make_sqlalchemy_column(col, colname, constraints=True):
     else:
         sql_column_type = sqlalchemy.String
         if constraints:
-            sql_type_kwargs['length'] = max([len(text_type(v)) for v in col])
+            sql_type_kwargs['length'] = max(len(text_type(v)) for v in col)
 
     if constraints:
         sql_column_kwargs['nullable'] = len(col_not_none) < len(col)
@@ -249,7 +248,7 @@ def drop_table(dbo, tablename, schema=None, commit=True):
     if schema is not None:
         tablename = _quote(schema) + '.' + tablename
 
-    sql = u'DROP TABLE %s' % tablename
+    sql = 'DROP TABLE %s' % tablename
     _execute(sql, dbo, commit)
 
 

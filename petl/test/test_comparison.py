@@ -1,6 +1,3 @@
-from __future__ import print_function, division, absolute_import
-
-
 from datetime import datetime
 
 
@@ -53,16 +50,16 @@ def test_comparable():
     eq_(e, a)
 
     # text
-    d = [u'b', u'ccc', u'aa']
+    d = ['b', 'ccc', 'aa']
     a = sorted(d, key=Comparable)
-    e = [u'aa', u'b', u'ccc']
+    e = ['aa', 'b', 'ccc']
     eq_(e, a)
 
     # mixed bytes and text
-    d = [u'b', b'ccc', b'aa']
+    d = ['b', b'ccc', b'aa']
     a = sorted(d, key=Comparable)
     # N.B., expect always bytes < unicode
-    e = [b'aa', b'ccc', u'b']
+    e = [b'aa', b'ccc', 'b']
     eq_(e, a)
 
     # mixed bytes and None
@@ -72,22 +69,22 @@ def test_comparable():
     eq_(e, a)
 
     # mixed text and None
-    d = [u'b', u'ccc', None, u'aa']
+    d = ['b', 'ccc', None, 'aa']
     a = sorted(d, key=Comparable)
-    e = [None, u'aa', u'b', u'ccc']
+    e = [None, 'aa', 'b', 'ccc']
     eq_(e, a)
 
     # mixed bytes, text and None
-    d = [u'b', b'ccc', None, b'aa']
+    d = ['b', b'ccc', None, b'aa']
     a = sorted(d, key=Comparable)
     # N.B., expect always bytes < unicode
-    e = [None, b'aa', b'ccc', u'b']
+    e = [None, b'aa', b'ccc', 'b']
     eq_(e, a)
 
     # mixed bytes, text, numbers and None
-    d = [u'b', True, b'ccc', False, None, b'aa', -1, 3.4]
+    d = ['b', True, b'ccc', False, None, b'aa', -1, 3.4]
     a = sorted(d, key=Comparable)
-    e = [None, -1, False, True, 3.4, b'aa', b'ccc', u'b']
+    e = [None, -1, False, True, 3.4, b'aa', b'ccc', 'b']
     eq_(e, a)
 
 
@@ -108,7 +105,7 @@ def test_comparable_datetime():
     eq_(e, a)
 
     # mixed datetime, numbers, bytes, text and None
-    d = [dt(hour=12), None, dt(hour=3), u'b', True, b'ccc', False, b'aa', -1,
+    d = [dt(hour=12), None, dt(hour=3), 'b', True, b'ccc', False, b'aa', -1,
          3.4]
     a = sorted(d, key=Comparable)
     # N.B., because bytes and unicode type names have changed in PY3,
@@ -116,7 +113,7 @@ def test_comparable_datetime():
     # versions, i.e., 'datetime' < 'str' < 'unicode' rather than 'bytes' <
     # 'datetime' < 'str'
     e = [None, -1, False, True, 3.4, dt(hour=3), dt(hour=12), b'aa', b'ccc',
-         u'b']
+         'b']
     eq_(e, a)
 
 

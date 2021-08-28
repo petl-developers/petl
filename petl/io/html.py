@@ -1,7 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import absolute_import, print_function, division
-
-
 # standard library dependencies
 import io
 from petl.compat import text_type, numeric_types, next, PY2, izip_longest, \
@@ -197,7 +193,7 @@ def _write_begin(f, flds, lineterminator, caption, index_header, truncate):
     f.write('<tr>' + lineterminator)
     for i, h in enumerate(flds):
         if index_header:
-            h = '%s|%s' % (i, h)
+            h = f'{i}|{h}'
         if truncate:
             h = h[:truncate]
         f.write(('<th>%s</th>' % h) + lineterminator)
@@ -219,7 +215,7 @@ def _write_row(f, flds, row, lineterminator, vrepr, tr_style, td_styles,
             r = r[:truncate]
         td_css = _get_td_css(h, v, td_styles)
         if td_css:
-            f.write(("<td style='%s'>%s</td>" % (td_css, r)) + lineterminator)
+            f.write((f"<td style='{td_css}'>{r}</td>") + lineterminator)
         else:
             f.write(("<td>%s</td>" % r) + lineterminator)
     f.write('</tr>' + lineterminator)

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2013 Simplistix Ltd
 #
 # This Software is released under the MIT License:
@@ -10,7 +9,7 @@ from datetime import datetime, time
 from petl.compat import xrange
 
 
-class Index(object):
+class Index:
     def __init__(self, name):
         self.name = name
 
@@ -34,7 +33,7 @@ class Col(Index):
         return col_by_name(self.name)
 
 
-class SheetView(object):
+class SheetView:
     """
     A view on a sheet in a workbook. Should be created by indexing a
     :class:`View`.
@@ -97,7 +96,7 @@ class SheetView(object):
         return self.__class__(self.book, self.sheet, *slices)
         
 
-class View(object):
+class View:
     """
     A view wrapper around a :class:`~xlrd.Book` that allows for easy
     iteration over the data in a group of cells.

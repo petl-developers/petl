@@ -1,6 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import absolute_import, print_function, division
-
 import sys
 import os
 from importlib import import_module
@@ -71,7 +68,7 @@ def _write_read_from_env_matching(prefix):
     q = 0
     for variable, base_url in os.environ.items():
         if variable.upper().startswith(prefix.upper()):
-            fmsg = "\n  {}: {} -> ".format(variable, base_url)
+            fmsg = f"\n  {variable}: {base_url} -> "
             print(fmsg, file=sys.stderr, end="")
             _write_read_into_url(base_url)
             print("DONE ", file=sys.stderr, end="")
@@ -183,19 +180,19 @@ def _is_installed(package_name, message=None):
 # region Mockup data
 
 _table = (
-    (u"name", u"friends", u"age"),
-    (u"Bob", "42", "33"),
-    (u"Jim", "13", "69"),
-    (u"Joe", "86", "17"),
-    (u"Ted", "23", "51"),
+    ("name", "friends", "age"),
+    ("Bob", "42", "33"),
+    ("Jim", "13", "69"),
+    ("Joe", "86", "17"),
+    ("Ted", "23", "51"),
 )
 
 _table2 = (
-    (u"name", u"friends", u"age"),
-    (u"Giannis", "31", "12"),
-    (u"James", "38", "8"),
-    (u"Stephen", "28", "4"),
-    (u"Jason", "23", "12"),
+    ("name", "friends", "age"),
+    ("Giannis", "31", "12"),
+    ("James", "38", "8"),
+    ("Stephen", "28", "4"),
+    ("Jason", "23", "12"),
 )
 
 # endregion

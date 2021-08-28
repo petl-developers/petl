@@ -1,6 +1,3 @@
-from __future__ import absolute_import, print_function, division
-
-
 import os
 import heapq
 from tempfile import NamedTemporaryFile
@@ -355,7 +352,7 @@ class SortView(Table):
                 yield tuple(row)
 
 
-class _NamedTempFileDeleteOnGC(object):
+class _NamedTempFileDeleteOnGC:
 
     def __init__(self, name):
         self.name = name
@@ -366,7 +363,7 @@ class _NamedTempFileDeleteOnGC(object):
             log('deleting %s' % name)
             unlink(name)
         except Exception as e:
-            log('exception deleting %s: %s' % (name, e))
+            log(f'exception deleting {name}: {e}')
             raise
         else:
             log('deleted %s' % name)
@@ -528,8 +525,7 @@ def itermergesort(sources, key, header, missing, reverse):
         getkey = comparable_itemgetter(*indices)
 
     # OK, do the merge sort
-    for row in _shortlistmergesorted(getkey, reverse, *sits):
-        yield row
+    yield from _shortlistmergesorted(getkey, reverse, *sits)
 
 
 def issorted(table, key=None, reverse=False, strict=False):

@@ -1,7 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import absolute_import, print_function, division
-
-
 import sys
 import os
 import tempfile
@@ -33,16 +29,16 @@ else:
 
         ix = create_in(dirname, schema)
         writer = ix.writer()
-        writer.add_document(title=u"First document", path=u"/a",
-                            content=u"This is the first document we've added!")
-        writer.add_document(title=u"Second document", path=u"/b",
-                            content=u"The second one is even more interesting!")
+        writer.add_document(title="First document", path="/a",
+                            content="This is the first document we've added!")
+        writer.add_document(title="Second document", path="/b",
+                            content="The second one is even more interesting!")
         writer.commit()
 
         # N.B., fields get sorted
-        expect = ((u'path', u'title'),
-                  (u'/a', u'First document'),
-                  (u'/b', u'Second document'))
+        expect = (('path', 'title'),
+                  ('/a', 'First document'),
+                  ('/b', 'Second document'))
         actual = fromtextindex(dirname)
         ieq(expect, actual)
 
@@ -55,16 +51,16 @@ else:
 
         ix = create_in(dirname, schema)
         writer = ix.writer()
-        writer.add_document(title=u"First document", path=u"/a",
-                            content=u"This is the first document we've added!")
-        writer.add_document(title=u"Second document", path=u"/b",
-                            content=u"The second one is even more interesting!")
+        writer.add_document(title="First document", path="/a",
+                            content="This is the first document we've added!")
+        writer.add_document(title="Second document", path="/b",
+                            content="The second one is even more interesting!")
         writer.commit()
 
         # N.B., fields get sorted
-        expect = ((u'path', u'title'),
-                  (u'/a', u'First document'),
-                  (u'/b', u'Second document'))
+        expect = (('path', 'title'),
+                  ('/a', 'First document'),
+                  ('/b', 'Second document'))
         actual = fromtextindex(ix)
         ieq(expect, actual)
 
@@ -76,16 +72,16 @@ else:
 
         ix = create_in(dirname, schema)
         writer = ix.writer()
-        writer.add_document(title=u"First document", path=u"/a",
-                            content=u"This is the first document we've added!")
-        writer.add_document(title=u"Second document", path=u"/b",
-                            content=u"The second one is even more interesting!")
+        writer.add_document(title="First document", path="/a",
+                            content="This is the first document we've added!")
+        writer.add_document(title="Second document", path="/b",
+                            content="The second one is even more interesting!")
         writer.commit()
 
         # N.B., fields get sorted
-        expect = ((u'docnum', u'path', u'title'),
-                  (0, u'/a', u'First document'),
-                  (1, u'/b', u'Second document'))
+        expect = (('docnum', 'path', 'title'),
+                  (0, '/a', 'First document'),
+                  (1, '/b', 'Second document'))
         actual = fromtextindex(dirname, docnum_field='docnum')
         ieq(expect, actual)
 
@@ -95,9 +91,9 @@ else:
 
         # name fields in ascending order as whoosh sorts fields on the way out
         tbl = (('f0', 'f1', 'f2', 'f3', 'f4'),
-               (u'AAA', 12, 4.3, True, datetime.datetime.now()),
-               (u'BBB', 6, 3.4, False, datetime.datetime(1900, 1, 31)),
-               (u'CCC', 42, 7.8, True, datetime.datetime(2100, 12, 25)))
+               ('AAA', 12, 4.3, True, datetime.datetime.now()),
+               ('BBB', 6, 3.4, False, datetime.datetime(1900, 1, 31)),
+               ('CCC', 42, 7.8, True, datetime.datetime(2100, 12, 25)))
 
         schema = Schema(f0=TEXT(stored=True),
                         f1=NUMERIC(int, stored=True),
@@ -116,9 +112,9 @@ else:
 
         # name fields in ascending order as whoosh sorts fields on the way out
         tbl = (('f0', 'f1', 'f2', 'f3', 'f4'),
-               (u'AAA', 12, 4.3, True, datetime.datetime.now()),
-               (u'BBB', 6, 3.4, False, datetime.datetime(1900, 1, 31)),
-               (u'CCC', 42, 7.8, True, datetime.datetime(2100, 12, 25)))
+               ('AAA', 12, 4.3, True, datetime.datetime.now()),
+               ('BBB', 6, 3.4, False, datetime.datetime(1900, 1, 31)),
+               ('CCC', 42, 7.8, True, datetime.datetime(2100, 12, 25)))
 
         schema = Schema(f0=TEXT(stored=True),
                         f1=NUMERIC(int, stored=True),
@@ -138,9 +134,9 @@ else:
 
         # name fields in ascending order as whoosh sorts fields on the way out
         tbl = (('f0', 'f1', 'f2', 'f3', 'f4'),
-               (u'AAA', 12, 4.3, True, datetime.datetime.now()),
-               (u'BBB', 6, 3.4, False, datetime.datetime(1900, 1, 31)),
-               (u'CCC', 42, 7.8, True, datetime.datetime(2100, 12, 25)))
+               ('AAA', 12, 4.3, True, datetime.datetime.now()),
+               ('BBB', 6, 3.4, False, datetime.datetime(1900, 1, 31)),
+               ('CCC', 42, 7.8, True, datetime.datetime(2100, 12, 25)))
 
         schema = Schema(f0=TEXT(stored=True),
                         f1=NUMERIC(int, stored=True),
@@ -161,9 +157,9 @@ else:
 
         # name fields in ascending order as whoosh sorts fields on the way out
         tbl = (('f0', 'f1', 'f2', 'f3', 'f4'),
-               (u'AAA', 12, 4.3, True, datetime.datetime.now()),
-               (u'BBB', 6, 3.4, False, datetime.datetime(1900, 1, 31)),
-               (u'CCC', 42, 7.8, True, datetime.datetime(2100, 12, 25)))
+               ('AAA', 12, 4.3, True, datetime.datetime.now()),
+               ('BBB', 6, 3.4, False, datetime.datetime(1900, 1, 31)),
+               ('CCC', 42, 7.8, True, datetime.datetime(2100, 12, 25)))
 
         schema = Schema(f0=TEXT(stored=True),
                         f1=NUMERIC(int, stored=True),
@@ -187,25 +183,25 @@ else:
 
         ix = create_in(dirname, schema)
         writer = ix.writer()
-        writer.add_document(title=u"Oranges", path=u"/a",
-                            content=u"This is the first document we've added!")
-        writer.add_document(title=u"Apples", path=u"/b",
-                            content=u"The second document is even more "
-                                    u"interesting!")
+        writer.add_document(title="Oranges", path="/a",
+                            content="This is the first document we've added!")
+        writer.add_document(title="Apples", path="/b",
+                            content="The second document is even more "
+                                    "interesting!")
         writer.commit()
 
         # N.B., fields get sorted
-        expect = ((u'path', u'title'),
-                  (u'/a', u'Oranges'))
+        expect = (('path', 'title'),
+                  ('/a', 'Oranges'))
         # N.B., by default whoosh does not do stemming
         actual = searchtextindex(dirname, 'oranges')
         ieq(expect, actual)
         actual = searchtextindex(dirname, 'add*')
         ieq(expect, actual)
 
-        expect = ((u'path', u'title'),
-                  (u'/a', u'Oranges'),
-                  (u'/b', u'Apples'))
+        expect = (('path', 'title'),
+                  ('/a', 'Oranges'),
+                  ('/b', 'Apples'))
         actual = searchtextindex(dirname, 'doc*')
         ieq(expect, actual)
 
@@ -217,16 +213,16 @@ else:
 
         ix = create_in(dirname, schema)
         writer = ix.writer()
-        writer.add_document(title=u"First document", path=u"/a",
-                            content=u"This is the first document we've added!")
-        writer.add_document(title=u"Second document", path=u"/b",
-                            content=u"The second one is even more interesting!")
+        writer.add_document(title="First document", path="/a",
+                            content="This is the first document we've added!")
+        writer.add_document(title="Second document", path="/b",
+                            content="The second one is even more interesting!")
         writer.commit()
 
         # N.B., fields get sorted
-        expect = ((u'path', u'title'),
-                  (u'/a', u'first document'),
-                  (u'/b', u'second document'))
+        expect = (('path', 'title'),
+                  ('/a', 'first document'),
+                  ('/b', 'second document'))
         actual = etl.fromtextindex(dirname).convert('title', 'lower')
         ieq(expect, actual)
 

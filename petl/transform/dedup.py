@@ -1,6 +1,3 @@
-from __future__ import absolute_import, print_function, division
-
-
 import operator
 from petl.compat import text_type
 

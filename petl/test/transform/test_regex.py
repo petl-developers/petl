@@ -1,7 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import absolute_import, print_function, division
-
-
 from petl.compat import next
 
 
@@ -233,35 +229,35 @@ def test_searchcomplement():
 
 
 def test_search_unicode():
-    tbl = ((u'name', u'id'),
-           (u'Արամ Խաչատրյան', 1),
-           (u'Johann Strauß', 2),
-           (u'Вагиф Сәмәдоғлу', 3),
-           (u'章子怡', 4))
-    actual = search(tbl, u'.Խա.')
-    expect = ((u'name', u'id'),
-              (u'Արամ Խաչատրյան', 1))
+    tbl = (('name', 'id'),
+           ('Արամ Խաչատրյան', 1),
+           ('Johann Strauß', 2),
+           ('Вагиф Сәмәдоғлу', 3),
+           ('章子怡', 4))
+    actual = search(tbl, '.Խա.')
+    expect = (('name', 'id'),
+              ('Արամ Խաչատրյան', 1))
     ieq(expect, actual)
     ieq(expect, actual)
 
 
 def test_splitdown():
 
-    tbl = ((u'name', u'roles'),
-           (u'Jane Doe', u'president,engineer,tailor,lawyer'),
-           (u'John Doe', u'rocket scientist,optometrist,chef,knight,sailor'))
+    tbl = (('name', 'roles'),
+           ('Jane Doe', 'president,engineer,tailor,lawyer'),
+           ('John Doe', 'rocket scientist,optometrist,chef,knight,sailor'))
 
     actual = splitdown(tbl, 'roles', ',')
-    expect = ((u'name', u'roles'),
-              (u'Jane Doe', u'president'),
-              (u'Jane Doe', u'engineer'),
-              (u'Jane Doe', u'tailor'),
-              (u'Jane Doe', u'lawyer'),
-              (u'John Doe', u'rocket scientist'),
-              (u'John Doe', u'optometrist'),
-              (u'John Doe', u'chef'),
-              (u'John Doe', u'knight'),
-              (u'John Doe', u'sailor'))
+    expect = (('name', 'roles'),
+              ('Jane Doe', 'president'),
+              ('Jane Doe', 'engineer'),
+              ('Jane Doe', 'tailor'),
+              ('Jane Doe', 'lawyer'),
+              ('John Doe', 'rocket scientist'),
+              ('John Doe', 'optometrist'),
+              ('John Doe', 'chef'),
+              ('John Doe', 'knight'),
+              ('John Doe', 'sailor'))
 
     ieq(expect, actual)
     ieq(expect, actual)

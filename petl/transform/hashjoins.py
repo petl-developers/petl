@@ -1,6 +1,3 @@
-from __future__ import absolute_import, print_function, division
-
-
 import operator
 from petl.compat import next, text_type
 
@@ -100,8 +97,7 @@ def iterhashjoin(left, right, lkey, rkey, rlookup, lprefix, rprefix):
         k = lgetk(lrow)
         if k in rlookup:
             rrows = rlookup[k]
-            for outrow in joinrows(lrow, rrows):
-                yield outrow
+            yield from joinrows(lrow, rrows)
         
         
 def hashleftjoin(left, right, key=None, lkey=None, rkey=None, missing=None,
