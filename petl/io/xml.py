@@ -173,9 +173,6 @@ class XmlView(Table):
         with self.source.open('rb') as xmlf:
             parser2 = _create_xml_parser(self.user_parser)
             tree = etree.parse(xmlf, parser=parser2)
-            if not hasattr(tree, 'iterfind'):
-                # Python 2.6 compatibility
-                tree.iterfind = tree.findall
 
             if vmatch is not None:
                 # simple case, all value paths are the same
