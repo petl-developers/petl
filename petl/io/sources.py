@@ -7,10 +7,11 @@ import zipfile
 from contextlib import contextmanager
 import subprocess
 import logging
+from urllib.request import urlopen
+from io import StringIO, BytesIO
 
 
 from petl.errors import ArgumentError
-from petl.compat import urlopen, StringIO, BytesIO, string_types, PY2
 
 
 logger = logging.getLogger(__name__)
@@ -83,10 +84,7 @@ class ZipSource:
 
     @contextmanager
     def open(self, mode):
-        if PY2:
-            mode = mode.translate(None, 'bU')
-        else:
-            mode = mode.translate({ord('b'): None, ord('U'): None})
+        mode = mode.translate({ord('b'): None, ord('U'): None})
         zf = zipfile.ZipFile(self.filename, mode, **self.kwargs)
         try:
             if self.pwd is not None:
@@ -334,7 +332,7 @@ def _assert_source_has_open(source_class):
 
 def _register_handler(handler_type, handler_class, handler_list):
 
-    assert isinstance(handler_type, string_types), _invalid_source_msg % handler_type
+    assert isinstance(handler_type, str), _invalid_source_msg % handler_type
     assert isinstance(handler_class, type), _invalid_source_msg % handler_type
     _assert_source_has_open(handler_class)
     handler_list[handler_type] = handler_class
@@ -342,7 +340,7 @@ def _register_handler(handler_type, handler_class, handler_list):
 
 def _get_handler(handler_type, handler_list):
 
-    if isinstance(handler_type, string_types):
+    if isinstance(handler_type, str):
         if handler_type in handler_list:
             return handler_list[handler_type]
     return None
@@ -434,7 +432,7 @@ def _get_handler_from(source, handlers):
 def _resolve_source_from_arg(source, handlers):
     if source is None:
         return StdinSource()
-    elif isinstance(source, string_types):
+    elif isinstance(source, str):
         handler = _get_handler_from(source, handlers)
         codec = _get_codec_for(source)
         if handler is None:

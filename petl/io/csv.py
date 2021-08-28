@@ -1,16 +1,7 @@
-# standard library dependencies
-from petl.compat import PY2
-
-
 # internal dependencies
 from petl.util.base import Table
 from petl.io.sources import read_source_from_arg, write_source_from_arg
-if PY2:
-    from petl.io.csv_py2 import fromcsv_impl, tocsv_impl, appendcsv_impl, \
-        teecsv_impl
-else:
-    from petl.io.csv_py3 import fromcsv_impl, tocsv_impl, appendcsv_impl, \
-        teecsv_impl
+from petl.io.csv_py3 import fromcsv_impl, tocsv_impl, appendcsv_impl, teecsv_impl
 
 
 def fromcsv(source=None, encoding=None, errors='strict', header=None, 

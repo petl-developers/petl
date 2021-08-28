@@ -1,6 +1,3 @@
-from petl.compat import next
-
-
 from petl.util.base import Table, asindices
 
 

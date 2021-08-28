@@ -2,7 +2,6 @@ import gzip
 import bz2
 import zipfile
 from tempfile import NamedTemporaryFile
-from petl.compat import PY2
 
 
 from petl.test.helpers import ieq, eq_
@@ -20,9 +19,7 @@ def test_memorysource():
     # test writing to a string buffer
     ss = MemorySource()
     etl.tocsv(tbl1, ss)
-    expect = "foo,bar\r\na,1\r\nb,2\r\nc,2\r\n"
-    if not PY2:
-        expect = expect.encode('ascii')
+    expect = "foo,bar\r\na,1\r\nb,2\r\nc,2\r\n".encode('ascii')
     actual = ss.getvalue()
     eq_(expect, actual)
 
@@ -34,17 +31,13 @@ def test_memorysource():
     # test appending
     etl.appendcsv(tbl1, ss)
     actual = ss.getvalue()
-    expect = "foo,bar\r\na,1\r\nb,2\r\nc,2\r\na,1\r\nb,2\r\nc,2\r\n"
-    if not PY2:
-        expect = expect.encode('ascii')
+    expect = "foo,bar\r\na,1\r\nb,2\r\nc,2\r\na,1\r\nb,2\r\nc,2\r\n".encode('ascii')
     eq_(expect, actual)
 
 
 def test_memorysource_2():
 
-    data = 'foo,bar\r\na,1\r\nb,2\r\nc,2\r\n'
-    if not PY2:
-        data = data.encode('ascii')
+    data = 'foo,bar\r\na,1\r\nb,2\r\nc,2\r\n'.encode('ascii')
     actual = etl.fromcsv(MemorySource(data))
     expect = (('foo', 'bar'),
               ('a', '1'),

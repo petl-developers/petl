@@ -1,7 +1,6 @@
 import itertools
 import collections
 import operator
-from petl.compat import next, text_type
 
 
 from petl.comparison import comparable_itemgetter
@@ -296,7 +295,7 @@ def iterrecast(source, key, variablefield, valuefield,
 
     it = iter(source)
     hdr = next(it)
-    flds = list(map(text_type, hdr))
+    flds = list(map(str, hdr))
 
     # normalise some stuff
     keyfields = key
@@ -536,7 +535,7 @@ def iterpivot(source, f1, f2, f3, aggfun, missing):
     # second pass - generate output
     it = iter(source)
     hdr = next(it)
-    flds = list(map(text_type, hdr))
+    flds = list(map(str, hdr))
     f1i = flds.index(f1)
     f2i = flds.index(f2)
     f3i = flds.index(f3)

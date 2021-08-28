@@ -1,5 +1,4 @@
 import itertools
-from petl.compat import next, text_type
 
 
 from petl.errors import ArgumentError
@@ -62,7 +61,7 @@ def iterunpack(source, field, newfields, include_original, missing):
     it = iter(source)
 
     hdr = next(it)
-    flds = list(map(text_type, hdr))
+    flds = list(map(str, hdr))
     if field in flds:
         field_index = flds.index(field)
     elif isinstance(field, int) and field < len(flds):
@@ -80,7 +79,7 @@ def iterunpack(source, field, newfields, include_original, missing):
         nunpack = len(newfields)
     elif isinstance(newfields, int):
         nunpack = newfields
-        newfields = [text_type(field) + text_type(i+1) for i in range(newfields)]
+        newfields = [str(field) + str(i+1) for i in range(newfields)]
         outhdr.extend(newfields)
     elif newfields is None:
         nunpack = 0
@@ -162,7 +161,7 @@ def iterunpackdict(table, field, keys, includeoriginal, samplesize, missing):
     # set up
     it = iter(table)
     hdr = next(it)
-    flds = list(map(text_type, hdr))
+    flds = list(map(str, hdr))
     fidx = flds.index(field)
     outhdr = list(flds)
     if not includeoriginal:

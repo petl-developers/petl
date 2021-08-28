@@ -1,5 +1,4 @@
 from collections import Counter
-from petl.compat import string_types, maketrans
 
 
 from petl.util.base import values, Table, data, wrap
@@ -192,7 +191,7 @@ def parsecounter(table, field, parsers=(('int', int), ('float', float))):
         counter[n] = 0
         errors[n] = 0
     for v in values(table, field):
-        if isinstance(v, string_types):
+        if isinstance(v, str):
             for name, parser in parsers.items():
                 try:
                     parser(v)
@@ -365,7 +364,7 @@ def stringpatterncounter(table, field):
 
     """
 
-    trans = maketrans(
+    trans = str.maketrans(
         'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789',
         'AAAAAAAAAAAAAAAAAAAAAAAAAAaaaaaaaaaaaaaaaaaaaaaaaaaa9999999999'
     )

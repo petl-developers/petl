@@ -1,5 +1,4 @@
 import datetime
-from petl.compat import long
 
 
 def datetimeparser(fmt, strict=True):
@@ -161,7 +160,7 @@ def boolparser(true_strings=('true', 't', 'yes', 'y', '1'),
 
 def numparser(strict=False):
     """Return a function that will attempt to parse the value as a number,
-    trying :func:`int`, :func:`long`, :func:`float` and :func:`complex` in
+    trying :func:`int`, :func:`float` and :func:`complex` in
     that order. If all fail, return the value as-is, unless ``strict=True``,
     in which case raise the underlying exception.
 
@@ -170,10 +169,6 @@ def numparser(strict=False):
     def f(v):
         try:
             return int(v)
-        except (ValueError, TypeError):
-            pass
-        try:
-            return long(v)
         except (ValueError, TypeError):
             pass
         try:

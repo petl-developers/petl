@@ -1,7 +1,6 @@
 import itertools
 
 
-from petl.compat import string_types, text_type
 from petl.util.base import Table, iterpeek
 from petl.io.numpy import construct_dtype
 
@@ -67,7 +66,7 @@ class BcolzView(Table):
     def __iter__(self):
 
         # obtain ctable
-        if isinstance(self.source, string_types):
+        if isinstance(self.source, str):
             import bcolz
             ctbl = bcolz.open(self.source, mode='r')
         else:
@@ -134,7 +133,7 @@ def tobcolz(table, dtype=None, sample=1000, **kwargs):
     hdr = next(it)
     # numpy is fussy about having tuples, need to make sure
     it = (tuple(row) for row in it)
-    flds = list(map(text_type, hdr))
+    flds = list(map(str, hdr))
     dtype = construct_dtype(flds, peek, dtype)
 
     # create ctable
@@ -168,7 +167,7 @@ def appendbcolz(table, obj, check_names=True):
     import bcolz
     import numpy as np
 
-    if isinstance(obj, string_types):
+    if isinstance(obj, str):
         ctbl = bcolz.open(obj, mode='a')
     else:
         assert hasattr(obj, 'append') and hasattr(obj, 'names'), \
@@ -179,7 +178,7 @@ def appendbcolz(table, obj, check_names=True):
     dtype = ctbl.dtype
     it = iter(table)
     hdr = next(it)
-    flds = list(map(text_type, hdr))
+    flds = list(map(str, hdr))
 
     # check names match
     if check_names:

@@ -1,5 +1,5 @@
 from tempfile import NamedTemporaryFile
-from petl.compat import pickle
+import pickle
 
 
 from petl.test.helpers import ieq

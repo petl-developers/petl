@@ -3,7 +3,6 @@ import random
 import time
 from collections import OrderedDict
 from functools import partial
-from petl.compat import xrange, text_type
 
 
 from petl.util.base import Table
@@ -67,7 +66,7 @@ class RandomTable(Table):
         yield tuple(flds)
 
         # construct data rows
-        for _ in xrange(nr):
+        for _ in range(nr):
             # artificial delay
             if self.wait:
                 time.sleep(self.wait)
@@ -156,7 +155,7 @@ class DummyTable(Table):
             self.seed = seed
 
     def __setitem__(self, item, value):
-        self.fields[text_type(item)] = value
+        self.fields[str(item)] = value
 
     def __iter__(self):
         nr = self.numrows
@@ -167,11 +166,11 @@ class DummyTable(Table):
         random.seed(seed)
 
         # construct header row
-        hdr = tuple(text_type(f) for f in fields.keys())
+        hdr = tuple(str(f) for f in fields.keys())
         yield hdr
 
         # construct data rows
-        for _ in xrange(nr):
+        for _ in range(nr):
             # artificial delay
             if self.wait:
                 time.sleep(self.wait)

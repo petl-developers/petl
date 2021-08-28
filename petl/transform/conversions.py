@@ -1,6 +1,3 @@
-from petl.compat import next, integer_types, string_types, text_type
-
-
 import petl.config as config
 from petl.errors import ArgumentError, FieldSelectionError
 from petl.util.base import Table, expr, header, Record
@@ -352,7 +349,7 @@ def iterfieldconvert(source, converters, failonerror, errorvalue, where,
     # grab the fields in the source table
     it = iter(source)
     hdr = next(it)
-    flds = list(map(text_type, hdr))
+    flds = list(map(str, hdr))
     yield tuple(hdr)  # these are not modified
 
     # build converter functions
@@ -360,7 +357,7 @@ def iterfieldconvert(source, converters, failonerror, errorvalue, where,
     for k, c in converters.items():
 
         # turn field names into row indices
-        if not isinstance(k, integer_types):
+        if not isinstance(k, int):
             try:
                 k = flds.index(k)
             except ValueError:  # not in list
@@ -372,11 +369,11 @@ def iterfieldconvert(source, converters, failonerror, errorvalue, where,
             converter_functions[k] = c
 
         # is converter a method name?
-        elif isinstance(c, string_types):
+        elif isinstance(c, str):
             converter_functions[k] = methodcaller(c)
 
         # is converter a method name with arguments?
-        elif isinstance(c, (tuple, list)) and isinstance(c[0], string_types):
+        elif isinstance(c, (tuple, list)) and isinstance(c[0], str):
             methnm = c[0]
             methargs = c[1:]
             converter_functions[k] = methodcaller(methnm, *methargs)
@@ -420,7 +417,7 @@ def iterfieldconvert(source, converters, failonerror, errorvalue, where,
                          for i, v in enumerate(_row))
 
     # prepare where function
-    if isinstance(where, string_types):
+    if isinstance(where, str):
         where = expr(where)
     elif where is not None:
         assert callable(where), 'expected callable for "where" argument, ' \

@@ -4,9 +4,8 @@ from itertools import islice, chain, cycle, product,\
     starmap, groupby, tee
 import operator
 from collections import Counter, namedtuple, OrderedDict
-from itertools import compress, combinations_with_replacement
-from petl.compat import imap, izip, izip_longest, ifilter, ifilterfalse, \
-    reduce, next, string_types, text_type
+from functools import reduce
+from itertools import compress, combinations_with_replacement, filterfalse, zip_longest
 
 
 from petl.errors import FieldSelectionError
@@ -112,13 +111,13 @@ class IterContainer:
         return takewhile(predicate, self)
 
     def ifilter(self, predicate):
-        return ifilter(predicate, self)
+        return filter(predicate, self)
 
     def ifilterfalse(self, predicate):
-        return ifilterfalse(predicate, self)
+        return filterfalse(predicate, self)
 
     def imap(self, function):
-        return imap(function, self)
+        return map(function, self)
 
     def starmap(self, function):
         return starmap(function, self)
@@ -145,10 +144,10 @@ class IterContainer:
         return combinations_with_replacement(self, *args, **kwargs)
 
     def izip(self, *args, **kwargs):
-        return izip(self, *args, **kwargs)
+        return zip(self, *args, **kwargs)
 
     def izip_longest(self, *args, **kwargs):
-        return izip_longest(self, *args, **kwargs)
+        return zip_longest(self, *args, **kwargs)
 
     def product(self, *args, **kwargs):
         return product(self, *args, **kwargs)
@@ -163,7 +162,7 @@ class IterContainer:
 class Table(IterContainer):
 
     def __getitem__(self, item):
-        if isinstance(item, string_types):
+        if isinstance(item, str):
             return ValuesView(self, item)
         else:
             return super().__getitem__(item)
@@ -230,7 +229,7 @@ class ValuesView(IterContainer):
 
     def __repr__(self):
         vreprs = list(map(repr, islice(self, 6)))
-        r = text_type(self.field) + ': '
+        r = str(self.field) + ': '
         r += ', '.join(vreprs[:5])
         if len(vreprs) > 5:
             r += ', ...'
@@ -279,7 +278,7 @@ wrap = TableWrapper
 def asindices(hdr, spec):
     """Convert the given field `spec` into a list of field indices."""
 
-    flds = list(map(text_type, hdr))
+    flds = list(map(str, hdr))
     indices = list()
     if not isinstance(spec, (list, tuple)):
         spec = (spec,)
@@ -350,7 +349,7 @@ def fieldnames(table):
 
     """
 
-    return tuple(text_type(f) for f in header(table))
+    return tuple(str(f) for f in header(table))
 
 
 Table.fieldnames = fieldnames
@@ -448,7 +447,7 @@ def iterdicts(table, *sliceargs, **kwargs):
 
 
 def asdict(hdr, row, missing=None):
-    flds = [text_type(f) for f in hdr]
+    flds = [str(f) for f in hdr]
     try:
         # list comprehension should be faster
         items = [(flds[i], row[i]) for i in range(len(flds))]
@@ -513,7 +512,7 @@ def iternamedtuples(table, *sliceargs, **kwargs):
     name = kwargs.get('name', 'row')
     it = iter(table)
     hdr = next(it)
-    flds = list(map(text_type, hdr))
+    flds = list(map(str, hdr))
     nt = namedtuple(name, tuple(flds))
     if sliceargs:
         it = islice(it, *sliceargs)
@@ -635,7 +634,7 @@ def iterrecords(table, *sliceargs, **kwargs):
     missing = kwargs.get('missing', None)
     it = iter(table)
     hdr = next(it)
-    flds = list(map(text_type, hdr))
+    flds = list(map(str, hdr))
     if sliceargs:
         it = islice(it, *sliceargs)
     for row in it:
@@ -691,7 +690,7 @@ def rowgroupby(table, key, value=None):
 
     it = iter(table)
     hdr = next(it)
-    flds = list(map(text_type, hdr))
+    flds = list(map(str, hdr))
     # wrap rows as records
     it = (Record(row, flds) for row in it)
 

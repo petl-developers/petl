@@ -1,6 +1,5 @@
 import re
 import operator
-from petl.compat import next, text_type
 
 
 from petl.errors import ArgumentError
@@ -99,7 +98,7 @@ def itercapture(source, field, pattern, newfields, include_original, flags,
     prog = re.compile(pattern, flags)
 
     hdr = next(it)
-    flds = list(map(text_type, hdr))
+    flds = list(map(str, hdr))
     if isinstance(field, int) and field < len(hdr):
         field_index = field
     elif field in flds:
@@ -196,7 +195,7 @@ def itersplit(source, field, pattern, newfields, include_original, maxsplit,
     prog = re.compile(pattern, flags)
 
     hdr = next(it)
-    flds = list(map(text_type, hdr))
+    flds = list(map(str, hdr))
     if isinstance(field, int) and field < len(hdr):
         field_index = field
         field = hdr[field_index]
@@ -311,20 +310,20 @@ def itersearch(table, pattern, field, flags, complement):
     prog = re.compile(pattern, flags)
     it = iter(table)
     hdr = next(it)
-    flds = list(map(text_type, hdr))
+    flds = list(map(str, hdr))
     yield tuple(hdr)
 
     if field is None:
         # search whole row
-        test = lambda r: any(prog.search(text_type(v)) for v in r)
+        test = lambda r: any(prog.search(str(v)) for v in r)
     else:
         indices = asindices(hdr, field)
         if len(indices) == 1:
             index = indices[0]
-            test = lambda r: prog.search(text_type(r[index]))
+            test = lambda r: prog.search(str(r[index]))
         else:
             getvals = operator.itemgetter(*indices)
-            test = lambda r: any(prog.search(text_type(v)) for v in getvals(r))
+            test = lambda r: any(prog.search(str(v)) for v in getvals(r))
     # complement==False, return rows that match
     if not complement:
         for row in it:
@@ -438,7 +437,7 @@ def itersplitdown(table, field, pattern, maxsplit, flags):
     prog = re.compile(pattern, flags)
     it = iter(table)
     hdr = next(it)
-    flds = list(map(text_type, hdr))
+    flds = list(map(str, hdr))
 
     if isinstance(field, int) and field < len(hdr):
         field_index = field

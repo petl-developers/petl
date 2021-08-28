@@ -1,5 +1,4 @@
 import operator
-from petl.compat import text_type
 
 
 from petl.util.base import Table, asindices, itervalues
@@ -324,7 +323,7 @@ def iterconflicts(source, key, missing, exclude, include):
         
     it = iter(source)
     hdr = next(it)
-    flds = list(map(text_type, hdr))
+    flds = list(map(str, hdr))
     yield tuple(hdr)
 
     # convert field selection into field indices

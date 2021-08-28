@@ -1,5 +1,4 @@
 import operator
-from petl.compat import next, string_types, callable, text_type
 from petl.comparison import Comparable
 
 
@@ -63,7 +62,7 @@ def select(table, *args, **kwargs):
         raise ArgumentError('missing positional argument')
     elif len(args) == 1:
         where = args[0]
-        if isinstance(where, string_types):
+        if isinstance(where, str):
             where = expr(where)
         else:
             assert callable(where), 'second argument must be string or callable'
@@ -125,7 +124,7 @@ def iterfieldselect(source, field, where, complement, missing):
 def iterrowselect(source, where, missing, complement):
     it = iter(source)
     hdr = next(it)
-    flds = list(map(text_type, hdr))
+    flds = list(map(str, hdr))
     yield tuple(hdr)
     it = (Record(row, flds, missing=missing) for row in it)
     for row in it:
@@ -419,7 +418,7 @@ class SelectUsingContextView(Table):
 def iterselectusingcontext(table, query):
     it = iter(table)
     hdr = tuple(next(it))
-    flds = list(map(text_type, hdr))
+    flds = list(map(str, hdr))
     yield hdr
     it = (Record(row, flds) for row in it)
     prv = None

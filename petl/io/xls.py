@@ -1,7 +1,7 @@
 import locale
+from itertools import zip_longest
 
 
-from petl.compat import izip_longest, next, xrange, BytesIO
 from petl.util.base import Table
 from petl.io.sources import read_source_from_arg, write_source_from_arg
 
@@ -56,7 +56,7 @@ class XLSView(Table):
                         ws = wb.sheet_by_index(self.sheet)
                     else:
                         ws = wb.sheet_by_name(str(self.sheet))
-                    for rownum in xrange(ws.nrows):
+                    for rownum in range(ws.nrows):
                         yield tuple(ws.row_values(rownum))
 
 
@@ -90,8 +90,8 @@ def toxls(tbl, filename, sheet, encoding=None, style_compression=0,
         # convert to list for easy zipping
         styles = [styles[f] for f in flds]
         for r, row in enumerate(it):
-            for c, (v, style) in enumerate(izip_longest(row, styles,
-                                                        fillvalue=None)):
+            for c, (v, style) in enumerate(zip_longest(row, styles,
+                                                       fillvalue=None)):
                 ws.write(r+1, c, label=v, style=style)
 
     target = write_source_from_arg(filename)

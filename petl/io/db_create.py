@@ -11,7 +11,6 @@ utility in the `csvkit <https://github.com/onyxfish/csvkit>`_ package.
 
 import datetime
 import logging
-from petl.compat import long, text_type
 
 
 from petl.errors import ArgumentError
@@ -81,13 +80,10 @@ def make_sqlalchemy_column(col, colname, constraints=True):
         else:
             sql_column_type = sqlalchemy.Integer
 
-    elif all(isinstance(v, long) for v in col_not_none):
+    elif all(isinstance(v, int) for v in col_not_none):
         sql_column_type = sqlalchemy.BigInteger
 
-    elif all(isinstance(v, (int, long)) for v in col_not_none):
-        sql_column_type = sqlalchemy.BigInteger
-
-    elif all(isinstance(v, (int, long, float)) for v in col_not_none):
+    elif all(isinstance(v, (int, float)) for v in col_not_none):
         sql_column_type = sqlalchemy.Float
 
     elif all(isinstance(v, datetime.datetime) for v in col_not_none):
@@ -102,7 +98,7 @@ def make_sqlalchemy_column(col, colname, constraints=True):
     else:
         sql_column_type = sqlalchemy.String
         if constraints:
-            sql_type_kwargs['length'] = max(len(text_type(v)) for v in col)
+            sql_type_kwargs['length'] = max(len(str(v)) for v in col)
 
     if constraints:
         sql_column_kwargs['nullable'] = len(col_not_none) < len(col)
@@ -182,8 +178,8 @@ def make_create_table_statement(table, tablename, schema=None,
     else:
         sql_dialect = None
 
-    return text_type(sqlalchemy.schema.CreateTable(sql_table)
-                     .compile(dialect=sql_dialect)).strip()
+    return str(sqlalchemy.schema.CreateTable(sql_table)
+               .compile(dialect=sql_dialect)).strip()
 
 
 def create_table(table, dbo, tablename, schema=None, commit=True,

@@ -2,7 +2,6 @@ import logging
 import sys
 from contextlib import contextmanager
 
-from petl.compat import PY3
 from petl.io.sources import register_reader, register_writer, get_reader, get_writer
 
 logger = logging.getLogger(__name__)
@@ -133,8 +132,7 @@ def _try_register_filesystems():
             raise ImportError("# ERROR: failed to register fsspec filesystems", ex)
 
 
-if PY3:
-    _try_register_filesystems()
+_try_register_filesystems()
 
 # endregion
 
@@ -225,10 +223,7 @@ def _parse_smb_url(url):
     if not url.startswith("smb://"):
         raise ValueError(e + url)
 
-    if PY3:
-        from urllib.parse import urlparse
-    else:
-        from urlparse import urlparse
+    from urllib.parse import urlparse
     parsed = urlparse(url)
     if not parsed.path:
         raise ValueError(e + url)

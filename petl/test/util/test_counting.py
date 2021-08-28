@@ -1,4 +1,3 @@
-from petl.compat import PY2
 from petl.test.helpers import ieq, eq_
 from petl.util.counting import valuecount, valuecounter, valuecounts, \
     rowlengths, typecounts, parsecounts, stringpatterns, nrows
@@ -110,25 +109,15 @@ def test_typecounts():
              (b'E', 42))
 
     actual = typecounts(table, 'foo')
-    if PY2:
-        expect = (('type', 'count', 'frequency'),
-                  ('str', 4, 4./5),
-                  ('unicode', 1, 1./5))
-    else:
-        expect = (('type', 'count', 'frequency'),
-                  ('bytes', 4, 4./5),
-                  ('str', 1, 1./5))
+    expect = (('type', 'count', 'frequency'),
+              ('bytes', 4, 4./5),
+              ('str', 1, 1./5))
     ieq(expect, actual)
 
     actual = typecounts(table, 'bar')
-    if PY2:
-        expect = (('type', 'count', 'frequency'),
-                  ('unicode', 3, 3./5),
-                  ('int', 2, 2./5))
-    else:
-        expect = (('type', 'count', 'frequency'),
-                  ('str', 3, 3./5),
-                  ('int', 2, 2./5))
+    expect = (('type', 'count', 'frequency'),
+              ('str', 3, 3./5),
+              ('int', 2, 2./5))
     ieq(expect, actual)
 
     actual = typecounts(table, 'baz')

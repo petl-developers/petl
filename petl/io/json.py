@@ -3,7 +3,6 @@ import io
 import json
 from json.encoder import JSONEncoder
 
-from petl.compat import PY2
 from petl.io.sources import read_source_from_arg, write_source_from_arg
 # internal dependencies
 from petl.util.base import data, Table, dicts as _dicts, iterpeek
@@ -97,10 +96,9 @@ class JsonView(Table):
 
     def __iter__(self):
         with self.source.open('rb') as f:
-            if not PY2:
-                # wrap buffer for text IO
-                f = io.TextIOWrapper(f, encoding='utf-8', newline='',
-                                     write_through=True)
+            # wrap buffer for text IO
+            f = io.TextIOWrapper(f, encoding='utf-8', newline='',
+                                 write_through=True)
             try:
                 if self.lines:
                     yield from iterjlines(f, self.header, self.missing)
@@ -109,8 +107,7 @@ class JsonView(Table):
                     yield from iterdicts(dicts, self.header, self.sample,
                                          self.missing)
             finally:
-                if not PY2:
-                    f.detach()
+                f.detach()
 
 
 def fromdicts(dicts, header=None, sample=1000, missing=None):
@@ -260,17 +257,13 @@ def _writejson(source, obj, prefix, suffix, *args, **kwargs):
     encoder = JSONEncoder(*args, **kwargs)
     source = write_source_from_arg(source)
     with source.open('wb') as f:
-        if PY2:
-            # write directly to buffer
+        # wrap buffer for text IO
+        f = io.TextIOWrapper(f, encoding='utf-8', newline='',
+                             write_through=True)
+        try:
             _writeobj(encoder, obj, f, prefix, suffix)
-        else:
-            # wrap buffer for text IO
-            f = io.TextIOWrapper(f, encoding='utf-8', newline='',
-                                 write_through=True)
-            try:
-                _writeobj(encoder, obj, f, prefix, suffix)
-            finally:
-                f.detach()
+        finally:
+            f.detach()
 
 
 def _writeobj(encoder, obj, f, prefix, suffix):

@@ -1,7 +1,7 @@
 import itertools
 import operator
 from collections import OrderedDict
-from petl.compat import next, string_types, reduce, text_type
+from functools import reduce
 
 
 from petl.errors import ArgumentError
@@ -326,9 +326,9 @@ def itermultiaggregate(source, key, aggregation):
         agg = aggregation[outfld]
         if callable(agg):
             aggregation[outfld] = None, agg
-        elif isinstance(agg, string_types):
+        elif isinstance(agg, str):
             aggregation[outfld] = agg, list  # list is default
-        elif len(agg) == 1 and isinstance(agg[0], string_types):
+        elif len(agg) == 1 and isinstance(agg[0], str):
             aggregation[outfld] = agg[0], list  # list is default
         elif len(agg) == 1 and callable(agg[0]):
             aggregation[outfld] = None, agg[0]  # aggregate whole rows
@@ -575,10 +575,10 @@ class MergeDuplicatesView(Table):
 def itermergeduplicates(table, key, missing):
     it = iter(table)
     hdr, it = iterpeek(it)
-    flds = list(map(text_type, hdr))
+    flds = list(map(str, hdr))
 
     # determine output fields
-    if isinstance(key, string_types):
+    if isinstance(key, str):
         outhdr = [key]
         keyflds = {key}
     else:
@@ -592,7 +592,7 @@ def itermergeduplicates(table, key, missing):
     # do the work
     for k, grp in rowgroupby(it, key):
         grp = list(grp)
-        if isinstance(key, string_types):
+        if isinstance(key, str):
             outrow = [k]
         else:
             outrow = list(k)

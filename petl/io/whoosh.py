@@ -1,5 +1,4 @@
 import operator
-from petl.compat import string_types, izip
 
 
 from petl.errors import ArgumentError
@@ -73,7 +72,7 @@ class TextIndexView(Table):
 def itertextindex(index_or_dirname, indexname, docnum_field):
     import whoosh.index
 
-    if isinstance(index_or_dirname, string_types):
+    if isinstance(index_or_dirname, str):
         dirname = index_or_dirname
         index = whoosh.index.open_dir(dirname, indexname=indexname,
                                       readonly=True)
@@ -168,7 +167,7 @@ def totextindex(table, index_or_dirname, schema=None, indexname=None,
     import whoosh.writing
 
     # deal with polymorphic argument
-    if isinstance(index_or_dirname, string_types):
+    if isinstance(index_or_dirname, str):
         dirname = index_or_dirname
         index = whoosh.index.create_in(dirname, schema,
                                        indexname=indexname)
@@ -222,7 +221,7 @@ def appendtextindex(table, index_or_dirname, indexname=None, merge=True,
     import whoosh.index
 
     # deal with polymorphic argument
-    if isinstance(index_or_dirname, string_types):
+    if isinstance(index_or_dirname, str):
         dirname = index_or_dirname
         index = whoosh.index.open_dir(dirname, indexname=indexname,
                                       readonly=False)
@@ -408,7 +407,7 @@ def itersearchindex(index_or_dirname, query, limit, pagenum, pagelen, indexname,
     if not search_kwargs:
         search_kwargs = dict()
 
-    if isinstance(index_or_dirname, string_types):
+    if isinstance(index_or_dirname, str):
         dirname = index_or_dirname
         index = whoosh.index.open_dir(dirname,
                                       indexname=indexname,
@@ -434,7 +433,7 @@ def itersearchindex(index_or_dirname, query, limit, pagenum, pagelen, indexname,
         yield hdr
 
         # parse the query
-        if isinstance(query, string_types):
+        if isinstance(query, str):
             # search all fields by default
             parser = whoosh.qparser.MultifieldParser(
                 index.schema.names(),
@@ -468,7 +467,7 @@ def itersearchindex(index_or_dirname, query, limit, pagenum, pagelen, indexname,
 
             else:
 
-                for (docnum, score), doc in izip(results.items(), results):
+                for (docnum, score), doc in zip(results.items(), results):
                     row = tuple()
                     if docnum_field is not None:
                         row += (docnum,)

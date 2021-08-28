@@ -1,4 +1,3 @@
-from petl.compat import next, string_types
 from petl.util.base import iterpeek, ValuesView, Table
 from petl.util.materialise import columns
 
@@ -21,7 +20,7 @@ def construct_dtype(flds, peek, dtype):
     if dtype is None:
         dtype = infer_dtype(peek)
 
-    elif isinstance(dtype, string_types):
+    elif isinstance(dtype, str):
         # insert field names from source table
         typestrings = [s.strip() for s in dtype.split(',')]
         dtype = [(f, t) for f, t in zip(flds, typestrings)]

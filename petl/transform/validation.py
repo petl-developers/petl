@@ -1,5 +1,4 @@
 import operator
-from petl.compat import text_type
 
 
 from petl.util.base import Table, asindices, Record
@@ -111,10 +110,10 @@ def iterproblems(table, constraints, expected_header):
     actual_header = next(it)
 
     if expected_header is None:
-        flds = list(map(text_type, actual_header))
+        flds = list(map(str, actual_header))
     else:
-        expected_flds = list(map(text_type, expected_header))
-        actual_flds = list(map(text_type, actual_header))
+        expected_flds = list(map(str, expected_header))
+        actual_flds = list(map(str, actual_header))
         try:
             assert expected_flds == actual_flds
         except Exception as e:

@@ -1,6 +1,6 @@
 import locale
 import codecs
-from petl.compat import izip_longest
+from itertools import zip_longest
 
 from petl.util.base import Table
 
@@ -69,4 +69,4 @@ def itercolumns(cols, header, missing):
     if header is None:
         header = ['f%s' % i for i in range(len(cols))]
     yield tuple(header)
-    yield from izip_longest(*cols, **dict(fillvalue=missing))
+    yield from zip_longest(*cols, **dict(fillvalue=missing))

@@ -1,5 +1,5 @@
 # standard library dependencies
-from petl.compat import pickle, next
+import pickle
 
 
 # internal dependencies

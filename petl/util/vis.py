@@ -1,7 +1,9 @@
+from __future__ import absolute_import, print_function, division
+
+
 import locale
 from itertools import islice
 from collections import defaultdict
-from petl.compat import numeric_types, text_type
 
 
 from petl import config
@@ -83,7 +85,7 @@ def look(table, limit=0, vrepr=None, index_header=None, style=None,
 Table.look = look
 
 
-class Look:
+class Look(object):
 
     def __init__(self, table, limit, vrepr, index_header, style, truncate,
                  width):
@@ -192,9 +194,9 @@ def _look_grid(table, vrepr, index_header, truncate, width):
 
     # fields representation
     hdr = next(it)
-    flds = list(map(text_type, hdr))
+    flds = list(map(str, hdr))
     if index_header:
-        fldsrepr = [f'{i}|{r}' for (i, r) in enumerate(flds)]
+        fldsrepr = ['%s|%s' % (i, r) for (i, r) in enumerate(flds)]
     else:
         fldsrepr = flds
 
@@ -264,7 +266,7 @@ def _look_grid(table, vrepr, index_header, truncate, width):
         rowline = '|'
         for i, w in enumerate(colwidths):
             vr = valsrepr[i]
-            if i < len(vals) and isinstance(vals[i], numeric_types) \
+            if i < len(vals) and isinstance(vals[i], (int, float)) \
                     and not isinstance(vals[i], bool):
                 # left pad numbers
                 rowline += ' ' * (w + 1 - len(vr))  # padding
@@ -292,9 +294,9 @@ def _look_simple(table, vrepr, index_header, truncate, width):
 
     # fields representation
     hdr = next(it)
-    flds = list(map(text_type, hdr))
+    flds = list(map(str, hdr))
     if index_header:
-        fldsrepr = [f'{i}|{r}' for (i, r) in enumerate(flds)]
+        fldsrepr = ['%s|%s' % (i, r) for (i, r) in enumerate(flds)]
     else:
         fldsrepr = flds
 
@@ -347,7 +349,7 @@ def _look_simple(table, vrepr, index_header, truncate, width):
         rowline = ''
         for i, w in enumerate(colwidths):
             vr = valsrepr[i]
-            if i < len(vals) and isinstance(vals[i], numeric_types) \
+            if i < len(vals) and isinstance(vals[i], (int, float)) \
                     and not isinstance(vals[i], bool):
                 # left pad numbers
                 rowline += vr.rjust(w)
@@ -375,9 +377,9 @@ def _look_minimal(table, vrepr, index_header, truncate, width):
 
     # fields representation
     hdr = next(it)
-    flds = list(map(text_type, hdr))
+    flds = list(map(str, hdr))
     if index_header:
-        fldsrepr = [f'{i}|{r}' for (i, r) in enumerate(flds)]
+        fldsrepr = ['%s|%s' % (i, r) for (i, r) in enumerate(flds)]
     else:
         fldsrepr = flds
 
@@ -424,7 +426,7 @@ def _look_minimal(table, vrepr, index_header, truncate, width):
         rowline = ''
         for i, w in enumerate(colwidths):
             vr = valsrepr[i]
-            if i < len(vals) and isinstance(vals[i], numeric_types) \
+            if i < len(vals) and isinstance(vals[i], (int, float)) \
                     and not isinstance(vals[i], bool):
                 # left pad numbers
                 rowline += vr.rjust(w)
@@ -473,7 +475,7 @@ def see(table, limit=0, vrepr=None, index_header=None):
     return See(table, limit=limit, vrepr=vrepr, index_header=index_header)
 
 
-class See:
+class See(object):
 
     def __init__(self, table, limit, vrepr, index_header):
         self.table = table
@@ -502,8 +504,8 @@ class See:
                     cols[str(f)].append('')
         for i, f in enumerate(flds):
             if index_header:
-                f = f'{i}|{f}'
-            output += '{}: {}'.format(f, ', '.join(cols[str(i)]))
+                f = '%s|%s' % (i, f)
+            output += '%s: %s' % (f, ', '.join(cols[str(i)]))
             if overflow:
                 output += '...\n'
             else:
@@ -548,7 +550,7 @@ def _display_html(table, limit=0, vrepr=None, index_header=None, caption=None,
     tohtml(table, buf, encoding=encoding, index_header=index_header,
            vrepr=vrepr, caption=caption, tr_style=tr_style,
            td_styles=td_styles, truncate=truncate)
-    output = text_type(buf.getvalue(), encoding)
+    output = str(buf.getvalue(), encoding)
 
     if epilogue:
         output += '<p>%s</p>' % epilogue

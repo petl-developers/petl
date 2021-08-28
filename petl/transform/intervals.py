@@ -1,5 +1,4 @@
 from operator import itemgetter, attrgetter
-from petl.compat import text_type
 
 
 from petl.util.base import asindices, records, Table, values, rowgroupby
@@ -19,7 +18,7 @@ def tupletree(table, start='start', stop='stop', value=None):
     tree = intervaltree.IntervalTree()
     it = iter(table)
     hdr = next(it)
-    flds = list(map(text_type, hdr))
+    flds = list(map(str, hdr))
     assert start in flds, 'start field not recognised'
     assert stop in flds, 'stop field not recognised'
     getstart = itemgetter(flds.index(start))
@@ -45,7 +44,7 @@ def facettupletrees(table, key, start='start', stop='stop', value=None):
     import intervaltree
     it = iter(table)
     hdr = next(it)
-    flds = list(map(text_type, hdr))
+    flds = list(map(str, hdr))
     assert start in flds, 'start field not recognised'
     assert stop in flds, 'stop field not recognised'
     getstart = itemgetter(flds.index(start))
@@ -737,10 +736,10 @@ def iterintervaljoin(left, right, lstart, lstop, rstart, rstop, lkey,
     # create iterators and obtain fields
     lit = iter(left)
     lhdr = next(lit)
-    lflds = list(map(text_type, lhdr))
+    lflds = list(map(str, lhdr))
     rit = iter(right)
     rhdr = next(rit)
-    rflds = list(map(text_type, rhdr))
+    rflds = list(map(str, rhdr))
 
     # check fields via petl.util.asindices (raises FieldSelectionError if spec
     # is not valid)
@@ -898,7 +897,7 @@ def iterintervalsubtract(left, right, lstart, lstop, rstart, rstop, lkey, rkey,
     # create iterators and obtain fields
     lit = iter(left)
     lhdr = next(lit)
-    lflds = list(map(text_type, lhdr))
+    lflds = list(map(str, lhdr))
     rit = iter(right)
     rhdr = next(rit)
 

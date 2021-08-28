@@ -3,7 +3,6 @@ import gc
 import logging
 from datetime import datetime
 import sys
-from petl.compat import next
 
 
 from petl.test.helpers import ieq, eq_

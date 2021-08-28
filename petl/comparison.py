@@ -1,9 +1,6 @@
 import operator
 
 
-from petl.compat import text_type, binary_type, numeric_types
-
-
 class Comparable:
     """Wrapper class to allow for flexible comparison of objects of different
     types, preserving the relaxed sorting behaviour of Python 2 with
@@ -37,17 +34,17 @@ class Comparable:
             return True
 
         # numbers < everything else (except None)
-        if isinstance(obj, numeric_types) \
-                and not isinstance(other, numeric_types):
+        if isinstance(obj, (bool, int, float)) \
+                and not isinstance(other, (bool, int, float)):
             return True
-        if not isinstance(obj, numeric_types) \
-                and isinstance(other, numeric_types):
+        if not isinstance(obj, (bool, int, float)) \
+                and isinstance(other, (bool, int, float)):
             return False
 
         # binary < unicode
-        if isinstance(obj, text_type) and isinstance(other, binary_type):
+        if isinstance(obj, str) and isinstance(other, bytes):
             return False
-        if isinstance(obj, binary_type) and isinstance(other, text_type):
+        if isinstance(obj, bytes) and isinstance(other, str):
             return True
 
         try:
@@ -76,7 +73,7 @@ class Comparable:
         return str(self.obj)
 
     def __unicode__(self):
-        return text_type(self.obj)
+        return str(self.obj)
 
     def __repr__(self):
         return 'Comparable(' + repr(self.obj) + ')'
@@ -93,9 +90,9 @@ class Comparable:
 
 def _typestr(x):
     # attempt to preserve Python 2 name orderings
-    if isinstance(x, binary_type):
+    if isinstance(x, bytes):
         return 'str'
-    if isinstance(x, text_type):
+    if isinstance(x, str):
         return 'unicode'
     return type(x).__name__
 

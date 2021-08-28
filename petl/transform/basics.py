@@ -1,8 +1,6 @@
 # standard library dependencies
-from itertools import islice, chain
+from itertools import count, chain, islice, zip_longest
 from collections import deque
-from itertools import count
-from petl.compat import izip, izip_longest, next, string_types, text_type
 
 
 # internal dependencies
@@ -524,7 +522,7 @@ class AddFieldView(Table):
 def iteraddfield(source, field, value, index):
     it = iter(source)
     hdr = next(it)
-    flds = list(map(text_type, hdr))
+    flds = list(map(str, hdr))
 
     # determine index of new field
     if index is None:
@@ -613,7 +611,7 @@ class AddFieldsView(Table):
 def iteraddfields(source, field_defs):
     it = iter(source)
     hdr = next(it)
-    flds = list(map(text_type, hdr))
+    flds = list(map(str, hdr))
 
     # initialize output fields and indices
     outhdr = list(hdr)
@@ -876,7 +874,7 @@ class SkipCommentsView(Table):
 def iterskipcomments(source, prefix):
     return (row for row in source
             if (len(row) > 0
-                and not(isinstance(row[0], string_types)
+                and not(isinstance(row[0], str)
                 and row[0].startswith(prefix))))
 
 
@@ -974,7 +972,7 @@ def iterannex(tables, missing):
     hdrs = [next(it) for it in its]
     outhdr = tuple(chain(*hdrs))
     yield outhdr
-    for rows in izip_longest(*its):
+    for rows in zip_longest(*its):
         outrow = list()
         for i, row in enumerate(rows):
             lh = len(hdrs[i])
@@ -1040,7 +1038,7 @@ def iteraddrownumbers(table, start, step, field):
     outhdr = [field]
     outhdr.extend(hdr)
     yield tuple(outhdr)
-    for row, n in izip(it, count(start, step)):
+    for row, n in zip(it, count(start, step)):
         outrow = [n]
         outrow.extend(row)
         yield tuple(outrow)
@@ -1103,7 +1101,7 @@ def iteraddcolumn(table, field, col, index, missing):
     yield tuple(outhdr)
 
     # construct output data
-    for row, val in izip_longest(it, col, fillvalue=missing):
+    for row, val in zip_longest(it, col, fillvalue=missing):
         # run out of rows?
         if row == missing:
             row = [missing] * len(hdr)
@@ -1181,7 +1179,7 @@ class AddFieldUsingContextView(Table):
 def iteraddfieldusingcontext(table, field, query):
     it = iter(table)
     hdr = tuple(next(it))
-    flds = list(map(text_type, hdr))
+    flds = list(map(str, hdr))
     yield hdr + (field,)
     flds.append(field)
     it = (Record(row, flds) for row in it)

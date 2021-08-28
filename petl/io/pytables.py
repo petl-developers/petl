@@ -1,5 +1,4 @@
 from contextlib import contextmanager
-from petl.compat import string_types
 
 
 from petl.errors import ArgumentError
@@ -112,7 +111,7 @@ def _get_hdf5_table(source, where, name, mode='r'):
         # source is a table
         h5tbl = source
 
-    elif isinstance(source, string_types):
+    elif isinstance(source, str):
 
         # assume source is the name of an HDF5 file, try to open it
         h5file = tables.open_file(source, mode=mode)
@@ -147,7 +146,7 @@ def _get_hdf5_file(source, mode='r'):
     needs_closing = False
 
     # allow for polymorphic args
-    if isinstance(source, string_types):
+    if isinstance(source, str):
 
         # assume source is the name of an HDF5 file, try to open it
         h5file = tables.open_file(source, mode=mode)

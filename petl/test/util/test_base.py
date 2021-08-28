@@ -1,6 +1,4 @@
-from petl.errors import ArgumentError
 from petl.test.helpers import ieq, eq_
-from petl.compat import next
 from petl.util.base import header, fieldnames, data, dicts, records, \
     namedtuples, itervalues, values, rowgroupby
 

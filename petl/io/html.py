@@ -1,18 +1,16 @@
 # standard library dependencies
 import io
-from petl.compat import text_type, numeric_types, next, PY2, izip_longest, \
-    string_types, callable
+from itertools import zip_longest
 
 
 # internal dependencies
 from petl.errors import ArgumentError
 from petl.util.base import Table, Record
-from petl.io.base import getcodec
 from petl.io.sources import write_source_from_arg
 
 
 def tohtml(table, source=None, encoding=None, errors='strict', caption=None,
-           vrepr=text_type, lineterminator='\n', index_header=False,
+           vrepr=str, lineterminator='\n', index_header=False,
            tr_style=None, td_styles=None, truncate=None):
     """
     Write the table as HTML to a file. E.g.::
@@ -57,14 +55,10 @@ def tohtml(table, source=None, encoding=None, errors='strict', caption=None,
     with source.open('wb') as buf:
 
         # deal with text encoding
-        if PY2:
-            codec = getcodec(encoding)
-            f = codec.streamwriter(buf, errors=errors)
-        else:
-            f = io.TextIOWrapper(buf,
-                                 encoding=encoding,
-                                 errors=errors,
-                                 newline='')
+        f = io.TextIOWrapper(buf,
+                             encoding=encoding,
+                             errors=errors,
+                             newline='')
 
         # write the table
         try:
@@ -88,15 +82,14 @@ def tohtml(table, source=None, encoding=None, errors='strict', caption=None,
             f.flush()
 
         finally:
-            if not PY2:
-                f.detach()
+            f.detach()
 
 
 Table.tohtml = tohtml
 
 
 def teehtml(table, source=None, encoding=None, errors='strict', caption=None,
-            vrepr=text_type, lineterminator='\n', index_header=False,
+            vrepr=str, lineterminator='\n', index_header=False,
             tr_style=None, td_styles=None, truncate=None):
     """
     Return a table that writes rows to a Unicode HTML file as they are
@@ -117,7 +110,7 @@ Table.teehtml = teehtml
 
 class TeeHTMLView(Table):
     def __init__(self, table, source=None, encoding=None, errors='strict',
-                 caption=None, vrepr=text_type, lineterminator='\n',
+                 caption=None, vrepr=str, lineterminator='\n',
                  index_header=False, tr_style=None, td_styles=None,
                  truncate=None):
         self.table = table
@@ -148,14 +141,10 @@ class TeeHTMLView(Table):
         with source.open('wb') as buf:
 
             # deal with text encoding
-            if PY2:
-                codec = getcodec(encoding)
-                f = codec.streamwriter(buf, errors=errors)
-            else:
-                f = io.TextIOWrapper(buf,
-                                     encoding=encoding,
-                                     errors=errors,
-                                     newline='')
+            f = io.TextIOWrapper(buf,
+                                 encoding=encoding,
+                                 errors=errors,
+                                 newline='')
 
             # write the table
             try:
@@ -181,8 +170,7 @@ class TeeHTMLView(Table):
                 f.flush()
 
             finally:
-                if not PY2:
-                    f.detach()
+                f.detach()
 
 
 def _write_begin(f, flds, lineterminator, caption, index_header, truncate):
@@ -209,7 +197,7 @@ def _write_row(f, flds, row, lineterminator, vrepr, tr_style, td_styles,
         f.write(("<tr style='%s'>" % tr_css) + lineterminator)
     else:
         f.write("<tr>" + lineterminator)
-    for h, v in izip_longest(flds, row, fillvalue=None):
+    for h, v in zip_longest(flds, row, fillvalue=None):
         r = vrepr(v)
         if truncate:
             r = r[:truncate]
@@ -224,7 +212,7 @@ def _write_row(f, flds, row, lineterminator, vrepr, tr_style, td_styles,
 def _get_tr_css(row, tr_style):
     # check for user-provided style
     if tr_style:
-        if isinstance(tr_style, string_types):
+        if isinstance(tr_style, str):
             return tr_style
         elif callable(tr_style):
             return tr_style(row)
@@ -238,14 +226,14 @@ def _get_tr_css(row, tr_style):
 def _get_td_css(h, v, td_styles):
     # check for user-provided style
     if td_styles:
-        if isinstance(td_styles, string_types):
+        if isinstance(td_styles, str):
             return td_styles
         elif callable(td_styles):
             return td_styles(v)
         elif isinstance(td_styles, dict):
             if h in td_styles:
                 s = td_styles[h]
-                if isinstance(s, string_types):
+                if isinstance(s, str):
                     return s
                 elif callable(s):
                     return s(v)
@@ -256,7 +244,7 @@ def _get_td_css(h, v, td_styles):
             raise ArgumentError('expected string, callable or dict, got %r'
                                 % td_styles)
     # fall back to default style
-    if isinstance(v, numeric_types) and not isinstance(v, bool):
+    if isinstance(v, (bool, int, float)) and not isinstance(v, bool):
         return 'text-align: right'
     else:
         return ''

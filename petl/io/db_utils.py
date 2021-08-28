@@ -1,9 +1,6 @@
 import logging
 
 
-from petl.compat import callable
-
-
 logger = logging.getLogger(__name__)
 debug = logger.debug
 

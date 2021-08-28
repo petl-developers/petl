@@ -1,6 +1,5 @@
 import operator
 from collections import OrderedDict
-from petl.compat import next, string_types, text_type
 
 
 import petl.config as config
@@ -86,7 +85,7 @@ class FieldMapView(Table):
 def iterfieldmap(source, mappings, failonerror, errorvalue):
     it = iter(source)
     hdr = next(it)
-    flds = list(map(text_type, hdr))
+    flds = list(map(str, hdr))
     outhdr = mappings.keys()
     yield tuple(outhdr)
 
@@ -96,7 +95,7 @@ def iterfieldmap(source, mappings, failonerror, errorvalue):
             mapfuns[outfld] = operator.itemgetter(m)
         elif isinstance(m, int) and m < len(hdr):
             mapfuns[outfld] = operator.itemgetter(m)
-        elif isinstance(m, string_types):
+        elif isinstance(m, str):
             mapfuns[outfld] = expr(m)
         elif callable(m):
             mapfuns[outfld] = m
@@ -212,7 +211,7 @@ class RowMapView(Table):
 def iterrowmap(source, rowmapper, header, failonerror):
     it = iter(source)
     hdr = next(it)
-    flds = list(map(text_type, hdr))
+    flds = list(map(str, hdr))
     yield tuple(header)
     it = (Record(row, flds) for row in it)
     for row in it:
@@ -306,7 +305,7 @@ class RowMapManyView(Table):
 def iterrowmapmany(source, rowgenerator, header, failonerror):
     it = iter(source)
     hdr = next(it)
-    flds = list(map(text_type, hdr))
+    flds = list(map(str, hdr))
     yield tuple(header)
     it = (Record(row, flds) for row in it)
     for row in it:

@@ -1,7 +1,6 @@
 import operator
 from collections import OrderedDict
-from itertools import islice
-from petl.compat import izip_longest, text_type, next
+from itertools import islice, zip_longest
 
 
 from petl.util.base import asindices, Table
@@ -58,11 +57,11 @@ def columns(table, missing=None):
     cols = OrderedDict()
     it = iter(table)
     hdr = next(it)
-    flds = list(map(text_type, hdr))
+    flds = list(map(str, hdr))
     for f in flds:
         cols[f] = list()
     for row in it:
-        for f, v in izip_longest(flds, row, fillvalue=missing):
+        for f, v in zip_longest(flds, row, fillvalue=missing):
             if f in cols:
                 cols[f].append(v)
     return cols
@@ -92,7 +91,7 @@ def facetcolumns(table, key, missing=None):
     fct = dict()
     it = iter(table)
     hdr = next(it)
-    flds = list(map(text_type, hdr))
+    flds = list(map(str, hdr))
     indices = asindices(hdr, key)
     assert len(indices) > 0, 'no key field selected'
     getkey = operator.itemgetter(*indices)
@@ -106,7 +105,7 @@ def facetcolumns(table, key, missing=None):
             fct[kv] = cols
         else:
             cols = fct[kv]
-        for f, v in izip_longest(flds, row, fillvalue=missing):
+        for f, v in zip_longest(flds, row, fillvalue=missing):
             if f in cols:
                 cols[f].append(v)
 

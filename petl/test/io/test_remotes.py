@@ -2,7 +2,6 @@ import sys
 import os
 from importlib import import_module
 
-from petl.compat import PY3
 from petl.test.helpers import ieq, eq_
 from petl.io.avro import fromavro, toavro
 from petl.io.csv import fromcsv, tocsv
@@ -15,9 +14,8 @@ from petl.util.vis import look
 
 
 def test_helper_local():
-    if PY3:
-        _ensure_dir("./tmp")
-        _write_read_into_url("./tmp/example.")
+    _ensure_dir("./tmp")
+    _write_read_into_url("./tmp/example.")
 
 
 def test_helper_fsspec():

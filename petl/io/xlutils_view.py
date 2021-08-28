@@ -6,7 +6,6 @@
 
 
 from datetime import datetime, time
-from petl.compat import xrange
 
 
 class Index:
@@ -71,7 +70,7 @@ class SheetView:
                         stop = max(0, max_n + stop_val)
                     elif stop_val > 0:
                         stop = min(max_n, stop_val)
-            setattr(self, name, xrange(start, stop))
+            setattr(self, name, range(start, stop))
 
     def __row(self, rowx):
         from xlrd import XL_CELL_DATE, xldate_as_tuple

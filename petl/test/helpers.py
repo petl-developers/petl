@@ -1,15 +1,15 @@
 import sys
 
 from nose.tools import eq_, assert_almost_equal
+from itertools import zip_longest
 
-from petl.compat import izip_longest
 
 
 def ieq(expect, actual, cast=None):
     '''test when values are equals for eacfh row and column'''
     ie = iter(expect)
     ia = iter(actual)
-    for re, ra in izip_longest(ie, ia, fillvalue=None):
+    for re, ra in zip_longest(ie, ia, fillvalue=None):
         if cast:
             ra = cast(ra)
         if re is None and ra is None:
@@ -17,9 +17,9 @@ def ieq(expect, actual, cast=None):
         if type(re) in (int, float, bool, str):
             eq_(re, ra)
             continue
-        for ve, va in izip_longest(re, ra, fillvalue=None):
+        for ve, va in zip_longest(re, ra, fillvalue=None):
             if isinstance(ve, list):
-                for je, ja in izip_longest(ve, va, fillvalue=None):
+                for je, ja in zip_longest(ve, va, fillvalue=None):
                     _eq_print(je, ja, re, ra)
             elif not isinstance(ve, dict):
                 _eq_print(ve, va, re, ra)

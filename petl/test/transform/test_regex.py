@@ -1,6 +1,3 @@
-from petl.compat import next
-
-
 from petl.test.helpers import ieq, eq_
 from petl.transform.regex import capture, split, search, searchcomplement, splitdown
 from petl.transform.basics import TransformError

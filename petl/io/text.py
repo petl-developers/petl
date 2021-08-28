@@ -1,6 +1,5 @@
 # standard library dependencies
 import io
-from petl.compat import next, PY2, text_type
 
 
 # internal dependencies
@@ -73,14 +72,10 @@ class TextView(Table):
         with self.source.open('rb') as buf:
 
             # deal with text encoding
-            if PY2:
-                codec = getcodec(self.encoding)
-                f = codec.streamreader(buf, errors=self.errors)
-            else:
-                f = io.TextIOWrapper(buf,
-                                     encoding=self.encoding,
-                                     errors=self.errors,
-                                     newline='')
+            f = io.TextIOWrapper(buf,
+                                 encoding=self.encoding,
+                                 errors=self.errors,
+                                 newline='')
 
             # generate the table
             try:
@@ -93,8 +88,7 @@ class TextView(Table):
                     for line in f:
                         yield (line.strip(self.strip),)
             finally:
-                if not PY2:
-                    f.detach()
+                f.detach()
 
 
 def totext(table, source=None, encoding=None, errors='strict', template=None,
@@ -176,14 +170,10 @@ def _writetext(table, source, mode, encoding, errors, template, prologue,
     with source.open(mode) as buf:
 
         # deal with text encoding
-        if PY2:
-            codec = getcodec(encoding)
-            f = codec.streamwriter(buf, errors=errors)
-        else:
-            f = io.TextIOWrapper(buf,
-                                 encoding=encoding,
-                                 errors=errors,
-                                 newline='')
+        f = io.TextIOWrapper(buf,
+                             encoding=encoding,
+                             errors=errors,
+                             newline='')
 
         # write the table
         try:
@@ -191,7 +181,7 @@ def _writetext(table, source, mode, encoding, errors, template, prologue,
                 f.write(prologue)
             it = iter(table)
             hdr = next(it)
-            flds = list(map(text_type, hdr))
+            flds = list(map(str, hdr))
             for row in it:
                 rec = asdict(flds, row)
                 s = template.format(**rec)
@@ -201,8 +191,7 @@ def _writetext(table, source, mode, encoding, errors, template, prologue,
             f.flush()
 
         finally:
-            if not PY2:
-                f.detach()
+            f.detach()
 
 
 def teetext(table, source=None, encoding=None, errors='strict', template=None,
@@ -249,13 +238,9 @@ def _iterteetext(table, source, encoding, errors, template, prologue, epilogue):
     with source.open('wb') as buf:
 
         # deal with text encoding
-        if PY2:
-            codec = getcodec(encoding)
-            f = codec.streamwriter(buf, errors=errors)
-        else:
-            f = io.TextIOWrapper(buf,
-                                 encoding=encoding,
-                                 errors=errors)
+        f = io.TextIOWrapper(buf,
+                             encoding=encoding,
+                             errors=errors)
 
         # write the data
         try:
@@ -264,7 +249,7 @@ def _iterteetext(table, source, encoding, errors, template, prologue, epilogue):
             it = iter(table)
             hdr = next(it)
             yield tuple(hdr)
-            flds = list(map(text_type, hdr))
+            flds = list(map(str, hdr))
             for row in it:
                 rec = asdict(flds, row)
                 s = template.format(**rec)
@@ -275,5 +260,4 @@ def _iterteetext(table, source, encoding, errors, template, prologue, epilogue):
             f.flush()
 
         finally:
-            if not PY2:
-                f.detach()
+            f.detach()

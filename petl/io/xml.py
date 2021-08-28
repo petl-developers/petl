@@ -7,7 +7,6 @@ except ImportError:
 
 from operator import attrgetter
 import itertools
-from petl.compat import string_types, text_type
 
 
 # internal dependencies
@@ -147,7 +146,7 @@ class XmlView(Table):
     def __init__(self, source, *args, **kwargs):
         self.source = source
         self.args = args
-        if len(args) == 2 and isinstance(args[1], (string_types, tuple, list)):
+        if len(args) == 2 and isinstance(args[1], (str, tuple, list)):
             self.rmatch = args[0]
             self.vmatch = args[1]
             self.vdict = None
@@ -185,7 +184,7 @@ class XmlView(Table):
                         getv = attrgetter('text')
                     else:
                         getv = lambda e: e.get(self.attr)
-                    if isinstance(vmatch, string_types):
+                    if isinstance(vmatch, str):
                         # match only one path
                         velms = rowelm.findall(vmatch)
                     else:
@@ -199,7 +198,7 @@ class XmlView(Table):
                 # difficult case, deal with different paths for each field
 
                 # determine output header
-                flds = tuple(sorted(map(text_type, vdict.keys())))
+                flds = tuple(sorted(map(str, vdict.keys())))
                 yield flds
 
                 # setup value getters
@@ -207,7 +206,7 @@ class XmlView(Table):
                 vgetters = dict()
                 for f in flds:
                     vmatch = self.vdict[f]
-                    if isinstance(vmatch, string_types):
+                    if isinstance(vmatch, str):
                         # match element path
                         vmatches[f] = vmatch
                         vgetters[f] = element_text_getter(self.missing)

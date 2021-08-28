@@ -1,4 +1,4 @@
-from petl.compat import maxint
+import sys
 from petl.test.helpers import eq_
 from petl.util.parsers import numparser, datetimeparser
 
@@ -8,7 +8,7 @@ def test_numparser():
     parsenumber = numparser()
     assert parsenumber('1') == 1
     assert parsenumber('1.0') == 1.0
-    assert parsenumber(str(maxint + 1)) == maxint + 1
+    assert parsenumber(str(sys.maxsize + 1)) == sys.maxsize + 1
     assert parsenumber('3+4j') == 3 + 4j
     assert parsenumber('aaa') == 'aaa'
     assert parsenumber(None) is None
@@ -19,7 +19,7 @@ def test_numparser_strict():
     parsenumber = numparser(strict=True)
     assert parsenumber('1') == 1
     assert parsenumber('1.0') == 1.0
-    assert parsenumber(str(maxint + 1)) == maxint + 1
+    assert parsenumber(str(sys.maxsize + 1)) == sys.maxsize + 1
     assert parsenumber('3+4j') == 3 + 4j
     try:
         parsenumber('aaa')

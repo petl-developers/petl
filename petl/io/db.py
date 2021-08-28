@@ -1,6 +1,5 @@
 # standard library dependencies
 import logging
-from petl.compat import next, text_type, string_types
 
 
 # internal dependencies
@@ -78,7 +77,7 @@ def fromdb(dbo, query, *args, **kwargs):
     """
 
     # convenience for working with sqlite3
-    if isinstance(dbo, string_types):
+    if isinstance(dbo, str):
         import sqlite3
         dbo = sqlite3.connect(dbo)
 
@@ -316,7 +315,7 @@ def todb(table, dbo, tablename, schema=None, commit=True,
     needs_closing = False
 
     # convenience for working with sqlite3
-    if isinstance(dbo, string_types):
+    if isinstance(dbo, str):
         import sqlite3
         dbo = sqlite3.connect(dbo)
         needs_closing = True
@@ -401,7 +400,7 @@ def _todb_dbapi_connection(table, connection, tablename, schema=None,
     # sanitise field names
     it = iter(table)
     hdr = next(it)
-    flds = list(map(text_type, hdr))
+    flds = list(map(str, hdr))
     colnames = [_quote(n) for n in flds]
     debug('column names: %r', colnames)
 
@@ -448,7 +447,7 @@ def _todb_dbapi_mkcurs(table, mkcurs, tablename, schema=None, commit=True,
     # sanitise field names
     it = iter(table)
     hdr = next(it)
-    flds = list(map(text_type, hdr))
+    flds = list(map(str, hdr))
     colnames = [_quote(n) for n in flds]
     debug('column names: %r', colnames)
 
@@ -496,7 +495,7 @@ def _todb_dbapi_cursor(table, cursor, tablename, schema=None, commit=True,
     # sanitise field names
     it = iter(table)
     hdr = next(it)
-    flds = list(map(text_type, hdr))
+    flds = list(map(str, hdr))
     colnames = [_quote(n) for n in flds]
     debug('column names: %r', colnames)
 
@@ -550,7 +549,7 @@ def _todb_sqlalchemy_connection(table, connection, tablename, schema=None,
     # sanitise field names
     it = iter(table)
     hdr = next(it)
-    flds = list(map(text_type, hdr))
+    flds = list(map(str, hdr))
     colnames = [_quote(n) for n in flds]
     debug('column names: %r', colnames)
 
@@ -609,7 +608,7 @@ def appenddb(table, dbo, tablename, schema=None, commit=True):
     needs_closing = False
 
     # convenience for working with sqlite3
-    if isinstance(dbo, string_types):
+    if isinstance(dbo, str):
         import sqlite3
         dbo = sqlite3.connect(dbo)
         needs_closing = True

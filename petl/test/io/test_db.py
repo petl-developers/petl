@@ -1,6 +1,5 @@
 import sqlite3
 from tempfile import NamedTemporaryFile
-from petl.compat import next
 
 
 from petl.test.helpers import ieq, eq_

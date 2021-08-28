@@ -1,5 +1,4 @@
 import operator
-from petl.compat import text_type
 
 
 from petl.errors import DuplicateKeyError
@@ -223,7 +222,7 @@ def dictlookup(table, key, dictionary=None):
 
     it = iter(table)
     hdr = next(it)
-    flds = list(map(text_type, hdr))
+    flds = list(map(str, hdr))
     keyindices = asindices(hdr, key)
     assert len(keyindices) > 0, 'no key selected'
     getkey = operator.itemgetter(*keyindices)
@@ -301,7 +300,7 @@ def dictlookupone(table, key, dictionary=None, strict=False):
 
     it = iter(table)
     hdr = next(it)
-    flds = list(map(text_type, hdr))
+    flds = list(map(str, hdr))
     keyindices = asindices(hdr, key)
     assert len(keyindices) > 0, 'no key selected'
     getkey = operator.itemgetter(*keyindices)
@@ -329,7 +328,7 @@ def recordlookup(table, key, dictionary=None):
 
     it = iter(table)
     hdr = next(it)
-    flds = list(map(text_type, hdr))
+    flds = list(map(str, hdr))
     keyindices = asindices(hdr, key)
     assert len(keyindices) > 0, 'no key selected'
     getkey = operator.itemgetter(*keyindices)
@@ -361,7 +360,7 @@ def recordlookupone(table, key, dictionary=None, strict=False):
 
     it = iter(table)
     hdr = next(it)
-    flds = list(map(text_type, hdr))
+    flds = list(map(str, hdr))
     keyindices = asindices(hdr, key)
     assert len(keyindices) > 0, 'no key selected'
     getkey = operator.itemgetter(*keyindices)

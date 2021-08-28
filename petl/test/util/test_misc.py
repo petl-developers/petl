@@ -1,5 +1,4 @@
 from petl.test.helpers import eq_
-from petl.compat import PY2
 from petl.util.misc import typeset, diffvalues, diffheaders
 
 
@@ -13,10 +12,7 @@ def test_typeset():
              (b'E', 42))
 
     actual = typeset(table, 'foo')
-    if PY2:
-        expect = {'str', 'unicode'}
-    else:
-        expect = {'bytes', 'str'}
+    expect = {'bytes', 'str'}
     eq_(expect, actual)
 
 

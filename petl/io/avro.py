@@ -3,8 +3,8 @@ import math
 from collections import OrderedDict
 from datetime import datetime, date, time
 from decimal import Decimal
+from itertools import zip_longest
 
-from petl.compat import izip_longest, text_type, string_types, PY3
 from petl.io.sources import read_source_from_arg, write_source_from_arg
 from petl.transform.headers import skip, setheader
 from petl.util.base import Table, dicts, fieldnames, iterpeek, wrap
@@ -293,12 +293,7 @@ class AvroView(Table):
         - avro type: int logicalType: date              -> python date
         - avro type: bytes logicalType: decimal         -> python Decimal
         '''
-        if header is None or PY3:
-            r = tuple(record.values())
-        else:
-            # fastavro on python2 does not respect dict order
-            r = tuple(record.get(col) for col in header)
-        return r
+        return tuple(record.values())
 
 
 def _write_toavro(table, target, mode, schema, sample,
@@ -311,7 +306,7 @@ def _write_toavro(table, target, mode, schema, sample,
     else:
         table2 = _fix_missing_headers(table, schema)
     # fastavro expects a iterator of dicts
-    rows = dicts(table2) if PY3 else _ordered_dict_iterator(table2)
+    rows = dicts(table2)
 
     target2 = write_source_from_arg(target, mode=mode)
     with target2.open(mode) as target_file:
@@ -381,7 +376,7 @@ def _build_schema_fields_from_values(peek, props):
 
 
 def _update_field_defs_from(props, row, fields, previous, fill_missing):
-    for prop, val in izip_longest(props, row):
+    for prop, val in zip_longest(props, row):
         if prop is None:
             break
         dprev = previous.get(prop + '_prec')
@@ -526,7 +521,7 @@ def _get_error_details(target, num, err, record, schema):
     else:
         table = [headers, record]
     example = wrap(table).look()
-    dest = " output: %s" % target if isinstance(target, string_types) else ''
+    dest = " output: %s" % target if isinstance(target, str) else ''
     printed = "failed writing on row #%d: %s\n%s\n schema: %s\n%s"
     details = printed % (num, err, dest, schema, example)
     return details
@@ -545,10 +540,7 @@ def _raise_error(ErrorType, new_message):
     exinf = sys.exc_info()
     tracebk = exinf[2]
     try:
-        if PY3:
-            raise ErrorType(new_message).with_traceback(tracebk)
-        # Python2 compatibility workaround
-        exec('raise ErrorType, new_message, tracebk')
+        raise ErrorType(new_message).with_traceback(tracebk)
     finally:
         exinf = None
         tracebk = None  # noqa: F841
@@ -557,7 +549,7 @@ def _raise_error(ErrorType, new_message):
 def _ordered_dict_iterator(table):
     it = iter(table)
     hdr = next(it)
-    flds = [text_type(f) for f in hdr]
+    flds = [str(f) for f in hdr]
     for row in it:
         items = list()
         for i, f in enumerate(flds):

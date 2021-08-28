@@ -1,5 +1,4 @@
 import itertools
-from petl.compat import next, text_type
 from petl.errors import FieldSelectionError
 
 
@@ -77,7 +76,7 @@ class RenameView(Table):
 def iterrename(source, spec, strict):
     it = iter(source)
     hdr = next(it)
-    flds = list(map(text_type, hdr))
+    flds = list(map(str, hdr))
     if strict:
         for x in spec:
             if isinstance(x, int):
@@ -306,7 +305,7 @@ class PrefixHeaderView(Table):
     def __iter__(self):
         it = iter(self.table)
         hdr = next(it)
-        outhdr = tuple((text_type(self.prefix) + text_type(f)) for f in hdr)
+        outhdr = tuple((str(self.prefix) + str(f)) for f in hdr)
         yield outhdr
         yield from it
 
@@ -329,7 +328,7 @@ class SuffixHeaderView(Table):
     def __iter__(self):
         it = iter(self.table)
         hdr = next(it)
-        outhdr = tuple((text_type(f) + text_type(self.suffix)) for f in hdr)
+        outhdr = tuple((str(f) + str(self.suffix)) for f in hdr)
         yield outhdr
         yield from it
 

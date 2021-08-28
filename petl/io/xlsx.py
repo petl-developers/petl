@@ -1,4 +1,3 @@
-from petl.compat import PY3
 from petl.util.base import Table, data
 from petl.io.sources import read_source_from_arg, write_source_from_arg
 
@@ -118,11 +117,6 @@ def toxlsx(tbl, filename, sheet=None, write_header=True, mode="replace"):
 
 
 def _load_or_create_workbook(filename, mode, sheet):
-    if PY3:
-        FileNotFound = FileNotFoundError
-    else:
-        FileNotFound = IOError
-
     import openpyxl
     wb = None
     if not (mode == "overwrite" or (mode == "replace" and sheet is None)):
@@ -130,7 +124,7 @@ def _load_or_create_workbook(filename, mode, sheet):
             source = read_source_from_arg(filename)
             with source.open('rb') as source2:
                 wb = openpyxl.load_workbook(filename=source2, read_only=False)
-        except FileNotFound:
+        except FileNotFoundError:
             wb = None
     if wb is None:
         wb = openpyxl.Workbook(write_only=True)
