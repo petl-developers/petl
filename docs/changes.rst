@@ -1,6 +1,12 @@
 Changes
 =======
 
+Unreleaesed
+-------------
+
+* Drop support for EOL Python 2.7.
+  By :user:`hugovk`, :issue:`478`.
+
 Version 1.7.4
 -------------
 
