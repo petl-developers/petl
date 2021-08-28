@@ -29,7 +29,7 @@ suite with::
     $ pip install nose
     $ nosetests -v
 
-Currently :mod:`petl` supports Python 2.7, 3.4, 3.5 and 3.6
+Currently :mod:`petl` supports Python 3.6+
 so the tests should pass under all these Python versions.
 
 Dependencies
@@ -85,12 +85,12 @@ Automatically running all tests
 
 All of the above tests can be run automatically using `tox
 <https://tox.readthedocs.org/>`_. You will need binaries for Python
-2.7 and 3.6 available on your system.
+3.6 available on your system.
 
 To run all tests **without** installing any of the optional
 dependencies, do::
 
-    $ tox -e py27,py36,docs
+    $ tox -e py36,docs
 
 To run the entire test suite, including installation of **all**
 optional dependencies, do::

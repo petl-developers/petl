@@ -21,7 +21,7 @@ To verify the installation, the test suite can be run with `nose
     $ pip install nose
     $ nosetests -v petl
 
-:mod:`petl` has been tested with Python versions 2.7 and 3.4-3.6 
+:mod:`petl` has been tested with Python versions 3.6+
 under Linux and Windows operating systems.
 
 .. _intro_dependencies:

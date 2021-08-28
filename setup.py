@@ -14,7 +14,7 @@ setup(
     description='A Python package for extracting, transforming and loading '
                 'tables of data.',
     long_description=open('README.txt').read(),
-    python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*',
+    python_requires='>=3.6',
     setup_requires=["setuptools>18.0", "setuptools-scm>1.5.4"],
     extras_require={
         'avro': ['fastavro>=0.24.0'],
@@ -40,8 +40,6 @@ setup(
     },
     classifiers=['Intended Audience :: Developers',
                  'License :: OSI Approved :: MIT License',
-                 'Programming Language :: Python :: 2',
-                 'Programming Language :: Python :: 2.7',
                  'Programming Language :: Python :: 3',
                  'Programming Language :: Python :: 3.6',
                  'Programming Language :: Python :: 3.7',
