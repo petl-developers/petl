@@ -74,7 +74,7 @@ def test_totext():
            prologue=prologue, epilogue=epilogue)
 
     # check what it did
-    with open(f.name, mode='rt', encoding='ascii', newline='') as o:
+    with open(f.name, encoding='ascii', newline='') as o:
         actual = o.read()
         expect = (
             "{| class='wikitable'\n"

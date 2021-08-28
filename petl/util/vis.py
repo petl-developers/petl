@@ -1,6 +1,3 @@
-from __future__ import absolute_import, print_function, division
-
-
 import locale
 from itertools import islice
 from collections import defaultdict
@@ -85,7 +82,7 @@ def look(table, limit=0, vrepr=None, index_header=None, style=None,
 Table.look = look
 
 
-class Look(object):
+class Look:
 
     def __init__(self, table, limit, vrepr, index_header, style, truncate,
                  width):
@@ -196,7 +193,7 @@ def _look_grid(table, vrepr, index_header, truncate, width):
     hdr = next(it)
     flds = list(map(str, hdr))
     if index_header:
-        fldsrepr = ['%s|%s' % (i, r) for (i, r) in enumerate(flds)]
+        fldsrepr = [f'{i}|{r}' for (i, r) in enumerate(flds)]
     else:
         fldsrepr = flds
 
@@ -296,7 +293,7 @@ def _look_simple(table, vrepr, index_header, truncate, width):
     hdr = next(it)
     flds = list(map(str, hdr))
     if index_header:
-        fldsrepr = ['%s|%s' % (i, r) for (i, r) in enumerate(flds)]
+        fldsrepr = [f'{i}|{r}' for (i, r) in enumerate(flds)]
     else:
         fldsrepr = flds
 
@@ -379,7 +376,7 @@ def _look_minimal(table, vrepr, index_header, truncate, width):
     hdr = next(it)
     flds = list(map(str, hdr))
     if index_header:
-        fldsrepr = ['%s|%s' % (i, r) for (i, r) in enumerate(flds)]
+        fldsrepr = [f'{i}|{r}' for (i, r) in enumerate(flds)]
     else:
         fldsrepr = flds
 
@@ -475,7 +472,7 @@ def see(table, limit=0, vrepr=None, index_header=None):
     return See(table, limit=limit, vrepr=vrepr, index_header=index_header)
 
 
-class See(object):
+class See:
 
     def __init__(self, table, limit, vrepr, index_header):
         self.table = table
@@ -504,8 +501,8 @@ class See(object):
                     cols[str(f)].append('')
         for i, f in enumerate(flds):
             if index_header:
-                f = '%s|%s' % (i, f)
-            output += '%s: %s' % (f, ', '.join(cols[str(i)]))
+                f = f'{i}|{f}'
+            output += '{}: {}'.format(f, ', '.join(cols[str(i)]))
             if overflow:
                 output += '...\n'
             else:

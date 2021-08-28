@@ -19,7 +19,7 @@ def test_memorysource():
     # test writing to a string buffer
     ss = MemorySource()
     etl.tocsv(tbl1, ss)
-    expect = "foo,bar\r\na,1\r\nb,2\r\nc,2\r\n".encode('ascii')
+    expect = b"foo,bar\r\na,1\r\nb,2\r\nc,2\r\n"
     actual = ss.getvalue()
     eq_(expect, actual)
 
@@ -31,13 +31,13 @@ def test_memorysource():
     # test appending
     etl.appendcsv(tbl1, ss)
     actual = ss.getvalue()
-    expect = "foo,bar\r\na,1\r\nb,2\r\nc,2\r\na,1\r\nb,2\r\nc,2\r\n".encode('ascii')
+    expect = b"foo,bar\r\na,1\r\nb,2\r\nc,2\r\na,1\r\nb,2\r\nc,2\r\n"
     eq_(expect, actual)
 
 
 def test_memorysource_2():
 
-    data = 'foo,bar\r\na,1\r\nb,2\r\nc,2\r\n'.encode('ascii')
+    data = b'foo,bar\r\na,1\r\nb,2\r\nc,2\r\n'
     actual = etl.fromcsv(MemorySource(data))
     expect = (('foo', 'bar'),
               ('a', '1'),

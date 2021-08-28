@@ -18,7 +18,7 @@ def test_tohtml():
     tohtml(tbl, fn, encoding='utf-8', lineterminator='\n')
 
     # check what it did
-    f = open(fn, mode='rt', encoding='utf-8', newline='')
+    f = open(fn, encoding='utf-8', newline='')
     actual = f.read()
     expect = (
         "<table class='petl'>\n"

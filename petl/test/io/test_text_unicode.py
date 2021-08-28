@@ -57,7 +57,7 @@ def test_totext():
            epilogue=epilogue, encoding='utf-8')
 
     # check what it did
-    f = open(fn, encoding='utf-8', mode='rt')
+    f = open(fn, encoding='utf-8')
     actual = f.read()
     expect = (
         "{| class='wikitable'\n"

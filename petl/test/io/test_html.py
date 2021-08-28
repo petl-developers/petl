@@ -18,7 +18,7 @@ def test_tohtml():
     tohtml(table, f.name, encoding='ascii', lineterminator='\n')
 
     # check what it did
-    with open(f.name, mode='rt', encoding='ascii', newline='') as o:
+    with open(f.name, encoding='ascii', newline='') as o:
         actual = o.read()
         expect = (
             "<table class='petl'>\n"
@@ -58,7 +58,7 @@ def test_tohtml_caption():
            lineterminator='\n')
 
     # check what it did
-    with open(f.name, mode='rt', encoding='ascii', newline='') as o:
+    with open(f.name, encoding='ascii', newline='') as o:
         actual = o.read()
         expect = (
             "<table class='petl'>\n"

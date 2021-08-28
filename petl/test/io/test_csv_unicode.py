@@ -68,7 +68,7 @@ def test_tocsv():
         "Вагиф Сәмәдоғлу,3\n"
         "章子怡,4\n"
     )
-    uf = open(fn, encoding='utf-8', mode='rt', newline='')
+    uf = open(fn, encoding='utf-8', newline='')
     actual = uf.read()
     eq_(expect, actual)
 
@@ -86,7 +86,7 @@ def test_tocsv():
         "Вагиф Сәмәдоғлу,3\n"
         "章子怡,4\n"
     )
-    uf = open(fn, encoding='utf-8', mode='rt', newline='')
+    uf = open(fn, encoding='utf-8', newline='')
     actual = uf.read()
     eq_(expect, actual)
 
@@ -119,7 +119,7 @@ def test_appendcsv():
         "ኃይሌ ገብረሥላሴ,5\n"
         "ედუარდ შევარდნაძე,6\n"
     )
-    uf = open(fn, encoding='utf-8', mode='rt')
+    uf = open(fn, encoding='utf-8')
     actual = uf.read()
     eq_(expect, actual)
 
@@ -142,6 +142,6 @@ def test_tocsv_none():
         'd,4\n'
     )
 
-    uf = open(fn, encoding='utf-8', mode='rt', newline='')
+    uf = open(fn, encoding='utf-8', newline='')
     actual = uf.read()
     eq_(expect, actual)
