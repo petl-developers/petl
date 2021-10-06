@@ -4,7 +4,7 @@ from __future__ import absolute_import, print_function, division
 import operator
 
 
-from petl.compat import text_type, binary_type, numeric_types
+from petl import compat
 
 
 class Comparable(object):
@@ -40,17 +40,17 @@ class Comparable(object):
             return True
 
         # numbers < everything else (except None)
-        if isinstance(obj, numeric_types) \
-                and not isinstance(other, numeric_types):
+        if isinstance(obj, compat.numeric_types) \
+                and not isinstance(other, compat.numeric_types):
             return True
-        if not isinstance(obj, numeric_types) \
-                and isinstance(other, numeric_types):
+        if not isinstance(obj, compat.numeric_types) \
+                and isinstance(other, compat.numeric_types):
             return False
 
         # binary < unicode
-        if isinstance(obj, text_type) and isinstance(other, binary_type):
+        if isinstance(obj, compat.text_type) and isinstance(other, compat.binary_type):
             return False
-        if isinstance(obj, binary_type) and isinstance(other, text_type):
+        if isinstance(obj, compat.binary_type) and isinstance(other, compat.text_type):
             return True
 
         try:
@@ -79,7 +79,7 @@ class Comparable(object):
         return str(self.obj)
 
     def __unicode__(self):
-        return text_type(self.obj)
+        return compat.text_type(self.obj)
 
     def __repr__(self):
         return 'Comparable(' + repr(self.obj) + ')'
@@ -96,9 +96,9 @@ class Comparable(object):
 
 def _typestr(x):
     # attempt to preserve Python 2 name orderings
-    if isinstance(x, binary_type):
+    if isinstance(x, compat.binary_type):
         return 'str'
-    if isinstance(x, text_type):
+    if isinstance(x, compat.text_type):
         return 'unicode'
     return type(x).__name__
 

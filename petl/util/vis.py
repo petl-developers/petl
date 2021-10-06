@@ -4,7 +4,7 @@ from __future__ import absolute_import, print_function, division
 import locale
 from itertools import islice
 from collections import defaultdict
-from petl.compat import numeric_types, text_type
+from petl import compat
 
 
 from petl import config
@@ -195,7 +195,7 @@ def _look_grid(table, vrepr, index_header, truncate, width):
 
     # fields representation
     hdr = next(it)
-    flds = list(map(text_type, hdr))
+    flds = list(map(compat.text_type, hdr))
     if index_header:
         fldsrepr = ['%s|%s' % (i, r) for (i, r) in enumerate(flds)]
     else:
@@ -267,7 +267,7 @@ def _look_grid(table, vrepr, index_header, truncate, width):
         rowline = '|'
         for i, w in enumerate(colwidths):
             vr = valsrepr[i]
-            if i < len(vals) and isinstance(vals[i], numeric_types) \
+            if i < len(vals) and isinstance(vals[i], compat.numeric_types) \
                     and not isinstance(vals[i], bool):
                 # left pad numbers
                 rowline += ' ' * (w + 1 - len(vr))  # padding
@@ -295,7 +295,7 @@ def _look_simple(table, vrepr, index_header, truncate, width):
 
     # fields representation
     hdr = next(it)
-    flds = list(map(text_type, hdr))
+    flds = list(map(compat.text_type, hdr))
     if index_header:
         fldsrepr = ['%s|%s' % (i, r) for (i, r) in enumerate(flds)]
     else:
@@ -350,7 +350,7 @@ def _look_simple(table, vrepr, index_header, truncate, width):
         rowline = ''
         for i, w in enumerate(colwidths):
             vr = valsrepr[i]
-            if i < len(vals) and isinstance(vals[i], numeric_types) \
+            if i < len(vals) and isinstance(vals[i], compat.numeric_types) \
                     and not isinstance(vals[i], bool):
                 # left pad numbers
                 rowline += vr.rjust(w)
@@ -378,7 +378,7 @@ def _look_minimal(table, vrepr, index_header, truncate, width):
 
     # fields representation
     hdr = next(it)
-    flds = list(map(text_type, hdr))
+    flds = list(map(compat.text_type, hdr))
     if index_header:
         fldsrepr = ['%s|%s' % (i, r) for (i, r) in enumerate(flds)]
     else:
@@ -427,7 +427,7 @@ def _look_minimal(table, vrepr, index_header, truncate, width):
         rowline = ''
         for i, w in enumerate(colwidths):
             vr = valsrepr[i]
-            if i < len(vals) and isinstance(vals[i], numeric_types) \
+            if i < len(vals) and isinstance(vals[i], compat.numeric_types) \
                     and not isinstance(vals[i], bool):
                 # left pad numbers
                 rowline += vr.rjust(w)
@@ -551,7 +551,7 @@ def _display_html(table, limit=0, vrepr=None, index_header=None, caption=None,
     tohtml(table, buf, encoding=encoding, index_header=index_header,
            vrepr=vrepr, caption=caption, tr_style=tr_style,
            td_styles=td_styles, truncate=truncate)
-    output = text_type(buf.getvalue(), encoding)
+    output = compat.text_type(buf.getvalue(), encoding)
 
     if epilogue:
         output += '<p>%s</p>' % epilogue
