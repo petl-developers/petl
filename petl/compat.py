@@ -15,9 +15,10 @@ PY3 = sys.version_info.major == 3
 if PY2:
     from itertools import ifilter, ifilterfalse, imap, izip, izip_longest
     from string import maketrans
+    from decimal import Decimal
     string_types = basestring,
     integer_types = int, long
-    numeric_types = bool, int, long, float
+    numeric_types = bool, int, long, float, Decimal
     text_type = unicode
     binary_type = str
     from urllib2 import urlopen
@@ -40,13 +41,14 @@ else:
     imap = map
     izip = zip
     xrange = range
+    from decimal import Decimal
     from itertools import filterfalse as ifilterfalse
     from itertools import zip_longest as izip_longest
     from functools import reduce
     maketrans = str.maketrans
     string_types = str,
     integer_types = int,
-    numeric_types = bool, int, float
+    numeric_types = bool, int, float, Decimal
     class_types = type,
     text_type = str
     binary_type = bytes
