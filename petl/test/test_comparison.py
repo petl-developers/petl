@@ -2,6 +2,7 @@ from __future__ import print_function, division, absolute_import
 
 
 from datetime import datetime
+from decimal import Decimal
 
 
 from petl.test.helpers import eq_
@@ -29,9 +30,9 @@ def test_comparable():
     eq_(e, a)
 
     # mixed numeric
-    d = [3., 1, 2.5]
+    d = [3., 1, 2.5, Decimal('1.5')]
     a = sorted(d, key=Comparable)
-    e = [1, 2.5, 3.]
+    e = [1, Decimal('1.5'), 2.5, 3.]
     eq_(e, a)
 
     # mixed numeric and bool
