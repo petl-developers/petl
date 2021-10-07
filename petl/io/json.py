@@ -5,7 +5,7 @@ from __future__ import absolute_import, print_function, division
 import io
 import itertools
 import json
-import typing
+import inspect
 from json.encoder import JSONEncoder
 
 from petl.compat import PY2
@@ -157,7 +157,7 @@ def fromdicts(dicts, header=None, sample=1000, missing=None):
     guarantee stability.
 
     """
-    view = DictsGeneratorView if isinstance(dicts, typing.Generator) else DictsView
+    view = DictsGeneratorView if inspect.isgenerator(dicts) else DictsView
     return view(dicts, header=header, sample=sample, missing=missing)
 
 
