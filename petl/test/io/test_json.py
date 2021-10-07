@@ -181,15 +181,14 @@ def test_fromdicts_header_does_not_raise():
 
 
 def test_fromdicts_header_list():
-    data = [
-        {'bar': 'a', 'foo': 1},
-        {'bar': 'b', 'foo': 2},
-        {'bar': 'c', 'foo': 2},
-    ]
+    from collections import OrderedDict
+    data = [OrderedDict([('foo', 'a'), ('bar', 1)]),
+        OrderedDict([('foo', 'b'), ('bar', 2)]),
+        OrderedDict([('foo', 'c'), ('bar', 2)])]
     actual = fromdicts(data)
     header = actual.header()
-    assert header == ('bar', 'foo')
-    expect = (('bar', 'foo'),
+    assert header == ('foo', 'bar')
+    expect = (('foo', 'bar'),
               ('a', 1),
               ('b', 2),
               ('c', 2))
@@ -198,15 +197,17 @@ def test_fromdicts_header_list():
 
 
 def test_fromdicts_header_generator():
+    from collections import OrderedDict
+
     def generator():
-        yield {'bar': 'a', 'foo': 1}
-        yield {'bar': 'b', 'foo': 2}
-        yield {'bar': 'c', 'foo': 2}
+        yield OrderedDict([('foo', 'a'), ('bar', 1)])
+        yield OrderedDict([('foo', 'b'), ('bar', 2)])
+        yield OrderedDict([('foo', 'c'), ('bar', 2)])
 
     actual = fromdicts(generator())
     header = actual.header()
-    assert header == ('bar', 'foo')
-    expect = (('bar', 'foo'),
+    assert header == ('foo', 'bar')
+    expect = (('foo', 'bar'),
               ('a', 1),
               ('b', 2),
               ('c', 2))
