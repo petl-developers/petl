@@ -178,3 +178,37 @@ def test_fromdicts_header_does_not_raise():
             {'foo': 'c', 'bar': 2}]
     actual = fromdicts(data)
     assert actual.header()
+
+
+def test_fromdicts_header_list():
+    data = [
+        {'bar': 'a', 'foo': 1},
+        {'bar': 'b', 'foo': 2},
+        {'bar': 'c', 'foo': 2},
+    ]
+    actual = fromdicts(data)
+    header = actual.header()
+    assert header == ('bar', 'foo')
+    expect = (('bar', 'foo'),
+              ('a', 1),
+              ('b', 2),
+              ('c', 2))
+    ieq(expect, actual)
+    ieq(expect, actual)
+
+
+def test_fromdicts_header_generator():
+    def generator():
+        yield {'bar': 'a', 'foo': 1}
+        yield {'bar': 'b', 'foo': 2}
+        yield {'bar': 'c', 'foo': 2}
+
+    actual = fromdicts(generator())
+    header = actual.header()
+    assert header == ('bar', 'foo')
+    expect = (('bar', 'foo'),
+              ('a', 1),
+              ('b', 2),
+              ('c', 2))
+    ieq(expect, actual)
+    ieq(expect, actual)
