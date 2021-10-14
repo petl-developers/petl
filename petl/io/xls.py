@@ -40,7 +40,7 @@ class XLSView(Table):
             source = read_source_from_arg(self.filename)
             with source.open('rb') as source2:
                 source3 = source2.read()
-                wb = xlutils_view.View(source3)
+                wb = xlutils_view.View(source3, **self.kwargs)
                 if self.sheet is None:
                     ws = wb[0]
                 else:
