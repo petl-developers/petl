@@ -28,7 +28,7 @@ setup(
         'pandas': ['pandas>=0.24.2'],
         'remote': ['fsspec>=0.7.4'],
         'smb': ['smbprotocol>=1.0.1'],
-        'xls': ['xlrd>=1.2.0', 'xlwt>=1.3.0'],
+        'xls': ['xlrd>=2.0.1', 'xlwt>=1.3.0'],
         'xlsx': ['openpyxl>=2.6.2'],
         'xpath': ['lxml>=4.4.0'],
         'whoosh': ['whoosh'],
