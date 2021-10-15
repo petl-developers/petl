@@ -27,7 +27,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ "ubuntu-latest", "windows-latest", "macos-latest" ]
-        python: [2.7, 3.6, 3.7, 3.8, 3.9]
+        python: [2.7, 3.6, 3.7, 3.8, 3.9, 3.10]
 
     runs-on: "${{ matrix.os }}"
 
@@ -37,7 +37,7 @@ jobs:
     steps:
       - name: Determine what scope of testing is available on ${{ matrix.os }}
         if: |
-          matrix.python >= '3.6' && matrix.python != '3.9' &&
+          matrix.python >= '3.6' && matrix.python != '3.9' && matrix.python != '3.10' &&
           (matrix.os != 'windows-latest' || matrix.python == '3.8')
         run: |
           echo 'testing=full' >> $GITHUB_ENV
