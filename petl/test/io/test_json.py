@@ -166,3 +166,46 @@ def test_tojsonarrays():
     assert result[1][1] == 2
     assert result[2][0] == 'c'
     assert result[2][1] == 2
+
+
+def test_fromdicts_header_does_not_raise():
+    data = [{'foo': 'a', 'bar': 1},
+            {'foo': 'b', 'bar': 2},
+            {'foo': 'c', 'bar': 2}]
+    actual = fromdicts(data)
+    assert actual.header()
+
+
+def test_fromdicts_header_list():
+    from collections import OrderedDict
+    data = [OrderedDict([('foo', 'a'), ('bar', 1)]),
+        OrderedDict([('foo', 'b'), ('bar', 2)]),
+        OrderedDict([('foo', 'c'), ('bar', 2)])]
+    actual = fromdicts(data)
+    header = actual.header()
+    assert header == ('foo', 'bar')
+    expect = (('foo', 'bar'),
+              ('a', 1),
+              ('b', 2),
+              ('c', 2))
+    ieq(expect, actual)
+    ieq(expect, actual)
+
+
+def test_fromdicts_header_generator():
+    from collections import OrderedDict
+
+    def generator():
+        yield OrderedDict([('foo', 'a'), ('bar', 1)])
+        yield OrderedDict([('foo', 'b'), ('bar', 2)])
+        yield OrderedDict([('foo', 'c'), ('bar', 2)])
+
+    actual = fromdicts(generator())
+    header = actual.header()
+    assert header == ('foo', 'bar')
+    expect = (('foo', 'bar'),
+              ('a', 1),
+              ('b', 2),
+              ('c', 2))
+    ieq(expect, actual)
+    ieq(expect, actual)

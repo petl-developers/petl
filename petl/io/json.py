@@ -1,6 +1,8 @@
 # standard library dependencies
 import io
+import itertools
 import json
+import inspect
 from json.encoder import JSONEncoder
 
 from petl.io.sources import read_source_from_arg, write_source_from_arg
@@ -147,20 +149,27 @@ def fromdicts(dicts, header=None, sample=1000, missing=None):
     guarantee stability.
 
     """
-
-    return DictsView(dicts, header=header, sample=sample, missing=missing)
+    view = DictsGeneratorView if inspect.isgenerator(dicts) else DictsView
+    return view(dicts, header=header, sample=sample, missing=missing)
 
 
 class DictsView(Table):
 
     def __init__(self, dicts, header=None, sample=1000, missing=None):
         self.dicts = dicts
-        self.header = header
+        self._header = header
         self.sample = sample
         self.missing = missing
 
     def __iter__(self):
-        return iterdicts(self.dicts, self.header, self.sample, self.missing)
+        return iterdicts(self.dicts, self._header, self.sample, self.missing)
+
+
+class DictsGeneratorView(DictsView):
+
+    def __iter__(self):
+        self.dicts, dicts = itertools.tee(self.dicts)
+        return iterdicts(dicts, self._header, self.sample, self.missing)
 
 
 def iterjlines(f, header, missing):

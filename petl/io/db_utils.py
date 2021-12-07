@@ -9,6 +9,10 @@ def _is_dbapi_connection(dbo):
     return _hasmethod(dbo, 'cursor')
 
 
+def _is_clikchouse_dbapi_connection(dbo):
+    return 'clickhouse_driver' in str(type(dbo))
+
+    
 def _is_dbapi_cursor(dbo):
     return _hasmethods(dbo, 'execute', 'executemany', 'fetchone', 'fetchmany',
                        'fetchall')

@@ -7,7 +7,7 @@ from petl.errors import ArgumentError
 from petl.util.base import Table
 from petl.io.db_utils import _is_dbapi_connection, _is_dbapi_cursor, \
     _is_sqlalchemy_connection, _is_sqlalchemy_engine, _is_sqlalchemy_session, \
-    _quote, _placeholders
+    _is_clikchouse_dbapi_connection, _quote, _placeholders
 from petl.io.db_create import drop_table, create_table
 
 
@@ -343,8 +343,13 @@ def _todb(table, dbo, tablename, schema=None, commit=True, truncate=False):
     # need to deal with polymorphic dbo argument
     # what sort of duck is it?
 
+    if _is_clikchouse_dbapi_connection(dbo):
+        debug('assuming %r is clickhosue DB-API 2.0 connection', dbo)
+        _todb_clikchouse_dbapi_connection(table, dbo, tablename, schema=schema,
+                               commit=commit, truncate=truncate)
+
     # does it quack like a standard DB-API 2.0 connection?
-    if _is_dbapi_connection(dbo):
+    elif _is_dbapi_connection(dbo):
         debug('assuming %r is standard DB-API 2.0 connection', dbo)
         _todb_dbapi_connection(table, dbo, tablename, schema=schema,
                                commit=commit, truncate=truncate)
@@ -423,6 +428,53 @@ def _todb_dbapi_connection(table, connection, tablename, schema=None,
 
     insertcolnames = ', '.join(colnames)
     insertquery = SQL_INSERT_QUERY % (tablename, insertcolnames, placeholders)
+    debug('insert data via query %r' % insertquery)
+    cursor.executemany(insertquery, it)
+
+    # finish up
+    debug('close the cursor')
+    cursor.close()
+
+    if commit:
+        debug('commit transaction')
+        connection.commit()
+
+
+def _todb_clikchouse_dbapi_connection(table, connection, tablename, schema=None,
+                           commit=True, truncate=False):
+
+    # sanitise table name
+    tablename = _quote(tablename)
+    if schema is not None:
+        tablename = _quote(schema) + '.' + tablename
+    debug('tablename: %r', tablename)
+
+    # sanitise field names
+    it = iter(table)
+    hdr = next(it)
+    flds = list(map(text_type, hdr))
+    colnames = [_quote(n) for n in flds]
+    debug('column names: %r', colnames)
+
+    # determine paramstyle and build placeholders string
+    placeholders = _placeholders(connection, colnames)
+    debug('placeholders: %r', placeholders)
+
+    # get a cursor
+    cursor = connection.cursor()
+
+    if truncate:
+        # TRUNCATE is not supported in some databases and causing locks with
+        # MySQL used via SQLAlchemy, fall back to DELETE FROM for now
+        truncatequery = 'TRUNCATE TABLE IF EXISTS %s' % tablename
+        debug('truncate the table via query %r', truncatequery)
+        cursor.execute(truncatequery)
+        # just in case, close and resurrect cursor
+        cursor.close()
+        cursor = connection.cursor()
+
+    insertcolnames = ', '.join(colnames)
+    insertquery = 'INSERT INTO %s (%s) VALUES' % (tablename, insertcolnames)
     debug('insert data via query %r' % insertquery)
     cursor.executemany(insertquery, it)
 
