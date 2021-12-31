@@ -260,6 +260,10 @@ def itersimpleaggregate(table, key, aggregation, value, field):
     if aggregation == len and key is not None:
         aggregation = lambda g: sum(1 for _ in g)  # count length of iterable
 
+    # special case where length of key is 1
+    if isinstance(key, (list, tuple)) and len(key) == 1:
+        key = key[0]
+
     # determine output header
     if isinstance(key, (list, tuple)):
         outhdr = tuple(key) + (field,)
