@@ -214,6 +214,14 @@ def test_convertall():
     ieq(expect2, table2)
     ieq(expect2, table2)
 
+    # test with non-string field names
+    table1 = (('foo', 3, 4),
+              (2, 2, 2))
+    table2 = convertall(table1, lambda x: x**2)
+    expect = (('foo', 3, 4),
+              (4, 4, 4))
+    ieq(expect, table2)
+
 
 def test_convertnumbers():
 
