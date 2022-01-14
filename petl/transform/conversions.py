@@ -6,7 +6,7 @@ from petl.compat import next, integer_types, string_types, text_type
 
 import petl.config as config
 from petl.errors import ArgumentError, FieldSelectionError
-from petl.util.base import Table, expr, header, Record
+from petl.util.base import Table, expr, fieldnames, Record
 from petl.util.parsers import numparser
 
 
@@ -242,7 +242,7 @@ def convertall(table, *args, **kwargs):
     """
 
     # TODO don't read the data twice!
-    return convert(table, header(table), *args, **kwargs)
+    return convert(table, fieldnames(table), *args, **kwargs)
 
 
 Table.convertall = convertall
