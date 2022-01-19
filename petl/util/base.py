@@ -59,14 +59,11 @@ class IterContainer(object):
 
     def list(self):
         # avoid iterating twice
-        l = list()
-        for i in iter(self):
-            l.append(i)
-        return l
+        return list(iter(self))
 
     def tuple(self):
         # avoid iterating twice
-        return tuple(self.list())
+        return tuple(iter(self))
 
     def dict(self, **kwargs):
         return dict(self, **kwargs)
