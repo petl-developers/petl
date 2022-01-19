@@ -28,11 +28,11 @@ def todataframe(table, index=None, exclude=None, columns=None,
 
     """
     import pandas as pd
-    l = list(table)
-    data = l[1:]
+    it = iter(table)
+    header = next(it)
     if columns is None:
-        columns = l[0]
-    return pd.DataFrame.from_records(data, index=index, exclude=exclude,
+        columns = header
+    return pd.DataFrame.from_records(it, index=index, exclude=exclude,
                                      columns=columns, coerce_float=coerce_float,
                                      nrows=nrows)
 
