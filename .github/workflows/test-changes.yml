@@ -113,7 +113,7 @@ jobs:
 
       - name: Test python source code for mode ${{ env.testing }}
         if: env.testing == 'simple'
-        run: nosetests -v petl --with-coverage --cover-package=petl
+        run: pytest --cov=petl petl
 
       - name: Test documentation inside source code for mode ${{ env.testing }}
         if: env.testing == 'full'
@@ -122,7 +122,7 @@ jobs:
           python -m pip install -r requirements-formats.txt
           echo "::endgroup::"
           echo "::group::Perform doc test execution with coverage"
-          nosetests -v --with-coverage --cover-package=petl --with-doctest --doctest-options=+NORMALIZE_WHITESPACE petl -I"csv_py2\.py" -I"db\.py"
+          pytest --cov=petl petl
           echo "::endgroup::"
 
       - name: Coveralls
