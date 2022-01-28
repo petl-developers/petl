@@ -1,7 +1,7 @@
 from __future__ import absolute_import, print_function, division
 
 
-from petl.test.failonerror import test_failonerror
+from petl.test.failonerror import assert_failonerror
 from petl.test.helpers import ieq
 from petl.transform.conversions import convert, convertall, convertnumbers, \
     replace, update, format, interpolate
@@ -305,7 +305,7 @@ def test_convert_failonerror():
     cvt_    = {'foo': 'lower'}
     expect_ = (('foo',), ('a',), (None,))
 
-    test_failonerror(
+    assert_failonerror(
             input_fn=partial(convert, input_, cvt_),
             expected_output=expect_)
 
