@@ -1,11 +1,11 @@
+import pytest
+
 from petl.test.helpers import ieq, eq_
 import petl.config as config
 
-from nose.tools import nottest
 
 
-@nottest
-def test_failonerror(input_fn, expected_output):
+def assert_failonerror(input_fn, expected_output):
     """In the input rows, the first row should process through the
     transformation cleanly.  The second row should generate an
     exception.  There are no requirements for any other rows."""
@@ -33,13 +33,9 @@ def test_failonerror(input_fn, expected_output):
 
     # When called with failonerror=True, a bad conversion raises an
     # exception
-    try:
+    with pytest.raises(Exception):
         table4 = input_fn(failonerror=True)
         table4.nrows()
-    except Exception:
-        pass
-    else:
-        raise Exception('expected exception not raised')
 
     # When called with failonerror='inline', a bad conversion
     # does not raise an exception, and an Exception for the failed
@@ -60,13 +56,9 @@ def test_failonerror(input_fn, expected_output):
     # When config.failonerror == True, a bad conversion raises an
     # exception
     config.failonerror = True
-    try:
+    with pytest.raises(Exception):
         table6 = input_fn()
         table6.nrows()
-    except Exception:
-        pass
-    else:
-        raise Exception('expected exception not raised')
 
     # When config.failonerror == 'inline', a bad conversion
     # does not raise an exception, and an Exception for the failed
@@ -82,13 +74,9 @@ def test_failonerror(input_fn, expected_output):
     # When config.failonerror is an invalid value, but still truthy, it
     # behaves the same as if == True
     config.failonerror = 'invalid'
-    try:
+    with pytest.raises(Exception):
         table8 = input_fn()
         table8.nrows()
-    except Exception:
-        pass
-    else:
-        raise Exception('expected exception not raised')
 
     # When config.failonerror is None, it behaves the same as if
     # config.failonerror is False
@@ -105,13 +93,9 @@ def test_failonerror(input_fn, expected_output):
 
     # A None keyword parameter uses config.failonerror == True
     config.failonerror = True
-    try:
+    with pytest.raises(Exception):
         table11 = input_fn(failonerror=None)
         table11.nrows()
-    except Exception:
-        pass
-    else:
-        raise Exception('expected exception not raised')
 
     # restore config setting
     config.failonerror = saved_config_failonerror
