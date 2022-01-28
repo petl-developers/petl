@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, print_function, division
-import sys
 import logging
 
+import pytest
 
 import petl as etl
 from petl.test.helpers import ieq
@@ -126,9 +126,14 @@ def _setup_postgresql(dbapi_connection):
     dbapi_connection.commit()
 
 
-host, user, password, database = 'localhost', 'petl', 'test', 'petl'
+def _setup_sqlalchemy_quotes(dbapi_connection, connection_record):
+    cursor = dbapi_connection.cursor()
+    cursor.execute("SET sql_mode = 'ANSI_QUOTES'")
 
 
+host, user, password, database = '127.0.0.1', 'petl', 'test', 'petl'
+
+SKIP_PYMYSQL = False
 try:
     import pymysql
     import sqlalchemy
@@ -137,10 +142,10 @@ try:
                     password=password,
                     database=database)
 except Exception as e:
-    print('SKIP pymysql tests: %s' % e, file=sys.stderr)
-else:
-
-    def test_mysql():
+    SKIP_PYMYSQL = 'SKIP pymysql tests: %s' % e
+finally:
+    @pytest.mark.skipif(bool(SKIP_PYMYSQL), reason=str(SKIP_PYMYSQL))
+    def test_pymysql():
 
         import pymysql
         connect = pymysql.connect
@@ -166,8 +171,9 @@ else:
         from sqlalchemy import create_engine
         sqlalchemy_engine = create_engine('mysql+pymysql://%s:%s@%s/%s' %
                                           (user, password, host, database))
+        from sqlalchemy.event import listen
+        listen(sqlalchemy_engine, "connect", _setup_sqlalchemy_quotes)
         sqlalchemy_connection = sqlalchemy_engine.connect()
-        sqlalchemy_connection.execute('SET SQL_MODE=ANSI_QUOTES')
         _test_dbo(sqlalchemy_connection)
         sqlalchemy_connection.close()
 
@@ -182,8 +188,8 @@ else:
         # exercise sqlalchemy engine
         _setup_mysql(dbapi_connection)
         sqlalchemy_engine2 = create_engine('mysql+pymysql://%s:%s@%s/%s' %
-                                           (user, password, host, database))
-        sqlalchemy_engine2.execute('SET SQL_MODE=ANSI_QUOTES')
+                                           (user, password, host, database), echo_pool='debug')
+        listen(sqlalchemy_engine2, "connect", _setup_sqlalchemy_quotes)
         _test_dbo(sqlalchemy_engine2)
         sqlalchemy_engine2.dispose()
 
@@ -195,8 +201,10 @@ else:
                                   charset='utf8')
         utf8_connection.cursor().execute('SET SQL_MODE=ANSI_QUOTES')
         _test_unicode(utf8_connection)
+        utf8_connection.close()
 
 
+SKIP_MYSQLDB = False
 try:
     import MySQLdb
     import sqlalchemy
@@ -205,10 +213,10 @@ try:
                     passwd=password,
                     db=database)
 except Exception as e:
-    print('SKIP MySQLdb tests: %s' % e, file=sys.stderr)
-else:
-
-    def test_mysql():
+    SKIP_MYSQLDB = 'SKIP MySQLdb tests: %s' % e
+finally:
+    @pytest.mark.skipif(bool(SKIP_MYSQLDB), reason=str(SKIP_MYSQLDB))
+    def test_mysqldb():
 
         import MySQLdb
         connect = MySQLdb.connect
@@ -234,6 +242,8 @@ else:
         from sqlalchemy import create_engine
         sqlalchemy_engine = create_engine('mysql+mysqldb://%s:%s@%s/%s' %
                                           (user, password, host, database))
+        from sqlalchemy.event import listen
+        listen(sqlalchemy_engine, "connect", _setup_sqlalchemy_quotes)
         sqlalchemy_connection = sqlalchemy_engine.connect()
         sqlalchemy_connection.execute('SET SQL_MODE=ANSI_QUOTES')
         _test_dbo(sqlalchemy_connection)
@@ -256,7 +266,7 @@ else:
         utf8_connection.cursor().execute('SET SQL_MODE=ANSI_QUOTES')
         _test_unicode(utf8_connection)
 
-
+SKIP_TEST_POSTGRES = False
 try:
     import psycopg2
     import sqlalchemy
@@ -265,9 +275,9 @@ try:
         % (host, database, user, password)
     )
 except Exception as e:
-    print('SKIP psycopg2 tests: %s' % e, file=sys.stderr)
-else:
-
+    SKIP_TEST_POSTGRES = 'SKIP psycopg2 tests: %s' % e
+finally:
+    @pytest.mark.skipif(bool(SKIP_TEST_POSTGRES), reason=str(SKIP_TEST_POSTGRES))
     def test_postgresql():
 
         import psycopg2
