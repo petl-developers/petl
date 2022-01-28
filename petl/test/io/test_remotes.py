@@ -5,6 +5,8 @@ import sys
 import os
 from importlib import import_module
 
+import pytest
+
 from petl.compat import PY3
 from petl.test.helpers import ieq, eq_
 from petl.io.avro import fromavro, toavro
@@ -28,7 +30,7 @@ def test_helper_fsspec():
         # pylint: disable=unused-import
         import fsspec  # noqa: F401
     except ImportError as e:
-        print("SKIP FSSPEC helper tests: %s" % e, file=sys.stderr)
+        pytest.skip("SKIP FSSPEC helper tests: %s" % e)
     else:
         _write_read_from_env_matching("PETL_TEST_")
 
@@ -38,7 +40,7 @@ def test_helper_smb():
         # pylint: disable=unused-import
         import smbclient  # noqa: F401
     except ImportError as e:
-        print("SKIP SMB helper tests: %s" % e, file=sys.stderr)
+        pytest.skip("SKIP SMB helper tests: %s" % e)
     else:
         _write_read_from_env_url("PETL_SMB_URL")
 

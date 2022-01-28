@@ -2,8 +2,7 @@
 from __future__ import division, print_function, absolute_import
 
 
-import sys
-
+import pytest
 
 import petl as etl
 from petl.test.helpers import ieq
@@ -14,7 +13,7 @@ try:
     # noinspection PyUnresolvedReferences
     import pandas as pd
 except ImportError as e:
-    print('SKIP pandas tests: %s' % e, file=sys.stderr)
+    pytest.skip('SKIP pandas tests: %s' % e, allow_module_level=True)
 else:
 
     def test_todataframe():

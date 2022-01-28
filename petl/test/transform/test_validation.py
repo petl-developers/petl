@@ -4,14 +4,12 @@ from __future__ import absolute_import, print_function, division
 
 import logging
 
+import pytest
 
 import petl as etl
 from petl.transform.validation import validate
 from petl.test.helpers import ieq
 from petl.errors import FieldSelectionError
-
-
-from nose.tools import raises
 
 
 logger = logging.getLogger(__name__)
@@ -52,7 +50,6 @@ def test_constraints():
     ieq(expect, actual)
 
 
-@raises(FieldSelectionError)
 def test_non_optional_constraint_with_missing_field():
     constraints = [
         dict(name='C1', field='foo', test=int),
@@ -62,7 +59,8 @@ def test_non_optional_constraint_with_missing_field():
              ('1999-99-99', 'z'))
 
     actual = validate(table, constraints)
-    debug(actual)
+    with pytest.raises(FieldSelectionError):
+        debug(actual)
 
 
 def test_optional_constraint_with_missing_field():

@@ -5,7 +5,10 @@ import os
 import gc
 import logging
 from datetime import datetime
-import sys
+import platform
+
+import pytest
+
 from petl.compat import next
 
 
@@ -282,39 +285,35 @@ def test_sort_buffered_cleanup():
         assert not os.path.exists(fn), fn
 
 
-import platform
-if platform.python_implementation() == 'PyPy':
-    print('SKIP sort cleanup test (PyPy)', file=sys.stderr)
-else:
+@pytest.mark.skipif(platform.python_implementation() == 'PyPy', reason='SKIP sort cleanup test (PyPy)')
+def test_sort_buffered_cleanup_open_iterator():
 
-    def test_sort_buffered_cleanup_open_iterator():
-
-        table = (('foo', 'bar'),
-                 ('C', 2),
-                 ('A', 9),
-                 ('A', 6),
-                 ('F', 1),
-                 ('D', 10))
-        # check if cleanup is robust against open iterators
-        result = sort(table, 'bar', buffersize=2)
-        debug('pull rows through, should populate file cache')
-        eq_(5, nrows(result))
-        eq_(3, len(result._filecache))
-        debug('check all files exist')
-        filenames = _get_names(result._filecache)
-        for fn in filenames:
-            assert os.path.exists(fn), fn
-        debug(filenames)
-        debug('open an iterator')
-        it = iter(result)
-        next(it)
-        next(it)
-        debug('delete objects and garbage collect')
-        del result
-        del it
-        gc.collect()
-        for fn in filenames:
-            assert not os.path.exists(fn), fn
+    table = (('foo', 'bar'),
+             ('C', 2),
+             ('A', 9),
+             ('A', 6),
+             ('F', 1),
+             ('D', 10))
+    # check if cleanup is robust against open iterators
+    result = sort(table, 'bar', buffersize=2)
+    debug('pull rows through, should populate file cache')
+    eq_(5, nrows(result))
+    eq_(3, len(result._filecache))
+    debug('check all files exist')
+    filenames = _get_names(result._filecache)
+    for fn in filenames:
+        assert os.path.exists(fn), fn
+    debug(filenames)
+    debug('open an iterator')
+    it = iter(result)
+    next(it)
+    next(it)
+    debug('delete objects and garbage collect')
+    del result
+    del it
+    gc.collect()
+    for fn in filenames:
+        assert not os.path.exists(fn), fn
 
 
 def test_sort_empty():
