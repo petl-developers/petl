@@ -2,10 +2,18 @@ from __future__ import absolute_import, print_function, division
 
 import sys
 
-from nose.tools import eq_, assert_almost_equal
+import pytest
 
 from petl.compat import izip_longest
 
+
+def eq_(expect, actual, msg=None):
+    assert expect == actual, msg
+
+
+def assert_almost_equal(first, second, places=None, msg=None):
+    abs = None if places is None else 10**-places
+    assert pytest.approx(first, second, abs=abs), msg
 
 def ieq(expect, actual, cast=None):
     '''test when values are equals for eacfh row and column'''

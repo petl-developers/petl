@@ -1,6 +1,8 @@
 wheel
 setuptools
 nose
+pytest-cov==2.12.0
+pytest>=4.6.6
 tox
 coveralls
 coverage
