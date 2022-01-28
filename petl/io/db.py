@@ -183,8 +183,10 @@ def _iter_dbapi_cursor(cursor, query, *args, **kwargs):
 
 
 def _iter_sqlalchemy_engine(engine, query, *args, **kwargs):
-    return _iter_sqlalchemy_connection(engine.connect(), query,
-                                       *args, **kwargs)
+    connection = engine.connect()
+    for row in _iter_sqlalchemy_connection(connection, query, *args, **kwargs):
+        yield row
+    connection.close()
 
 
 def _iter_sqlalchemy_connection(connection, query, *args, **kwargs):
