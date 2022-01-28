@@ -2,11 +2,11 @@
 from __future__ import absolute_import, print_function, division
 
 
-import sys
 import logging
 from datetime import datetime, date
 import sqlite3
 
+import pytest
 
 from petl.io.db import fromdb, todb
 from petl.io.db_create import make_sqlalchemy_column
@@ -98,7 +98,7 @@ try:
     # noinspection PyUnresolvedReferences
     import sqlalchemy
 except ImportError as e:
-    print('SKIP generic create tests: %s' % e, file=sys.stderr)
+    pytest.skip('SKIP generic create tests: %s' % e, allow_module_level=True)
 else:
 
     from sqlalchemy import Column, DateTime, Date
@@ -131,7 +131,7 @@ else:
         _test_create(dbapi_cursor)
         dbapi_cursor.close()
 
-
+SKIP_PYMYSQL = False
 try:
     import pymysql
     import sqlalchemy
@@ -140,9 +140,9 @@ try:
                     password=password,
                     database=database)
 except Exception as e:
-    print('SKIP pymysql create tests: %s' % e, file=sys.stderr)
-else:
-
+    SKIP_PYMYSQL = 'SKIP pymysql create tests: %s' % e
+finally:
+    @pytest.mark.skipif(SKIP_PYMYSQL, reason=SKIP_PYMYSQL)
     def test_mysql_create():
 
         import pymysql
@@ -183,6 +183,7 @@ else:
         sqlalchemy_session.close()
 
 
+SKIP_POSTGRES = False
 try:
     import psycopg2
     import sqlalchemy
@@ -191,9 +192,9 @@ try:
         % (host, database, user, password)
     )
 except Exception as e:
-    print('SKIP psycopg2 create tests: %s' % e, file=sys.stderr)
-else:
-
+    SKIP_POSTGRES = 'SKIP psycopg2 create tests: %s' % e
+finally:
+    @pytest.mark.skipif(bool(SKIP_POSTGRES), reason=str(SKIP_POSTGRES))
     def test_postgresql_create():
         import psycopg2
         import psycopg2.extensions

@@ -5,6 +5,8 @@ import sys
 from collections import OrderedDict
 from tempfile import NamedTemporaryFile
 
+import pytest
+
 from petl.test.helpers import ieq
 from petl.util import nrows, look
 from petl.io.xml import fromxml, toxml
@@ -201,7 +203,7 @@ def test_fromxml_url():
         import pkg_resources
         filename = pkg_resources.resource_filename('petl', 'test/resources/test.xml')
     except Exception as e:
-        print('SKIP test_fromxml_url: %s' % e, file=sys.stderr)
+        pytest.skip('SKIP test_fromxml_url: %s' % e)
     else:
         actual = fromxml(url, 'pydev_property', {'name': ( '.', 'name'), 'prop': '.'})
         assert nrows(actual) > 0

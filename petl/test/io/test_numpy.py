@@ -2,8 +2,7 @@
 from __future__ import absolute_import, print_function, division
 
 
-import sys
-
+import pytest
 
 import petl as etl
 from petl.test.helpers import ieq, eq_, assert_almost_equal
@@ -14,7 +13,7 @@ try:
     # noinspection PyUnresolvedReferences
     import numpy as np
 except ImportError as e:
-    print('SKIP numpy tests: %s' % e, file=sys.stderr)
+    pytest.skip('SKIP numpy tests: %s' % e, allow_module_level=True)
 else:
 
     def test_toarray_nodtype():

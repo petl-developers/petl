@@ -2,10 +2,10 @@
 from __future__ import division, print_function, absolute_import
 
 
-import sys
 from itertools import chain
 from tempfile import NamedTemporaryFile
 
+import pytest
 
 from petl.test.helpers import ieq
 from petl.transform.sorts import sort
@@ -17,7 +17,7 @@ try:
     # noinspection PyUnresolvedReferences
     import tables
 except ImportError as e:
-    print('SKIP pytables tests: %s' % e, file=sys.stderr)
+    pytest.skip('SKIP pytables tests: %s' % e, allow_module_level=True)
 else:
 
     class FooBar(tables.IsDescription):

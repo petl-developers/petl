@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, print_function, division
-import sys
 import tempfile
 
+import pytest
 
 from petl.test.helpers import ieq, eq_
 from petl.io.bcolz import frombcolz, tobcolz, appendbcolz
@@ -11,7 +11,7 @@ from petl.io.bcolz import frombcolz, tobcolz, appendbcolz
 try:
     import bcolz
 except ImportError as e:
-    print('SKIP bcolz tests: %s' % e, file=sys.stderr)
+    pytest.skip('SKIP bcolz tests: %s' % e, allow_module_level=True)
 else:
 
     def test_frombcolz():
