@@ -142,7 +142,7 @@ try:
 except Exception as e:
     SKIP_PYMYSQL = 'SKIP pymysql create tests: %s' % e
 finally:
-    @pytest.mark.skipif(SKIP_PYMYSQL, reason=SKIP_PYMYSQL)
+    @pytest.mark.skipif(bool(SKIP_PYMYSQL), reason=str(SKIP_PYMYSQL))
     def test_mysql_create():
 
         import pymysql
