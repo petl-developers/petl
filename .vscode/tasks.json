@@ -1,0 +1,53 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Package: build",
+            "command": "python2",
+            "args": [
+                "setup.py",
+                "build"
+            ],
+            "presentation": {
+                "echo": true,
+                "panel": "shared",
+                "focus": true
+            }
+        },
+        {
+            "label": "Package: install",
+            "command": "python3",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "args": [
+                "setup.py",
+                "install"
+            ],
+            "presentation": {
+                "echo": true,
+                "panel": "shared",
+                "focus": true
+            }
+        }
+    ],
+    "problemMatcher": [
+        {
+            "fileLocation": "absolute",
+            "pattern": [
+                {
+                    "regexp": "^\\s+File \"(.*)\", line (\\d+), in (.*)$",
+                    "file": 1,
+                    "line": 2
+                },
+                {
+                    "regexp": "^\\s+(.*)$",
+                    "message": 1
+                }
+            ]
+        }
+    ]
+}
