@@ -1,2 +1,0 @@
-import nose
-nose.run()
