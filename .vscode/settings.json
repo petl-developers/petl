@@ -123,4 +123,6 @@
         // "--follow-imports",
         // "silent",
     ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true
 }
