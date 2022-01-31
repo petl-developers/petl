@@ -118,10 +118,10 @@ jobs:
         if: env.testing == 'full'
         run: |
           echo "::group::Install extra packages test dependencies"
-          python -m pip install -r requirements-formats.txt
+          python -m pip install --prefer-binary -r requirements-formats.txt
           echo "::endgroup::"
           echo "::group::Perform doc test execution with coverage"
-          pytest --cov=petl petl
+          pytest --doctest-modules --ignore-glob='*_py2.py' --cov=petl petl
           echo "::endgroup::"
 
       - name: Coveralls
