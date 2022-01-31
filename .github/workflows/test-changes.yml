@@ -37,8 +37,7 @@ jobs:
     steps:
       - name: Determine what scope of testing is available on ${{ matrix.os }}
         if: |
-          matrix.python >= '3.6' && matrix.python != '3.9' && matrix.python != '3.10' &&
-          (matrix.os != 'windows-latest' || matrix.python == '3.8')
+          matrix.python >= '3.6' && (matrix.os != 'windows-latest' || matrix.python >= '3.8')
         run: |
           echo 'testing=full' >> $GITHUB_ENV
 
