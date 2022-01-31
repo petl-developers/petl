@@ -1,8 +1,17 @@
-# This workflow checks out code, performs a Codacy security scan
-# and integrates the results with the
-# GitHub Advanced Security code scanning feature.  For more information on
-# the Codacy security scan action usage and parameters, see
-# https://github.com/codacy/codacy-analysis-cli-action.
+# Codacy is an automated code review tool that makes it easy to ensure your team is writing high-quality code
+
+# This workflow checks out code, performs a Codacy security scan  and integrates 
+# the results with the GitHub Advanced Security code scanning feature.
+
+# The following scenario is implemented:
+# - Integration with GitHub code scanning: 
+#   Analyzes each commit and pull request and uploads the results to GitHub, 
+#   which displays the identified issues under your repository's tab Security.
+
+# For more information on the Codacy security scan action usage, see:
+# - https://github.com/marketplace/actions/codacy-analysis-cli
+# - https://github.com/codacy/codacy-analysis-cli-action
+
 # For more information on Codacy Analysis CLI in general, see
 # https://github.com/codacy/codacy-analysis-cli.
 
@@ -10,9 +19,9 @@ name: Codacy Security Scan
 
 on:
   push:
-    branches: [ master ]
+    branches: [ master, main ]
   pull_request:
-    branches: [ master ]
+    branches: [ master, main ]
 
 jobs:
   codacy-security-scan:
@@ -21,13 +30,14 @@ jobs:
     steps:
       # Checkout the repository to the GitHub Actions runner
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@main
 
       # Execute Codacy Analysis CLI and generate a SARIF output with the security issues identified during the analysis
       - name: Run Codacy Analysis CLI
-        uses: codacy/codacy-analysis-cli-action@1.1.0
+        uses: codacy/codacy-analysis-cli-action@master
         with:
-          # Check https://github.com/codacy/codacy-analysis-cli#project-token to get your project token from your Codacy repository
+          # To get your project token from your Codacy repository check:
+          #   https://github.com/codacy/codacy-analysis-cli#project-token
           # You can also omit the token and run the tools that support default configurations
           project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
           verbose: true
@@ -41,6 +51,8 @@ jobs:
 
       # Upload the SARIF file generated in the previous step
       - name: Upload SARIF results file
-        uses: github/codeql-action/upload-sarif@v1
+        uses: github/codeql-action/upload-sarif@main
         with:
           sarif_file: results.sarif
+
+# end of file #
