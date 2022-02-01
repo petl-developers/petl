@@ -58,7 +58,7 @@ jobs:
       - name: Install test dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -r requirements-tests.txt
+          python -m pip install --prefer-binary -r requirements-tests.txt
 
       - name: Setup environment variables for remote filesystem testing
         if: matrix.os == 'ubuntu-latest' && matrix.python == '3.8'
@@ -68,7 +68,7 @@ jobs:
           echo "Setup SFTP environment variable to trigger testing in Petl"
           echo 'PETL_TEST_SFTP=sftp://petl:test@localhost:2244/public/' >> $GITHUB_ENV
           echo "::group::Install remote test dependencies"
-          python -m pip install -r requirements-remote.txt
+          python -m pip install --prefer-binary -r requirements-remote.txt
           echo "::endgroup::"
 
       - name: Install optinal test dependencies for mode ${{ env.testing }}
@@ -104,7 +104,7 @@ jobs:
           docker run -it --name postgres -p 5432:5432 -e POSTGRES_DB=petl -e POSTGRES_USER=petl -e POSTGRES_PASSWORD=test -d postgres:latest
           echo "::endgroup::"
           echo "::group::Install database test dependencies"
-          python -m pip install -r requirements-database.txt
+          python -m pip install --prefer-binary -r requirements-database.txt
           echo "::endgroup::"
 
       - name: Setup petl package
@@ -153,7 +153,7 @@ jobs:
 
       - name: Install doc generation dependencies
         run: |
-          python -m pip install -r requirements-docs.txt
+          python -m pip install --prefer-binary -r requirements-docs.txt
 
       - name: Setup petl package
         run: python setup.py build
