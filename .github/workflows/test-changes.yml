@@ -37,7 +37,7 @@ jobs:
     steps:
       - name: Determine what scope of testing is available on ${{ matrix.os }}
         if: |
-          matrix.python >= '3.6' && (matrix.os != 'windows-latest' || matrix.python >= '3.8')
+          (matrix.python >= '3.' ) && ( matrix.os != 'windows-latest' )
         run: |
           echo 'testing=full' >> $GITHUB_ENV
 
@@ -120,7 +120,7 @@ jobs:
           echo "::group::Install extra packages test dependencies"
           python -m pip install --prefer-binary -r requirements-formats.txt
           echo "::endgroup::"
-          echo "::group::Perform doc test execution with coverage"
+          echo "::group::Perform doctest-modules execution with coverage"
           pytest --doctest-modules --ignore-glob='*_py2.py' --cov=petl petl
           echo "::endgroup::"
 
