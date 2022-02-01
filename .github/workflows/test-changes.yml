@@ -121,7 +121,7 @@ jobs:
           python -m pip install --prefer-binary -r requirements-formats.txt
           echo "::endgroup::"
           echo "::group::Perform doctest-modules execution with coverage"
-          pytest --doctest-modules --ignore-glob='*_py2.py' --cov=petl petl
+          pytest --doctest-modules --ignore-glob='*_py2.py'  --ignore-glob='petl/io/db.py' --cov=petl petl
           echo "::endgroup::"
 
       - name: Coveralls
