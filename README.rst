@@ -12,12 +12,13 @@ loading tables of data.
 See also `petlx <https://github.com/alimanfoo/petlx>`_, a library of
 extension modules for ``petl``.
 
-.. image:: https://travis-ci.org/petl-developers/petl.svg?branch=master
-    :target: https://travis-ci.org/petl-developers/petl
+.. image:: https://github.com/petl-developers/petl/actions/workflows/test-changes.yml/badge.svg
+    :target: https://github.com/petl-developers/petl/actions/workflows/test-changes.yml
     :alt: continuous integration build status
 
-.. image:: https://ci.appveyor.com/api/projects/status/nttbwesq6p4bd5qr?svg=true
-    :target: https://ci.appveyor.com/project/petl-developers/petl
+.. image:: https://github.com/petl-developers/petl/actions/workflows/publish-release.yml/badge.svg
+    :target: https://github.com/petl-developers/petl/actions/workflows/publish-release.yml
+    :alt: continuous delivery release status
 
 .. image:: https://readthedocs.org/projects/petl/badge/?version=stable
     :target: http://petl.readthedocs.io/en/stable/?badge=stable
