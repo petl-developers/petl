@@ -1,15 +1,28 @@
 .. module:: petl
 
 petl - Extract, Transform and Load
-===================================================
+===================================
 
 :mod:`petl` is a general purpose Python package for extracting, transforming
 and loading tables of data.
 
+.. image:: petl-architecture.png
+    :width: 750
+    :align: center
+    :alt: petl use cases diagram
+
+Resources
+---------
+
 - Documentation: http://petl.readthedocs.org/
-- Source Code: https://github.com/petl-developers/petl
-- Download: http://pypi.python.org/pypi/petl
 - Mailing List: http://groups.google.com/group/python-etl
+- Source Code: https://github.com/petl-developers/petl
+- Download: 
+  - PyPI: http://pypi.python.org/pypi/petl
+  - Conda Forge:https://anaconda.org/conda-forge/petl
+
+Getting Help
+-------------
 
 Please feel free to ask questions via the mailing list
 (python-etl@googlegroups.com).
@@ -20,6 +33,9 @@ python-etl@googlegroups.com or `raise an issue on GitHub
 
 For an example of :mod:`petl` in use, see the `case study on comparing tables
 <http://nbviewer.ipython.org/github/petl-developers/petl/tree/master/notes/case_study_1.ipynb>`_.
+
+Contents
+--------
 
 For an alphabetic list of all functions in the package,
 see the :ref:`genindex`.
