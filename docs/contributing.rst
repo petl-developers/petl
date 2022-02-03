@@ -29,7 +29,7 @@ suite with::
     $ pip install -r requirements-tests.txt
     $ pytest -v petl
 
-Currently :mod:`petl` supports Python 2.7, 3.4, 3.5 and 3.6
+Currently :mod:`petl` supports Python 2.7, 3.6 up to 3.10
 so the tests should pass under all these Python versions.
 
 Dependencies
