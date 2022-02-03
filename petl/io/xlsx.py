@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, print_function, division
 
-from petl.compat import PY3
+import itertools
+
+from petl.compat import PY3, text_type
 from petl.util.base import Table, data
 from petl.io.sources import read_source_from_arg, write_source_from_arg
 
@@ -110,7 +112,10 @@ def toxlsx(tbl, filename, sheet=None, write_header=True, mode="replace"):
     wb = _load_or_create_workbook(filename, mode, sheet)
     ws = _insert_sheet_on_workbook(mode, sheet, wb)
     if write_header:
-        rows = tbl
+        it = iter(tbl)
+        hdr = next(it)
+        flds = list(map(text_type, hdr))
+        rows = itertools.chain([flds], it)
     else:
         rows = data(tbl)
     for row in rows:
@@ -178,7 +183,10 @@ def appendxlsx(tbl, filename, sheet=None, write_header=False):
         else:
             ws = wb[str(sheet)]
         if write_header:
-            rows = tbl
+            it = iter(tbl)
+            hdr = next(it)
+            flds = list(map(text_type, hdr))
+            rows = itertools.chain([flds], it)
         else:
             rows = data(tbl)
         for row in rows:

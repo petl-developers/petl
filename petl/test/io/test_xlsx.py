@@ -26,6 +26,22 @@ try:
 except ImportError as e:
     pytest.skip('SKIP xlsx tests: %s' % e, allow_module_level=True)
 else:
+    @pytest.fixture(scope="module")
+    def xlsx_table_with_non_str_header():
+        class Header:
+            def __init__(self, name):
+                self.__name = name
+
+            def __str__(self):
+                return self.__name
+
+            def __eq__(self, other):
+                return str(other) == str(self)
+
+        return ((Header('foo'), Header('bar')),
+                ('A', 1),
+                ('B', 2),
+                ('C', 2))
 
     def test_fromxlsx():
         filename = _get_test_xlsx()
@@ -237,3 +253,31 @@ else:
             assert False, 'Adding duplicate sheet name did not fail'
         except ValueError:
             pass
+
+    def test_toxlsx_with_non_str_header(xlsx_table_with_non_str_header):
+        f = NamedTemporaryFile(delete=True, suffix='.xlsx')
+        f.close()
+
+        toxlsx(xlsx_table_with_non_str_header, f.name, 'Sheet1')
+        actual = etl.fromxlsx(f.name, 'Sheet1')
+        ieq(xlsx_table_with_non_str_header, actual)
+
+    def test_appendxlsx_with_non_str_header(xlsx_table_with_non_str_header):
+        tbl = (('foo', 'bar'),
+               ('A', 1),
+               ('B', 2),
+               ('C', 2),
+               (u'é', datetime(2012, 1, 1)))
+
+        f = NamedTemporaryFile(delete=True, suffix='.xlsx')
+        f.close()
+
+        # write first table
+        toxlsx(tbl, f.name, 'Sheet1')
+        actual = fromxlsx(f.name, 'Sheet1')
+        ieq(tbl, actual)
+
+        # test appendxlsx
+        appendxlsx(xlsx_table_with_non_str_header, f.name, 'Sheet1')
+        expect = etl.cat(tbl, xlsx_table_with_non_str_header)
+        ieq(expect, actual)
