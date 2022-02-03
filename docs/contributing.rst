@@ -26,8 +26,8 @@ The main :mod:`petl` test suite can be run with `nose
 repository cloned to the current working directory, you can run the test
 suite with::
 
-    $ pip install nose
-    $ nosetests -v
+    $ pip install -r requirements-tests.txt
+    $ pytest -v petl
 
 Currently :mod:`petl` supports Python 2.7, 3.4, 3.5 and 3.6
 so the tests should pass under all these Python versions.
