@@ -5,15 +5,21 @@ petl - Extract, Transform and Load
 loading tables of data.
 
 .. image:: docs/petl-architecture.png
+    :align: center
     :alt: petl architecture example
 
-- Docs: http://petl.readthedocs.org/
-- Source: https://github.com/petl-developers/petl
-- Download: http://pypi.python.org/pypi/petl
-- Mailing list: http://groups.google.com/group/python-etl
+Resources
+---------
 
-See also `petlx <https://github.com/alimanfoo/petlx>`_, a library of
-extension modules for ``petl``.
+- Documentation: http://petl.readthedocs.org/
+- Mailing List: http://groups.google.com/group/python-etl
+- Source Code: https://github.com/petl-developers/petl
+- Download: 
+  - PyPI: http://pypi.python.org/pypi/petl
+  - Conda Forge:https://anaconda.org/conda-forge/petl
+
+DevOps Status
+-------------
 
 .. image:: https://github.com/petl-developers/petl/actions/workflows/test-changes.yml/badge.svg
     :target: https://github.com/petl-developers/petl/actions/workflows/test-changes.yml
