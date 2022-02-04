@@ -67,9 +67,6 @@
         "editor.insertSpaces": true,
         "files.insertFinalNewline": true,
     },
-    // Using virtualenvwrapper for create env_petl environment
-    "python.pythonPath": "~/.virtualenvs/env_petl/bin/python",
-    "restructuredtext.confPath": "${workspaceFolder}/docs",
     "python.formatting.provider": "black",
     "python.autoComplete.extraPaths": [
         "${workspaceFolder}/petl/",
@@ -124,5 +121,13 @@
         // "silent",
     ],
     "python.testing.unittestEnabled": false,
-    "python.testing.pytestEnabled": true
+    "python.testing.pytestEnabled": true,
+    "python.analysis.extraPaths": [
+        "${workspaceFolder}/petl/",
+        "${workspaceFolder}/petl/io/",
+        "${workspaceFolder}/petl/transform/",
+        "${workspaceFolder}/petl/util/",
+        "${workspaceFolder}/petl/test/",
+        "${workspaceFolder}/petl/test/io"
+    ]
 }
