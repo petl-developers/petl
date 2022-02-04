@@ -71,7 +71,7 @@ jobs:
           python -m pip install --prefer-binary -r requirements-remote.txt
           echo "::endgroup::"
 
-      - name: Install optinal test dependencies for mode ${{ env.testing }}
+      - name: Install optional test dependencies for mode ${{ env.testing }}
         if: matrix.os == 'ubuntu-latest' && matrix.python >= '3.7'
         env:
           DISABLE_BLOSC_AVX2: 1
@@ -110,11 +110,11 @@ jobs:
       - name: Setup petl package
         run: python setup.py sdist bdist_wheel
 
-      - name: Test python source code for mode ${{ env.testing }}
+      - name: Test python source code for mode simple
         if: env.testing == 'simple'
         run: pytest --cov=petl petl
 
-      - name: Test documentation inside source code for mode ${{ env.testing }}
+      - name: Test documentation inside source code for mode full
         if: env.testing == 'full'
         run: |
           echo "::group::Install extra packages test dependencies"
