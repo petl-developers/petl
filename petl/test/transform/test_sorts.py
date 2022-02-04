@@ -9,6 +9,7 @@ import platform
 
 import pytest
 
+import petl
 from petl.compat import next
 
 
@@ -522,3 +523,21 @@ def test_issorted():
     assert not issorted(table5, key='foo')
     assert issorted(table5, key='foo', reverse=True)
     assert not issorted(table5, key='foo', reverse=True, strict=True)
+
+
+def test_sort_missing_cell_numeric():
+    """ Sorting table with missing values raises IndexError #385 """
+    tbl = (('a', 'b'), ('4',), ('2', '1'), ('1',))
+    expect = (('a', 'b'), ('1',), ('2', '1'), ('4',))
+
+    sorted = sort(tbl)
+    ieq(expect, sorted)
+
+
+def test_sort_missing_cell_text():
+    """ Sorting table with missing values raises IndexError #385 """
+    tbl = (('a', 'b', 'c'), ('C',), ('A', '4', '5'))
+    expect = (('a', 'b', 'c'), ('A', '4', '5'), ('C',))
+
+    sorted = sort(tbl)
+    ieq(expect, sorted)

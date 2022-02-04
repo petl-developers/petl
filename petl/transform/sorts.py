@@ -295,7 +295,6 @@ class SortView(Table):
         else:
             indices = range(len(hdr))
         # now use field indices to construct a _getkey function
-        # TODO check if this raises an exception on short rows
         getkey = comparable_itemgetter(*indices)
 
         # TODO support native comparison

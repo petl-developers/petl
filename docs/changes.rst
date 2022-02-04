@@ -7,6 +7,9 @@ Version 1.7.8
 * Add casting of headers to strings in toxlsx and appendxlsx
   By :user:`arturponinski`, :issue:`530`.
 
+* Fix sorting of rows with different length
+  By :user:`arturponinski`, :issue:`385`.
+
 Version 1.7.7
 -------------
 
