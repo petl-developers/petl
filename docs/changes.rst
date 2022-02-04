@@ -1,6 +1,54 @@
 Changes
 =======
 
+Version 1.7.7
+-------------
+
+* New pull request template. No python changes.
+  By :user:`juarezr`, :issue:`594`.
+
+Version 1.7.6
+-------------
+
+* Fix convertall does not work when table header has non-string elements
+  By :user:`dnicolodi`, :issue:`579`.
+
+* Fix todataframe() to do not iterate the table multiple times
+  By :user:`dnicolodi`, :issue:`578`.
+
+* Fix broken aggregate when supplying single key
+  By :user:`MalayGoel`, :issue:`552`.
+
+* Migrated to pytest
+  By :user:`arturponinski`, :issue:`584`.
+
+* Testing python 3.10 on Github Actions. No python changes.
+  By :user:`juarezr`, :issue:`591`.
+
+* codacity: upgrade to latest/main github action version. No python changes.
+  By :user:`juarezr`, :issue:`585`.
+
+* Publish releases to PyPI with Github Actions. No python changes.
+  By :user:`juarezr`, :issue:`593`.
+
+Version 1.7.5
+-------------
+
+* Added Decimal to numeric types
+  By :user:`blas`, :issue:`573`.
+
+* Add support for ignore_workbook_corruption parameter in xls
+  By :user:`arturponinski`, :issue:`572`.
+
+* Add support for generators in the petl.fromdicts
+  By :user:`arturponinski`, :issue:`570`.
+
+* Add function to support fromdb, todb, appenddb via clickhouse_driver
+  By :user:`superjcd`, :issue:`566`.
+
+* Fix fromdicts(...).header() raising TypeError
+  By :user:`romainernandez`, :issue:`555`.
+
 Version 1.7.4
 -------------
 
