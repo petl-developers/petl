@@ -11,273 +11,218 @@ import petl as etl
 from petl.io.xlsx import fromxlsx, toxlsx, appendxlsx
 from petl.test.helpers import ieq, eq_
 
-
-def _get_test_xlsx():
-    try:
-        import pkg_resources
-        return pkg_resources.resource_filename('petl', 'test/resources/test.xlsx')
-    except:
-        return None
+openpyxl = pytest.importorskip("openpyxl")
 
 
-try:
-    # noinspection PyUnresolvedReferences
-    import openpyxl
-except ImportError as e:
-    pytest.skip('SKIP xlsx tests: %s' % e, allow_module_level=True)
-else:
-    @pytest.fixture(scope="module")
-    def xlsx_table_with_non_str_header():
-        class Header:
-            def __init__(self, name):
-                self.__name = name
+@pytest.fixture()
+def xlsx_test_filename():
+    pkg_resources = pytest.importorskip("pkg_resources") # conda is missing pkg_resources
+    return pkg_resources.resource_filename('petl', 'test/resources/test.xlsx')
 
-            def __str__(self):
-                return self.__name
 
-            def __eq__(self, other):
-                return str(other) == str(self)
+@pytest.fixture(scope="module")
+def xlsx_test_table():
+    return (('foo', 'bar'),
+              ('A', 1),
+              ('B', 2),
+              ('C', 2),
+              (u'é', datetime(2012, 1, 1)))
 
-        return ((Header('foo'), Header('bar')),
-                ('A', 1),
-                ('B', 2),
-                ('C', 2))
 
-    def test_fromxlsx():
-        filename = _get_test_xlsx()
-        if filename is None:
-            return
-        tbl = fromxlsx(filename, 'Sheet1')
-        expect = (('foo', 'bar'),
-                  ('A', 1),
-                  ('B', 2),
-                  ('C', 2),
-                  (u'é', datetime(2012, 1, 1)))
-        ieq(expect, tbl)
-        ieq(expect, tbl)
+@pytest.fixture(scope="module")
+def xlsx_table_with_non_str_header():
+    class Header:
+        def __init__(self, name):
+            self.__name = name
 
-    def test_fromxlsx_read_only():
-        filename = _get_test_xlsx()
-        if filename is None:
-            return
-        tbl = fromxlsx(filename, sheet='Sheet1', read_only=True)
-        expect = (('foo', 'bar'),
-                  ('A', 1),
-                  ('B', 2),
-                  ('C', 2),
-                  (u'é', datetime(2012, 1, 1)))
-        ieq(expect, tbl)
-        ieq(expect, tbl)
+        def __str__(self):
+            return self.__name
 
-    def test_fromxlsx_nosheet():
-        filename = _get_test_xlsx()
-        if filename is None:
-            return
-        tbl = fromxlsx(filename)
-        expect = (('foo', 'bar'),
-                  ('A', 1),
-                  ('B', 2),
-                  ('C', 2),
-                  (u'é', datetime(2012, 1, 1)))
-        ieq(expect, tbl)
-        ieq(expect, tbl)
+        def __eq__(self, other):
+            return str(other) == str(self)
 
-    def test_fromxlsx_range():
-        filename = _get_test_xlsx()
-        if filename is None:
-            return
-        tbl = fromxlsx(filename, 'Sheet2', range_string='B2:C6')
-        expect = (('foo', 'bar'),
-                  ('A', 1),
-                  ('B', 2),
-                  ('C', 2),
-                  (u'é', datetime(2012, 1, 1)))
-        ieq(expect, tbl)
-        ieq(expect, tbl)
+    return ((Header('foo'), Header('bar')),
+            ('A', 1),
+            ('B', 2),
+            ('C', 2))
 
-    def test_fromxlsx_offset():
-        filename = _get_test_xlsx()
-        if filename is None:
-            return
-        tbl = fromxlsx(filename, 'Sheet1', min_row=2, min_col=2)
-        expect = ((1,),
-                  (2,),
-                  (2,),
-                  (datetime(2012, 1, 1, 0, 0),))
-        ieq(expect, tbl)
-        ieq(expect, tbl)
 
-    def test_toxlsx_appendxlsx():
+def test_fromxlsx(xlsx_test_table, xlsx_test_filename):
+    tbl = fromxlsx(xlsx_test_filename, 'Sheet1')
+    expect = xlsx_test_table
+    ieq(expect, tbl)
+    ieq(expect, tbl)
 
-        # setup
-        tbl = (('foo', 'bar'),
-               ('A', 1),
-               ('B', 2),
-               ('C', 2),
-               (u'é', datetime(2012, 1, 1)))
-        f = NamedTemporaryFile(delete=True, suffix='.xlsx')
-        f.close()
 
-        # test toxlsx
-        toxlsx(tbl, f.name, 'Sheet1')
-        actual = fromxlsx(f.name, 'Sheet1')
-        ieq(tbl, actual)
+def test_fromxlsx_read_only(xlsx_test_filename):
+    tbl = fromxlsx(xlsx_test_filename, sheet='Sheet1', read_only=True)
+    expect = (('foo', 'bar'),
+              ('A', 1),
+              ('B', 2),
+              ('C', 2),
+              (u'é', datetime(2012, 1, 1)))
+    ieq(expect, tbl)
+    ieq(expect, tbl)
 
-        # test appendxlsx
-        appendxlsx(tbl, f.name, 'Sheet1')
-        expect = etl.cat(tbl, tbl)
-        ieq(expect, actual)
 
-    def test_toxlsx_nosheet():
-        tbl = (('foo', 'bar'),
-               ('A', 1),
-               ('B', 2),
-               ('C', 2),
-               (u'é', datetime(2012, 1, 1)))
-        f = NamedTemporaryFile(delete=True, suffix='.xlsx')
-        f.close()
-        toxlsx(tbl, f.name)
-        actual = fromxlsx(f.name)
-        ieq(tbl, actual)
+def test_fromxlsx_nosheet(xlsx_test_filename):
+    tbl = fromxlsx(xlsx_test_filename)
+    expect = (('foo', 'bar'),
+              ('A', 1),
+              ('B', 2),
+              ('C', 2),
+              (u'é', datetime(2012, 1, 1)))
+    ieq(expect, tbl)
+    ieq(expect, tbl)
 
-    def test_integration():
-        tbl = (('foo', 'bar'),
-               ('A', 1),
-               ('B', 2),
-               ('C', 2),
-               (u'é', datetime(2012, 1, 1)))
-        f = NamedTemporaryFile(delete=True, suffix='.xlsx')
-        f.close()
-        tbl = etl.wrap(tbl)
-        tbl.toxlsx(f.name, 'Sheet1')
-        actual = etl.fromxlsx(f.name, 'Sheet1')
-        ieq(tbl, actual)
-        tbl.appendxlsx(f.name, 'Sheet1')
-        expect = tbl.cat(tbl)
-        ieq(expect, actual)
 
-    def test_toxlsx_overwrite():
-        tbl = (('foo', 'bar'),
-               ('A', 1),
-               ('B', 2),
-               ('C', 2),
-               (u'é', datetime(2012, 1, 1)))
-        f = NamedTemporaryFile(delete=False, suffix='.xlsx')
-        f.close()
+def test_fromxlsx_range(xlsx_test_filename):
+    tbl = fromxlsx(xlsx_test_filename, 'Sheet2', range_string='B2:C6')
+    expect = (('foo', 'bar'),
+              ('A', 1),
+              ('B', 2),
+              ('C', 2),
+              (u'é', datetime(2012, 1, 1)))
+    ieq(expect, tbl)
+    ieq(expect, tbl)
 
-        toxlsx(tbl, f.name, 'Sheet1', mode="overwrite")
-        wb = openpyxl.load_workbook(f.name, read_only=True)
-        eq_(1, len(wb.sheetnames))
 
-    def test_toxlsx_replace_file():
-        tbl = (('foo', 'bar'),
-               ('A', 1),
-               ('B', 2),
-               ('C', 2),
-               (u'é', datetime(2012, 1, 1)))
-        f = NamedTemporaryFile(delete=True, suffix='.xlsx')
-        f.close()
+def test_fromxlsx_offset(xlsx_test_filename):
+    tbl = fromxlsx(xlsx_test_filename, 'Sheet1', min_row=2, min_col=2)
+    expect = ((1,),
+              (2,),
+              (2,),
+              (datetime(2012, 1, 1, 0, 0),))
+    ieq(expect, tbl)
+    ieq(expect, tbl)
 
-        toxlsx(tbl, f.name, 'Sheet1', mode="overwrite")
-        toxlsx(tbl, f.name, sheet=None, mode="replace")
-        wb = openpyxl.load_workbook(f.name, read_only=True)
-        eq_(1, len(wb.sheetnames))
 
-    def test_toxlsx_replace_sheet():
-        tbl = (('foo', 'bar'),
-               ('A', 1),
-               ('B', 2),
-               ('C', 2),
-               (u'é', datetime(2012, 1, 1)))
-        f = NamedTemporaryFile(delete=True, suffix='.xlsx')
-        f.close()
+def test_toxlsx_appendxlsx(xlsx_test_table):
 
-        toxlsx(tbl, f.name, 'Sheet1', mode="overwrite")
-        toxlsx(tbl, f.name, 'Sheet1', mode="replace")
-        wb = openpyxl.load_workbook(f.name, read_only=True)
-        eq_(1, len(wb.sheetnames))
+    # setup
+    f = NamedTemporaryFile(delete=True, suffix='.xlsx')
+    f.close()
 
-    def test_toxlsx_replace_sheet_nofile():
-        tbl = (('foo', 'bar'),
-               ('A', 1),
-               ('B', 2),
-               ('C', 2),
-               (u'é', datetime(2012, 1, 1)))
-        f = NamedTemporaryFile(delete=True, suffix='.xlsx')
-        f.close()
+    # test toxlsx
+    toxlsx(xlsx_test_table, f.name, 'Sheet1')
+    actual = fromxlsx(f.name, 'Sheet1')
+    ieq(xlsx_test_table, actual)
 
-        toxlsx(tbl, f.name, 'Sheet1', mode="replace")
-        wb = openpyxl.load_workbook(f.name, read_only=True)
-        eq_(1, len(wb.sheetnames))
+    # test appendxlsx
+    appendxlsx(xlsx_test_table, f.name, 'Sheet1')
+    expect = etl.cat(xlsx_test_table, xlsx_test_table)
+    ieq(expect, actual)
 
-    def test_toxlsx_add_nosheet():
-        tbl = (('foo', 'bar'),
-               ('A', 1),
-               ('B', 2),
-               ('C', 2),
-               (u'é', datetime(2012, 1, 1)))
-        f = NamedTemporaryFile(delete=True, suffix='.xlsx')
-        f.close()
 
-        toxlsx(tbl, f.name, 'Sheet1', mode="overwrite")
-        toxlsx(tbl, f.name, None, mode="add")
-        wb = openpyxl.load_workbook(f.name, read_only=True)
-        eq_(2, len(wb.sheetnames))
+def test_toxlsx_nosheet(xlsx_test_table):
+    f = NamedTemporaryFile(delete=True, suffix='.xlsx')
+    f.close()
+    toxlsx(xlsx_test_table, f.name)
+    actual = fromxlsx(f.name)
+    ieq(xlsx_test_table, actual)
 
-    def test_toxlsx_add_sheet_nomatch():
-        tbl = (('foo', 'bar'),
-               ('A', 1),
-               ('B', 2),
-               ('C', 2),
-               (u'é', datetime(2012, 1, 1)))
-        f = NamedTemporaryFile(delete=True, suffix='.xlsx')
-        f.close()
 
-        toxlsx(tbl, f.name, 'Sheet1', mode="overwrite")
-        toxlsx(tbl, f.name, 'Sheet2', mode="add")
-        wb = openpyxl.load_workbook(f.name, read_only=True)
-        eq_(2, len(wb.sheetnames))
+def test_integration(xlsx_test_table):
+    f = NamedTemporaryFile(delete=True, suffix='.xlsx')
+    f.close()
+    tbl = etl.wrap(xlsx_test_table)
+    tbl.toxlsx(f.name, 'Sheet1')
+    actual = etl.fromxlsx(f.name, 'Sheet1')
+    ieq(tbl, actual)
+    tbl.appendxlsx(f.name, 'Sheet1')
+    expect = tbl.cat(tbl)
+    ieq(expect, actual)
 
-    def test_toxlsx_add_sheet_match():
-        tbl = (('foo', 'bar'),
-               ('A', 1),
-               ('B', 2),
-               ('C', 2),
-               (u'é', datetime(2012, 1, 1)))
-        f = NamedTemporaryFile(delete=True, suffix='.xlsx')
-        f.close()
 
-        toxlsx(tbl, f.name, 'Sheet1', mode="overwrite")
-        try:
-            toxlsx(tbl, f.name, 'Sheet1', mode="add")
-            assert False, 'Adding duplicate sheet name did not fail'
-        except ValueError:
-            pass
+def test_toxlsx_overwrite(xlsx_test_table):
+    f = NamedTemporaryFile(delete=False, suffix='.xlsx')
+    f.close()
 
-    def test_toxlsx_with_non_str_header(xlsx_table_with_non_str_header):
-        f = NamedTemporaryFile(delete=True, suffix='.xlsx')
-        f.close()
+    toxlsx(xlsx_test_table, f.name, 'Sheet1', mode="overwrite")
+    wb = openpyxl.load_workbook(f.name, read_only=True)
+    eq_(1, len(wb.sheetnames))
 
-        toxlsx(xlsx_table_with_non_str_header, f.name, 'Sheet1')
-        actual = etl.fromxlsx(f.name, 'Sheet1')
-        ieq(xlsx_table_with_non_str_header, actual)
 
-    def test_appendxlsx_with_non_str_header(xlsx_table_with_non_str_header):
-        tbl = (('foo', 'bar'),
-               ('A', 1),
-               ('B', 2),
-               ('C', 2),
-               (u'é', datetime(2012, 1, 1)))
+def test_toxlsx_replace_file(xlsx_test_table):
+    f = NamedTemporaryFile(delete=True, suffix='.xlsx')
+    f.close()
 
-        f = NamedTemporaryFile(delete=True, suffix='.xlsx')
-        f.close()
+    toxlsx(xlsx_test_table, f.name, 'Sheet1', mode="overwrite")
+    toxlsx(xlsx_test_table, f.name, sheet=None, mode="replace")
+    wb = openpyxl.load_workbook(f.name, read_only=True)
+    eq_(1, len(wb.sheetnames))
 
-        # write first table
-        toxlsx(tbl, f.name, 'Sheet1')
-        actual = fromxlsx(f.name, 'Sheet1')
-        ieq(tbl, actual)
 
-        # test appendxlsx
-        appendxlsx(xlsx_table_with_non_str_header, f.name, 'Sheet1')
-        expect = etl.cat(tbl, xlsx_table_with_non_str_header)
-        ieq(expect, actual)
+def test_toxlsx_replace_sheet(xlsx_test_table):
+    f = NamedTemporaryFile(delete=True, suffix='.xlsx')
+    f.close()
+
+    toxlsx(xlsx_test_table, f.name, 'Sheet1', mode="overwrite")
+    toxlsx(xlsx_test_table, f.name, 'Sheet1', mode="replace")
+    wb = openpyxl.load_workbook(f.name, read_only=True)
+    eq_(1, len(wb.sheetnames))
+
+
+def test_toxlsx_replace_sheet_nofile(xlsx_test_table):
+    f = NamedTemporaryFile(delete=True, suffix='.xlsx')
+    f.close()
+
+    toxlsx(xlsx_test_table, f.name, 'Sheet1', mode="replace")
+    wb = openpyxl.load_workbook(f.name, read_only=True)
+    eq_(1, len(wb.sheetnames))
+
+
+def test_toxlsx_add_nosheet(xlsx_test_table):
+    f = NamedTemporaryFile(delete=True, suffix='.xlsx')
+    f.close()
+
+    toxlsx(xlsx_test_table, f.name, 'Sheet1', mode="overwrite")
+    toxlsx(xlsx_test_table, f.name, None, mode="add")
+    wb = openpyxl.load_workbook(f.name, read_only=True)
+    eq_(2, len(wb.sheetnames))
+
+
+def test_toxlsx_add_sheet_nomatch(xlsx_test_table):
+    f = NamedTemporaryFile(delete=True, suffix='.xlsx')
+    f.close()
+
+    toxlsx(xlsx_test_table, f.name, 'Sheet1', mode="overwrite")
+    toxlsx(xlsx_test_table, f.name, 'Sheet2', mode="add")
+    wb = openpyxl.load_workbook(f.name, read_only=True)
+    eq_(2, len(wb.sheetnames))
+
+
+def test_toxlsx_add_sheet_match(xlsx_test_table):
+    tbl = xlsx_test_table
+    f = NamedTemporaryFile(delete=True, suffix='.xlsx')
+    f.close()
+
+    toxlsx(tbl, f.name, 'Sheet1', mode="overwrite")
+    with pytest.raises(ValueError) as excinfo:
+        toxlsx(tbl, f.name, 'Sheet1', mode="add")
+    assert 'Sheet Sheet1 already exists in file' in str(excinfo.value)
+
+
+def test_toxlsx_with_non_str_header(xlsx_table_with_non_str_header):
+    f = NamedTemporaryFile(delete=True, suffix='.xlsx')
+    f.close()
+
+    toxlsx(xlsx_table_with_non_str_header, f.name, 'Sheet1')
+    actual = etl.fromxlsx(f.name, 'Sheet1')
+    ieq(xlsx_table_with_non_str_header, actual)
+
+
+def test_appendxlsx_with_non_str_header(xlsx_table_with_non_str_header, xlsx_test_table):
+
+    f = NamedTemporaryFile(delete=True, suffix='.xlsx')
+    f.close()
+
+    # write first table
+    toxlsx(xlsx_test_table, f.name, 'Sheet1')
+    actual = fromxlsx(f.name, 'Sheet1')
+    ieq(xlsx_test_table, actual)
+
+    # test appendxlsx
+    appendxlsx(xlsx_table_with_non_str_header, f.name, 'Sheet1')
+    expect = etl.cat(xlsx_test_table, xlsx_table_with_non_str_header)
+    ieq(expect, actual)
