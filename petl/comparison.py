@@ -107,12 +107,12 @@ def comparable_itemgetter(*args):
     getter = operator.itemgetter(*args)
     getter_with_default = _itemgetter_with_default(*args)
 
-    def f(x):
+    def getter_with_fallback(x):
         try:
             return getter(x)
         except (IndexError, KeyError):
             return getter_with_default(x)
-    g = lambda x: Comparable(f(x))
+    g = lambda x: Comparable(getter_with_fallback(x))
     return g
 
 
