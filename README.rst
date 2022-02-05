@@ -28,7 +28,7 @@ DevOps Status
     :alt: PyPI release status
 
 .. image:: https://github.com/conda-forge/petl-feedstock/actions/workflows/automerge.yml/badge.svg
-    :target: https://github.com/conda-forge/petl-feedstock/actions/workflows/automerge.yml/badge.svg
+    :target: https://github.com/conda-forge/petl-feedstock/actions/workflows/automerge.yml
     :alt: Conda Forge release status
 
 .. image:: https://readthedocs.org/projects/petl/badge/?version=stable
