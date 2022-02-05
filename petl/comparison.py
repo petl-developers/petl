@@ -107,23 +107,23 @@ def comparable_itemgetter(*args):
     getter = operator.itemgetter(*args)
     getter_with_default = _itemgetter_with_default(*args)
 
-    def getter_with_fallback(x):
+    def _getter_with_fallback(obj):
         try:
-            return getter(x)
+            return getter(obj)
         except (IndexError, KeyError):
-            return getter_with_default(x)
-    g = lambda x: Comparable(getter_with_fallback(x))
+            return getter_with_default(obj)
+    g = lambda x: Comparable(_getter_with_fallback(x))
     return g
 
 
 def _itemgetter_with_default(*args):
     """ itemgetter compatible with `operator.itemgetter` behavior, filling missing
     values with default instead of raising IndexError or KeyError """
-    def get_default(obj, item, default):
+    def _get_default(obj, item, default):
         try:
             return obj[item]
         except (IndexError, KeyError):
             return default
     if len(args) == 1:
-        return partial(get_default, item=args[0], default=None)
-    return lambda obj: tuple(get_default(obj, item=item, default=None) for item in args)
+        return partial(_get_default, item=args[0], default=None)
+    return lambda obj: tuple(_get_default(obj, item=item, default=None) for item in args)
