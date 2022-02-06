@@ -1,12 +1,31 @@
 .. module:: petl.io
+.. _io_usage:
 
-Extract/Load - reading/writing tables from files, databases and other sources
-=============================================================================
+Usage - reading/writing tables
+==============================
+
+`petl` uses simple python functions for providing a rows and columns abstraction
+for reading and writing data from files, databases, and other sources.
+
+The main features that `petl` was designed are:
+
+- Pure python implementation based on `streams <https://docs.python.org/3/library/io.html>`,
+  `iterators <https://docs.python.org/3/library/stdtypes.html?highlight=iterator#iterator-types>`
+  , and other python types.
+- Extensible approach requiring only dependencies being only optional
+- Use a Dataframe/Table like paradigm similar of Pandas, R, and others
+- Lightweight alternative to develop and maintain compared to heavier, 
+  full-featured frameworks, like PySpark, PyArrow and other ETL tools.
+
+.. _io_overview:
+
+Brief Overview
+--------------
 
 .. _io_extract:
 
 Extract (read)
---------------
+^^^^^^^^^^^^^^
 
 The "from..." functions extract a table from a file-like source or
 database. For everything except :func:`petl.io.db.fromdb` the
@@ -37,7 +56,7 @@ once and so will not work as expected with data from stdin.
 .. _io_load:
 
 Load (write)
-------------
+^^^^^^^^^^^^
 
 The "to..." functions load data from a table into a file-like source
 or database. For functions that accept a ``source`` argument, if the
@@ -55,16 +74,21 @@ Some helper classes are also available for writing to other types of
 file-like sources, e.g., writing to a Zip file or string buffer, see
 the section on :ref:`io_helpers` below for more information.
 
+.. _io_builtin_formats:
+
+Built-in File Formats
+---------------------
+
 .. module:: petl.io.csv
 .. _io_csv:
 
 Python objects
---------------
+^^^^^^^^^^^^^^
 
 .. autofunction:: petl.io.base.fromcolumns
 
 Delimited files
----------------
+^^^^^^^^^^^^^^^
 
 .. autofunction:: petl.io.csv.fromcsv
 .. autofunction:: petl.io.csv.tocsv
@@ -80,7 +104,7 @@ Delimited files
 .. _io_pickle:
 
 Pickle files
-------------
+^^^^^^^^^^^^
 
 .. autofunction:: petl.io.pickle.frompickle
 .. autofunction:: petl.io.pickle.topickle
@@ -92,7 +116,7 @@ Pickle files
 .. _io_text:
 
 Text files
-----------
+^^^^^^^^^^
 
 .. autofunction:: petl.io.text.fromtext
 .. autofunction:: petl.io.text.totext
@@ -104,7 +128,7 @@ Text files
 .. _io_xml:
 
 XML files
----------
+^^^^^^^^^
 
 .. autofunction:: petl.io.xml.fromxml
 .. autofunction:: petl.io.xml.toxml
@@ -114,7 +138,7 @@ XML files
 .. _io_html:
 
 HTML files
-----------
+^^^^^^^^^^
 
 .. autofunction:: petl.io.html.tohtml
 .. autofunction:: petl.io.html.teehtml
@@ -124,38 +148,69 @@ HTML files
 .. _io_json:
 
 JSON files
-----------
+^^^^^^^^^^
 
 .. autofunction:: petl.io.json.fromjson
 .. autofunction:: petl.io.json.fromdicts
 .. autofunction:: petl.io.json.tojson
 .. autofunction:: petl.io.json.tojsonarrays
 
+.. module:: petl.io.streams
+.. _io_helpers:
 
-.. module:: petl.io.db
-.. _io_db:
+Python I/O streams
+^^^^^^^^^^^^^^^^^^
 
-Databases
----------
+The following classes are helpers for extract (``from...()``) and load
+(``to...()``) functions that use a file-like data source.
 
-.. note::
+An instance of any of the following classes can be used as the ``source``
+argument to data extraction functions like :func:`petl.io.csv.fromcsv` etc.,
+with the exception of :class:`petl.io.sources.StdoutSource` which is
+write-only.
 
-    The automatic table creation feature of :func:`petl.io.db.todb`
-    requires `SQLAlchemy <http://www.sqlalchemy.org/>`_ to be installed, e.g.::
+An instance of any of the following classes can also be used as the ``source``
+argument to data loading functions like :func:`petl.io.csv.tocsv` etc., with the
+exception of :class:`petl.io.sources.StdinSource`,
+:class:`petl.io.sources.URLSource` and :class:`petl.io.sources.PopenSource`
+which are read-only.
 
-        $ pip install sqlalchemy
+The behaviour of each source can usually be configured by passing arguments
+to the constructor, see the source code of the :mod:`petl.io.sources` module
+for full details.
 
+.. autoclass:: petl.io.sources.StdinSource
+.. autoclass:: petl.io.sources.StdoutSource
+.. autoclass:: petl.io.sources.MemorySource
+.. autoclass:: petl.io.sources.PopenSource
 
-.. autofunction:: petl.io.db.fromdb
-.. autofunction:: petl.io.db.todb
-.. autofunction:: petl.io.db.appenddb
+.. module:: petl.io.register
+.. _io_register:
 
+Custom I/O streams
+^^^^^^^^^^^^^^^^^^
+
+For creating custom helpers for :ref:`remote I/O <io_remotes>` or
+`compression` use the following functions:
+
+.. autofunction:: petl.io.sources.register_reader
+.. autofunction:: petl.io.sources.register_writer
+.. autofunction:: petl.io.sources.get_reader
+.. autofunction:: petl.io.sources.get_writer
+
+See the source code of the classes in :mod:`petl.io.sources` module for
+more details.
+
+.. _io_extended_formats:
+
+Supported File Formats
+----------------------
 
 .. module:: petl.io.xls
 .. _io_xls:
 
 Excel .xls files (xlrd/xlwt)
-----------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. note::
 
@@ -174,7 +229,7 @@ Excel .xls files (xlrd/xlwt)
 .. _io_xlsx:
 
 Excel .xlsx files (openpyxl)
-----------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. note::
 
@@ -193,7 +248,7 @@ Excel .xlsx files (openpyxl)
 .. _io_numpy:
 
 Arrays (NumPy)
---------------
+^^^^^^^^^^^^^^
 
 .. note::
 
@@ -212,7 +267,7 @@ Arrays (NumPy)
 .. _io_pandas:
 
 DataFrames (pandas)
--------------------
+^^^^^^^^^^^^^^^^^^^
 
 .. note::
 
@@ -229,7 +284,7 @@ DataFrames (pandas)
 .. _io_pytables:
 
 HDF5 files (PyTables)
----------------------
+^^^^^^^^^^^^^^^^^^^^^
 
 .. note::
 
@@ -255,7 +310,7 @@ HDF5 files (PyTables)
 .. _io_bcolz:
 
 Bcolz ctables
--------------
+^^^^^^^^^^^^^
 
 .. note::
 
@@ -272,7 +327,7 @@ Bcolz ctables
 .. _io_whoosh:
 
 Text indexes (Whoosh)
----------------------
+^^^^^^^^^^^^^^^^^^^^^
 
 .. note::
 
@@ -292,7 +347,7 @@ Text indexes (Whoosh)
 .. _io_avro:
 
 Avro files (fastavro)
-----------------------------
+^^^^^^^^^^^^^^^^^^^^^
 
 .. note::
 
@@ -334,39 +389,31 @@ Avro files (fastavro)
    :start-after: begin_complex_schema
    :end-before: end_complex_schema
 
-.. module:: petl.io.sources
-.. _io_helpers:
+.. module:: petl.io.db
+.. _io_db:
 
-I/O helper classes
-------------------
+Databases
+---------
 
-The following classes are helpers for extract (``from...()``) and load
-(``to...()``) functions that use a file-like data source.
+.. note::
 
-An instance of any of the following classes can be used as the ``source``
-argument to data extraction functions like :func:`petl.io.csv.fromcsv` etc.,
-with the exception of :class:`petl.io.sources.StdoutSource` which is
-write-only.
+    For reading and writing to databases, the following functions requires
+    `SQLAlchemy <http://www.sqlalchemy.org/>` with the database specific driver
+    to be installed along petl, e.g.::
 
-An instance of any of the following classes can also be used as the ``source``
-argument to data loading functions like :func:`petl.io.csv.tocsv` etc., with the
-exception of :class:`petl.io.sources.StdinSource`,
-:class:`petl.io.sources.URLSource` and :class:`petl.io.sources.PopenSource`
-which are read-only.
+        $ pip install sqlalchemy
+        $ pip install sqlite3
+        $ pip install pymysql
 
-The behaviour of each source can usually be configured by passing arguments
-to the constructor, see the source code of the :mod:`petl.io.sources` module
-for full details.
+.. autofunction:: petl.io.db.fromdb
+.. autofunction:: petl.io.db.todb
+.. autofunction:: petl.io.db.appenddb
 
-.. autoclass:: petl.io.sources.StdinSource
-.. autoclass:: petl.io.sources.StdoutSource
-.. autoclass:: petl.io.sources.MemorySource
-.. autoclass:: petl.io.sources.PopenSource
-
+.. module:: petl.io.remote
 .. _io_remotes:
 
-Remote I/O helper classes
--------------------------
+Remote and Cloud Filesystems
+----------------------------
 
 The following classes are helpers for reading (``from...()``) and writing
 (``to...()``) functions transparently as a file-like source.
@@ -377,13 +424,26 @@ in :ref:`Extract <io_extract>` and :ref:`Load <io_load>`.
 It's possible to read and write just by prefixing the protocol (e.g: `s3://`)
 in the source path of the file.
 
+.. note::
+
+    For reading and writing to remote filesystems, the following functions 
+    requires `fsspec <https://filesystem-spec.readthedocs.io/>` to be installed 
+    along petl package e.g.::
+
+        $ pip install fsspec
+
+The supported filesystems with their URI formats can be found in:
+
+- fsspec `Built-in Implementations <https://filesystem-spec.readthedocs.io/en/latest/api.html#built-in-implementations>`
+- fsspec `Other Known Implementations <https://filesystem-spec.readthedocs.io/en/latest/api.html#other-known-implementations>`
+
 .. autoclass:: petl.io.remotes.RemoteSource
 .. autoclass:: petl.io.remotes.SMBSource
 
 .. _io_deprecated:
 
-Deprecated I/O helper classes
------------------------------
+Deprecated I/O sources
+^^^^^^^^^^^^^^^^^^^^^^
 
 The following helpers are deprecated and will be removed in a future version.
 
@@ -394,19 +454,3 @@ It's functionality was replaced by helpers in :ref:`Remote helpers <io_remotes>`
 .. autoclass:: petl.io.sources.BZ2Source
 .. autoclass:: petl.io.sources.ZipSource
 .. autoclass:: petl.io.sources.URLSource
-
-.. _io_custom_helpers:
-
-Custom I/O helper classes
-------------------------------
-
-For creating custom helpers for :ref:`remote I/O <io_remotes>` or
-`compression` use the following functions:
-
-.. autofunction:: petl.io.sources.register_reader
-.. autofunction:: petl.io.sources.register_writer
-.. autofunction:: petl.io.sources.get_reader
-.. autofunction:: petl.io.sources.get_writer
-
-See the source code of the classes in :mod:`petl.io.sources` module for
-more details.

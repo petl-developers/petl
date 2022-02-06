@@ -1,8 +1,7 @@
 .. module:: petl.transform
 
-Transform - transforming tables
-===============================
-
+Usage - transforming rows and columns
+=====================================
 
 .. module:: petl.transform.basics
 .. _transform_basics:
