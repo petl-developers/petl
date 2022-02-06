@@ -153,4 +153,30 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
+## Custom section for petl ##
+
+# Python generated files
+
+*.pyc
+
+# Jypyter notebooks tem files
+
+.ipynb_checkpoints/
+**/.ipynb_checkpoints/*
+
+# Editor backup files 
+*~
+*.backup
+
+# Petl build generated files
+petl/version.py
+**/tmp/
+
+# Petl doctest generated files
+example*.*
+
+# Ignore this patterns for develepment convenience
+
+sketch*
+
 ## end of .gitignore file ##
