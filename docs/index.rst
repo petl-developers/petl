@@ -23,9 +23,10 @@ Resources
 
 .. note::
 
-   - Version 2.0 will be a new major milestone of :mod:`petl`.
+   - Version 2.0 will be a major milestone for :mod:`petl`.
    - This version will introduce some changes that could affect current behaviour.
-   - We will try to keep compatibility to maximum, except where it is inconsistent.
+   - We will try to keep compatibility to the maximum possible, except 
+     when the current behavior is inconsistent or have shortcomings.
    - The biggest change is the end of support of Python `2.7`.
    - The minimum supported version will be Python `3.6`.
 
