@@ -36,6 +36,9 @@ class IterContainer(object):
         elif isinstance(item, slice):
             return islice(self, item.start, item.stop, item.step)
 
+    def __iter__(self):
+        raise NotImplementedError
+
     def index(self, item):
         for i, o in enumerate(self):
             if o == item:
