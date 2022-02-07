@@ -292,7 +292,9 @@ def asindices(hdr, spec):
             indices.append(s)  # index fields from 0
         # spec could be a field
         elif s in flds:
-            indices.append(flds.index(s))
+            idx = flds.index(s)
+            indices.append(idx)
+            flds[idx] = None  # replace with None to mark as used
         else:
             raise FieldSelectionError(s)
     return indices

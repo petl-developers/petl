@@ -4,8 +4,8 @@ from __future__ import absolute_import, print_function, division
 from petl.test.helpers import ieq
 from petl.errors import FieldSelectionError
 from petl.util import fieldnames
-from petl.transform.headers import setheader, extendheader, pushheader, skip,\
-    rename, prefixheader, suffixheader
+from petl.transform.headers import setheader, extendheader, pushheader, skip, \
+    rename, prefixheader, suffixheader, sortheader
 
 
 def test_setheader():
@@ -239,4 +239,38 @@ def test_suffixheader():
 
     actual = suffixheader(table1, '_suf')
     ieq(expect, actual)
+    ieq(expect, actual)
+
+
+def test_sortheaders():
+    table1 = (
+        ('id', 'foo', 'bar', 'baz'),
+        ('a', 1, 2, 3),
+        ('b', 4, 5, 6))
+
+    expect = (
+        ('bar', 'baz', 'foo', 'id'),
+        (2, 3, 1, 'a'),
+        (5, 6, 4, 'b'),
+    )
+
+    actual = sortheader(table1)
+    ieq(expect, actual)
+
+
+def test_sortheaders_duplicate_headers():
+    """ Failing test case provided in sortheader()
+    with duplicate column names overlays values #392 """
+    table1 = (
+        ('id', 'foo', 'foo', 'foo'),
+        ('a', 1, 2, 3),
+        ('b', 4, 5, 6))
+
+    expect = (
+        ('foo', 'foo', 'foo', 'id'),
+        (1, 2, 3, 'a'),
+        (4, 5, 6, 'b'),
+    )
+
+    actual = sortheader(table1)
     ieq(expect, actual)
