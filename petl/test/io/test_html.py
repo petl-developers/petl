@@ -86,3 +86,35 @@ def test_tohtml_caption():
             u"</table>\n"
         )
         eq_(expect, actual)
+
+
+def test_tohtml_with_style():
+
+    # exercise function
+    table = (('foo', 'bar'),
+             ('a', 1))
+
+    f = NamedTemporaryFile(delete=False)
+    tohtml(table, f.name, encoding='ascii', lineterminator='\n',
+        tr_style='text-align: right', td_styles='text-align: center')
+
+    # check what it did
+    with io.open(f.name, mode='rt', encoding='ascii', newline='') as o:
+        actual = o.read()
+        expect = (
+            u"<table class='petl'>\n"
+            u"<thead>\n"
+            u"<tr>\n"
+            u"<th>foo</th>\n"
+            u"<th>bar</th>\n"
+            u"</tr>\n"
+            u"</thead>\n"
+            u"<tbody>\n"
+            u"<tr style='text-align: right'>\n"
+            u"<td style='text-align: center'>a</td>\n"
+            u"<td style='text-align: center'>1</td>\n"
+            u"</tr>\n"
+            u"</tbody>\n"
+            u"</table>\n"
+        )
+        eq_(expect, actual)
