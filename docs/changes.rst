@@ -4,6 +4,12 @@ Changes
 Version 1.7.8
 -------------
 
+* Cleanup and unclutter old and unused files in repository
+  By :user:`juarezr`, :issue:`606`.
+
+* Add tohtml with css styles test case
+  By :user:`juarezr`, :issue:`609`.
+
 * Fix sortheader() to not overwrite data for duplicate column names
   By :user:`arturponinski`, :issue:`392`.
 
