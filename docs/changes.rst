@@ -4,6 +4,9 @@ Changes
 Version 1.7.8
 -------------
 
+* Fix sortheader() to not overwrite data for duplicate column names
+  By :user:`arturponinski`, :issue:`392`.
+
 * Add NotImplementedError to IterContainer's __iter__
   By :user:`arturponinski`, :issue:`483`.
 
