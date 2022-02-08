@@ -727,7 +727,10 @@ class RowSliceView(Table):
 
 def iterrowslice(source, sliceargs):
     it = iter(source)
-    yield tuple(next(it))  # fields
+    try:
+        yield tuple(next(it))  # fields
+    except StopIteration:
+        return
     for row in islice(it, *sliceargs):
         yield tuple(row)
 

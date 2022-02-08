@@ -1,5 +1,6 @@
 from __future__ import absolute_import, print_function, division
 
+import pytest
 
 from petl.test.helpers import ieq
 from petl.util import expr, empty, coalesce
@@ -458,6 +459,20 @@ def test_head():
               ('c', 5),
               ('d', 7))
     ieq(expect, table2)
+
+
+def test_head_raises_stop_iteration_for_empty_table():
+    table = iter(head([]))
+    with pytest.raises(StopIteration):
+        next(table)  # header
+
+
+def test_head_raises_stop_iteration_for_header_only():
+    table1 = (('foo', 'bar', 'baz'),)
+    table = iter(head(table1))
+    next(table)  # header
+    with pytest.raises(StopIteration):
+        next(table)
 
 
 def test_tail():

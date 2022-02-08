@@ -4,6 +4,9 @@ Changes
 Version 1.7.8
 -------------
 
+* Fix iterrowslice() to conform with PEP 479
+  By :user:`arturponinski`, :issue:`575`.
+
 * Cleanup and unclutter old and unused files in repository
   By :user:`juarezr`, :issue:`606`.
 
