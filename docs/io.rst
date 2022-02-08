@@ -12,7 +12,8 @@ The main features that `petl` was designed are:
 - Pure python implementation based on `streams <https://docs.python.org/3/library/io.html>`,
   `iterators <https://docs.python.org/3/library/stdtypes.html?highlight=iterator#iterator-types>`
   , and other python types.
-- Extensible approach requiring only dependencies being only optional
+- Extensible approach, only requiring package dependencies when using their 
+  functionality.
 - Use a Dataframe/Table like paradigm similar of Pandas, R, and others
 - Lightweight alternative to develop and maintain compared to heavier, 
   full-featured frameworks, like PySpark, PyArrow and other ETL tools.
@@ -397,8 +398,8 @@ Databases
 
 .. note::
 
-    For reading and writing to databases, the following functions requires
-    `SQLAlchemy <http://www.sqlalchemy.org/>` with the database specific driver
+    For reading and writing to databases, the following functions require
+    `SQLAlchemy <http://www.sqlalchemy.org/>` its the database specific driver
     to be installed along petl, e.g.::
 
         $ pip install sqlalchemy
