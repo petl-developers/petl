@@ -4,6 +4,9 @@ Changes
 Version 1.7.8
 -------------
 
+* Add NotImplementedError to IterContainer's __iter__
+  By :user:`arturponinski`, :issue:`483`.
+
 * Add casting of headers to strings in toxlsx and appendxlsx
   By :user:`arturponinski`, :issue:`530`.
 
