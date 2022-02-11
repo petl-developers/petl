@@ -1,5 +1,6 @@
 from __future__ import absolute_import, print_function, division
 
+import os
 import sys
 
 import pytest
@@ -8,15 +9,18 @@ from petl.compat import izip_longest
 
 
 def eq_(expect, actual, msg=None):
+    """Test when two values from a python variable are exactly equals (==)"""
     assert expect == actual, msg
 
 
 def assert_almost_equal(first, second, places=None, msg=None):
-    abs = None if places is None else 10**-places
-    assert pytest.approx(first, second, abs=abs), msg
+    """Test when the values are aproximatedly equals by a places exponent"""
+    vabs = None if places is None else 10 ** (- places)
+    assert pytest.approx(first, second, abs=vabs), msg
+
 
 def ieq(expect, actual, cast=None):
-    '''test when values are equals for eacfh row and column'''
+    """Test when values of a iterable are equals for each row and column"""
     ie = iter(expect)
     ia = iter(actual)
     for re, ra in izip_longest(ie, ia, fillvalue=None):
@@ -36,32 +40,17 @@ def ieq(expect, actual, cast=None):
 
 
 def _eq_print(ve, va, re, ra):
+    """Print two values when they aren't exactly equals (==)"""
     try:
         eq_(ve, va)
     except AssertionError as ea:
+        # Show the values but only when they differ
         print('\nrow: ', re, ' != ', ra, file=sys.stderr)
         print('val: ', ve, ' != ', va, file=sys.stderr)
         raise ea
 
 
 def ieq2(expect, actual, cast=None):
-    '''test twice when values are equals for eacfh row and column'''
+    """Test when iterables values are equals twice looking for side effects"""
     ieq(expect, actual, cast)
     ieq(expect, actual, cast)
-
-
-def test_iassertequal():
-    x = ['a', 'b']
-    y = ['a', 'b', 'c']
-    try:
-        ieq(x, y)
-    except AssertionError:
-        pass
-    else:
-        assert False, 'did not catch actual item left over'
-    try:
-        ieq(y, x)
-    except AssertionError:
-        pass
-    else:
-        assert False, 'did not catch expected item left over'
