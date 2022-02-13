@@ -64,3 +64,17 @@ def ieq2(expect, actual, cast=None):
     """Test when iterables values are equals twice looking for side effects"""
     ieq(expect, actual, cast)
     ieq(expect, actual, cast)
+
+
+def get_env_vars_named(prefix, remove_prefix=True):
+    """Get all named variables starting with prefix"""
+    res = {}
+    varlen = len(prefix)
+    for varname, varvalue in os.environ.items():
+        if varname.upper().startswith(prefix.upper()):
+            if remove_prefix:
+                varname = varname[varlen:]
+            res[varname] = varvalue
+    if len(res) == 0:
+        return None
+    return res
