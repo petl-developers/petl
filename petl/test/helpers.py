@@ -23,6 +23,7 @@ def ieq(expect, actual, cast=None):
     """Test when values of a iterable are equals for each row and column"""
     ie = iter(expect)
     ia = iter(actual)
+    ir = 0
     for re, ra in izip_longest(ie, ia, fillvalue=None):
         if cast:
             ra = cast(ra)
@@ -31,22 +32,31 @@ def ieq(expect, actual, cast=None):
         if type(re) in (int, float, bool, str):
             eq_(re, ra)
             continue
-        for ve, va in izip_longest(re, ra, fillvalue=None):
-            if isinstance(ve, list):
-                for je, ja in izip_longest(ve, va, fillvalue=None):
-                    _eq_print(je, ja, re, ra)
-            elif not isinstance(ve, dict):
-                _eq_print(ve, va, re, ra)
+        _ieq_row(re, ra, ir)
+        ir = ir + 1
 
 
-def _eq_print(ve, va, re, ra):
+def _ieq_row(re, ra, ir):
+    assert ra is not None, "Expected row #%d is None, but result row is not None" % ir
+    assert re is not None, "Expected row #%d is not None, but result row is None" % ir
+    ic = 0
+    for ve, va in izip_longest(re, ra, fillvalue=None):
+        if isinstance(ve, list):
+            for je, ja in izip_longest(ve, va, fillvalue=None):
+                _ieq_col(je, ja, re, ra, ir, ic)
+        elif not isinstance(ve, dict):
+            _ieq_col(ve, va, re, ra, ir, ic)
+        ic = ic + 1
+
+
+def _ieq_col(ve, va, re, ra, ir, ic):
     """Print two values when they aren't exactly equals (==)"""
     try:
         eq_(ve, va)
     except AssertionError as ea:
         # Show the values but only when they differ
-        print('\nrow: ', re, ' != ', ra, file=sys.stderr)
-        print('val: ', ve, ' != ', va, file=sys.stderr)
+        print('\nrow #%d' % ir, re, ' != ', ra, file=sys.stderr)
+        print('col #%d: ' % ic, ve, ' != ', va, file=sys.stderr)
         raise ea
 
 
