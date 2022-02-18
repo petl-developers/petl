@@ -24,7 +24,7 @@ def capture(table, field, pattern, newfields=None, include_original=False,
         ...           ['2', 'A2', '15'],
         ...           ['3', 'B1', '18'],
         ...           ['4', 'C12', '19']]
-        >>> table2 = etl.capture(table1, 'variable', '(\\w)(\\d+)',
+        >>> table2 = etl.capture(table1, 'variable', '([A-Z,a-z]+)([0-9]+)',
         ...                      ['treat', 'time'])
         >>> table2
         +-----+-------+-------+------+
@@ -40,7 +40,7 @@ def capture(table, field, pattern, newfields=None, include_original=False,
         +-----+-------+-------+------+
 
         >>> # using the include_original argument
-        ... table3 = etl.capture(table1, 'variable', '(\\w)(\\d+)',
+        ... table3 = etl.capture(table1, 'variable', '([A-Z,a-z]+)([0-9]+)',
         ...                      ['treat', 'time'],
         ...                      include_original=True)
         >>> table3
@@ -65,7 +65,6 @@ def capture(table, field, pattern, newfields=None, include_original=False,
     expression. If ``fill`` is ``None`` (default) then a
     ``petl.transform.TransformError`` will be raised on the first non-matching
     value.
-
     """
 
     return CaptureView(table, field, pattern,
@@ -457,4 +456,3 @@ def itersplitdown(table, field, pattern, maxsplit, flags):
         value = row[field_index]
         for v in prog.split(value, maxsplit):
             yield tuple(v if i == field_index else row[i] for i in range(len(hdr)))
-
