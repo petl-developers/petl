@@ -476,7 +476,7 @@ def test_toxml12():
 def test_toxml13():
     _check_toxml(
         _TABLE1, _BODY1,
-        check=('//tr', ('td', 'th')),
+        check=('.//tr', ('td', 'th')),
         style=' <tr><td>{ABCD}</td><td>{N123}</td></tr>\n',
         root='table',
         rows='tbody'
@@ -558,7 +558,7 @@ def test_toxml18():
     _TAB_AHZ = _ROW_A0 + _HEAD1 + _BODY1 + _ROW_Z9
     _check_toxml(
         _TABLE1, _TAB_AHZ,
-        check=('//row', 'col'),
+        check=('.//row', 'col'),
         head='thead/row/col',
         rows='row/col',
         prologue=_TAG_TOP + _TAG_A0, 
@@ -579,7 +579,7 @@ def test_toxml19():
 def test_toxml20():
     _check_toxml(
         _TABLE1, _TABLE1,
-        check=('//line', 'cell'),
+        check=('.//line', 'cell'),
         root='book',
         head='thead/line/cell',
         rows='tbody/line/cell',
