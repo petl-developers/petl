@@ -210,25 +210,6 @@ Supported File Formats
 .. module:: petl.io.xls
 .. _io_xls:
 
-Google sheet files (gsheet)
-----------------------------
-
-.. note::
-
-    The following functions require `gspread
-    <https://github.com/burnash/gspread>`_  to be installed,
-    e.g.::
-
-        $ pip install gspread
-
-.. autofunction:: petl.io.gsheet.fromgsheet
-.. autofunction:: petl.io.gsheet.togsheet
-.. autofunction:: petl.io.gsheet.appendgsheet
-
-
-.. module:: petl.io.gsheet
-.. _io_gsheet:
-
 Excel .xls files (xlrd/xlwt)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -409,6 +390,29 @@ Avro files (fastavro)
    :start-after: begin_complex_schema
    :end-before: end_complex_schema
 
+.. module:: petl.io.gsheet
+.. _io_gsheet:
+
+Google Sheets (gspread)
+^^^^^^^^^^^^^^^^^^^^^^^
+
+.. warning::
+
+    This is a experimental feature. API and behavior may change between releases
+    with some possible breaking changes.
+
+.. note::
+
+    The following functions require `gspread
+    <https://github.com/burnash/gspread>`_  to be installed,
+    e.g.::
+
+        $ pip install gspread
+
+.. autofunction:: petl.io.gsheet.fromgsheet
+.. autofunction:: petl.io.gsheet.togsheet
+.. autofunction:: petl.io.gsheet.appendgsheet
+
 .. module:: petl.io.db
 .. _io_db:
 
@@ -418,7 +422,7 @@ Databases
 .. note::
 
     For reading and writing to databases, the following functions require
-    `SQLAlchemy <http://www.sqlalchemy.org/>` its the database specific driver
+    `SQLAlchemy <http://www.sqlalchemy.org/>` and the database specific driver
     to be installed along petl, e.g.::
 
         $ pip install sqlalchemy
@@ -452,10 +456,14 @@ in the source path of the file.
 
         $ pip install fsspec
 
-The supported filesystems with their URI formats can be found in:
+The supported filesystems with their URI formats can be found in fsspec 
+documentation:
 
-- fsspec `Built-in Implementations <https://filesystem-spec.readthedocs.io/en/latest/api.html#built-in-implementations>`
-- fsspec `Other Known Implementations <https://filesystem-spec.readthedocs.io/en/latest/api.html#other-known-implementations>`
+- `Built-in Implementations <https://filesystem-spec.readthedocs.io/en/latest/api.html#built-in-implementations>`__
+- `Other Known Implementations <https://filesystem-spec.readthedocs.io/en/latest/api.html#other-known-implementations>`__
+
+Remote sources
+^^^^^^^^^^^^^^
 
 .. autoclass:: petl.io.remotes.RemoteSource
 .. autoclass:: petl.io.remotes.SMBSource
