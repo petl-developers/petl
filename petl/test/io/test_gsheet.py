@@ -38,7 +38,7 @@ In order to run google spreadsheet tests, follow the steps bellow:
 3. Or else save the file in one of the following paths:
       unix: ~/.config/gspread/service_account.json
    windows: %APPDATA%\\gspread\\service_account.json
-""")
+""", allow_module_level=True)
 
 
 def _load_creds_from_file(json_path):
