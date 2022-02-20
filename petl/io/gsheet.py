@@ -128,6 +128,7 @@ class GoogleSheetView(Table):
             yield tuple(row)
 
     def _yield_by_range(self, ws):
+        # TODO: try using: worksheet.get_values('A2:C10')
         # start_cell -> top left, end_cell -> bottom right
         start_cell, end_cell = self.cell_range.split(":")
         from gspread.utils import a1_to_rowcol
@@ -184,6 +185,7 @@ def togsheet(
     if worksheet:
         ws.update_title(title=worksheet)
     # gspread indices start at 1, therefore row index insert starts at 1
+    # TODO: batch insert with ws.insert_rows
     for index, row in enumerate(tbl, start=1):
         ws.insert_row(row, index)
     # specify the user account to share to
