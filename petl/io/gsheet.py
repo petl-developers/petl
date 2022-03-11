@@ -39,21 +39,30 @@ def _open_spreadsheet(gspread_client, spreadsheet, open_by_key=False):
     return wb
 
 
-def _select_worksheet(wb, worksheet):
+def _select_worksheet(wb, worksheet, find_or_create=False):
     # Allow for user to specify no sheet, sheet index or sheet name
     if worksheet is None:
         ws = wb.sheet1
     elif isinstance(worksheet, int):
         ws = wb.get_worksheet(worksheet)
+    elif isinstance(worksheet, text_type):
+        sheetname = text_type(worksheet)
+        if find_or_create:
+            if worksheet in [wbs.title for wbs in wb.worksheets()]:
+                ws = wb.worksheet(sheetname)
+            else:
+                ws = wb.add_worksheet(sheetname, 1, 1)
+        else:
+            # use text_type for cross version compatibility
+            ws = wb.worksheet(sheetname)
     else:
-        # use text_type for cross version compatibility
-        ws = wb.worksheet(text_type(worksheet))
+        raise PetlArgError("Only can find worksheet by name or by number")
     return ws
 
 
 def fromgsheet(
-    credentials_or_client, spreadsheet, open_by_key=False,
-    worksheet=None, cell_range=None
+    credentials_or_client, spreadsheet, worksheet=None, cell_range=None,
+    open_by_key=False
 ):
     """
     Extract a table from a google spreadsheet.
@@ -95,23 +104,24 @@ def fromgsheet(
     return GoogleSheetView(
         credentials_or_client,
         spreadsheet,
+        worksheet,
+        cell_range,
         open_by_key,
-        worksheet=worksheet,
-        cell_range=cell_range
     )
 
 
 class GoogleSheetView(Table):
-    """This module resembles XLSXView."""
+    """Conects to a worksheet and iterates over its rows."""
 
     def __init__(
-        self, credentials_or_client, spreadsheet, open_by_key, worksheet, cell_range
+        self, credentials_or_client, spreadsheet, worksheet, cell_range,
+        open_by_key
     ):
         self.auth_info = credentials_or_client
         self.spreadsheet = spreadsheet
-        self.open_by_key = open_by_key
         self.worksheet = worksheet
         self.cell_range = cell_range
+        self.open_by_key = open_by_key
 
     def __iter__(self):
         gspread_client = _get_gspread_client(self.auth_info)
@@ -128,23 +138,14 @@ class GoogleSheetView(Table):
             yield tuple(row)
 
     def _yield_by_range(self, ws):
-        # TODO: try using: worksheet.get_values('A2:C10')
-        # start_cell -> top left, end_cell -> bottom right
-        start_cell, end_cell = self.cell_range.split(":")
-        from gspread.utils import a1_to_rowcol
-
-        start_row, start_col = a1_to_rowcol(start_cell)
-        end_row, end_col = a1_to_rowcol(end_cell)
-        # gspread starts its indices at 1
-        for i, row in enumerate(ws.get_all_values(), start=1):
-            if i in range(start_row, end_row + 1):
-                start_col_index = start_col - 1
-                yield tuple(row[start_col_index:end_col])
+        found = ws.get_values(self.cell_range)
+        for row in found:
+            yield tuple(row)
 
 
 def togsheet(
-    tbl, credentials_or_client, spreadsheet,
-    worksheet=None, share_emails=None, role="reader"
+    table, credentials_or_client, spreadsheet, worksheet=None, cell_range=None,
+    share_emails=None, role="reader"
 ):
     """
     Write a table to a new google sheet.
@@ -153,12 +154,16 @@ def togsheet(
     For more info, check `authentication`_. 
 
     The `spreadsheet` will be the title of the workbook created google sheets.
+    If there is a spreadsheet with same title a new one will be created.
 
     If `worksheet` is specified, the first worksheet in the spreadsheet
     will be renamed to its value.
 
     The spreadsheet will be shared with all emails in `share_emails` with
     `role` permissions granted. For more info, check `sharing`_. 
+
+    Returns: the spreadsheet key that can be used in `appendgsheet` further.
+
 
     .. _sharing: https://developers.google.com/drive/v3/web/manage-sharing
 
@@ -179,15 +184,12 @@ def togsheet(
     gspread_client = _get_gspread_client(credentials_or_client)
     wb = gspread_client.create(spreadsheet)
     ws = wb.sheet1
-    # make smallest table possible
-    ws.resize(rows=1, cols=1)
+    ws.resize(rows=1, cols=1)  # make smallest table possible
     # rename sheet if set
-    if worksheet:
+    if worksheet is not None:
         ws.update_title(title=worksheet)
     # gspread indices start at 1, therefore row index insert starts at 1
-    # TODO: batch insert with ws.insert_rows
-    for index, row in enumerate(tbl, start=1):
-        ws.insert_row(row, index)
+    ws.append_rows(table, table_range=cell_range)
     # specify the user account to share to
     if share_emails is not None:
         for user_email in share_emails:
@@ -196,7 +198,7 @@ def togsheet(
 
 
 def appendgsheet(
-    tbl, credentials_or_client, spreadsheet, open_by_key=False, worksheet="Sheet1"
+    table, credentials_or_client, spreadsheet, worksheet=None, open_by_key=False
 ):
     """
     Append a table to an existing google shoot at either a new worksheet
@@ -217,15 +219,10 @@ def appendgsheet(
     # be able to give filename or key for file
     wb = _open_spreadsheet(gspread_client, spreadsheet, open_by_key)
     # check to see if worksheet exists, if so append, otherwise create
-    if worksheet in [wbs.title for wbs in wb.worksheets()]:
-        ws = wb.worksheet(text_type(worksheet))
-    else:
-        ws = wb.add_worksheet(text_type(worksheet), 1, 1)
-    # efficiency loss, but get_all_values() will only return meaningful rows,
-    # therefore len(rows) + 1 gives the earliest open insert index
-    start_point = len(ws.get_all_values()) + 1
-    for index, row in enumerate(tbl, start=start_point):
-        ws.insert_row(row, index)
+    ws = _select_worksheet(wb, worksheet, True)
+    ws.append_rows(table)
+    return wb.id
 
 
 Table.togsheet = togsheet
+Table.appendgsheet = appendgsheet
