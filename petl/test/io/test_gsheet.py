@@ -230,7 +230,7 @@ def test_tofromgsheet_08_recreate():
 
 def _get_testcase_for_append():
     table_list = [TEST_TABLE[:], TEST_TABLE[:]]
-    expected = TEST_TABLE[:] + TEST_TABLE[:]
+    expected = TEST_TABLE[:] + TEST_TABLE[1:]
     return table_list, expected
 
 
@@ -251,20 +251,17 @@ def test_appendgsheet_12_other_sheet():
     filename, gspread_client, emails = _get_gspread_test_params()
     # test to append gsheet
     table = TEST_TABLE[:]
+    table2 = TEST_TABLE[1:]
     spread_id = togsheet(table, gspread_client, filename, share_emails=emails)
     try:
         appendgsheet(table, gspread_client, filename, worksheet="petl")
+        # get the results from the 2 sheets
         result1 = fromgsheet(gspread_client, filename, worksheet=None)
         ieq(result1, table)
         result2 = fromgsheet(gspread_client, filename, worksheet="petl")
-        ieq(result2, table)
+        ieq(result2, table2)
     finally:
         gspread_client.del_spreadsheet(spread_id)
-
-
-@pytest.fixture()
-def setup_emails(monkeypatch):
-    monkeypatch.setenv("PETL_GSHEET_EMAIL_J", "juarezr@gmail.com")
 
 
 # endregion

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, print_function, division
 
-from petl.util.base import Table
+from petl.util.base import Table, iterdata
 from petl.compat import text_type
 from petl.errors import ArgumentError as PetlArgError
 
@@ -72,14 +72,14 @@ def fromgsheet(
 
     The `spreadsheet` can either be the key of the spreadsheet or its name.
 
-    Set `open_by_key` to `True` in order to treat `spreadsheet` as spreadsheet key.
-
     The `worksheet` argument can be omitted, in which case the first
     sheet in the workbook is used by default.
 
     The `cell_range` argument can be used to provide a range string
     specifying the top left and bottom right corners of a set of cells to
     extract. (i.e. 'A1:C7').
+
+    Set `open_by_key` to `True` in order to treat `spreadsheet` as spreadsheet key.
 
     .. note::
         - Only the top level of google drive will be searched for the 
@@ -198,7 +198,8 @@ def togsheet(
 
 
 def appendgsheet(
-    table, credentials_or_client, spreadsheet, worksheet=None, open_by_key=False
+    table, credentials_or_client, spreadsheet, worksheet=None, 
+    open_by_key=False, include_header=False
 ):
     """
     Append a table to an existing google shoot at either a new worksheet
@@ -212,6 +213,11 @@ def appendgsheet(
     The `worksheet` is the title of the worksheet to append to or create when it
     does not exist yet.
 
+    Set `open_by_key` to `True` in order to treat `spreadsheet` as spreadsheet key.
+
+    Set `include_header` to `True` if you don't want omit fieldnames as the 
+    first row appended.
+
     .. note:: 
         The sheet index cannot be used, and None is not an option.
     """
@@ -220,7 +226,8 @@ def appendgsheet(
     wb = _open_spreadsheet(gspread_client, spreadsheet, open_by_key)
     # check to see if worksheet exists, if so append, otherwise create
     ws = _select_worksheet(wb, worksheet, True)
-    ws.append_rows(table)
+    rows = table if include_header else list(iterdata(table))
+    ws.append_rows(rows)
     return wb.id
 
 
