@@ -573,4 +573,7 @@ def _ordered_dict_iterator(table):
         yield OrderedDict(items)
 
 
+Table.toavro = toavro
+Table.appendavro = appendavro
+
 # endregion
