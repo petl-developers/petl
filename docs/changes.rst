@@ -1,6 +1,15 @@
 Changes
 =======
 
+Version 1.7.9
+-------------
+
+* Feature: Add improved support for working with Google Sheets 
+  By :user:`juarezr`, :issue:`615`.
+
+* Maintanance: Improve test helpers testing
+  By :user:`juarezr`, :issue:`614`.
+
 Version 1.7.8
 -------------
 
