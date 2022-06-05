@@ -71,7 +71,7 @@ def fromtsv(source=None, encoding=None, errors='strict', header=None,
     """
 
     csvargs.setdefault('dialect', 'excel-tab')
-    return fromcsv(source, encoding=encoding, errors=errors, **csvargs)
+    return fromcsv(source, encoding=encoding, errors=errors, header=header, **csvargs)
 
 
 def tocsv(table, source=None, encoding=None, errors='strict', write_header=True,
