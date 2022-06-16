@@ -3,15 +3,20 @@ from __future__ import absolute_import, print_function, division
 
 # standard library dependencies
 import io
-import itertools
 import json
 import inspect
+import logging
 from json.encoder import JSONEncoder
+from os import unlink
+from tempfile import NamedTemporaryFile
 
 from petl.compat import PY2
+from petl.compat import pickle
 from petl.io.sources import read_source_from_arg, write_source_from_arg
 # internal dependencies
-from petl.util.base import data, Table, dicts as _dicts, iterpeek
+from petl.util.base import data, Table, dicts as _dicts, iterpeek, iterchunk
+
+logger = logging.getLogger(__name__)
 
 
 def fromjson(source, *args, **kwargs):
@@ -157,8 +162,9 @@ def fromdicts(dicts, header=None, sample=1000, missing=None):
     guarantee stability.
 
     """
-    view = DictsGeneratorView if inspect.isgenerator(dicts) else DictsView
-    return view(dicts, header=header, sample=sample, missing=missing)
+    if inspect.isgenerator(dicts):
+        logger.warning("Generator passed to `fromdicts` may cause unexpected results. Use `fromdictsgenerator`")
+    return DictsView(dicts, header=header, sample=sample, missing=missing)
 
 
 class DictsView(Table):
@@ -173,11 +179,83 @@ class DictsView(Table):
         return iterdicts(self.dicts, self._header, self.sample, self.missing)
 
 
+def fromdictsgenerator(dicts_generator, header=None, sample=1000, missing=None):
+    """
+    View a generator of Python :class:`dict` as a table. E.g.::
+
+        >>> import petl as etl
+        >>> dicts = [{"foo": "a", "bar": 1},
+        ...          {"foo": "b", "bar": 2},
+        ...          {"foo": "c", "bar": 2}]
+        >>> dicts_generator = (d for d in dicts)
+        >>> table1 = etl.fromdictsgenerator(dicts_generator, header=['foo', 'bar'])
+        >>> table1
+        +-----+-----+
+        | foo | bar |
+        +=====+=====+
+        | 'a' |   1 |
+        +-----+-----+
+        | 'b' |   2 |
+        +-----+-----+
+        | 'c' |   2 |
+        +-----+-----+
+
+    This is an implementation which walks through the source generator in a lazy manner. Rows requested
+    for the first time are dumped into cache file. Consequent calls first walk through the cached
+    rows first, and then iterate the source generator until it is exhausted.
+
+    If no `header` is specified, fields will be discovered by sampling keys
+    from the first `sample` dictionaries in `dicts_generator`. The header will be
+    constructed from keys in the order discovered. Note that this
+    ordering may not be stable, and therefore it may be advisable to specify
+    an explicit `header` or to use another function like
+    :func:`petl.transform.headers.sortheader` on the resulting table to
+    guarantee stability.
+
+    """
+    return DictsGeneratorView(dicts_generator, header=header, sample=sample, missing=missing)
+
+
 class DictsGeneratorView(DictsView):
 
+    def __init__(self, dicts, header=None, sample=1000, missing=None):
+        super(DictsGeneratorView, self).__init__(dicts, header, sample, missing)
+        self._filecache = None
+
     def __iter__(self):
-        self.dicts, dicts = itertools.tee(self.dicts)
-        return iterdicts(dicts, self._header, self.sample, self.missing)
+        if not self._header:
+            self._determine_header()
+        yield self._header
+
+        if self._filecache:
+            for row in iterchunk(self._filecache.name):
+                yield row
+
+        if not self._filecache:
+            self._filecache = NamedTemporaryFile(delete=False, mode='wb', buffering=0)
+        it = iter(self.dicts)
+        for o in it:
+            row = tuple(o[f] if f in o else self.missing for f in self._header)
+            pickle.dump(row, self._filecache, protocol=-1)
+            yield row
+        self._filecache.close()
+
+    def _determine_header(self):
+        it = iter(self.dicts)
+        header = list()
+        peek, it = iterpeek(it, self.sample)
+        self.dicts = it
+        if isinstance(peek, dict):
+            peek = [peek]
+        for o in peek:
+            if hasattr(o, 'keys'):
+                header += [k for k in o.keys() if k not in header]
+        self._header = tuple(header)
+        return it
+
+    def __del__(self):
+        self._filecache.close()
+        unlink(self._filecache.name)
 
 
 def iterjlines(f, header, missing):

@@ -17,7 +17,7 @@ from petl.io.xml import fromxml, toxml
 
 from petl.io.html import tohtml, teehtml
 
-from petl.io.json import fromjson, tojson, tojsonarrays, fromdicts
+from petl.io.json import fromjson, tojson, tojsonarrays, fromdicts, fromdictsgenerator
 
 from petl.io.db import fromdb, todb, appenddb
 

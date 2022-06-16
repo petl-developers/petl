@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, print_function, division
 
-
+from collections import OrderedDict
 from tempfile import NamedTemporaryFile
 import json
 
 
 from petl.test.helpers import ieq
-from petl import fromjson, fromdicts, tojson, tojsonarrays
+from petl import fromjson, fromdicts, fromdictsgenerator, tojson, tojsonarrays
 
 
 def test_fromjson_1():
@@ -121,7 +121,6 @@ def test_fromdicts_onepass():
 
 
 def test_fromdicts_ordered():
-    from collections import OrderedDict
     data = [OrderedDict([('foo', 'a'), ('bar', 1)]),
             OrderedDict([('foo', 'b')]),
             OrderedDict([('foo', 'c'), ('bar', 2), ('baz', True)])]
@@ -181,7 +180,6 @@ def test_fromdicts_header_does_not_raise():
 
 
 def test_fromdicts_header_list():
-    from collections import OrderedDict
     data = [OrderedDict([('foo', 'a'), ('bar', 1)]),
         OrderedDict([('foo', 'b'), ('bar', 2)]),
         OrderedDict([('foo', 'c'), ('bar', 2)])]
@@ -195,16 +193,27 @@ def test_fromdicts_header_list():
     ieq(expect, actual)
     ieq(expect, actual)
 
-
-def test_fromdicts_header_generator():
-    from collections import OrderedDict
-
+def test_fromdictsgenerator_twice():
     def generator():
         yield OrderedDict([('foo', 'a'), ('bar', 1)])
         yield OrderedDict([('foo', 'b'), ('bar', 2)])
         yield OrderedDict([('foo', 'c'), ('bar', 2)])
 
-    actual = fromdicts(generator())
+    actual = fromdictsgenerator(generator())
+    expect = (('foo', 'bar'),
+              ('a', 1),
+              ('b', 2),
+              ('c', 2))
+    ieq(expect, actual)
+    ieq(expect, actual)
+
+def test_fromdictsgenerator_header():
+    def generator():
+        yield OrderedDict([('foo', 'a'), ('bar', 1)])
+        yield OrderedDict([('foo', 'b'), ('bar', 2)])
+        yield OrderedDict([('foo', 'c'), ('bar', 2)])
+
+    actual = fromdictsgenerator(generator())
     header = actual.header()
     assert header == ('foo', 'bar')
     expect = (('foo', 'bar'),
@@ -213,3 +222,25 @@ def test_fromdicts_header_generator():
               ('c', 2))
     ieq(expect, actual)
     ieq(expect, actual)
+
+
+def test_fromdictsgenerator_random_generator():
+    def generator():
+        for i in range(5):
+            yield OrderedDict([('n', i), ('foo', 100*i), ('bar', 200*i)])
+
+    actual = fromdictsgenerator(generator(), sample=3)
+    assert actual.header() == ('n', 'foo', 'bar')
+    # first pass
+    it1 = iter(actual)
+    first_row1 = next(it1)
+    first_row2 = next(it1)
+    # second pass
+    it2 = iter(actual)
+    second_row1 = next(it2)
+    second_row2 = next(it2)
+    assert first_row1 == second_row1
+    assert first_row2 == second_row2
+    assert next(it1) == next(it2)
+    ieq(actual, actual)
+    assert actual.header() == ('n', 'foo', 'bar')
