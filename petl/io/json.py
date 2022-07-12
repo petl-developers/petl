@@ -227,11 +227,12 @@ class DictsGeneratorView(DictsView):
         yield self._header
 
         if not self._filecache:
-            self._filecache = NamedTemporaryFile(delete=False, mode='wb', buffering=0)
+            self._filecache = NamedTemporaryFile(delete=False, mode='wb')
             it = iter(self.dicts)
             for o in it:
                 row = tuple(o[f] if f in o else self.missing for f in self._header)
                 pickle.dump(row, self._filecache, protocol=-1)
+            self._filecache.flush()
             self._filecache.close()
 
         for row in iterchunk(self._filecache.name):
