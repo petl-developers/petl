@@ -153,6 +153,7 @@ JSON files
 
 .. autofunction:: petl.io.json.fromjson
 .. autofunction:: petl.io.json.fromdicts
+.. autofunction:: petl.io.json.fromdictsgenerator
 .. autofunction:: petl.io.json.tojson
 .. autofunction:: petl.io.json.tojsonarrays
 

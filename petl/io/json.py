@@ -200,9 +200,8 @@ def fromdictsgenerator(dicts_generator, header=None, sample=1000, missing=None):
         | 'c' |   2 |
         +-----+-----+
 
-    This is an implementation which walks through the source generator in a lazy manner. Rows requested
-    for the first time are dumped into cache file. Consequent calls first walk through the cached
-    rows first, and then iterate the source generator until it is exhausted.
+    This is an implementation which on first pass walks through the source generator and caches the result.
+    Consequent calls walk through the cached file.
 
     If no `header` is specified, fields will be discovered by sampling keys
     from the first `sample` dictionaries in `dicts_generator`. The header will be
@@ -227,18 +226,16 @@ class DictsGeneratorView(DictsView):
             self._determine_header()
         yield self._header
 
-        if self._filecache:
-            for row in iterchunk(self._filecache.name):
-                yield row
-
         if not self._filecache:
             self._filecache = NamedTemporaryFile(delete=False, mode='wb', buffering=0)
-        it = iter(self.dicts)
-        for o in it:
-            row = tuple(o[f] if f in o else self.missing for f in self._header)
-            pickle.dump(row, self._filecache, protocol=-1)
+            it = iter(self.dicts)
+            for o in it:
+                row = tuple(o[f] if f in o else self.missing for f in self._header)
+                pickle.dump(row, self._filecache, protocol=-1)
+            self._filecache.close()
+
+        for row in iterchunk(self._filecache.name):
             yield row
-        self._filecache.close()
 
     def _determine_header(self):
         it = iter(self.dicts)
@@ -254,8 +251,8 @@ class DictsGeneratorView(DictsView):
         return it
 
     def __del__(self):
-        self._filecache.close()
-        unlink(self._filecache.name)
+        if self._filecache:
+            unlink(self._filecache.name)
 
 
 def iterjlines(f, header, missing):

@@ -241,6 +241,10 @@ def test_fromdictsgenerator_random_generator():
     second_row2 = next(it2)
     assert first_row1 == second_row1
     assert first_row2 == second_row2
-    assert next(it1) == next(it2)
+    # reverse order
+    second_row3 = next(it2)
+    first_row3 = next(it1)
+    assert second_row3 == first_row3
     ieq(actual, actual)
     assert actual.header() == ('n', 'foo', 'bar')
+    assert len(actual) == 6
