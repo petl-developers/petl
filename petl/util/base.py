@@ -1,6 +1,7 @@
 from __future__ import absolute_import, print_function, division
 
-
+import logging
+import pickle
 import re
 from itertools import islice, chain, cycle, product,\
     permutations, combinations, takewhile, dropwhile, \
@@ -15,6 +16,9 @@ from petl.compat import imap, izip, izip_longest, ifilter, ifilterfalse, \
 from petl.errors import FieldSelectionError
 from petl.comparison import comparable_itemgetter
 
+
+logger = logging.getLogger(__name__)
+debug = logger.debug
 
 class IterContainer(object):
 
@@ -740,6 +744,18 @@ def iterpeek(it, n=1):
     else:
         peek = list(islice(it, n))
         return peek, chain(peek, it)
+
+
+def iterchunk(fn):
+    # reopen so iterators from file cache are independent
+    debug('iterchunk, opening %s' % fn)
+    with open(fn, 'rb') as f:
+        try:
+            while True:
+                yield pickle.load(f)
+        except EOFError:
+            pass
+    debug('end of iterchunk, closed %s' % fn)
 
 
 def empty():

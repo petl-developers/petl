@@ -3,15 +3,17 @@ from __future__ import absolute_import, print_function, division
 
 # standard library dependencies
 import io
-import itertools
 import json
 import inspect
 from json.encoder import JSONEncoder
+from os import unlink
+from tempfile import NamedTemporaryFile
 
 from petl.compat import PY2
+from petl.compat import pickle
 from petl.io.sources import read_source_from_arg, write_source_from_arg
 # internal dependencies
-from petl.util.base import data, Table, dicts as _dicts, iterpeek
+from petl.util.base import data, Table, dicts as _dicts, iterpeek, iterchunk
 
 
 def fromjson(source, *args, **kwargs):
@@ -175,9 +177,43 @@ class DictsView(Table):
 
 class DictsGeneratorView(DictsView):
 
+    def __init__(self, dicts, header=None, sample=1000, missing=None):
+        super(DictsGeneratorView, self).__init__(dicts, header, sample, missing)
+        self._filecache = None
+
     def __iter__(self):
-        self.dicts, dicts = itertools.tee(self.dicts)
-        return iterdicts(dicts, self._header, self.sample, self.missing)
+        if not self._header:
+            self._determine_header()
+        yield self._header
+
+        if not self._filecache:
+            self._filecache = NamedTemporaryFile(delete=False, mode='wb')
+            it = iter(self.dicts)
+            for o in it:
+                row = tuple(o[f] if f in o else self.missing for f in self._header)
+                pickle.dump(row, self._filecache, protocol=-1)
+            self._filecache.flush()
+            self._filecache.close()
+
+        for row in iterchunk(self._filecache.name):
+            yield row
+
+    def _determine_header(self):
+        it = iter(self.dicts)
+        header = list()
+        peek, it = iterpeek(it, self.sample)
+        self.dicts = it
+        if isinstance(peek, dict):
+            peek = [peek]
+        for o in peek:
+            if hasattr(o, 'keys'):
+                header += [k for k in o.keys() if k not in header]
+        self._header = tuple(header)
+        return it
+
+    def __del__(self):
+        if self._filecache:
+            unlink(self._filecache.name)
 
 
 def iterjlines(f, header, missing):

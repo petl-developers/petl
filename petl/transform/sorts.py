@@ -14,6 +14,7 @@ from petl.compat import pickle, next, text_type
 import petl.config as config
 from petl.comparison import comparable_itemgetter
 from petl.util.base import Table, asindices
+from petl.util.base import iterchunk as _iterchunk
 
 
 logger = logging.getLogger(__name__)
@@ -113,18 +114,6 @@ def sort(table, key=None, reverse=False, buffersize=None, tempdir=None,
 
 
 Table.sort = sort
-
-
-def _iterchunk(fn):
-    # reopen so iterators from file cache are independent
-    debug('iterchunk, opening %s' % fn)
-    with open(fn, 'rb') as f:
-        try:
-            while True:
-                yield pickle.load(f)
-        except EOFError:
-            pass
-    debug('end of iterchunk, closed %s' % fn)
 
 
 class _Keyed(namedtuple('Keyed', ['key', 'obj'])):
