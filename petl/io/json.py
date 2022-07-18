@@ -142,6 +142,24 @@ def fromdicts(dicts, header=None, sample=1000, missing=None):
         | 'c' |   2 |
         +-----+-----+
 
+    Argument `dicts` can also be a generator, the output of generator
+    is iterated and cached using a temporary file to support further
+    transforms and multiple passes of the table:
+
+        >>> import petl as etl
+        >>> dicts = ({"foo": chr(ord("a")+i), "bar":i+1} for i in range(3))
+        >>> table1 = etl.fromdicts(dicts, header=['foo', 'bar'])
+        >>> table1
+        +-----+-----+
+        | foo | bar |
+        +=====+=====+
+        | 'a' |   1 |
+        +-----+-----+
+        | 'b' |   2 |
+        +-----+-----+
+        | 'c' |   3 |
+        +-----+-----+
+
     If `header` is not specified, `sample` items from `dicts` will be
     inspected to discovery dictionary keys. Note that the order in which
     dictionary keys are discovered may not be stable,
@@ -157,6 +175,16 @@ def fromdicts(dicts, header=None, sample=1000, missing=None):
     an explicit `header` or to use another function like
     :func:`petl.transform.headers.sortheader` on the resulting table to
     guarantee stability.
+
+    .. versionchanged:: 1.7.5
+
+    Full support of generators passed as `dicts` has been added, leveraging
+    `itertools.tee`.
+
+    .. versionchanged:: 1.7.11
+
+    Generator support has been modified to use temporary file cache
+    instead of `itertools.tee` due to high memory usage.
 
     """
     view = DictsGeneratorView if inspect.isgenerator(dicts) else DictsView
