@@ -1,6 +1,12 @@
 Changes
 =======
 
+Version 1.7.10
+-------------
+
+* Fix fromtsv() to pass on header argument
+  By :user:`jfitzell`, :issue:`622`.
+
 Version 1.7.9
 -------------
 
