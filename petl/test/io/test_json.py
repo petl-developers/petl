@@ -5,6 +5,7 @@ from collections import OrderedDict
 from tempfile import NamedTemporaryFile
 import json
 
+import pytest
 
 from petl.test.helpers import ieq
 from petl import fromjson, fromdicts, tojson, tojsonarrays
@@ -193,13 +194,26 @@ def test_fromdicts_header_list():
     ieq(expect, actual)
     ieq(expect, actual)
 
-def test_fromdicts_generator_twice():
+
+@pytest.fixture
+def dicts_generator():
     def generator():
         yield OrderedDict([('foo', 'a'), ('bar', 1)])
         yield OrderedDict([('foo', 'b'), ('bar', 2)])
         yield OrderedDict([('foo', 'c'), ('bar', 2)])
+    return generator()
 
-    actual = fromdicts(generator())
+
+def test_fromdicts_generator_single(dicts_generator):
+    actual = fromdicts(dicts_generator)
+    expect = (('foo', 'bar'),
+              ('a', 1),
+              ('b', 2),
+              ('c', 2))
+    ieq(expect, actual)
+
+def test_fromdicts_generator_twice(dicts_generator):
+    actual = fromdicts(dicts_generator)
     expect = (('foo', 'bar'),
               ('a', 1),
               ('b', 2),
@@ -207,13 +221,8 @@ def test_fromdicts_generator_twice():
     ieq(expect, actual)
     ieq(expect, actual)
 
-def test_fromdicts_generator_header():
-    def generator():
-        yield OrderedDict([('foo', 'a'), ('bar', 1)])
-        yield OrderedDict([('foo', 'b'), ('bar', 2)])
-        yield OrderedDict([('foo', 'c'), ('bar', 2)])
-
-    actual = fromdicts(generator())
+def test_fromdicts_generator_header(dicts_generator):
+    actual = fromdicts(dicts_generator)
     header = actual.header()
     assert header == ('foo', 'bar')
     expect = (('foo', 'bar'),

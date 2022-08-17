@@ -208,6 +208,7 @@ class DictsGeneratorView(DictsView):
     def __init__(self, dicts, header=None, sample=1000, missing=None):
         super(DictsGeneratorView, self).__init__(dicts, header, sample, missing)
         self._filecache = None
+        self._cached = 0
 
     def __iter__(self):
         if not self._header:
@@ -215,15 +216,28 @@ class DictsGeneratorView(DictsView):
         yield self._header
 
         if not self._filecache:
-            self._filecache = NamedTemporaryFile(delete=False, mode='wb')
-            it = iter(self.dicts)
-            for o in it:
-                row = tuple(o[f] if f in o else self.missing for f in self._header)
-                pickle.dump(row, self._filecache, protocol=-1)
-            self._filecache.flush()
-            self._filecache.close()
+            if PY2:
+                self._filecache = NamedTemporaryFile(delete=False, mode='wb+', bufsize=0)
+            else:
+                self._filecache = NamedTemporaryFile(delete=False, mode='wb+', buffering=0)
 
-        for row in iterchunk(self._filecache.name):
+        position = 0
+        it = iter(self.dicts)
+        while True:
+            if position < self._cached:
+                self._filecache.seek(position)
+                row = pickle.load(self._filecache)
+                position = self._filecache.tell()
+                yield row
+                continue
+            try:
+                o = next(it)
+            except StopIteration:
+                break
+            row = tuple(o[f] if f in o else self.missing for f in self._header)
+            self._filecache.seek(self._cached)
+            pickle.dump(row, self._filecache, protocol=-1)
+            self._cached = position = self._filecache.tell()
             yield row
 
     def _determine_header(self):
@@ -241,6 +255,7 @@ class DictsGeneratorView(DictsView):
 
     def __del__(self):
         if self._filecache:
+            self._filecache.close()
             unlink(self._filecache.name)
 
 
