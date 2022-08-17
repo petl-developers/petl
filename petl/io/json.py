@@ -13,7 +13,7 @@ from petl.compat import PY2
 from petl.compat import pickle
 from petl.io.sources import read_source_from_arg, write_source_from_arg
 # internal dependencies
-from petl.util.base import data, Table, dicts as _dicts, iterpeek, iterchunk
+from petl.util.base import data, Table, dicts as _dicts, iterpeek
 
 
 def fromjson(source, *args, **kwargs):
