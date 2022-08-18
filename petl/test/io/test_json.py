@@ -134,6 +134,18 @@ def test_fromdicts_ordered():
     ieq(expect, actual)
 
 
+def test_fromdicts_missing():
+    data = [OrderedDict([('foo', 'a'), ('bar', 1)]),
+            OrderedDict([('foo', 'b')]),
+            OrderedDict([('foo', 'c'), ('bar', 2), ('baz', True)])]
+    actual = fromdicts(data, missing="x")
+    expect = (('foo', 'bar', 'baz'),
+              ('a', 1, "x"),
+              ('b', "x", "x"),
+              ('c', 2, True))
+    ieq(expect, actual)
+
+
 def test_tojson():
 
     # exercise function
@@ -212,6 +224,7 @@ def test_fromdicts_generator_single(dicts_generator):
               ('c', 2))
     ieq(expect, actual)
 
+
 def test_fromdicts_generator_twice(dicts_generator):
     actual = fromdicts(dicts_generator)
     expect = (('foo', 'bar'),
@@ -220,6 +233,7 @@ def test_fromdicts_generator_twice(dicts_generator):
               ('c', 2))
     ieq(expect, actual)
     ieq(expect, actual)
+
 
 def test_fromdicts_generator_header(dicts_generator):
     actual = fromdicts(dicts_generator)
@@ -257,3 +271,16 @@ def test_fromdicts_generator_random_access():
     ieq(actual, actual)
     assert actual.header() == ('n', 'foo', 'bar')
     assert len(actual) == 6
+
+
+def test_fromdicts_generator_missing():
+    def generator():
+        yield OrderedDict([('foo', 'a'), ('bar', 1)])
+        yield OrderedDict([('foo', 'b'), ('bar', 2)])
+        yield OrderedDict([('foo', 'c'), ('baz', 2)])
+    actual = fromdicts(generator(), missing="x")
+    expect = (('foo', 'bar', 'baz'),
+              ('a', 1, "x"),
+              ('b', 2, "x"),
+              ('c', "x", 2))
+    ieq(expect, actual)
