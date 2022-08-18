@@ -234,7 +234,7 @@ class DictsGeneratorView(DictsView):
                 o = next(it)
             except StopIteration:
                 break
-            row = tuple(o[f] if f in o else self.missing for f in self._header)
+            row = tuple(o.get(f, self.missing) for f in self._header)
             self._filecache.seek(self._cached)
             pickle.dump(row, self._filecache, protocol=-1)
             self._cached = position = self._filecache.tell()
@@ -290,7 +290,7 @@ def iterdicts(dicts, header, sample, missing):
 
     # generate data rows
     for o in it:
-        yield tuple(o[f] if f in o else missing for f in header)
+        yield tuple(o.get(f, missing) for f in header)
 
 
 def tojson(table, source=None, prefix=None, suffix=None, *args, **kwargs):
