@@ -1,6 +1,12 @@
 Changes
 =======
 
+Version 1.7.11
+--------------
+
+* Fix generator support in fromdicts to use file cache
+  By :user:`arturponinski`, :issue:`625`.
+
 Version 1.7.10
 --------------
 
