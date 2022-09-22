@@ -317,7 +317,7 @@ def tojson(table, source=None, prefix=None, suffix=None, *args, **kwargs):
         >>> table1 = [['name', 'wins'],
         ...           ['Gilbert', [['straight', '7S'], ['one pair', '10H']]],
         ...           ['Alexa', [['two pair', '4S'], ['two pair', '9S']]],
-        ...           ['May', []] 
+        ...           ['May', []], 
         ...           ['Deloise',[['three of a kind', '5S']]]]
         >>> etl.tojson(table1, 'example.file3.jsonl', lines = True, sort_keys=True)
         >>> # check what it did
