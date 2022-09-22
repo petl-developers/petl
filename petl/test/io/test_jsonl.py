@@ -73,10 +73,10 @@ def test_tojson_1():
 
 def test_tojson_2():
     table = [['name', 'wins'],
-            ['Gilbert', [['straight', '7S'], ['one pair', '10H']]],
-            ['Alexa', [['two pair', '4S'], ['two pair', '9S']]],
-            ['May', []],
-            ['Deloise',[['three of a kind', '5S']]]]
+             ['Gilbert', [['straight', '7S'], ['one pair', '10H']]],
+             ['Alexa', [['two pair', '4S'], ['two pair', '9S']]],
+             ['May', []],
+             ['Deloise', [['three of a kind', '5S']]]]
     f = NamedTemporaryFile(delete=False, mode='r')
     tojson(table, f.name, lines=True)
     result = []
