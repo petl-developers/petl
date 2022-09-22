@@ -331,7 +331,6 @@ def tojson(table, source=None, prefix=None, suffix=None, *args, **kwargs):
     Note that this is currently not streaming, all data is loaded into memory
     before being written to the file.
 
-
     """
 
     obj = list(_dicts(table))
