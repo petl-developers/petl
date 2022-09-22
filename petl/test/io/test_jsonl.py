@@ -85,12 +85,9 @@ def test_tojson_2():
     assert len(result) == 4
     assert result[0]['name'] == 'Gilbert'
     assert result[0]['wins'] == [['straight', '7S'], ['one pair', '10H']]
-    assert result[0]['wins'][0] == ['straight', '7S']
-    assert result[0]['wins'][1] == ['one pair', '10H']
     assert result[1]['name'] == 'Alexa'
     assert result[1]['wins'] == [['two pair', '4S'], ['two pair', '9S']]
-    assert result[1]['wins'][1][1] == '9S'
     assert result[2]['name'] == 'May'
     assert result[2]['wins'] == []
     assert result[3]['name'] == 'Deloise'
-    assert result[3]['wins'][0][0] == 'three of a kind'
+    assert result[3]['wins'] == [['three of a kind', '5S']]
