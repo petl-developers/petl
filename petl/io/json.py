@@ -44,7 +44,7 @@ def fromjson(source, *args, **kwargs):
         | 'c' |   2 |
         +-----+-----+
 
-   Setting argument `lines` to `True` will enable to
+    Setting argument `lines` to `True` will enable to
     infer the document as a JSON lines document. For more details about JSON lines
     please visit https://jsonlines.org/.
 
