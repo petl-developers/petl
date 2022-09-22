@@ -44,7 +44,7 @@ def fromjson(source, *args, **kwargs):
         | 'c' |   2 |
         +-----+-----+
 
-    Setting argument `lines` to `True` will enable to
+   Setting argument `lines` to `True` will enable to
     infer the document as a JSON lines document. For more details about JSON lines
     please visit https://jsonlines.org/.
 
@@ -68,7 +68,7 @@ def fromjson(source, *args, **kwargs):
         | 'Alexa'   | [['two pair', '4S'], ['two pair', '9S']]  |
         +-----------+-------------------------------------------+
         | 'May'     | []                                        |
-        +-----------+-------------------------------------------+
+        +-----------+-------------- -----------------------------+
         | 'Deloise' | [['three of a kind', '5S']]               |
         +-----------+-------------------------------------------+
 
@@ -308,10 +308,32 @@ def tojson(table, source=None, prefix=None, suffix=None, *args, **kwargs):
         [{"bar": 1, "foo": "a"}, {"bar": 2, "foo": "b"}, {"bar": 2, "foo": "c"}]
 
 
+
+    Setting argument `lines` to `True` will enable to
+    infer the writing format as a JSON lines . For more details about JSON lines
+    please visit https://jsonlines.org/.
+
+        >>> import petl as etl
+        >>> table1 = [['name', 'wins'],
+        ...           ['Gilbert', [['straight', '7S'], ['one pair', '10H']]],
+        ...           ['Alexa', [['two pair', '4S'], ['two pair', '9S']]],
+        ...           ['May', []] 
+        ...           ['Deloise',[['three of a kind', '5S']]]]
+        >>> etl.tojson(table1, 'example.file3.jsonl', lines = True, sort_keys=True)
+        >>> # check what it did
+        ... print(open('example.file3.jsonl').read())
+        {"name": "Gilbert", "wins": [["straight", "7S"], ["one pair", "10H"]]}
+        {"name": "Alexa", "wins": [["two pair", "4S"], ["two pair", "9S"]]}
+        {"name": "May", "wins": []} 
+        {"name": "Deloise", "wins": [["three of a kind", "5S"]]}
+        
+    
     Note that this is currently not streaming, all data is loaded into memory
     before being written to the file.
 
+
     """
+
     obj = list(_dicts(table))
     _writejson(source, obj, prefix, suffix, *args, **kwargs)
 
