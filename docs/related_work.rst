@@ -253,6 +253,16 @@ Looks abandoned since 2009, but there is some code.
 
 - http://plyr.had.co.nz/
 
+**Tablib**
+
+- https://github.com/jazzband/tablib
+- https://tablib.readthedocs.io
+
+Tablib is an MIT Licensed format-agnostic tabular dataset library, written in
+Python. It allows you to import, export, and manipulate tabular data sets.
+Advanced features include segregation, dynamic columns, tags & filtering, and
+seamless format import & export.
+
 **PowerShell**
 
 - http://technet.microsoft.com/en-us/library/ee176874.aspx - Import-Csv
