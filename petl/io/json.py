@@ -307,6 +307,26 @@ def tojson(table, source=None, prefix=None, suffix=None, *args, **kwargs):
         ... print(open('example.file3.json').read())
         [{"bar": 1, "foo": "a"}, {"bar": 2, "foo": "b"}, {"bar": 2, "foo": "c"}]
 
+
+
+    Setting argument `lines` to `True` will enable to
+    infer the writing format as a JSON lines . For more details about JSON lines
+    please visit https://jsonlines.org/.
+
+        >>> import petl as etl
+        >>> table1 = [['name', 'wins'],
+        ...           ['Gilbert', [['straight', '7S'], ['one pair', '10H']]],
+        ...           ['Alexa', [['two pair', '4S'], ['two pair', '9S']]],
+        ...           ['May', []],
+        ...           ['Deloise',[['three of a kind', '5S']]]]
+        >>> etl.tojson(table1, 'example.file3.jsonl', lines = True, sort_keys=True)
+        >>> # check what it did
+        ... print(open('example.file3.jsonl').read())
+        {"name": "Gilbert", "wins": [["straight", "7S"], ["one pair", "10H"]]}
+        {"name": "Alexa", "wins": [["two pair", "4S"], ["two pair", "9S"]]}
+        {"name": "May", "wins": []}
+        {"name": "Deloise", "wins": [["three of a kind", "5S"]]}
+
     Note that this is currently not streaming, all data is loaded into memory
     before being written to the file.
 
@@ -350,26 +370,33 @@ Table.tojsonarrays = tojsonarrays
 
 
 def _writejson(source, obj, prefix, suffix, *args, **kwargs):
+    lines = kwargs.pop('lines', False)
     encoder = JSONEncoder(*args, **kwargs)
     source = write_source_from_arg(source)
     with source.open('wb') as f:
         if PY2:
             # write directly to buffer
-            _writeobj(encoder, obj, f, prefix, suffix)
+            _writeobj(encoder, obj, f, prefix, suffix, lines=lines)
         else:
             # wrap buffer for text IO
             f = io.TextIOWrapper(f, encoding='utf-8', newline='',
                                  write_through=True)
             try:
-                _writeobj(encoder, obj, f, prefix, suffix)
+                _writeobj(encoder, obj, f, prefix, suffix, lines=lines)
             finally:
                 f.detach()
 
 
-def _writeobj(encoder, obj, f, prefix, suffix):
+def _writeobj(encoder, obj, f, prefix, suffix, lines=False):
     if prefix is not None:
         f.write(prefix)
-    for chunk in encoder.iterencode(obj):
-        f.write(chunk)
+    if lines:
+        for rec in obj:
+            for chunk in encoder.iterencode(rec):
+                f.write(chunk)
+            f.write('\n')
+    else:
+        for chunk in encoder.iterencode(obj):
+            f.write(chunk)
     if suffix is not None:
         f.write(suffix)
