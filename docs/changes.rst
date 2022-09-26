@@ -1,6 +1,12 @@
 Changes
 =======
 
+Version 1.7.12
+--------------
+
+* Add support for writing to JSONL files
+  By :user:`mzaeemz`, :issue:`524`.
+
 Version 1.7.11
 --------------
 
