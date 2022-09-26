@@ -179,4 +179,9 @@ example*.*
 
 sketch*
 
+
+# Ignore this folder not idea users
+
+.idea/
+
 ## end of .gitignore file ##
