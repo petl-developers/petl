@@ -436,9 +436,7 @@ def _get_handler_from(source, handlers):
 
 
 def _resolve_source_from_arg(source, handlers):
-    if source is None:
-        return StdinSource()
-    elif isinstance(source, string_types):
+    if isinstance(source, string_types):
         handler = _get_handler_from(source, handlers)
         codec = _get_codec_for(source)
         if handler is None:
@@ -464,6 +462,8 @@ def read_source_from_arg(source):
 
     .. versionadded:: 1.4.0
     '''
+    if source is None:
+        return StdinSource()
     return _resolve_source_from_arg(source, _READERS)
 
 
@@ -477,4 +477,6 @@ def write_source_from_arg(source, mode='wb'):
 
     .. versionadded:: 1.4.0
     '''
+    if source is None:
+        return StdoutSource()
     return _resolve_source_from_arg(source, _WRITERS)
