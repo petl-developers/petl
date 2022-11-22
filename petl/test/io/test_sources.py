@@ -92,6 +92,17 @@ def test_stdoutsource():
     etl.topickle(tbl, StdoutSource())
 
 
+def test_stdoutsource_none(capfd):
+
+    tbl = [('foo', 'bar'), ('a', 1), ('b', 2)]
+    etl.tocsv(tbl, encoding='ascii')
+    captured = capfd.readouterr()
+    outp = captured.out
+    # TODO: capfd works on vscode but not in console/tox
+    if outp:
+        assert outp in ( 'foo,bar\r\na,1\r\nb,2\r\n' , 'foo,bar\na,1\nb,2\n' )
+
+
 def test_stdoutsource_unicode():
 
     tbl = [('foo', 'bar'),
