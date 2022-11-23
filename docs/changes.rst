@@ -1,7 +1,7 @@
 Changes
 =======
 
-Version 1.7.13
+Version 1.7.12
 --------------
 
 * Fix? calling functions to*() should output by default to stdout
@@ -9,9 +9,6 @@ Version 1.7.13
 
 * Add python3.11 for the build and testing
   By :user:`juarezr`, :issue:`635`.
-
-Version 1.7.12
---------------
 
 * Add support for writing to JSONL files
   By :user:`mzaeemz`, :issue:`524`.
