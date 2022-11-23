@@ -42,7 +42,7 @@ jobs:
           echo 'testing=full' >> $GITHUB_ENV
 
       - name: Checkout source code
-        uses: actions/checkout@v2
+        uses: actions/checkout@main
 
       - name: Install linux tools
         if: matrix.os == 'ubuntu-latest'
@@ -144,7 +144,7 @@ jobs:
 
     steps:
       - name: Checkout source code
-        uses: actions/checkout@v2
+        uses: actions/checkout@main
 
       - name: Set up Python ${{ matrix.python }}
         uses: actions/setup-python@v2
