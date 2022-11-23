@@ -1,6 +1,15 @@
 Changes
 =======
 
+Version 1.7.13
+--------------
+
+* Fix? calling functions to*() should output by default to stdout
+  By :user:`juarezr`, :issue:`632`.
+
+* Add python3.11 for the build and testing
+  By :user:`juarezr`, :issue:`635`.
+
 Version 1.7.12
 --------------
 
