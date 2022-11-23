@@ -1,7 +1,14 @@
-# packages bellow need complex local setup
-# throubleshooting: 
-# 1. define the following variable before running pip:
-# $ export DISABLE_BLOSC_AVX2=1
-# 2. pip install --prefer-binary bcolz
+# Packages bellow need complex local setup #
+# Also check: .github/workflows/test-changes.yml
+
+# Throubleshooting: 
+# 1. $ export DISABLE_BLOSC_AVX2=1
+# 2. $ brew install c-blosc
+
 blosc  ; python_version >= '3.7'
-bcolz  ; python_version >= '3.7'
+
+# Throubleshooting: 
+# 1. pip install --prefer-binary -r requirements-optional.txt
+# 2. pip install --prefer-binary bcolz
+
+bcolz  ; python_version >= '3.7' and python_version < '3.10'
