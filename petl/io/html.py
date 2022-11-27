@@ -4,8 +4,8 @@ from __future__ import absolute_import, print_function, division
 
 # standard library dependencies
 import io
-from petl.compat import text_type, numeric_types, next, PY2, izip_longest, \
-    string_types, callable
+from petl import compat
+from petl.compat import next, PY2, izip_longest, string_types, callable
 
 
 # internal dependencies
@@ -16,7 +16,7 @@ from petl.io.sources import write_source_from_arg
 
 
 def tohtml(table, source=None, encoding=None, errors='strict', caption=None,
-           vrepr=text_type, lineterminator='\n', index_header=False,
+           vrepr=None, lineterminator='\n', index_header=False,
            tr_style=None, td_styles=None, truncate=None):
     """
     Write the table as HTML to a file. E.g.::
@@ -56,6 +56,8 @@ def tohtml(table, source=None, encoding=None, errors='strict', caption=None,
     in the output HTML.
 
     """
+    if vrepr is None:
+        vrepr = compat.text_type
 
     source = write_source_from_arg(source)
     with source.open('wb') as buf:
@@ -100,13 +102,15 @@ Table.tohtml = tohtml
 
 
 def teehtml(table, source=None, encoding=None, errors='strict', caption=None,
-            vrepr=text_type, lineterminator='\n', index_header=False,
+            vrepr=None, lineterminator='\n', index_header=False,
             tr_style=None, td_styles=None, truncate=None):
     """
     Return a table that writes rows to a Unicode HTML file as they are
     iterated over.
 
     """
+    if vrepr is None:
+        vrepr = compat.text_type
 
     source = write_source_from_arg(source)
     return TeeHTMLView(table, source=source, encoding=encoding, errors=errors,
@@ -121,7 +125,7 @@ Table.teehtml = teehtml
 
 class TeeHTMLView(Table):
     def __init__(self, table, source=None, encoding=None, errors='strict',
-                 caption=None, vrepr=text_type, lineterminator='\n',
+                 caption=None, vrepr=None, lineterminator='\n',
                  index_header=False, tr_style=None, td_styles=None,
                  truncate=None):
         self.table = table
@@ -129,7 +133,7 @@ class TeeHTMLView(Table):
         self.encoding = encoding
         self.errors = errors
         self.caption = caption
-        self.vrepr = vrepr
+        self.vrepr = compat.text_type if vrepr is None else vrepr
         self.lineterminator = lineterminator
         self.index_header = index_header
         self.tr_style = tr_style
@@ -260,7 +264,7 @@ def _get_td_css(h, v, td_styles):
             raise ArgumentError('expected string, callable or dict, got %r'
                                 % td_styles)
     # fall back to default style
-    if isinstance(v, numeric_types) and not isinstance(v, bool):
+    if isinstance(v, compat.numeric_types) and not isinstance(v, bool):
         return 'text-align: right'
     else:
         return ''
