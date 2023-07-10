@@ -112,7 +112,10 @@ def iterproblems(table, constraints, expected_header):
     yield outhdr
 
     it = iter(table)
-    actual_header = next(it)
+    try:
+        actual_header = next(it)
+    except StopIteration:
+        actual_header = []
 
     if expected_header is None:
         flds = list(map(text_type, actual_header))

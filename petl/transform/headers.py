@@ -79,7 +79,10 @@ class RenameView(Table):
 
 def iterrename(source, spec, strict):
     it = iter(source)
-    hdr = next(it)
+    try:
+        hdr = next(it)
+    except StopIteration:
+        hdr = []
     flds = list(map(text_type, hdr))
     if strict:
         for x in spec:
@@ -138,7 +141,10 @@ class SetHeaderView(Table):
 
 def itersetheader(source, header):
     it = iter(source)
-    next(it)  # discard source header
+    try:
+        next(it)  # discard source header
+    except StopIteration:
+        pass  # no previous header
     yield tuple(header)
     for row in it:
         yield tuple(row)
@@ -185,7 +191,10 @@ class ExtendHeaderView(Table):
 
 def iterextendheader(source, fields):
     it = iter(source)
-    hdr = next(it)
+    try:
+        hdr = next(it)
+    except StopIteration:
+        hdr = []
     outhdr = list(hdr)
     outhdr.extend(fields)
     yield tuple(outhdr)
@@ -308,7 +317,10 @@ class PrefixHeaderView(Table):
 
     def __iter__(self):
         it = iter(self.table)
-        hdr = next(it)
+        try:
+            hdr = next(it)
+        except StopIteration:
+            return
         outhdr = tuple((text_type(self.prefix) + text_type(f)) for f in hdr)
         yield outhdr
         for row in it:
@@ -332,7 +344,10 @@ class SuffixHeaderView(Table):
 
     def __iter__(self):
         it = iter(self.table)
-        hdr = next(it)
+        try:
+            hdr = next(it)
+        except StopIteration:
+            return
         outhdr = tuple((text_type(f) + text_type(self.suffix)) for f in hdr)
         yield outhdr
         for row in it:
@@ -361,7 +376,10 @@ class SortHeaderView(Table):
 
     def __iter__(self):
         it = iter(self.table)
-        hdr = next(it)
+        try:
+            hdr = next(it)
+        except StopIteration:
+            return
         shdr = sorted(hdr)
         indices = asindices(hdr, shdr)
         transform = rowgetter(*indices)

@@ -91,6 +91,16 @@ def test_fieldmap_empty():
     ieq(expect, actual)
 
 
+def test_fieldmap_headerless():
+    table = []
+    expect = []
+    mappings = OrderedDict()
+    mappings['foo'] = 'foo'
+    mappings['baz'] = 'bar', lambda v: v * 2
+    actual = fieldmap(table, mappings)
+    ieq(expect, actual)
+
+
 def test_fieldmap_failonerror():
     input_  = (('foo',), ('A',), (1,))
     mapper_ = {'bar': ('foo', lambda v: v.lower())}
@@ -157,6 +167,17 @@ def test_rowmap_empty():
     actual = rowmap(table, rowmapper, header=['subject_id', 'gender',
                                               'age_months', 'bmi'])
     expect = (('subject_id', 'gender', 'age_months', 'bmi'),)
+    ieq(expect, actual)
+
+
+def test_rowmap_headerless():
+    table = []
+
+    def rowmapper(row):
+        return row
+
+    actual = rowmap(table, rowmapper, header=['subject_id', 'gender'])
+    expect = []
     ieq(expect, actual)
 
 
@@ -287,3 +308,15 @@ def test_recordmapmany():
     ieq(expect, actual)
     ieq(expect, actual)  # can iteratate twice?
 
+
+def test_recordmapmany_headerless():
+    table = []
+
+    def duplicate(rec):
+        yield rec
+        yield rec
+
+    actual = rowmapmany(table, duplicate, header=['subject_id', 'variable'])
+    expect = []
+    ieq(expect, actual)
+    ieq(expect, actual)  # can iteratate twice?

@@ -88,7 +88,10 @@ class FieldMapView(Table):
 
 def iterfieldmap(source, mappings, failonerror, errorvalue):
     it = iter(source)
-    hdr = next(it)
+    try:
+        hdr = next(it)
+    except StopIteration:
+        return
     flds = list(map(text_type, hdr))
     outhdr = mappings.keys()
     yield tuple(outhdr)
@@ -214,7 +217,10 @@ class RowMapView(Table):
 
 def iterrowmap(source, rowmapper, header, failonerror):
     it = iter(source)
-    hdr = next(it)
+    try:
+        hdr = next(it)
+    except StopIteration:
+        return
     flds = list(map(text_type, hdr))
     yield tuple(header)
     it = (Record(row, flds) for row in it)
@@ -308,7 +314,10 @@ class RowMapManyView(Table):
 
 def iterrowmapmany(source, rowgenerator, header, failonerror):
     it = iter(source)
-    hdr = next(it)
+    try:
+        hdr = next(it)
+    except StopIteration:
+        return
     flds = list(map(text_type, hdr))
     yield tuple(header)
     it = (Record(row, flds) for row in it)

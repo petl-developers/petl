@@ -89,7 +89,12 @@ def iterduplicates(source, key):
     # first need to sort the data
     it = iter(source)
 
-    hdr = next(it)
+    try:
+        hdr = next(it)
+    except StopIteration:
+        if key is None:
+            return  # nothing to do on a table without headers
+        hdr = []
     yield tuple(hdr)
 
     # convert field selection into field indices
@@ -189,7 +194,10 @@ def iterunique(source, key):
     # first need to sort the data
     it = iter(source)
 
-    hdr = next(it)
+    try:
+        hdr = next(it)
+    except StopIteration:
+        return
     yield tuple(hdr)
 
     # convert field selection into field indices
@@ -326,7 +334,10 @@ def iterconflicts(source, key, missing, exclude, include):
         include = None
         
     it = iter(source)
-    hdr = next(it)
+    try:
+        hdr = next(it)
+    except StopIteration:
+        return
     flds = list(map(text_type, hdr))
     yield tuple(hdr)
 
@@ -407,7 +418,10 @@ class DistinctView(Table):
 
     def __iter__(self):
         it = iter(self.table)
-        hdr = next(it)
+        try:
+            hdr = next(it)
+        except StopIteration:
+            return
 
         # convert field selection into field indices
         if self.key is None:

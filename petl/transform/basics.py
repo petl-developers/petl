@@ -130,7 +130,10 @@ def itercut(source, spec, missing=None):
     spec = tuple(spec)  # make sure no-one can change midstream
 
     # convert field selection into field indices
-    hdr = next(it)
+    try:
+        hdr = next(it)
+    except StopIteration:
+        hdr = []
     indices = asindices(hdr, spec)
 
     # define a function to transform each row in the source data
@@ -202,7 +205,10 @@ def itercutout(source, spec, missing=None):
     spec = tuple(spec)  # make sure no-one can change midstream
 
     # convert field selection into field indices
-    hdr = next(it)
+    try:
+        hdr = next(it)
+    except StopIteration:
+        hdr = []
     indicesout = asindices(hdr, spec)
     indices = [i for i in range(len(hdr)) if i not in indicesout]
 
@@ -340,7 +346,12 @@ class CatView(Table):
 
 def itercat(sources, missing, header):
     its = [iter(t) for t in sources]
-    hdrs = [list(next(it)) for it in its]
+    hdrs = []
+    for it in its:
+        try:
+            hdrs.append(list(next(it)))
+        except StopIteration:
+            hdrs.append([])
 
     if header is None:
         # determine output fields by gathering all fields found in the sources
@@ -451,7 +462,12 @@ class StackView(Table):
 
 def iterstack(sources, missing, trim, pad):
     its = [iter(t) for t in sources]
-    hdrs = [next(it) for it in its]
+    hdrs = []
+    for it in its:
+        try:
+            hdrs.append(next(it))
+        except StopIteration:
+            hdrs.append([])
     hdr = hdrs[0]
     n = len(hdr)
     yield tuple(hdr)
@@ -526,7 +542,10 @@ class AddFieldView(Table):
 
 def iteraddfield(source, field, value, index):
     it = iter(source)
-    hdr = next(it)
+    try:
+        hdr = next(it)
+    except StopIteration:
+        hdr = []
     flds = list(map(text_type, hdr))
 
     # determine index of new field
@@ -615,7 +634,10 @@ class AddFieldsView(Table):
 
 def iteraddfields(source, field_defs):
     it = iter(source)
-    hdr = next(it)
+    try:
+        hdr = next(it)
+    except StopIteration:
+        hdr = []
     flds = list(map(text_type, hdr))
 
     # initialize output fields and indices
@@ -826,7 +848,10 @@ class TailView(Table):
 
 def itertail(source, n):
     it = iter(source)
-    yield tuple(next(it))  # fields
+    try:
+        yield tuple(next(it))  # fields
+    except StopIteration:
+        return  # stop generating
     cache = deque()
     for row in it:
         cache.append(row)
@@ -910,7 +935,10 @@ class MoveFieldView(Table):
         it = iter(self.table)
 
         # determine output fields
-        hdr = next(it)
+        try:
+            hdr = next(it)
+        except StopIteration:
+            hdr = []
         outhdr = [f for f in hdr if f != self.field]
         outhdr.insert(self.index, self.field)
         yield tuple(outhdr)
@@ -977,7 +1005,12 @@ class AnnexView(Table):
 
 def iterannex(tables, missing):
     its = [iter(t) for t in tables]
-    hdrs = [next(it) for it in its]
+    hdrs = []
+    for it in its:
+        try:
+            hdrs.append(next(it))
+        except StopIteration:
+            hdrs.append([])
     outhdr = tuple(chain(*hdrs))
     yield outhdr
     for rows in izip_longest(*its):
@@ -1042,7 +1075,10 @@ class AddRowNumbersView(Table):
 
 def iteraddrownumbers(table, start, step, field):
     it = iter(table)
-    hdr = next(it)
+    try:
+        hdr = next(it)
+    except StopIteration:
+        hdr = []
     outhdr = [field]
     outhdr.extend(hdr)
     yield tuple(outhdr)
@@ -1097,7 +1133,10 @@ class AddColumnView(Table):
 
 def iteraddcolumn(table, field, col, index, missing):
     it = iter(table)
-    hdr = next(it)
+    try:
+        hdr = next(it)
+    except StopIteration:
+        hdr = []
 
     # determine position of new column
     if index is None:
@@ -1186,13 +1225,19 @@ class AddFieldUsingContextView(Table):
 
 def iteraddfieldusingcontext(table, field, query):
     it = iter(table)
-    hdr = tuple(next(it))
+    try:
+        hdr = tuple(next(it))
+    except StopIteration:
+        hdr = ()
     flds = list(map(text_type, hdr))
     yield hdr + (field,)
     flds.append(field)
     it = (Record(row, flds) for row in it)
     prv = None
-    cur = next(it)
+    try:
+        cur = next(it)
+    except StopIteration:
+        return  # no more items
     for nxt in it:
         v = query(prv, cur, nxt)
         yield tuple(cur) + (v,)

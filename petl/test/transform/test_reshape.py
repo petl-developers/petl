@@ -3,7 +3,9 @@ from __future__ import absolute_import, print_function, division
 
 from datetime import datetime
 
+import pytest
 
+from petl.errors import FieldSelectionError
 from petl.test.helpers import ieq
 from petl.transform.reshape import melt, recast, transpose, pivot, flatten, \
     unflatten
@@ -65,6 +67,13 @@ def test_melt_2():
 def test_melt_empty():
     table = (('foo', 'bar', 'baz'),)
     expect = (('foo', 'variable', 'value'),)
+    actual = melt(table, key='foo')
+    ieq(expect, actual)
+
+
+def test_melt_headerless():
+    table = []
+    expect = []
     actual = melt(table, key='foo')
     ieq(expect, actual)
 
@@ -254,6 +263,13 @@ def test_recast_empty():
     ieq(expect, actual)
 
 
+def test_recast_headerless():
+    table = []
+    expect = []
+    actual = recast(table)
+    ieq(expect, actual)
+
+
 def test_recast_date():
 
     dt = datetime.now().replace
@@ -383,6 +399,13 @@ def test_pivot_empty():
     ieq(expect2, table2)
 
 
+def test_pivot_headerless():
+    table1 = []
+    with pytest.raises(FieldSelectionError):
+        for i in pivot(table1, 'region', 'gender', 'units', sum):
+            pass
+
+
 def test_flatten():
 
     table1 = (('foo', 'bar', 'baz'),
@@ -401,6 +424,13 @@ def test_flatten():
 def test_flatten_empty():
 
     table1 = (('foo', 'bar', 'baz'),)
+    expect1 = []
+    actual1 = flatten(table1)
+    ieq(expect1, actual1)
+
+
+def test_flatten_headerless():
+    table1 = []
     expect1 = []
     actual1 = flatten(table1)
     ieq(expect1, actual1)

@@ -1,5 +1,6 @@
 from __future__ import absolute_import, print_function, division
 
+import pytest
 
 from petl.test.helpers import ieq
 from petl.errors import FieldSelectionError
@@ -29,6 +30,13 @@ def test_setheader_empty():
     ieq(expect2, table2)
 
 
+def test_setheader_headerless():
+    table = []
+    actual = setheader(table, ['foo', 'bar'])
+    expect = [('foo', 'bar')]
+    ieq(expect, actual)
+
+
 def test_extendheader():
 
     table1 = (('foo',),
@@ -48,6 +56,14 @@ def test_extendheader_empty():
     table2 = extendheader(table1, ['bar', 'baz'])
     expect2 = (('foo', 'bar', 'baz'),)
     ieq(expect2, table2)
+
+
+def test_extendheader_headerless():
+    table = []
+    actual = extendheader(table, ['foo', 'bar'])
+    expect = [('foo', 'bar')]
+    ieq(expect, actual)
+    ieq(expect, actual)
 
 
 def test_pushheader():
@@ -79,6 +95,14 @@ def test_pushheader_empty():
     table2 = pushheader(table1, 'foo', 'bar')
     expect2 = (('foo', 'bar'),)
     ieq(expect2, table2)
+
+
+def test_pushheader_headerless():
+    table = []
+    actual = pushheader(table, ['foo', 'bar'])
+    expect = [('foo', 'bar')]
+    ieq(expect, actual)
+    ieq(expect, actual)
 
 
 def test_pushheader_positional():
@@ -152,6 +176,13 @@ def test_skip_empty():
     ieq(expect2, table2)
 
 
+def test_skip_headerless():
+    table = []
+    actual = skip(table, 2)
+    expect = []
+    ieq(expect, actual)
+
+
 def test_rename():
 
     table = (('foo', 'bar'),
@@ -212,6 +243,13 @@ def test_rename_empty():
     ieq(expect, actual)
 
 
+def test_rename_headerless():
+    table = []
+    with pytest.raises(FieldSelectionError):
+        for i in rename(table, 'foo', 'foofoo'):
+            pass
+
+
 def test_prefixheader():
 
     table1 = (('foo', 'bar'),
@@ -227,6 +265,13 @@ def test_prefixheader():
     ieq(expect, actual)
 
 
+def test_prefixheader_headerless():
+    table = []
+    actual = prefixheader(table, 'pre_')
+    expect = []
+    ieq(expect, actual)
+
+
 def test_suffixheader():
 
     table1 = (('foo', 'bar'),
@@ -239,6 +284,13 @@ def test_suffixheader():
 
     actual = suffixheader(table1, '_suf')
     ieq(expect, actual)
+    ieq(expect, actual)
+
+
+def test_suffixheader_headerless():
+    table = []
+    actual = suffixheader(table, '_suf')
+    expect = []
     ieq(expect, actual)
 
 
@@ -273,4 +325,11 @@ def test_sortheaders_duplicate_headers():
     )
 
     actual = sortheader(table1)
+    ieq(expect, actual)
+
+
+def test_sortheader_headerless():
+    table = []
+    actual = sortheader(table)
+    expect = []
     ieq(expect, actual)

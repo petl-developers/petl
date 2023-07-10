@@ -85,12 +85,15 @@ def toxls(tbl, filename, sheet, encoding=None, style_compression=0,
     else:
         # handle styles
         it = iter(tbl)
-        hdr = next(it)
-        flds = list(map(str, hdr))
-        for c, f in enumerate(flds):
-            ws.write(0, c, label=f)
-            if f not in styles or styles[f] is None:
-                styles[f] = xlwt.Style.default_style
+        try:
+            hdr = next(it)
+            flds = list(map(str, hdr))
+            for c, f in enumerate(flds):
+                ws.write(0, c, label=f)
+                if f not in styles or styles[f] is None:
+                    styles[f] = xlwt.Style.default_style
+        except StopIteration:
+            pass  # no header written
         # convert to list for easy zipping
         styles = [styles[f] for f in flds]
         for r, row in enumerate(it):

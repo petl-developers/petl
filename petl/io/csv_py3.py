@@ -20,15 +20,15 @@ def fromcsv_impl(source, **kwargs):
 class CSVView(Table):
 
     def __init__(self, source, encoding, errors, header, **csvargs):
-            self.source = source
-            self.encoding = encoding
-            self.errors = errors
-            self.csvargs = csvargs
-            self.header = header
+        self.source = source
+        self.encoding = encoding
+        self.errors = errors
+        self.csvargs = csvargs
+        self.header = header
 
     def __iter__(self):
         if self.header is not None:
-          yield tuple(self.header)
+            yield tuple(self.header)
         with self.source.open('rb') as buf:
             csvfile = io.TextIOWrapper(buf, encoding=self.encoding,
                                        errors=self.errors, newline='')
@@ -86,7 +86,10 @@ class TeeCSVView(Table):
             try:
                 writer = csv.writer(csvfile, **self.csvargs)
                 it = iter(self.table)
-                hdr = next(it)
+                try:
+                    hdr = next(it)
+                except StopIteration:
+                    return
                 if self.write_header:
                     writer.writerow(hdr)
                 yield tuple(hdr)

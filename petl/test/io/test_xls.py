@@ -85,6 +85,15 @@ else:
         ieq(expect, actual)
         ieq(expect, actual)
 
+    def test_toxls_headerless():
+        expect = []
+        f = NamedTemporaryFile(delete=False)
+        f.close()
+        toxls(expect, f.name, 'Sheet1')
+        actual = fromxls(f.name, 'Sheet1')
+        ieq(expect, actual)
+        ieq(expect, actual)
+
     def test_toxls_date():
         expect = (('foo', 'bar'),
                   (u'é', datetime(2012, 1, 1)),

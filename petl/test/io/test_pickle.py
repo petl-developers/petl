@@ -10,6 +10,14 @@ from petl.test.helpers import ieq
 from petl.io.pickle import frompickle, topickle, appendpickle
 
 
+def picklereader(fl):
+    try:
+        while True:
+            yield pickle.load(fl)
+    except EOFError:
+        pass
+
+
 def test_frompickle():
 
     f = NamedTemporaryFile(delete=False)
@@ -36,13 +44,6 @@ def test_topickle_appendpickle():
     f = NamedTemporaryFile(delete=False)
     topickle(table, f.name)
 
-    def picklereader(fl):
-        try:
-            while True:
-                yield pickle.load(fl)
-        except EOFError:
-            pass
-
     # check what it did
     with open(f.name, 'rb') as o:
         actual = picklereader(o)
@@ -66,3 +67,12 @@ def test_topickle_appendpickle():
                   ('e', 9),
                   ('f', 1))
         ieq(expect, actual)
+
+
+def test_topickle_headerless():
+    table = []
+    f = NamedTemporaryFile(delete=False)
+    topickle(table, f.name)
+    expect = []
+    with open(f.name, 'rb') as o:
+        ieq(expect, picklereader(o))

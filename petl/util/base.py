@@ -244,7 +244,10 @@ def itervalues(table, field, **kwargs):
 
     missing = kwargs.get('missing', None)
     it = iter(table)
-    hdr = next(it)
+    try:
+        hdr = next(it)
+    except StopIteration:
+        hdr = []
 
     indices = asindices(hdr, field)
     assert len(indices) > 0, 'no field selected'
@@ -445,7 +448,10 @@ class DictsView(IterContainer):
 def iterdicts(table, *sliceargs, **kwargs):
     missing = kwargs.get('missing', None)
     it = iter(table)
-    hdr = next(it)
+    try:
+        hdr = next(it)
+    except StopIteration:
+        return
     if sliceargs:
         it = islice(it, *sliceargs)
     for row in it:
@@ -517,7 +523,10 @@ def iternamedtuples(table, *sliceargs, **kwargs):
     missing = kwargs.get('missing', None)
     name = kwargs.get('name', 'row')
     it = iter(table)
-    hdr = next(it)
+    try:
+        hdr = next(it)
+    except StopIteration:
+        return
     flds = list(map(text_type, hdr))
     nt = namedtuple(name, tuple(flds))
     if sliceargs:
@@ -639,7 +648,10 @@ class RecordsView(IterContainer):
 def iterrecords(table, *sliceargs, **kwargs):
     missing = kwargs.get('missing', None)
     it = iter(table)
-    hdr = next(it)
+    try:
+        hdr = next(it)
+    except StopIteration:
+        return
     flds = list(map(text_type, hdr))
     if sliceargs:
         it = islice(it, *sliceargs)
@@ -695,7 +707,10 @@ def rowgroupby(table, key, value=None):
     """
 
     it = iter(table)
-    hdr = next(it)
+    try:
+        hdr = next(it)
+    except StopIteration:
+        hdr = []
     flds = list(map(text_type, hdr))
     # wrap rows as records
     it = (Record(row, flds) for row in it)

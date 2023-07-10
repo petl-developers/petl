@@ -1,7 +1,8 @@
 from __future__ import absolute_import, print_function, division
 
+import pytest
 
-from petl.errors import DuplicateKeyError
+from petl.errors import DuplicateKeyError, FieldSelectionError
 from petl.test.helpers import eq_
 from petl import cut, lookup, lookupone, dictlookup, dictlookupone, \
     recordlookup, recordlookupone
@@ -40,6 +41,12 @@ def test_lookup():
     actual = lookup(t2, ('foo', 'bar'), 'baz')
     expect = {('a', 1): [True], ('b', 2): [False], ('b', 3): [True, False]}
     eq_(expect, actual)
+
+
+def test_lookup_headerless():
+    table = []
+    with pytest.raises(FieldSelectionError):
+        lookup(table, 'foo', 'bar')
 
 
 def test_lookupone():
@@ -83,6 +90,12 @@ def test_lookupone():
     actual = lookupone(t2, ('foo', 'bar'), 'baz', strict=False)
     expect = {('a', 1): True, ('b', 2): False, ('b', 3): True}  # first wins
     eq_(expect, actual)
+
+
+def test_lookupone_headerless():
+    table = []
+    with pytest.raises(FieldSelectionError):
+        lookupone(table, 'foo', 'bar')
 
 
 def test_dictlookup():

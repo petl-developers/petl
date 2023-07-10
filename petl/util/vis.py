@@ -194,7 +194,10 @@ def _look_grid(table, vrepr, index_header, truncate, width):
     it = iter(table)
 
     # fields representation
-    hdr = next(it)
+    try:
+        hdr = next(it)
+    except StopIteration:
+        return ''
     flds = list(map(text_type, hdr))
     if index_header:
         fldsrepr = ['%s|%s' % (i, r) for (i, r) in enumerate(flds)]
@@ -294,7 +297,10 @@ def _look_simple(table, vrepr, index_header, truncate, width):
     it = iter(table)
 
     # fields representation
-    hdr = next(it)
+    try:
+        hdr = next(it)
+    except StopIteration:
+        return ''
     flds = list(map(text_type, hdr))
     if index_header:
         fldsrepr = ['%s|%s' % (i, r) for (i, r) in enumerate(flds)]
@@ -377,7 +383,10 @@ def _look_minimal(table, vrepr, index_header, truncate, width):
     it = iter(table)
 
     # fields representation
-    hdr = next(it)
+    try:
+        hdr = next(it)
+    except StopIteration:
+        return ''
     flds = list(map(text_type, hdr))
     if index_header:
         fldsrepr = ['%s|%s' % (i, r) for (i, r) in enumerate(flds)]
@@ -495,7 +504,10 @@ class See(object):
         # construct output
         output = ''
         it = iter(table)
-        flds = next(it)
+        try:
+            flds = next(it)
+        except StopIteration:
+            return ''
         cols = defaultdict(list)
         for row in it:
             for i, f in enumerate(flds):
