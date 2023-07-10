@@ -118,3 +118,21 @@ def test_tohtml_with_style():
             u"</table>\n"
         )
         eq_(expect, actual)
+
+
+def test_tohtml_headerless():
+    table = []
+
+    f = NamedTemporaryFile(delete=False)
+    tohtml(table, f.name, encoding='ascii', lineterminator='\n')
+
+    # check what it did
+    with io.open(f.name, mode='rt', encoding='ascii', newline='') as o:
+        actual = o.read()
+        expect = (
+            u"<table class='petl'>\n"
+            u"<tbody>\n"
+            u"</tbody>\n"
+            u"</table>\n"
+        )
+        eq_(expect, actual)

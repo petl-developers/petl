@@ -130,3 +130,14 @@ def test_header():
 
     ieq(expect, actual)
     ieq(expect, actual)
+
+
+def test_validation_headerless():
+    header = ('foo', 'bar', 'baz')
+    table = []
+    # Expect only a missing header - no exceptions please
+    expect = (('name', 'row', 'field', 'value', 'error'),
+              ('__header__', 0, None, None, 'AssertionError'))
+    actual = validate(table, header=header)
+    ieq(expect, actual)
+    ieq(expect, actual)

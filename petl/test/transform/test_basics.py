@@ -2,6 +2,7 @@ from __future__ import absolute_import, print_function, division
 
 import pytest
 
+from petl.errors import FieldSelectionError
 from petl.test.helpers import ieq
 from petl.util import expr, empty, coalesce
 from petl.transform.basics import cut, cat, addfield, rowslice, head, tail, \
@@ -71,6 +72,13 @@ def test_cut_empty():
     ieq(expect, actual)
 
 
+def test_cut_headerless():
+    table = ()
+    with pytest.raises(FieldSelectionError):
+        for i in cut(table, 'bar'):
+            pass
+
+
 def test_cutout():
 
     table = (('foo', 'bar', 'baz'),
@@ -106,6 +114,13 @@ def test_cutout():
                    ('D', 9.0),
                    ('E', None))
     ieq(expectation, cut3)
+
+
+def test_cutout_headerless():
+    table = ()
+    with pytest.raises(FieldSelectionError):
+        for i in cutout(table, 'bar'):
+            pass
 
 
 def test_cat():
@@ -198,6 +213,16 @@ def test_cat_empty():
     ieq(expect, actual)
 
 
+def test_cat_headerless():
+    table1 = (('foo', 'bar'),
+              (1, 'A'),
+              (2, 'B'))
+    table2 = ()
+    expect = table1  # basically does nothing
+    actual = cat(table1, table2)
+    ieq(expect, actual)
+
+
 def test_cat_dupfields():
     table1 = (('foo', 'foo'),
               (1, 'A'),
@@ -253,6 +278,16 @@ def test_stack_dupfields():
     ieq(expect, actual)
 
 
+def test_stack_headerless():
+    table1 = (('foo', 'bar'),
+              (1, 'A'),
+              (2, 'B'))
+    table2 = ()
+    expect = table1  # basically does nothing
+    actual = stack(table1, table2)
+    ieq(expect, actual)
+
+
 def test_addfield():
     table = (('foo', 'bar'),
              ('M', 12),
@@ -304,6 +339,15 @@ def test_addfield_empty():
     table = (('foo', 'bar'),)
     expect = (('foo', 'bar', 'baz'),)
     actual = addfield(table, 'baz', 42)
+    ieq(expect, actual)
+    ieq(expect, actual)
+
+
+def test_addfield_headerless():
+    """When adding a field to a headerless table, implicitly add a header."""
+    table = ()
+    expect = (('foo',),)
+    actual = addfield(table, 'foo', 1)
     ieq(expect, actual)
     ieq(expect, actual)
 
@@ -438,6 +482,13 @@ def test_rowslice_empty():
     ieq(expect, actual)
 
 
+def test_rowslice_headerless():
+    table = ()
+    expect = ()
+    actual = rowslice(table, 1, 2)
+    ieq(expect, actual)
+
+
 def test_head():
 
     table1 = (('foo', 'bar'),
@@ -501,6 +552,13 @@ def test_tail():
 def test_tail_empty():
     table = (('foo', 'bar'),)
     expect = (('foo', 'bar'),)
+    actual = tail(table)
+    ieq(expect, actual)
+
+
+def test_tail_headerless():
+    table = ()
+    expect = ()
     actual = tail(table)
     ieq(expect, actual)
 
@@ -576,6 +634,16 @@ def test_annex_uneven_rows():
     ieq(expect, actual)
 
 
+def test_annex_headerless():
+    table1 = (('foo', 'bar'),
+              ('C', 2))
+    table2 = ()  # does nothing
+    expect = table1
+    actual = annex(table1, table2)
+    ieq(expect, actual)
+    ieq(expect, actual)
+
+
 def test_addrownumbers():
 
     table1 = (('foo', 'bar'),
@@ -602,6 +670,15 @@ def test_addrownumbers_field_name():
               (1, 'A', 9),
               (2, 'C', 2))
     actual = addrownumbers(table1, field='id')
+    ieq(expect, actual)
+    ieq(expect, actual)
+
+
+def test_addrownumbers_headerless():
+    """Adds a column row if there is none."""
+    table = ()
+    expect = (('id',),)
+    actual = addrownumbers(table, field='id')
     ieq(expect, actual)
     ieq(expect, actual)
 
@@ -653,6 +730,17 @@ def test_empty_addcolumn():
               ('B', 2))
     ieq(expect, table3)
     ieq(expect, table3)
+
+
+def test_addcolumn_headerless():
+    """Adds a header row if none exists."""
+    table1 = ()
+    expect = (('foo',),
+              ('A',),
+              ('B',))
+    actual = addcolumn(table1, 'foo', ['A', 'B'])
+    ieq(expect, actual)
+    ieq(expect, actual)
 
 
 def test_addfieldusingcontext():
@@ -718,6 +806,30 @@ def test_addfieldusingcontext_stateful():
     table3 = addfieldusingcontext(table2, 'quux', downstream)
     ieq(expect, table3)
     ieq(expect, table3)
+
+
+def test_addfieldusingcontext_empty():
+    table = empty()
+    expect = (('foo',),)
+
+    def query(prv, cur, nxt):
+        return 0
+
+    actual = addfieldusingcontext(table, 'foo', query)
+    ieq(expect, actual)
+    ieq(expect, actual)
+
+
+def test_addfieldusingcontext_headerless():
+    table = ()
+    expect = (('foo',),)
+
+    def query(prv, cur, nxt):
+        return 0
+
+    actual = addfieldusingcontext(table, 'foo', query)
+    ieq(expect, actual)
+    ieq(expect, actual)
 
 
 def test_movefield():

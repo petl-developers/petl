@@ -113,9 +113,12 @@ def toxlsx(tbl, filename, sheet=None, write_header=True, mode="replace"):
     ws = _insert_sheet_on_workbook(mode, sheet, wb)
     if write_header:
         it = iter(tbl)
-        hdr = next(it)
-        flds = list(map(text_type, hdr))
-        rows = itertools.chain([flds], it)
+        try:
+            hdr = next(it)
+            flds = list(map(text_type, hdr))
+            rows = itertools.chain([flds], it)
+        except StopIteration:
+            rows = it
     else:
         rows = data(tbl)
     for row in rows:
@@ -184,9 +187,12 @@ def appendxlsx(tbl, filename, sheet=None, write_header=False):
             ws = wb[str(sheet)]
         if write_header:
             it = iter(tbl)
-            hdr = next(it)
-            flds = list(map(text_type, hdr))
-            rows = itertools.chain([flds], it)
+            try:
+                hdr = next(it)
+                flds = list(map(text_type, hdr))
+                rows = itertools.chain([flds], it)
+            except StopIteration:
+                rows = it
         else:
             rows = data(tbl)
         for row in rows:

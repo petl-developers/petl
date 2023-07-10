@@ -75,7 +75,10 @@ def tohtml(table, source=None, encoding=None, errors='strict', caption=None,
             it = iter(table)
 
             # write header
-            hdr = next(it)
+            try:
+                hdr = next(it)
+            except StopIteration:
+                hdr = []
             _write_begin(f, hdr, lineterminator, caption, index_header,
                          truncate)
 
@@ -166,10 +169,13 @@ class TeeHTMLView(Table):
                 it = iter(table)
 
                 # write header
-                hdr = next(it)
+                try:
+                    hdr = next(it)
+                    yield hdr
+                except StopIteration:
+                    hdr = []
                 _write_begin(f, hdr, lineterminator, caption, index_header,
                              truncate)
-                yield hdr
 
                 # write body
                 if tr_style and callable(tr_style):
@@ -193,16 +199,17 @@ def _write_begin(f, flds, lineterminator, caption, index_header, truncate):
     f.write("<table class='petl'>" + lineterminator)
     if caption is not None:
         f.write(('<caption>%s</caption>' % caption) + lineterminator)
-    f.write('<thead>' + lineterminator)
-    f.write('<tr>' + lineterminator)
-    for i, h in enumerate(flds):
-        if index_header:
-            h = '%s|%s' % (i, h)
-        if truncate:
-            h = h[:truncate]
-        f.write(('<th>%s</th>' % h) + lineterminator)
-    f.write('</tr>' + lineterminator)
-    f.write('</thead>' + lineterminator)
+    if flds:
+        f.write('<thead>' + lineterminator)
+        f.write('<tr>' + lineterminator)
+        for i, h in enumerate(flds):
+            if index_header:
+                h = '%s|%s' % (i, h)
+            if truncate:
+                h = h[:truncate]
+            f.write(('<th>%s</th>' % h) + lineterminator)
+        f.write('</tr>' + lineterminator)
+        f.write('</thead>' + lineterminator)
     f.write('<tbody>' + lineterminator)
 
 

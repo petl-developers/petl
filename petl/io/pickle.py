@@ -119,7 +119,10 @@ def _writepickle(table, source, mode, protocol, write_header):
     source = write_source_from_arg(source, mode)
     with source.open(mode) as f:
         it = iter(table)
-        hdr = next(it)
+        try:
+            hdr = next(it)
+        except StopIteration:
+            return
         if write_header:
             pickle.dump(hdr, f, protocol)
         for row in it:
@@ -153,7 +156,10 @@ class TeePickleView(Table):
         source = write_source_from_arg(self.source)
         with source.open('wb') as f:
             it = iter(self.table)
-            hdr = next(it)
+            try:
+                hdr = next(it)
+            except StopIteration:
+                return
             if self.write_header:
                 pickle.dump(hdr, f, protocol)
             yield tuple(hdr)

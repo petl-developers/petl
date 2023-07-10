@@ -1,7 +1,8 @@
 from __future__ import absolute_import, print_function, division
 
+import pytest
 
-from petl.errors import ArgumentError
+from petl.errors import FieldSelectionError
 from petl.test.helpers import ieq, eq_
 from petl.compat import next
 from petl.util.base import header, fieldnames, data, dicts, records, \
@@ -52,10 +53,24 @@ def test_data():
     ieq(expect, actual)
 
 
+def test_data_headerless():
+    table = []
+    actual = data(table)
+    expect = []
+    ieq(expect, actual)
+
+
 def test_dicts():
     table = (('foo', 'bar'), ('a', 1), ('b', 2))
     actual = dicts(table)
     expect = ({'foo': 'a', 'bar': 1}, {'foo': 'b', 'bar': 2})
+    ieq(expect, actual)
+
+
+def test_dicts_headerless():
+    table = []
+    actual = dicts(table)
+    expect = []
     ieq(expect, actual)
 
 
@@ -92,6 +107,13 @@ def test_records():
     eq_(1, o.get('bar'))
     eq_(None, o.get('baz'))
     eq_('qux', o.get('baz', default='qux'))
+
+
+def test_records_headerless():
+    table = []
+    actual = records(table)
+    expect = []
+    ieq(expect, actual)
 
 
 def test_records_errors():
@@ -147,6 +169,13 @@ def test_namedtuples():
     eq_(2, o.bar)
 
 
+def test_namedtuples_headerless():
+    table = []
+    actual = namedtuples(table)
+    expect = []
+    ieq(expect, actual)
+
+
 def test_namedtuples_unevenrows():
     table = (('foo', 'bar'), ('a', 1, True), ('b',))
     actual = namedtuples(table)
@@ -187,6 +216,14 @@ def test_itervalues():
     ieq(expect, actual)
 
 
+def test_itervalues_headerless():
+    table = []
+    actual = itervalues(table, 'foo')
+    with pytest.raises(FieldSelectionError):
+        for i in actual:
+            pass
+
+
 def test_values():
 
     table = (('foo', 'bar', 'baz'),
@@ -220,6 +257,14 @@ def test_values():
     expect = (True, None, False)
     ieq(expect, actual)
     ieq(expect, actual)
+
+
+def test_values_headerless():
+    table = []
+    actual = values(table, 'foo')
+    with pytest.raises(FieldSelectionError):
+        for i in actual:
+            pass
 
 
 def test_rowgroupby():
@@ -279,3 +324,9 @@ def test_rowgroupby():
     eq_(2, len(vals))
     eq_(True, vals[0])
     eq_(None, vals[1])  # gets padded
+
+
+def test_rowgroupby_headerless():
+    table = []
+    with pytest.raises(FieldSelectionError):
+        rowgroupby(table, 'foo')

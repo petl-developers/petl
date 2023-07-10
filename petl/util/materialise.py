@@ -60,7 +60,10 @@ def columns(table, missing=None):
 
     cols = OrderedDict()
     it = iter(table)
-    hdr = next(it)
+    try:
+        hdr = next(it)
+    except StopIteration:
+        hdr = []
     flds = list(map(text_type, hdr))
     for f in flds:
         cols[f] = list()
@@ -94,7 +97,10 @@ def facetcolumns(table, key, missing=None):
 
     fct = dict()
     it = iter(table)
-    hdr = next(it)
+    try:
+        hdr = next(it)
+    except StopIteration:
+        hdr = []
     flds = list(map(text_type, hdr))
     indices = asindices(hdr, key)
     assert len(indices) > 0, 'no key field selected'

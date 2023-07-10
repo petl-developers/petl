@@ -174,3 +174,18 @@ def test_totext_gz():
         eq_(expect, actual)
     finally:
         o.close()
+
+
+def test_totext_headerless():
+    table = []
+    f = NamedTemporaryFile(delete=False)
+    prologue = "-- START\n"
+    template = "+ {f1}\n"
+    epilogue = "-- END\n"
+    totext(table, f.name, encoding='ascii', template=template,
+           prologue=prologue, epilogue=epilogue)
+
+    with io.open(f.name, mode='rt', encoding='ascii', newline='') as o:
+        actual = o.read()
+        expect = prologue + epilogue
+        eq_(expect, actual)

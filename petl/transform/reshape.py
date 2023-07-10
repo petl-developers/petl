@@ -110,7 +110,10 @@ def itermelt(source, key, variables, variablefield, valuefield):
         raise ValueError('either key or variables must be specified')
 
     it = iter(source)
-    hdr = next(it)
+    try:
+        hdr = next(it)
+    except StopIteration:
+        return
 
     # determine key and variable field indices
     key_indices = variables_indices = None
@@ -298,7 +301,10 @@ def iterrecast(source, key, variablefield, valuefield,
     # TODO only make one pass through the data
 
     it = iter(source)
-    hdr = next(it)
+    try:
+        hdr = next(it)
+    except StopIteration:
+        return
     flds = list(map(text_type, hdr))
 
     # normalise some stuff
@@ -538,7 +544,10 @@ def iterpivot(source, f1, f2, f3, aggfun, missing):
 
     # second pass - generate output
     it = iter(source)
-    hdr = next(it)
+    try:
+        hdr = next(it)
+    except StopIteration:
+        hdr = []
     flds = list(map(text_type, hdr))
     f1i = flds.index(f1)
     f2i = flds.index(f2)

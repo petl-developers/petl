@@ -1,6 +1,8 @@
 from __future__ import absolute_import, print_function, division
 
+import pytest
 
+from petl.errors import FieldSelectionError
 from petl.test.failonerror import assert_failonerror
 from petl.test.helpers import ieq
 from petl.transform.conversions import convert, convertall, convertnumbers, \
@@ -69,6 +71,19 @@ def test_convert_empty():
     table = (('foo', 'bar'),)
     expect = (('foo', 'bar'),)
     actual = convert(table, 'foo', int)
+    ieq(expect, actual)
+
+
+def test_convert_headerless():
+    table = ()
+    with pytest.raises(FieldSelectionError):
+        for i in convert(table, 'foo', int):
+            pass
+
+
+def test_convert_headerless_no_conversions():
+    table = expect = ()
+    actual = convert(table)
     ieq(expect, actual)
 
 

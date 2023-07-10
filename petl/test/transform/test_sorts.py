@@ -11,7 +11,7 @@ import pytest
 
 from petl.compat import next
 
-
+from petl.errors import FieldSelectionError
 from petl.test.helpers import ieq, eq_
 from petl.util import nrows
 from petl.transform.basics import cat
@@ -360,6 +360,25 @@ def test_sort_none():
                    ('D', dt(hour=17)))
     ieq(expectation, result)
 
+
+def test_sort_headerless_no_keys():
+    """
+    Sorting a headerless table without specifying cols should be a no-op.
+    """
+    table = []
+    result = sort(table)
+    expectation = []
+    ieq(expectation, result)
+
+
+def test_sort_headerless_explicit():
+    """
+    But if you specify keys, they must exist.
+    """
+    table = []
+    with pytest.raises(FieldSelectionError):
+        for i in sort(table, 'foo'):
+            pass
 
 # TODO test sort with native comparison
 

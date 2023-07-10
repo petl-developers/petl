@@ -10,7 +10,7 @@ from petl.compat import izip_longest
 
 def eq_(expect, actual, msg=None):
     """Test when two values from a python variable are exactly equals (==)"""
-    assert expect == actual, msg
+    assert expect == actual, msg or ('%r != %s' % (expect, actual))
 
 
 def assert_almost_equal(first, second, places=None, msg=None):

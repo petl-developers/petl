@@ -26,6 +26,12 @@ else:
         actual = todataframe(tbl)
         assert expect.equals(actual)
 
+    def test_headerless():
+        tbl = []
+        expect = pd.DataFrame()
+        actual = todataframe(tbl)
+        assert expect.equals(actual)
+
     def test_fromdataframe():
         tbl = [('foo', 'bar', 'baz'),
                ('apples', 1, 2.5),

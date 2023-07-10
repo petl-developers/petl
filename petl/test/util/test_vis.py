@@ -189,3 +189,10 @@ def test_lookstr():
 +-----+-----+
 """
     eq_(expect, actual)
+
+
+def test_look_headerless():
+    table = []
+    actual = repr(look(table))
+    expect = ""
+    eq_(expect, actual)
