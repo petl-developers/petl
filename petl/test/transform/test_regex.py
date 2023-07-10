@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, print_function, division
 
+import pytest
 
 from petl.compat import next
-
-
+from petl.errors import ArgumentError
 from petl.test.helpers import ieq, eq_
 from petl.transform.regex import capture, split, search, searchcomplement, splitdown
 from petl.transform.basics import TransformError
@@ -55,6 +55,13 @@ def test_capture_empty():
     expect = (('foo', 'baz', 'qux'),)
     actual = capture(table, 'bar', r'(\w)(\d)', ('baz', 'qux'))
     ieq(expect, actual)
+
+
+def test_capture_headerless():
+    table = []
+    with pytest.raises(ArgumentError):
+        for i in capture(table, 'bar', r'(\w)(\d)', ('baz', 'qux')):
+            pass
 
 
 def test_capture_nonmatching():
@@ -148,6 +155,13 @@ def test_split_empty():
     ieq(expect, actual)
 
 
+def test_split_headerless():
+    table = []
+    with pytest.raises(ArgumentError):
+        for i in split(table, 'bar', 'd', ('baz', 'qux')):
+            pass
+
+
 def test_search():
 
     table1 = (('foo', 'bar', 'baz'),
@@ -189,6 +203,14 @@ def test_search_2():
               ('aa', 4, 9.3),
               ('aaa', 2, 88.2),
               ('bb', 7, 100.9))
+    ieq(expect, actual)
+    ieq(expect, actual)
+
+
+def test_search_headerless():
+    table = []
+    actual = search(table, 'foo', '[ab]{2}')
+    expect = []
     ieq(expect, actual)
     ieq(expect, actual)
 

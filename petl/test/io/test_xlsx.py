@@ -226,3 +226,13 @@ def test_appendxlsx_with_non_str_header(xlsx_table_with_non_str_header, xlsx_tes
     appendxlsx(xlsx_table_with_non_str_header, f.name, 'Sheet1')
     expect = etl.cat(xlsx_test_table, xlsx_table_with_non_str_header)
     ieq(expect, actual)
+
+
+def test_toxlsx_headerless():
+    expect = []
+    f = NamedTemporaryFile(delete=False)
+    f.close()
+    toxlsx(expect, f.name)
+    actual = fromxlsx(f.name)
+    ieq(expect, actual)
+    ieq(expect, actual)

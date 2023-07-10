@@ -53,6 +53,13 @@ def test_filldown():
     ieq(expect, actual)
 
 
+def test_filldown_headerless():
+    table = []
+    actual = filldown(table, 'foo')
+    expect = []
+    ieq(expect, actual)
+
+
 def test_fillright():
 
     table = (('foo', 'bar', 'baz'),
@@ -77,6 +84,13 @@ def test_fillright():
     ieq(expect, actual)
 
 
+def test_fillright_headerless():
+    table = []
+    actual = fillright(table, 'foo')
+    expect = []
+    ieq(expect, actual)
+
+
 def test_fillleft():
 
     table = (('foo', 'bar', 'baz'),
@@ -98,4 +112,11 @@ def test_fillleft():
               (2, 'c', None),
               ('c', 'c', .72))
     ieq(expect, actual)
+    ieq(expect, actual)
+
+
+def test_fillleft_headerless():
+    table = []
+    actual = fillleft(table, 'foo')
+    expect = []
     ieq(expect, actual)

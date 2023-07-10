@@ -13,7 +13,10 @@ def _setup_lookup(table, key, value):
 
     # obtain iterator and header row
     it = iter(table)
-    hdr = next(it)
+    try:
+        hdr = next(it)
+    except StopIteration:
+        hdr = []
 
     # prepare key getter
     keyindices = asindices(hdr, key)
@@ -225,7 +228,10 @@ def dictlookup(table, key, dictionary=None):
         dictionary = dict()
 
     it = iter(table)
-    hdr = next(it)
+    try:
+        hdr = next(it)
+    except StopIteration:
+        hdr = []
     flds = list(map(text_type, hdr))
     keyindices = asindices(hdr, key)
     assert len(keyindices) > 0, 'no key selected'
@@ -303,7 +309,10 @@ def dictlookupone(table, key, dictionary=None, strict=False):
         dictionary = dict()
 
     it = iter(table)
-    hdr = next(it)
+    try:
+        hdr = next(it)
+    except StopIteration:
+        hdr = []
     flds = list(map(text_type, hdr))
     keyindices = asindices(hdr, key)
     assert len(keyindices) > 0, 'no key selected'
@@ -331,7 +340,10 @@ def recordlookup(table, key, dictionary=None):
         dictionary = dict()
 
     it = iter(table)
-    hdr = next(it)
+    try:
+        hdr = next(it)
+    except StopIteration:
+        hdr = []
     flds = list(map(text_type, hdr))
     keyindices = asindices(hdr, key)
     assert len(keyindices) > 0, 'no key selected'
@@ -363,7 +375,10 @@ def recordlookupone(table, key, dictionary=None, strict=False):
         dictionary = dict()
 
     it = iter(table)
-    hdr = next(it)
+    try:
+        hdr = next(it)
+    except StopIteration:
+        hdr = []
     flds = list(map(text_type, hdr))
     keyindices = asindices(hdr, key)
     assert len(keyindices) > 0, 'no key selected'

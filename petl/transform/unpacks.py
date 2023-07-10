@@ -64,7 +64,10 @@ class UnpackView(Table):
 def iterunpack(source, field, newfields, include_original, missing):
     it = iter(source)
 
-    hdr = next(it)
+    try:
+        hdr = next(it)
+    except StopIteration:
+        hdr = []
     flds = list(map(text_type, hdr))
     if field in flds:
         field_index = flds.index(field)
@@ -164,7 +167,10 @@ def iterunpackdict(table, field, keys, includeoriginal, samplesize, missing):
 
     # set up
     it = iter(table)
-    hdr = next(it)
+    try:
+        hdr = next(it)
+    except StopIteration:
+        hdr = []
     flds = list(map(text_type, hdr))
     fidx = flds.index(field)
     outhdr = list(flds)

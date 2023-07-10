@@ -100,7 +100,10 @@ def itercapture(source, field, pattern, newfields, include_original, flags,
     it = iter(source)
     prog = re.compile(pattern, flags)
 
-    hdr = next(it)
+    try:
+        hdr = next(it)
+    except StopIteration:
+        hdr = []
     flds = list(map(text_type, hdr))
     if isinstance(field, int) and field < len(hdr):
         field_index = field
@@ -197,7 +200,10 @@ def itersplit(source, field, pattern, newfields, include_original, maxsplit,
     it = iter(source)
     prog = re.compile(pattern, flags)
 
-    hdr = next(it)
+    try:
+        hdr = next(it)
+    except StopIteration:
+        hdr = []
     flds = list(map(text_type, hdr))
     if isinstance(field, int) and field < len(hdr):
         field_index = field
@@ -312,7 +318,10 @@ class SearchView(Table):
 def itersearch(table, pattern, field, flags, complement):
     prog = re.compile(pattern, flags)
     it = iter(table)
-    hdr = next(it)
+    try:
+        hdr = next(it)
+    except StopIteration:
+        return
     flds = list(map(text_type, hdr))
     yield tuple(hdr)
 
@@ -439,7 +448,10 @@ def itersplitdown(table, field, pattern, maxsplit, flags):
 
     prog = re.compile(pattern, flags)
     it = iter(table)
-    hdr = next(it)
+    try:
+        hdr = next(it)
+    except StopIteration:
+        return
     flds = list(map(text_type, hdr))
 
     if isinstance(field, int) and field < len(hdr):

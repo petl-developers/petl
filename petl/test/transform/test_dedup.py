@@ -1,6 +1,8 @@
 from __future__ import absolute_import, print_function, division
 
+import pytest
 
+from petl.errors import FieldSelectionError
 from petl.test.helpers import ieq
 from petl.transform.dedup import duplicates, unique, conflicts, distinct, \
     isunique
@@ -32,6 +34,23 @@ def test_duplicates():
                    ('B', '2', '3.4'),
                    ('B', '2', 42))
     ieq(expectation, result)
+
+
+def test_duplicates_headerless_no_keys():
+    """Removing the duplicates from an empty table without specifying which
+    columns shouldn't be a problem.
+    """
+    table = []
+    actual = duplicates(table)
+    expect = []
+    ieq(expect, actual)
+
+
+def test_duplicates_headerless_explicit():
+    table = []
+    with pytest.raises(FieldSelectionError):
+        for i in duplicates(table, 'foo'):
+            pass
 
 
 def test_duplicates_empty():

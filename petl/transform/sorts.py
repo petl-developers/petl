@@ -286,7 +286,12 @@ class SortView(Table):
         self.clearcache()
         it = iter(source)
 
-        hdr = next(it)
+        try:
+            hdr = next(it)
+        except StopIteration:
+            if key is None:
+                return  # nothing to do on a table without headers
+            hdr = []
         yield tuple(hdr)
 
         if key is not None:
@@ -480,7 +485,12 @@ def itermergesort(sources, key, header, missing, reverse):
     # borrow this from itercat - TODO remove code smells
 
     its = [iter(t) for t in sources]
-    src_hdrs = [next(it) for it in its]
+    src_hdrs = []
+    for it in its:
+        try:
+            src_hdrs.append(next(it))
+        except StopIteration:
+            src_hdrs.append([])
 
     if header is None:
         # determine output fields by gathering all fields found in the sources
@@ -562,7 +572,10 @@ def issorted(table, key=None, reverse=False, strict=False):
         op = operator.ge
 
     it = iter(table)
-    flds = [text_type(f) for f in next(it)]
+    try:
+        flds = [text_type(f) for f in next(it)]
+    except StopIteration:
+        flds = []
     if key is None:
         prev = next(it)
         for curr in it:

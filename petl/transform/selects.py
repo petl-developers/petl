@@ -112,8 +112,11 @@ class FieldSelectView(Table):
 
 def iterfieldselect(source, field, where, complement, missing):
     it = iter(source)
-    hdr = next(it)
-    yield tuple(hdr)
+    try:
+        hdr = next(it)
+        yield tuple(hdr)
+    except StopIteration:
+        hdr = []  # will raise FieldSelectionError below
     indices = asindices(hdr, field)
     getv = operator.itemgetter(*indices)
     for row in it:
@@ -127,7 +130,10 @@ def iterfieldselect(source, field, where, complement, missing):
 
 def iterrowselect(source, where, missing, complement):
     it = iter(source)
-    hdr = next(it)
+    try:
+        hdr = next(it)
+    except StopIteration:
+        return  # will yield nothing
     flds = list(map(text_type, hdr))
     yield tuple(hdr)
     it = (Record(row, flds, missing=missing) for row in it)
@@ -421,7 +427,10 @@ class SelectUsingContextView(Table):
 
 def iterselectusingcontext(table, query):
     it = iter(table)
-    hdr = tuple(next(it))
+    try:
+        hdr = tuple(next(it))
+    except StopIteration:
+        return  # will yield nothing
     flds = list(map(text_type, hdr))
     yield hdr
     it = (Record(row, flds) for row in it)

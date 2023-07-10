@@ -29,7 +29,10 @@ def todataframe(table, index=None, exclude=None, columns=None,
     """
     import pandas as pd
     it = iter(table)
-    header = next(it)
+    try:
+        header = next(it)
+    except StopIteration:
+        header = None  # Will create an Empty DataFrame
     if columns is None:
         columns = header
     return pd.DataFrame.from_records(it, index=index, exclude=exclude,

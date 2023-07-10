@@ -112,7 +112,10 @@ class TeeCSVView(Table):
             it = iter(self.table)
 
             # deal with header row
-            hdr = next(it)
+            try:
+                hdr = next(it)
+            except StopIteration:
+                return
             if self.write_header:
                 writer.writerow(hdr)
             # N.B., always yield header, even if we don't write it
