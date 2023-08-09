@@ -106,10 +106,7 @@ def _register_filesystems(only_available=False):
 def _register_filesystems_from(fsspec_registry, only_available):
     """Register each fsspec provider from this registry as remote source."""
     for protocol, spec in fsspec_registry.items():
-        if not isinstance(spec, dict):
-            continue
-
-        missing_deps = "err" in spec
+        missing_deps = isinstance(spec, dict) and "err" in spec
         if missing_deps and only_available:
             # this could lead to only buit-in implementations available
             # Other Known Implementations are reported with 'err' even even
