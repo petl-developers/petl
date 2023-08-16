@@ -27,7 +27,14 @@ jobs:
       fail-fast: false
       matrix:
         os: [ "ubuntu-latest", "windows-latest", "macos-latest" ]
-        python: ['2.7', '3.6', '3.7', '3.8', '3.9', '3.10', '3.11']
+        python: ['3.6', '3.7', '3.8', '3.9', '3.10', '3.11']
+        include:
+          - python: '2.7'
+            os: "ubuntu-20.04"
+          - python: '2.7'
+            os: "macos-11"
+          - python: '2.7'
+            os: "windows-2019"
 
     runs-on: "${{ matrix.os }}"
 
