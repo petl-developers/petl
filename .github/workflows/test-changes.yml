@@ -27,16 +27,27 @@ jobs:
       fail-fast: false
       matrix:
         os: [ "ubuntu-latest", "windows-latest", "macos-latest" ]
-        python: ['2.7', '3.6', '3.7', '3.8', '3.9', '3.10', '3.11']
+        python: ['3.6', '3.7', '3.8', '3.9', '3.10', '3.11']
+        include:
+          - python: '2.7'
+            os: "ubuntu-latest"
+
     runs-on: "${{ matrix.os }}"
     env:
       testing: simple
+      python_eol: no
     steps:
       - name: Determine what scope of testing is available on ${{ matrix.os }}
         if: |
           (matrix.python >= '3.' ) && ( matrix.os != 'windows-latest' )
         run: |
           echo 'testing=full' >> $GITHUB_ENV
+
+      - name: Determine if the python ${{ matrix.python }} is available on ${{ matrix.os }}
+        if: |
+          (matrix.python < '3.' ) || ( matrix.python == '3.6' && matrix.os == 'ubuntu-latest' )
+        run: |
+          echo 'python_eol=yes' >> $GITHUB_ENV
 
       - name: Checkout source code
         uses: actions/checkout@main
@@ -48,13 +59,13 @@ jobs:
           sudo apt-get install -y --no-install-recommends python3-h5py
 
       - name: Set up Python ${{ matrix.python }}
-        if: matrix.python >= '3.'
+        if: env.python_eol == 'no'
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python }}
 
-      - name: Set up EOL Python ${{ matrix.python }}
-        if: matrix.python < '3.'
+      - name: Set up Python ${{ matrix.python }} discontinued on ${{ matrix.os }}
+        if: env.python_eol == 'yes'
         uses: MatteoH2O1999/setup-python@v1
         with:
           python-version: ${{ matrix.python }}
