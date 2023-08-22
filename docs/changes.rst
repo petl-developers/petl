@@ -1,10 +1,31 @@
 Changes
 =======
 
+Version 1.7.14
+--------------
+
+* Enhancement: Fix other functions to conform with PEP 479
+  By :user:`augustomen`, :issue:`645`.
+
+* CI: fix build as SQLAlchemy 2 is not supported yet
+  By :user:`juarezr`, :issue:`635`.
+
+* CI: workaround for actions/setup-python#672 as Github removed python 2.7 and 3.6
+  By :user:`juarezr`, :issue:`649`.
+
+* CI: Gh actions upgrade
+  By :user:`juarezr`, :issue:`639`.
+
+Version 1.7.13
+--------------
+
+* Fix in case a custom protocol was registered in fsspec
+  By :user:`timheb`, :issue:`647`.
+
 Version 1.7.12
 --------------
 
-* Fix? calling functions to*() should output by default to stdout
+* Fix: calling functions to*() should output by default to stdout
   By :user:`juarezr`, :issue:`632`.
 
 * Add python3.11 for the build and testing
