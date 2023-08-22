@@ -19,7 +19,7 @@ setup(
     extras_require={
         'avro': ['fastavro>=0.24.0'],
         'bcolz': ['bcolz>=1.2.1'],
-        'db': ['SQLAlchemy>=1.3.6'],
+        'db': ['SQLAlchemy>=1.3.6,<2.0'],
         'hdf5': ['cython>=0.29.13', 'numpy>=1.16.4', 'numexpr>=2.6.9', 
                  'tables>=3.5.2'],
         'http': ['aiohttp>=3.6.2', 'requests'],
