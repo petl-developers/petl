@@ -1,7 +1,7 @@
 from __future__ import absolute_import, print_function, division
 
 import hashlib
-import random
+import random as pyrandom
 import time
 from collections import OrderedDict
 from functools import partial
@@ -57,7 +57,6 @@ def randomtable(numflds=5, numrows=100, wait=0, seed=None):
 
 
 class RandomTable(Table):
-
     def __init__(self, numflds=5, numrows=100, wait=0, seed=None):
         self.numflds = numflds
         self.numrows = numrows
@@ -68,16 +67,15 @@ class RandomTable(Table):
             self.seed = seed
 
     def __iter__(self):
-
         nf = self.numflds
         nr = self.numrows
         seed = self.seed
 
         # N.B., we want this to be stable, i.e., same data each time
-        random.seed(seed)
+        pyrandom.seed(seed)
 
         # construct fields
-        flds = ['f%s' % n for n in range(nf)]
+        flds = ["f%s" % n for n in range(nf)]
         yield tuple(flds)
 
         # construct data rows
@@ -85,18 +83,22 @@ class RandomTable(Table):
             # artificial delay
             if self.wait:
                 time.sleep(self.wait)
-            yield tuple(random.random() for n in range(nf))
+            yield tuple(pyrandom.random() for n in range(nf))
 
     def reseed(self):
         self.seed = randomseed()
 
 
-def dummytable(numrows=100,
-               fields=(('foo', partial(random.randint, 0, 100)),
-                       ('bar', partial(random.choice, ('apples', 'pears',
-                                                       'bananas', 'oranges'))),
-                       ('baz', random.random)),
-               wait=0, seed=None):
+def dummytable(
+        numrows=100,
+        fields=(
+                ('foo', partial(pyrandom.randint, 0, 100)),
+                ('bar', partial(pyrandom.choice, ('apples', 'pears', 'bananas', 'oranges'))),
+                ('baz', pyrandom.random),
+        ),
+        wait=0,
+        seed=None,
+):
     """
     Construct a table with dummy data. Use `numrows` to specify the number of
     rows. Set `wait` to a float greater than zero to simulate a delay on each
@@ -121,13 +123,11 @@ def dummytable(numrows=100,
         ...
         <BLANKLINE>
 
-        >>> # customise fields
-        ... import random
+        >>> import random as pyrandom
         >>> from functools import partial
-        >>> fields = [('foo', random.random),
-        ...           ('bar', partial(random.randint, 0, 500)),
-        ...           ('baz', partial(random.choice,
-        ...                           ['chocolate', 'strawberry', 'vanilla']))]
+        >>> fields = [('foo', pyrandom.random),
+        ...           ('bar', partial(pyrandom.randint, 0, 500)),
+        ...           ('baz', partial(pyrandom.choice, ['chocolate', 'strawberry', 'vanilla']))]
         >>> table2 = etl.dummytable(100, fields=fields, seed=42)
         >>> table2
         +---------------------+-----+-------------+
@@ -164,7 +164,6 @@ def dummytable(numrows=100,
 
 
 class DummyTable(Table):
-
     def __init__(self, numrows=100, fields=None, wait=0, seed=None):
         self.numrows = numrows
         self.wait = wait
@@ -186,7 +185,7 @@ class DummyTable(Table):
         fields = self.fields.copy()
 
         # N.B., we want this to be stable, i.e., same data each time
-        random.seed(seed)
+        pyrandom.seed(seed)
 
         # construct header row
         hdr = tuple(text_type(f) for f in fields.keys())
