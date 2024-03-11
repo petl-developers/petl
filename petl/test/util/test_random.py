@@ -1,4 +1,4 @@
-import random
+import random as pyrandom
 import time
 from functools import partial
 
@@ -46,10 +46,10 @@ def test_dummytable_custom_fields():
     and that it accepts and uses custom column names provided.
     """
     columns = (
-        ('count', partial(random.randint, 0, 100)),
-        ('pet', partial(random.choice, ('dog', 'cat', 'cow'))),
-        ('color', partial(random.choice, ('yellow', 'orange', 'brown'))),
-        ('value', random.random)
+        ('count', partial(pyrandom.randint, 0, 100)),
+        ('pet', partial(pyrandom.choice, ['dog', 'cat', 'cow', ])),
+        ('color', partial(pyrandom.choice, ['yellow', 'orange', 'brown'])),
+        ('value', pyrandom.random),
     )
     rows = 35
 
