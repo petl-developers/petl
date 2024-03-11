@@ -7,6 +7,9 @@ Version 1.7.15
 * Add unit tests for randomtable, dummytable, and their supporting functions and classes.
   By :user:`bmos`, :issue:`657`.
 
+* Fix: DeprecationWarning: Seeding based on hashing is deprecated since Python 3.9 and will be removed in a subsequent version.
+  By :user:`bmos`, :issue:`657`.
+
 Version 1.7.14
 --------------
 

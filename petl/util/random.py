@@ -1,15 +1,24 @@
 from __future__ import absolute_import, print_function, division
 
-
-import datetime
+import hashlib
 import random
 import time
 from collections import OrderedDict
 from functools import partial
+
 from petl.compat import xrange, text_type
-
-
 from petl.util.base import Table
+
+
+def randomseed():
+    """
+    Obtain the hex digest of a sha256 hash of the
+    current epoch time in nanoseconds.
+    """
+
+    time_ns = str(time.time()).encode()
+    hash_time = hashlib.sha256(time_ns).hexdigest()
+    return hash_time
 
 
 def randomtable(numflds=5, numrows=100, wait=0, seed=None):
@@ -36,9 +45,11 @@ def randomtable(numflds=5, numrows=100, wait=0, seed=None):
         | 0.026535969683863625 |   0.1988376506866485 |  0.6498844377795232 |
         +----------------------+----------------------+---------------------+
         ...
+        <BLANKLINE>
 
     Note that the data are generated on the fly and are not stored in memory,
     so this function can be used to simulate very large tables.
+    The only supported seed types are: None, int, float, str, bytes, and bytearray.
 
     """
 
@@ -52,7 +63,7 @@ class RandomTable(Table):
         self.numrows = numrows
         self.wait = wait
         if seed is None:
-            self.seed = datetime.datetime.now()
+            self.seed = randomseed()
         else:
             self.seed = seed
 
@@ -77,7 +88,7 @@ class RandomTable(Table):
             yield tuple(random.random() for n in range(nf))
 
     def reseed(self):
-        self.seed = datetime.datetime.now()
+        self.seed = randomseed()
 
 
 def dummytable(numrows=100,
@@ -108,6 +119,7 @@ def dummytable(numrows=100,
         |   4 | 'apples' |  0.09369523986159245 |
         +-----+----------+----------------------+
         ...
+        <BLANKLINE>
 
         >>> # customise fields
         ... import random
@@ -132,12 +144,19 @@ def dummytable(numrows=100,
         |  0.4219218196852704 |  15 | 'chocolate' |
         +---------------------+-----+-------------+
         ...
+        <BLANKLINE>
+
+        >>> table3_1 = etl.dummytable(50)
+        >>> table3_2 = etl.dummytable(100)
+        >>> table3_1[5] == table3_2[5]
+        False
 
     Data generation functions can be specified via the `fields` keyword
     argument.
 
     Note that the data are generated on the fly and are not stored in memory,
     so this function can be used to simulate very large tables.
+    The only supported seed types are: None, int, float, str, bytes, and bytearray.
 
     """
 
@@ -154,7 +173,7 @@ class DummyTable(Table):
         else:
             self.fields = OrderedDict(fields)
         if seed is None:
-            self.seed = datetime.datetime.now()
+            self.seed = randomseed()
         else:
             self.seed = seed
 
@@ -181,4 +200,4 @@ class DummyTable(Table):
             yield tuple(fields[f]() for f in fields)
 
     def reseed(self):
-        self.seed = datetime.datetime.now()
+        self.seed = randomseed()
