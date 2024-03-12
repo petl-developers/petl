@@ -2,17 +2,55 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python: Debug File",
-            "type": "python",
+            "name": "python: with Args",
+            "type": "debugpy",
             "request": "launch",
             "program": "${file}",
-            "console": "integratedTerminal"
+            "args": "${input:arguments}",
+            "cwd": "${input:debug_working_dir}",
+            "justMyCode": true,
+            "autoReload": {
+                "enable": true
+            }
         },
         {
-            "name": "Python: Module",
-            "type": "python",
+            "name": "python: Within Libs",
+            "type": "debugpy",
             "request": "launch",
-            "module": "petl"
-        }
+            "program": "${file}",
+            "args": "${input:last_arguments}",
+            "cwd": "${input:debug_working_dir}",
+            "justMyCode": false,
+            "autoReload": {
+                "enable": true
+            }
+        },
+    ],
+    "inputs": [
+        {
+            // Usage: "args": "${input:arguments}",
+            "id": "arguments",
+            "type": "promptString",
+            "description": "Which arguments to pass to the command?",
+        },
+        {
+            // Usage: "cwd": "${input:debug_working_dir}"
+            "id": "debug_working_dir",
+            "type": "pickString",
+            "description": "Debug the python program in which of these folders?",
+            "options": [
+                "${fileDirname}",
+                "${fileWorkspaceFolder}",
+                "${fileWorkspaceFolder}/petl",
+                "${fileWorkspaceFolder}/petl/tests",
+                "${fileWorkspaceFolder}/examples",
+                "${relativeFileDirname}",
+                "${userHome}",
+                "${cwd}",
+                "${selectedText}",
+                "",
+            ],
+            "default": "${fileDirname}"
+        },
     ]
 }
