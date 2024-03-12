@@ -25,7 +25,7 @@ tbl_dummy_data.look()
 
 # <codecell>
 
-%memit print tbl_dummy_data.nrows()
+print tbl_dummy_data.nrows()
 
 # <headingcell level=2>
 
@@ -43,17 +43,17 @@ cursor.execute('CREATE TABLE issue_219 (foo INTEGER, bar TEXT, baz FLOAT);')
 
 # <codecell>
 
-%memit -r1 tbl_dummy_data.progress(10000).todb(psql_connection, 'issue_219')
+tbl_dummy_data.progress(10000).todb(psql_connection, 'issue_219')
 
 # <codecell>
 
 # memory usage using default cursor
-%memit print etl.fromdb(psql_connection, 'select * from issue_219 order by foo').look(2)
+print etl.fromdb(psql_connection, 'select * from issue_219 order by foo').look(2)
 
 # <codecell>
 
 # memory usage using server-side cursor
-%memit print etl.fromdb(lambda: psql_connection.cursor(name='server-side'), 'select * from issue_219 order by foo').look(2)
+print etl.fromdb(lambda: psql_connection.cursor(name='server-side'), 'select * from issue_219 order by foo').look(2)
 
 # <headingcell level=2>
 
@@ -72,15 +72,15 @@ cursor.execute('CREATE TABLE issue_219 (foo INTEGER, bar TEXT, baz FLOAT);')
 
 # <codecell>
 
-%memit -r1 tbl_dummy_data.progress(10000).todb(mysql_connection, 'issue_219')
+tbl_dummy_data.progress(10000).todb(mysql_connection, 'issue_219')
 
 # <codecell>
 
 # memory usage with default cursor
-%memit print etl.fromdb(mysql_connection, 'select * from issue_219 order by foo').look(2)
+print etl.fromdb(mysql_connection, 'select * from issue_219 order by foo').look(2)
 
 # <codecell>
 
 # memory usage with server-side cursor
-%memit print etl.fromdb(lambda: mysql_connection.cursor(MySQLdb.cursors.SSCursor), 'select * from issue_219 order by foo').look(2)
+print etl.fromdb(lambda: mysql_connection.cursor(MySQLdb.cursors.SSCursor), 'select * from issue_219 order by foo').look(2)
 
