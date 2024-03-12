@@ -24,7 +24,7 @@
             "autoReload": {
                 "enable": true
             }
-        },
+        }
     ],
     "inputs": [
         {
@@ -48,7 +48,7 @@
                 "${userHome}",
                 "${cwd}",
                 "${selectedText}",
-                "",
+                ""
             ],
             "default": "${fileDirname}"
         },
