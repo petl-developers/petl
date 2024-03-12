@@ -1,73 +1,121 @@
 {
-    // SETTINGS OF EDITOR FOR ALL FILES
-    "editor.formatOnSave": false, // for reducing git changes for now
+    //-- Editor settings for all files -------------------------------------------------
+    //
+    "editor.formatOnSave": false, // Using this for reducing git changes between commits
     "editor.formatOnPaste": true,
     "editor.tabSize": 4,
     "editor.wordWrapColumn": 83,
-    "editor.renderWhitespace": "trailing",
+    "editor.renderWhitespace": "boundary",
     "files.eol": "\n",
     "files.encoding": "utf8",
+    //
+    //-- Editor settings for search/view files -----------------------------------------
+    //
     "files.exclude": {
+        // python
         "**/.tox": true,
+        "**/.nox": true,
         "**/.eggs": true,
         "**/*.egg-info": true,
         "**/__pycache__": true,
+        "**/__pypackages__": true,
         "**/.pylint.d": true,
         "**/.cache": true,
         "**/.mypy_cache": true,
         "**/.pytest_cache": true,
+        "**/.ruff_cache": true,
+        "**/.ipynb_checkpoints": true,
         "**/*.pyc": true,
         "**/*.egg": true,
+        "**/*.pyenv": true,
+        "**/*.pytype": true,
         "**/.vscode-server": true,
     },
     "files.watcherExclude": {
+        // git
         "**/.git/objects/**": true,
         "**/.git/subtree-cache/**": true,
-        "**/.tox/*/**": true,
-        "**/.eggs/*/**": true,
-        "**/*.egg-info/*/**": true,
-        "**/__pycache__/*/**": true,
-        "**/.cache/*/**": true,
-        "**/.mypy_cache/*/**": true,
-        "**/.pytest_cache/*/**": true,
-        "**/logs/*/**": true,
+        // python
+        "**/.tox": true,
+        "**/.nox": true,
+        "**/.eggs": true,
+        "**/*.egg-info": true,
+        "**/__pycache__": true,
+        "**/__pypackages__": true,
+        "**/.cache": true,
+        "**/.mypy_cache": true,
+        "**/.pytest_cache": true,
+        "**/.ruff_cache": true,
+        "**/.ipynb_checkpoints": true,
         "**/*.pyc": true,
         "**/*.egg": true,
+        "**/*.venv": true,
+        "**/*.pyenv": true,
+        "**/*.pytype": true,
+        "**/_build": true,
+        "**/build": true,
+        "**/dist": true,
+        "**/site-packages": true,
+        // others
+        "**/logs": true,
         "**/*.log": true,
-        "**/.vscode-server/*/**": true,
+        "**/.vscode-server": true,
         "**/example.*": true,
     },
     "search.exclude": {
+        // git
         "**/.git/objects/**": true,
         "**/.git/subtree-cache/**": true,
-        "**/.tox/*/**": true,
-        "**/.eggs/*/**": true,
-        "**/*.egg-info/*/**": true,
-        "**/__pycache__/*/**": true,
-        "**/.cache/*/**": true,
-        "**/.mypy_cache/*/**": true,
-        "**/.pytest_cache/*/**": true,
-        "**/logs/*/**": true,
+        // python
+        "**/.tox": true,
+        "**/.nox": true,
+        "**/.eggs": true,
+        "**/*.egg-info": true,
+        "**/__pycache__": true,
+        "**/__pypackages__": true,
+        "**/.cache": true,
+        "**/.mypy_cache": true,
+        "**/.pytest_cache": true,
+        "**/.ruff_cache": true,
+        "**/.ipynb_checkpoints": true,
         "**/*.pyc": true,
         "**/*.egg": true,
+        "**/*.venv": true,
+        "**/*.pyenv": true,
+        "**/*.pytype": true,
+        "**/_build": true,
+        "**/build": true,
+        "**/dist": true,
+        "**/site-packages": true,
+        // others
         "**/*.log": true,
-        "**/.vscode-server/*/**": true,
+        "**/logs": true,
+        "**/.vscode-server": true,
         "**/example.*": true,
     },
+    //
+    //-- Python language settings ------------------------------------------------------
+    //
     "[python]": {
-        // SETTINGS OF FOR PYTHON
+        // Editor settings for python files
         "editor.tabSize": 4,
         "editor.wordWrapColumn": 83,
         "files.eol": "\n",
         "files.encoding": "utf8",
-        // "editor.trimAutoWhitespace": true, // disabled for now
-        // "files.trimFinalNewlines": true,  // for reducing git changes due to whitespaces
-        // "files.trimTrailingWhitespace": true,
-        // SETTINGS EXCLUSIVE TO PYTHON
+        "editor.defaultFormatter": "charliermarsh.ruff",
+        // "editor.defaultFormatter": "ms-python.black-formatter",
+        //-- Settings for keeping source code compatibility
+        "editor.codeActionsOnSave": {
+            "source.fixAll": "explicit",
+            "source.organizeImports": "explicit"
+        },
         "editor.insertSpaces": true,
         "files.insertFinalNewline": true,
+        //-- Settings to reduce git changes due to whitespaces up source code (disabled for now)
+        // "editor.trimAutoWhitespace": true,
+        // "files.trimFinalNewlines": true,
+        // "files.trimTrailingWhitespace": true,
     },
-    "python.formatting.provider": "black",
     "python.autoComplete.extraPaths": [
         "${workspaceFolder}/petl/",
         "${workspaceFolder}/petl/io/",
@@ -76,12 +124,15 @@
         "${workspaceFolder}/petl/test/",
         "${workspaceFolder}/petl/test/io",
     ],
-    "python.linting.enabled": true,
-    "python.linting.maxNumberOfProblems": 12,
-    "python.linting.ignorePatterns": [
+    //
+    //-- Python analysis/tools settings ------------------------------------------------
+    //
+    "python.analysis.logLevel": "Warning",
+    "pylint.ignorePatterns": [
         ".vscode/*.py",
         ".git",
         ".tox",
+        ".nox",
         ".venv",
         ".eggs",
         ".egg-info",
@@ -91,17 +142,15 @@
         "__pycache__",
         "_build",
         "*.pyc",
+        ".vscode",
         ".vscode-server",
     ],
-    "python.linting.pylintEnabled": true,
-    "python.linting.pylintArgs": [
+    "pylint.args": [
         "--max-line-length=83",
         "--reports=y",
         "--disable=import-error,invalid-name,bad-continuation,import-outside-toplevel,missing-module-docstring,missing-function-docstring,trailing-whitespace,line-too-long,bad-whitespace"
     ],
-    "python.analysis.logLevel": "Warning",
-    "python.linting.flake8Enabled": true,
-    "python.linting.flake8Args": [
+    "flake8.args": [
         "--max-line-length",
         "83",
         "--max-complexity",
@@ -111,8 +160,7 @@
         "--exclude",
         ".git,.tox,.venv,.eggs,.egg-info,.cache,.mypy_cache,.pytest_cache,.vscode,__pycache__,_build,*.pyc,.vscode-server"
     ],
-    "python.linting.mypyEnabled": false,
-    "python.linting.mypyArgs": [
+    "mypy-type-checker.args": [
         "--allow-untyped-defs",
         "--allow-untyped-calls",
         "--allow-untyped-globals",
@@ -129,5 +177,9 @@
         "${workspaceFolder}/petl/util/",
         "${workspaceFolder}/petl/test/",
         "${workspaceFolder}/petl/test/io"
+    ],
+    "bandit.args": [
+        "--configfile",
+        "${workspaceFolder}/pyproject.toml"
     ]
 }
