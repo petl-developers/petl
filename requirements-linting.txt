@@ -1,0 +1,17 @@
+## Used as main formatter/linter:
+
+ruff >= 0.3
+
+# Used in Github:
+
+pylint >= 3.0.0
+flake8 >= 7.0.0
+black >= 24.0.0
+bandit[toml,sarif] >= 1.7.0
+
+## Suggestions:
+
+# pre-commit
+
+#? Obs: Should work with python >= 3.8
+
