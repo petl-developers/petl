@@ -1,0 +1,23 @@
+{
+    "recommendations": [
+        //
+        //-- Used for IDE, Workbench, Tools --------------------------------------------
+        //
+        "editorconfig.editorconfig",
+        "VisualStudioExptTeam.vscodeintellicode",
+        //
+        //-- Used for linters, formatters ----------------------------------------------
+        //
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "charliermarsh.ruff",
+        "njpwerner.autodocstring",
+        "njqdev.vscode-python-typehint",
+        // "ms-python.mypy-type-checker",
+        //
+        //-- Used for: Git, Code Quality -----------------------------------------------
+        //
+        "vivaxy.vscode-conventional-commits",
+        "codezombiech.gitignore",
+    ]
+}
