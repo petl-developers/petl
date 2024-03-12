@@ -31,7 +31,7 @@
             // Usage: "args": "${input:arguments}",
             "id": "arguments",
             "type": "promptString",
-            "description": "Which arguments to pass to the command?",
+            "description": "Which arguments to pass to the command?"
         },
         {
             // Usage: "cwd": "${input:debug_working_dir}"
