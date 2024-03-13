@@ -1,11 +1,13 @@
-from __future__ import print_function, absolute_import, division
-from setuptools import setup, find_packages
+from __future__ import absolute_import, division, print_function
 
+from setuptools import find_packages, setup
 
 setup(
     name='petl',
     author='Alistair Miles',
     author_email='alimanfoo@googlemail.com',
+    maintainer="Juarez Rudsatz",
+    maintainer_email="juarezr@gmail.com",
     package_dir={'': '.'},
     packages=find_packages('.'),
     scripts=['bin/petl'],
@@ -13,7 +15,7 @@ setup(
     license='MIT License',
     description='A Python package for extracting, transforming and loading '
                 'tables of data.',
-    long_description=open('README.txt').read(),
+    long_description=open('README.txt', encoding="utf-8").read(),
     python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*',
     setup_requires=["setuptools>18.0", "setuptools-scm>1.5.4"],
     extras_require={
@@ -49,6 +51,7 @@ setup(
                  'Programming Language :: Python :: 3.9',
                  'Programming Language :: Python :: 3.10',
                  'Programming Language :: Python :: 3.11',
+                 'Programming Language :: Python :: 3.12',
                  'Topic :: Software Development :: Libraries :: Python Modules'
                  ]
 )
