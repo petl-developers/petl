@@ -1,0 +1,95 @@
+#!/usr/bin/env -S bash -x -c 'docker compose --file docker-compose.yml up --detach'
+
+#region commands -----------------------------------------------------------------------------------
+
+#$ docker compose --file docker-compose.yml up --detach
+#$ docker compose --file docker-compose.yml down --remove-orphans -v --rmi local
+
+#$ docker exec --tty --interactive --privileged petl-xxxxxx /bin/bash
+
+#$ docker exec -it petl-postgres psql -U petl --dbname=petl
+#$ docker exec -it petl-msyql mysql --user=petl --database=petl --password=test
+
+#endregion -----------------------------------------------------------------------------------------
+
+#region docker composer ----------------------------------------------------------------------------
+
+---
+services:
+  postgres:
+    container_name: petl-postgres
+    hostname: petl_postgres
+    image: postgres:latest
+    environment:
+      - POSTGRES_USER=petl
+      - POSTGRES_PASSWORD=test
+      - POSTGRES_DB=petl
+      - POSTGRES_HOST_AUTH_METHOD=password
+    ports:
+      - "5432:5432/tcp"
+    restart: "unless-stopped"
+    stdin_open: true
+    tty: true
+    healthcheck:
+      test: ["CMD", "psql", "--host=localhost", "--username=petl", "--dbname=petl", "-c", "select 1 as ok"]
+      interval: 20s
+      timeout: 10s
+      retries: 5
+      start_period: 2s
+
+  mysql:
+    container_name: petl-mysql
+    hostname: petl_mysql
+    image: mysql:latest
+    ports:
+      - "3306:3306/tcp"
+      - "33060:33060/tcp"
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+      MYSQL_DATABASE: "petl"
+      MYSQL_USER: "petl"
+      MYSQL_PASSWORD: "test"
+      MYSQL_ROOT_PASSWORD: "pass0"
+    restart: "unless-stopped"
+    stdin_open: true
+    tty: true
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      interval: 20s
+      timeout: 10s
+      retries: 5
+      start_period: 2s
+
+  samba:
+    container_name: petl-samba
+    hostname: petl_samba
+    image: dperson/samba
+    ports:
+      - "137:137/udp"
+      - "138:138/udp"
+      - "139:139/tcp"
+      - "445:445/tcp"
+    tmpfs:
+      - /tmp
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
+    volumes:
+      - /mnt:/mnt:z
+      - /mnt2:/mnt2:z
+    command: '-s "public;/mnt;yes;no;yes;all" -s "mount2;/mnt2" -u "petl;test" -p'
+
+  sftp:
+    container_name: petl-sftp
+    hostname: petl_sftp
+    image: atmoz/sftp
+    ports:
+      - "22:22/tcp"
+    tmpfs:
+      - /tmp
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
+    command: 'petl:test:::public'
+
+#endregion -----------------------------------------------------------------------------------------
