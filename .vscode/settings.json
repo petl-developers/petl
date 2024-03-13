@@ -2,7 +2,8 @@
     //-- Editor settings for all files -------------------------------------------------
     //
     "editor.formatOnSave": false, // Using this for reducing git changes between commits
-    "editor.formatOnPaste": true,
+    "editor.formatOnPaste": false,
+    "editor.formatOnType": true,
     "editor.tabSize": 4,
     "editor.wordWrapColumn": 83,
     "editor.renderWhitespace": "boundary",
