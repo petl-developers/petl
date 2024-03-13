@@ -10,14 +10,18 @@
         //
         "ms-python.python",
         "ms-python.vscode-pylance",
+        "ms-python.debugpy",
         "charliermarsh.ruff",
         "njpwerner.autodocstring",
         "njqdev.vscode-python-typehint",
+        //
+        // "ms-python.pylint",
+        // "ms-python.flake8",
         // "ms-python.mypy-type-checker",
+        // "ms-python.isort",
         //
         //-- Used for: Git, Code Quality -----------------------------------------------
         //
-        "vivaxy.vscode-conventional-commits",
-        "codezombiech.gitignore"
+        "vivaxy.vscode-conventional-commits"
     ]
 }
