@@ -50,7 +50,7 @@ jobs:
           echo 'python_eol=yes' >> $GITHUB_ENV
 
       - name: Checkout source code
-        uses: actions/checkout@main
+        uses: actions/checkout@v4
 
       - name: Install linux tools
         if: matrix.os == 'ubuntu-latest'
@@ -60,13 +60,13 @@ jobs:
 
       - name: Set up Python ${{ matrix.python }}
         if: env.python_eol == 'no'
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}
 
       - name: Set up Python ${{ matrix.python }} discontinued on ${{ matrix.os }}
         if: env.python_eol == 'yes'
-        uses: MatteoH2O1999/setup-python@v1
+        uses: MatteoH2O1999/setup-python@v3
         with:
           python-version: ${{ matrix.python }}
           cache: pip
@@ -160,10 +160,10 @@ jobs:
 
     steps:
       - name: Checkout source code
-        uses: actions/checkout@main
+        uses: actions/checkout@v4
 
       - name: Set up Python ${{ matrix.python }}
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}
 
