@@ -36,6 +36,7 @@ on:
         - info
         - warning
         - debug
+  workflow_call:
 
 permissions:
   contents: read
