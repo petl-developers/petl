@@ -17,6 +17,9 @@ on:
 
 jobs:
   pypi:
+    strategy:
+      matrix:
+        python: ['3.10']
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source code
