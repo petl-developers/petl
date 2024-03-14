@@ -33,6 +33,7 @@ on:
         - info
         - warning
         - debug
+  workflow_call:
 
 jobs:
   analyze:
