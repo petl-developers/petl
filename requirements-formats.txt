@@ -13,4 +13,5 @@ fastavro==0.24.2 ; python_version < '3.0'
 gspread>=3.4.0 ; python_version >= '3.4'
 
 # version 3.9.2 fails with python3.12 on macos-latest: PyTables/PyTables#1093
-tables ; python_version <= '3.10'
+tables ; sys_platform != 'darwin'
+
