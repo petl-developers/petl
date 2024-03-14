@@ -23,7 +23,6 @@ on:
   #   branches: [ "master" ]
   workflow_run:
     workflows: [Test Changes]
-    branches: [ "master" ]
     types:
       - completed
   workflow_dispatch:
