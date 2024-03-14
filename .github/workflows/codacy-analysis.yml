@@ -16,8 +16,8 @@ name: Codacy Security Scan
 on:
   schedule:
     - cron: '59 11 27 * *'
-  push:
-    branches: [ "master" ]
+  # push:
+  #   branches: [ "master" ]
   # pull_request:
   #   # The branches below must be a subset of the branches above
   #   branches: [ "master" ]
