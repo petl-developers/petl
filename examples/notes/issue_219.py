@@ -11,21 +11,20 @@
 
 # <codecell>
 
-import sys
-sys.path.insert(0, '../src')
-import petl; print petl.VERSION
-from petl.fluent import etl
-import psycopg2
 import MySQLdb
+import psycopg2
+
+import petl
+from petl.fluent import etl
 
 # <codecell>
-
+print(petl.VERSION)
 tbl_dummy_data = etl().dummytable(100000)
 tbl_dummy_data.look()
 
 # <codecell>
 
-print tbl_dummy_data.nrows()
+print(tbl_dummy_data.nrows())
 
 # <headingcell level=2>
 
@@ -48,12 +47,12 @@ tbl_dummy_data.progress(10000).todb(psql_connection, 'issue_219')
 # <codecell>
 
 # memory usage using default cursor
-print etl.fromdb(psql_connection, 'select * from issue_219 order by foo').look(2)
+print(etl.fromdb(psql_connection, 'select * from issue_219 order by foo').look(2))
 
 # <codecell>
 
 # memory usage using server-side cursor
-print etl.fromdb(lambda: psql_connection.cursor(name='server-side'), 'select * from issue_219 order by foo').look(2)
+print(etl.fromdb(lambda: psql_connection.cursor(name='server-side'), 'select * from issue_219 order by foo').look(2))
 
 # <headingcell level=2>
 
@@ -77,10 +76,10 @@ tbl_dummy_data.progress(10000).todb(mysql_connection, 'issue_219')
 # <codecell>
 
 # memory usage with default cursor
-print etl.fromdb(mysql_connection, 'select * from issue_219 order by foo').look(2)
+print(etl.fromdb(mysql_connection, 'select * from issue_219 order by foo').look(2))
 
 # <codecell>
 
 # memory usage with server-side cursor
-print etl.fromdb(lambda: mysql_connection.cursor(MySQLdb.cursors.SSCursor), 'select * from issue_219 order by foo').look(2)
+print(etl.fromdb(lambda: mysql_connection.cursor(MySQLdb.cursors.SSCursor), 'select * from issue_219 order by foo').look(2))
 
