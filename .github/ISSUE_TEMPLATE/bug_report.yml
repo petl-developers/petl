@@ -1,0 +1,169 @@
+name: Bug Report
+description: File a bug report with detailed information to help us find the root cause
+title: "Bug: "
+labels: ["Bug"]
+# projects: ["petl-developers/petl"]
+# assignees:
+#   - juarezr
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Problem description
+
+        Thanks for taking the time to fill out this bug report!
+        Please erase example text in all fields bellow and fill with details of the bug you have found.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: |
+        Please explain:
+        - what the current output/behavior is
+        - what's the bug is preventing you from doing
+        - tell if it had worked before but regressed and stopped working
+      placeholder: Please, tell us a clear and concise description of what the bug is and how it manifests.
+      value: |
+        Example:
+          When performing a specific operation using petl function XYZ, the folloing warning is emitted:
+            DeprecationWarning: ABC is deprecated since Python 3.9 and will be removed in a subsequent version.
+            The only supported action are: other, alternative, and something else.
+          Furthermore, when using the same code on another context, I get this error instead:
+            Error: Something got wrong somewhere!
+    validations:
+      required: true
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: What is the expected behavior?
+      description: |
+        Please explain:
+        - what did you expect to happen.
+        - how the current behavior doesn't match the intended behavior.
+      placeholder: Please, tell us what did you expect to happen, what's the intended behavior.
+      value: |
+        Example:
+          I would expect to be able to use petl for doing the operation I need to do. 
+          In the current iteration, that is only possible if I do not use the other petl functionality.
+          Other operations, like working around the issue and doing somenthin else, also do not work. 
+          I've tried using other function as well, but it didn't change anything.
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        ## Scenario for Reprodution
+  - type: textarea
+    id: reproducible-test-case
+    attributes:
+      label: Reproducible test case
+      description: |
+        Please provide a minimal, reproducible code sample, a copy-pastable example if possible. 
+        This will be automatically formatted into code, so no need for backticks.
+      render: shell
+    validations:
+      required: false
+  - type: markdown
+    attributes:
+      value: |
+        ## Context Information
+  - type: input
+    id: petl-version
+    attributes:
+      label: What version of petl are you have found the bug?
+      description: Please fill the range of versions you confirmed the bug
+      placeholder: v1.7.15
+    validations:
+      required: true
+  - type: dropdown
+    id: python-version
+    attributes:
+      label: Version
+      description: What version of python are you running?
+      options:
+        - python 3.13+
+        - python 3.12
+        - python 3.11
+        - python 3.10
+        - python 3.9
+        - python 3.8
+        - python 3.7
+        - python 3.6
+        - python 3.5
+        - python 3.4
+        - python 3.3
+        - python 3.2
+        - python 3.1
+        - python 3.0
+        - python 2.7
+    validations:
+      required: true
+  - type: dropdown
+    id: operating-system
+    attributes:
+      label: What OS are you seeing the problem on?
+      options:
+        - Linux
+        - Windows
+        - MacOS
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: os-version
+    attributes:
+      label: What OS version are you using?
+      description: Operating system, distribution, and version
+      placeholder: cat /etc/os-release && uname -a
+    validations:
+      required: false
+  - type: dropdown
+    id: package-manager
+    attributes:
+      label: What package manager you used to install?
+      options:
+        - pip
+        - conda
+        - Source Code
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: installed-packages
+    attributes:
+      label: What's the current installed packages?
+      description: |
+        Also, if you think it might be relevant, please provide the output from ``pip freeze`` or
+        ``conda env export`` depending on which was used to install petl and other packages.
+    validations:
+      required: false
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log output
+      description: | 
+        Please copy and paste any relevant log output.
+        This will be automatically formatted into code, so no need for backticks.
+      render: shell
+    validations:
+      required: false
+  - type: markdown
+    attributes:
+      value: |
+        ## Additional context
+  - type: textarea
+    id: other-notes
+    attributes:
+      label: Additional Notes
+      description: Anything not covered or N/A
+      placeholder: n/a
+    validations:
+      required: false
+  - type: checkboxes
+    id: agree-to-code-of-conduct
+    attributes:
+      label: Code of Conduct
+      description: By submitting this issue, you agree to follow the project [Code of Conduct](https://github.com/petl-developers/petl/blob/master/CODE_OF_CONDUCT.md).
+      options:
+        - label: I agree to follow this project's Code of Conduct
+          required: true
