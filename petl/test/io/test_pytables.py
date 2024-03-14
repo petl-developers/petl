@@ -31,8 +31,7 @@ else:
         # set up a new hdf5 table to work with
         h5file = tables.open_file(f.name, mode='w', title='Test file')
         h5file.create_group('/', 'testgroup', 'Test Group')
-        h5table = h5file.create_table('/testgroup', 'testtable', FooBar,
-                                      'Test Table')
+        h5table = h5file.create_table('/testgroup', 'testtable', FooBar, 'Test Table')
 
         # load some data into the table
         table1 = (('foo', 'bar'),
