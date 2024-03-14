@@ -202,21 +202,24 @@ jobs:
           cd docs
           sphinx-build -W -b singlehtml -d ../build/doctrees . ../build/singlehtml
 
-  call-workflow-codeql:
-    needs: test-source-code
-    uses: ./.github/workflows/codeql-analysis.yml
-    permissions:
-      actions: read
-      contents: read
-      pull-requests: write
-      security-events: write
+  # TODO: 1 configuration not found: https://docs.github.com/en/actions/using-workflows/reusing-workflows#overview
+  # call-workflow-codeql:
+  #   needs: test-source-code
+  #   uses: ./.github/workflows/codeql-analysis.yml
+  #   permissions:
+  #     actions: read
+  #     contents: read
+  #     pull-requests: write
+  #     security-events: write
+  #   secrets: inherit # pass all secrets
 
-  call-workflow-codacity:
-    needs: test-source-code
-    uses: ./.github/workflows/codacy-analysis.yml
-    permissions:
-      actions: read
-      contents: read
-      pull-requests: write
-      security-events: write
+  # call-workflow-codacity:
+  #   needs: test-source-code
+  #   uses: ./.github/workflows/codacy-analysis.yml
+  #   permissions:
+  #     actions: read
+  #     contents: read
+  #     pull-requests: write
+  #     security-events: write
+  #   secrets: inherit # pass all secrets
 

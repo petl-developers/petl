@@ -16,11 +16,11 @@ name: Codacy Security Scan
 on:
   schedule:
     - cron: '59 11 27 * *'
-  # push:
-  #   branches: [ "master" ]
-  # pull_request:
-  #   branches: [ "master" ]
-  #   types: [opened, reopened, synchronize, ready_for_review]
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+    types: [opened, reopened, synchronize, ready_for_review]
   # workflow_run:
   #   workflows: [Test Changes]
   #   types:
