@@ -14,14 +14,16 @@ name: "CodeQL"
 on:
   schedule:
     - cron: '59 10 27 * *'
-  # push:
-  #   branches: [ "master" ]
-  # pull_request:
-  #   branches: [ "master" ]
-  workflow_run:
-    workflows: [Test Changes]
-    types:
-      - completed
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+    types: [opened, reopened, synchronize, ready_for_review]
+# workflow_run:
+  #   workflows: [Test Changes]
+  #   types:
+  #     - completed
+  workflow_call:
   workflow_dispatch:
     inputs:
       logLevel:
@@ -33,7 +35,6 @@ on:
         - info
         - warning
         - debug
-  workflow_call:
 
 jobs:
   analyze:
