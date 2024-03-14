@@ -23,6 +23,7 @@ on:
     branches: [ "master" ]
     types:
       - completed
+  workflow_dispatch:
 
 jobs:
   analyze:
