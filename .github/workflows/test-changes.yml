@@ -149,6 +149,16 @@ jobs:
       - name: Setup petl package
         run: python setup.py sdist bdist_wheel
 
+      - name: Install extra packages dependencies for mode full
+        if: env.testing == 'full'
+        run: python -m pip install --prefer-binary -r requirements-formats.txt
+
+      - name: List Installed Packages for Throubleshooting
+        run: |
+          echo "::group::List Installed Packages for Throubleshooting"
+          python -m pip list --format freeze
+          echo "::endgroup::"
+
       - name: Test python source code for mode simple
         if: env.testing == 'simple'
         run: pytest --cov=petl petl
@@ -156,9 +166,6 @@ jobs:
       - name: Test documentation inside source code for mode full
         if: env.testing == 'full'
         run: |
-          echo "::group::Install extra packages test dependencies"
-          python -m pip install --prefer-binary -r requirements-formats.txt
-          echo "::endgroup::"
           echo "::group::Perform doctest-modules execution with coverage"
           pytest --doctest-modules --cov=petl petl
           echo "::endgroup::"
