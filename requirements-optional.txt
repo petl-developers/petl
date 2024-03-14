@@ -2,13 +2,20 @@
 # Also check: .github/workflows/test-changes.yml
 
 # Throubleshooting: 
-# 1. $ export DISABLE_BLOSC_AVX2=1
-# 2. $ brew install c-blosc
+# 1.  $ export DISABLE_BLOSC_AVX2=1
+
+# 2.1 $ brew install c-blosc              # On macOS
+# 2.2 $ sudo apt-get install python3-dev  # On debian distros
+# 2.3 $ sudo dnf install python3-devel    # On debian distros
+
+# 3.1 $ sudo find / -iname "Python.h"
+# 3.2 $ export C_INCLUDE_PATH=/usr/include/python3.11/Python.h
+
 
 blosc  ; python_version >= '3.7'
 
 # Throubleshooting: 
-# 1. pip install --prefer-binary -r requirements-optional.txt
-# 2. pip install --prefer-binary bcolz
+# 1. $ pip install --prefer-binary -r requirements-optional.txt
+# 2. $ pip install --prefer-binary bcolz
 
 bcolz  ; python_version >= '3.7' and python_version < '3.10'
