@@ -1,0 +1,87 @@
+name: Feature request
+description: Suggest an idea for this project
+title: "Feature Request: "
+labels: ["Feature"]
+# projects: ["petl-developers/petl"]
+# assignees:
+#   - juarezr
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Feature request
+
+        Thanks for taking the time to fill out this feature request!
+  - type: textarea
+    id: request-objective
+    attributes:
+      label: Explain why petl needs this feature?
+      description: |
+        Please explain:
+        - What would you want to achieve with this request?
+        - Is your feature request related to a problem or shortcoming?
+        - Why the current behavior is a problem?
+      placeholder: Please, tell us a clear and concise description of the feature.
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        ## Desired Solution
+  - type: textarea
+    id: desired-solution
+    attributes:
+      label: Describe the solution you would like
+      description: |
+        Please explain:
+        - How you expect the feature would work.
+        - What is the expected output/behavior for this feature.
+        - What you think that shouldn't be done.
+      placeholder: Please, tell us what did you expect to happen, what's the intended behavior.
+    validations:
+      required: true
+  - type: textarea
+    id: solution-alternatives
+    attributes:
+      label: Describe alternatives solutions you would have considered
+      description: |
+        Please explain:
+        - If there are any any alternative solutions tha might work.
+        - If there is any workaround for the problem.
+        - Why this alternatives aren't satisfactory?
+    validations:
+      required: false
+  - type: markdown
+    attributes:
+      value: |
+        ## Suggestions
+  - type: textarea
+    id: source-code-example
+    attributes:
+      label: Source Code Examples
+      description: |
+        Whenever relevant, please provide a code sample, of what would be the syntax, the way you meant to use. 
+        This will be automatically formatted into code, so no need for backticks.
+      render: shell
+    validations:
+      required: false
+  - type: markdown
+    attributes:
+      value: |
+        ## Additional context
+  - type: textarea
+    id: other-notes
+    attributes:
+      label: Additional Notes
+      description: Anything not covered or N/A
+      placeholder: n/a
+    validations:
+      required: false
+  - type: checkboxes
+    id: agree-to-code-of-conduct
+    attributes:
+      label: Code of Conduct
+      description: By submitting this issue, you agree to follow the project [Code of Conduct](https://github.com/petl-developers/petl/blob/master/CODE_OF_CONDUCT.md).
+      options:
+        - label: I agree to follow this project's Code of Conduct
+          required: true
