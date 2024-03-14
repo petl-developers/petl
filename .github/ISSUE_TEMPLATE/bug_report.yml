@@ -60,7 +60,7 @@ body:
       description: |
         Please provide a minimal, reproducible code sample, a copy-pastable example if possible. 
         This will be automatically formatted into code, so no need for backticks.
-      render: shell
+      render: python
     validations:
       required: false
   - type: markdown
