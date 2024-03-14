@@ -204,8 +204,9 @@ jobs:
 
   call-workflow-codeql:
     needs: test-source-code
-    uses: ./.github/workflows/codeql-analysis.yml
+    uses: ./.github/workflows/codeql-analysis.yml@master
 
   call-workflow-codacity:
     needs: test-source-code
-    uses: ./.github/workflows/codacy-analysis.yml
+    uses: ./.github/workflows/codacy-analysis.yml@master
+
