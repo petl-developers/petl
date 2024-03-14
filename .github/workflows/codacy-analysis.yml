@@ -16,15 +16,16 @@ name: Codacy Security Scan
 on:
   schedule:
     - cron: '59 11 27 * *'
-  # push:
-  #   branches: [ "master" ]
-  # pull_request:
-  #   # The branches below must be a subset of the branches above
-  #   branches: [ "master" ]
-  workflow_run:
-    workflows: [Test Changes]
-    types:
-      - completed
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+    types: [opened, reopened, synchronize, ready_for_review]
+  # workflow_run:
+  #   workflows: [Test Changes]
+  #   types:
+  #     - completed
+  workflow_call:
   workflow_dispatch:
     inputs:
       logLevel:
@@ -36,7 +37,6 @@ on:
         - info
         - warning
         - debug
-  workflow_call:
 
 permissions:
   contents: read
