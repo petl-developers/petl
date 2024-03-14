@@ -204,9 +204,19 @@ jobs:
 
   call-workflow-codeql:
     needs: test-source-code
-    uses: ./.github/workflows/codeql-analysis.yml@master
+    uses: ./.github/workflows/codeql-analysis.yml
+    permissions:
+      actions: read
+      contents: read
+      pull-requests: write
+      security-events: write
 
   call-workflow-codacity:
     needs: test-source-code
-    uses: ./.github/workflows/codacy-analysis.yml@master
+    uses: ./.github/workflows/codacy-analysis.yml
+    permissions:
+      actions: read
+      contents: read
+      pull-requests: write
+      security-events: write
 
