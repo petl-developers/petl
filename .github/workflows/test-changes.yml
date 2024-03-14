@@ -201,3 +201,11 @@ jobs:
         run: |
           cd docs
           sphinx-build -W -b singlehtml -d ../build/doctrees . ../build/singlehtml
+
+  call-workflow-codeql:
+    needs: test-source-code
+    uses: ./.github/workflows/codeql-analysis.yml
+
+  call-workflow-codacity:
+    needs: test-source-code
+    uses: ./.github/workflows/codacy-analysis.yml
