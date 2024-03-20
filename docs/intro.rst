@@ -233,6 +233,23 @@ So, for example, a list of lists is a valid table container::
 
     >>> table = [['foo', 'bar'], ['a', 1], ['b', 2]]
 
+Please keep in mind that using batched data generators is forbidden:
+
+    >>> from itertools import batched
+    >>> def invalid_container_generator():
+    >>>     for data_rows_batch in batched([['foo', 'bar'], ['a', 1], ['b', 2], ['c', 3]], 2):
+    >>>         yield data_rows_batch
+    >>>
+    >>> table = invalid_container_generator()
+
+Generator used as table container should yield single data row at a time:
+
+    >>> def valid_container_generator():
+    >>>    for data_row in [['foo', 'bar'], ['a', 1], ['b', 2], ['c', 3]]:
+    >>>        yield data_row
+    >>>
+    >>> table = valid_container_generator()
+
 Note that an object returned by the :func:`csv.reader` function from the
 standard Python :mod:`csv` module is a table iterator and **not** a table
 container, because it can only be iterated over once. However, it is
