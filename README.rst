@@ -13,8 +13,8 @@ Resources
 
 :Documentation: http://petl.readthedocs.org/
 :PyPI: http://pypi.python.org/pypi/petl
-:Conda Forge:https://anaconda.org/conda-forge/petl
-:Mailing List: http://groups.google.com/group/python-etl
+:Conda: https://anaconda.org/conda-forge/petl
+:Discussion: http://groups.google.com/group/python-etl
 
 DevOps Status
 -------------
