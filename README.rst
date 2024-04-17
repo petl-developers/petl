@@ -11,10 +11,10 @@ loading tables of data.
 Resources
 ---------
 
-:Documentation: http://petl.readthedocs.org/
-:PyPI: http://pypi.python.org/pypi/petl
-:Conda: https://anaconda.org/conda-forge/petl
-:Discussion: http://groups.google.com/group/python-etl
+- Documentation: http://petl.readthedocs.org/
+- PyPI: http://pypi.python.org/pypi/petl
+- Conda: https://anaconda.org/conda-forge/petl
+- Discussion: http://groups.google.com/group/python-etl
 
 DevOps Status
 -------------
