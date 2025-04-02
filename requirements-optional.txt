@@ -18,4 +18,4 @@ blosc  ; python_version >= '3.7'
 # 1. $ pip install --prefer-binary -r requirements-optional.txt
 # 2. $ pip install --prefer-binary bcolz
 
-bcolz  ; python_version >= '3.7' and python_version < '3.10'
+bcolz  ; python_version >= '3.7' and python_version < '3.9.9'
