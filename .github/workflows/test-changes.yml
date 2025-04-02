@@ -44,7 +44,7 @@ jobs:
       # TODO: Also test on arm64, with PyPy and GraalPy @https://github.com/actions/setup-python/blob/main/docs/advanced-usage.md#graalpy
       matrix:
         #@ https://github.com/actions/runner-images#available-images
-        os: [ "ubuntu-latest", "windows-latest", "macos-latest" ]
+        os: [ "ubuntu-latest", "windows-latest", "macos-latest", "macos-latest-large" ]
         #@ https://github.com/marketplace/actions/setup-python
         #@ https://github.com/actions/setup-python/blob/main/docs/advanced-usage.md#python
         python: ['3.6', '3.7', '3.8', '3.9', '3.10', '3.11', '3.12']
@@ -65,6 +65,10 @@ jobs:
             os: "ubuntu-latest"
             mode: 'basic'
             install: 'yes'
+        exclude:
+          - os: 'macos-latest'
+            install: 'yes'
+            # macos-latest == macOS-14-arm64
 
     runs-on: "${{ matrix.os }}"
     steps:
