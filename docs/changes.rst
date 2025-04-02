@@ -1,6 +1,12 @@
 Changes
 =======
 
+Version 1.7.16
+--------------
+
+* Fix: Joining tables with uneven rows gives wrong result.
+  By :user:`MichalKarol`.
+
 Version 1.7.15
 --------------
 

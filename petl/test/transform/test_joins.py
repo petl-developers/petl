@@ -1,10 +1,23 @@
-from __future__ import absolute_import, print_function, division
+from __future__ import absolute_import, division, print_function
 
-
+from petl import (
+    antijoin,
+    crossjoin,
+    cut,
+    hashantijoin,
+    hashjoin,
+    hashleftjoin,
+    hashlookupjoin,
+    hashrightjoin,
+    join,
+    leftjoin,
+    lookupjoin,
+    outerjoin,
+    rightjoin,
+    sort,
+    unjoin,
+)
 from petl.test.helpers import ieq
-from petl import join, leftjoin, rightjoin, outerjoin, crossjoin, antijoin, \
-    lookupjoin, hashjoin, hashleftjoin, hashrightjoin, hashantijoin, \
-    hashlookupjoin, unjoin, sort, cut
 
 
 def _test_join_basic(join_impl):
@@ -207,6 +220,23 @@ def _test_join_multiple(join_impl):
     ieq(expect, actual)
 
 
+def _test_join_uneven_rows(join_impl):
+    table1 = (('id', 'colour'),
+              ('aa',),
+              ('bb', 'red'),
+              ('cc', 'purple'))
+    table2 = (('identifier', 'shape'),
+              ('aa', 'circle'),
+              ('cc',),
+              ('dd', 'ellipse'))
+
+    table3 = join_impl(table1, table2, lkey='id', rkey='identifier')
+    expect3 = (('id', 'colour', 'shape'),
+               ('aa', None, 'circle'),
+               ('cc', 'purple', None))
+    ieq(expect3, table3)
+
+
 def _test_join(join_impl):
     _test_join_basic(join_impl)
     _test_join_compound_keys(join_impl)
@@ -216,6 +246,7 @@ def _test_join(join_impl):
     _test_join_prefix(join_impl)
     _test_join_lrkey(join_impl)
     _test_join_multiple(join_impl)
+    _test_join_uneven_rows(join_impl)
 
 
 def test_join():
@@ -966,6 +997,20 @@ def test_crossjoin_prefix():
                (2, 'red', 3, 'square'))
     ieq(expect3, table3)
 
+def test_crossjoin_uneven_rows():
+    table1 = (('id', 'colour'),
+              (1,),
+              (2, 'red'))
+    table2 = (('id', 'shape'),
+              (1, 'circle'),
+              (3,))
+    table3 = crossjoin(table1, table2, prefix=True)
+    expect3 = (('1_id', '1_colour', '2_id', '2_shape'),
+               (1, None, 1, 'circle'),
+               (1, None, 3, None),
+               (2, 'red', 1, 'circle'),
+               (2, 'red', 3, None))
+    ieq(expect3, table3)
 
 def _test_antijoin_basics(antijoin_impl):
 
@@ -1049,12 +1094,30 @@ def _test_antijoin_lrkey(antijoin_impl):
                (5, 'white'))
     ieq(expect3, table3)
 
+def _test_antijoin_uneven_rows(antijoin_impl):
+    table1 = (('id', 'colour'),
+              (0,),
+              (1,),
+              (2, 'red'),
+              (4, 'yellow'),
+              (5, 'white'))
+    table2 = (('identifier', 'shape'),
+              (1,),
+              (3, 'square'))
+    table3 = antijoin_impl(table1, table2, lkey='id', rkey='identifier')
+    expect3 = (('id', 'colour'),
+               (0, None),
+               (2, 'red'),
+               (4, 'yellow'),
+               (5, 'white'))
+    ieq(expect3, table3)
 
 def _test_antijoin(antijoin_impl):
     _test_antijoin_basics(antijoin_impl)
     _test_antijoin_empty(antijoin_impl)
     _test_antijoin_novaluefield(antijoin_impl)
     _test_antijoin_lrkey(antijoin_impl)
+    _test_antijoin_uneven_rows(antijoin_impl)
 
 
 def test_antijoin():
@@ -1179,12 +1242,32 @@ def _test_lookupjoin_novaluefield(lookupjoin_impl):
     ieq(cut(expect, 'id'), actual)
 
 
+def _test_lookupjoin_uneven_rows(lookupjoin_impl):
+    table1 = (('id', 'color', 'cost'),
+              (1, 'blue',),
+              (2, 'red', 8),
+              (3, 'purple', 4))
+
+    table2 = (('identifier', 'shape', 'size'),
+              (1, 'circle', 'big'),
+              (2, 'square',),
+              (3, 'ellipse', 'small'))
+
+    actual = lookupjoin_impl(table1, table2, lkey='id', rkey='identifier')
+    expect = (('id', 'color', 'cost', 'shape', 'size'),
+              (1, 'blue', None, 'circle', 'big'),
+              (2, 'red', 8, 'square', None),
+              (3, 'purple', 4, 'ellipse', 'small'))
+    ieq(expect, actual)
+
+
 def _test_lookupjoin(lookupjoin_impl):
     _test_lookupjoin_1(lookupjoin_impl)
     _test_lookupjoin_2(lookupjoin_impl)
     _test_lookupjoin_prefix(lookupjoin_impl)
     _test_lookupjoin_lrkey(lookupjoin_impl)
     _test_lookupjoin_novaluefield(lookupjoin_impl)
+    _test_lookupjoin_uneven_rows(lookupjoin_impl)
 
 
 def test_lookupjoin():

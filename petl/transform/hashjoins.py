@@ -1,17 +1,16 @@
-from __future__ import absolute_import, print_function, division
-
+from __future__ import absolute_import, division, print_function
 
 import operator
+
 from petl.compat import next, text_type
-
-
-from petl.util.base import Table, asindices, rowgetter, iterpeek
-from petl.util.lookups import lookup, lookupone
+from petl.transform.basics import stack
 from petl.transform.joins import keys_from_args
+from petl.util.base import Table, asindices, iterpeek, rowgetter
+from petl.util.lookups import lookup, lookupone
 
 
 def hashjoin(left, right, key=None, lkey=None, rkey=None, cache=True,
-             lprefix=None, rprefix=None):
+             lprefix=None, rprefix=None, missing=None):
     """Alternative implementation of :func:`petl.transform.joins.join`, where
     the join is executed by constructing an in-memory lookup for the right
     hand table, then iterating over rows from the left hand table.
@@ -25,11 +24,16 @@ def hashjoin(left, right, key=None, lkey=None, rkey=None, cache=True,
     Left and right tables with different key fields can be handled via the
     `lkey` and `rkey` arguments.
 
+    .. versionchanged:: 1.7.16
+        To ensure correct results for tables with uneven rows, tables will be
+        squared up and rows will be filled with the value if `missing` keyword
+        argument before joining to ensure correct results.
+
     """
     
     lkey, rkey = keys_from_args(left, right, key, lkey, rkey)
     return HashJoinView(left, right, lkey=lkey, rkey=rkey, cache=cache,
-                        lprefix=lprefix, rprefix=rprefix)
+                        lprefix=lprefix, rprefix=rprefix, missing=missing)
 
 
 Table.hashjoin = hashjoin
@@ -38,9 +42,9 @@ Table.hashjoin = hashjoin
 class HashJoinView(Table):
     
     def __init__(self, left, right, lkey, rkey, cache=True, lprefix=None,
-                 rprefix=None):
-        self.left = left
-        self.right = right
+                 rprefix=None, missing=None):
+        self.left = stack(left, missing=missing)
+        self.right = stack(right, missing=missing)
         self.lkey = lkey
         self.rkey = rkey
         self.cache = cache
@@ -119,6 +123,10 @@ def hashleftjoin(left, right, key=None, lkey=None, rkey=None, missing=None,
     Left and right tables with different key fields can be handled via the
     `lkey` and `rkey` arguments.
 
+    .. versionchanged:: 1.7.16
+        To ensure correct results for tables with uneven rows, tables will be
+        squared up before joining to ensure correct results.
+
     """
 
     lkey, rkey = keys_from_args(left, right, key, lkey, rkey)
@@ -133,8 +141,8 @@ class HashLeftJoinView(Table):
     
     def __init__(self, left, right, lkey, rkey, missing=None, cache=True,
                  lprefix=None, rprefix=None):
-        self.left = left
-        self.right = right
+        self.left = stack(left, missing=missing)
+        self.right = stack(right, missing=missing)
         self.lkey = lkey
         self.rkey = rkey
         self.missing = missing
@@ -221,6 +229,10 @@ def hashrightjoin(left, right, key=None, lkey=None, rkey=None, missing=None,
     Left and right tables with different key fields can be handled via the
     `lkey` and `rkey` arguments.
 
+    .. versionchanged:: 1.7.16
+        To ensure correct results for tables with uneven rows, tables will be
+        squared up before joining to ensure correct results.
+
     """
 
     lkey, rkey = keys_from_args(left, right, key, lkey, rkey)
@@ -235,8 +247,8 @@ class HashRightJoinView(Table):
     
     def __init__(self, left, right, lkey, rkey, missing=None, cache=True,
                  lprefix=None, rprefix=None):
-        self.left = left
-        self.right = right
+        self.left = stack(left, missing=missing)
+        self.right = stack(right, missing=missing)
         self.lkey = lkey
         self.rkey = rkey
         self.missing = missing
@@ -385,6 +397,10 @@ def hashlookupjoin(left, right, key=None, lkey=None, rkey=None, missing=None,
     Left and right tables with different key fields can be handled via the
     `lkey` and `rkey` arguments.
 
+    .. versionchanged:: 1.7.16
+        To ensure correct results for tables with uneven rows, tables will be
+        squared up before joining to ensure correct results.
+
     """
 
     lkey, rkey = keys_from_args(left, right, key, lkey, rkey)
@@ -399,8 +415,8 @@ class HashLookupJoinView(Table):
 
     def __init__(self, left, right, lkey, rkey, missing=None, lprefix=None,
                  rprefix=None):
-        self.left = left
-        self.right = right
+        self.left = stack(left, missing=missing)
+        self.right = stack(right, missing=missing)
         self.lkey = lkey
         self.rkey = rkey
         self.missing = missing
