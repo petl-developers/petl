@@ -41,8 +41,12 @@ jobs:
     needs: run-guard
     strategy:
       fail-fast: false
+      # TODO: Also test on arm64, with PyPy and GraalPy @https://github.com/actions/setup-python/blob/main/docs/advanced-usage.md#graalpy
       matrix:
+        #@ https://github.com/actions/runner-images#available-images
         os: [ "ubuntu-latest", "windows-latest", "macos-latest" ]
+        #@ https://github.com/marketplace/actions/setup-python
+        #@ https://github.com/actions/setup-python/blob/main/docs/advanced-usage.md#python
         python: ['3.6', '3.7', '3.8', '3.9', '3.10', '3.11', '3.12']
         include:
           - python: '2.7'
