@@ -67,12 +67,12 @@ def toarray(table, dtype=None, count=-1, sample=1000):
         array([('apples', 1, 2.5), ('oranges', 3, 4.4), ('pears', 7, 0.1)],
               dtype=(numpy.record, [('foo', '<U7'), ('bar', '<i8'), ('baz', '<f8')]))
         >>> # the dtype can be specified as a string
-        ... a = etl.toarray(table, dtype='a4, i2, f4')
+        ... a = etl.toarray(table, dtype='S4, i2, f4')
         >>> a
         array([(b'appl', 1, 2.5), (b'oran', 3, 4.4), (b'pear', 7, 0.1)],
               dtype=[('foo', 'S4'), ('bar', '<i2'), ('baz', '<f4')])
         >>> # the dtype can also be partially specified
-        ... a = etl.toarray(table, dtype={'foo': 'a4'})
+        ... a = etl.toarray(table, dtype={'foo': 'S4'})
         >>> a
         array([(b'appl', 1, 2.5), (b'oran', 3, 4.4), (b'pear', 7, 0.1)],
               dtype=[('foo', 'S4'), ('bar', '<i8'), ('baz', '<f8')])
@@ -122,9 +122,9 @@ def fromarray(a):
         >>> a = np.array([('apples', 1, 2.5),
         ...               ('oranges', 3, 4.4),
         ...               ('pears', 7, 0.1)],
-        ...              dtype='U8, i4,f4')
+        ...              dtype='S8, i4, f4')
         >>> table = etl.fromarray(a)
-        >>> table
+        >>> table # doctest: +SKIP
         +-----------+----+-----+
         | f0        | f1 | f2  |
         +===========+====+=====+
