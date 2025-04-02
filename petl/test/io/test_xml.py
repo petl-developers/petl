@@ -356,7 +356,7 @@ def test_toxml00():
 def test_toxml01():
     _check_toxml(
         _TABLE1, _TABLE1,
-        check=('//tr', ('th', 'td')),
+        check=('.//tr', ('th', 'td')),
         root='table',
         head='thead/tr/th',
         rows='tbody/tr/td'
@@ -591,7 +591,7 @@ def test_toxml20():
 def test_toxml21():
     _check_toxml(
         _TABLE1, _TAB_HAZ,
-        check=('//row', 'col'),
+        check=('.//row', 'col'),
         root='book',
         head='thead/row/col',
         rows='tbody/row/col',
