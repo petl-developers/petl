@@ -49,25 +49,25 @@ jobs:
         #@ https://github.com/actions/setup-python/blob/main/docs/advanced-usage.md#python
         python: ['3.6', '3.7', '3.8', '3.9', '3.10', '3.11', '3.12']
         include:
+          # Default configuration for all jobs
+          - mode: 'full'
+          - install: 'no'
+          - primary: '3.8'
+          # Conditional configuration overrides
+          - python: '3.6'
+            install: 'yes'
+          - python: '3.7'
+            install: 'yes'
+          - os: 'windows-latest'
+            mode: 'basic'
+          # Additional Jobs not included in the matrix above
           - python: '2.7'
             os: "ubuntu-latest"
+            mode: 'basic'
+            install: 'yes'
 
     runs-on: "${{ matrix.os }}"
-    env:
-      testing: simple
-      python_eol: no
     steps:
-      - name: Determine what scope of testing is available on ${{ matrix.os }}
-        if: |
-          (matrix.python >= '3.' ) && ( matrix.os != 'windows-latest' )
-        run: |
-          echo 'testing=full' >> $GITHUB_ENV
-
-      - name: Determine if the python ${{ matrix.python }} is available on ${{ matrix.os }}
-        if: |
-          (matrix.python < '3.' ) || ( matrix.python == '3.6' && matrix.os == 'ubuntu-latest' )
-        run: |
-          echo 'python_eol=yes' >> $GITHUB_ENV
 
       - name: Checkout source code
         uses: actions/checkout@v4
@@ -78,14 +78,14 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends python3-h5py
 
-      - name: Set up Python ${{ matrix.python }}
-        if: env.python_eol == 'no'
+      - name: Set up Python ${{ matrix.python }} with install = ${{ matrix.install }}
+        if: matrix.install == 'no'
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}
 
       - name: Set up Python ${{ matrix.python }} discontinued on ${{ matrix.os }}
-        if: env.python_eol == 'yes'
+        if: matrix.install == 'yes'
         uses: MatteoH2O1999/setup-python@v3
         with:
           python-version: ${{ matrix.python }}
@@ -96,8 +96,8 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install --prefer-binary -r requirements-tests.txt
 
-      - name: Setup environment variables for remote filesystem testing
-        if: matrix.os == 'ubuntu-latest' && matrix.python == '3.8'
+      - name: Setup environment variables for remote filesystem testing with primary = ${{ matrix.primary }}
+        if: matrix.os == 'ubuntu-latest' && matrix.python == matrix.primary
         run: |
           echo "Setup SMB environment variable to trigger testing in Petl"
           echo 'PETL_TEST_SMB=smb://WORKGROUP;petl:test@localhost/public/' >> $GITHUB_ENV
@@ -107,8 +107,8 @@ jobs:
           python -m pip install --prefer-binary -r requirements-remote.txt
           echo "::endgroup::"
 
-      - name: Install optional test dependencies for mode ${{ env.testing }}
-        if: matrix.os == 'ubuntu-latest' && matrix.python >= '3.7'
+      - name: Install optional test dependencies with install = ${{ matrix.install }}
+        if: matrix.os == 'ubuntu-latest' && matrix.install == 'no'
         env:
           DISABLE_BLOSC_AVX2: 1
         run: |
@@ -120,8 +120,8 @@ jobs:
           # pip install --prefer-binary bcolz
           echo "::endgroup::"
 
-      - name: Install containers for remote filesystem testing
-        if: matrix.os == 'ubuntu-latest' && matrix.python == '3.8'
+      - name: Install containers for remote filesystem testing with install = ${{ matrix.install }}
+        if: matrix.os == 'ubuntu-latest' && matrix.install == 'no'
         run: |
           echo "::group::Setup docker for SMB at: ${{ env.PETL_TEST_SMB }}$"
           docker run -it --name samba -p 139:139 -p 445:445 -d "dperson/samba" -p -u "petl;test" -s "public;/public-dir;yes;no;yes;all"
@@ -130,8 +130,8 @@ jobs:
           docker run -it --name sftp -p 2244:22 -d atmoz/sftp petl:test:::public
           echo "::endgroup::"
 
-      - name: Install containers for remote database testing
-        if: matrix.os == 'ubuntu-latest' && matrix.python >= '3.6'
+      - name: Install containers for remote database testing for mode ${{ matrix.mode }}
+        if: matrix.os == 'ubuntu-latest' && matrix.mode == 'full'
         run: |
           echo "::group::Setup docker for MySQL"
           docker run -it --name mysql -p 3306:3306 -p 33060:33060 -e MYSQL_ROOT_PASSWORD=pass0 -e MYSQL_DATABASE=petl -e MYSQL_USER=petl -e MYSQL_PASSWORD=test -d mysql:latest
@@ -143,11 +143,11 @@ jobs:
           python -m pip install --prefer-binary -r requirements-database.txt
           echo "::endgroup::"
 
-      - name: Setup petl package
+      - name: Setup petl package for mode ${{ matrix.mode }}
         run: python setup.py sdist bdist_wheel
 
       - name: Install extra packages dependencies for mode full
-        if: env.testing == 'full'
+        if: matrix.mode == 'full'
         run: python -m pip install --prefer-binary -r requirements-formats.txt
 
       - name: List Installed Packages for Throubleshooting
@@ -157,18 +157,18 @@ jobs:
           echo "::endgroup::"
 
       - name: Test python source code for mode simple
-        if: env.testing == 'simple'
+        if: matrix.mode == 'simple'
         run: pytest --cov=petl petl
 
       - name: Test documentation inside source code for mode full
-        if: env.testing == 'full'
+        if: matrix.mode == 'full'
         run: |
           echo "::group::Perform doctest-modules execution with coverage"
           pytest --doctest-modules --cov=petl petl
           echo "::endgroup::"
 
-      - name: Coveralls
-        if: matrix.os == 'ubuntu-latest' && matrix.python == '3.8'
+      - name: Coveralls with primary = ${{ matrix.primary }}
+        if: matrix.os == 'ubuntu-latest' && matrix.python == matrix.primary
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
