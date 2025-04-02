@@ -130,7 +130,7 @@ jobs:
           docker run -it --name sftp -p 2244:22 -d atmoz/sftp petl:test:::public
           echo "::endgroup::"
 
-      - name: Install containers for remote database testing for mode ${{ matrix.mode }}
+      - name: Install containers for remote database testing with mode = ${{ matrix.mode }}
         if: matrix.os == 'ubuntu-latest' && matrix.mode == 'full'
         run: |
           echo "::group::Setup docker for MySQL"
@@ -143,7 +143,7 @@ jobs:
           python -m pip install --prefer-binary -r requirements-database.txt
           echo "::endgroup::"
 
-      - name: Setup petl package for mode ${{ matrix.mode }}
+      - name: Setup petl package with mode = ${{ matrix.mode }}
         run: python setup.py sdist bdist_wheel
 
       - name: Install extra packages dependencies for mode full
@@ -156,8 +156,8 @@ jobs:
           python -m pip list --format freeze
           echo "::endgroup::"
 
-      - name: Test python source code for mode simple
-        if: matrix.mode == 'simple'
+      - name: Test python source code for mode basic
+        if: matrix.mode == 'basic'
         run: pytest --cov=petl petl
 
       - name: Test documentation inside source code for mode full
@@ -175,7 +175,7 @@ jobs:
           python -m pip install --upgrade coveralls
           coveralls --service=github
 
-      - name: Print source code coverage
+      - name: Print source code coverage with mode = ${{ matrix.mode }}
         run: coverage report -m
 
   test-documentation:
