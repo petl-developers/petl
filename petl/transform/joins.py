@@ -1,18 +1,15 @@
-from __future__ import absolute_import, print_function, division
-
+from __future__ import absolute_import, division, print_function
 
 import itertools
 import operator
+
+from petl.comparison import Comparable, comparable_itemgetter
 from petl.compat import next, text_type
-
-
 from petl.errors import ArgumentError
-from petl.comparison import comparable_itemgetter, Comparable
-from petl.util.base import Table, asindices, rowgetter, rowgroupby, \
-    header, data
-from petl.transform.sorts import sort
-from petl.transform.basics import cut, cutout
+from petl.transform.basics import cut, cutout, stack
 from petl.transform.dedup import distinct
+from petl.transform.sorts import sort
+from petl.util.base import Table, asindices, data, header, rowgetter, rowgroupby
 
 
 def natural_key(left, right):
@@ -135,6 +132,10 @@ def join(left, right, key=None, lkey=None, rkey=None, presorted=False,
     Left and right tables with different key fields can be handled via the
     `lkey` and `rkey` arguments.
 
+    .. versionchanged:: 1.7.16
+        To ensure correct results for tables with uneven rows, tables will be
+        squared up before joining to ensure correct results.
+
     """
 
     # TODO don't read data twice (occurs if using natural key)
@@ -155,13 +156,12 @@ class JoinView(Table):
                  lprefix=None, rprefix=None):
         self.lkey = lkey
         self.rkey = rkey
-        if presorted:
-            self.left = left
-            self.right = right
-        else:
-            self.left = sort(left, lkey, buffersize=buffersize,
+        self.left = stack(left, missing=missing)
+        self.right = stack(right, missing=missing)
+        if not presorted:
+            self.left = sort(self.left, lkey, buffersize=buffersize,
                              tempdir=tempdir, cache=cache)
-            self.right = sort(right, rkey, buffersize=buffersize,
+            self.right = sort(self.right, rkey, buffersize=buffersize,
                               tempdir=tempdir, cache=cache)
         self.leftouter = leftouter
         self.rightouter = rightouter
@@ -212,6 +212,10 @@ def leftjoin(left, right, key=None, lkey=None, rkey=None, missing=None,
     Left and right tables with different key fields can be handled via the
     `lkey` and `rkey` arguments.
 
+    .. versionchanged:: 1.7.16
+        To ensure correct results for tables with uneven rows, tables will be
+        squared up before joining to ensure correct results.
+
     """
 
     # TODO don't read data twice (occurs if using natural key)
@@ -260,6 +264,10 @@ def rightjoin(left, right, key=None, lkey=None, rkey=None, missing=None,
 
     Left and right tables with different key fields can be handled via the
     `lkey` and `rkey` arguments.
+
+    .. versionchanged:: 1.7.16
+        To ensure correct results for tables with uneven rows, tables will be
+        squared up before joining to ensure correct results.
 
     """
 
@@ -312,6 +320,10 @@ def outerjoin(left, right, key=None, lkey=None, rkey=None, missing=None,
 
     Left and right tables with different key fields can be handled via the
     `lkey` and `rkey` arguments.
+
+    .. versionchanged:: 1.7.16
+        To ensure correct results for tables with uneven rows, tables will be
+        squared up before joining to ensure correct results.
 
     """
 
@@ -476,6 +488,10 @@ def crossjoin(*tables, **kwargs):
     If `prefix` is `True` then field names in the output table header will be
     prefixed by the index of the input table.
 
+    .. versionchanged:: 1.7.16
+        To ensure correct results for tables with uneven rows, tables will be
+        squared up before joining to ensure correct results.
+
     """
 
     return CrossJoinView(*tables, **kwargs)
@@ -487,8 +503,9 @@ Table.crossjoin = crossjoin
 class CrossJoinView(Table):
 
     def __init__(self, *sources, **kwargs):
-        self.sources = sources
         self.prefix = kwargs.get('prefix', False)
+        self.missing = kwargs.get('missing', None)
+        self.sources = [stack(source, missing=self.missing) for source in sources]
 
     def __iter__(self):
         return itercrossjoin(self.sources, self.prefix)
@@ -673,6 +690,10 @@ def lookupjoin(left, right, key=None, lkey=None, rkey=None, missing=None,
 
     See also :func:`petl.transform.joins.leftjoin`.
 
+    .. versionchanged:: 1.7.16
+        To ensure correct results for tables with uneven rows, tables will be
+        squared up before joining to ensure correct results.
+
     """
 
     lkey, rkey = keys_from_args(left, right, key, lkey, rkey)
@@ -690,13 +711,12 @@ class LookupJoinView(Table):
     def __init__(self, left, right, lkey, rkey, presorted=False, missing=None,
                  buffersize=None, tempdir=None, cache=True,
                  lprefix=None, rprefix=None):
-        if presorted:
-            self.left = left
-            self.right = right
-        else:
-            self.left = sort(left, lkey, buffersize=buffersize,
+        self.left = stack(left, missing=missing)
+        self.right = stack(right, missing=missing)
+        if not presorted:
+            self.left = sort(self.left, lkey, buffersize=buffersize,
                              tempdir=tempdir, cache=cache)
-            self.right = sort(right, rkey, buffersize=buffersize,
+            self.right = sort(self.right, rkey, buffersize=buffersize,
                               tempdir=tempdir, cache=cache)
         self.lkey = lkey
         self.rkey = rkey
