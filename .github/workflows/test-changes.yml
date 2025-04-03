@@ -47,7 +47,7 @@ jobs:
         os: [ "ubuntu-latest", "windows-latest", "macos-latest", "macos-13" ]
         #@ https://github.com/marketplace/actions/setup-python
         #@ https://github.com/actions/setup-python/blob/main/docs/advanced-usage.md#python
-        python: ['3.6', '3.7', '3.8', '3.9', '3.10', '3.11', '3.12']
+        python: ['3.6', '3.7', '3.8', '3.9', '3.10', '3.11', '3.12', '3.13']
         # TODO: Also test with PyPy and GraalPy @https://github.com/actions/setup-python/blob/main/docs/advanced-usage.md#graalpy
         include:
           # Default configuration for all jobs
