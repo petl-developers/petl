@@ -12,7 +12,7 @@
 # 3.2 $ export C_INCLUDE_PATH=/usr/include/python3.11/Python.h
 
 
-blosc  ; python_version >= '3.7'
+blosc  ; python_version >= '3.7' and python_version != '3.13'
 
 # Throubleshooting: 
 # 1. $ pip install --prefer-binary -r requirements-optional.txt
