@@ -61,9 +61,13 @@ jobs:
             install: 'yes'
           - os: 'windows-latest'
             mode: 'basic'
+          # Handle random test failures
+          - os: 'ubuntu-latest'
+            python: '3.9'
+            mode: 'basic'
           # Additional Jobs not included in the matrix above
           - python: '2.7'
-            os: "ubuntu-latest"
+            os: 'ubuntu-latest'
             mode: 'basic'
             install: 'yes'
         exclude:
