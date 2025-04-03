@@ -73,10 +73,10 @@ def lookup(table, key, value=None, dictionary=None):
         ... # object, including persistent dictionaries created via the
         ... # shelve module
         ... import shelve
-        >>> lkp = shelve.open('example.dat', flag='n')
+        >>> lkp = shelve.open('example1.dat', flag='n')
         >>> lkp = etl.lookup(table1, 'foo', 'bar', lkp)
         >>> lkp.close()
-        >>> lkp = shelve.open('example.dat', flag='r')
+        >>> lkp = shelve.open('example1.dat', flag='r')
         >>> lkp['a']
         [1]
         >>> lkp['b']
@@ -150,10 +150,10 @@ def lookupone(table, key, value=None, dictionary=None, strict=False):
         ... # object, including persistent dictionaries created via the
         ... # shelve module
         ... import shelve
-        >>> lkp = shelve.open('example.dat', flag='n')
+        >>> lkp = shelve.open('example2.dat', flag='n')
         >>> lkp = etl.lookupone(table1, 'foo', 'bar', lkp)
         >>> lkp.close()
-        >>> lkp = shelve.open('example.dat', flag='r')
+        >>> lkp = shelve.open('example2.dat', flag='r')
         >>> lkp['a']
         1
         >>> lkp['b']
@@ -213,13 +213,13 @@ def dictlookup(table, key, dictionary=None):
         ... # object, including persistent dictionaries created via the
         ... # shelve module
         ... import shelve
-        >>> lkp = shelve.open('example.dat', flag='n')
-        >>> lkp = etl.dictlookup(table1, 'foo', lkp)
-        >>> lkp.close()
-        >>> lkp = shelve.open('example.dat', flag='r')
-        >>> lkp['a']
+        >>> lok = shelve.open('example3.dat', flag='n')
+        >>> lok = etl.dictlookup(table1, 'foo', lok)
+        >>> lok.close()
+        >>> lup = shelve.open('example3.dat', flag='r')
+        >>> lup['a']
         [{'foo': 'a', 'bar': 1}]
-        >>> lkp['b']
+        >>> lup['b']
         [{'foo': 'b', 'bar': 2}, {'foo': 'b', 'bar': 3}]
 
     """
@@ -294,10 +294,10 @@ def dictlookupone(table, key, dictionary=None, strict=False):
         ... # object, including persistent dictionaries created via the
         ... # shelve module
         ... import shelve
-        >>> lkp = shelve.open('example.dat', flag='n')
+        >>> lkp = shelve.open('example4.dat', flag='n')
         >>> lkp = etl.dictlookupone(table1, 'foo', lkp)
         >>> lkp.close()
-        >>> lkp = shelve.open('example.dat', flag='r')
+        >>> lkp = shelve.open('example4.dat', flag='r')
         >>> lkp['a']
         {'foo': 'a', 'bar': 1}
         >>> lkp['b']
