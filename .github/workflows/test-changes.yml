@@ -77,6 +77,9 @@ jobs:
             python: '3.6'
           - os: 'macos-latest'
             python: '3.7'
+          # python 3.7 too slow on ubuntu-latest
+          - os: 'ubuntu-latest'
+            python: '3.7'
 
     runs-on: "${{ matrix.os }}"
     steps:
