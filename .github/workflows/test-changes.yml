@@ -66,9 +66,9 @@ jobs:
             mode: 'basic'
             install: 'yes'
         exclude:
+          # macos-latest == macOS-14-arm64
           - os: 'macos-latest'
             install: 'yes'
-            # macos-latest == macOS-14-arm64
 
     runs-on: "${{ matrix.os }}"
     steps:
