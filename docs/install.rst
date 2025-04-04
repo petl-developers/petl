@@ -21,8 +21,8 @@ To verify the installation, the test suite can be run with `pytest
     $ pip install pytest
     $ pytest -v petl
 
-:mod:`petl` has been tested with Python versions 2.7 and 3.4-3.6 
-under Linux and Windows operating systems.
+:mod:`petl` has been tested with Python versions 2.7 and 3.6-3.13
+under Linux, MacOS, and Windows operating systems.
 
 .. _intro_dependencies:
 
