@@ -4,6 +4,12 @@ Changes
 Version 1.7.16
 --------------
 
+* CI: added jobs for testing petl with python 3.13 and macos-13 on Intel platform
+  By :user:`juarezr`, :issue:`675`.
+
+* CI: workaround for actions/setup-python as Github removed support for python 3.7
+  By :user:`juarezr`, :issue:`675`.
+
 * Fix: Joining tables with uneven rows gives wrong result.
   By :user:`MichalKarol`.
 
