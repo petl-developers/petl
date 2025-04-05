@@ -58,10 +58,10 @@ see the :ref:`genindex`.
    transform
    util
    config
-   changes
    contributing
    acknowledgments
    related_work
+   changes
 
 Indices and tables
 ------------------
