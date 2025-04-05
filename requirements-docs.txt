@@ -3,3 +3,8 @@
 sphinx
 sphinx-issues
 rinohtype
+
+# Used for generating docs version from Git
+
+setuptools
+setuptools-scm
