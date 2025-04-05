@@ -11,8 +11,8 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-import sys, os
-
+import os
+import sys
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -211,6 +211,16 @@ latex_documents = [
 
 # If false, no module index is generated.
 #latex_domain_indices = True
+
+
+# -- Options for PDF output ---------------------------------------------------
+
+# https://www.mos6581.org/rinohtype/master/quickstart.html#sphinx-builder
+
+rinoh_documents = [dict(doc='index',        # top-level file (index.rst)
+                        author='Alistair Miles',
+                        title='petl Documentation',
+                        target='manual')]   # output file (manual.pdf)
 
 
 # -- Options for manual page output --------------------------------------------
