@@ -1,5 +1,5 @@
-setuptools
-setuptools_scm
+# Used in tox.ini @ py3x-docs
+
 sphinx
 sphinx-issues
-mock
+rinohtype
