@@ -659,7 +659,10 @@ def iterrecords(table, *sliceargs, **kwargs):
         yield Record(row, flds, missing=missing)
 
 
-def expr(s):
+_RESTRICTED = None
+
+
+def expr(expression_text):
     """
     Construct a function operating on a table record.
 
@@ -678,7 +681,32 @@ def expr(s):
     def repl(matchobj):
         return "rec['%s']" % matchobj.group(1)
 
-    return eval("lambda rec: " + prog.sub(repl, s))
+    global _RESTRICTED
+    if _RESTRICTED is None:
+        _RESTRICTED = {
+            "__builtins__": None,
+            "__class__": None,
+            "__package__": None,
+            "__loader__": None,
+            "__spec__": None,
+            "__file__": None,
+            "__cached__": None,
+            "__dict__": None,
+            "__import__": None,
+            "__path__": None,
+            "__main__": None,
+            "__name__": None,
+            "__doc__": None
+        }
+        nomods = {k: None for k in sys.modules if "." not in k}
+        _RESTRICTED.update(nomods)
+
+    strexpr = "lambda rec: " + prog.sub(repl, expression_text)
+    try:
+        fun = eval(strexpr, _RESTRICTED, _RESTRICTED)
+        return fun
+    except ValueError as ve:
+        raise ValueError('Invalid expression: "%s" causes error: %s' % (strexpr, ve))
 
 
 def rowgroupby(table, key, value=None):
