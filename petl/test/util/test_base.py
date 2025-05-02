@@ -6,7 +6,7 @@ from petl.errors import FieldSelectionError
 from petl.test.helpers import ieq, eq_
 from petl.compat import next
 from petl.util.base import header, fieldnames, data, dicts, records, \
-    namedtuples, itervalues, values, rowgroupby
+    namedtuples, itervalues, values, rowgroupby, expr
 
 
 def test_header():
@@ -330,3 +330,18 @@ def test_rowgroupby_headerless():
     table = []
     with pytest.raises(FieldSelectionError):
         rowgroupby(table, 'foo')
+
+
+def test_expr_ok():
+    fu = expr("2")
+    res = fu(2)
+    assert res == 2
+
+
+def test_expr_inject():
+    with pytest.raises(Exception) as exc_info:
+        fu = expr("__import__('os').system('ls')")
+        res = fu(2)
+        if res:
+            print(res)
+    assert exc_info is not None
