@@ -659,7 +659,7 @@ def iterrecords(table, *sliceargs, **kwargs):
         yield Record(row, flds, missing=missing)
 
 
-def expr(s):
+def expr(expression_text):
     """
     Construct a function operating on a table record.
 
@@ -678,7 +678,12 @@ def expr(s):
     def repl(matchobj):
         return "rec['%s']" % matchobj.group(1)
 
-    return eval("lambda rec: " + prog.sub(repl, s))
+    strexpr = "lambda rec: " + prog.sub(repl, expression_text)
+    try:
+        fun = eval(strexpr, { '__builtins__': None }, { '__builtins__': None })
+        return fun
+    except ValueError as ve:
+        raise ValueError('Invalid expression: %s' % strexpr) from ve
 
 
 def rowgroupby(table, key, value=None):
