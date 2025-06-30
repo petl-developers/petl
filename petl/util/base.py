@@ -1,19 +1,37 @@
-from __future__ import absolute_import, print_function, division
+from __future__ import absolute_import, division, print_function
 
-
-import re
-from itertools import islice, chain, cycle, product,\
-    permutations, combinations, takewhile, dropwhile, \
-    starmap, groupby, tee
 import operator
-from collections import Counter, namedtuple, OrderedDict
-from itertools import compress, combinations_with_replacement
-from petl.compat import imap, izip, izip_longest, ifilter, ifilterfalse, \
-    reduce, next, string_types, text_type
+import re
+from collections import Counter, OrderedDict, namedtuple
+from itertools import (
+    chain,
+    combinations,
+    combinations_with_replacement,
+    compress,
+    cycle,
+    dropwhile,
+    groupby,
+    islice,
+    permutations,
+    product,
+    starmap,
+    takewhile,
+    tee,
+)
 
-
-from petl.errors import FieldSelectionError
 from petl.comparison import comparable_itemgetter
+from petl.compat import (
+    ifilter,
+    ifilterfalse,
+    imap,
+    izip,
+    izip_longest,
+    next,
+    reduce,
+    string_types,
+    text_type,
+)
+from petl.errors import FieldSelectionError
 
 
 class IterContainer(object):
@@ -683,7 +701,7 @@ def expr(expression_text):
         fun = eval(strexpr, { '__builtins__': None }, { '__builtins__': None })
         return fun
     except ValueError as ve:
-        raise ValueError('Invalid expression: %s' % strexpr) from ve
+        raise ValueError('Invalid expression: "%s" causes error: %s' % (strexpr, ve))
 
 
 def rowgroupby(table, key, value=None):
