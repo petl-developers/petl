@@ -678,7 +678,7 @@ def iterrecords(table, *sliceargs, **kwargs):
         yield Record(row, flds, missing=missing)
 
 
-__RESTRICTED = None
+_RESTRICTED = None
 
 
 def expr(expression_text):
@@ -700,10 +700,9 @@ def expr(expression_text):
     def repl(matchobj):
         return "rec['%s']" % matchobj.group(1)
 
-    strexpr = "lambda rec: " + prog.sub(repl, expression_text)
-    if __RESTRICTED is None:
-        nomods = {k: None for k in sys.modules if "." not in k}
-        noglobs = {
+    global _RESTRICTED
+    if _RESTRICTED is None:
+        _RESTRICTED = {
             "__builtins__": None,
             "__class__": None,
             "__package__": None,
@@ -716,12 +715,14 @@ def expr(expression_text):
             "__path__": None,
             "__main__": None,
             "__name__": None,
-            "__doc__": None,
-            **nomods
+            "__doc__": None
         }
-        __RESTRICTED = dict(noglobs.items() + nomods.items())
+        nomods = {k: None for k in sys.modules if "." not in k}
+        _RESTRICTED.update(nomods)
+
+    strexpr = "lambda rec: " + prog.sub(repl, expression_text)
     try:
-        fun = eval(strexpr, __RESTRICTED, __RESTRICTED)
+        fun = eval(strexpr, _RESTRICTED, _RESTRICTED)
         return fun
     except ValueError as ve:
         raise ValueError('Invalid expression: "%s" causes error: %s' % (strexpr, ve))
