@@ -2,6 +2,7 @@ from __future__ import absolute_import, division, print_function
 
 import operator
 import re
+import sys
 from collections import Counter, OrderedDict, namedtuple
 from itertools import (
     chain,
@@ -698,7 +699,24 @@ def expr(expression_text):
 
     strexpr = "lambda rec: " + prog.sub(repl, expression_text)
     try:
-        fun = eval(strexpr, { '__builtins__': None }, { '__builtins__': None })
+        nomods = {k: None for k in sys.modules if "." not in k}
+        restricted = {
+            "__builtins__": None,
+            "__class__": None,
+            "__package__": None,
+            "__loader__": None,
+            "__spec__": None,
+            "__file__": None,
+            "__cached__": None,
+            "__dict__": None,
+            "__import__": None,
+            "__path__": None,
+            "__main__": None,
+            "__name__": None,
+            "__doc__": None,
+            **nomods
+        }
+        fun = eval(strexpr, restricted, restricted)
         return fun
     except ValueError as ve:
         raise ValueError('Invalid expression: "%s" causes error: %s' % (strexpr, ve))
