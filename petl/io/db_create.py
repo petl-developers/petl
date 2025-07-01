@@ -100,6 +100,9 @@ def make_sqlalchemy_column(col, colname, constraints=True):
     elif all(isinstance(v, datetime.time) for v in col_not_none):
         sql_column_type = sqlalchemy.Time
 
+    elif all(isinstance(v, (dict, list)) for v in col_not_none):
+        sql_column_type = sqlalchemy.JSON
+
     else:
         sql_column_type = sqlalchemy.String
         if constraints:
