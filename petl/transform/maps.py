@@ -12,7 +12,7 @@ from petl.util.base import Table, expr, rowgroupby, Record
 from petl.transform.sorts import sort
 
 
-def fieldmap(table, mappings=None, failonerror=None, errorvalue=None):
+def fieldmap(table, mappings=None, failonerror=None, errorvalue=None, trusted=True):
     """
     Transform a table, mapping fields arbitrarily between input and output.
     E.g.::
@@ -54,12 +54,15 @@ def fieldmap(table, mappings=None, failonerror=None, errorvalue=None):
     Note also that the mapping value can be an expression string, which will be
     converted to a lambda function via :func:`petl.util.base.expr`.
 
+    The ``trusted`` keyword argument can be used to specify whether the
+    expression is trusted. See `:func:`petl.util.base.expr` for details.
+
     The `failonerror` and `errorvalue` keyword arguments are documented
     under :func:`petl.config.failonerror`
     """
 
     return FieldMapView(table, mappings=mappings, failonerror=failonerror,
-                        errorvalue=errorvalue)
+                        errorvalue=errorvalue, trusted=trusted)
 
 
 Table.fieldmap = fieldmap
@@ -68,7 +71,7 @@ Table.fieldmap = fieldmap
 class FieldMapView(Table):
 
     def __init__(self, source, mappings=None, failonerror=None,
-                 errorvalue=None):
+                 errorvalue=None, trusted=True):
         self.source = source
         if mappings is None:
             self.mappings = OrderedDict()
@@ -77,16 +80,17 @@ class FieldMapView(Table):
         self.failonerror = (config.failonerror if failonerror is None
                                 else failonerror)
         self.errorvalue = errorvalue
+        self.trusted = trusted
 
     def __setitem__(self, key, value):
         self.mappings[key] = value
 
     def __iter__(self):
         return iterfieldmap(self.source, self.mappings, self.failonerror,
-                            self.errorvalue)
+                            self.errorvalue, self.trusted)
 
 
-def iterfieldmap(source, mappings, failonerror, errorvalue):
+def iterfieldmap(source, mappings, failonerror, errorvalue, trusted):
     it = iter(source)
     try:
         hdr = next(it)
@@ -103,7 +107,7 @@ def iterfieldmap(source, mappings, failonerror, errorvalue):
         elif isinstance(m, int) and m < len(hdr):
             mapfuns[outfld] = operator.itemgetter(m)
         elif isinstance(m, string_types):
-            mapfuns[outfld] = expr(m)
+            mapfuns[outfld] = expr(m, trusted=trusted)
         elif callable(m):
             mapfuns[outfld] = m
         elif isinstance(m, (tuple, list)) and len(m) == 2:

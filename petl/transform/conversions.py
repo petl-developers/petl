@@ -203,6 +203,9 @@ def convert(table, *args, **kwargs):
     Also accepts `failonerror` and `errorvalue` keyword arguments,
     documented under :func:`petl.config.failonerror`
 
+    The ``trusted`` keyword argument can be used to specify whether the
+    expression is trusted. See `:func:`petl.util.base.expr` for details.
+
     """
 
     converters = None
@@ -325,7 +328,7 @@ Table.convertnumbers = convertnumbers
 class FieldConvertView(Table):
 
     def __init__(self, source, converters=None, failonerror=None,
-                 errorvalue=None, where=None, pass_row=False):
+                 errorvalue=None, where=None, pass_row=False, trusted=True):
         self.source = source
         if converters is None:
             self.converters = dict()
@@ -340,17 +343,18 @@ class FieldConvertView(Table):
         self.errorvalue = errorvalue
         self.where = where
         self.pass_row = pass_row
+        self.trusted = trusted
 
     def __iter__(self):
         return iterfieldconvert(self.source, self.converters, self.failonerror,
-                                self.errorvalue, self.where, self.pass_row)
+                                self.errorvalue, self.where, self.pass_row, self.trusted)
 
     def __setitem__(self, key, value):
         self.converters[key] = value
 
 
 def iterfieldconvert(source, converters, failonerror, errorvalue, where,
-                     pass_row):
+                     pass_row, trusted):
 
     # grab the fields in the source table
     it = iter(source)
@@ -427,7 +431,7 @@ def iterfieldconvert(source, converters, failonerror, errorvalue, where,
 
     # prepare where function
     if isinstance(where, string_types):
-        where = expr(where)
+        where = expr(where, trusted=trusted)
     elif where is not None:
         assert callable(where), 'expected callable for "where" argument, ' \
                                 'found %r' % where

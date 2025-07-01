@@ -320,3 +320,25 @@ def test_recordmapmany_headerless():
     expect = []
     ieq(expect, actual)
     ieq(expect, actual)  # can iteratate twice?
+
+
+def test_fieldmap_untrusted():
+    table = (('id', 'sex', 'age', 'height', 'weight'),
+             (1, 'male', 16, 1.45, 62.0),
+             (2, 'female', 19, 1.34, 55.4),
+             (3, 'female', 17, 1.78, 74.4),
+             (4, 'male', 21, 1.33, 45.2),
+             (5, '-', 25, 1.65, 51.9))
+
+    expect = (('subject_id', 'bmi'),
+              (1, 62.0 / 1.45 ** 2),
+              (2, 55.4 / 1.34 ** 2),
+              (3, 74.4 / 1.78 ** 2),
+              (4, 45.2 / 1.33 ** 2),
+              (5, 51.9 / 1.65 ** 2))
+
+    # do it with suffix
+    actual = fieldmap(table, trusted=True)
+    actual['subject_id'] = 'id'
+    actual['bmi'] = '{weight} / {height}**2'
+    ieq(expect, actual)

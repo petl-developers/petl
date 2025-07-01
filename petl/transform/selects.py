@@ -57,17 +57,21 @@ def select(table, *args, **kwargs):
     The complement of the selection can be returned (i.e., the query can be
     inverted) by providing `complement=True` as a keyword argument.
 
+    The ``trusted`` keyword argument can be used to specify whether the
+    expression is trusted. See `:func:`petl.util.base.expr` for details.
+
     """
 
     missing = kwargs.get('missing', None)
     complement = kwargs.get('complement', False)
+    trusted = kwargs.get('trusted', True)
 
     if len(args) == 0:
         raise ArgumentError('missing positional argument')
     elif len(args) == 1:
         where = args[0]
         if isinstance(where, string_types):
-            where = expr(where)
+            where = expr(where, trusted=trusted)
         else:
             assert callable(where), 'second argument must be string or callable'
         return RowSelectView(table, where, missing=missing,
