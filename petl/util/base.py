@@ -1,7 +1,7 @@
-from __future__ import absolute_import, print_function, division
-
+from __future__ import absolute_import, division, print_function
 
 import re
+import sys
 from itertools import islice, chain, cycle, product,\
     permutations, combinations, takewhile, dropwhile, \
     starmap, groupby, tee
@@ -9,7 +9,7 @@ import operator
 from collections import Counter, namedtuple, OrderedDict
 from itertools import compress, combinations_with_replacement
 from petl.compat import imap, izip, izip_longest, ifilter, ifilterfalse, \
-    reduce, next, string_types, text_type
+    reduce, next, string_types, text_type, PY3
 
 
 from petl.errors import FieldSelectionError
@@ -660,9 +660,11 @@ def iterrecords(table, *sliceargs, **kwargs):
 
 
 _RESTRICTED = None
+_expr_impl = None
+_expr_regex = None
 
 
-def expr(expression_text):
+def expr(expression_text, trusted=True):
     """
     Construct a function operating on a table record.
 
@@ -674,12 +676,62 @@ def expr(expression_text):
     So, e.g., the expression string ``"{foo} * {bar}"`` is converted to the
     function ``lambda rec: rec['foo'] * rec['bar']``
 
+    The ``trusted`` keyword argument can be used to specify whether the
+    expression is trusted and doesn't contains any type of code injection.
+    If the expression is trusted, it will be evaluated using ``eval``,
+    otherwise it will be evaluated using the `asteval` library if available.
+
+    Note that in further versions of petl, the default value of ``trusted`` 
+    will change to ``False``.
     """
 
-    prog = re.compile(r'\{([^}]+)\}')
+    global _expr_impl
+    if _expr_impl is None:
+        _expr_impl = _unsafe_expr
+        if trusted is not None and not trusted and PY3:
+            try:
+                import asteval # noqa: F401
+                _expr_impl = _safe_expr
+            except ImportError:
+                pass
 
-    def repl(matchobj):
+    def _expr_repl(matchobj):
         return "rec['%s']" % matchobj.group(1)
+
+    global _expr_regex
+    if _expr_regex is None:
+        _expr_regex = re.compile(r'\{([^}]+)\}')
+    strexpr = _expr_regex.sub(_expr_repl, expression_text)
+
+    return _expr_impl(strexpr)
+
+
+class PetlAstEval(object):
+    def __init__(self, expression_text):
+        from asteval import Interpreter
+
+        self.aeval = Interpreter()
+        code = "def expr(rec):\n    return %s\n" % expression_text
+        self.aeval(code)
+
+    def __repr__(self):
+        return self.aeval.expr
+    
+    def __call__(self, rec):
+            self.aeval.symtable['rec'] = rec
+            evaluated = self.aeval("expr(rec)")
+            if len(self.aeval.error) > 0:
+                err = [ e.get_error()[-1] for e in self.aeval.error ]
+                msg = "\n".join(err)
+                raise ValueError("Failed to evaluate expression due to: %s" % msg)
+            return evaluated
+
+def _safe_expr(expression_text):
+    evaluator = PetlAstEval(expression_text)
+    return evaluator
+
+
+def _unsafe_expr(expression_text):
 
     global _RESTRICTED
     if _RESTRICTED is None:
@@ -701,7 +753,7 @@ def expr(expression_text):
         nomods = {k: None for k in sys.modules if "." not in k}
         _RESTRICTED.update(nomods)
 
-    strexpr = "lambda rec: " + prog.sub(repl, expression_text)
+    strexpr = "lambda rec: " + expression_text
     try:
         fun = eval(strexpr, _RESTRICTED, _RESTRICTED)
         return fun
