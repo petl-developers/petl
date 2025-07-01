@@ -339,3 +339,19 @@ def test_facet_empty():
     table = (('foo', 'bar'),)
     actual = facet(table, 'foo')
     eq_(list(), list(actual.keys()))
+
+
+def test_select_untrusted():
+ 
+    table = (('foo', 'bar', 'baz'),
+             ('a', 4, 9.3),
+             ('a', 2, 88.2),
+             ('b', 1, 23.3),
+             ('c', 8, 42.0),
+             ('d', 7, 100.9),
+             ('c', 2))
+
+    actual = select(table, "{foo} == 'a' and {bar} > 3", trusted=False)
+    expect = (('foo', 'bar', 'baz'),
+              ('a', 4, 9.3))
+    ieq(expect, actual)
