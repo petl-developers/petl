@@ -4,9 +4,9 @@ import pytest
 
 from petl.errors import FieldSelectionError
 from petl.test.helpers import ieq, eq_
-from petl.compat import next
+from petl.compat import PY3, next
 from petl.util.base import header, fieldnames, data, dicts, records, \
-    namedtuples, itervalues, values, rowgroupby
+    namedtuples, itervalues, values, rowgroupby, expr
 
 
 def test_header():
@@ -330,3 +330,58 @@ def test_rowgroupby_headerless():
     table = []
     with pytest.raises(FieldSelectionError):
         rowgroupby(table, 'foo')
+
+
+def test_expr_ok():
+    fu = expr("{foo} * {bar}")
+    res = fu({'foo': 3, 'bar': 2})
+    eq_(6, res)
+
+
+def test_expr_nok():
+    fu = expr("{foo2} * {bar2}", trusted=True)
+    with pytest.raises(KeyError) as exc_info:
+        fu({'foo': 3, 'bar': 2})
+        assert exc_info is not None
+
+
+def test_expr_inject():
+    with pytest.raises(Exception) as exc_info:
+        # trick: using trusted=None will allow to skip using asteval
+        fu = expr("__import__('os').system('ls')", trusted=None)
+        fu({'foo': 3, 'bar': 2})
+        assert exc_info is not None
+
+
+def _has_asteval():
+    if PY3:
+        try:
+            import asteval
+            return True
+        except ImportError:
+            pass
+    return False
+
+
+def test_expr_untrusted():
+    if _has_asteval():
+        with pytest.raises((ValueError, TypeError)) as exc_info:
+            _fu = expr("__import__('os').system('ls')", trusted=False)
+            if _fu is not None:
+                _fu({'foo': 3, 'bar': 2})
+            assert exc_info is not None
+
+
+def test_expr_ok_untrusted():
+    if _has_asteval():
+        fu = expr("{foo} * {bar}")
+        res = fu({'foo': 3, 'bar': 2})
+        eq_(6, res)
+
+
+def test_expr_nok_untrusted():
+    if _has_asteval():
+        fu = expr("{foo2} * {bar2}", trusted=True)
+        with pytest.raises(KeyError) as exc_info:
+            fu({'foo': 3, 'bar': 2})
+            assert exc_info is not None

@@ -1,19 +1,39 @@
-from __future__ import absolute_import, print_function, division
+from __future__ import absolute_import, division, print_function
 
-
-import re
-from itertools import islice, chain, cycle, product,\
-    permutations, combinations, takewhile, dropwhile, \
-    starmap, groupby, tee
 import operator
-from collections import Counter, namedtuple, OrderedDict
-from itertools import compress, combinations_with_replacement
-from petl.compat import imap, izip, izip_longest, ifilter, ifilterfalse, \
-    reduce, next, string_types, text_type
+import re
+import sys
+from collections import Counter, OrderedDict, namedtuple
+from itertools import (
+    chain,
+    combinations,
+    combinations_with_replacement,
+    compress,
+    cycle,
+    dropwhile,
+    groupby,
+    islice,
+    permutations,
+    product,
+    starmap,
+    takewhile,
+    tee,
+)
 
-
-from petl.errors import FieldSelectionError
 from petl.comparison import comparable_itemgetter
+from petl.compat import (
+    PY3,
+    ifilter,
+    ifilterfalse,
+    imap,
+    izip,
+    izip_longest,
+    next,
+    reduce,
+    string_types,
+    text_type,
+)
+from petl.errors import FieldSelectionError
 
 
 class IterContainer(object):
@@ -659,7 +679,12 @@ def iterrecords(table, *sliceargs, **kwargs):
         yield Record(row, flds, missing=missing)
 
 
-def expr(s):
+_RESTRICTED = None
+_expr_impl = None
+_expr_regex = None
+
+
+def expr(expression_text, trusted=True):
     """
     Construct a function operating on a table record.
 
@@ -671,14 +696,89 @@ def expr(s):
     So, e.g., the expression string ``"{foo} * {bar}"`` is converted to the
     function ``lambda rec: rec['foo'] * rec['bar']``
 
+    The ``trusted`` keyword argument can be used to specify whether the
+    expression is trusted and doesn't contains any type of code injection.
+    If the expression is trusted, it will be evaluated using ``eval``,
+    otherwise it will be evaluated using the `asteval` library if available.
+
+    Note that in further versions of petl, the default value of ``trusted`` 
+    will change to ``False``.
     """
 
-    prog = re.compile(r'\{([^}]+)\}')
+    global _expr_impl
+    if _expr_impl is None:
+        _expr_impl = _unsafe_expr
+        if trusted is not None and not trusted and PY3:
+            try:
+                import asteval
+                _expr_impl = _safe_expr
+            except ImportError:
+                pass
 
-    def repl(matchobj):
+    def _expr_repl(matchobj):
         return "rec['%s']" % matchobj.group(1)
 
-    return eval("lambda rec: " + prog.sub(repl, s))
+    global _expr_regex
+    if _expr_regex is None:
+        _expr_regex = re.compile(r'\{([^}]+)\}')
+    strexpr = _expr_regex.sub(_expr_repl, expression_text)
+
+    return _expr_impl(strexpr)
+
+
+class PetlAstEval(object):
+    def __init__(self, expression_text):
+        from asteval import Interpreter
+
+        self.aeval = Interpreter()
+        code = "def expr(rec):\n    return %s\n" % expression_text
+        self.aeval(code)
+
+    def __repr__(self):
+        return self.aeval.expr
+    
+    def __call__(self, rec):
+            self.aeval.symtable['rec'] = rec
+            evaluated = self.aeval("expr(rec)")
+            if len(self.aeval.error) > 0:
+                err = [ e.get_error()[-1] for e in self.aeval.error ]
+                msg = "\n".join(err)
+                raise ValueError("Failed to evaluate expression due to: %s" % msg)
+            return evaluated
+
+def _safe_expr(expression_text):
+    evaluator = PetlAstEval(expression_text)
+    return evaluator
+
+
+def _unsafe_expr(expression_text):
+
+    global _RESTRICTED
+    if _RESTRICTED is None:
+        _RESTRICTED = {
+            "__builtins__": None,
+            "__class__": None,
+            "__package__": None,
+            "__loader__": None,
+            "__spec__": None,
+            "__file__": None,
+            "__cached__": None,
+            "__dict__": None,
+            "__import__": None,
+            "__path__": None,
+            "__main__": None,
+            "__name__": None,
+            "__doc__": None
+        }
+        nomods = {k: None for k in sys.modules if "." not in k}
+        _RESTRICTED.update(nomods)
+
+    strexpr = "lambda rec: " + expression_text
+    try:
+        fun = eval(strexpr, _RESTRICTED, _RESTRICTED)
+        return fun
+    except ValueError as ve:
+        raise ValueError('Invalid expression: "%s" causes error: %s' % (strexpr, ve))
 
 
 def rowgroupby(table, key, value=None):
