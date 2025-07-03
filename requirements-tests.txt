@@ -8,4 +8,4 @@ coverage
 coveralls
 mock; python_version < '3.0'
 pandas
-pyarrow>=3.0.0
+pyarrow
