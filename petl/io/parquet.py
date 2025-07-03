@@ -8,7 +8,6 @@ from petl.io.pandas import fromdataframe, todataframe
 from petl.util.base import Table
 from petl.io.sources import read_source_from_arg, write_source_from_arg
 
-
 # third-party dependencies
 import pandas as pd
 
@@ -17,31 +16,18 @@ def fromparquet(source=None, **kwargs):
     """
     Extract data from a Parquet file and return as a PETL table.
 
-    The input can be a local filesystem path or any URL supported by fsspec (e.g., S3, GCS).
-
-    Example:
-
-        >>> import petl as etl
-        >>> # read a Parquet file into a PETL table
-        ... table = etl.fromparquet('data/example.parquet')
-        >>> table
-        +-------+------+
-        | name  | age  |
-        +=======+======+
-        | 'Amy' |   22 |
-        +-------+------+
-        | 'Bob' |   34 |
-        +-------+------+
+    The input can be a local filesystem path or any URL supported by fsspec
+    (e.g., S3, GCS).
 
     :param source: path or URL to Parquet file
     :param kwargs: passed through to pandas.read_parquet
     :returns: a PETL Table
     """
-
     src = read_source_from_arg(source)
     with src.open('rb') as f:
         df = pd.read_parquet(f, **kwargs)
     return fromdataframe(df)
+
 
 def toparquet(table, source=None, **kwargs):
     """
@@ -54,10 +40,9 @@ def toparquet(table, source=None, **kwargs):
     """
     src = write_source_from_arg(source)
     with src.open('wb') as f:
-        df = df = todataframe(table)
+        df = todataframe(table)
         df.to_parquet(f, **kwargs)
     return table
-
 
 
 Table.fromparquet = fromparquet
