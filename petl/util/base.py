@@ -250,7 +250,7 @@ def itervalues(table, field, **kwargs):
 
     If field == (), and the table has exactly one column, yields 1-tuples
     of each value so that `tbl.values()` on a single-column table returns
-    [(v,), (v,)]. Otherwise, behaves exactly as before.
+    [(v,), (v,)...]. Otherwise, behaves exactly as before.
     """
     missing = kwargs.get('missing', None)
     it = iter(table)
@@ -262,7 +262,7 @@ def itervalues(table, field, **kwargs):
     # which column(s) were requested?
     indices = asindices(hdr, field)
 
-    # special case: no field & single-column table → default to that column
+    # special case: no field & single-column table -> default to that column
     if not indices and field == () and len(hdr) == 1:
         indices = [0]
 
