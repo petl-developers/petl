@@ -392,6 +392,7 @@ Avro files (fastavro)
 
 .. module:: petl.io.parquet
 .. _io_parquet:
+
 Parquet files
 ^^^^^^^^^^^^^
 
