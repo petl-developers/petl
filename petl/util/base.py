@@ -240,8 +240,18 @@ class ValuesView(IterContainer):
         return r
 
 
-def itervalues(table, field, **kwargs):
 
+
+import operator
+
+def itervalues(table, field, **kwargs):
+    """
+    Iterate over the value(s) in the given field(s).
+
+    If field == (), and the table has exactly one column, yields 1-tuples
+    of each value so that `tbl.values()` on a single-column table returns
+    [(v,), (v,), …]. Otherwise, behaves exactly as before.
+    """
     missing = kwargs.get('missing', None)
     it = iter(table)
     try:
@@ -249,25 +259,38 @@ def itervalues(table, field, **kwargs):
     except StopIteration:
         hdr = []
 
+    # which column(s) were requested?
     indices = asindices(hdr, field)
-    assert len(indices) > 0, 'no field selected'
-    getvalue = operator.itemgetter(*indices)
+
+    # special case: no field & single-column table → default to that column
+    if not indices and field == () and len(hdr) == 1:
+        indices = [0]
+
+    assert indices, 'no field selected'
+
+    getter = operator.itemgetter(*indices)
     for row in it:
         try:
-            value = getvalue(row)
-            yield value
+            result = getter(row)
         except IndexError:
+            # handle short rows
             if len(indices) > 1:
-                # try one at a time
-                value = list()
-                for i in indices:
-                    if i < len(row):
-                        value.append(row[i])
-                    else:
-                        value.append(missing)
-                yield tuple(value)
+                vals = [
+                    row[i] if i < len(row) else missing
+                    for i in indices
+                ]
+                yield tuple(vals)
             else:
                 yield missing
+        else:
+            # wrap single result in tuple only for our special single-column case
+            if len(indices) == 1 and field == ():
+                yield (result,)
+            else:
+                yield result
+
+
+
 
 
 class TableWrapper(Table):

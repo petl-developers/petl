@@ -390,8 +390,15 @@ Avro files (fastavro)
    :start-after: begin_complex_schema
    :end-before: end_complex_schema
 
-.. module:: petl.io.gsheet
-.. _io_gsheet:
+.. module:: petl.io.parquet
+.. _io_parquet:
+Parquet files
+^^^^^^^^^^^^^
+
+These functions read and write Parquet via pandas:
+
+.. autofunction:: petl.io.parquet.fromparquet
+.. autofunction:: petl.io.parquet.toparquet
 
 Google Sheets (gspread)
 ^^^^^^^^^^^^^^^^^^^^^^^

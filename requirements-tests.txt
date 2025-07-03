@@ -7,3 +7,5 @@ tox
 coverage
 coveralls
 mock; python_version < '3.0'
+pandas>=1.0
+pyarrow>=3.0.0
