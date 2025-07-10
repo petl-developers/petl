@@ -1,6 +1,23 @@
 Changes
 =======
 
+Version 1.7.17
+--------------
+
+## Whats Changed
+
+* ci: added readthedocs settings file
+  By :user:`juarezr`, :issue:`677`.
+
+* build and publish a wheel
+  By :user:`dimbleby`, :issue:`679`.
+
+* Added ability to infer JSON column type into db_create.py 
+  By :user:`muhammadbadar1998`, :issue:`682`.
+
+* fix: mitigate code injection related in #672
+  By :user:`juarezr`, :issue:`681`.
+
 Version 1.7.16
 --------------
 
