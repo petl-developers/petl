@@ -95,10 +95,9 @@ def _setup_generic(dbapi_connection):
 
 
 try:
-    # noinspection PyUnresolvedReferences
-    import sqlalchemy
+    import sqlalchemy  # noqa: F401
 except ImportError as e:
-    pytest.skip('SKIP generic create tests: %s' % e, allow_module_level=True)
+    pytest.skip('SKIP generic DB create tests: %s' % e, allow_module_level=True)
 else:
 
     from sqlalchemy import Column, DateTime, Date
@@ -186,7 +185,7 @@ finally:
 SKIP_POSTGRES = False
 try:
     import psycopg2
-    import sqlalchemy
+    import sqlalchemy  # noqa: F401
     psycopg2.connect(
         'host=%s dbname=%s user=%s password=%s'
         % (host, database, user, password)

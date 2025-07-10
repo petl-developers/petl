@@ -20,8 +20,7 @@ debug = logger.debug
 
 
 try:
-    # noinspection PyUnresolvedReferences
-    import intervaltree
+    import intervaltree # noqa: F401
 except ImportError as e:
     pytest.skip('SKIP interval tests: %s' % e, allow_module_level=True)
 else:

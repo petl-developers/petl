@@ -14,8 +14,7 @@ from petl.io.whoosh import fromtextindex, totextindex, appendtextindex, \
 
 
 try:
-    # noinspection PyUnresolvedReferences
-    import whoosh
+    import whoosh  # noqa: F401
 except ImportError as e:
     pytest.skip('SKIP whoosh tests: %s' % e, allow_module_level=True)
 else:

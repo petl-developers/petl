@@ -125,7 +125,6 @@ def _register_filesystems_from(fsspec_registry, only_available):
 
 def _try_register_filesystems():
     try:
-        # pylint: disable=unused-import
         import fsspec  # noqa: F401
     except ImportError:
         logger.debug("# Missing fsspec package. Install with: pip install fsspec")

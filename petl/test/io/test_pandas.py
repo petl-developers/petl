@@ -10,8 +10,7 @@ from petl.io.pandas import todataframe, fromdataframe
 
 
 try:
-    # noinspection PyUnresolvedReferences
-    import pandas as pd
+    import pandas as pd # noqa: F401
 except ImportError as e:
     pytest.skip('SKIP pandas tests: %s' % e, allow_module_level=True)
 else:
