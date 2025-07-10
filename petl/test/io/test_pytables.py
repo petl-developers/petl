@@ -14,8 +14,7 @@ from petl.io.pytables import fromhdf5, fromhdf5sorted, tohdf5, appendhdf5
 
 
 try:
-    # noinspection PyUnresolvedReferences
-    import tables
+    import tables # noqa: F401
 except ImportError as e:
     pytest.skip('SKIP pytables tests: %s' % e, allow_module_level=True)
 else:

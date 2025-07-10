@@ -26,10 +26,8 @@ def _get_test_xls():
 
 
 try:
-    # noinspection PyUnresolvedReferences
-    import xlrd
-    # noinspection PyUnresolvedReferences
-    import xlwt
+    import xlrd # noqa: F401
+    import xlwt # noqa: F401
 except ImportError as e:
     pytest.skip('SKIP xls tests: %s' % e, allow_module_level=True)
 else:

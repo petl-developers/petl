@@ -10,8 +10,7 @@ from petl.io.numpy import toarray, fromarray, torecarray
 
 
 try:
-    # noinspection PyUnresolvedReferences
-    import numpy as np
+    import numpy as np # noqa: F401
 except ImportError as e:
     pytest.skip('SKIP numpy tests: %s' % e, allow_module_level=True)
 else:

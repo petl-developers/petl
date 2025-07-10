@@ -100,17 +100,12 @@
     //
     "[python]": {
         // Editor settings for python files
+        "editor.formatOnSave": false, // Using this for reducing git changes between commits
         "editor.tabSize": 4,
         "editor.wordWrapColumn": 88,
         "files.eol": "\n",
         "files.encoding": "utf8",
         "editor.defaultFormatter": "charliermarsh.ruff",
-        // "editor.defaultFormatter": "ms-python.black-formatter",
-        //-- Settings for keeping source code compatibility
-        "editor.codeActionsOnSave": {
-            "source.fixAll": "explicit",
-            "source.organizeImports": "explicit"
-        },
         "editor.insertSpaces": true,
         "files.insertFinalNewline": true,
         //-- Settings to reduce git changes due to whitespaces up source code (disabled for now)

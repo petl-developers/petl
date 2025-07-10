@@ -27,7 +27,6 @@ def test_helper_local():
 
 def test_helper_fsspec():
     try:
-        # pylint: disable=unused-import
         import fsspec  # noqa: F401
     except ImportError as e:
         pytest.skip("SKIP FSSPEC helper tests: %s" % e)
@@ -37,7 +36,6 @@ def test_helper_fsspec():
 
 def test_helper_smb():
     try:
-        # pylint: disable=unused-import
         import smbclient  # noqa: F401
     except ImportError as e:
         pytest.skip("SKIP SMB helper tests: %s" % e)
