@@ -718,13 +718,13 @@ class PetlAstEval(object):
         return self.aeval.expr
     
     def __call__(self, rec):
-            self.aeval.symtable['rec'] = rec
-            evaluated = self.aeval("expr(rec)")
-            if len(self.aeval.error) > 0:
-                err = [ e.get_error()[-1] for e in self.aeval.error ]
-                msg = "\n".join(err)
-                raise ValueError("Failed to evaluate expression due to: %s" % msg)
-            return evaluated
+        self.aeval.symtable['rec'] = rec
+        evaluated = self.aeval("expr(rec)")
+        if len(self.aeval.error) > 0:
+            err = [ e.get_error()[-1] for e in self.aeval.error ]
+            msg = "\n".join(err)
+            raise ValueError("Failed to evaluate expression due to: %s" % msg)
+        return evaluated
 
 def _safe_expr(expression_text):
     evaluator = PetlAstEval(expression_text)
