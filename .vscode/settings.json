@@ -5,10 +5,11 @@
     "editor.formatOnPaste": false,
     "editor.formatOnType": true,
     "editor.tabSize": 4,
-    "editor.wordWrapColumn": 83,
+    "editor.wordWrapColumn": 88,
     "editor.renderWhitespace": "boundary",
     "files.eol": "\n",
     "files.encoding": "utf8",
+    "notebook.formatOnSave.enabled": false,
     //
     //-- Editor settings for search/view files -----------------------------------------
     //
@@ -100,7 +101,7 @@
     "[python]": {
         // Editor settings for python files
         "editor.tabSize": 4,
-        "editor.wordWrapColumn": 83,
+        "editor.wordWrapColumn": 88,
         "files.eol": "\n",
         "files.encoding": "utf8",
         "editor.defaultFormatter": "charliermarsh.ruff",
@@ -147,13 +148,13 @@
         ".vscode-server",
     ],
     "pylint.args": [
-        "--max-line-length=83",
+        "--max-line-length=88",
         "--reports=y",
         "--disable=import-error,invalid-name,bad-continuation,import-outside-toplevel,missing-module-docstring,missing-function-docstring,trailing-whitespace,line-too-long,bad-whitespace"
     ],
     "flake8.args": [
         "--max-line-length",
-        "83",
+        "88",
         "--max-complexity",
         "10",
         "--extend-ignore",
@@ -171,6 +172,9 @@
     ],
     "python.testing.unittestEnabled": false,
     "python.testing.pytestEnabled": true,
+    "python.testing.pytestPath": "petl/test/",
+    "testing.showCoverageInExplorer": true,
+    "testing.gutterEnabled": true,
     "python.analysis.extraPaths": [
         "${workspaceFolder}/petl/",
         "${workspaceFolder}/petl/io/",

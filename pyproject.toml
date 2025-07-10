@@ -1,8 +1,59 @@
 [build-system]
 requires = ["setuptools", "setuptools-scm", "wheel"]
 
-[tool.bandit]
-exclude_dirs = ["bin", "docs"]
+[tool.ruff]
+include = [
+    "pyproject.toml",
+    "petl/**/*.py",
+    "examples/**/*.py",
+    "docs/**/*.rst",
+]
 
-[tool.bandit.assert_used]
-skips = ["*/*_test.py", "*/test_*.py"]
+line-length = 88
+indent-width = 4
+
+[tool.ruff.lint]
+ignore = [ "E201", "E202", "E203", "E501", "W291" ]
+
+
+[tool.pylint.main]
+# Files or directories to be skipped. They should be base names, not paths.
+ignore = [ "build", "dist", "bin"]
+
+# Files or directories matching the regular expression patterns are skipped. The
+# regex matches against base names, not paths. The default value ignores Emacs
+# file locks
+ignore-patterns = [
+    "^\\.#",
+    ".vscode/*.py",
+    ".git",
+    ".tox",
+    ".nox",
+    ".venv",
+    ".eggs",
+    ".egg-info",
+    ".cache",
+    ".mypy_cache",
+    ".pytest_cache",
+    "__pycache__",
+    "_build",
+    "*.pyc",
+    ".vscode",
+    ".vscode-server",
+]
+
+[tool.pylint."messages control"]
+
+disable = [
+    "import-error",
+    "invalid-name",
+    "bad-continuation",
+    "import-outside-toplevel",
+    "missing-module-docstring",
+    "useless-suppression",
+    "missing-function-docstring",
+    "trailing-whitespace",
+    "line-too-long",
+    "bare-except",
+    "bad-whitespace",
+]

@@ -1,0 +1,20 @@
+[flake8]
+
+max-line-length = 88
+
+# H202: assertRaises Exception too broad
+# H233: Python 3.x incompatible use of print operator
+# H301: one import per line
+# H306: imports not in alphabetical order (time, os)
+# H401: docstring should not start with a space
+# H403: multi line docstrings should end on a new line
+# H404: multi line docstring should start without a leading new line
+# H405: multi line docstring summary not separated with an empty line
+# H501: Do not use self.__dict__ for string formatting
+
+extend-ignore = E201,E202,E203,E501,W503,W291,H202,H301,H306,H401,H403,H404,H405
+
+exclude=.git,.tox,.venv,.eggs,.egg-info,.cache,.mypy_cache,.pytest_cache,.vscode,__pycache__,_build,dist,bin
+
+per-file-ignores =
+    petl/__init__.py:F401
