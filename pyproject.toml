@@ -13,12 +13,12 @@ line-length = 88
 indent-width = 4
 
 [tool.ruff.lint]
-ignore = [ "E201", "E202", "E203", "E501", "W291" ]
+ignore = ["E201", "E202", "E203", "E501", "W291"]
 
 
 [tool.pylint.main]
 # Files or directories to be skipped. They should be base names, not paths.
-ignore = [ "build", "dist", "bin"]
+ignore = ["build", "dist", "bin"]
 
 # Files or directories matching the regular expression patterns are skipped. The
 # regex matches against base names, not paths. The default value ignores Emacs
@@ -37,7 +37,7 @@ ignore-patterns = [
     ".pytest_cache",
     "__pycache__",
     "_build",
-    "*.pyc",
+    ".*.pyc",
     ".vscode",
     ".vscode-server",
 ]
@@ -47,13 +47,47 @@ ignore-patterns = [
 disable = [
     "import-error",
     "invalid-name",
-    "bad-continuation",
     "import-outside-toplevel",
+    "consider-using-from-import",
+    "ungrouped-imports",
+    "unused-import",
+    "unused-argument",
+    "unused-variable",
     "missing-module-docstring",
-    "useless-suppression",
     "missing-function-docstring",
     "trailing-whitespace",
     "line-too-long",
     "bare-except",
-    "bad-whitespace",
+    "no-else-return",
+    "no-else-raise",
+    "consider-using-f-string",
+    "missing-class-docstring",
+    "too-many-arguments",
+    "too-many-positional-arguments",
+    "too-many-branches",
+    "too-few-public-methods",
+    "too-many-locals",
+    "too-many-instance-attributes",
+    "too-many-lines",
+    "too-many-statements",
+    "too-many-nested-blocks",
+    "use-yield-from",
+    "use-list-literal",
+    "use-dict-literal",
+    "consider-using-with",
+    "consider-using-dict-items",
+    "consider-using-generator",
+    "broad-exception-caught",
+    "broad-exception-raised",
+    "unnecessary-comprehension",
+    "unnecessary-lambda",
+    "unnecessary-lambda-assignment",
+    "redundant-u-string-prefix",
+    "logging-not-lazy",
+    "useless-object-inheritance",
+    "stop-iteration-return",
 ]
+
+[tool.bandit]
+targets = ["petl", "examples"]
+skips = ["B101"]
