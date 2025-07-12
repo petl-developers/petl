@@ -8,3 +8,7 @@ rinohtype
 
 setuptools
 setuptools-scm
+
+# add parquet dependencies
+pandas
+pyarrow
