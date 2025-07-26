@@ -46,4 +46,4 @@ from petl.io.remotes import SMBSource
 
 from petl.io.gsheet import fromgsheet, togsheet, appendgsheet
 
-from petl.io.parquet import fromparquet, toparquet
+from petl.io.arrow import fromarrow, toarrow

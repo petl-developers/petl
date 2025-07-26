@@ -9,6 +9,6 @@ rinohtype
 setuptools
 setuptools-scm
 
-# add parquet dependencies
+# add pyarrow dependencies
 pandas
 pyarrow

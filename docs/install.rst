@@ -87,7 +87,7 @@ hdf5
   Note that also are additional software to be installed.
 
 parquet
-  For using :ref:`Parquet files <io_parquet>` via pandas.
+  For using :ref:`Parquet files <io_parquet>` via pyarrow.
 
 remote
   For reading and writing from :ref:`Remote Sources <io_remotes>` with `fsspec`.
