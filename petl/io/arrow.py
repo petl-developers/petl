@@ -3,70 +3,76 @@ from __future__ import absolute_import, print_function, division
 
 # internal dependencies
 from petl.util.base import Table, header, data
-from petl.io.sources import read_source_from_arg, write_source_from_arg
+
 # third-party dependencies
-import pyarrow as pa                 # for Table construction
-import pyarrow.dataset as ds         # for streaming reads and dataset writes
-import pyarrow.parquet as pq         # for Parquet I/O
+import pyarrow as pa               # PyArrow core
+import pyarrow.dataset as ds       # Arrow dataset API
+import pyarrow.parquet as pq       # Parquet reader/writer
 
 __all__ = (
     'fromarrow', 'toarrow',
 )
 
-def fromarrow(source=None, *, format='parquet', columns=None, **kwargs):
+def fromarrow(source, **kwargs):
     """
-    Extract data from an Arrow-compatible dataset into a PETL table.
+    Extract data from an Arrow-compatible dataset into a PETL Table.
 
-    :param source: path/URL (fsspec-supported) to file(s) or directory
-    :param format: dataset format ('parquet', 'orc', etc.)
-    :param columns: list of columns to select
-    :param kwargs: passed to pyarrow.dataset.dataset
-    :returns: a PETL Table (streaming rows)
+    :param source: file path, list of paths, or directory
+    :param format: dataset format (e.g., 'parquet', 'orc', 'ipc'); default 'parquet'
+    :param columns: list of columns to load; default None (all)
+    :param kwargs: other keyword arguments passed to pyarrow.dataset.dataset
+    :returns: a streaming PETL Table (first row is header)
     """
-    src = read_source_from_arg(source)
-    dataset = ds.dataset(src.path, format=format, **kwargs)
-    cols = [field.name for field in dataset.schema]
+    fmt = kwargs.pop('format', 'parquet')
+    cols_opt = kwargs.pop('columns', None)
+    dataset = ds.dataset(source, format=fmt, **kwargs)
+    column_names = [field.name for field in dataset.schema]
 
-    def _rows():
-        for batch in dataset.to_batches(columns=columns):
+    def all_rows():
+        # yield header
+        yield tuple(column_names)
+        # yield data rows
+        for batch in dataset.to_batches(columns=cols_opt):
             for rec in batch.to_pylist():
-                yield tuple(rec.get(c) for c in cols)
+                yield tuple(rec.get(c) for c in column_names)
 
-    from petl import fromrows  # import here to avoid circular
-    return fromrows(cols, _rows())
-
+    return Table(all_rows())
 
 
-def toarrow(table, target=None, *, format='parquet', schema=None, **kwargs):
+def toarrow(table, target, **kwargs):
     """
-    Write a PETL table to an Arrow file or dataset.
+    Write a PETL Table to an Arrow dataset or file.
 
-    :param table: PETL Table (first row = header)
-    :param target: path/URL for file or directory
-    :param format: format name ('parquet', 'ipc', etc.)
-    :param schema: optional pyarrow.Schema
-    :param kwargs: passed to writer (write_table or write_dataset)
-    :returns: the original PETL Table for chaining
+    :param table: PETL Table (first row is header)
+    :param target: output file path or directory
+    :param format: format name (e.g., 'parquet', 'ipc', 'orc'); default 'parquet'
+    :param schema: optional pa.Schema; default None (infer schema)
+    :param kwargs: passed to writer (pq.write_table or ds.write_dataset)
+    :returns: the original PETL Table
     """
-    tgt = write_source_from_arg(target)
+    fmt = kwargs.pop('format', 'parquet')
+    schema = kwargs.pop('schema', None)
     hdr = header(table)
     rows = data(table)
 
+    # accumulate data by column
     arrays = {c: [] for c in hdr}
     for row in rows:
         for c, v in zip(hdr, row):
             arrays[c].append(v)
 
+    # build Arrow Table
     arrow_tbl = pa.Table.from_pydict(arrays, schema=schema)
 
-    if format == 'parquet':
-        with tgt.open('wb') as f:
-            pq.write_table(arrow_tbl, f, **kwargs)
+    if fmt == 'parquet':
+        # single-file Parquet write
+        pq.write_table(arrow_tbl, target, **kwargs)
     else:
-        ds.write_dataset(arrow_tbl, base_dir=tgt.path, format=format, **kwargs)
+        # directory-based dataset write for other formats
+        ds.write_dataset(arrow_tbl, target, format=fmt, **kwargs)
 
     return table
 
-# Attach to Table class
+# attach to Table class
 Table.fromarrow = staticmethod(fromarrow)
 Table.toarrow = staticmethod(toarrow)
