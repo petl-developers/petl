@@ -34,6 +34,7 @@ setup(
         'xlsx': ['openpyxl>=2.6.2'],
         'xpath': ['lxml>=4.4.0'],
         'whoosh': ['whoosh'],
+        "parquet": ["pyarrow>=4.0.0"]
     },
     use_scm_version={
         "version_scheme": "guess-next-dev",

@@ -5,6 +5,7 @@ intervaltree>=3.0.2
 lxml>=4.6.5
 openpyxl>=2.6.2
 pandas
+pyarrow
 Whoosh>=2.7.4
 xlrd>=2.0.1
 xlwt>=1.3.0
