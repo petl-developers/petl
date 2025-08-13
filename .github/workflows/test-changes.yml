@@ -6,6 +6,8 @@ name: Test Changes
 on: 
   push:
     branches: [ "master" ]
+  merge_group:
+    branches: [ "master" ]
   pull_request:
     branches: [ "master" ]
     types: [opened, reopened, synchronize, ready_for_review]
