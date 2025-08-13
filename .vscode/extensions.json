@@ -3,7 +3,6 @@
         //
         //-- Used for IDE, Workbench, Tools --------------------------------------------
         //
-        "editorconfig.editorconfig",
         //
         //-- Used for linters, formatters ----------------------------------------------
         //
@@ -12,18 +11,15 @@
         "ms-python.vscode-python-envs",
         "ms-python.debugpy",
         "charliermarsh.ruff",
-        // "njpwerner.autodocstring",
-        // "njqdev.vscode-python-typehint",
         //
-        // "ms-python.pylint",
-        // "ms-python.flake8",
-        // "ms-python.mypy-type-checker",
-        // "ms-python.isort",
+        //-- Used for: launch.json, tasks.json, launch/debug -----------------------
+        //
+        "rioj7.command-variable", //? Add files/pickers/commands variables for launch.json and tasks.json
+        "augustocdias.tasks-shell-input", //? Use shell commands as input for your tasks
         //
         //-- Used for: Git, Code Quality -----------------------------------------------
         //
         "Wequick.coverage-gutters",
-        // "vivaxy.vscode-conventional-commits"
     ],
     "unwantedRecommendations": [
         //
