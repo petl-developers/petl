@@ -6,10 +6,23 @@
     "editor.formatOnType": true,
     "editor.tabSize": 4,
     "editor.wordWrapColumn": 88,
-    "editor.renderWhitespace": "boundary",
     "files.eol": "\n",
     "files.encoding": "utf8",
     "notebook.formatOnSave.enabled": false,
+    //
+    //-- Editor visual settings --------------------------------------------------------
+    //
+    "editor.fontLigatures": "'liga', 'calt', 'dlig', 'THND'",
+    "editor.renderWhitespace": "boundary",
+    "editor.guides.bracketPairs": true,
+    "editor.folding": true,
+    "editor.foldingStrategy": "auto",
+    "editor.showFoldingControls": "always",
+    "editor.rulers": [
+        88,
+        100,
+        120
+    ],
     //
     //-- Editor settings for search/view files -----------------------------------------
     //
