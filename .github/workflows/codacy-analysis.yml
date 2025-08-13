@@ -73,11 +73,11 @@ jobs:
           max-allowed-issues: 2147483647
 
       - name: Fetch SARIF files
-          uses: actions/download-artifact@v4
-          with:
-            path: ../results
-            pattern: *.sarif
-            merge-multiple: true
+        uses: actions/download-artifact@v4
+        with:
+          path: ../results
+          pattern: *.sarif
+          merge-multiple: true
 
       # Upload the SARIF file generated in the previous step
       - name: Upload SARIF results file
