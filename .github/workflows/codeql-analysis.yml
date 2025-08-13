@@ -47,6 +47,12 @@ jobs:
     #   - https://gh.io/using-larger-runners
     # Consider using larger runners for possible analysis time improvements.
     runs-on: ${{ (matrix.language == 'swift' && 'macos-latest') || 'ubuntu-latest' }}
+    if: |
+      (  (!github.event.pull_request.draft) &&
+         (github.event.action != 'labeled') &&
+         (!contains( github.event.pull_request.labels.*.name, 'prevent-ci')) )
+      || ((github.event.action != 'labeled') && contains( github.event.pull_request.labels.*.name, 'force-ci'))
+      || (github.event.label.name == 'force-ci')
     timeout-minutes: ${{ (matrix.language == 'swift' && 120) || 360 }}
     permissions:
       # required for all workflows
