@@ -82,7 +82,7 @@ jobs:
           uses: actions/download-artifact@v4
           with:
             path: ../results
-            pattern: *.sarif
+            pattern: "*.sarif"
             merge-multiple: true
 
       # Upload the SARIF file generated in the previous step
