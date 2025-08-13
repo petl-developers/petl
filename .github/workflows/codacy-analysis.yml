@@ -72,9 +72,18 @@ jobs:
           # This will handover control about PR rejection to the GitHub side
           max-allowed-issues: 2147483647
 
+      - name: Fetch SARIF files
+          uses: actions/download-artifact@v4
+          with:
+            path: ../results
+            pattern: *.sarif
+            merge-multiple: true
+
       # Upload the SARIF file generated in the previous step
       - name: Upload SARIF results file
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: results.sarif
           category: codacy
+
+## End of codacy-security-scan job ##
