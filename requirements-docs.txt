@@ -8,3 +8,7 @@ rinohtype
 
 setuptools
 setuptools-scm
+
+# add pyarrow dependencies
+pandas
+pyarrow
