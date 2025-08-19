@@ -4,13 +4,15 @@ from __future__ import absolute_import, print_function, division
 import operator
 from collections import OrderedDict
 from itertools import islice
+from typing import Dict, Tuple, List, Any
+
 from petl.compat import izip_longest, text_type, next
 
 
 from petl.util.base import asindices, Table
 
 
-def listoflists(tbl):
+def listoflists(tbl) -> List[list]:
     return [list(row) for row in tbl]
 
 
@@ -18,7 +20,7 @@ Table.listoflists = listoflists
 Table.lol = listoflists
 
 
-def tupleoftuples(tbl):
+def tupleoftuples(tbl) -> Tuple[tuple, ...]:
     return tuple(tuple(row) for row in tbl)
 
 
@@ -26,7 +28,7 @@ Table.tupleoftuples = tupleoftuples
 Table.tot = tupleoftuples
 
 
-def listoftuples(tbl):
+def listoftuples(tbl) -> List[tuple]:
     return [tuple(row) for row in tbl]
 
 
@@ -34,7 +36,7 @@ Table.listoftuples = listoftuples
 Table.lot = listoftuples
 
 
-def tupleoflists(tbl):
+def tupleoflists(tbl) -> Tuple[list, ...]:
     return tuple(list(row) for row in tbl)
 
 
@@ -42,7 +44,7 @@ Table.tupleoflists = tupleoflists
 Table.tol = tupleoflists
 
 
-def columns(table, missing=None):
+def columns(table, missing=None) -> OrderedDict:
     """
     Construct a :class:`dict` mapping field names to lists of values. E.g.::
 
@@ -77,7 +79,7 @@ def columns(table, missing=None):
 Table.columns = columns
 
 
-def facetcolumns(table, key, missing=None):
+def facetcolumns(table, key, missing=None) -> Dict[Any, Dict[str, Any]]:
     """
     Like :func:`petl.util.materialise.columns` but stratified by values of the
     given key field. E.g.::
@@ -125,7 +127,7 @@ def facetcolumns(table, key, missing=None):
 Table.facetcolumns = facetcolumns
 
 
-def cache(table, n=None):
+def cache(table, n=None) -> 'CacheView':
     """
     Wrap the table with a cache that caches up to `n` rows as they are initially
     requested via iteration (cache all rows be default).
