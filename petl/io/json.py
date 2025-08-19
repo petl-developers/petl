@@ -16,7 +16,7 @@ from petl.io.sources import read_source_from_arg, write_source_from_arg
 from petl.util.base import data, Table, dicts as _dicts, iterpeek
 
 
-def fromjson(source, *args, **kwargs):
+def fromjson(source=None, *args, **kwargs):
     """
     Extract data from a JSON file. The file must contain a JSON array as
     the top level object, and each member of the array will be treated as a

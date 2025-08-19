@@ -112,6 +112,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install --prefer-binary -r requirements-tests.txt
+          python -m pip install -e .
 
       - name: Setup environment variables for remote filesystem testing with primary = ${{ matrix.primary }}
         if: matrix.os == 'ubuntu-latest' && matrix.python == matrix.primary
