@@ -13,3 +13,4 @@ from petl.transform import *
 from petl import config
 from petl import errors
 from petl.errors import *
+from .transform.standardize import standardize  
