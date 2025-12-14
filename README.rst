@@ -1,3 +1,9 @@
+## Deploy on Hostinger
+
+Quickly deploy using Hostinger with a 1-click installation
+
+[![Deploy on Hostinger](https://assets.hostinger.com/vps/deploy.svg)](https://www.hostinger.com/vps/docker-hosting?compose_url=https://github.com/petl-developers/petl/)
+
 petl - Extract, Transform and Load
 ===================================================
 
