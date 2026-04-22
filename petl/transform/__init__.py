@@ -11,6 +11,8 @@ from petl.transform.conversions import convert, convertall, replace, \
     replaceall, update, convertnumbers, format, formatall, interpolate, \
     interpolateall
 
+from petl.transform.clamp import clampvalues
+ 
 from petl.transform.sorts import sort, mergesort, issorted
 
 from petl.transform.selects import select, selectop, selectcontains, \
