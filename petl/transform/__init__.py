@@ -12,6 +12,8 @@ from petl.transform.conversions import convert, convertall, replace, \
     interpolateall
 
 from petl.transform.clamp import clampvalues
+
+from petl.transform.filldown import filldown
  
 from petl.transform.sorts import sort, mergesort, issorted
 
