@@ -165,6 +165,33 @@ def test_tojson():
     assert result[2]['bar'] == 2
 
 
+def _run_python_with_stdin(code, input_data):
+    import subprocess
+    import sys
+
+    proc = subprocess.Popen(
+        [sys.executable, '-c', code],
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    stdout, stderr = proc.communicate(input_data)
+    assert proc.returncode == 0, stderr.decode('utf-8')
+    return stdout
+
+
+def test_tojson_fromcsv_stdin_subprocess():
+    csv_data = b'foo,bar\nx,1\ny,2\n'
+    code = 'import petl as etl; etl.fromcsv().tojson(sort_keys=True)'
+
+    stdout = _run_python_with_stdin(code, csv_data)
+
+    assert json.loads(stdout.decode('utf-8')) == [
+        {'bar': '1', 'foo': 'x'},
+        {'bar': '2', 'foo': 'y'},
+    ]
+
+
 def test_tojsonarrays():
 
     # exercise function
@@ -182,6 +209,34 @@ def test_tojsonarrays():
     assert result[1][1] == 2
     assert result[2][0] == 'c'
     assert result[2][1] == 2
+
+
+def test_tojsonarrays_fromcsv_stdin_subprocess():
+    csv_data = b'foo,bar\nx,1\ny,2\n'
+    code = 'import petl as etl; etl.fromcsv().tojsonarrays()'
+
+    stdout = _run_python_with_stdin(code, csv_data)
+
+    assert json.loads(stdout.decode('utf-8')) == [
+        ['x', '1'],
+        ['y', '2'],
+    ]
+
+
+def test_tojsonarrays_header_fromcsv_stdin_subprocess():
+    csv_data = b'foo,bar\nx,1\ny,2\n'
+    code = (
+        'import petl as etl; '
+        'etl.fromcsv().tojsonarrays(output_header=True)'
+    )
+
+    stdout = _run_python_with_stdin(code, csv_data)
+
+    assert json.loads(stdout.decode('utf-8')) == [
+        ['foo', 'bar'],
+        ['x', '1'],
+        ['y', '2'],
+    ]
 
 
 def test_fromdicts_header_does_not_raise():

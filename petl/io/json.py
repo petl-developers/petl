@@ -332,7 +332,7 @@ def tojson(table, source=None, prefix=None, suffix=None, *args, **kwargs):
 
     """
 
-    obj = list(_dicts(table))
+    obj = [row for row in _dicts(table)]
     _writejson(source, obj, prefix, suffix, *args, **kwargs)
 
 
@@ -360,9 +360,9 @@ def tojsonarrays(table, source=None, prefix=None, suffix=None,
     """
 
     if output_header:
-        obj = list(table)
+        obj = [row for row in table]
     else:
-        obj = list(data(table))
+        obj = [row for row in data(table)]
     _writejson(source, obj, prefix, suffix, *args, **kwargs)
 
 
