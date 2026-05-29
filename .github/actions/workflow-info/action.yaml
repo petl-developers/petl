@@ -50,7 +50,7 @@ runs:
           echo "::endgroup::";
         };
 
-        printf '# Workflow Information on ${{ inputs.title }}\n\n' >> "${GITHUB_STEP_SUMMARY}";
+        printf '# Workflow Information on %s\n\n' '${{ inputs.title }}' >> "${GITHUB_STEP_SUMMARY}";
         printf '\n## Event Information\n\n' >> "${GITHUB_STEP_SUMMARY}";
         echo '- github.ref_name: ${{ github.ref_name }}' >> "${GITHUB_STEP_SUMMARY}";
         echo '- github.sha: ${{ github.sha }}' >> "${GITHUB_STEP_SUMMARY}";
@@ -83,9 +83,10 @@ runs:
         with open(_GITHUB_OUTPUT, "a") as _output, open(_GITHUB_STEP_SUMMARY, "a") as _summary:
             # region Output -----------------------------------------------------------------
 
-            def out(text: str, *args: object, end: str = "\n", c: str = " \t\f\v") -> str:
+            def out(key: str, text: str, *args: object, end: str = "\n", c: str = " \t\f\v") -> str:
                 _text = text.format(*args).rstrip(c) if args else text.rstrip(c) if text else ""
-                _output.write(_text + end)
+                if key and key.strip():
+                    _output.write("{}={}\n".format(key.strip(), _text + end))
                 return _text
 
             def group(text: str, *args: object, close: bool = False) -> str:
@@ -93,11 +94,11 @@ runs:
                 if _text:
                     if close:
                         endgroup()
-                    out("::group::{}", _text)
+                    print("::group::{}".format(_text))
                 return _text
 
             def endgroup() -> None:
-                out("::endgroup::")
+                print("::endgroup::")
 
             # endregion
             # region Summary ----------------------------------------------------------------
