@@ -18,10 +18,10 @@ jobs:
         python: ['3.10']
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout source code at ${{ inputs.branch_commit_or_ref || 'master' }}
+      - name: Checkout source code at ${{ inputs.branch_commit_or_ref || github.ref }}
         uses: actions/checkout@v6
         with:
-          ref: ${{ inputs.branch_commit_or_ref || 'master' }}
+          ref: ${{ inputs.branch_commit_or_ref || github.ref }}
 
       - name: Set up Python ${{ matrix.python }}
         uses: actions/setup-python@v6

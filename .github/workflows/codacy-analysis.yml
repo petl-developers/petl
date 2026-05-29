@@ -55,10 +55,10 @@ jobs:
       || (github.event.label.name == 'force-ci')
     steps:
       # Checkout the repository to the GitHub Actions runner
-      - name: Checkout code at ${{ inputs.branch_commit_or_ref || 'master' }}
+      - name: Checkout code at ${{ inputs.branch_commit_or_ref || github.ref }}
         uses: actions/checkout@v6
         with:
-          ref: ${{ inputs.branch_commit_or_ref || 'master' }}
+          ref: ${{ inputs.branch_commit_or_ref || github.ref }}
 
       # Execute Codacy Analysis CLI and generate a SARIF output with the security issues identified during the analysis
       - name: Run Codacy Analysis CLI

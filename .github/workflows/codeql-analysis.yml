@@ -68,10 +68,10 @@ jobs:
         # Learn more about CodeQL language support at https://aka.ms/codeql-docs/language-support
 
     steps:
-      - name: Checkout repository at ${{ inputs.branch_commit_or_ref || 'master' }}
+      - name: Checkout repository at ${{ inputs.branch_commit_or_ref || github.ref }}
         uses: actions/checkout@v6
         with:
-          ref: ${{ inputs.branch_commit_or_ref || 'master' }}
+          ref: ${{ inputs.branch_commit_or_ref || github.ref }}
 
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v4

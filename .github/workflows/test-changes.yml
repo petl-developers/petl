@@ -3,13 +3,13 @@
 
 name: Test Changes
 
-on: 
+on:
   push:
-    branches: [ "master" ]
+    branches: ["master"]
   merge_group:
-    branches: [ "master" ]
+    branches: ["master"]
   pull_request:
-    branches: [ "master" ]
+    branches: ["master"]
     types: [opened, reopened, synchronize, ready_for_review]
   workflow_dispatch:
     inputs:
@@ -35,6 +35,11 @@ jobs:
       - name: Checking if CI shoud run for ${{ github.ref_name }}...
         run: echo "Resuming CI. Continuing next jobs..." >> "${GITHUB_STEP_SUMMARY}"
 
+      - name: Checkout source code at ${{ inputs.branch_commit_or_ref || github.ref }}
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.branch_commit_or_ref || github.ref }}
+
       - name: Report Workflow Information
         id: workflow_report
         uses: ./.github/actions/workflow-info
@@ -49,54 +54,60 @@ jobs:
       fail-fast: false
       matrix:
         #@ https://github.com/actions/runner-images#available-images
-        os: [ "ubuntu-latest", "windows-latest", "macos-latest", "macos-latest-large" ]
+        os:
+          [
+            "ubuntu-latest",
+            "windows-latest",
+            "macos-latest",
+            "macos-latest-large",
+          ]
         #@ https://github.com/marketplace/actions/setup-python
         #@ https://github.com/actions/setup-python/blob/main/docs/advanced-usage.md#python
-        python: ['3.6', '3.7', '3.8', '3.9', '3.10', '3.11', '3.12', '3.13', '3.14']
+        python:
+          ["3.6", "3.7", "3.8", "3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
         # TODO: Also test with PyPy and GraalPy @https://github.com/actions/setup-python/blob/main/docs/advanced-usage.md#graalpy
         include:
           # Default configuration for all jobs
-          - mode: 'full'
-          - install: 'no'
-          - primary: '3.8'
+          - mode: "full"
+          - install: "no"
+          - primary: "3.8"
           # Conditional configuration overrides
-          - python: '3.6'
-            install: 'yes'
-          - python: '3.7'
-            install: 'yes'
-          - os: 'windows-latest'
-            mode: 'basic'
+          - python: "3.6"
+            install: "yes"
+          - python: "3.7"
+            install: "yes"
+          - os: "windows-latest"
+            mode: "basic"
           # Handle random test failures
-          - os: 'ubuntu-latest'
-            python: '3.9'
-            mode: 'basic'
+          - os: "ubuntu-latest"
+            python: "3.9"
+            mode: "basic"
           # Additional Jobs not included in the matrix above
-          - python: '2.7'
-            os: 'ubuntu-latest'
-            mode: 'basic'
-            install: 'yes'
+          - python: "2.7"
+            os: "ubuntu-latest"
+            mode: "basic"
+            install: "yes"
         exclude:
           # macos-latest == macos-15-arm64
           # macos-latest-large == macos-15-intel
-          - os: 'macos-latest'
-            python: '3.6'
-          - os: 'macos-latest'
-            python: '3.7'
-          - os: 'macos-latest-large'
-            python: '3.6'
-          - os: 'macos-latest-large'
-            python: '3.7'
+          - os: "macos-latest"
+            python: "3.6"
+          - os: "macos-latest"
+            python: "3.7"
+          - os: "macos-latest-large"
+            python: "3.6"
+          - os: "macos-latest-large"
+            python: "3.7"
           # python 3.7 too slow on ubuntu-latest
-          - os: 'ubuntu-latest'
-            python: '3.7'
+          - os: "ubuntu-latest"
+            python: "3.7"
 
     runs-on: "${{ matrix.os }}"
     steps:
-
-      - name: Checkout source code at ${{ inputs.branch_commit_or_ref || 'master' }}
+      - name: Checkout source code at ${{ inputs.branch_commit_or_ref || github.ref }}
         uses: actions/checkout@v6
         with:
-          ref: ${{ inputs.branch_commit_or_ref || 'master' }}
+          ref: ${{ inputs.branch_commit_or_ref || github.ref }}
 
       - name: Install linux tools
         if: matrix.os == 'ubuntu-latest'
@@ -212,10 +223,10 @@ jobs:
         python: [3.8]
 
     steps:
-      - name: Checkout source code at ${{ inputs.branch_commit_or_ref || 'master' }}
+      - name: Checkout source code at ${{ inputs.branch_commit_or_ref || github.ref }}
         uses: actions/checkout@v6
         with:
-          ref: ${{ inputs.branch_commit_or_ref || 'master' }}
+          ref: ${{ inputs.branch_commit_or_ref || github.ref }}
 
       - name: Set up Python ${{ matrix.python }}
         uses: actions/setup-python@v6
@@ -254,4 +265,3 @@ jobs:
   #     pull-requests: write
   #     security-events: write
   #   secrets: inherit # pass all secrets
-
