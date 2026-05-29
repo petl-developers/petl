@@ -104,7 +104,7 @@ jobs:
 
       - name: Set up Python ${{ matrix.python }} discontinued on ${{ matrix.os }}
         if: matrix.install == 'yes'
-        uses: MatteoH2O1999/setup-python@v3
+        uses: MatteoH2O1999/setup-python@v6
         with:
           python-version: ${{ matrix.python }}
           cache: pip
