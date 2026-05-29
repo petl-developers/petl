@@ -15,13 +15,13 @@ name: Codacy Security Scan
 
 on:
   schedule:
-    - cron: '59 11 27 * *'
+    - cron: "59 11 27 * *"
   push:
-    branches: [ "master" ]
+    branches: ["master"]
   merge_group:
-    branches: [ "master" ]
+    branches: ["master"]
   pull_request:
-    branches: [ "master" ]
+    branches: ["master"]
     types: [opened, reopened, synchronize, ready_for_review]
   # workflow_run:
   #   workflows: [Test Changes]
@@ -85,7 +85,7 @@ jobs:
 
       # Upload the SARIF file generated in the previous step
       - name: Upload SARIF results file
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: results.sarif
           category: codacy
