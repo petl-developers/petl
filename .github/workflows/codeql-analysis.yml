@@ -28,15 +28,11 @@ on:
   workflow_call:
   workflow_dispatch:
     inputs:
-      logLevel:
-        description: 'Log level'
+      branch_commit_or_ref:
+        description: "Run this workflow in what branch/commit?"
         required: true
-        default: 'warning'
-        type: choice
-        options:
-        - info
-        - warning
-        - debug
+        type: string
+        default: master
 
 jobs:
   analyze:
@@ -72,8 +68,10 @@ jobs:
         # Learn more about CodeQL language support at https://aka.ms/codeql-docs/language-support
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+      - name: Checkout repository at ${{ inputs.branch_commit_or_ref || 'master' }}
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.branch_commit_or_ref || 'master' }}
 
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL

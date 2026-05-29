@@ -30,15 +30,11 @@ on:
   workflow_call:
   workflow_dispatch:
     inputs:
-      logLevel:
-        description: 'Log level'
+      branch_commit_or_ref:
+        description: "Run this workflow in what branch/commit?"
         required: true
-        default: 'warning'
-        type: choice
-        options:
-        - info
-        - warning
-        - debug
+        type: string
+        default: master
 
 permissions:
   contents: read
@@ -59,8 +55,10 @@ jobs:
       || (github.event.label.name == 'force-ci')
     steps:
       # Checkout the repository to the GitHub Actions runner
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - name: Checkout code at ${{ inputs.branch_commit_or_ref || 'master' }}
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.branch_commit_or_ref || 'master' }}
 
       # Execute Codacy Analysis CLI and generate a SARIF output with the security issues identified during the analysis
       - name: Run Codacy Analysis CLI

@@ -13,15 +13,11 @@ on:
     types: [opened, reopened, synchronize, ready_for_review]
   workflow_dispatch:
     inputs:
-      logLevel:
-        description: 'Log level'
+      branch_commit_or_ref:
+        description: "Run this workflow in what branch/commit?"
         required: true
-        default: 'warning'
-        type: choice
-        options:
-        - info
-        - warning
-        - debug
+        type: string
+        default: master
 
 jobs:
   run-guard:
@@ -89,8 +85,10 @@ jobs:
     runs-on: "${{ matrix.os }}"
     steps:
 
-      - name: Checkout source code
-        uses: actions/checkout@v4
+      - name: Checkout source code at ${{ inputs.branch_commit_or_ref || 'master' }}
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.branch_commit_or_ref || 'master' }}
 
       - name: Install linux tools
         if: matrix.os == 'ubuntu-latest'
@@ -206,8 +204,10 @@ jobs:
         python: [3.8]
 
     steps:
-      - name: Checkout source code
-        uses: actions/checkout@v4
+      - name: Checkout source code at ${{ inputs.branch_commit_or_ref || 'master' }}
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.branch_commit_or_ref || 'master' }}
 
       - name: Set up Python ${{ matrix.python }}
         uses: actions/setup-python@v5
