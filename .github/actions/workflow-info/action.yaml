@@ -1,0 +1,174 @@
+# How to test locally:
+#
+# curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+# $ cargo install wrkflw
+# $ cargo install wrkflw
+# $ wrkflw run --verbose --event push --diff --show-action-messages .github/workflows/debug.yml
+
+name: "Report Workflow Information"
+description: "Reusable action meant to be used in workflow steps"
+branding:
+  icon: "watch"
+  color: "green"
+
+inputs:
+  title:
+    description: "A reference to put in the report title"
+    required: true
+    default: "the Job"
+  parameters:
+    description: "Input variables used in Job"
+    required: false
+  content:
+    description: "Content to put in the report"
+    required: false
+outputs:
+  status:
+    description: "Return report status"
+    value: ${{ steps.report_workflow_generation.outputs.status }}
+runs:
+  using: "composite"
+  steps:
+    - name: Report Workflow Information
+      id: report_workflow_generation
+      env:
+        REPORT_PARAMS: "${{ inputs.parameters }}"
+        REPORT_CONTENT: "${{ inputs.content }}"
+      shell: bash
+      run: |
+        echo "::group::Generating report"
+        echo "status=started" >> "${GITHUB_OUTPUT}";
+
+        dump_ctx(){
+          echo "::group::Context ${1:-Unknown}"
+          local text;
+          if ! text="$(cat -)"; then printf 'Failed to dump context for %s\n' "${1:-Unknown}" >> "${GITHUB_STEP_SUMMARY}"; fi
+          text="${text#"${text%%[![:space:]]*}"}"
+          if test "${#text}" -gt 3; then
+            printf '\n### %s Context\n\n\n```json\n%s\n```\n' "${1:-Unknown}" "${text:-Nothing in context}" >> "${GITHUB_STEP_SUMMARY}";
+          fi
+          echo "::endgroup::";
+        };
+
+        printf '# Workflow Information on ${{ inputs.title }}\n\n' >> "${GITHUB_STEP_SUMMARY}";
+        printf '\n## Event Information\n\n' >> "${GITHUB_STEP_SUMMARY}";
+        echo '- github.ref_name: ${{ github.ref_name }}' >> "${GITHUB_STEP_SUMMARY}";
+        echo '- github.sha: ${{ github.sha }}' >> "${GITHUB_STEP_SUMMARY}";
+
+        echo "${REPORT_PARAMS:-}" | dump_ctx "Parameters";
+        if test -n "${REPORT_CONTENT:-}"; then
+          printf '\n## Summary\n\n' >> "${GITHUB_STEP_SUMMARY}";
+          echo "${REPORT_CONTENT:-}" >> "${GITHUB_STEP_SUMMARY}";
+        fi
+
+        printf '\n## Context Information\n' >> "${GITHUB_STEP_SUMMARY}";
+        echo '${{ toJson(runner) }}' | dump_ctx "Runner";
+        echo '${{ toJson(job) }}' | dump_ctx "Job";
+
+        echo "status=finished" >> "${GITHUB_OUTPUT}";
+        echo "::endgroup::"
+
+    - name: Report Python Information
+      id: report_python_information
+      shell: python
+      run: |
+        ##python3 - <<PY
+        # region Helpers --------------------------------------------------------------------
+        import platform
+        import os
+
+        _GITHUB_STEP_SUMMARY = os.environ.get("GITHUB_STEP_SUMMARY", "sketch-github-step.md")
+        _GITHUB_OUTPUT = os.environ.get("GITHUB_OUTPUT", "sketch-github-output.md")
+
+        with open(_GITHUB_OUTPUT, "a") as _output, open(_GITHUB_STEP_SUMMARY, "a") as _summary:
+            # region Output -----------------------------------------------------------------
+
+            def out(text: str, *args: object, end: str = "\n", c: str = " \t\f\v") -> str:
+                _text = text.format(*args).rstrip(c) if args else text.rstrip(c) if text else ""
+                _output.write(_text + end)
+                return _text
+
+            def group(text: str, *args: object, close: bool = False) -> str:
+                _text = text.format(*args).strip() if args else text.strip() if text else ""
+                if _text:
+                    if close:
+                        endgroup()
+                    out("::group::{}", _text)
+                return _text
+
+            def endgroup() -> None:
+                out("::endgroup::")
+
+            # endregion
+            # region Summary ----------------------------------------------------------------
+
+            def line(text: str, *args: object, end: str = "\n", c: str = " \t\f\v") -> str:
+                _text = text.format(*args).rstrip(c) if args else text.rstrip(c) if text else ""
+                _summary.write(_text + end)
+                return _text
+
+            def header(text: str, *args: object, level: int = 2) -> str:
+                _text = text.format(*args).strip() if args else text.strip() if text else ""
+                if _text and level > 0:
+                    _pre, _hsh = "" if level < 2 else "\n", "#" * level
+                    line("{}{} {}\n", _pre, _hsh, _text)
+                return _text
+
+            def script(text: str, *args: object, lang: str = "", title: str = "", level: int = 3) -> str:
+                _text = text.format(*args) if args else text if text else ""
+                if _text:
+                    _lines = [ _l.rstrip() for _l in _text.splitlines()]
+                    _clean = "\n".join(_lines)
+                    header(title, level=level)
+                    line("```{}\n{}\n```\n", lang.strip().lower(), _clean)
+                    return _clean
+                return _text
+
+            def item(text: str, *args: object, indent: int = 0) -> None:
+                _text = text.format(*args).rstrip() if args else text.rstrip() if text else ""
+                if _text and indent >= 0:
+                    line("{}- {}", "  " * abs(indent), _text)
+                return _text
+
+            def prop(title: str, text: str, *args: object, indent: int = 0) -> None:
+                _text = text.format(*args) if args else text if text else ""
+                if title:
+                    item("{}: {}\n", title, _text, indent=indent)
+                return _text
+
+            # endregion
+            # endregion
+            # region Report ---------------------------------------------------------------------
+
+            group("Python Information")
+            header("Python Information", level=1)
+            header("System Information")
+
+            prop("System", platform.system())
+            prop("Release", platform.release())
+            prop("Version", platform.version())
+            prop("Uname", platform.uname())
+            prop("Node", platform.node())
+            prop("Machine", platform.machine())
+            prop("Processor", platform.processor())
+
+            group("Python Runtime", close=True)
+            header("Python Runtime")
+
+            prop("Version", platform.python_version())
+            prop("Version Tuple", " ".join(platform.python_version_tuple()))
+            prop("Implementation", platform.python_implementation())
+            prop("Build", " ".join(platform.python_build()))
+            prop("Compiler", platform.python_compiler())
+            prop("Branch", platform.python_branch())
+            prop("Revision", platform.python_revision())
+
+            group("Context Information", close=True)
+            script('''${{ toJson(runner) }}''', lang="json", title="Runner Context")
+            script('''${{ toJson(job) }}''', lang="json", title="Job Context")
+            endgroup()
+        # endregion
+        ##PY
+
+## end workflow action ##
+

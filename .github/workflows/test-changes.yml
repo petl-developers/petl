@@ -32,8 +32,16 @@ jobs:
       || ((github.event.action != 'labeled') && contains( github.event.pull_request.labels.*.name, 'force-ci'))
       || (github.event.label.name == 'force-ci')
     steps:
-      - name: Checking if CI shoud run for this push/PR...
-        run: echo Resuming CI. Continuing next jobs...
+      - name: Checking if CI shoud run for ${{ github.ref_name }}...
+        run: echo "Resuming CI. Continuing next jobs..." >> "${GITHUB_STEP_SUMMARY}"
+
+      - name: Report Workflow Information
+        id: workflow_report
+        uses: ./.github/actions/workflow-info
+        with:
+          title: "${{ github.ref_name }}"
+          parameters: "${{ toJson(inputs) }}"
+          content: "\n- Ref: ${{ github.head_ref }}\n"
 
   test-source-code:
     needs: run-guard
