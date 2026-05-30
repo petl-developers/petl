@@ -61,6 +61,7 @@ def test_fromsqlite3_connection():
 
     ieq(expect, actual, cast=tuple)
     ieq(expect, actual, cast=tuple)  # verify can iterate twice
+    connection.close()
 
 
 def test_fromsqlite3_withargs():
@@ -88,6 +89,7 @@ def test_fromsqlite3_withargs():
               ('c', 2.0))
     ieq(expect, actual)
     ieq(expect, actual)  # verify can iterate twice
+    connection.close()
 
 
 def test_tosqlite3_appendsqlite3():
@@ -118,6 +120,7 @@ def test_tosqlite3_appendsqlite3():
               ('e', 9),
               ('f', 1))
     appenddb(table2, f.name, 'foobar')
+    conn.close()
 
     # check what it did
     conn = sqlite3.connect(f.name)
@@ -129,6 +132,7 @@ def test_tosqlite3_appendsqlite3():
               ('e', 9),
               ('f', 1))
     ieq(expect, actual)
+    conn.close()
 
 
 def test_tosqlite3_appendsqlite3_connection():
@@ -166,6 +170,7 @@ def test_tosqlite3_appendsqlite3_connection():
               ('e', 9),
               ('f', 1))
     ieq(expect, actual)
+    conn.close()
 
 
 def test_tosqlite3_identifiers():
@@ -190,6 +195,7 @@ def test_tosqlite3_identifiers():
               ('b', 2),
               ('c', 2))
     ieq(expect, actual)
+    conn.close()
 
 
 # TODO test uneven rows

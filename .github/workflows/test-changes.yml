@@ -3,25 +3,21 @@
 
 name: Test Changes
 
-on: 
+on:
   push:
-    branches: [ "master" ]
+    branches: ["master"]
   merge_group:
-    branches: [ "master" ]
+    branches: ["master"]
   pull_request:
-    branches: [ "master" ]
+    branches: ["master"]
     types: [opened, reopened, synchronize, ready_for_review]
   workflow_dispatch:
     inputs:
-      logLevel:
-        description: 'Log level'
+      branch_commit_or_ref:
+        description: "Run this workflow in what branch/commit?"
         required: true
-        default: 'warning'
-        type: choice
-        options:
-        - info
-        - warning
-        - debug
+        type: string
+        default: master
 
 jobs:
   run-guard:
@@ -36,8 +32,8 @@ jobs:
       || ((github.event.action != 'labeled') && contains( github.event.pull_request.labels.*.name, 'force-ci'))
       || (github.event.label.name == 'force-ci')
     steps:
-      - name: Checking if CI shoud run for this push/PR...
-        run: echo Resuming CI. Continuing next jobs...
+      - name: Checking if CI shoud run for ${{ github.ref_name }}...
+        run: echo "Resuming CI. Continuing next jobs..."
 
   test-source-code:
     needs: run-guard
@@ -45,49 +41,64 @@ jobs:
       fail-fast: false
       matrix:
         #@ https://github.com/actions/runner-images#available-images
-        #@ https://docs.github.com/en/actions/using-github-hosted-runners/using-github-hosted-runners/about-github-hosted-runners#standard-github-hosted-runners-for-public-repositories
-        os: [ "ubuntu-latest", "windows-latest", "macos-latest", "macos-13" ]
+        os:
+          ["ubuntu-latest", "windows-latest", "macos-latest"]
         #@ https://github.com/marketplace/actions/setup-python
         #@ https://github.com/actions/setup-python/blob/main/docs/advanced-usage.md#python
-        python: ['3.6', '3.7', '3.8', '3.9', '3.10', '3.11', '3.12', '3.13']
+        python:
+          ["3.6", "3.7", "3.8", "3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
         # TODO: Also test with PyPy and GraalPy @https://github.com/actions/setup-python/blob/main/docs/advanced-usage.md#graalpy
         include:
           # Default configuration for all jobs
-          - mode: 'full'
-          - install: 'no'
-          - primary: '3.8'
+          - mode: "full"
+          - install: "no"
+          - primary: "3.8"
           # Conditional configuration overrides
-          - python: '3.6'
-            install: 'yes'
-          - python: '3.7'
-            install: 'yes'
-          - os: 'windows-latest'
-            mode: 'basic'
+          - python: "3.6"
+            install: "yes"
+          - python: "3.7"
+            install: "yes"
+          - os: "windows-latest"
+            mode: "basic"
           # Handle random test failures
-          - os: 'ubuntu-latest'
-            python: '3.9'
-            mode: 'basic'
+          - os: "ubuntu-latest"
+            python: "3.9"
+            mode: "basic"
           # Additional Jobs not included in the matrix above
-          - python: '2.7'
-            os: 'ubuntu-latest'
-            mode: 'basic'
-            install: 'yes'
+          - python: "2.7"
+            os: "ubuntu-latest"
+            mode: "basic"
+            install: "yes"
         exclude:
-          # macos-latest == macOS-14-arm64
-          # macos-13 == Intel
-          - os: 'macos-latest'
-            python: '3.6'
-          - os: 'macos-latest'
-            python: '3.7'
+          # macos-latest == macos-15-arm64
+          # macos-latest-large == macos-15-intel
+          - os: "macos-latest"
+            python: "3.6"
+          - os: "macos-latest"
+            python: "3.7"
           # python 3.7 too slow on ubuntu-latest
-          - os: 'ubuntu-latest'
-            python: '3.7'
+          - os: "ubuntu-latest"
+            python: "3.7"
 
     runs-on: "${{ matrix.os }}"
     steps:
+      - name: Checkout source code at ${{ inputs.branch_commit_or_ref || github.ref }}
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.branch_commit_or_ref || github.ref }}
 
-      - name: Checkout source code
-        uses: actions/checkout@v4
+      - name: Report Workflow Information
+        id: workflow_report
+        uses: ./.github/actions/workflow-info
+        with:
+          title: "${{ github.ref_name }} on ${{ matrix.os }} with python ${{ matrix.python }}"
+          parameters: "${{ toJson(inputs) }}"
+          content: |
+            - Ref: ${{ github.head_ref }}
+            - matrix.python: ${{ matrix.python }}
+            - matrix.os: ${{ matrix.os }}
+            - matrix.mode: ${{ matrix.mode }}
+            - matrix.install: ${{ matrix.install }}
 
       - name: Install linux tools
         if: matrix.os == 'ubuntu-latest'
@@ -97,13 +108,13 @@ jobs:
 
       - name: Set up Python ${{ matrix.python }} with install = ${{ matrix.install }}
         if: matrix.install == 'no'
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python }}
 
       - name: Set up Python ${{ matrix.python }} discontinued on ${{ matrix.os }}
         if: matrix.install == 'yes'
-        uses: MatteoH2O1999/setup-python@v3
+        uses: MatteoH2O1999/setup-python@v6
         with:
           python-version: ${{ matrix.python }}
           cache: pip
@@ -175,10 +186,14 @@ jobs:
 
       - name: Test python source code for mode basic
         if: matrix.mode == 'basic'
+        env:
+          PYTHONTRACEMALLOC: 1
         run: pytest --cov=petl petl
 
       - name: Test documentation inside source code for mode full
         if: matrix.mode == 'full'
+        env:
+          PYTHONTRACEMALLOC: 1
         run: |
           echo "::group::Perform doctest-modules execution with coverage"
           pytest --doctest-modules --cov=petl petl
@@ -193,7 +208,11 @@ jobs:
           coveralls --service=github
 
       - name: Print source code coverage with mode = ${{ matrix.mode }}
-        run: coverage report -m
+        run: |
+          printf '\n## Coverage for python ${{ matrix.python }} with mode ${{ matrix.mode }}\n\n' >> "${GITHUB_STEP_SUMMARY}";
+          printf '```text' >> "${GITHUB_STEP_SUMMARY}";
+          coverage report -m >> "${GITHUB_STEP_SUMMARY}";
+          printf '```' >> "${GITHUB_STEP_SUMMARY}";
 
   test-documentation:
     needs: run-guard
@@ -203,11 +222,13 @@ jobs:
         python: [3.8]
 
     steps:
-      - name: Checkout source code
-        uses: actions/checkout@v4
+      - name: Checkout source code at ${{ inputs.branch_commit_or_ref || github.ref }}
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.branch_commit_or_ref || github.ref }}
 
       - name: Set up Python ${{ matrix.python }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python }}
 
@@ -243,4 +264,3 @@ jobs:
   #     pull-requests: write
   #     security-events: write
   #   secrets: inherit # pass all secrets
-

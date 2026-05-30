@@ -1,0 +1,180 @@
+# How to test locally:
+#
+# curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+# $ cargo install wrkflw
+# $ cargo install wrkflw
+# $ wrkflw run --verbose --event push --diff --show-action-messages .github/workflows/debug.yml
+
+name: "Report Workflow Information"
+description: "Reusable action meant to be used in workflow steps"
+branding:
+  icon: "watch"
+  color: "green"
+
+inputs:
+  title:
+    description: "A reference to put in the report title"
+    required: true
+    default: "the Job"
+  parameters:
+    description: "Input variables used in Job"
+    required: false
+  content:
+    description: "Content to put in the report"
+    required: false
+outputs:
+  status:
+    description: "Return report status"
+    value: ${{ steps.report_workflow_generation.outputs.status }}
+runs:
+  using: "composite"
+  steps:
+    - name: Report Workflow Information
+      id: report_workflow_generation
+      env:
+        REPORT_PARAMS: "${{ inputs.parameters }}"
+        REPORT_CONTENT: "${{ inputs.content }}"
+      shell: python
+      run: |
+        import platform
+        import os
+        import json
+
+        _GITHUB_STEP_SUMMARY = os.environ.get("GITHUB_STEP_SUMMARY", "sketch-github-step.md")
+        _GITHUB_OUTPUT = os.environ.get("GITHUB_OUTPUT", "sketch-github-output.md")
+        _group_is_open = False
+
+        with open(_GITHUB_OUTPUT, "a") as _output, open(_GITHUB_STEP_SUMMARY, "a") as _summary:
+
+            def out(key: str, text: str, *args: object, end: str = "\n", c: str = " \t\f\v") -> str:
+                _text = text.format(*args).rstrip(c) if args else text.rstrip(c) if text else ""
+                if key and key.strip():
+                    _output.write("{}={}\n".format(key.strip(), _text + end))
+                return _text
+
+            def group(text: str, *args: object) -> str:
+                global _group_is_open
+                _text = text.format(*args).strip() if args else text.strip() if text else ""
+                if _text:
+                    if _group_is_open:
+                        endgroup()
+                    print("::group::{}".format(_text))
+                    _group_is_open = True
+                return _text
+
+            def endgroup() -> None:
+                global _group_is_open
+                print("::endgroup::")
+                _group_is_open = False
+
+            def newline() -> None:
+                _summary.write("\n")
+
+            def line(text: str, *args: object, end: str = "\n", c: str = " \t\f\v") -> str:
+                _text = text.format(*args).rstrip(c) if args else text.rstrip(c) if text else ""
+                _summary.write(_text + end)
+                return _text
+
+            def header(text: str, *args: object, level: int = 2) -> str:
+                _text = text.format(*args).strip() if args else text.strip() if text else ""
+                if _text and level > 0:
+                    _pre, _hsh = "" if level < 2 else "\n", "#" * level
+                    line("{}{} {}\n", _pre, _hsh, _text)
+                return _text
+
+            def env(varname: str, *, title: str = "", level: int = 3) -> str:
+                _value = os.environ.get(varname, None) if varname else None
+                if _value:
+                    header(title, level=level)
+                    line(_value)
+                    newline()
+                return _value
+
+            def script(text: str, *args: object, lang: str = "", title: str = "", level: int = 3) -> str:
+                _text = text.format(*args) if args else text if text else ""
+                if _text:
+                    _lines = [ _l.rstrip() for _l in _text.splitlines()]
+                    _clean = "\n".join(_lines)
+                    header(title, level=level)
+                    line("```{}\n{}\n```\n", lang.strip().lower(), _clean)
+                    return _clean
+                return _text
+
+            def item(text: str, *args: object, indent: int = 0) -> None:
+                _text = text.format(*args).rstrip() if args else text.rstrip() if text else ""
+                if _text and indent >= 0:
+                    line("{}- {}", "  " * abs(indent), _text)
+                return _text
+
+            def prop(title: str, text: str, *args: object, indent: int = 0) -> None:
+                _text = text.format(*args) if args else text if text else ""
+                if title:
+                    item("{}: {}\n", title, _text, indent=indent)
+                return _text
+
+            def listing(text: str, *, title: str = "", indent: int = 0, level: int = 3) -> None:
+                if not text or not text.strip():
+                    return
+                try:
+                    _json = json.loads(text)
+                except json.JSONDecodeError as _ex:
+                    line("Failed to parse JSON: {}", _ex)
+                    return
+                if _json:
+                    header(title, level=level)
+                for _key, _value in _json.items():
+                    prop(_key.strip(), str(_value).strip() if _value else "", indent=indent)
+                newline()
+
+            def env_listing(varname: str, *, title: str = "", indent: int = 0, level: int = 3) -> str:
+                _value = os.environ.get(varname, None) if varname else None
+                if _value:
+                    listing(_value, title=title, indent=indent, level=level)
+                return _value
+
+            out("status", "started")
+            group("Workflow Information")
+            header("Job: ${{ inputs.title }}", level=1)
+
+            env_listing("REPORT_PARAMS", title="Parameters")
+            env("REPORT_CONTENT", title="Summary")
+
+            header("Event Information")
+            prop("github.repository", '''${{ github.repository }}''')
+            prop("github.ref_name", '''${{ github.ref_name }}''')
+            prop("github.sha", '''${{ github.sha }}''')
+            prop("github.event_name", '''${{ github.event_name }}''')
+            prop("github.actor", '''${{ github.actor }}''')
+
+            group("Context Information")
+            header("Context Information")
+            listing("""${{ toJson(runner) }}""", title="Runner Context")
+            listing("""${{ toJson(job) }}""", title="Job Context")
+            endgroup()
+
+            group("System Information")
+            header("System Information")
+
+            prop("System", platform.system())
+            prop("Release", platform.release())
+            prop("Version", platform.version())
+            prop("Uname", platform.uname())
+            prop("Node", platform.node())
+            prop("Machine", platform.machine())
+            prop("Processor", platform.processor())
+
+            group("Python Runtime")
+            header("Python Runtime")
+
+            prop("Version", platform.python_version())
+            prop("Version Tuple", " ".join(platform.python_version_tuple()))
+            prop("Implementation", platform.python_implementation())
+            prop("Build", " ".join(platform.python_build()))
+            prop("Compiler", platform.python_compiler())
+            prop("Branch", platform.python_branch())
+            prop("Revision", platform.python_revision())
+
+            out("status", "started")
+
+## end workflow action ##
+

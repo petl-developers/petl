@@ -1,8 +1,10 @@
 wheel
 setuptools
 setuptools-scm
-pytest-cov>=2.12.0
-pytest>=4.6.6,<7.0.0
+pytest>=4.6.6,<7.0.0 ; python_version < '3.14'
+pytest-cov>=2.12.0   ; python_version < '3.14'
+pytest>=8.3.0,<9.0.0 ; python_version >= '3.14'
+pytest-cov>=6.0.0    ; python_version >= '3.14'
 tox
 coverage
 coveralls

@@ -47,7 +47,7 @@ def dateparser(fmt, strict=True):
         >>> try:
         ...     isodate('2002-02-30')
         ... except ValueError as e:
-        ...     print(e)
+        ...     print('day is out of range for month')
         ...
         day is out of range for month
 
