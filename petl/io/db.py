@@ -21,7 +21,7 @@ debug = logger.debug
 warning = logger.warning
 
 
-def fromdb(dbo, query, *args, ownsdb=False, **kwargs):
+def fromdb(dbo, query, *args, **kwargs):
     """Provides access to data from any DB-API 2.0 connection via a given query.
     E.g., using :mod:`sqlite3`::
 
@@ -84,6 +84,7 @@ def fromdb(dbo, query, *args, ownsdb=False, **kwargs):
 
     """
 
+    ownsdb = kwargs.pop('ownsdb', False)
     # convenience for working with sqlite3
     if isinstance(dbo, string_types):
         import sqlite3
