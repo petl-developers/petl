@@ -186,10 +186,14 @@ jobs:
 
       - name: Test python source code for mode basic
         if: matrix.mode == 'basic'
+        env:
+          PYTHONTRACEMALLOC: 1
         run: pytest --cov=petl petl
 
       - name: Test documentation inside source code for mode full
         if: matrix.mode == 'full'
+        env:
+          PYTHONTRACEMALLOC: 1
         run: |
           echo "::group::Perform doctest-modules execution with coverage"
           pytest --doctest-modules --cov=petl petl
