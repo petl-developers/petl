@@ -208,7 +208,11 @@ jobs:
           coveralls --service=github
 
       - name: Print source code coverage with mode = ${{ matrix.mode }}
-        run: coverage report -m
+        run: |
+          printf '\n## Coverage for python ${{ matrix.python }} with mode ${{ matrix.mode }}\n\n' >> "${GITHUB_STEP_SUMMARY}";
+          printf '```text' >> "${GITHUB_STEP_SUMMARY}";
+          coverage report -m >> "${GITHUB_STEP_SUMMARY}";
+          printf '```' >> "${GITHUB_STEP_SUMMARY}";
 
   test-documentation:
     needs: run-guard
