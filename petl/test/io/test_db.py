@@ -107,6 +107,7 @@ def test_fromdb_withargs():
               ('c', 2.0))
     ieq(expect, actual)
     ieq(expect, actual) # verify can iterate twice
+    connection.close()
 
 
 def test_todb_appenddb():
@@ -146,6 +147,7 @@ def test_todb_appenddb():
               ('e', 9),
               ('f', 1))
     ieq(expect, actual)
+    conn.close()
 
 
 def test_todb_appenddb_cursor():
@@ -186,3 +188,4 @@ def test_todb_appenddb_cursor():
               ('e', 9),
               ('f', 1))
     ieq(expect, actual)
+    conn.close()
