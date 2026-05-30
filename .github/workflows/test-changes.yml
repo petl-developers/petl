@@ -33,7 +33,7 @@ jobs:
       || (github.event.label.name == 'force-ci')
     steps:
       - name: Checking if CI shoud run for ${{ github.ref_name }}...
-        run: echo "Resuming CI. Continuing next jobs...""
+        run: echo "Resuming CI. Continuing next jobs..."
 
   test-source-code:
     needs: run-guard
@@ -76,9 +76,9 @@ jobs:
             python: "3.6"
           - os: "macos-latest"
             python: "3.7"
-          - os: "macos-latest-large"
+          - os: "macos-14-large"
             python: "3.6"
-          - os: "macos-latest-large"
+          - os: "macos-14-large"
             python: "3.7"
           # python 3.7 too slow on ubuntu-latest
           - os: "ubuntu-latest"

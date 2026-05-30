@@ -34,18 +34,17 @@ runs:
       env:
         REPORT_PARAMS: "${{ inputs.parameters }}"
         REPORT_CONTENT: "${{ inputs.content }}"
+      shell: python
       run: |
-        ##python3 - <<PY
-        # region Helpers --------------------------------------------------------------------
         import platform
         import os
+        import json
 
         _GITHUB_STEP_SUMMARY = os.environ.get("GITHUB_STEP_SUMMARY", "sketch-github-step.md")
         _GITHUB_OUTPUT = os.environ.get("GITHUB_OUTPUT", "sketch-github-output.md")
         _group_is_open = False
 
         with open(_GITHUB_OUTPUT, "a") as _output, open(_GITHUB_STEP_SUMMARY, "a") as _summary:
-            # region Output -----------------------------------------------------------------
 
             def out(key: str, text: str, *args: object, end: str = "\n", c: str = " \t\f\v") -> str:
                 _text = text.format(*args).rstrip(c) if args else text.rstrip(c) if text else ""
@@ -66,9 +65,6 @@ runs:
                 global _group_is_open
                 print("::endgroup::")
                 _group_is_open = False
-
-            # endregion
-            # region Summary ----------------------------------------------------------------
 
             def newline() -> None:
                 _summary.write("\n")
@@ -134,10 +130,6 @@ runs:
                     listing(_value, title=title, indent=indent, level=level)
                 return _value
 
-            # endregion
-            # endregion
-            # region Report ---------------------------------------------------------------------
-
             out("status", "started")
             group("Workflow Information")
             header("Workflow Information for ${{ inputs.title }}", level=1)
@@ -181,8 +173,6 @@ runs:
             prop("Revision", platform.python_revision())
 
             out("status", "started")
-        # endregion
-        ##PY
 
 ## end workflow action ##
 
