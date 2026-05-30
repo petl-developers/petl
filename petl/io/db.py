@@ -96,12 +96,12 @@ def fromdb(dbo, query, *args, **kwargs):
 
 class DbView(Table):
 
-    def __init__(self, dbo, query, *args, ownsdb=False, **kwargs):
+    def __init__(self, dbo, query, *args, **kwargs):
         self.dbo = dbo
         self.query = query
         self.args = args
         self.kwargs = kwargs
-        self.ownsdb = ownsdb
+        self.ownsdb = kwargs.pop('ownsdb', False)
 
     def __del__(self):
         if self.ownsdb:
