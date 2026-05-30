@@ -34,43 +34,6 @@ runs:
       env:
         REPORT_PARAMS: "${{ inputs.parameters }}"
         REPORT_CONTENT: "${{ inputs.content }}"
-      shell: bash
-      run: |
-        echo "::group::Generating report"
-        echo "status=started" >> "${GITHUB_OUTPUT}";
-
-        dump_ctx(){
-          echo "::group::Context ${1:-Unknown}"
-          local text;
-          if ! text="$(cat -)"; then printf 'Failed to dump context for %s\n' "${1:-Unknown}" >> "${GITHUB_STEP_SUMMARY}"; fi
-          text="${text#"${text%%[![:space:]]*}"}"
-          if test "${#text}" -gt 3; then
-            printf '\n### %s Context\n\n\n```json\n%s\n```\n' "${1:-Unknown}" "${text:-Nothing in context}" >> "${GITHUB_STEP_SUMMARY}";
-          fi
-          echo "::endgroup::";
-        };
-
-        printf '# Workflow Information on %s\n\n' '${{ inputs.title }}' >> "${GITHUB_STEP_SUMMARY}";
-        printf '\n## Event Information\n\n' >> "${GITHUB_STEP_SUMMARY}";
-        echo '- github.ref_name: ${{ github.ref_name }}' >> "${GITHUB_STEP_SUMMARY}";
-        echo '- github.sha: ${{ github.sha }}' >> "${GITHUB_STEP_SUMMARY}";
-
-        echo "${REPORT_PARAMS:-}" | dump_ctx "Parameters";
-        if test -n "${REPORT_CONTENT:-}"; then
-          printf '\n## Summary\n\n' >> "${GITHUB_STEP_SUMMARY}";
-          echo "${REPORT_CONTENT:-}" >> "${GITHUB_STEP_SUMMARY}";
-        fi
-
-        printf '\n## Context Information\n' >> "${GITHUB_STEP_SUMMARY}";
-        echo '${{ toJson(runner) }}' | dump_ctx "Runner";
-        echo '${{ toJson(job) }}' | dump_ctx "Job";
-
-        echo "status=finished" >> "${GITHUB_OUTPUT}";
-        echo "::endgroup::"
-
-    - name: Report Python Information
-      id: report_python_information
-      shell: python
       run: |
         ##python3 - <<PY
         # region Helpers --------------------------------------------------------------------
@@ -79,6 +42,7 @@ runs:
 
         _GITHUB_STEP_SUMMARY = os.environ.get("GITHUB_STEP_SUMMARY", "sketch-github-step.md")
         _GITHUB_OUTPUT = os.environ.get("GITHUB_OUTPUT", "sketch-github-output.md")
+        _group_is_open = False
 
         with open(_GITHUB_OUTPUT, "a") as _output, open(_GITHUB_STEP_SUMMARY, "a") as _summary:
             # region Output -----------------------------------------------------------------
@@ -89,19 +53,25 @@ runs:
                     _output.write("{}={}\n".format(key.strip(), _text + end))
                 return _text
 
-            def group(text: str, *args: object, close: bool = False) -> str:
+            def group(text: str, *args: object) -> str:
+                global _group_is_open
                 _text = text.format(*args).strip() if args else text.strip() if text else ""
                 if _text:
-                    if close:
+                    if _group_is_open:
                         endgroup()
                     print("::group::{}".format(_text))
                 return _text
 
             def endgroup() -> None:
+                global _group_is_open
                 print("::endgroup::")
+                _group_is_open = False
 
             # endregion
             # region Summary ----------------------------------------------------------------
+
+            def newline() -> None:
+                _summary.write("\n")
 
             def line(text: str, *args: object, end: str = "\n", c: str = " \t\f\v") -> str:
                 _text = text.format(*args).rstrip(c) if args else text.rstrip(c) if text else ""
@@ -114,6 +84,14 @@ runs:
                     _pre, _hsh = "" if level < 2 else "\n", "#" * level
                     line("{}{} {}\n", _pre, _hsh, _text)
                 return _text
+
+            def env(varname: str, *, title: str = "", level: int = 3) -> str:
+                _value = os.environ.get(varname, None) if varname else None
+                if _value:
+                    header(title, level=level)
+                    line(_value)
+                    newline()
+                return _value
 
             def script(text: str, *args: object, lang: str = "", title: str = "", level: int = 3) -> str:
                 _text = text.format(*args) if args else text if text else ""
@@ -137,12 +115,50 @@ runs:
                     item("{}: {}\n", title, _text, indent=indent)
                 return _text
 
+            def listing(text: str, *, title: str = "", indent: int = 0, level: int = 3) -> None:
+                if not text or not text.strip():
+                    return
+                try:
+                    _json = json.loads(text)
+                except json.JSONDecodeError as _ex:
+                    line("Failed to parse JSON: {}", _ex)
+                    return
+                header(title, level=level)
+                for _key, _value in _json.items():
+                    prop(_key.strip(), str(_value).strip() if _value else "", indent=indent)
+                newline()
+
+            def env_listing(varname: str, *, title: str = "", indent: int = 0, level: int = 3) -> str:
+                _value = os.environ.get(varname, None) if varname else None
+                if _value:
+                    listing(_value, title=title, indent=indent, level=level)
+                return _value
+
             # endregion
             # endregion
             # region Report ---------------------------------------------------------------------
 
-            group("Python Information")
-            header("Python Information", level=1)
+            out("status", "started")
+            group("Workflow Information")
+            header("Workflow Information for ${{ inputs.title }}", level=1)
+
+            env_listing("REPORT_PARAMS", title="Parameters")
+            env("REPORT_CONTENT", title="Summary")
+
+            header("Event Information")
+            prop("github.repository", '''${{ github.repository }}''')
+            prop("github.ref_name", '''${{ github.ref_name }}''')
+            prop("github.sha", '''${{ github.sha }}''')
+            prop("github.event_name", '''${{ github.event_name }}''')
+            prop("github.actor", '''${{ github.actor }}''')
+
+            group("Context Information")
+            header("Context Information")
+            listing("""${{ toJson(runner) }}""", title="Runner Context")
+            listing("""${{ toJson(job) }}""", title="Job Context")
+            endgroup()
+
+            group("System Information")
             header("System Information")
 
             prop("System", platform.system())
@@ -153,7 +169,7 @@ runs:
             prop("Machine", platform.machine())
             prop("Processor", platform.processor())
 
-            group("Python Runtime", close=True)
+            group("Python Runtime")
             header("Python Runtime")
 
             prop("Version", platform.python_version())
@@ -164,10 +180,7 @@ runs:
             prop("Branch", platform.python_branch())
             prop("Revision", platform.python_revision())
 
-            group("Context Information", close=True)
-            script('''${{ toJson(runner) }}''', lang="json", title="Runner Context")
-            script('''${{ toJson(job) }}''', lang="json", title="Job Context")
-            endgroup()
+            out("status", "started")
         # endregion
         ##PY
 
