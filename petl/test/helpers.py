@@ -17,7 +17,7 @@ def assert_almost_equal(first, second, places=None, msg=None):
     """Test when the values are aproximatedly equals by a places exponent"""
     vabs = None if places is None else 10 ** (- places)
     # Use the == operator to trigger pytest.approx comparison logic
-    assert first == pytest.approx(second, abs=vabs), msg
+    assert second == pytest.approx(first, abs=vabs), msg
 
 
 def ieq(expect, actual, cast=None):

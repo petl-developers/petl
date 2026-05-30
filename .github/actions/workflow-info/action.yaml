@@ -59,6 +59,7 @@ runs:
                     if _group_is_open:
                         endgroup()
                     print("::group::{}".format(_text))
+                    _group_is_open = True
                 return _text
 
             def endgroup() -> None:
