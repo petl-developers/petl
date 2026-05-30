@@ -32,7 +32,7 @@ def test_fromdb():
     c.close()
 
     # test the function
-    actual = fromdb(connection, 'select * from foobar')
+    actual = fromdb(connection, 'select * from foobar', ownsdb=True)
     expect = (('foo', 'bar'),
               ('a', 1),
               ('b', 2),

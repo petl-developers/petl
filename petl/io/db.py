@@ -21,14 +21,14 @@ debug = logger.debug
 warning = logger.warning
 
 
-def fromdb(dbo, query, *args, **kwargs):
+def fromdb(dbo, query, *args, ownsdb=False, **kwargs):
     """Provides access to data from any DB-API 2.0 connection via a given query.
     E.g., using :mod:`sqlite3`::
 
         >>> import petl as etl
         >>> import sqlite3
         >>> connection = sqlite3.connect('example.db')
-        >>> table = etl.fromdb(connection, 'SELECT * FROM example')
+        >>> table = etl.fromdb(connection, 'SELECT * FROM example', ownsdb=True)
 
     E.g., using :mod:`psycopg2` (assuming you've installed it first)::
 
@@ -59,6 +59,9 @@ def fromdb(dbo, query, *args, **kwargs):
     The parameter `dbo` may also be a string, in which case it is interpreted as
     the name of a file containing an :mod:`sqlite3` database.
 
+    When parameter `ownsdb` is True, the database connection will be closed when the
+    cursor is out of scope and is being garbage collected.
+
     Note that the default behaviour of most database servers and clients is for
     the entire result set for each query to be sent from the server to the
     client. If your query returns a large result set this can result in
@@ -85,17 +88,27 @@ def fromdb(dbo, query, *args, **kwargs):
     if isinstance(dbo, string_types):
         import sqlite3
         dbo = sqlite3.connect(dbo)
+        ownsdb = True
 
-    return DbView(dbo, query, *args, **kwargs)
+    return DbView(dbo, query, *args, ownsdb=ownsdb, **kwargs)
 
 
 class DbView(Table):
 
-    def __init__(self, dbo, query, *args, **kwargs):
+    def __init__(self, dbo, query, *args, ownsdb=False, **kwargs):
         self.dbo = dbo
         self.query = query
         self.args = args
         self.kwargs = kwargs
+        self.ownsdb = ownsdb
+
+    def __del__(self):
+        if self.ownsdb:
+            try:
+                self.dbo.close()
+                self.dbo = None
+            except Exception:
+                pass
 
     def __iter__(self):
 
