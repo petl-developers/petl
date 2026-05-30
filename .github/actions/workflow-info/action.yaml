@@ -119,7 +119,8 @@ runs:
                 except json.JSONDecodeError as _ex:
                     line("Failed to parse JSON: {}", _ex)
                     return
-                header(title, level=level)
+                if _json:
+                    header(title, level=level)
                 for _key, _value in _json.items():
                     prop(_key.strip(), str(_value).strip() if _value else "", indent=indent)
                 newline()
@@ -132,7 +133,7 @@ runs:
 
             out("status", "started")
             group("Workflow Information")
-            header("Workflow Information for ${{ inputs.title }}", level=1)
+            header("Job: ${{ inputs.title }}", level=1)
 
             env_listing("REPORT_PARAMS", title="Parameters")
             env("REPORT_CONTENT", title="Summary")

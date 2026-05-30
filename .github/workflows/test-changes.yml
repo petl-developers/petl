@@ -91,7 +91,7 @@ jobs:
         id: workflow_report
         uses: ./.github/actions/workflow-info
         with:
-          title: "${{ github.ref_name }}"
+          title: "${{ github.ref_name }} on ${{ matrix.os }} with python ${{ matrix.python }}"
           parameters: "${{ toJson(inputs) }}"
           content: |
             - Ref: ${{ github.head_ref }}
