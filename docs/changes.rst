@@ -18,6 +18,9 @@ Version 1.7.17
 * fix: mitigate code injection related in #672
   By :user:`juarezr`, :issue:`681`.
 
+* Add ``drop='if_exists'`` support to :func:`petl.io.db.todb`.
+  :issue:`666`.
+
 Version 1.7.16
 --------------
 

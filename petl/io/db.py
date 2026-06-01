@@ -288,9 +288,10 @@ def todb(table, dbo, tablename, schema=None, commit=True,
     create : bool
         If True attempt to create the table before loading, inferring types
         from a sample of the data (requires SQLAlchemy)
-    drop : bool
+    drop : bool or 'if_exists'
         If True attempt to drop the table before recreating (only relevant if
-        create=True)
+        create=True). If 'if_exists', do not raise an error if the table does
+        not exist.
     constraints : bool
         If True use length and nullable constraints (only relevant if
         create=True)
@@ -349,7 +350,9 @@ def todb(table, dbo, tablename, schema=None, commit=True,
     try:
         if create:
             if drop:
-                drop_table(dbo, tablename, schema=schema, commit=commit)
+                if_exists = drop == 'if_exists'
+                drop_table(dbo, tablename, schema=schema, commit=commit,
+                           if_exists=if_exists)
             create_table(table, dbo, tablename, schema=schema, commit=commit,
                          constraints=constraints, metadata=metadata,
                          dialect=dialect, sample=sample)

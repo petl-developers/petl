@@ -46,6 +46,19 @@ def _test_create(dbo):
     else:
         raise Exception('expected exception not raised')
 
+    debug('verify create with drop if exists when missing')
+    todb(expect, dbo, 'test_create_if_exists', create=True,
+         drop='if_exists')
+    actual_if_exists = fromdb(dbo, 'SELECT * FROM test_create_if_exists')
+    ieq(expect, actual_if_exists)
+    debug(look(actual_if_exists))
+
+    debug('verify recreate with drop if exists')
+    todb(expect_extended, dbo, 'test_create_if_exists', create=True,
+         drop='if_exists')
+    ieq(expect_extended, actual_if_exists)
+    debug(look(actual_if_exists))
+
     debug('create table and verify')
     todb(expect, dbo, 'test_create', create=True)
     ieq(expect, actual)
@@ -80,6 +93,7 @@ def _setup_mysql(dbapi_connection):
     # deal with quote compatibility
     cursor.execute('SET SQL_MODE=ANSI_QUOTES')
     cursor.execute('DROP TABLE IF EXISTS test_create')
+    cursor.execute('DROP TABLE IF EXISTS test_create_if_exists')
     cursor.execute('DROP TABLE IF EXISTS "foo "" bar`"')
     cursor.close()
     dbapi_connection.commit()
@@ -89,6 +103,7 @@ def _setup_generic(dbapi_connection):
     # setup table
     cursor = dbapi_connection.cursor()
     cursor.execute('DROP TABLE IF EXISTS test_create')
+    cursor.execute('DROP TABLE IF EXISTS test_create_if_exists')
     cursor.execute('DROP TABLE IF EXISTS "foo "" bar`"')
     cursor.close()
     dbapi_connection.commit()
