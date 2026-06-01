@@ -229,7 +229,7 @@ def create_table(table, dbo, tablename, schema=None, commit=True,
     _execute(sql, dbo, commit=commit)
 
 
-def drop_table(dbo, tablename, schema=None, commit=True):
+def drop_table(dbo, tablename, schema=None, commit=True, if_exists=False):
     """
     Drop a database table.
 
@@ -244,6 +244,8 @@ def drop_table(dbo, tablename, schema=None, commit=True):
         Name of the database schema the table is in
     commit : bool
         If True commit the changes
+    if_exists : bool
+        If True, do not raise an error if the table does not exist
 
     """
 
@@ -252,7 +254,10 @@ def drop_table(dbo, tablename, schema=None, commit=True):
     if schema is not None:
         tablename = _quote(schema) + '.' + tablename
 
-    sql = u'DROP TABLE %s' % tablename
+    if if_exists:
+        sql = u'DROP TABLE IF EXISTS %s' % tablename
+    else:
+        sql = u'DROP TABLE %s' % tablename
     _execute(sql, dbo, commit)
 
 
