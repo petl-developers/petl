@@ -205,7 +205,7 @@ jobs:
           PYTHONTRACEMALLOC: 1
         run: |
           echo "::group::Perform doctest-modules execution with coverage"
-          pytest --doctest-modules --cov=petl petl
+          pytest --doctest-modules --cov=petl --durations=10 petl
           echo "::endgroup::"
 
       - name: Coveralls with primary = ${{ matrix.primary }}
