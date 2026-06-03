@@ -12,7 +12,7 @@ from petl.io.db import fromdb, todb
 from petl.io.db_create import make_sqlalchemy_column
 from petl.test.helpers import ieq, eq_
 from petl.util.vis import look
-from petl.test.io.test_db_server import user, password, host, database
+from petl.test.io.test_db_server import get_pg_args, get_mysql_args
 
 
 logger = logging.getLogger(__name__)
@@ -110,7 +110,7 @@ def _setup_generic(dbapi_connection):
 
 
 try:
-    import sqlalchemy  # noqa: F401
+    import sqlalchemy
 except ImportError as e:
     pytest.skip('SKIP generic DB create tests: %s' % e, allow_module_level=True)
 else:
@@ -149,10 +149,11 @@ SKIP_PYMYSQL = False
 try:
     import pymysql
     import sqlalchemy
-    pymysql.connect(host=host,
-                    user=user,
-                    password=password,
-                    database=database)
+    myhost, myuser, mypassword, mydatabase = get_mysql_args()
+    pymysql.connect(host=myhost,
+                    user=myuser,
+                    password=mypassword,
+                    database=mydatabase)
 except Exception as e:
     SKIP_PYMYSQL = 'SKIP pymysql create tests: %s' % e
 finally:
@@ -160,13 +161,12 @@ finally:
     def test_mysql_create():
 
         import pymysql
-        connect = pymysql.connect
 
         # assume database already created
-        dbapi_connection = connect(host=host,
-                                   user=user,
-                                   password=password,
-                                   database=database)
+        dbapi_connection = pymysql.connect(host=myhost,
+                                   user=myuser,
+                                   password=mypassword,
+                                   database=mydatabase)
 
         # exercise using a dbapi_connection
         _setup_mysql(dbapi_connection)
@@ -182,7 +182,7 @@ finally:
         _setup_mysql(dbapi_connection)
         from sqlalchemy import create_engine
         sqlalchemy_engine = create_engine('mysql+pymysql://%s:%s@%s/%s'
-                                          % (user, password, host, database))
+                                          % (myuser, mypassword, myhost, mydatabase))
         sqlalchemy_connection = sqlalchemy_engine.connect()
         sqlalchemy_connection.execute('SET SQL_MODE=ANSI_QUOTES')
         _test_create(sqlalchemy_connection)
@@ -200,10 +200,11 @@ finally:
 SKIP_POSTGRES = False
 try:
     import psycopg2
-    import sqlalchemy  # noqa: F401
+    import sqlalchemy
+    pghost, pguser, pgpassword, pgdatabase = get_pg_args()
     psycopg2.connect(
         'host=%s dbname=%s user=%s password=%s'
-        % (host, database, user, password)
+        % (pghost, pgdatabase, pguser, pgpassword)
     )
 except Exception as e:
     SKIP_POSTGRES = 'SKIP psycopg2 create tests: %s' % e
@@ -218,7 +219,7 @@ finally:
         # assume database already created
         dbapi_connection = psycopg2.connect(
             'host=%s dbname=%s user=%s password=%s'
-            % (host, database, user, password)
+            % (pghost, pgdatabase, pguser, pgpassword)
         )
         dbapi_connection.autocommit = True
 
