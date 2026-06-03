@@ -112,6 +112,7 @@ jobs:
 
       - name: Report Workflow Information
         id: workflow_report
+        if: matrix.python >= '3'
         uses: ./.github/actions/workflow-info
         with:
           title: "${{ github.ref_name }} on ${{ matrix.os }} with python ${{ matrix.python }}"
@@ -185,9 +186,9 @@ jobs:
         run: |
           echo "::group::List Installed Packages for Throubleshooting"
           printf '\n## Installed Packages for python ${{ matrix.python }} with mode ${{ matrix.mode }}\n\n' >> "${GITHUB_STEP_SUMMARY}";
-          echo "- Python Version: $(python --version)"
-          echo "- Pytest Version: $(pytest --version)"
-          echo "- Pip Version: $(pip --version | head -n 1 | cut -d' ' -f2)"
+          echo "- Python Version: $(python --version)" >> "${GITHUB_STEP_SUMMARY}";
+          echo "- Pytest Version: $(pytest --version)" >> "${GITHUB_STEP_SUMMARY}";
+          echo "- Pip Version: $(pip --version | head -n 1 | cut -d' ' -f2)" >> "${GITHUB_STEP_SUMMARY}";
           printf '```text' >> "${GITHUB_STEP_SUMMARY}";
           python -m pip list --format freeze >> "${GITHUB_STEP_SUMMARY}";
           printf '```' >> "${GITHUB_STEP_SUMMARY}";
