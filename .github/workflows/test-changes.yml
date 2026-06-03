@@ -51,6 +51,7 @@ jobs:
         include:
           # Default configuration for all jobs
           - mode: "full"
+          - scope: "full"
           - install: "no"
           - primary: "3.8"
           # Conditional configuration overrides
@@ -60,14 +61,17 @@ jobs:
             install: "yes"
           - os: "windows-latest"
             mode: "basic"
+            scope: "basic"
           # Handle random test failures
           - os: "ubuntu-latest"
             python: "3.9"
             mode: "basic"
+            scope: "basic"
           # Additional Jobs not included in the matrix above
           - python: "2.7"
             os: "ubuntu-latest"
             mode: "basic"
+            scope: "full"
             install: "yes"
         exclude:
           # macos-latest == macos-15-arm64
@@ -92,6 +96,12 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends python3-h5py
+
+      - name: Install additional linux tools
+        if: matrix.os == 'ubuntu-latest' && matrix.mode == 'full' && matrix.scope == 'full'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends default-libmysqlclient-dev
 
       - name: Set up Python ${{ matrix.python }} with install = ${{ matrix.install }}
         if: matrix.install == 'no'
@@ -122,6 +132,7 @@ jobs:
             - matrix.python: ${{ matrix.python }}
             - matrix.os: ${{ matrix.os }}
             - matrix.mode: ${{ matrix.mode }}
+            - matrix.scope: ${{ matrix.scope }}
             - matrix.install: ${{ matrix.install }}
 
       - name: Install test dependencies
@@ -162,8 +173,8 @@ jobs:
           docker run -it --name sftp -p 2244:22 -d atmoz/sftp petl:test:::public
           echo "::endgroup::"
 
-      - name: Install containers for remote database testing with mode = ${{ matrix.mode }}
-        if: matrix.os == 'ubuntu-latest' && matrix.mode == 'full'
+      - name: Install containers for remote database testing with scope = ${{ matrix.scope }}
+        if: matrix.os == 'ubuntu-latest' && matrix.scope == 'full'
         run: |
           echo "::group::Setup docker for MySQL"
           docker run -it --name mysql -p 3306:3306 -p 33060:33060 -e MYSQL_ROOT_PASSWORD=pass0 -e MYSQL_DATABASE=petl -e MYSQL_USER=petl -e MYSQL_PASSWORD=test -d mysql:latest
@@ -178,14 +189,15 @@ jobs:
       - name: Setup petl package with mode = ${{ matrix.mode }}
         run: python setup.py sdist bdist_wheel
 
-      - name: Install extra packages dependencies for mode full
-        if: matrix.mode == 'full'
+      - name: Install extra packages dependencies for scope = ${{ matrix.scope }}
+        if: matrix.scope == 'full'
         run: python -m pip install --prefer-binary -r requirements-formats.txt
 
       - name: List Installed Packages for Throubleshooting
+        shell: bash
         run: |
           echo "::group::List Installed Packages for Throubleshooting"
-          printf '\n## Installed Packages for python ${{ matrix.python }} with mode ${{ matrix.mode }}\n\n' >> "${GITHUB_STEP_SUMMARY}";
+          printf '\n## Installed Packages for python ${{ matrix.python }}\n\n' >> "${GITHUB_STEP_SUMMARY}";
           echo "- Python Version: $(python --version)" >> "${GITHUB_STEP_SUMMARY}";
           echo "- Pytest Version: $(pytest --version)" >> "${GITHUB_STEP_SUMMARY}";
           echo "- Pip Version: $(pip --version | head -n 1 | cut -d' ' -f2)" >> "${GITHUB_STEP_SUMMARY}";
@@ -194,13 +206,13 @@ jobs:
           printf '```' >> "${GITHUB_STEP_SUMMARY}";
           echo "::endgroup::"
 
-      - name: Test python source code for mode basic
+      - name: Test python source code for mode = basic
         if: matrix.mode == 'basic'
         env:
           PYTHONTRACEMALLOC: 1
         run: pytest --cov=petl petl
 
-      - name: Test documentation inside source code for mode full
+      - name: Test including documentation inside source code for mode = full
         if: matrix.mode == 'full'
         env:
           PYTHONTRACEMALLOC: 1
@@ -209,7 +221,7 @@ jobs:
           pytest --doctest-modules --cov=petl --durations=10 petl
           echo "::endgroup::"
 
-      - name: Coveralls with primary = ${{ matrix.primary }}
+      - name: Coveralls with os = ${{ matrix.os }}, primary = ${{ matrix.primary }}
         if: matrix.os == 'ubuntu-latest' && matrix.python == matrix.primary
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -217,7 +229,7 @@ jobs:
           python -m pip install --upgrade coveralls
           coveralls --service=github
 
-      - name: Print source code coverage with mode = ${{ matrix.mode }}
+      - name: Print source code coverage
         run: |
           printf '\n## Coverage for python ${{ matrix.python }} with mode ${{ matrix.mode }}\n\n' >> "${GITHUB_STEP_SUMMARY}";
           printf '```text' >> "${GITHUB_STEP_SUMMARY}";
