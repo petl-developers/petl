@@ -184,7 +184,13 @@ jobs:
       - name: List Installed Packages for Throubleshooting
         run: |
           echo "::group::List Installed Packages for Throubleshooting"
-          python -m pip list --format freeze
+          printf '\n## Installed Packages for python ${{ matrix.python }} with mode ${{ matrix.mode }}\n\n' >> "${GITHUB_STEP_SUMMARY}";
+          echo "- Python Version: $(python --version)"
+          echo "- Pytest Version: $(pytest --version)"
+          echo "- Pip Version: $(pip --version | head -n 1 | cut -d' ' -f2)"
+          printf '```text' >> "${GITHUB_STEP_SUMMARY}";
+          python -m pip list --format freeze >> "${GITHUB_STEP_SUMMARY}";
+          printf '```' >> "${GITHUB_STEP_SUMMARY}";
           echo "::endgroup::"
 
       - name: Test python source code for mode basic
@@ -246,24 +252,3 @@ jobs:
         run: |
           cd docs
           sphinx-build -W -b singlehtml -d ../build/doctrees . ../build/singlehtml
-
-  # TODO: 1 configuration not found: https://docs.github.com/en/actions/using-workflows/reusing-workflows#overview
-  # call-workflow-codeql:
-  #   needs: test-source-code
-  #   uses: ./.github/workflows/codeql-analysis.yml
-  #   permissions:
-  #     actions: read
-  #     contents: read
-  #     pull-requests: write
-  #     security-events: write
-  #   secrets: inherit # pass all secrets
-
-  # call-workflow-codacity:
-  #   needs: test-source-code
-  #   uses: ./.github/workflows/codacy-analysis.yml
-  #   permissions:
-  #     actions: read
-  #     contents: read
-  #     pull-requests: write
-  #     security-events: write
-  #   secrets: inherit # pass all secrets
