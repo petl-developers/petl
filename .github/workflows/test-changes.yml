@@ -51,6 +51,7 @@ jobs:
         include:
           # Default configuration for all jobs
           - mode: "full"
+          - scope: "full"
           - install: "no"
           - primary: "3.8"
           # Conditional configuration overrides
@@ -60,14 +61,17 @@ jobs:
             install: "yes"
           - os: "windows-latest"
             mode: "basic"
+            scope: "basic"
           # Handle random test failures
           - os: "ubuntu-latest"
             python: "3.9"
             mode: "basic"
+            scope: "basic"
           # Additional Jobs not included in the matrix above
           - python: "2.7"
             os: "ubuntu-latest"
             mode: "basic"
+            scope: "full"
             install: "yes"
         exclude:
           # macos-latest == macos-15-arm64
@@ -87,24 +91,20 @@ jobs:
         with:
           ref: ${{ inputs.branch_commit_or_ref || github.ref }}
 
-      - name: Report Workflow Information
-        id: workflow_report
-        uses: ./.github/actions/workflow-info
-        with:
-          title: "${{ github.ref_name }} on ${{ matrix.os }} with python ${{ matrix.python }}"
-          parameters: "${{ toJson(inputs) }}"
-          content: |
-            - Ref: ${{ github.head_ref }}
-            - matrix.python: ${{ matrix.python }}
-            - matrix.os: ${{ matrix.os }}
-            - matrix.mode: ${{ matrix.mode }}
-            - matrix.install: ${{ matrix.install }}
-
       - name: Install linux tools
         if: matrix.os == 'ubuntu-latest'
         run: |
+          echo "::group::Install linux tools"
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends python3-h5py
+          echo "::endgroup::"
+
+      - name: Install additional linux tools
+        if: matrix.os == 'ubuntu-latest' && matrix.scope == 'full'
+        run: |
+          echo "::group::Install additional linux tools"
+          sudo apt-get install -y --no-install-recommends default-libmysqlclient-dev
+          echo "::endgroup::"
 
       - name: Set up Python ${{ matrix.python }} with install = ${{ matrix.install }}
         if: matrix.install == 'no'
@@ -119,10 +119,32 @@ jobs:
           python-version: ${{ matrix.python }}
           cache: pip
 
+      - name: Upgrade pip
+        run: |
+          echo "::group::Upgrading pip"
+          python -m pip install --upgrade pip
+          echo "::endgroup::"
+
+      - name: Report Workflow Information
+        id: workflow_report
+        if: matrix.python >= '3'
+        uses: ./.github/actions/workflow-info
+        with:
+          title: "${{ github.ref_name }} on ${{ matrix.os }} with python ${{ matrix.python }}"
+          parameters: "${{ toJson(inputs) }}"
+          content: |
+            - Ref: ${{ github.head_ref }}
+            - matrix.python: ${{ matrix.python }}
+            - matrix.os: ${{ matrix.os }}
+            - matrix.mode: ${{ matrix.mode }}
+            - matrix.scope: ${{ matrix.scope }}
+            - matrix.install: ${{ matrix.install }}
+
       - name: Install test dependencies
         run: |
-          python -m pip install --upgrade pip
+          echo "::group::Install test dependencies"
           python -m pip install --prefer-binary -r requirements-tests.txt
+          echo "::endgroup::"
 
       - name: Setup environment variables for remote filesystem testing with primary = ${{ matrix.primary }}
         if: matrix.os == 'ubuntu-latest' && matrix.python == matrix.primary
@@ -158,8 +180,8 @@ jobs:
           docker run -it --name sftp -p 2244:22 -d atmoz/sftp petl:test:::public
           echo "::endgroup::"
 
-      - name: Install containers for remote database testing with mode = ${{ matrix.mode }}
-        if: matrix.os == 'ubuntu-latest' && matrix.mode == 'full'
+      - name: Install containers for remote database testing with scope = ${{ matrix.scope }}
+        if: matrix.os == 'ubuntu-latest' && matrix.scope == 'full'
         run: |
           echo "::group::Setup docker for MySQL"
           docker run -it --name mysql -p 3306:3306 -p 33060:33060 -e MYSQL_ROOT_PASSWORD=pass0 -e MYSQL_DATABASE=petl -e MYSQL_USER=petl -e MYSQL_PASSWORD=test -d mysql:latest
@@ -174,32 +196,45 @@ jobs:
       - name: Setup petl package with mode = ${{ matrix.mode }}
         run: python setup.py sdist bdist_wheel
 
-      - name: Install extra packages dependencies for mode full
-        if: matrix.mode == 'full'
-        run: python -m pip install --prefer-binary -r requirements-formats.txt
-
-      - name: List Installed Packages for Throubleshooting
+      - name: Install extra packages dependencies for scope = ${{ matrix.scope }}
+        if: matrix.scope == 'full'
         run: |
-          echo "::group::List Installed Packages for Throubleshooting"
-          python -m pip list --format freeze
+          echo "::group::Install extra packages dependencies"
+          python -m pip install --prefer-binary -r requirements-formats.txt
           echo "::endgroup::"
 
-      - name: Test python source code for mode basic
+      - name: List Installed Packages for Throubleshooting
+        shell: bash
+        run: |
+          echo "::group::List Installed Packages for Throubleshooting"
+          printf '\n## Installed Packages for python ${{ matrix.python }}\n\n' >> "${GITHUB_STEP_SUMMARY}";
+          echo "- Python Version: $(python --version)" >> "${GITHUB_STEP_SUMMARY}";
+          echo "- Pytest Version: $(pytest --version)" >> "${GITHUB_STEP_SUMMARY}";
+          echo "- Pip Version: $(pip --version | head -n 1 | cut -d' ' -f2)" >> "${GITHUB_STEP_SUMMARY}";
+          printf '```text' >> "${GITHUB_STEP_SUMMARY}";
+          python -m pip list --format freeze >> "${GITHUB_STEP_SUMMARY}";
+          printf '```' >> "${GITHUB_STEP_SUMMARY}";
+          echo "::endgroup::"
+
+      - name: Test python source code for mode = basic
         if: matrix.mode == 'basic'
         env:
           PYTHONTRACEMALLOC: 1
-        run: pytest --cov=petl petl
+        run: |
+          echo "::group::Perform basic test execution with coverage"
+          pytest --cov=petl petl
+          echo "::endgroup::"
 
-      - name: Test documentation inside source code for mode full
+      - name: Test including documentation inside source code for mode = full
         if: matrix.mode == 'full'
         env:
           PYTHONTRACEMALLOC: 1
         run: |
           echo "::group::Perform doctest-modules execution with coverage"
-          pytest --doctest-modules --cov=petl petl
+          pytest --doctest-modules --cov=petl --durations=10 petl
           echo "::endgroup::"
 
-      - name: Coveralls with primary = ${{ matrix.primary }}
+      - name: Coveralls with os = ${{ matrix.os }}, primary = ${{ matrix.primary }}
         if: matrix.os == 'ubuntu-latest' && matrix.python == matrix.primary
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -207,7 +242,7 @@ jobs:
           python -m pip install --upgrade coveralls
           coveralls --service=github
 
-      - name: Print source code coverage with mode = ${{ matrix.mode }}
+      - name: Print source code coverage
         run: |
           printf '\n## Coverage for python ${{ matrix.python }} with mode ${{ matrix.mode }}\n\n' >> "${GITHUB_STEP_SUMMARY}";
           printf '```text' >> "${GITHUB_STEP_SUMMARY}";
@@ -243,24 +278,3 @@ jobs:
         run: |
           cd docs
           sphinx-build -W -b singlehtml -d ../build/doctrees . ../build/singlehtml
-
-  # TODO: 1 configuration not found: https://docs.github.com/en/actions/using-workflows/reusing-workflows#overview
-  # call-workflow-codeql:
-  #   needs: test-source-code
-  #   uses: ./.github/workflows/codeql-analysis.yml
-  #   permissions:
-  #     actions: read
-  #     contents: read
-  #     pull-requests: write
-  #     security-events: write
-  #   secrets: inherit # pass all secrets
-
-  # call-workflow-codacity:
-  #   needs: test-source-code
-  #   uses: ./.github/workflows/codacy-analysis.yml
-  #   permissions:
-  #     actions: read
-  #     contents: read
-  #     pull-requests: write
-  #     security-events: write
-  #   secrets: inherit # pass all secrets

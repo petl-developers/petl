@@ -1,6 +1,7 @@
 Cython
 numpy
-numexpr
+numexpr>=2.6.9,<2.8 ; python_version < '3'
+numexpr ; python_version >= '3'
 intervaltree>=3.0.2
 lxml>=4.6.5
 openpyxl>=2.6.2
