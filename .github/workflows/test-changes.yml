@@ -87,19 +87,6 @@ jobs:
         with:
           ref: ${{ inputs.branch_commit_or_ref || github.ref }}
 
-      - name: Report Workflow Information
-        id: workflow_report
-        uses: ./.github/actions/workflow-info
-        with:
-          title: "${{ github.ref_name }} on ${{ matrix.os }} with python ${{ matrix.python }}"
-          parameters: "${{ toJson(inputs) }}"
-          content: |
-            - Ref: ${{ github.head_ref }}
-            - matrix.python: ${{ matrix.python }}
-            - matrix.os: ${{ matrix.os }}
-            - matrix.mode: ${{ matrix.mode }}
-            - matrix.install: ${{ matrix.install }}
-
       - name: Install linux tools
         if: matrix.os == 'ubuntu-latest'
         run: |
@@ -119,9 +106,25 @@ jobs:
           python-version: ${{ matrix.python }}
           cache: pip
 
-      - name: Install test dependencies
+      - name: Upgrade pip
         run: |
           python -m pip install --upgrade pip
+
+      - name: Report Workflow Information
+        id: workflow_report
+        uses: ./.github/actions/workflow-info
+        with:
+          title: "${{ github.ref_name }} on ${{ matrix.os }} with python ${{ matrix.python }}"
+          parameters: "${{ toJson(inputs) }}"
+          content: |
+            - Ref: ${{ github.head_ref }}
+            - matrix.python: ${{ matrix.python }}
+            - matrix.os: ${{ matrix.os }}
+            - matrix.mode: ${{ matrix.mode }}
+            - matrix.install: ${{ matrix.install }}
+
+      - name: Install test dependencies
+        run: |
           python -m pip install --prefer-binary -r requirements-tests.txt
 
       - name: Setup environment variables for remote filesystem testing with primary = ${{ matrix.primary }}
