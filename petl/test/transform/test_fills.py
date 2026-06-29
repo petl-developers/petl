@@ -60,6 +60,19 @@ def test_filldown_headerless():
     ieq(expect, actual)
 
 
+def test_filldown_header_only():
+    table = (('foo', 'bar', 'baz'),)
+    expect = (('foo', 'bar', 'baz'),)
+
+    actual = filldown(table)
+    ieq(expect, actual)
+    ieq(expect, actual)
+
+    actual = filldown(table, 'bar')
+    ieq(expect, actual)
+    ieq(expect, actual)
+
+
 def test_fillright():
 
     table = (('foo', 'bar', 'baz'),

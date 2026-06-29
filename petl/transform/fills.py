@@ -112,7 +112,10 @@ def iterfilldown(table, fillfields, missing):
     if not fillfields:  # fill down all fields
         fillfields = hdr
     fillindices = asindices(hdr, fillfields)
-    fill = list(next(it))  # fill values
+    try:
+        fill = list(next(it))  # fill values
+    except StopIteration:
+        return
     yield tuple(fill)
     for row in it:
         outrow = list(row)
