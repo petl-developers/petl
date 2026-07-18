@@ -1,10 +1,14 @@
 wheel
 setuptools
 setuptools-scm
-pytest>=4.6.6,<7.0.0 ; python_version < '3.14'
-pytest-cov>=2.12.0   ; python_version < '3.14'
+# pytest 7+ required once formats pull anyio (httpx), whose pytest plugin
+# imports _pytest.scope (pytest>=7). Keep pytest 6 only for ancient Pythons.
+pytest>=4.6.6,<7.0.0 ; python_version < '3.8'
+pytest-cov>=2.12.0,<4.0.0 ; python_version < '3.8'
+pytest>=7.4.0,<9.0.0 ; python_version >= '3.8' and python_version < '3.14'
+pytest-cov>=4.0.0,<7.0.0 ; python_version >= '3.8' and python_version < '3.14'
 pytest>=8.3.0,<9.0.0 ; python_version >= '3.14'
-pytest-cov>=6.0.0    ; python_version >= '3.14'
+pytest-cov>=6.0.0 ; python_version >= '3.14'
 tox
 coverage
 coveralls
