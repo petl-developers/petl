@@ -127,7 +127,8 @@ def itercapture(source, field, pattern, newfields, include_original, flags,
             out_row = list(row)
         else:
             out_row = [v for i, v in enumerate(row) if i != field_index]
-        match = prog.search(value)
+        # None is a missing cell; treat as non-matching like an empty miss.
+        match = None if value is None else prog.search(value)
         if match is None:
             if fill is not None:
                 out_row.extend(fill)

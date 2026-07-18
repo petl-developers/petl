@@ -299,3 +299,15 @@ def test_splitdown():
 
 # TODO test sub()
 
+
+
+def test_capture_none_value():
+    table = (('id', 'variable'),
+             ('1', None),
+             ('2', 'A1'))
+    result = capture(table, 'variable', r'(\w)(\d+)', ('treat', 'time'),
+                     fill=['', ''])
+    expect = (('id', 'treat', 'time'),
+              ('1', '', ''),
+              ('2', 'A', '1'))
+    ieq(expect, result)
