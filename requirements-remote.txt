@@ -5,5 +5,5 @@ smbprotocol>=1.0.1
 paramiko>=2.7.1
 requests; python_version >= '3'
 fsspec>=0.7.4 ; python_version >= '3'
-aiohttp>=3.6.2 ; python_version >= '3.5.3' or ( python_version > '3.10' and python_version < '3.2' )
+aiohttp>=3.6.2 ; python_version >= '3.5.3'
 s3fs>=0.2.2 ; python_version >= '3'
