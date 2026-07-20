@@ -1,8 +1,12 @@
 Cython                 ; python_version < '3.7' or python_version >= '3.9'
 Cython>=0.29.21,<3.0.0 ; python_version >= '3.7' and python_version < '3.9' # fixes further bcolz build
-numpy
+
+numpy<2.0.0 ; python_version <= '3.9' # tables==3.9.2 fails with numpy 2.x
+numpy>2.0.0 ; python_version >  '3.9' # tables>=3.10 requires numpy>2.0.0
+
 numexpr>=2.6.9,<2.8 ; python_version < '3'
-numexpr ; python_version >= '3'
+numexpr             ; python_version >= '3'
+
 intervaltree>=3.0.2
 lxml>=4.6.5
 openpyxl>=2.6.2
@@ -14,6 +18,6 @@ fastavro>=0.24.2 ; python_version >= '3'
 fastavro==0.24.2 ; python_version < '3'
 gspread>=3.4.0 ; python_version >= '3'
 
-# version 3.9.2 fails with python3.12 on macos-latest: PyTables/PyTables#1093
-tables ; sys_platform != 'darwin'
+tables<=3.8   ; python_version <  '3.9'
+tables>=3.9.2 ; python_version >= '3.9'
 
