@@ -53,21 +53,21 @@ def test_fromxlsx(xlsx_test_table, xlsx_test_filename):
 
 def test_fromxlsx_read_only(xlsx_test_filename):
     tbl = fromxlsx(xlsx_test_filename, sheet="Sheet1", read_only=True)
-    expect = (("foo", "bar"), ("A", 1), ("B", 2), ("C", 2), ("é", datetime(2012, 1, 1)))
+    expect = (("foo", "bar"), ("A", 1), ("B", 2), ("C", 2), (u"é", datetime(2012, 1, 1)))
     ieq(expect, tbl)
     ieq(expect, tbl)
 
 
 def test_fromxlsx_nosheet(xlsx_test_filename):
     tbl = fromxlsx(xlsx_test_filename)
-    expect = (("foo", "bar"), ("A", 1), ("B", 2), ("C", 2), ("é", datetime(2012, 1, 1)))
+    expect = (("foo", "bar"), ("A", 1), ("B", 2), ("C", 2), (u"é", datetime(2012, 1, 1)))
     ieq(expect, tbl)
     ieq(expect, tbl)
 
 
 def test_fromxlsx_range(xlsx_test_filename):
     tbl = fromxlsx(xlsx_test_filename, "Sheet2", range_string="B2:C6")
-    expect = (("foo", "bar"), ("A", 1), ("B", 2), ("C", 2), ("é", datetime(2012, 1, 1)))
+    expect = (("foo", "bar"), ("A", 1), ("B", 2), ("C", 2), (u"é", datetime(2012, 1, 1)))
     ieq(expect, tbl)
     ieq(expect, tbl)
 
