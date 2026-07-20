@@ -197,6 +197,7 @@ jobs:
         run: |
           python -m pip install --upgrade build setuptools wheel
           python -m build
+          python -m pip install build --user
 
       - name: Install extra packages dependencies for scope = ${{ matrix.scope }}
         if: matrix.scope == 'full'

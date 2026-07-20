@@ -1,4 +1,5 @@
-Cython
+Cython                 ; python_version < '3.7' or python_version >= '3.9'
+Cython>=0.29.21,<3.0.0 ; python_version >= '3.7' and python_version < '3.9' # fixes further bcolz build
 numpy
 numexpr>=2.6.9,<2.8 ; python_version < '3'
 numexpr ; python_version >= '3'
