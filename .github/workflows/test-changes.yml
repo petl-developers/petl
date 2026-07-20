@@ -53,7 +53,7 @@ jobs:
           - mode: "full"
           - scope: "full"
           - install: "no"
-          - primary: "3.8"
+          - primary: "3.10"
           # Conditional configuration overrides
           - python: "3.6"
             install: "yes"
@@ -267,7 +267,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python: [3.8]
+        python: ['3.10']
 
     steps:
       - name: Checkout source code at ${{ inputs.branch_commit_or_ref || github.ref }}
