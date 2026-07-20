@@ -22,4 +22,4 @@ blosc  ; python_version >= '3.7' and python_version != '3.13'
 Cython>=0.29.21,<3.0.0 ; python_version >= '3.7' and python_version < '3.9'
 bcolz  ; python_version >= '3.7' and python_version < '3.9'
 
-bcolz-zipline ; python_version >= '3.9' and python_version < '3.14'
+bcolz-zipline ; python_version >= '3.9' and python_version < '3.13'
