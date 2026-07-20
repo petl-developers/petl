@@ -194,7 +194,9 @@ jobs:
           echo "::endgroup::"
 
       - name: Setup petl package with mode = ${{ matrix.mode }}
-        run: python setup.py sdist bdist_wheel
+        run: |
+          python -m pip install --upgrade build setuptools wheel
+          python -m build
 
       - name: Install extra packages dependencies for scope = ${{ matrix.scope }}
         if: matrix.scope == 'full'
@@ -272,7 +274,9 @@ jobs:
           python -m pip install --prefer-binary -r requirements-docs.txt
 
       - name: Setup petl package
-        run: python setup.py build
+        run: |
+          python -m pip install --upgrade build setuptools wheel
+          python -m build
 
       - name: Test docs generation
         run: |
