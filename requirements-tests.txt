@@ -1,6 +1,7 @@
 wheel
 setuptools
 setuptools-scm
+importlib_resources ; python_version < '3.9'
 # pytest 7+ required once formats pull anyio (httpx), whose pytest plugin
 # imports _pytest.scope (pytest>=7). Keep pytest 6 only for ancient Pythons.
 pytest>=4.6.6,<7.0.0 ; python_version < '3.8'
