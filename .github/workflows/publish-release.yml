@@ -19,16 +19,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source code at ${{ inputs.branch_commit_or_ref || github.ref }}
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ inputs.branch_commit_or_ref || github.ref }}
 
       - name: Set up Python ${{ matrix.python }}
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python }}
 
-      - name: Install pypa/build
+      - name: Build and Install petl package
         run: |
           python -m pip install build --user
 

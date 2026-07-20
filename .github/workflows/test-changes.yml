@@ -87,7 +87,7 @@ jobs:
     runs-on: "${{ matrix.os }}"
     steps:
       - name: Checkout source code at ${{ inputs.branch_commit_or_ref || github.ref }}
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ inputs.branch_commit_or_ref || github.ref }}
 
@@ -108,7 +108,7 @@ jobs:
 
       - name: Set up Python ${{ matrix.python }} with install = ${{ matrix.install }}
         if: matrix.install == 'no'
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python }}
 
@@ -264,12 +264,12 @@ jobs:
 
     steps:
       - name: Checkout source code at ${{ inputs.branch_commit_or_ref || github.ref }}
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ inputs.branch_commit_or_ref || github.ref }}
 
       - name: Set up Python ${{ matrix.python }}
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python }}
 
