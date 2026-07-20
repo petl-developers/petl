@@ -2,7 +2,6 @@
 from __future__ import absolute_import, print_function, division
 
 import sys
-from importlib.resources import files
 from tempfile import NamedTemporaryFile
 
 import pytest
@@ -11,6 +10,11 @@ from petl.test.helpers import ieq
 from petl.util import nrows, look
 from petl.io.xml import fromxml, toxml
 from petl.compat import urlopen
+
+try:
+    from importlib.resources import files
+except ImportError:  # Python < 3.9
+    from importlib_resources import files
 
 
 def test_fromxml():

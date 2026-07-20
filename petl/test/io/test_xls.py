@@ -3,7 +3,6 @@ from __future__ import division, print_function, absolute_import
 
 
 from datetime import datetime
-from importlib.resources import files
 from tempfile import NamedTemporaryFile
 
 import pytest
@@ -20,6 +19,10 @@ from petl.test.helpers import ieq
 
 def _get_test_xls():
     try:
+        try:
+            from importlib.resources import files
+        except ImportError:  # Python < 3.9
+            from importlib_resources import files
         return str(files('petl') / 'test/resources/test.xls')
     except:
         return None
