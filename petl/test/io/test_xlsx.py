@@ -3,6 +3,7 @@ from __future__ import absolute_import, print_function, division
 
 
 from datetime import datetime
+from importlib.resources import files
 from tempfile import NamedTemporaryFile
 
 import pytest
@@ -16,8 +17,7 @@ openpyxl = pytest.importorskip("openpyxl")
 
 @pytest.fixture()
 def xlsx_test_filename():
-    pkg_resources = pytest.importorskip("pkg_resources") # conda is missing pkg_resources
-    return pkg_resources.resource_filename('petl', 'test/resources/test.xlsx')
+    return str(files('petl') / 'test/resources/test.xlsx')
 
 
 @pytest.fixture(scope="module")

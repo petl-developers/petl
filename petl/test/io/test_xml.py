@@ -2,7 +2,7 @@
 from __future__ import absolute_import, print_function, division
 
 import sys
-from collections import OrderedDict
+from importlib.resources import files
 from tempfile import NamedTemporaryFile
 
 import pytest
@@ -200,8 +200,7 @@ def test_fromxml_url():
     try:
         url = 'http://raw.githubusercontent.com/petl-developers/petl/master/petl/test/resources/test.xml'
         urlopen(url)
-        import pkg_resources
-        filename = pkg_resources.resource_filename('petl', 'test/resources/test.xml')
+        filename = str(files('petl') / 'test/resources/test.xml')
     except Exception as e:
         pytest.skip('SKIP test_fromxml_url: %s' % e)
     else:
