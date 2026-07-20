@@ -157,19 +157,6 @@ jobs:
           python -m pip install --prefer-binary -r requirements-remote.txt
           echo "::endgroup::"
 
-      - name: Install optional test dependencies with install = ${{ matrix.install }}
-        if: matrix.os == 'ubuntu-latest' && matrix.install == 'no'
-        env:
-          DISABLE_BLOSC_AVX2: 1
-        run: |
-          echo "::group::Install tricky test dependencies"
-          if ! pip install --prefer-binary -r requirements-optional.txt ; then
-            echo 'Dismissed failure installing some optional package.  Resuming tests...'
-          fi
-          # DISABLE_BLOSC_AVX2=1 && export DISABLE_BLOSC_AVX2
-          # pip install --prefer-binary bcolz
-          echo "::endgroup::"
-
       - name: Install containers for remote filesystem testing with install = ${{ matrix.install }}
         if: matrix.os == 'ubuntu-latest' && matrix.install == 'no'
         run: |
@@ -204,6 +191,20 @@ jobs:
         run: |
           echo "::group::Install extra packages dependencies"
           python -m pip install --prefer-binary -r requirements-formats.txt
+          echo "::endgroup::"
+
+      - name: Install optional test dependencies with install = ${{ matrix.install }}
+        if: matrix.os == 'ubuntu-latest' && matrix.install == 'no'
+        env:
+          DISABLE_BLOSC_AVX2: 1
+        run: |
+          echo "::group::Install tricky test dependencies"
+          # pip install --prefer-binary 'Cython>=0.29.21,<3.0.0' bcolz
+          if ! pip install --prefer-binary -r requirements-optional.txt ; then
+            echo "::warning file=requirements-optional.txt,line=23,col=1,endColumn=5,title=Optional package failure::Dismissed failure installing some optional package. Resuming tests..."
+          else
+            echo "::notice file=requirements-optional.txt,line=23,col=1,endColumn=5,title=Optional package failure::Successfully installed all optional packages."
+          fi
           echo "::endgroup::"
 
       - name: List Installed Packages for Throubleshooting
