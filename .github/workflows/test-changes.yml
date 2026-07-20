@@ -149,9 +149,9 @@ jobs:
       - name: Setup environment variables for remote filesystem testing with primary = ${{ matrix.primary }}
         if: matrix.os == 'ubuntu-latest' && matrix.python == matrix.primary
         run: |
-          echo "Setup SMB environment variable to trigger testing in Petl"
+          echo "::notice file=requirements-remote.txt,line=4,title=SMB environment configuration::Setup SMB environment variable to trigger testing in Petl"
           echo 'PETL_TEST_SMB=smb://WORKGROUP;petl:test@localhost/public/' >> $GITHUB_ENV
-          echo "Setup SFTP environment variable to trigger testing in Petl"
+          echo "::notice file=requirements-remote.txt,line=5,title=SFTP environment configuration::Setup SFTP environment variable to trigger testing in Petl"
           echo 'PETL_TEST_SFTP=sftp://petl:test@localhost:2244/public/' >> $GITHUB_ENV
           echo "::group::Install remote test dependencies"
           python -m pip install --prefer-binary -r requirements-remote.txt
@@ -172,9 +172,11 @@ jobs:
         run: |
           echo "::group::Setup docker for MySQL"
           docker run -it --name mysql -p 3306:3306 -p 33060:33060 -e MYSQL_ROOT_PASSWORD=pass0 -e MYSQL_DATABASE=petl -e MYSQL_USER=petl -e MYSQL_PASSWORD=test -d mysql:latest
+          echo "::notice file=requirements-database.txt,line=4,title=MySQL docker installation::Setup MySQL docker container for testing in Petl"
           echo "::endgroup::"
           echo "::group::Setup docker for Postgres"
           docker run -it --name postgres -p 5432:5432 -e POSTGRES_DB=petl -e POSTGRES_USER=petl -e POSTGRES_PASSWORD=test -d postgres:latest
+          echo "::notice file=requirements-database.txt,line=6,title=Postgres docker installation::Setup Postgres docker container for testing in Petl"
           echo "::endgroup::"
           echo "::group::Install database test dependencies"
           python -m pip install --prefer-binary -r requirements-database.txt
