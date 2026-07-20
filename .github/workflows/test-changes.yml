@@ -99,6 +99,13 @@ jobs:
           sudo apt-get install -y --no-install-recommends python3-h5py
           echo "::endgroup::"
 
+      - name: Install macos tools
+        if: matrix.os == 'macos-latest' && matrix.scope == 'full'
+        run: |
+          echo "::group::Install macos tools"
+          brew install hdf5
+          echo "::endgroup::"
+
       - name: Install additional linux tools
         if: matrix.os == 'ubuntu-latest' && matrix.scope == 'full'
         run: |
