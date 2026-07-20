@@ -1,6 +1,34 @@
 Changes
 =======
 
+Version 1.7.20
+--------------
+
+## Whats Changed
+
+* Fix filldown RuntimeError on header-only tables
+  By :user:`sarathfrancis90`, :issue:`698`.
+* feat: modernize python dependencies in CI
+  By :user:`juarezr`, :issue:`702`.
+
+Version 1.7.19
+--------------
+
+## Whats Changed
+
+* Add drop=if_exists support to todb
+  By :user:`akashmalbari`, :issue:`695`.
+
+Version 1.7.18
+--------------
+
+## Whats Changed
+
+* Fix tojson() output for stdin-backed CSV input
+  By :user:`akashmalbari`, :issue:`693`.
+* feat: add argument ownsb to fromdb function
+  By :user:`juarezr`, :issue:`694`.
+
 Version 1.7.17
 --------------
 
