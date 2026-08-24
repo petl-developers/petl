@@ -222,12 +222,13 @@ def _iter_sqlalchemy_session(session, query, *args, **kwargs):
 
 def todb(table, dbo, tablename, schema=None, commit=True,
          create=False, drop=False, constraints=True, metadata=None,
-         dialect=None, sample=1000):
+         dialect=None, sample=1000, truncate=True):
     """
     Load data into an existing database table via a DB-API 2.0
-    connection or cursor. Note that the database table will be truncated,
+    connection or cursor. By default the database table will be truncated,
     i.e., all existing rows will be deleted prior to inserting the new data.
-    E.g.::
+    Pass ``truncate=False`` to keep the existing rows and append instead, as
+    :func:`petl.io.db.appenddb` does. E.g.::
 
         >>> import petl as etl
         >>> table = [['foo', 'bar'],
@@ -304,6 +305,10 @@ def todb(table, dbo, tablename, schema=None, commit=True,
     sample : int
         Number of rows to sample when inferring types etc. Set to 0 to use the
         whole table (only relevant if create=True)
+    truncate : bool
+        If True (the default) truncate the table before loading, deleting any
+        existing rows. Set to False to keep existing rows and append the new
+        data instead.
 
     .. note::
 
@@ -357,7 +362,7 @@ def todb(table, dbo, tablename, schema=None, commit=True,
                          constraints=constraints, metadata=metadata,
                          dialect=dialect, sample=sample)
         _todb(table, dbo, tablename, schema=schema, commit=commit,
-              truncate=True)
+              truncate=truncate)
 
     finally:
         if needs_closing:

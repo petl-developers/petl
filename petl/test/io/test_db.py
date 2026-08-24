@@ -99,6 +99,58 @@ def test_todb_drop_if_exists_uses_if_exists(monkeypatch):
         calls)
 
 
+def _record_todb_truncate(monkeypatch, **kwargs):
+    calls = []
+
+    def fake_todb(table, dbo, tablename, schema=None, commit=True,
+                  truncate=False):
+        calls.append(('load', tablename, truncate))
+
+    monkeypatch.setattr(db, '_todb', fake_todb)
+
+    table = (('foo',), ('a',))
+    todb(table, object(), 'foobar', **kwargs)
+    return calls
+
+
+def test_todb_truncate_default_truncates(monkeypatch):
+    calls = _record_todb_truncate(monkeypatch)
+
+    eq_([('load', 'foobar', True)], calls)
+
+
+def test_todb_truncate_false_appends(monkeypatch):
+    calls = _record_todb_truncate(monkeypatch, truncate=False)
+
+    eq_([('load', 'foobar', False)], calls)
+
+
+def test_todb_truncate_false_keeps_existing_rows():
+
+    f = NamedTemporaryFile(delete=False)
+    conn = sqlite3.connect(f.name)
+    conn.execute('create table foobar (foo, bar)')
+    conn.commit()
+
+    table = (('foo', 'bar'),
+             ('a', 1),
+             ('b', 2))
+    todb(table, conn, 'foobar')
+
+    table2 = (('foo', 'bar'),
+              ('c', 3),
+              ('d', 4))
+    todb(table2, conn, 'foobar', truncate=False)
+
+    actual = conn.execute('select * from foobar')
+    expect = (('a', 1),
+              ('b', 2),
+              ('c', 3),
+              ('d', 4))
+    ieq(expect, actual)
+    conn.close()
+
+
 def test_fromdb():
 
     # initial data

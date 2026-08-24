@@ -6,6 +6,8 @@ Version 1.7.20
 
 ## Whats Changed
 
+* feat: add truncate argument to todb function
+  By :user:`ChrisJr404`, :issue:`669`.
 * Fix filldown RuntimeError on header-only tables
   By :user:`sarathfrancis90`, :issue:`698`.
 * feat: modernize python dependencies in CI
