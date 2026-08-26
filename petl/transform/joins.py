@@ -1,7 +1,6 @@
 from __future__ import absolute_import, division, print_function
 
 import itertools
-import operator
 
 from petl.comparison import Comparable, comparable_itemgetter
 from petl.compat import next, text_type
@@ -743,8 +742,8 @@ def iterlookupjoin(left, right, lkey, rkey, missing=None, lprefix=None,
     rkind = asindices(rhdr, rkey)
 
     # construct functions to extract key values from both tables
-    lgetk = operator.itemgetter(*lkind)
-    rgetk = operator.itemgetter(*rkind)
+    lgetk = comparable_itemgetter(*lkind)
+    rgetk = comparable_itemgetter(*rkind)
 
     # determine indices of non-key fields in the right table
     # (in the output, we only include key fields from the left table - we
@@ -786,7 +785,8 @@ def iterlookupjoin(left, right, lkey, rkey, missing=None, lprefix=None,
     lrowgrp = []
 
     # loop until *either* of the iterators is exhausted
-    lkval, rkval = None, None  # initialise here to handle empty tables
+    # initialise here to handle empty tables
+    lkval, rkval = Comparable(None), Comparable(None)
     try:
 
         # pick off initial row groups

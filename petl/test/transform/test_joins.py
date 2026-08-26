@@ -1261,6 +1261,65 @@ def _test_lookupjoin_uneven_rows(lookupjoin_impl):
     ieq(expect, actual)
 
 
+def _test_lookupjoin_empty(lookupjoin_impl):
+
+    table1 = (('id', 'colour'),
+              (1, 'blue'),
+              (2, 'red'),
+              (3, 'purple'))
+    table2 = (('id', 'shape'),)
+
+    # empty right table
+    actual = lookupjoin_impl(table1, table2, key='id')
+    expect = (('id', 'colour', 'shape'),
+              (1, 'blue', None),
+              (2, 'red', None),
+              (3, 'purple', None))
+    ieq(expect, actual)
+    ieq(expect, actual)
+
+    # empty left table
+    actual = lookupjoin_impl(table2, table1, key='id')
+    expect = (('id', 'shape', 'colour'),)
+    ieq(expect, actual)
+
+    # both tables empty
+    actual = lookupjoin_impl(table2, table2, key='id')
+    expect = (('id', 'shape', 'shape'),)
+    ieq(expect, actual)
+
+
+def _test_lookupjoin_uncomparable_keys(lookupjoin_impl):
+
+    # key values that raise TypeError under native Python 3 comparison;
+    # petl orders them as None < numbers < everything else
+    table1 = (('id', 'colour'),
+              (None, 'blue'),
+              (1, 'red'),
+              ('two', 'purple'))
+    table2 = (('id', 'shape'),
+              (1, 'circle'),
+              ('two', 'square'))
+
+    actual = lookupjoin_impl(table1, table2, key='id')
+    expect = (('id', 'colour', 'shape'),
+              (None, 'blue', None),
+              (1, 'red', 'circle'),
+              ('two', 'purple', 'square'))
+    ieq(expect, actual)
+    ieq(expect, actual)
+
+    # no key values in common, so every comparison crosses types
+    table3 = (('id', 'shape'),
+              ('three', 'ellipse'))
+    actual = lookupjoin_impl(table1, table3, key='id')
+    expect = (('id', 'colour', 'shape'),
+              (None, 'blue', None),
+              (1, 'red', None),
+              ('two', 'purple', None))
+    ieq(expect, actual)
+
+
 def _test_lookupjoin(lookupjoin_impl):
     _test_lookupjoin_1(lookupjoin_impl)
     _test_lookupjoin_2(lookupjoin_impl)
@@ -1268,6 +1327,8 @@ def _test_lookupjoin(lookupjoin_impl):
     _test_lookupjoin_lrkey(lookupjoin_impl)
     _test_lookupjoin_novaluefield(lookupjoin_impl)
     _test_lookupjoin_uneven_rows(lookupjoin_impl)
+    _test_lookupjoin_empty(lookupjoin_impl)
+    _test_lookupjoin_uncomparable_keys(lookupjoin_impl)
 
 
 def test_lookupjoin():
