@@ -2,6 +2,7 @@
 from __future__ import absolute_import, print_function, division
 
 
+import os
 import sqlite3
 from tempfile import NamedTemporaryFile
 from petl.compat import next
@@ -128,27 +129,31 @@ def test_todb_truncate_false_appends(monkeypatch):
 def test_todb_truncate_false_keeps_existing_rows():
 
     f = NamedTemporaryFile(delete=False)
+    f.close()
     conn = sqlite3.connect(f.name)
-    conn.execute('create table foobar (foo, bar)')
-    conn.commit()
+    try:
+        conn.execute('create table foobar (foo, bar)')
+        conn.commit()
 
-    table = (('foo', 'bar'),
-             ('a', 1),
-             ('b', 2))
-    todb(table, conn, 'foobar')
+        table = (('foo', 'bar'),
+                 ('a', 1),
+                 ('b', 2))
+        todb(table, conn, 'foobar')
 
-    table2 = (('foo', 'bar'),
-              ('c', 3),
-              ('d', 4))
-    todb(table2, conn, 'foobar', truncate=False)
+        table2 = (('foo', 'bar'),
+                  ('c', 3),
+                  ('d', 4))
+        todb(table2, conn, 'foobar', truncate=False)
 
-    actual = conn.execute('select * from foobar')
-    expect = (('a', 1),
-              ('b', 2),
-              ('c', 3),
-              ('d', 4))
-    ieq(expect, actual)
-    conn.close()
+        actual = conn.execute('select * from foobar')
+        expect = (('a', 1),
+                  ('b', 2),
+                  ('c', 3),
+                  ('d', 4))
+        ieq(expect, actual)
+    finally:
+        conn.close()
+        os.unlink(f.name)
 
 
 def test_fromdb():
