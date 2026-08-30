@@ -784,13 +784,17 @@ def iterlookupjoin(left, right, lkey, rkey, missing=None, lprefix=None,
     rgit = itertools.groupby(rit, key=rgetk)
     lrowgrp = []
 
+    # whether lrowgrp holds a group that has been picked off lgit but not yet
+    # yielded; tracked explicitly because no key value can stand in for
+    # "iterator exhausted" - None is itself a valid key
+    lgrp_pending = False
+
     # loop until *either* of the iterators is exhausted
-    # initialise here to handle empty tables
-    lkval, rkval = Comparable(None), Comparable(None)
     try:
 
         # pick off initial row groups
         lkval, lrowgrp = next(lgit)
+        lgrp_pending = True
         rkval, rrowgrp = next(rgit)
 
         while True:
@@ -798,7 +802,9 @@ def iterlookupjoin(left, right, lkey, rkey, missing=None, lprefix=None,
                 for row in joinrows(lrowgrp, None):
                     yield tuple(row)
                 # advance left
+                lgrp_pending = False
                 lkval, lrowgrp = next(lgit)
+                lgrp_pending = True
             elif lkval > rkval:
                 # advance right
                 rkval, rrowgrp = next(rgit)
@@ -806,14 +812,16 @@ def iterlookupjoin(left, right, lkey, rkey, missing=None, lprefix=None,
                 for row in joinrows(lrowgrp, rrowgrp):
                     yield tuple(row)
                 # advance both
+                lgrp_pending = False
                 lkval, lrowgrp = next(lgit)
+                lgrp_pending = True
                 rkval, rrowgrp = next(rgit)
 
     except StopIteration:
         pass
 
     # make sure any left rows remaining are yielded
-    if lkval > rkval:
+    if lgrp_pending:
         # yield anything that got left hanging
         for row in joinrows(lrowgrp, None):
             yield tuple(row)

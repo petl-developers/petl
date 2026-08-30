@@ -1288,6 +1288,28 @@ def _test_lookupjoin_empty(lookupjoin_impl):
     expect = (('id', 'shape', 'shape'),)
     ieq(expect, actual)
 
+    # empty right table where the first left key is None; None must not be
+    # mistaken for an "iterator exhausted" marker and drop the first group
+    table3 = (('id', 'colour'),
+              (None, 'blue'),
+              (2, 'red'))
+    actual = lookupjoin_impl(table3, table2, key='id')
+    expect = (('id', 'colour', 'shape'),
+              (None, 'blue', None),
+              (2, 'red', None))
+    ieq(expect, actual)
+    ieq(expect, actual)
+
+    # ... and where every left key is None
+    table4 = (('id', 'colour'),
+              (None, 'blue'),
+              (None, 'red'))
+    actual = lookupjoin_impl(table4, table2, key='id')
+    expect = (('id', 'colour', 'shape'),
+              (None, 'blue', None),
+              (None, 'red', None))
+    ieq(expect, actual)
+
 
 def _test_lookupjoin_uncomparable_keys(lookupjoin_impl):
 
