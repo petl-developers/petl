@@ -2,10 +2,12 @@ from __future__ import absolute_import, print_function, division
 
 
 from datetime import datetime
+import subprocess
+import sys
 
 import pytest
 
-from petl.errors import FieldSelectionError
+from petl.errors import ArgumentError, FieldSelectionError
 from petl.test.helpers import ieq
 from petl.transform.reshape import melt, recast, transpose, pivot, flatten, \
     unflatten
@@ -485,3 +487,38 @@ def test_unflatten_empty():
     expect1 = (('f0', 'f1', 'f2'),)
     actual1 = unflatten(table1, 'lines', 3)
     ieq(expect1, actual1)
+
+
+@pytest.mark.parametrize('header,kwargs,message', [
+    ((), {}, 'invalid value field: value'),
+    (('id', 'variable', 'value'), {'valuefield': 'missing'},
+     'invalid value field: missing'),
+    (('id', 'variable', 'value'), {'key': 'missing'},
+     'invalid key field: missing'),
+    (('id', 'variable', 'value'), {'variablefield': 'missing'},
+     'invalid variable field: missing'),
+    (('id', 'variable', 'value'), {'variablefield': {'missing': ['x']}},
+     'invalid variable field: missing'),
+    (('id', 'variable', 'value'), {'key': ['id', 'value']},
+     'value field cannot be a key field'),
+    (('id', 'variable', 'value'), {'variablefield': ['variable', 'value']},
+     'value field cannot be a variable field'),
+])
+def test_recast_invalid_fields(header, kwargs, message):
+    with pytest.raises(ArgumentError) as exc:
+        list(recast([header], **kwargs))
+    assert str(exc.value) == 'argument error: ' + message
+
+
+def test_recast_validation_with_optimization():
+    code = """
+from petl import empty, recast
+from petl.errors import ArgumentError
+try:
+    list(recast(empty()))
+except ArgumentError:
+    pass
+else:
+    raise RuntimeError('recast accepted a missing value field')
+"""
+    subprocess.check_call([sys.executable, '-O', '-c', code])

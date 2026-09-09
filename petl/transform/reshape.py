@@ -7,6 +7,7 @@ import operator
 from petl.compat import next, text_type
 
 
+from petl.errors import ArgumentError
 from petl.comparison import comparable_itemgetter
 from petl.util.base import Table, rowgetter, values, itervalues, \
     header, data, asindices
@@ -261,6 +262,12 @@ def recast(table, key=None, variablefield='variable', valuefield='value',
     time to reshape the data and recast variables as fields. How many rows are
     scanned in the first pass is determined by the `samplesize` argument.
 
+    When the result is iterated, invalid key, variable or value field names
+    raise :class:`petl.errors.ArgumentError`. The value field must exist in the
+    input header and must not also be selected as a key or variable field.
+    This also applies to an empty table with no fields; define the expected
+    header before recasting it.
+
     See also :func:`petl.transform.reshape.melt`.
 
     """
@@ -334,15 +341,19 @@ def iterrecast(source, key, variablefield, valuefield,
         variablefields = [f for f in flds
                           if f not in keyfields and f != valuefield]
 
-    # sanity checks
-    assert valuefield in flds, 'invalid value field: %s' % valuefield
-    assert valuefield not in keyfields, 'value field cannot be keyfields'
-    assert valuefield not in variablefields, \
-        'value field cannot be variable field'
+    # Validate user-supplied fields even when assertions are disabled.
+    if valuefield not in flds:
+        raise ArgumentError('invalid value field: %s' % valuefield)
+    if valuefield in keyfields:
+        raise ArgumentError('value field cannot be a key field')
+    if valuefield in variablefields:
+        raise ArgumentError('value field cannot be a variable field')
     for f in keyfields:
-        assert f in flds, 'invalid keyfields field: %s' % f
+        if f not in flds:
+            raise ArgumentError('invalid key field: %s' % f)
     for f in variablefields:
-        assert f in flds, 'invalid variable field: %s' % f
+        if f not in flds:
+            raise ArgumentError('invalid variable field: %s' % f)
 
     # we'll need these later
     valueindex = flds.index(valuefield)

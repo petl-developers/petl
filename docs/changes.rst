@@ -1,6 +1,12 @@
 Changes
 =======
 
+Unreleased
+----------
+
+* Raise ``ArgumentError`` for invalid ``recast()`` fields, including under
+  Python optimization, instead of relying on assertions. See :issue:`297`.
+
 Version 1.7.25
 --------------
 
