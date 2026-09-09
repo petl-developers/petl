@@ -1,5 +1,9 @@
 from __future__ import absolute_import, print_function, division
 
+import pickle
+import shelve
+from contextlib import closing
+
 import pytest
 
 from petl.errors import FieldSelectionError
@@ -7,6 +11,7 @@ from petl.test.helpers import ieq, eq_
 from petl.compat import PY3, next
 from petl.util.base import header, fieldnames, data, dicts, records, \
     namedtuples, itervalues, values, rowgroupby, expr
+from petl.util.lookups import recordlookup
 
 
 def test_header():
@@ -107,6 +112,47 @@ def test_records():
     eq_(1, o.get('bar'))
     eq_(None, o.get('baz'))
     eq_('qux', o.get('baz', default='qux'))
+
+
+@pytest.mark.parametrize('protocol', range(pickle.HIGHEST_PROTOCOL + 1))
+@pytest.mark.parametrize('row', [('a',), ('a', 1), ('a', 1, True)])
+def test_records_pickle(protocol, row):
+    original = next(iter(records([['foo', 'bar'], row], missing='missing')))
+    original.extra = {'nested': [1, 2]}
+    restored = pickle.loads(pickle.dumps(original, protocol=protocol))
+    eq_(type(original), type(restored))
+    eq_(tuple(original), tuple(restored))
+    eq_(original.flds, restored.flds)
+    eq_(original.missing, restored.missing)
+    eq_(original.extra, restored.extra)
+    eq_(original[0], restored[0])
+    eq_(original['bar'], restored['bar'])
+    eq_(original.bar, restored.bar)
+    with pytest.raises(KeyError):
+        restored['unknown']
+    with pytest.raises(AttributeError):
+        restored.unknown
+
+
+def test_records_legacy_pickle():
+    # Protocol 0 output produced before Record defined its own reducer.
+    payload = (b'ccopy_reg\n_reconstructor\np0\n(cpetl.util.base\nRecord\np1\n'
+               b'c__builtin__\ntuple\np2\n(Va\np3\ntp4\ntp5\nRp6\n(dp7\n'
+               b'Vflds\np8\n(lp9\nVfoo\np10\naVbar\np11\nasVmissing\np12\ng12\nsb.')
+    restored = pickle.loads(payload)
+    eq_(('a',), tuple(restored))
+    eq_('a', restored.foo)
+    eq_('missing', restored.bar)
+
+
+def test_recordlookup_shelve(tmpdir):
+    filename = str(tmpdir.join('records'))
+    table = [['foo', 'bar'], ['a', 1], ['a', 2]]
+    with closing(shelve.open(filename)) as database:
+        recordlookup(table, 'foo', dictionary=database)
+    with closing(shelve.open(filename)) as database:
+        eq_([1, 2], [record.bar for record in database['a']])
+        eq_(['a', 'a'], [record['foo'] for record in database['a']])
 
 
 def test_records_headerless():

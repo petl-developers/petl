@@ -565,6 +565,9 @@ class Record(tuple):
         self.flds = flds
         self.missing = missing
 
+    def __reduce__(self):
+        return type(self), (tuple(self), self.flds, self.missing), self.__dict__
+
     def __getitem__(self, f):
         if isinstance(f, int):
             idx = f
@@ -579,14 +582,16 @@ class Record(tuple):
             return self.missing
 
     def __getattr__(self, f):
-        if f in self.flds:
+        # Unpickling older records can probe attributes before restoring flds.
+        flds = object.__getattribute__(self, 'flds')
+        if f in flds:
             try:
-                return super(Record, self).__getitem__(self.flds.index(f))
+                return super(Record, self).__getitem__(flds.index(f))
             except IndexError:  # handle short rows
                 return self.missing
         else:
             raise AttributeError('item ' + repr(f) +
-                                ' not in fields ' + repr(self.flds))
+                                ' not in fields ' + repr(flds))
 
     def get(self, key, default=None):
         try:
@@ -618,6 +623,10 @@ def records(table, *sliceargs, **kwargs):
         ['a', 'b']
 
     Short rows are padded with the value of the `missing` keyword argument.
+
+    Records can be pickled when their values and metadata are picklable.
+    Field names and the `missing` value are retained after loading, so field
+    access behaves the same as before serialization.
 
     """
 
