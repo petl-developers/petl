@@ -4,6 +4,10 @@ Changes
 Unreleased
 ----------
 
+* Clarify that ``valuecounter()`` accepts multiple fields as positional
+  arguments, with examples of mixed names/indexes and tuple unpacking.
+  See :issue:`641`.
+
 * Raise ``ArgumentError`` for invalid ``recast()`` fields, including under
   Python optimization, instead of relying on assertions. See :issue:`297`.
 
