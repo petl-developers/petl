@@ -69,8 +69,22 @@ def valuecounter(table, *field, **kwargs):
         >>> etl.valuecounter(table, 'foo')
         Counter({'b': 2, 'a': 1, 'c': 1})
 
-    The `field` argument can be a single field name or index (starting from
-    zero) or a tuple of field names and/or indexes.
+    Each field can be a name or index (starting from zero). Pass multiple
+    fields as separate positional arguments to count compound keys. E.g.::
+
+        >>> table = [['foo', 'bar'],
+        ...          ['a', False],
+        ...          ['b', True],
+        ...          ['b', True]]
+        >>> etl.valuecounter(table, 'foo', 1)
+        Counter({('b', True): 2, ('a', False): 1})
+
+    If field names or indexes are stored in a tuple or list, unpack them with
+    ``*`` instead of passing the tuple or list as a single argument::
+
+        >>> fields = ('foo', 'bar')
+        >>> etl.valuecounter(table, *fields)
+        Counter({('b', True): 2, ('a', False): 1})
 
     """
 
