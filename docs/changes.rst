@@ -4,6 +4,9 @@ Changes
 Unreleased
 ----------
 
+* Read empty JSON lines files as empty tables instead of raising
+  ``RuntimeError`` when discovering the header.
+
 * Clarify that ``valuecounter()`` accepts multiple fields as positional
   arguments, with examples of mixed names/indexes and tuple unpacking.
   See :issue:`641`.

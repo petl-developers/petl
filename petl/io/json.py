@@ -48,6 +48,9 @@ def fromjson(source, *args, **kwargs):
     infer the document as a JSON lines document. For more details about JSON lines
     please visit https://jsonlines.org/.
 
+    An empty JSON lines file produces a table with no data rows. If no
+    `header` is supplied, the table has an empty header tuple.
+
         >>> import petl as etl
         >>> data_with_jlines = '''{"name": "Gilbert", "wins": [["straight", "7S"], ["one pair", "10H"]]}
         ... {"name": "Alexa", "wins": [["two pair", "4S"], ["two pair", "9S"]]}
@@ -320,7 +323,11 @@ def iterjlines(f, header, missing):
 
     if header is None:
         header = list()
-        peek, it = iterpeek(it, 1)
+        try:
+            peek, it = iterpeek(it, 1)
+        except StopIteration:
+            yield tuple()
+            return
         json_obj = json.loads(peek)
         if hasattr(json_obj, 'keys'):
             header += [k for k in json_obj.keys() if k not in header]
