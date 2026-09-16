@@ -79,7 +79,7 @@ persistence capability based on zodb for handling larger datasets.
 
 **csvkit (Python package)**
 
-- http://pypi.python.org/pypi/picalo/
+- https://pypi.org/project/csvkit/
 - http://csvkit.rtfd.org/
 
 A set of command-line utilities for transforming tabular data from CSV
