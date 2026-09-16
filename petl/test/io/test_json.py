@@ -11,6 +11,54 @@ from petl.test.helpers import ieq
 from petl import dummytable, fromjson, fromdicts, tojson, tojsonarrays
 
 
+@pytest.mark.parametrize('kind', ['list', 'iterator', 'generator'])
+@pytest.mark.parametrize('sample', [0, 1, 2])
+def test_fromdicts_header_sample(kind, sample):
+    records = [OrderedDict([('id', '001')]),
+               OrderedDict([('id', '002'), ('later', 'value')])]
+    if kind == 'iterator':
+        source = iter(records)
+    elif kind == 'generator':
+        source = (record for record in records)
+    else:
+        source = records
+    expected = {
+        0: [(), (), ()],
+        1: [('id',), ('001',), ('002',)],
+        2: [('id', 'later'), ('001', None), ('002', 'value')],
+    }[sample]
+    actual = fromdicts(source, sample=sample)
+    ieq(expected, actual)
+    if kind != 'iterator':
+        ieq(expected, actual)
+
+
+@pytest.mark.parametrize('kind', ['list', 'iterator', 'generator'])
+def test_fromdicts_single_sample_empty(kind):
+    source = []
+    if kind == 'iterator':
+        source = iter(source)
+    elif kind == 'generator':
+        source = (record for record in source)
+    actual = fromdicts(source, sample=1)
+    ieq([()], actual)
+    if kind != 'iterator':
+        ieq([()], actual)
+
+
+@pytest.mark.parametrize('records, expected', [
+    ([], [()]),
+    ([{'id': '001'}, {'id': '002', 'later': 'value'}],
+     [('id',), ('001',), ('002',)]),
+])
+def test_fromjson_single_sample(tmpdir, records, expected):
+    path = tmpdir.join('sample.json')
+    path.write(json.dumps(records))
+    actual = fromjson(str(path), sample=1)
+    ieq(expected, actual)
+    ieq(expected, actual)
+
+
 def test_fromjson_1():
 
     f = NamedTemporaryFile(delete=False, mode='w')

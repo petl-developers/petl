@@ -5,6 +5,7 @@ from __future__ import absolute_import, print_function, division
 import io
 import json
 import inspect
+from itertools import chain, islice
 from json.encoder import JSONEncoder
 from os import unlink
 from tempfile import NamedTemporaryFile
@@ -86,6 +87,9 @@ def fromjson(source, *args, **kwargs):
     :func:`petl.transform.headers.sortheader` on the resulting table to
     guarantee stability.
 
+    With `sample=1`, only the first object's keys are used. An empty input
+    array produces an empty header and no data rows.
+
     """
 
     source = read_source_from_arg(source)
@@ -163,6 +167,10 @@ def fromdicts(dicts, header=None, sample=1000, missing=None):
     If `header` is not specified, `sample` items from `dicts` will be
     inspected to discovery dictionary keys. Note that the order in which
     dictionary keys are discovered may not be stable,
+
+    A sample size of one discovers the first dictionary's keys. Empty
+    inputs produce an empty header and no data rows, including with
+    `sample=1`.
 
     See also :func:`petl.io.json.fromjson`.
 
@@ -299,10 +307,9 @@ class DictsGeneratorView(DictsView):
     def _determine_header(self):
         it = iter(self._dicts)
         header = list()
-        peek, it = iterpeek(it, self.sample)
+        peek = list(islice(it, self.sample))
+        it = chain(peek, it)
         self._dicts = it
-        if isinstance(peek, dict):
-            peek = [peek]
         for o in peek:
             if hasattr(o, 'keys'):
                 header += [k for k in o.keys() if k not in header]
@@ -338,7 +345,8 @@ def iterdicts(dicts, header, sample, missing):
     if header is None:
         # discover fields
         header = list()
-        peek, it = iterpeek(it, sample)
+        peek = list(islice(it, sample))
+        it = chain(peek, it)
         for o in peek:
             if hasattr(o, 'keys'):
                 header += [k for k in o.keys() if k not in header]

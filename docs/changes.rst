@@ -4,6 +4,9 @@ Changes
 Unreleased
 ----------
 
+* Preserve discovered columns and values with ``sample=1`` in ``fromdicts()``
+  and JSON array input. Empty samples no longer raise ``RuntimeError``.
+
 * Clarify that ``valuecounter()`` accepts multiple fields as positional
   arguments, with examples of mixed names/indexes and tuple unpacking.
   See :issue:`641`.
