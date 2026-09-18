@@ -4,6 +4,10 @@ Changes
 Unreleased
 ----------
 
+* Preserve tuple values when formatting ``DuplicateKeyError`` and
+  ``FieldSelectionError`` messages, including compound duplicate keys and
+  invalid tuple field selectors. See :issue:`641`.
+
 * Clarify that ``valuecounter()`` accepts multiple fields as positional
   arguments, with examples of mixed names/indexes and tuple unpacking.
   See :issue:`641`.
