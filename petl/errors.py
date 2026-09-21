@@ -7,7 +7,7 @@ class DuplicateKeyError(Exception):
         self.key = key
 
     def __str__(self):
-        return 'duplicate key: %r' % self.key
+        return 'duplicate key: %r' % (self.key,)
 
 
 class FieldSelectionError(Exception):
@@ -16,7 +16,7 @@ class FieldSelectionError(Exception):
         self.value = value
 
     def __str__(self):
-        return 'selection is not a field or valid field index: %r' % self.value
+        return 'selection is not a field or valid field index: %r' % (self.value,)
 
 
 class ArgumentError(Exception):

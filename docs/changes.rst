@@ -4,6 +4,10 @@ Changes
 Unreleased
 ----------
 
+* Preserve tuple values when formatting ``DuplicateKeyError`` and
+  ``FieldSelectionError`` messages, including compound duplicate keys and
+  invalid tuple field selectors. See :issue:`641`.
+
 * Preserve discovered columns and values with ``sample=1`` in ``fromdicts()``
   and JSON array input. Empty samples no longer raise ``RuntimeError``.
 * Read empty JSON lines files as empty tables instead of raising
