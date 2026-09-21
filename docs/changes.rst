@@ -6,6 +6,8 @@ Unreleased
 
 * Preserve discovered columns and values with ``sample=1`` in ``fromdicts()``
   and JSON array input. Empty samples no longer raise ``RuntimeError``.
+* Read empty JSON lines files as empty tables instead of raising
+  ``RuntimeError`` when discovering the header.
 
 * Clarify that ``valuecounter()`` accepts multiple fields as positional
   arguments, with examples of mixed names/indexes and tuple unpacking.
