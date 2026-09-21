@@ -355,6 +355,8 @@ finally:
         sqlalchemy_session.close()
 
         # other exercises
+        # The Session exercise now commits its rows; start the next case empty.
+        _setup_postgresql(dbapi_connection)
         _test_dbo(dbapi_connection,
                   lambda: dbapi_connection.cursor(name='arbitrary'))
         _test_with_schema(dbapi_connection, 'public')

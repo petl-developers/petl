@@ -184,7 +184,7 @@ finally:
         sqlalchemy_engine = create_engine('mysql+pymysql://%s:%s@%s/%s'
                                           % (myuser, mypassword, myhost, mydatabase))
         sqlalchemy_connection = sqlalchemy_engine.connect()
-        sqlalchemy_connection.execute('SET SQL_MODE=ANSI_QUOTES')
+        sqlalchemy_connection.execute(sqlalchemy.text('SET SQL_MODE=ANSI_QUOTES'))
         _test_create(sqlalchemy_connection)
         sqlalchemy_connection.close()
 
