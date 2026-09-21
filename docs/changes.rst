@@ -1,24 +1,39 @@
 Changes
 =======
 
-Unreleased
+Version 1.7.26
 ----------
+
+* Support SQLAlchemy 2 database operations
+  By :user:`umd0730`, :issue:`719`.
 
 * Preserve tuple values when formatting ``DuplicateKeyError`` and
   ``FieldSelectionError`` messages, including compound duplicate keys and
   invalid tuple field selectors. See :issue:`641`.
+  By :user:`umd0730`, :issue:`718`.
 
 * Preserve discovered columns and values with ``sample=1`` in ``fromdicts()``
   and JSON array input. Empty samples no longer raise ``RuntimeError``.
+  By :user:`umd0730`, :issue:`717`.
+
 * Read empty JSON lines files as empty tables instead of raising
   ``RuntimeError`` when discovering the header.
+  By :user:`umd0730`, :issue:`716`.
+
+* Correct csvkit's PyPI link in related work
+  By :user:`codeofwxz`, :issue:`715`.
 
 * Clarify that ``valuecounter()`` accepts multiple fields as positional
-  arguments, with examples of mixed names/indexes and tuple unpacking.
-  See :issue:`641`.
+  arguments, with examples of mixed names/indexes and tuple unpacking. See :issue:`641`.
+  By :user:`be-student`, :issue:`714`.
 
 * Raise ``ArgumentError`` for invalid ``recast()`` fields, including under
   Python optimization, instead of relying on assertions. See :issue:`297`.
+  By :user:`umd0730`, :issue:`712`.
+
+* docs: demonstrate row field-name and index access in convert.
+  By :user:`be-student`, :issue:`711`.
+
 
 Version 1.7.25
 --------------
