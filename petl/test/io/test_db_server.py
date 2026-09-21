@@ -278,7 +278,7 @@ finally:
         from sqlalchemy.event import listen
         listen(sqlalchemy_engine, "connect", _setup_sqlalchemy_quotes)
         sqlalchemy_connection = sqlalchemy_engine.connect()
-        sqlalchemy_connection.execute('SET SQL_MODE=ANSI_QUOTES')
+        sqlalchemy_connection.execute(sqlalchemy.text('SET SQL_MODE=ANSI_QUOTES'))
         _test_dbo(sqlalchemy_connection)
         sqlalchemy_connection.close()
 
@@ -355,6 +355,8 @@ finally:
         sqlalchemy_session.close()
 
         # other exercises
+        # The Session exercise now commits its rows; start the next case empty.
+        _setup_postgresql(dbapi_connection)
         _test_dbo(dbapi_connection,
                   lambda: dbapi_connection.cursor(name='arbitrary'))
         _test_with_schema(dbapi_connection, 'public')
