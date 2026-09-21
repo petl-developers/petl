@@ -131,3 +131,39 @@ def test_sqlalchemy_create_drop_commit_false(engine):
         drop_table(connection, 'records', commit=False)
         assert transaction.is_active
         transaction.rollback()
+
+
+@pytest.mark.parametrize('use_engine', [False, True])
+@pytest.mark.parametrize('expression', [False, True])
+def test_sqlalchemy_keyword_parameters(engine, use_engine, expression):
+    query = 'SELECT :value AS value'
+    if expression:
+        query = sa.text(query)
+    with engine.connect() as connection:
+        dbo = engine if use_engine else connection
+        assert list(etl.fromdb(dbo, query, value=123)) == [('value',), (123,)]
+
+
+@pytest.mark.parametrize('parameters', [([123],), (123,), (123, 456)])
+def test_sqlalchemy_legacy_positional_parameters(engine, parameters):
+    query = 'SELECT ? AS value' if len(parameters) == 1 else 'SELECT ? + ? AS value'
+    expected = 123 if len(parameters) == 1 else 579
+    assert list(etl.fromdb(engine, query, *parameters)) == [('value',), (expected,)]
+
+
+def test_sqlalchemy_commit_true_existing_connection_transaction(engine):
+    with engine.begin() as connection:
+        connection.execute(sa.text('CREATE TABLE records (id INTEGER, name TEXT)'))
+    with engine.connect() as connection:
+        transaction = connection.begin()
+        table = [('id', 'name'), (1, 'Alice')]
+        etl.todb(table, connection, 'records', commit=True)
+        if sa.__version__.startswith('1.3.'):
+            # Preserve the historical subtransaction behavior on 1.3.
+            assert transaction.is_active
+            assert rows(engine) == []
+            transaction.rollback()
+            assert rows(engine) == []
+        else:
+            assert not transaction.is_active
+            assert rows(engine) == table[1:]

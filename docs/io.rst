@@ -435,9 +435,12 @@ connection use the database driver's parameter style. With a session, use
 SQLAlchemy's named parameters, e.g. ``:id`` and ``{'id': 1}``. SQLAlchemy
 executable expressions such as ``text()`` are also accepted.
 
-Writes commit by default, including any transaction already active on a supplied
-connection or session. Pass ``commit=False`` to leave the transaction under the
-caller's control. For example::
+Writes commit by default. Sessions commit through the Session API. On SQLAlchemy
+1.4 and 2.x, an already-active connection transaction is also committed. On 1.3,
+an already-active connection retains its historical subtransaction behavior:
+the caller still needs to commit or roll back the outer transaction. Pass
+``commit=False`` to explicitly leave transaction control to the caller on all
+versions. For example::
 
     from sqlalchemy import create_engine
     import petl as etl

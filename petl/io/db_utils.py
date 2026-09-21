@@ -56,9 +56,22 @@ def _hasprop(o, n):
 def _execute_sqlalchemy(connection, query, *args, **kwargs):
     # Raw SQL keeps the underlying driver's parameter style. SQLAlchemy
     # expressions still use execute(), including their named bind parameters.
-    if isinstance(query, string_types) and _hasmethod(connection, 'exec_driver_sql'):
-        return connection.exec_driver_sql(query, *args, **kwargs)
-    return connection.execute(query, *args, **kwargs)
+    if not _hasmethod(connection, 'exec_driver_sql'):
+        return connection.execute(query, *args, **kwargs)
+
+    # Older execute() accepted keywords, scalar arguments and flat lists.
+    # Modern execution APIs take one parameter mapping or sequence instead.
+    parameters = args if len(args) > 1 else args[0] if args else kwargs
+    if isinstance(query, string_types):
+        if isinstance(parameters, list):
+            if not parameters or not (isinstance(parameters[0], (tuple, list))
+                                      or hasattr(parameters[0], 'keys')):
+                parameters = tuple(parameters)
+        elif (parameters is not None and not isinstance(parameters, tuple)
+              and not hasattr(parameters, 'keys')):
+            parameters = (parameters,)
+        return connection.exec_driver_sql(query, parameters)
+    return connection.execute(query, parameters)
 
 
 @contextmanager
