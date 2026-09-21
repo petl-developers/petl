@@ -278,7 +278,7 @@ finally:
         from sqlalchemy.event import listen
         listen(sqlalchemy_engine, "connect", _setup_sqlalchemy_quotes)
         sqlalchemy_connection = sqlalchemy_engine.connect()
-        sqlalchemy_connection.execute('SET SQL_MODE=ANSI_QUOTES')
+        sqlalchemy_connection.execute(sqlalchemy.text('SET SQL_MODE=ANSI_QUOTES'))
         _test_dbo(sqlalchemy_connection)
         sqlalchemy_connection.close()
 

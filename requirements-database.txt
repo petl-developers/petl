@@ -2,7 +2,7 @@
 
 cryptography 
 pymysql 
-SQLAlchemy>=1.3.6,<2.0
+SQLAlchemy>=1.3.6
 psycopg2-binary
 mysqlclient ; python_version < '3'
 

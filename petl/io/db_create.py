@@ -20,7 +20,7 @@ from petl.util.materialise import columns
 from petl.transform.basics import head
 from petl.io.db_utils import _is_dbapi_connection, _is_dbapi_cursor, \
     _is_sqlalchemy_engine, _is_sqlalchemy_session, _is_sqlalchemy_connection,\
-    _quote
+    _quote, _execute_sqlalchemy, _sqlalchemy_transaction
 
 
 logger = logging.getLogger(__name__)
@@ -362,24 +362,18 @@ def _execute_dbapi_cursor(sql, cursor, commit):
 
 
 def _execute_sqlalchemy_connection(sql, connection, commit):
-
-    if commit:
-        debug('begin transaction')
-        trans = connection.begin()
-
-    debug('execute SQL')
-    connection.execute(sql)
-
-    if commit:
-        debug('commit transaction')
-        trans.commit()
+    with _sqlalchemy_transaction(connection, commit):
+        debug('execute SQL')
+        _execute_sqlalchemy(connection, sql).close()
 
     # N.B., don't close connection, leave that to the application
 
 
 def _execute_sqlalchemy_engine(sql, engine, commit):
-    _execute_sqlalchemy_connection(sql, engine.connect(), commit)
+    with engine.connect() as connection:
+        _execute_sqlalchemy_connection(sql, connection, commit)
 
 
 def _execute_sqlalchemy_session(sql, session, commit):
-    _execute_sqlalchemy_connection(sql, session.connection(), commit)
+    with _sqlalchemy_transaction(session, commit):
+        _execute_sqlalchemy_connection(sql, session.connection(), False)

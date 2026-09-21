@@ -429,6 +429,29 @@ Databases
         $ pip install sqlite3
         $ pip install pymysql
 
+SQLAlchemy 1.3, 1.4 (including future mode), and 2.x engines, connections and
+sessions are supported. SQL strings passed to ``fromdb()`` with an engine or
+connection use the database driver's parameter style. With a session, use
+SQLAlchemy's named parameters, e.g. ``:id`` and ``{'id': 1}``. SQLAlchemy
+executable expressions such as ``text()`` are also accepted.
+
+Writes commit by default, including any transaction already active on a supplied
+connection or session. Pass ``commit=False`` to leave the transaction under the
+caller's control. For example::
+
+    from sqlalchemy import create_engine
+    import petl as etl
+
+    engine = create_engine('sqlite:///example.db')
+    with engine.begin() as connection:
+        etl.todb(table, connection, 'example', create=True, commit=False)
+        etl.appenddb(more_rows, connection, 'example', commit=False)
+
+Connections opened from an engine are closed after use. To retain an uncommitted
+transaction, pass a connection or session rather than an engine. If iteration
+over ``fromdb()`` is interrupted, close its iterator to release its result and
+any connection it opened. Supplied connections and sessions remain open.
+
 .. autofunction:: petl.io.db.fromdb
 .. autofunction:: petl.io.db.todb
 .. autofunction:: petl.io.db.appenddb

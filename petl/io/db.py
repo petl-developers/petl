@@ -12,7 +12,8 @@ from petl.errors import ArgumentError
 from petl.util.base import Table
 from petl.io.db_utils import _is_dbapi_connection, _is_dbapi_cursor, \
     _is_sqlalchemy_connection, _is_sqlalchemy_engine, _is_sqlalchemy_session, \
-    _is_clikchouse_dbapi_connection, _quote, _placeholders
+    _is_clikchouse_dbapi_connection, _quote, _placeholders, \
+    _execute_sqlalchemy, _sqlalchemy_transaction
 from petl.io.db_create import drop_table, create_table
 
 
@@ -197,27 +198,37 @@ def _iter_dbapi_cursor(cursor, query, *args, **kwargs):
 
 
 def _iter_sqlalchemy_engine(engine, query, *args, **kwargs):
-    connection = engine.connect()
-    for row in _iter_sqlalchemy_connection(connection, query, *args, **kwargs):
-        yield row
-    connection.close()
+    with engine.connect() as connection:
+        iterator = _iter_sqlalchemy_connection(connection, query, *args, **kwargs)
+        try:
+            for row in iterator:
+                yield row
+        finally:
+            iterator.close()
 
 
 def _iter_sqlalchemy_connection(connection, query, *args, **kwargs):
     debug('connection: %r', connection)
-    results = connection.execute(query, *args, **kwargs)
-    hdr = results.keys()
-    yield tuple(hdr)
-    for row in results:
-        yield row
+    results = _execute_sqlalchemy(connection, query, *args, **kwargs)
+    try:
+        yield tuple(results.keys())
+        for row in results:
+            yield row
+    finally:
+        results.close()
 
 
 def _iter_sqlalchemy_session(session, query, *args, **kwargs):
+    if isinstance(query, string_types):
+        from sqlalchemy import text
+        query = text(query)
     results = session.execute(query, *args, **kwargs)
-    hdr = results.keys()
-    yield tuple(hdr)
-    for row in results:
-        yield row
+    try:
+        yield tuple(results.keys())
+        for row in results:
+            yield row
+    finally:
+        results.close()
 
 
 def todb(table, dbo, tablename, schema=None, commit=True,
@@ -617,8 +628,9 @@ def _todb_dbapi_cursor(table, cursor, tablename, schema=None, commit=True,
 def _todb_sqlalchemy_engine(table, engine, tablename, schema=None, commit=True,
                             truncate=False):
 
-    _todb_sqlalchemy_connection(table, engine.connect(), tablename,
-                                schema=schema, commit=commit, truncate=truncate)
+    with engine.connect() as connection:
+        _todb_sqlalchemy_connection(table, connection, tablename,
+                                    schema=schema, commit=commit, truncate=truncate)
 
 
 def _todb_sqlalchemy_connection(table, connection, tablename, schema=None,
@@ -642,34 +654,27 @@ def _todb_sqlalchemy_connection(table, connection, tablename, schema=None,
     # N.B., we need to obtain a reference to the underlying DB-API connection so
     # we can import the module and determine the paramstyle
     proxied_raw_connection = connection.connection
-    actual_raw_connection = proxied_raw_connection.connection
+    if hasattr(proxied_raw_connection, 'driver_connection'):
+        actual_raw_connection = proxied_raw_connection.driver_connection
+    else:
+        actual_raw_connection = proxied_raw_connection.connection
 
     # determine paramstyle and build placeholders string
     placeholders = _placeholders(actual_raw_connection, colnames)
     debug('placeholders: %r', placeholders)
 
-    if commit:
-        debug('begin transaction')
-        trans = connection.begin()
+    with _sqlalchemy_transaction(connection, commit):
+        if truncate:
+            # TRUNCATE is not supported in some databases and causes locks.
+            truncatequery = SQL_TRUNCATE_QUERY % tablename
+            debug('truncate the table via query %r', truncatequery)
+            _execute_sqlalchemy(connection, truncatequery).close()
 
-    if truncate:
-        # TRUNCATE is not supported in some databases and causing locks with
-        # MySQL used via SQLAlchemy, fall back to DELETE FROM for now
-        truncatequery = SQL_TRUNCATE_QUERY % tablename
-        debug('truncate the table via query %r', truncatequery)
-        connection.execute(truncatequery)
-
-    insertcolnames = ', '.join(colnames)
-    insertquery = SQL_INSERT_QUERY % (tablename, insertcolnames, placeholders)
-    debug('insert data via query %r' % insertquery)
-    for row in it:
-        connection.execute(insertquery, row)
-
-    # finish up
-
-    if commit:
-        debug('commit transaction')
-        trans.commit()
+        insertcolnames = ', '.join(colnames)
+        insertquery = SQL_INSERT_QUERY % (tablename, insertcolnames, placeholders)
+        debug('insert data via query %r' % insertquery)
+        for row in it:
+            _execute_sqlalchemy(connection, insertquery, tuple(row)).close()
 
     # N.B., don't close connection, leave that to the application
 
@@ -677,9 +682,10 @@ def _todb_sqlalchemy_connection(table, connection, tablename, schema=None,
 def _todb_sqlalchemy_session(table, session, tablename, schema=None,
                              commit=True, truncate=False):
 
-    _todb_sqlalchemy_connection(table, session.connection(), tablename,
-                                schema=schema, commit=commit,
-                                truncate=truncate)
+    with _sqlalchemy_transaction(session, commit):
+        _todb_sqlalchemy_connection(table, session.connection(), tablename,
+                                    schema=schema, commit=False,
+                                    truncate=truncate)
 
 
 def appenddb(table, dbo, tablename, schema=None, commit=True):
