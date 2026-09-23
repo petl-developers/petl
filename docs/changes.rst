@@ -2,7 +2,7 @@ Changes
 =======
 
 Version 1.7.26
-----------
+--------------
 
 * Preserve integer values in ``fromdataframe()`` when pandas tables contain
   both integer and floating-point columns, avoiding precision loss for large
