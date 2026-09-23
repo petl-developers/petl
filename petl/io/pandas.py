@@ -65,6 +65,9 @@ def fromdataframe(df, include_index=False):
         | 'pears'   |   7 | 0.1 |
         +-----------+-----+-----+
 
+    Values are extracted without coercing each row to a common dtype, so
+    integer columns retain their values even alongside floating-point columns.
+
     """
 
     return DataFrameView(df, include_index=include_index)
@@ -74,8 +77,8 @@ class DataFrameView(Table):
 
     def __init__(self, df, include_index=False):
         assert hasattr(df, 'columns') \
-            and hasattr(df, 'iterrows') \
-            and inspect.ismethod(df.iterrows), \
+            and hasattr(df, 'itertuples') \
+            and inspect.ismethod(df.itertuples), \
             'bad argument, expected pandas.DataFrame, found %r' % df
         self.df = df
         self.include_index = include_index
@@ -83,9 +86,10 @@ class DataFrameView(Table):
     def __iter__(self):
         if self.include_index:
             yield ('index',) + tuple(self.df.columns)
-            for i, row in self.df.iterrows():
-                yield (i,) + tuple(row)
+            for row in self.df.itertuples(index=True, name=None):
+                yield row
         else:
             yield tuple(self.df.columns)
-            for _, row in self.df.iterrows():
-                yield tuple(row)
+            # Keep the index during iteration so zero-column frames retain rows.
+            for row in self.df.itertuples(index=True, name=None):
+                yield row[1:]
