@@ -158,8 +158,11 @@ def itersetheader(source, header):
         source_header = next(it)
     except StopIteration:
         source_header = ()
-    if callable(header):
-        header = [header(field) for field in source_header]
+    try:
+        iter(header)
+    except TypeError:
+        if callable(header):
+            header = [header(field) for field in source_header]
     yield tuple(header)
     for row in it:
         yield tuple(row)
