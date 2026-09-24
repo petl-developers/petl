@@ -170,8 +170,6 @@ def _mean_std(values, ddof):
 
 
 def _standardize_value(value, stats):
-    if stats is None:
-        return value
     origin, mean, std, precision = stats
     if std == 0:
         return 0.0

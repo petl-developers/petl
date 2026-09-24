@@ -94,6 +94,21 @@ def test_standardize_preserves_non_finite_values():
     assert values[4:] == [float('inf'), float('-inf')]
 
 
+def test_standardize_field_without_finite_numbers():
+    table = (('value',),
+             (None,),
+             (True,),
+             ('unknown',),
+             (float('inf'),))
+
+    rows = standardize(table, 'value').list()
+    assert rows == [('value',),
+                    (None,),
+                    (True,),
+                    ('unknown',),
+                    (float('inf'),)]
+
+
 def test_standardize_large_values_without_precision_loss():
     base = 10 ** 400
     table = (('close', 'wide'),
