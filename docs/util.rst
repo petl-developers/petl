@@ -108,4 +108,6 @@ Miscellaneous
 .. autofunction:: petl.util.misc.diffvalues
 .. autofunction:: petl.util.misc.strjoin
 .. autofunction:: petl.util.misc.nthword
+.. autofunction:: petl.util.misc.substringbefore
+.. autofunction:: petl.util.misc.substringafter
 .. autofunction:: petl.util.misc.coalesce

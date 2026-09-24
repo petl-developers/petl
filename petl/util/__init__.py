@@ -26,4 +26,4 @@ from petl.util.timing import progress, log_progress, clock
 from petl.util.statistics import limits, stats
 
 from petl.util.misc import typeset, diffheaders, diffvalues, nthword, strjoin, \
-    coalesce
+    substringbefore, substringafter, coalesce

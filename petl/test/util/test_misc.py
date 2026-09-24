@@ -3,7 +3,8 @@ from __future__ import absolute_import, print_function, division
 
 from petl.test.helpers import eq_
 from petl.compat import PY2
-from petl.util.misc import typeset, diffvalues, diffheaders
+from petl.util.misc import typeset, diffvalues, diffheaders, substringbefore, \
+    substringafter
 
 
 def test_typeset():
@@ -50,4 +51,25 @@ def test_diffvalues():
     eq_({'c'}, add)
     eq_({'b'}, sub)
 
+
+def test_substringbefore():
+
+    before = substringbefore(':')
+    eq_('foo', before('foo:bar:baz'))
+    eq_('foo', before('foo'))
+    eq_('', before(':foo'))
+
+    before_bytes = substringbefore(b':')
+    eq_(b'foo', before_bytes(b'foo:bar'))
+
+
+def test_substringafter():
+
+    after = substringafter(':')
+    eq_('bar:baz', after('foo:bar:baz'))
+    eq_('', after('foo'))
+    eq_('foo', after(':foo'))
+
+    after_bytes = substringafter(b':')
+    eq_(b'bar', after_bytes(b'foo:bar'))
 
