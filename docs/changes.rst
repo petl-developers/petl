@@ -2,7 +2,7 @@ Changes
 =======
 
 Version 1.7.26
-----------
+--------------
 
 * Support SQLAlchemy 2 database operations
   By :user:`umd0730`, :issue:`719`.
