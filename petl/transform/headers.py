@@ -118,6 +118,19 @@ def setheader(table, header):
         | 'b'    |      2 |
         +--------+--------+
 
+    A function can also be provided to transform each field in the existing
+    header. E.g.::
+
+        >>> table3 = etl.setheader(table1, str.upper)
+        >>> table3
+        +-----+-----+
+        | FOO | BAR |
+        +=====+=====+
+        | 'a' |   1 |
+        +-----+-----+
+        | 'b' |   2 |
+        +-----+-----+
+
     See also :func:`petl.transform.headers.extendheader`,
     :func:`petl.transform.headers.pushheader`.
 
@@ -142,9 +155,11 @@ class SetHeaderView(Table):
 def itersetheader(source, header):
     it = iter(source)
     try:
-        next(it)  # discard source header
+        source_header = next(it)
     except StopIteration:
-        pass  # no previous header
+        source_header = ()
+    if callable(header):
+        header = [header(field) for field in source_header]
     yield tuple(header)
     for row in it:
         yield tuple(row)
