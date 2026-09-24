@@ -1,12 +1,19 @@
 Changes
 =======
 
-Version 1.7.26
+Version 1.7.27
 --------------
 
 * Preserve integer values in ``fromdataframe()`` when pandas tables contain
   both integer and floating-point columns, avoiding precision loss for large
   integers. Index inclusion and empty-table behavior are unchanged.
+  By :user:`rastagan-git`, :issue:`720`.
+
+* Add callable support to setheader
+  By :user:`akashmalbari`, :issue:`721`.
+
+Version 1.7.26
+--------------
 
 * Support SQLAlchemy 2 database operations
   By :user:`umd0730`, :issue:`719`.

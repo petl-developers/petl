@@ -22,6 +22,48 @@ def test_setheader():
     ieq(expect2, table2)  # can iterate twice?
 
 
+def test_setheader_callable():
+
+    table1 = (('foo', 'Bar'),
+              ('a', 1),
+              ('b', 2))
+    table2 = setheader(table1, lambda field: field.upper())
+    expect2 = (('FOO', 'BAR'),
+               ('a', 1),
+               ('b', 2))
+    ieq(expect2, table2)
+    ieq(expect2, table2)  # can iterate twice?
+
+
+def test_setheader_callable_method():
+
+    table1 = setheader((('foo', 'Bar'),
+                        ('a', 1)),
+                       lambda field: field.upper())
+    table2 = table1.setheader(lambda field: field.lower())
+    expect2 = (('foo', 'bar'),
+               ('a', 1))
+    ieq(expect2, table2)
+
+
+def test_setheader_callable_iterable():
+
+    class CallableHeader(object):
+
+        def __iter__(self):
+            return iter(('new_foo', 'new_bar'))
+
+        def __call__(self, field):
+            raise AssertionError('callable iterable should remain a header')
+
+    table1 = (('foo', 'bar'),
+              ('a', 1))
+    table2 = setheader(table1, CallableHeader())
+    expect2 = (('new_foo', 'new_bar'),
+               ('a', 1))
+    ieq(expect2, table2)
+
+
 def test_setheader_empty():
 
     table1 = (('foo', 'bar'),)
