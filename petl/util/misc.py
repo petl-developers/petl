@@ -123,6 +123,44 @@ def nthword(n, sep=None):
     return lambda s: s.split(sep)[n]
 
 
+def substringbefore(delimiter):
+    """
+    Construct a function to return the part of a string before the first
+    occurrence of `delimiter`. E.g.::
+
+        >>> import petl as etl
+        >>> before = etl.substringbefore(':')
+        >>> before('foo:bar:baz')
+        'foo'
+        >>> before('foo')
+        'foo'
+
+    Intended for use with :func:`petl.transform.conversions.convert`.
+
+    """
+
+    return lambda value: value.partition(delimiter)[0]
+
+
+def substringafter(delimiter):
+    """
+    Construct a function to return the part of a string after the first
+    occurrence of `delimiter`. E.g.::
+
+        >>> import petl as etl
+        >>> after = etl.substringafter(':')
+        >>> after('foo:bar:baz')
+        'bar:baz'
+        >>> after('foo')
+        ''
+
+    Intended for use with :func:`petl.transform.conversions.convert`.
+
+    """
+
+    return lambda value: value.partition(delimiter)[2]
+
+
 def coalesce(*fields, **kwargs):
     """
     Return a function which accepts a row and returns the first non-missing
