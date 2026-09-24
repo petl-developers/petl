@@ -55,3 +55,5 @@ from petl.transform.intervals import intervaljoin, intervalleftjoin, \
     facetintervalrecordlookupone, collapsedintervals
 
 from petl.transform.validation import validate
+
+from petl.transform.standardize import standardize

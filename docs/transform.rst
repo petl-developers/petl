@@ -60,6 +60,12 @@ Converting values
 .. autofunction:: petl.transform.conversions.update
 
 
+Standardizing values
+--------------------
+
+.. autofunction:: petl.transform.standardize.standardize
+
+
 .. module:: petl.transform.selects
 .. _transform_selects:
 
