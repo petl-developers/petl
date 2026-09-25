@@ -20,7 +20,10 @@ def fromxlsx(filename, sheet=None, range_string=None, min_row=None,
     the workbook is used by default.
 
     The `range_string` argument can be used to provide a range string
-    specifying a range of cells to extract.
+    specifying a range of cells to extract. Single cells (e.g., ``'B2'``),
+    whole rows (e.g., ``'1:2'``) and whole columns (e.g., ``'A:B'``) are
+    returned as rows of values, just like rectangular ranges. Row numbers
+    in a range must be at least 1.
 
     The `min_row`, `min_col`, `max_row` and `max_col` arguments can be
     used to limit the range of cells to extract. They will be ignored
@@ -58,6 +61,7 @@ class XLSXView(Table):
 
     def __iter__(self):
         import openpyxl
+        from openpyxl.utils.cell import range_boundaries
         source = read_source_from_arg(self.filename)
         with source.open('rb') as source2:
             wb = openpyxl.load_workbook(filename=source2,
@@ -70,7 +74,15 @@ class XLSXView(Table):
             else:
                 ws = wb[str(self.sheet)]
             if self.range_string is not None:
-                rows = ws[self.range_string]
+                bounds = range_boundaries(self.range_string)
+                if not any(bounds):
+                    raise IndexError(self.range_string +
+                                     " is not a valid coordinate or range")
+                min_col, min_row, max_col, max_row = bounds
+                if min_row == 0 or max_row == 0:
+                    raise ValueError("Row numbers must be at least 1")
+                rows = ws.iter_rows(min_row=min_row, min_col=min_col,
+                                    max_row=max_row, max_col=max_col)
             else:
                 rows = ws.iter_rows(min_row=self.min_row,
                                     min_col=self.min_col,
