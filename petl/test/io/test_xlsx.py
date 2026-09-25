@@ -72,6 +72,59 @@ def test_fromxlsx_range(xlsx_test_filename):
     ieq(expect, tbl)
 
 
+@pytest.mark.parametrize("read_only", [False, True])
+@pytest.mark.parametrize("range_string, expect", [
+    ("B2", ((1,),)),
+    ("B2:B2", ((1,),)),
+    ("$B$2", ((1,),)),
+    ("1", (("foo", "bar"),)),
+    ("1:1", (("foo", "bar"),)),
+    ("2:3", (("A", 1), ("B", 2))),
+    ("A1:B1", (("foo", "bar"),)),
+])
+def test_fromxlsx_range_shapes(xlsx_test_filename, read_only,
+                               range_string, expect):
+    tbl = fromxlsx(xlsx_test_filename, range_string=range_string,
+                   read_only=read_only)
+    ieq(expect, tbl)
+    ieq(expect, tbl)
+
+
+@pytest.mark.parametrize("read_only", [False, True])
+@pytest.mark.parametrize("range_string, column_count", [
+    ("A", 1), ("A:A", 1), ("A:B", 2),
+])
+def test_fromxlsx_column_ranges(xlsx_test_filename, xlsx_test_table,
+                                read_only, range_string, column_count):
+    tbl = fromxlsx(xlsx_test_filename, range_string=range_string,
+                   read_only=read_only)
+    expect = [row[:column_count] for row in xlsx_test_table]
+    ieq(expect, tbl)
+    ieq(expect, tbl)
+
+
+@pytest.mark.parametrize("read_only", [False, True])
+def test_fromxlsx_range_overrides_bounds(xlsx_test_filename, read_only):
+    tbl = fromxlsx(xlsx_test_filename, range_string="A1:B1",
+                   min_row=2, max_row=3, min_col=2, max_col=2,
+                   read_only=read_only)
+    ieq((("foo", "bar"),), tbl)
+
+
+@pytest.mark.parametrize("read_only", [False, True])
+@pytest.mark.parametrize("range_string, error", [
+    ("", IndexError),
+    ("A1:B", ValueError),
+    ("B0", ValueError),
+    ("A0:B0", ValueError),
+])
+def test_fromxlsx_invalid_range(xlsx_test_filename, read_only,
+                                range_string, error):
+    with pytest.raises(error):
+        list(fromxlsx(xlsx_test_filename, range_string=range_string,
+                      read_only=read_only))
+
+
 def test_fromxlsx_offset(xlsx_test_filename):
     tbl = fromxlsx(xlsx_test_filename, "Sheet1", min_row=2, min_col=2)
     expect = ((1,), (2,), (2,), (datetime(2012, 1, 1, 0, 0),))
