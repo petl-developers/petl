@@ -3,6 +3,7 @@ from __future__ import absolute_import, print_function, division
 
 import logging
 
+import pytest
 
 from petl.test.helpers import eq_
 import petl as etl
@@ -174,6 +175,27 @@ bar: 1, 2
 foo: 'a_prime', 'b_prime'
 """
     eq_(expect, actual)
+
+
+@pytest.mark.parametrize('header', [
+    ('foo', 'bar'), ('foo', 'foo'), ('foo', '0'), (1, 0),
+])
+@pytest.mark.parametrize('index_header', [False, True])
+@pytest.mark.parametrize('limit', [None, 2])
+def test_see_irregular_rows(header, index_header, limit):
+    table = (header, ('a',), ('b', 2), (), ('c', 3))
+    fields = list(map(str, header))
+    if index_header:
+        fields = [str(i) + '|' + field for i, field in enumerate(fields)]
+    if limit is None:
+        expect = (fields[0] + ": 'a', 'b', , 'c'\n" +
+                  fields[1] + ": , 2, , 3\n")
+    else:
+        expect = (fields[0] + ": 'a', 'b'...\n" +
+                  fields[1] + ": , 2...\n")
+    view = see(table, index_header=index_header, limit=limit)
+    eq_(expect, repr(view))
+    eq_(expect, repr(view))
 
 
 def test_lookstr():

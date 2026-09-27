@@ -4,6 +4,10 @@ Changes
 Version 1.7.27
 --------------
 
+* Preserve missing-cell positions when displaying short rows with
+  ``see()``, including duplicate and numeric-looking field names.
+  By :user:`rastagan-git`.
+
 * Add ``standardize()`` to scale numeric fields to a mean of 0 and a standard
   deviation of 1. Based on the contribution by :user:`CharveeSaraiya` in
   :issue:`690`.
