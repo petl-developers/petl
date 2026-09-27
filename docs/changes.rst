@@ -4,6 +4,10 @@ Changes
 Version 1.7.27
 --------------
 
+* Expand the configuration reference with inspection, sorting and error
+  handling defaults, argument precedence and executable examples.
+  By :user:`rastagan-git`, :issue:`390`.
+
 * Add ``standardize()`` to scale numeric fields to a mean of 0 and a standard
   deviation of 1. Based on the contribution by :user:`CharveeSaraiya` in
   :issue:`690`.
