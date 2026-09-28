@@ -8,6 +8,11 @@ Version 1.7.27
   handling defaults, argument precedence and executable examples.
   By :user:`rastagan-git`, :issue:`390`.
 
+* Return row-oriented data from ``fromxlsx()`` for single-cell, whole-row
+  and whole-column ranges, in both normal and read-only mode. Reject ranges
+  containing row zero rather than treating zero as an unspecified bound.
+  By :user:`rastagan-git`.
+
 * Add ``standardize()`` to scale numeric fields to a mean of 0 and a standard
   deviation of 1. Based on the contribution by :user:`CharveeSaraiya` in
   :issue:`690`.
