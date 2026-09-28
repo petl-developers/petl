@@ -471,6 +471,13 @@ def see(table, limit=0, vrepr=None, index_header=None):
 
     Useful for tables with a larger number of fields.
 
+    Missing cells in short rows are shown as blank entries, preserving
+    their positions within each column. E.g.::
+
+        >>> etl.see([['foo', 'bar'], ['a'], ['b', 2]])
+        foo: 'a', 'b'
+        bar: , 2
+
 
     """
 
@@ -510,11 +517,11 @@ class See(object):
             return ''
         cols = defaultdict(list)
         for row in it:
-            for i, f in enumerate(flds):
+            for i, _ in enumerate(flds):
                 try:
                     cols[str(i)].append(vrepr(row[i]))
                 except IndexError:
-                    cols[str(f)].append('')
+                    cols[str(i)].append('')
         for i, f in enumerate(flds):
             if index_header:
                 f = '%s|%s' % (i, f)

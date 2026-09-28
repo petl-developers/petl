@@ -1,21 +1,29 @@
 Changes
 =======
 
-Version 1.7.27
+Version 1.7.28
 --------------
+
+* Preserve missing-cell positions when displaying short rows with
+  ``see()``, including duplicate and numeric-looking field names.
+  By :user:`rastagan-git`, :issue:`726`.
 
 * Expand the configuration reference with inspection, sorting and error
   handling defaults, argument precedence and executable examples.
-  By :user:`rastagan-git`, :issue:`390`.
+  By :user:`rastagan-git`, :issue:`725`, closes :issue:`390`.
 
 * Return row-oriented data from ``fromxlsx()`` for single-cell, whole-row
   and whole-column ranges, in both normal and read-only mode. Reject ranges
   containing row zero rather than treating zero as an unspecified bound.
-  By :user:`rastagan-git`.
+  By :user:`rastagan-git`, :issue:`724`.
 
 * Add ``standardize()`` to scale numeric fields to a mean of 0 and a standard
   deviation of 1. Based on the contribution by :user:`CharveeSaraiya` in
   :issue:`690`.
+  By :user:`akashmalbari`, :issue:`730`.
+
+Version 1.7.27
+--------------
 
 * Preserve integer values in ``fromdataframe()`` when pandas tables contain
   both integer and floating-point columns, avoiding precision loss for large
