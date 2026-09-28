@@ -6,7 +6,7 @@ Version 1.7.28
 
 * Preserve missing-cell positions when displaying short rows with
   ``see()``, including duplicate and numeric-looking field names.
- By :user:`rastagan-git`, :issue:`726`.
+  By :user:`rastagan-git`, :issue:`726`.
 
 * Expand the configuration reference with inspection, sorting and error
   handling defaults, argument precedence and executable examples.
