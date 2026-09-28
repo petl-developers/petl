@@ -4,6 +4,10 @@ Changes
 Version 1.7.27
 --------------
 
+* Expand the configuration reference with inspection, sorting and error
+  handling defaults, argument precedence and executable examples.
+  By :user:`rastagan-git`, :issue:`390`.
+
 * Return row-oriented data from ``fromxlsx()`` for single-cell, whole-row
   and whole-column ranges, in both normal and read-only mode. Reject ranges
   containing row zero rather than treating zero as an unspecified bound.
