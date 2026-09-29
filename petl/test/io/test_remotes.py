@@ -30,8 +30,11 @@ def test_helper_fsspec():
         import fsspec  # noqa: F401
     except ImportError as e:
         pytest.skip("SKIP FSSPEC helper tests: %s" % e)
-    else:
-        _write_read_from_env_matching("PETL_TEST_")
+    if not _write_read_from_env_matching("PETL_TEST_"):
+        pytest.skip(
+            "No PETL_TEST_* environment variables; "
+            "export PETL_TEST_<protocol>=<url> for remote filesystem tests"
+        )
 
 
 def test_helper_smb():
@@ -39,8 +42,12 @@ def test_helper_smb():
         import smbclient  # noqa: F401
     except ImportError as e:
         pytest.skip("SKIP SMB helper tests: %s" % e)
-    else:
-        _write_read_from_env_url("PETL_SMB_URL")
+    base_url = _env_test_url(os.getenv("PETL_TEST_SMB", "skip"))
+    if base_url == "skip":
+        pytest.skip(
+            "PETL_TEST_SMB not set; export PETL_TEST_SMB for SMB remote tests"
+        )
+    _write_read_into_url(base_url)
 
 
 def test_helper_smb_url_parse():
@@ -67,24 +74,31 @@ def _ensure_dir(directory):
         os.makedirs(directory)
 
 
+def _env_test_url(value):
+    """Normalize URL from environment (strip whitespace and optional quotes)."""
+    if value is None:
+        return value
+    value = value.strip()
+    if len(value) >= 2 and value[0] == value[-1] and value[0] in ("'", '"'):
+        value = value[1:-1]
+    return value
+
+
 def _write_read_from_env_matching(prefix):
     q = 0
     for variable, base_url in os.environ.items():
         if variable.upper().startswith(prefix.upper()):
+            base_url = _env_test_url(base_url)
             fmsg = "\n  {}: {} -> ".format(variable, base_url)
             print(fmsg, file=sys.stderr, end="")
             _write_read_into_url(base_url)
             print("DONE ", file=sys.stderr, end="")
             q += 1
-    if q < 1:
-        msg = """SKIPPED
-    For testing remote source define a environment variable:
-    $ export PETL_TEST_<protocol>='<protocol>://myuser:mypassword@host:port/path/to/folder'"""
-        print(msg, file=sys.stderr)
+    return q > 0
 
 
 def _write_read_from_env_url(env_var_name):
-    base_url = os.getenv(env_var_name, "skip")
+    base_url = _env_test_url(os.getenv(env_var_name, "skip"))
     if base_url == "skip":
         print("SKIPPED ", file=sys.stderr, end="")
     else:

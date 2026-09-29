@@ -1,47 +1,16 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, print_function, division
 import logging
-import os
-import warnings
-
 import pytest
 
 import petl as etl
+from petl.compat import PY3
 from petl.test.helpers import ieq
+from petl.test.io.pytest_helpers import get_db_args, get_mysql_args, get_pg_args, require_package, skip_unless_connect
 
 
 logger = logging.getLogger(__name__)
 debug = logger.debug
-
-
-def get_from_env(prefix, name, current, default):
-    if current != default:
-        return current
-    varname = "{}_{}".format(prefix.upper(), name.upper())
-    return os.getenv(varname, default)
-
-
-def get_db_args(*prefixes):
-    host = '127.0.0.1'
-    user = 'petl'
-    pwrd = 'test'
-    base = 'petl'
-    for prefix in prefixes:
-        host = get_from_env(prefix, 'HOST', host, '127.0.0.1')
-        user = get_from_env(prefix, 'USER', user, 'petl')
-        pwrd = get_from_env(prefix, 'PASSWORD', pwrd, 'test')
-        base = get_from_env(prefix, 'DATABASE', base, 'petl')
-    return host, user, pwrd, base
-
-
-def get_mysql_args(*prefixes):
-    prefixes += ('PYMYSQL', 'MYSQL',)
-    return get_db_args(*prefixes)
-
-
-def get_pg_args(*prefixes):
-    prefixes += ('PSYCOPG2', 'POSTGRESQL', 'POSTGRES', 'PG',)
-    return get_db_args(*prefixes)
 
 
 def _test_dbo(write_dbo, read_dbo=None):
@@ -163,30 +132,20 @@ def _setup_sqlalchemy_quotes(dbapi_connection, connection_record):
     cursor.execute("SET sql_mode = 'ANSI_QUOTES'")
 
 
-SKIP_PYMYSQL = False
-try:
-    import pymysql
-    import sqlalchemy
+def test_pymysql():
+    pymysql = require_package('pymysql')
+    require_package('sqlalchemy')
     myhost, myuser, mypassword, mydatabase = get_mysql_args()
-    pymysql.connect(host=myhost,
-                    user=myuser,
-                    password=mypassword,
-                    database=mydatabase)
-except Exception as e:
-    SKIP_PYMYSQL = 'SKIP pymysql tests: %s' % e
-    warnings.warn(SKIP_PYMYSQL, UserWarning)
-finally:
-    @pytest.mark.skipif(bool(SKIP_PYMYSQL), reason=str(SKIP_PYMYSQL))
-    def test_pymysql():
 
-        import pymysql
+    def connect():
+        return pymysql.connect(host=myhost,
+                               user=myuser,
+                               password=mypassword,
+                               database=mydatabase)
 
-        # assume database already created
-        dbapi_connection = pymysql.connect(host=myhost,
-                                   user=myuser,
-                                   password=mypassword,
-                                   database=mydatabase)
+    dbapi_connection = skip_unless_connect(connect, 'SKIP pymysql tests')
 
+    try:
         # exercise using a dbapi_connection
         _setup_mysql(dbapi_connection)
         _test_dbo(dbapi_connection)
@@ -231,35 +190,30 @@ finally:
                                   password=mypassword,
                                   database=mydatabase,
                                   charset='utf8')
-        utf8_connection.cursor().execute('SET SQL_MODE=ANSI_QUOTES')
-        _test_unicode(utf8_connection)
-        utf8_connection.close()
+        try:
+            utf8_connection.cursor().execute('SET SQL_MODE=ANSI_QUOTES')
+            _test_unicode(utf8_connection)
+        finally:
+            utf8_connection.close()
+    finally:
+        dbapi_connection.close()
 
 
-SKIP_MYSQLDB = False
-try:
-    import MySQLdb
-    import sqlalchemy
+@pytest.mark.skipif(PY3, reason='MySQLdb is Python 2 only')
+def test_mysqldb():
+    MySQLdb = require_package('MySQLdb')
+    require_package('sqlalchemy')
     myhost, myuser, mypassword, mydatabase = get_db_args('MYSQLDB', 'MYSQL')
-    MySQLdb.connect(host=myhost,
-                    user=myuser,
-                    passwd=mypassword,
-                    db=mydatabase)
-except Exception as e:
-    SKIP_MYSQLDB = 'SKIP MySQLdb tests: %s' % e
-    warnings.warn(SKIP_MYSQLDB, UserWarning)
-finally:
-    @pytest.mark.skipif(bool(SKIP_MYSQLDB), reason=str(SKIP_MYSQLDB))
-    def test_mysqldb():
 
-        import MySQLdb
+    def connect():
+        return MySQLdb.connect(host=myhost,
+                               user=myuser,
+                               passwd=mypassword,
+                               db=mydatabase)
 
-        # assume database already created
-        dbapi_connection = MySQLdb.connect(host=myhost,
-                                   user=myuser,
-                                   passwd=mypassword,
-                                   db=mydatabase)
+    dbapi_connection = skip_unless_connect(connect, 'SKIP MySQLdb tests')
 
+    try:
         # exercise using a dbapi_connection
         _setup_mysql(dbapi_connection)
         _test_dbo(dbapi_connection)
@@ -276,9 +230,10 @@ finally:
         sqlalchemy_engine = create_engine('mysql+mysqldb://%s:%s@%s/%s' %
                                          (myuser, mypassword, myhost, mydatabase))
         from sqlalchemy.event import listen
+        from sqlalchemy import create_engine, text as sqlalchemy_text
         listen(sqlalchemy_engine, "connect", _setup_sqlalchemy_quotes)
         sqlalchemy_connection = sqlalchemy_engine.connect()
-        sqlalchemy_connection.execute(sqlalchemy.text('SET SQL_MODE=ANSI_QUOTES'))
+        sqlalchemy_connection.execute(sqlalchemy_text('SET SQL_MODE=ANSI_QUOTES'))
         _test_dbo(sqlalchemy_connection)
         sqlalchemy_connection.close()
 
@@ -297,36 +252,32 @@ finally:
                                   passwd=mypassword,
                                   db=mydatabase,
                                   charset='utf8')
-        utf8_connection.cursor().execute('SET SQL_MODE=ANSI_QUOTES')
-        _test_unicode(utf8_connection)
+        try:
+            utf8_connection.cursor().execute('SET SQL_MODE=ANSI_QUOTES')
+            _test_unicode(utf8_connection)
+        finally:
+            utf8_connection.close()
+    finally:
+        dbapi_connection.close()
 
-SKIP_TEST_POSTGRES = False
-try:
-    import psycopg2
-    import sqlalchemy
+
+def test_postgresql():
+    psycopg2 = require_package('psycopg2')
+    require_package('sqlalchemy')
     pghost, pguser, pgpassword, pgdatabase = get_pg_args()
-    psycopg2.connect(
-        'host=%s dbname=%s user=%s password=%s'
-        % (pghost, pgdatabase, pguser, pgpassword)
-    )
-except Exception as e:
-    SKIP_TEST_POSTGRES = 'SKIP psycopg2 tests: %s' % e
-    warnings.warn(SKIP_TEST_POSTGRES, UserWarning)
-finally:
-    @pytest.mark.skipif(bool(SKIP_TEST_POSTGRES), reason=str(SKIP_TEST_POSTGRES))
-    def test_postgresql():
 
-        import psycopg2
+    def connect():
         import psycopg2.extensions
         psycopg2.extensions.register_type(psycopg2.extensions.UNICODE)
         psycopg2.extensions.register_type(psycopg2.extensions.UNICODEARRAY)
-
-        # assume database already created
-        dbapi_connection = psycopg2.connect(
+        return psycopg2.connect(
             'host=%s dbname=%s user=%s password=%s'
             % (pghost, pgdatabase, pguser, pgpassword)
         )
 
+    dbapi_connection = skip_unless_connect(connect, 'SKIP psycopg2 tests')
+
+    try:
         # exercise using a dbapi_connection
         _setup_postgresql(dbapi_connection)
         _test_dbo(dbapi_connection)
@@ -361,3 +312,5 @@ finally:
                   lambda: dbapi_connection.cursor(name='arbitrary'))
         _test_with_schema(dbapi_connection, 'public')
         _test_unicode(dbapi_connection)
+    finally:
+        dbapi_connection.close()

@@ -1,18 +1,16 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, print_function, division
 
-
 import logging
 from datetime import datetime, date
 import sqlite3
-
 import pytest
 
 from petl.io.db import fromdb, todb
 from petl.io.db_create import make_sqlalchemy_column
 from petl.test.helpers import ieq, eq_
+from petl.test.io.pytest_helpers import get_pg_args, get_mysql_args, require_package, skip_unless_connect
 from petl.util.vis import look
-from petl.test.io.test_db_server import get_pg_args, get_mysql_args
 
 
 logger = logging.getLogger(__name__)
@@ -109,65 +107,57 @@ def _setup_generic(dbapi_connection):
     dbapi_connection.commit()
 
 
-try:
-    import sqlalchemy
-except ImportError as e:
-    pytest.skip('SKIP generic DB create tests: %s' % e, allow_module_level=True)
-else:
+def test_make_datetime_column():
+    require_package('sqlalchemy')
+    from sqlalchemy import Column, DateTime
 
-    from sqlalchemy import Column, DateTime, Date
+    dt = [datetime(2014, 1, 1, 1, 1, 1, 1), datetime(2014, 1, 1, 1, 1, 1, 2)]
+    sql_col = make_sqlalchemy_column(dt,'name')
+    expect = Column('name', DateTime(), nullable=False)
+    eq_(str(expect.type), str(sql_col.type))
 
-    def test_make_datetime_column():
-        sql_col = make_sqlalchemy_column([datetime(2014, 1, 1, 1, 1, 1, 1),
-                                          datetime(2014, 1, 1, 1, 1, 1, 2)],
-                                         'name')
-        expect = Column('name', DateTime(), nullable=False)
-        eq_(str(expect.type), str(sql_col.type))
 
-    def test_make_date_column():
-        sql_col = make_sqlalchemy_column([date(2014, 1, 1),
-                                          date(2014, 1, 2)],
-                                         'name')
-        expect = Column('name', Date(), nullable=False)
-        eq_(str(expect.type), str(sql_col.type))
+def test_make_date_column():
+    require_package('sqlalchemy')
+    from sqlalchemy import Column, Date
 
-    def test_sqlite3_create():
+    sql_col = make_sqlalchemy_column([date(2014, 1, 1),
+                                        date(2014, 1, 2)],
+                                        'name')
+    expect = Column('name', Date(), nullable=False)
+    eq_(str(expect.type), str(sql_col.type))
 
-        dbapi_connection = sqlite3.connect(':memory:')
 
-        # exercise using a dbapi_connection
-        _setup_generic(dbapi_connection)
-        _test_create(dbapi_connection)
+def test_sqlite3_create():
+    require_package('sqlalchemy')
 
-        # exercise using a dbapi_cursor
-        _setup_generic(dbapi_connection)
-        dbapi_cursor = dbapi_connection.cursor()
-        _test_create(dbapi_cursor)
-        dbapi_cursor.close()
+    dbapi_connection = sqlite3.connect(':memory:')
 
-SKIP_PYMYSQL = False
-try:
-    import pymysql
-    import sqlalchemy
+    # exercise using a dbapi_connection
+    _setup_generic(dbapi_connection)
+    _test_create(dbapi_connection)
+
+    # exercise using a dbapi_cursor
+    _setup_generic(dbapi_connection)
+    dbapi_cursor = dbapi_connection.cursor()
+    _test_create(dbapi_cursor)
+    dbapi_cursor.close()
+
+
+def test_mysql_create():
+    pymysql = require_package('pymysql')
+    require_package('sqlalchemy')
     myhost, myuser, mypassword, mydatabase = get_mysql_args()
-    pymysql.connect(host=myhost,
-                    user=myuser,
-                    password=mypassword,
-                    database=mydatabase)
-except Exception as e:
-    SKIP_PYMYSQL = 'SKIP pymysql create tests: %s' % e
-finally:
-    @pytest.mark.skipif(bool(SKIP_PYMYSQL), reason=str(SKIP_PYMYSQL))
-    def test_mysql_create():
 
-        import pymysql
+    def connect():
+        return pymysql.connect(host=myhost,
+                               user=myuser,
+                               password=mypassword,
+                               database=mydatabase)
 
-        # assume database already created
-        dbapi_connection = pymysql.connect(host=myhost,
-                                   user=myuser,
-                                   password=mypassword,
-                                   database=mydatabase)
+    dbapi_connection = skip_unless_connect(connect, 'SKIP pymysql create tests')
 
+    try:
         # exercise using a dbapi_connection
         _setup_mysql(dbapi_connection)
         _test_create(dbapi_connection)
@@ -180,11 +170,11 @@ finally:
 
         # exercise sqlalchemy dbapi_connection
         _setup_mysql(dbapi_connection)
-        from sqlalchemy import create_engine
+        from sqlalchemy import create_engine, text as sqlalchemy_text
         sqlalchemy_engine = create_engine('mysql+pymysql://%s:%s@%s/%s'
                                           % (myuser, mypassword, myhost, mydatabase))
         sqlalchemy_connection = sqlalchemy_engine.connect()
-        sqlalchemy_connection.execute(sqlalchemy.text('SET SQL_MODE=ANSI_QUOTES'))
+        sqlalchemy_connection.execute(sqlalchemy_text('SET SQL_MODE=ANSI_QUOTES'))
         _test_create(sqlalchemy_connection)
         sqlalchemy_connection.close()
 
@@ -195,34 +185,29 @@ finally:
         sqlalchemy_session = Session()
         _test_create(sqlalchemy_session)
         sqlalchemy_session.close()
+    finally:
+        dbapi_connection.close()
 
 
-SKIP_POSTGRES = False
-try:
-    import psycopg2
-    import sqlalchemy
+def test_postgresql_create():
+    psycopg2 = require_package('psycopg2')
+    require_package('sqlalchemy')
     pghost, pguser, pgpassword, pgdatabase = get_pg_args()
-    psycopg2.connect(
-        'host=%s dbname=%s user=%s password=%s'
-        % (pghost, pgdatabase, pguser, pgpassword)
-    )
-except Exception as e:
-    SKIP_POSTGRES = 'SKIP psycopg2 create tests: %s' % e
-finally:
-    @pytest.mark.skipif(bool(SKIP_POSTGRES), reason=str(SKIP_POSTGRES))
-    def test_postgresql_create():
-        import psycopg2
+
+    def connect():
         import psycopg2.extensions
         psycopg2.extensions.register_type(psycopg2.extensions.UNICODE)
         psycopg2.extensions.register_type(psycopg2.extensions.UNICODEARRAY)
-
-        # assume database already created
-        dbapi_connection = psycopg2.connect(
+        conn = psycopg2.connect(
             'host=%s dbname=%s user=%s password=%s'
             % (pghost, pgdatabase, pguser, pgpassword)
         )
-        dbapi_connection.autocommit = True
+        conn.autocommit = True
+        return conn
 
+    dbapi_connection = skip_unless_connect(connect, 'SKIP psycopg2 create tests')
+
+    try:
         # exercise using a dbapi_connection
         _setup_generic(dbapi_connection)
         _test_create(dbapi_connection)
@@ -253,3 +238,5 @@ finally:
         # sqlalchemy_session = Session()
         # _test_create(sqlalchemy_session)
         # sqlalchemy_session.close()
+    finally:
+        dbapi_connection.close()

@@ -1,0 +1,105 @@
+#!/usr/bin/env -S bash -x -c 'docker compose --file docker-compose-shell.yml up --detach'
+
+#region commands -----------------------------------------------------------------------------------
+
+# 1. Create the containers and the services in the background
+#$ docker compose --file docker-compose-shell up --detach
+
+# 2. Run a shell inside the python sandbox container
+
+#$ docker exec --interactive --tty --privileged petl-python27 /bin/bash
+#$ docker exec -it --privileged petl-python3x /bin/bash
+
+# 5. Stop the services and remove the containers
+
+#$ docker compose --file docker-compose-shell down --remove-orphans -v --rmi local
+
+#endregion -----------------------------------------------------------------------------------------
+
+#region file/db services ---------------------------------------------------------------------------
+
+---
+services:
+  python3x:
+    container_name: petl-python3x
+    hostname: petl_py3x
+    # image: python:slim
+    environment:
+      - PYTHON3_IMAGE_TAG=${PYTHON3_IMAGE_TAG:-slim}
+      - PYTHONTRACEMALLOC=1
+      - POSTGRES_HOST=petl_postgres
+      - MYSQL_HOST=petl_mysql
+      - PETL_TEST_SMB=smb://WORKGROUP;petl:test@petl_samba/public/
+      - PETL_TEST_SFTP=sftp://petl:test@petl_sftp:2244/public/
+    build:
+      context: .
+      dockerfile_inline: |
+        FROM python:${PYTHON3_IMAGE_TAG:-slim}
+        RUN apt-get update
+        RUN apt-get install -y postgresql-client default-mysql-client smbclient openssh-client
+        RUN apt-get install -y gcc git
+        RUN python -m pip install --upgrade pip
+        RUN mkdir -p /app
+        RUN mkdir -p /req
+        COPY requirements-*.txt /req/
+        RUN python -m pip install -r req/requirements-tests.txt -r req/requirements-database.txt -r req/requirements-formats.txt -r req/requirements-remote.txt -r req/requirements-docs.txt -r req/requirements-linting.txt
+    # Keeps the container running forever
+    command: tail -f /dev/null
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
+    # mounts the repository souce code into the container
+    volumes:
+      - .:/app
+    working_dir: /app
+    networks:
+      - petl_network
+
+  python27:
+    container_name: petl-python27
+    hostname: petl_py27
+    # image: python:2.7.18-slim
+    environment:
+      - PYTHON2_IMAGE_TAG=${PYTHON2_IMAGE_TAG:-2.7.18-slim}
+      - PYTHONTRACEMALLOC=1
+      - POSTGRES_HOST=petl_postgres
+      - MYSQL_HOST=petl_mysql
+      - PETL_TEST_SMB=smb://WORKGROUP;petl:test@petl_samba/public/
+      - PETL_TEST_SFTP=sftp://petl:test@petl_sftp:2244/public/
+    build:
+      context: .
+      dockerfile_inline: |
+        FROM python:${PYTHON2_IMAGE_TAG:-2.7.18-slim}
+        RUN sed -i 's/deb.debian.org/archive.debian.org/g' /etc/apt/sources.list \
+        && sed -i 's|security.debian.org|archive.debian.org|g' /etc/apt/sources.list \
+        && sed -i '/buster-updates/d' /etc/apt/sources.list
+        RUN apt-get update
+        RUN apt-get install -y postgresql-client default-mysql-client smbclient openssh-client
+        RUN apt-get install -y gcc git
+        RUN python -m pip install --upgrade pip
+        RUN mkdir -p /app
+        RUN apt-get install -y default-libmysqlclient-dev
+        RUN mkdir -p /req
+        COPY requirements-*.txt /req/
+        RUN python -m pip install -r req/requirements-tests.txt -r req/requirements-database.txt -r req/requirements-formats.txt -r req/requirements-remote.txt -r req/requirements-docs.txt
+    # Keeps the container running forever
+    command: tail -f /dev/null
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
+    # mounts the repository souce code into the container
+    volumes:
+      - .:/app
+    working_dir: /app
+    networks:
+      - petl_network
+
+#endregion -----------------------------------------------------------------------------------------
+
+#region other settings -----------------------------------------------------------------------------
+
+networks:
+  petl_network:
+    driver: bridge
+
+#endregion -----------------------------------------------------------------------------------------
