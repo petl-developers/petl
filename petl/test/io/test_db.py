@@ -219,6 +219,8 @@ def test_fromdb_mkcursor():
     eq_(('a', 1), next(i1))
     eq_(('foo', 'bar'), next(i2))
     eq_(('b', 2), next(i1))
+    del i1, i2, actual
+    connection.close()
 
 
 def test_fromdb_withargs():
