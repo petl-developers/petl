@@ -230,9 +230,10 @@ def test_mysqldb():
         sqlalchemy_engine = create_engine('mysql+mysqldb://%s:%s@%s/%s' %
                                          (myuser, mypassword, myhost, mydatabase))
         from sqlalchemy.event import listen
+        from sqlalchemy import create_engine, text as sqlalchemy_text
         listen(sqlalchemy_engine, "connect", _setup_sqlalchemy_quotes)
         sqlalchemy_connection = sqlalchemy_engine.connect()
-        sqlalchemy_connection.execute(sqlalchemy.text('SET SQL_MODE=ANSI_QUOTES'))
+        sqlalchemy_connection.execute(sqlalchemy_text('SET SQL_MODE=ANSI_QUOTES'))
         _test_dbo(sqlalchemy_connection)
         sqlalchemy_connection.close()
 

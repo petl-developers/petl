@@ -1,4 +1,4 @@
-#!/usr/bin/env -S bash -x -c 'docker compose --file docker-compose-shell up --detach'
+#!/usr/bin/env -S bash -x -c 'docker compose --file docker-compose-shell.yml up --detach'
 
 #region commands -----------------------------------------------------------------------------------
 
