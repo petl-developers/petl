@@ -2,6 +2,8 @@ from __future__ import absolute_import, print_function, division
 
 
 import itertools
+import operator
+from collections import deque
 from petl.compat import next, text_type
 from petl.errors import FieldSelectionError
 
@@ -316,6 +318,51 @@ class SkipView(Table):
 
 def iterskip(source, n):
     return itertools.islice(source, n, None)
+
+
+def skiplast(table, n):
+    """
+    Skip the last `n` rows of a table. E.g.::
+
+        >>> import petl as etl
+        >>> table = [('name', 'value'), ('a', 1), ('b', 2), ('Total', 3)]
+        >>> list(etl.skiplast(table, 1))
+        [('name', 'value'), ('a', 1), ('b', 2)]
+
+    Like :func:`skip`, this operates on all rows, including the header.
+    If `n` is at least the number of rows, the result is empty. A zero
+    count leaves the table unchanged; negative counts are invalid.
+
+    The source is read once, buffering at most `n` pending rows, so it
+    need not fit in memory. The returned view can be iterated again if
+    the source can be iterated again.
+
+    """
+
+    return SkipLastView(table, n)
+
+
+Table.skiplast = skiplast
+
+
+class SkipLastView(Table):
+
+    def __init__(self, source, n):
+        self.source = source
+        self.n = operator.index(n)
+        if self.n < 0:
+            raise ValueError('number of rows to skip must be non-negative')
+
+    def __iter__(self):
+        return iterskiplast(self.source, self.n)
+
+
+def iterskiplast(source, n):
+    it = iter(source)
+    pending = deque(itertools.islice(it, n))
+    for row in it:
+        pending.append(row)
+        yield pending.popleft()
 
 
 def prefixheader(table, prefix):

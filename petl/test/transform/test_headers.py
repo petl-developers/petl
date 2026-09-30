@@ -1,6 +1,7 @@
 from __future__ import absolute_import, print_function, division
 
 import pytest
+import petl as etl
 
 from petl.test.helpers import ieq
 from petl.errors import FieldSelectionError
@@ -223,6 +224,34 @@ def test_skip_headerless():
     actual = skip(table, 2)
     expect = []
     ieq(expect, actual)
+
+
+@pytest.mark.parametrize('n', [0, 1, 2, 3, 4, 10])
+def test_skiplast(n):
+    table = [('foo', 'bar'), ('a', 1), ('b', 2), ('footer',)]
+    result = etl.skiplast(table, n)
+    expected = table[:len(table) - n] if n < len(table) else []
+    ieq(expected, result)
+    ieq(expected, result)
+    ieq(expected, etl.wrap(table).skiplast(n))
+
+
+def test_skiplast_empty():
+    ieq([], etl.skiplast([], 2))
+
+
+def test_skiplast_streams_single_pass_input():
+    source = iter(range(100))
+    result = iter(etl.skiplast(source, 2))
+    assert next(result) == 0
+    # Only the emitted row and two pending rows have been consumed.
+    assert next(source) == 3
+
+
+@pytest.mark.parametrize('n, error', [(-1, ValueError), (1.5, TypeError)])
+def test_skiplast_invalid_count(n, error):
+    with pytest.raises(error):
+        list(etl.skiplast([('foo',), ('bar',)], n))
 
 
 def test_rename():
