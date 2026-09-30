@@ -4,6 +4,9 @@ Changes
 Version 1.7.28
 --------------
 
+* Add ``skiplast()`` to remove trailing rows, such as file footers, in one
+  pass with bounded buffering. By :user:`natesute`, closes :issue:`216`.
+
 * Preserve missing-cell positions when displaying short rows with
   ``see()``, including duplicate and numeric-looking field names.
   By :user:`rastagan-git`, :issue:`726`.

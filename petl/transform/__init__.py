@@ -5,7 +5,7 @@ from petl.transform.basics import cut, cutout, movefield, cat, annex, \
     tail, skipcomments, stack, addfields
 
 from petl.transform.headers import rename, setheader, extendheader, \
-    pushheader, skip, prefixheader, suffixheader, sortheader
+    pushheader, skip, skiplast, prefixheader, suffixheader, sortheader
 
 from petl.transform.conversions import convert, convertall, replace, \
     replaceall, update, convertnumbers, format, formatall, interpolate, \
