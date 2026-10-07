@@ -214,6 +214,9 @@ def aggregate(table, key, aggregation=None, value=None, presorted=False,
 
     If `key` is None, sorting is not necessary.
 
+    A single-field key may also be specified as a one-item list or tuple,
+    for both simple and multiple aggregations.
+
     """
 
     if callable(aggregation):
@@ -322,6 +325,10 @@ class MultiAggregateView(Table):
 
     
 def itermultiaggregate(source, key, aggregation):
+    # normalise singleton selectors as in itersimpleaggregate
+    if isinstance(key, (list, tuple)) and len(key) == 1:
+        key = key[0]
+
     aggregation = OrderedDict(aggregation.items())  # take a copy
     it = iter(source)
     hdr = next(it)
