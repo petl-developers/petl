@@ -1,6 +1,13 @@
 Changes
 =======
 
+Version 1.7.29
+--------------
+
+* Document how to sort by several fields in different directions with
+  ``sort()``, by chaining stable sorts starting with the last field.
+  By :user:`LuisFigueroaG`, :issue:`375`.
+
 Version 1.7.28
 --------------
 

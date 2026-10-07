@@ -154,6 +154,47 @@ def test_sort_6():
     ieq(expectation, result)
 
 
+def test_sort_chained_mixed_directions():
+
+    table = (('foo', 'bar'),
+             ('C', 2),
+             ('A', 9),
+             ('A', 6),
+             ('F', 1),
+             ('D', 10),
+             ('A', 2))
+
+    # foo descending, then bar ascending
+    expectation = (('foo', 'bar'),
+                   ('F', 1),
+                   ('D', 10),
+                   ('C', 2),
+                   ('A', 2),
+                   ('A', 6),
+                   ('A', 9))
+
+    result = sort(sort(table, 'bar'), 'foo', reverse=True)
+    ieq(expectation, result)
+    result = sort(sort(table, 'bar', buffersize=2), 'foo', reverse=True,
+                  buffersize=2)
+    ieq(expectation, result)
+
+    # foo ascending, then bar descending
+    expectation = (('foo', 'bar'),
+                   ('A', 9),
+                   ('A', 6),
+                   ('A', 2),
+                   ('C', 2),
+                   ('D', 10),
+                   ('F', 1))
+
+    result = sort(sort(table, 'bar', reverse=True), 'foo')
+    ieq(expectation, result)
+    result = sort(sort(table, 'bar', reverse=True, buffersize=2), 'foo',
+                  buffersize=2)
+    ieq(expectation, result)
+
+
 def test_sort_buffered():
 
     table = (('foo', 'bar'),
