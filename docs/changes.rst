@@ -1,6 +1,12 @@
 Changes
 =======
 
+Version 1.7.29
+--------------
+
+* Add ``tomarkdown()`` to write a table as a Markdown pipe table.
+  By :user:`LuisFigueroaG`, :issue:`418`.
+
 Version 1.7.28
 --------------
 
