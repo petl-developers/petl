@@ -4,6 +4,10 @@ Changes
 Version 1.7.28
 --------------
 
+* Update the contributor guide to use pytest and the configured Tox
+  test, doctest and documentation environments.
+  By :user:`ryanduguid`.
+
 * Preserve missing-cell positions when displaying short rows with
   ``see()``, including duplicate and numeric-looking field names.
   By :user:`rastagan-git`, :issue:`726`.
