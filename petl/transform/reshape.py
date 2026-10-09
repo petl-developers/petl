@@ -268,6 +268,10 @@ def recast(table, key=None, variablefield='variable', valuefield='value',
     This also applies to an empty table with no fields; define the expected
     header before recasting it.
 
+    The sorted rows and discovered fields are cached after the first data
+    read. Later iterations use this cache, as with :func:`sort`. Create a new
+    recast view to read the source again.
+
     See also :func:`petl.transform.reshape.melt`.
 
     """
@@ -295,17 +299,16 @@ class RecastView(Table):
         else:
             self.reducers = reducers
         self.missing = missing
+        self._cache = []
 
     def __iter__(self):
         return iterrecast(self.source, self.key, self.variablefield,
                           self.valuefield, self.samplesize, self.reducers,
-                          self.missing)
+                          self.missing, self._cache)
 
 
-def iterrecast(source, key, variablefield, valuefield,
-               samplesize, reducers, missing):
-
-    # TODO only make one pass through the data
+def _prepare_recast(source, key, variablefield, valuefield, samplesize):
+    """Find the output fields and prepare a lazy sort."""
 
     it = iter(source)
     try:
@@ -374,18 +377,31 @@ def iterrecast(source, key, variablefield, valuefield,
             # turn from sets to sorted lists
             variables[f] = sorted(variables[f])
 
-    # finished the first pass
+    # Keep the sample order when the sorted rows are read again.
+    variables = [tuple(variables[f]) for f in variablefields]
+    outhdr = tuple(keyfields) + tuple(itertools.chain.from_iterable(variables))
+    return (sort(source, key=keyfields), outhdr, keyindices, variableindices,
+            variables, valueindex)
 
-    # determine the output fields
-    outhdr = list(keyfields)
-    for f in variablefields:
-        outhdr.extend(variables[f])
-    yield tuple(outhdr)
 
-    # output data
+def iterrecast(source, key, variablefield, valuefield,
+               samplesize, reducers, missing, cache=None):
+    if cache:
+        prepared = cache[0]
+    else:
+        prepared = _prepare_recast(source, key, variablefield, valuefield,
+                                  samplesize)
+        if prepared is None:
+            return
+    source, outhdr, keyindices, variableindices, variables, valueindex = prepared
+    yield outhdr
 
-    source = sort(source, key=keyfields)
-    it = itertools.islice(source, 1, None)  # skip header row
+    it = itertools.islice(source, 1, None)
+    # A data read completes the sort. Do not retain a failed or unread sort.
+    first = list(itertools.islice(it, 1))
+    if cache is not None:
+        cache[:] = [prepared]
+    it = itertools.chain(first, it)
     getsortablekey = comparable_itemgetter(*keyindices)
     getactualkey = operator.itemgetter(*keyindices)
 
@@ -397,12 +413,12 @@ def iterrecast(source, key, variablefield, valuefield,
         # N.B., key returned by groupby may be wrapped as SortableItem, we want
         # to output the actual key value, get it from the first row in the group
         key_value = getactualkey(group[0])
-        if len(keyfields) > 1:
+        if len(keyindices) > 1:
             out_row = list(key_value)
         else:
             out_row = [key_value]
-        for f, i in zip(variablefields, variableindices):
-            for variable in variables[f]:
+        for i, field_variables in zip(variableindices, variables):
+            for variable in field_variables:
                 # collect all values for the current variable
                 vals = [r[valueindex] for r in group if r[i] == variable]
                 if len(vals) == 0:

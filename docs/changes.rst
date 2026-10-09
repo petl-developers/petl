@@ -1,6 +1,13 @@
 Changes
 =======
 
+Unreleased
+----------
+
+* Reuse the sorted rows and discovered fields when a ``recast()`` view is
+  read again. See :issue:`369`.
+
+
 Version 1.7.28
 --------------
 
