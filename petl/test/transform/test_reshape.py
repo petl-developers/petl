@@ -350,6 +350,44 @@ def test_recast_lazy_partial_read(recast_cache):
     assert len(reads) == reads_after_sort
 
 
+
+@pytest.mark.parametrize('combine', ['cat', 'stack', 'annex'])
+def test_recast_cache_before_data_read(recast_cache, combine):
+    import petl
+
+    calls, _, _ = recast_cache
+    table = [('id', 'variable', 'value'), (2, 'a', 20), (1, 'a', 10),
+             (3, 'a', 30)]
+    view = recast(table)
+    if combine == 'annex':
+        expected = [('id', 'a', 'id', 'a'), (1, 10, 1, 10),
+                    (2, 20, 2, 20), (3, 30, 3, 30)]
+    else:
+        expected = [('id', 'a'), (1, 10), (2, 20), (3, 30),
+                    (1, 10), (2, 20), (3, 30)]
+    combined = getattr(petl, combine)(view, view)
+    assert [row for row in combined] == expected
+    assert len(calls) == 1
+
+
+
+def test_recast_cache_with_changed_fields(recast_cache):
+    calls, _, _ = recast_cache
+    table = [('id', 'variable', 'value'), (1, 'a', 10)]
+    view = recast(table)
+    first = iter(view)
+    assert next(first) == ('id', 'a')
+    table[:] = [('id', 'variable', 'value'), (2, 'b', 20)]
+    second = iter(view)
+    assert next(second) == ('id', 'b')
+    assert next(second) == (2, 20)
+    with pytest.raises(ArgumentError, match='recast fields changed'):
+        next(first)
+    second.close()
+    assert [row for row in view] == [('id', 'b'), (2, 20)]
+    assert len(calls) == 1
+
+
 def test_recast_cached_source_changes(recast_cache):
     table = [('id', 'variable', 'value'), (2, 'a', 20), (1, 'a', 10)]
     view = recast(table)

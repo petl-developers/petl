@@ -270,7 +270,8 @@ def recast(table, key=None, variablefield='variable', valuefield='value',
 
     The sorted rows and discovered fields are cached after the first data
     read. Later iterations use this cache, as with :func:`sort`. Create a new
-    recast view to read the source again.
+    recast view to read the source again. Do not change source fields while
+    iterators are active.
 
     See also :func:`petl.transform.reshape.melt`.
 
@@ -393,14 +394,19 @@ def iterrecast(source, key, variablefield, valuefield,
                                   samplesize)
         if prepared is None:
             return
-    source, outhdr, keyindices, variableindices, variables, valueindex = prepared
-    yield outhdr
+    yield prepared[1]
 
+    # Another iterator can fill the cache after this header is read.
+    if cache:
+        if prepared[1:] != cache[0][1:]:
+            raise ArgumentError('recast fields changed during iteration')
+        prepared = cache[0]
+    source, outhdr, keyindices, variableindices, variables, valueindex = prepared
     it = itertools.islice(source, 1, None)
     # A data read completes the sort. Do not retain a failed or unread sort.
     first = list(itertools.islice(it, 1))
-    if cache is not None:
-        cache[:] = [prepared]
+    if cache is not None and not cache:
+        cache.append(prepared)
     it = itertools.chain(first, it)
     getsortablekey = comparable_itemgetter(*keyindices)
     getactualkey = operator.itemgetter(*keyindices)
