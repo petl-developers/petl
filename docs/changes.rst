@@ -5,7 +5,8 @@ Unreleased
 ----------
 
 * Reuse the sorted rows and discovered fields when a ``recast()`` view is
-  read again. See :issue:`369`.
+  read again. Copy row fields before sorting to keep the cache stable when
+  source rows are edited in place. See :issue:`369`.
 
 
 Version 1.7.28

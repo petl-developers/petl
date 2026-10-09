@@ -400,6 +400,54 @@ def test_recast_cached_source_changes(recast_cache):
     assert [row for row in recast(table)] == [('new_id', 'c'), (4, 40)]
 
 
+@pytest.mark.parametrize('index, value, fresh_rows', [
+    (2, 99, [('id', 'a'), (1, 99), (2, 20), (3, 30)]),
+    (0, 3, [('id', 'a'), (2, 20), (3, [10, 30])]),
+    (1, 'z', [('id', 'a', 'z'), (1, None, 10), (2, 20, None),
+              (3, 30, None)]),
+])
+def test_recast_cached_row_edits(recast_cache, index, value, fresh_rows):
+    calls, _, _ = recast_cache
+    table = [['id', 'variable', 'value'], [1, 'a', 10], [2, 'a', 20],
+             [3, 'a', 30]]
+    view = recast(table)
+    expected = [('id', 'a'), (1, 10), (2, 20), (3, 30)]
+    assert [row for row in view] == expected
+    table[1][index] = value
+    assert [row for row in view] == expected
+    assert len(calls) == 1
+    assert [row for row in recast(table)] == fresh_rows
+    assert len(calls) == 2
+
+
+def test_recast_row_edits_after_partial_read(recast_cache):
+    table = [['id', 'variable', 'value'], [1, 'a', 10], [2, 'a', 20],
+             [3, 'a', 30]]
+    view = recast(table)
+    it = iter(view)
+    assert next(it) == ('id', 'a')
+    assert next(it) == (1, 10)
+    table[2][2] = 99
+    table[3][0] = 1
+    assert [row for row in it] == [(2, 20), (3, 30)]
+    assert [row for row in view] == [('id', 'a'), (1, 10), (2, 20), (3, 30)]
+
+
+def test_recast_source_reuses_row(recast_cache):
+    class Source(object):
+        def __iter__(self):
+            yield ['id', 'variable', 'value']
+            row = [None, 'a', None]
+            for key in (3, 1, 2):
+                row[0], row[2] = key, key * 10
+                yield row
+
+    view = recast(Source())
+    expected = [('id', 'a'), (1, 10), (2, 20), (3, 30)]
+    assert [row for row in view] == expected
+    assert [row for row in view] == expected
+
+
 def test_recast_cache_cleanup(recast_cache):
     calls, directory, buffersize = recast_cache
     table = [('id', 'variable', 'value'), (3, 'a', 30), (1, 'a', 10),

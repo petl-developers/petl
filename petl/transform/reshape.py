@@ -270,8 +270,11 @@ def recast(table, key=None, variablefield='variable', valuefield='value',
 
     The sorted rows and discovered fields are cached after the first data
     read. Later iterations use this cache, as with :func:`sort`. Create a new
-    recast view to read the source again. Do not change source fields while
-    iterators are active.
+    recast view to read the source again. Cached rows are shallow tuple
+    copies, so changing fields in a source row does not change the cache.
+    Mutable objects stored in cells are not copied by this step. Do not
+    change these objects while using the view. Do not change source fields
+    while iterators are active.
 
     See also :func:`petl.transform.reshape.melt`.
 
@@ -306,6 +309,16 @@ class RecastView(Table):
         return iterrecast(self.source, self.key, self.variablefield,
                           self.valuefield, self.samplesize, self.reducers,
                           self.missing, self._cache)
+
+
+class _RecastSource(object):
+
+    def __init__(self, source):
+        self.source = source
+
+    def __iter__(self):
+        for row in self.source:
+            yield tuple(row)
 
 
 def _prepare_recast(source, key, variablefield, valuefield, samplesize):
@@ -381,8 +394,9 @@ def _prepare_recast(source, key, variablefield, valuefield, samplesize):
     # Keep the sample order when the sorted rows are read again.
     variables = [tuple(variables[f]) for f in variablefields]
     outhdr = tuple(keyfields) + tuple(itertools.chain.from_iterable(variables))
-    return (sort(source, key=keyfields), outhdr, keyindices, variableindices,
-            variables, valueindex)
+    sorted_source = sort(_RecastSource(source), key=keyfields)
+    return (sorted_source, outhdr, keyindices, variableindices, variables,
+            valueindex)
 
 
 def iterrecast(source, key, variablefield, valuefield,
