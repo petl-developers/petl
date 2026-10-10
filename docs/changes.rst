@@ -31,6 +31,10 @@ Version 1.7.29
   test, doctest and documentation environments.
   By :user:`ryanduguid`.
 
+* Return the header with the count field from ``distinct(..., count=...)``
+  on a table without data rows, instead of raising a ``TypeError``.
+  By :user:`NotAFlightRisk`.
+
 Version 1.7.28
 --------------
 
