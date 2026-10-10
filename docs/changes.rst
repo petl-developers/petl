@@ -31,6 +31,10 @@ Version 1.7.29
   test, doctest and documentation environments.
   By :user:`ryanduguid`.
 
+* Fix ``selectusingcontext()`` raising ``RuntimeError`` on a table that has
+  a header but no data rows. The header is now returned unchanged.
+  By :user:`raashish1601`.
+
 Version 1.7.28
 --------------
 
