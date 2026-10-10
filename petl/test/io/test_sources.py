@@ -2,6 +2,9 @@
 from __future__ import absolute_import, print_function, division
 
 
+import os
+import sys
+import subprocess
 import gzip
 import bz2
 import zipfile
@@ -159,3 +162,30 @@ def test_bzip2source():
     # read implicit
     tbl2 = etl.fromcsv(fn)
     ieq(tbl, tbl2)
+
+
+def test_bzip2source_without_bz2_module():
+
+    # python can be built without the bz2 module, petl should still import
+    # and only fail when a .bz2 file is actually used
+    fn = NamedTemporaryFile().name
+    etl.tocsv([('foo', 'bar'), ('a', '1')], fn + '.bz2')
+    code = """
+import sys
+sys.modules['bz2'] = None
+import petl as etl
+fn = sys.argv[1]
+tbl = [('foo', 'bar'), ('a', '1')]
+etl.tocsv(tbl, fn + '.csv')
+assert list(etl.fromcsv(fn + '.csv')) == tbl
+for f in (lambda: etl.tocsv(tbl, fn + '.out.bz2'),
+          lambda: list(etl.fromcsv(fn + '.bz2'))):
+    try:
+        f()
+    except ImportError as e:
+        assert 'bz2' in str(e), str(e)
+    else:
+        raise RuntimeError('expected ImportError')
+"""
+    cwd = os.path.dirname(os.path.dirname(os.path.abspath(etl.__file__)))
+    subprocess.check_call([sys.executable, '-c', code, fn], cwd=cwd)

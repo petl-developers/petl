@@ -29,7 +29,7 @@ def fromcsv(source=None, encoding=None, errors='strict', header=None,
         ...           ['a', 1],
         ...           ['b', 2],
         ...           ['c', 2]]
-        >>> with open('example.csv', 'w') as f:
+        >>> with open('example.csv', 'w', newline='') as f:
         ...     writer = csv.writer(f)
         ...     writer.writerows(table1)
         ...

@@ -21,16 +21,16 @@ environment to run tests etc.
 Running the test suite
 ----------------------
 
-The main :mod:`petl` test suite can be run with `nose
-<https://nose.readthedocs.org/>`_. E.g., assuming you have the source code
+The main :mod:`petl` test suite can be run with `pytest
+<https://docs.pytest.org/en/stable/>`_. E.g., assuming you have the source code
 repository cloned to the current working directory, you can run the test
 suite with::
 
     $ pip install -r requirements-tests.txt
     $ pytest -v petl
 
-Currently :mod:`petl` supports Python 2.7, 3.6 up to 3.13
-so the tests should pass under all these Python versions.
+The test environments and their Python interpreters are defined in
+``tox.ini``.
 
 Dependencies
 ------------
@@ -64,10 +64,11 @@ is not found, these tests are skipped.
 Running doctests
 ----------------
 
-Doctests in docstrings should (almost) all be runnable, and should
-pass if run with Python 3.6. Doctests can be run with `nose
-<https://nose.readthedocs.org/>`_. See the tox.ini file for example
-doctest commands.
+Doctests in docstrings can be run with pytest's ``--doctest-modules``
+option. For example, the Python 3.14 doctest environment runs these
+examples with coverage::
+
+    $ tox -e py314-doctest
 
 Building the documentation
 --------------------------
@@ -83,22 +84,21 @@ Built docs can then be found in the ``docs/_build/html/`` directory.
 Automatically running all tests
 -------------------------------
 
-All of the above tests can be run automatically using `tox
-<https://tox.readthedocs.org/>`_. You will need binaries for Python
-2.7 and 3.6 available on your system.
+The test suite and documentation builds can be run automatically using
+`tox <https://tox.readthedocs.org/>`_. Install the Python interpreter
+for each selected environment. For example, with Python 3.14 installed::
 
-To run all tests **without** installing any of the optional
-dependencies, do::
+    $ tox -e py314,py314-docs
 
-    $ tox -e py27,py36,docs
+The test environment installs ``requirements-tests.txt`` and
+``requirements-formats.txt``. The documentation environment installs
+``requirements-docs.txt``. Tox creates these environments and installs
+their dependencies on the first run.
 
-To run the entire test suite, including installation of **all**
-optional dependencies, do::
-
-    $ tox
-
-The first time you run this it will take some while all the optional
-dependencies are installed in each environment.
+Running ``tox`` without ``-e`` selects the default environments listed
+in ``tox.ini``. Database and remote filesystem tests have separate
+``database``, ``remote`` and ``compose`` environments; see ``tox.ini``
+for their dependencies and service setup commands.
 
 Contributing code via GitHub
 ----------------------------
