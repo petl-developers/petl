@@ -2,6 +2,8 @@ from __future__ import absolute_import, print_function, division
 
 
 from datetime import datetime
+import gc
+import os
 import subprocess
 import sys
 
@@ -270,6 +272,267 @@ def test_recast_headerless():
     expect = []
     actual = recast(table)
     ieq(expect, actual)
+
+
+
+@pytest.fixture(params=[None, 2])
+def recast_cache(request, monkeypatch, tmpdir):
+    import petl.config
+    import petl.transform.sorts as sorts
+
+    monkeypatch.setattr(petl.config, 'sort_buffersize', request.param)
+    calls = []
+    original_sort = sorts.SortView._iternocache
+    original_tempfile = sorts.NamedTemporaryFile
+
+    def counted_sort(self, *args):
+        calls.append(True)
+        return original_sort(self, *args)
+
+    def tempfile(*args, **kwargs):
+        kwargs['dir'] = str(tmpdir)
+        return original_tempfile(*args, **kwargs)
+
+    monkeypatch.setattr(sorts.SortView, '_iternocache', counted_sort)
+    monkeypatch.setattr(sorts, 'NamedTemporaryFile', tempfile)
+    return calls, str(tmpdir), request.param
+
+
+def test_recast_reuses_sort(recast_cache):
+    calls, _, _ = recast_cache
+    table = [('id', 'variable', 'value'), (2, 'a', 3), (1, 'a', 4),
+             (1, 'b', 5), (1, 'a', 6)]
+    view = recast(table, reducers={'a': sum}, missing=0)
+    expected = [('id', 'a', 'b'), (1, 10, 5), (2, 3, 0)]
+    assert [row for row in view] == expected
+    assert [row for row in view] == expected
+    assert len(calls) == 1
+
+
+def test_recast_preserves_sample(recast_cache):
+    calls, _, _ = recast_cache
+    table = [('id', 'variable', 'value'), (3, 'z', 30), (1, 'a', 10),
+             (2, 'z', 20)]
+    view = recast(table, samplesize=1)
+    expected = [('id', 'z'), (1, None), (2, 20), (3, 30)]
+    assert [row for row in view] == expected
+    assert [row for row in view] == expected
+    assert len(calls) == 1
+
+
+def test_recast_lazy_partial_read(recast_cache):
+    calls, _, _ = recast_cache
+    reads = []
+    table = [('id', 'variable', 'value'), (2, 'a', 20), (1, 'a', 10)]
+
+    class Source(object):
+        def __iter__(self):
+            reads.append(True)
+            return iter(table)
+
+    view = recast(Source())
+    it = iter(view)
+    assert reads == calls == []
+    assert next(it) == ('id', 'a')
+    assert calls == []
+    it.close()
+    first = iter(view)
+    assert next(first) == ('id', 'a')
+    assert next(first) == (1, 10)
+    reads_after_sort = len(reads)
+    second = iter(view)
+    assert next(second) == ('id', 'a')
+    assert next(second) == (1, 10)
+    assert next(first) == next(second) == (2, 20)
+    first.close()
+    second.close()
+    assert len(calls) == 1
+    assert len(reads) == reads_after_sort
+
+
+
+@pytest.mark.parametrize('combine', ['cat', 'stack', 'annex'])
+def test_recast_cache_before_data_read(recast_cache, combine):
+    import petl
+
+    calls, _, _ = recast_cache
+    table = [('id', 'variable', 'value'), (2, 'a', 20), (1, 'a', 10),
+             (3, 'a', 30)]
+    view = recast(table)
+    if combine == 'annex':
+        expected = [('id', 'a', 'id', 'a'), (1, 10, 1, 10),
+                    (2, 20, 2, 20), (3, 30, 3, 30)]
+    else:
+        expected = [('id', 'a'), (1, 10), (2, 20), (3, 30),
+                    (1, 10), (2, 20), (3, 30)]
+    combined = getattr(petl, combine)(view, view)
+    assert [row for row in combined] == expected
+    assert len(calls) == 1
+
+
+
+def test_recast_cache_with_changed_fields(recast_cache):
+    calls, _, _ = recast_cache
+    table = [('id', 'variable', 'value'), (1, 'a', 10)]
+    view = recast(table)
+    first = iter(view)
+    assert next(first) == ('id', 'a')
+    table[:] = [('id', 'variable', 'value'), (2, 'b', 20)]
+    second = iter(view)
+    assert next(second) == ('id', 'b')
+    assert next(second) == (2, 20)
+    with pytest.raises(ArgumentError, match='recast fields changed'):
+        next(first)
+    second.close()
+    assert [row for row in view] == [('id', 'b'), (2, 20)]
+    assert len(calls) == 1
+
+
+def test_recast_cached_source_changes(recast_cache):
+    table = [('id', 'variable', 'value'), (2, 'a', 20), (1, 'a', 10)]
+    view = recast(table)
+    table.append((3, 'b', 30))
+    expected = [('id', 'a', 'b'), (1, 10, None), (2, 20, None),
+                (3, None, 30)]
+    assert [row for row in view] == expected
+    table[:] = [('new_id', 'variable', 'value'), (4, 'c', 40)]
+    assert [row for row in view] == expected
+    assert [row for row in recast(table)] == [('new_id', 'c'), (4, 40)]
+
+
+@pytest.mark.parametrize('index, value, fresh_rows', [
+    (2, 99, [('id', 'a'), (1, 99), (2, 20), (3, 30)]),
+    (0, 3, [('id', 'a'), (2, 20), (3, [10, 30])]),
+    (1, 'z', [('id', 'a', 'z'), (1, None, 10), (2, 20, None),
+              (3, 30, None)]),
+])
+def test_recast_cached_row_edits(recast_cache, index, value, fresh_rows):
+    calls, _, _ = recast_cache
+    table = [['id', 'variable', 'value'], [1, 'a', 10], [2, 'a', 20],
+             [3, 'a', 30]]
+    view = recast(table)
+    expected = [('id', 'a'), (1, 10), (2, 20), (3, 30)]
+    assert [row for row in view] == expected
+    table[1][index] = value
+    assert [row for row in view] == expected
+    assert len(calls) == 1
+    assert [row for row in recast(table)] == fresh_rows
+    assert len(calls) == 2
+
+
+def test_recast_row_edits_after_partial_read(recast_cache):
+    table = [['id', 'variable', 'value'], [1, 'a', 10], [2, 'a', 20],
+             [3, 'a', 30]]
+    view = recast(table)
+    it = iter(view)
+    assert next(it) == ('id', 'a')
+    assert next(it) == (1, 10)
+    table[2][2] = 99
+    table[3][0] = 1
+    assert [row for row in it] == [(2, 20), (3, 30)]
+    assert [row for row in view] == [('id', 'a'), (1, 10), (2, 20), (3, 30)]
+
+
+def test_recast_source_reuses_row(recast_cache):
+    class Source(object):
+        def __iter__(self):
+            yield ['id', 'variable', 'value']
+            row = [None, 'a', None]
+            for key in (3, 1, 2):
+                row[0], row[2] = key, key * 10
+                yield row
+
+    view = recast(Source())
+    expected = [('id', 'a'), (1, 10), (2, 20), (3, 30)]
+    assert [row for row in view] == expected
+    assert [row for row in view] == expected
+
+
+def test_recast_cache_cleanup(recast_cache):
+    calls, directory, buffersize = recast_cache
+    table = [('id', 'variable', 'value'), (3, 'a', 30), (1, 'a', 10),
+             (2, 'a', 20), (4, 'a', 40)]
+    view = recast(table)
+    expected = [('id', 'a'), (1, 10), (2, 20), (3, 30), (4, 40)]
+    assert [row for row in view] == expected
+    files = sorted(os.listdir(directory))
+    assert bool(files) == (buffersize == 2)
+    assert [row for row in view] == expected
+    assert sorted(os.listdir(directory)) == files
+    assert len(calls) == 1
+    it = iter(view)
+    assert next(it) == expected[0]
+    assert next(it) == expected[1]
+    del view
+    gc.collect()
+    assert sorted(os.listdir(directory)) == files
+    assert [row for row in it] == expected[2:]
+    it.close()
+    del it
+    gc.collect()
+    assert os.listdir(directory) == []
+
+
+def test_recast_sort_error(recast_cache):
+    calls, directory, _ = recast_cache
+
+    class Source(object):
+        fail = True
+        rows = [('id', 'variable', 'value'), (3, 'a', 30), (1, 'a', 10),
+                (2, 'a', 20), (4, 'a', 40)]
+
+        def __iter__(self):
+            for row in self.rows:
+                yield row
+            if self.fail:
+                raise ValueError('source failed')
+
+    source = Source()
+    view = recast(source, samplesize=1)
+    with pytest.raises(ValueError, match='source failed'):
+        [row for row in view]
+    gc.collect()
+    assert os.listdir(directory) == []
+    source.fail = False
+    source.rows = [('id', 'variable', 'value'), (3, 'b', 30), (1, 'b', 10)]
+    expected = [('id', 'b'), (1, 10), (3, 30)]
+    assert [row for row in view] == expected
+    assert [row for row in view] == expected
+    assert len(calls) == 2
+
+
+def test_recast_reducer_error(recast_cache):
+    calls, _, _ = recast_cache
+
+    def fail(values):
+        raise ValueError('reducer failed')
+
+    reducers = {'a': fail}
+    table = [('id', 'variable', 'value'), (2, 'a', 20), (1, 'a', 10),
+             (1, 'a', 11)]
+    view = recast(table, reducers=reducers)
+    with pytest.raises(ValueError, match='reducer failed'):
+        [row for row in view]
+    reducers['a'] = sum
+    assert [row for row in view] == [('id', 'a'), (1, 21), (2, 20)]
+    assert len(calls) == 1
+
+
+def test_recast_validation_retry(recast_cache):
+    table = [('id', 'variable')]
+    view = recast(table)
+    with pytest.raises(ArgumentError, match='invalid value field'):
+        [row for row in view]
+    table[:] = [('id', 'variable', 'value'), (1, 'a', 10)]
+    assert [row for row in view] == [('id', 'a'), (1, 10)]
+
+
+def test_recast_empty_cache(recast_cache):
+    calls, _, _ = recast_cache
+    view = recast([('id', 'variable', 'value')])
+    assert [row for row in view] == [('id',)]
+    assert [row for row in view] == [('id',)]
+    assert len(calls) == 1
 
 
 def test_recast_date():
