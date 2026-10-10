@@ -40,6 +40,11 @@ Version 1.7.28
   :issue:`690`.
   By :user:`akashmalbari`, :issue:`730`.
 
+* Write the demo file in the ``fromcsv()`` docstring with ``newline=''``, so
+  the example round-trips on Windows instead of inserting an empty row after
+  every record.
+  By :user:`lizerui1608-dev`, :issue:`734`.
+
 Version 1.7.27
 --------------
 
