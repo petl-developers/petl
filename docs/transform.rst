@@ -40,6 +40,7 @@ Header manipulations
 .. autofunction:: petl.transform.headers.suffixheader
 .. autofunction:: petl.transform.headers.sortheader
 .. autofunction:: petl.transform.headers.skip
+.. autofunction:: petl.transform.headers.skiplast
 
 
 .. module:: petl.transform.conversions

@@ -24,12 +24,15 @@ Version 1.7.29
   stateful decoder callbacks do not process it twice within one iteration.
   By :user:`sunlishuo25`.
 
-Version 1.7.28
---------------
-
+* Add ``skiplast()`` to remove trailing rows, such as file footers, in one
+  pass with bounded buffering. By :user:`natesute`, closes :issue:`216`.
+  
 * Update the contributor guide to use pytest and the configured Tox
   test, doctest and documentation environments.
   By :user:`ryanduguid`.
+
+Version 1.7.28
+--------------
 
 * Preserve missing-cell positions when displaying short rows with
   ``see()``, including duplicate and numeric-looking field names.
