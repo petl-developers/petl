@@ -31,6 +31,10 @@ Version 1.7.29
   test, doctest and documentation environments.
   By :user:`ryanduguid`.
 
+* Fix ``progress()`` and ``log_progress()`` raising ``UnboundLocalError``
+  when the table yields no rows at all, e.g. when reading an empty CSV file.
+  By :user:`raashish1601`.
+
 Version 1.7.28
 --------------
 
