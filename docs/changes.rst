@@ -4,6 +4,33 @@ Changes
 Version 1.7.29
 --------------
 
+* Reuse the sorted rows and discovered fields when a ``recast()`` view is
+  read again. Copy row fields before sorting to keep the cache stable when
+  source rows are edited in place. See :issue:`369`.
+
+* Write the demo file in the ``fromcsv()`` docstring with ``newline=''``, so
+  the example round-trips on Windows instead of inserting an empty row after
+  every record.
+  By :user:`lizerui1608-dev`, :issue:`734`.
+
+* Allow importing ``petl`` on Python builds without the ``bz2`` module.
+  Reading or writing ``.bz2`` files then raises an ``ImportError`` explaining
+  that ``bz2`` is not available.
+  By :user:`LuisFigueroaG`, :issue:`415`.
+
+* Apply JSON decoder options in ``fromjson(..., lines=True)`` during header
+  discovery and row parsing, including custom decoders and numeric parsers.
+  Reuse the first decoded record for header discovery and row output so
+  stateful decoder callbacks do not process it twice within one iteration.
+  By :user:`sunlishuo25`.
+
+* Add ``skiplast()`` to remove trailing rows, such as file footers, in one
+  pass with bounded buffering. By :user:`natesute`, closes :issue:`216`.
+  
+* Update the contributor guide to use pytest and the configured Tox
+  test, doctest and documentation environments.
+  By :user:`ryanduguid`.
+
 * Document how to sort by several fields in different directions with
   ``sort()``, by chaining stable sorts starting with the last field.
   By :user:`LuisFigueroaG`, :issue:`375`.
