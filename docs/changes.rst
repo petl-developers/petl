@@ -31,6 +31,12 @@ Version 1.7.29
   test, doctest and documentation environments.
   By :user:`ryanduguid`.
 
+* Fix ``complement()``, ``diff()``, ``intersection()``, ``hashcomplement()``
+  and ``hashintersection()`` raising ``RuntimeError`` when either table has
+  no header row, e.g. when it was read from an empty file. An empty left
+  table now gives an empty result, and an empty right table is treated as
+  having no rows. By :user:`raashish1601`.
+
 Version 1.7.28
 --------------
 
