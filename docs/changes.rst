@@ -4,6 +4,15 @@ Changes
 Version 1.7.29
 --------------
 
+* Reuse the sorted rows and discovered fields when a ``recast()`` view is
+  read again. Copy row fields before sorting to keep the cache stable when
+  source rows are edited in place. See :issue:`369`.
+
+* Write the demo file in the ``fromcsv()`` docstring with ``newline=''``, so
+  the example round-trips on Windows instead of inserting an empty row after
+  every record.
+  By :user:`lizerui1608-dev`, :issue:`734`.
+
 * Allow importing ``petl`` on Python builds without the ``bz2`` module.
   Reading or writing ``.bz2`` files then raises an ``ImportError`` explaining
   that ``bz2`` is not available.
@@ -39,11 +48,6 @@ Version 1.7.28
   deviation of 1. Based on the contribution by :user:`CharveeSaraiya` in
   :issue:`690`.
   By :user:`akashmalbari`, :issue:`730`.
-
-* Write the demo file in the ``fromcsv()`` docstring with ``newline=''``, so
-  the example round-trips on Windows instead of inserting an empty row after
-  every record.
-  By :user:`lizerui1608-dev`, :issue:`734`.
 
 Version 1.7.27
 --------------
