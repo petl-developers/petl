@@ -4,6 +4,7 @@ from __future__ import absolute_import, print_function, division
 
 # standard library dependencies
 import io
+from itertools import chain
 from petl.compat import text_type, next, PY2, izip_longest
 
 
@@ -32,9 +33,10 @@ def tomarkdown(table, source=None, encoding=None, errors='strict',
         | b | 2 |
         | c | x\\|y |
 
-    Values are converted to text with the `vrepr` function. Pipe characters
-    are escaped and line breaks are replaced with ``<br>``, so that each row
-    is written on a single line.
+    Values are converted to text with the `vrepr` function. Backslashes and
+    pipe characters are escaped and line breaks are replaced with ``<br>``,
+    so that each row is written on a single line. If the table has an empty
+    header, a blank header row is written, as Markdown tables require one.
 
     .. versionadded:: 1.7.29
 
@@ -60,13 +62,22 @@ def tomarkdown(table, source=None, encoding=None, errors='strict',
                 hdr = next(it)
             except StopIteration:
                 hdr = []
-            if hdr:
-                _write_row(f, [_escape(text_type(h)) for h in hdr],
-                           lineterminator)
-                _write_row(f, ['---'] * len(hdr), lineterminator)
+            flds = [_escape(text_type(h)) for h in hdr]
+            if not flds:
+                # a pipe table needs a header row, so leave it blank
+                try:
+                    row = next(it)
+                except StopIteration:
+                    pass
+                else:
+                    flds = [''] * max(len(row), 1)
+                    it = chain([row], it)
+            if flds:
+                _write_row(f, flds, lineterminator)
+                _write_row(f, ['---'] * len(flds), lineterminator)
                 for row in it:
                     cells = [_escape(vrepr(v)) for _, v in
-                             izip_longest(hdr, row, fillvalue=None)]
+                             izip_longest(flds, row, fillvalue=None)]
                     _write_row(f, cells, lineterminator)
             f.flush()
 
@@ -79,7 +90,7 @@ Table.tomarkdown = tomarkdown
 
 
 def _escape(s):
-    s = s.replace('|', '\\|')
+    s = s.replace('\\', '\\\\').replace('|', '\\|')
     s = s.replace('\r\n', '<br>').replace('\r', '<br>').replace('\n', '<br>')
     return s
 

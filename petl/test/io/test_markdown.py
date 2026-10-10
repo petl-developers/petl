@@ -52,6 +52,23 @@ def test_tomarkdown_escape():
     eq_(expect, _read(f.name))
 
 
+def test_tomarkdown_escape_backslash():
+
+    table = ((u'foo\\|bar', u'baz'),
+             (u'a\\|b', u'C:\\path'),
+             (u'c\\', u'd'))
+
+    f = NamedTemporaryFile(delete=False)
+    tomarkdown(table, f.name, encoding='ascii')
+    expect = (
+        u"| foo\\\\\\|bar | baz |\n"
+        u"| --- | --- |\n"
+        u"| a\\\\\\|b | C:\\\\path |\n"
+        u"| c\\\\ | d |\n"
+    )
+    eq_(expect, _read(f.name))
+
+
 def test_tomarkdown_irregular_rows():
 
     table = (('foo', 'bar'),
@@ -113,6 +130,21 @@ def test_tomarkdown_empty():
     buf = MemorySource()
     tomarkdown([('foo', 'bar')], buf)
     eq_(b'| foo | bar |\n| --- | --- |\n', buf.getvalue())
+
+
+def test_tomarkdown_empty_header():
+
+    buf = MemorySource()
+    tomarkdown([[]], buf)
+    eq_(b'', buf.getvalue())
+
+    buf = MemorySource()
+    tomarkdown([[], ['value']], buf)
+    eq_(b'|  |\n| --- |\n| value |\n', buf.getvalue())
+
+    buf = MemorySource()
+    tomarkdown([[], ['a', 'b'], ['c', 'd']], buf)
+    eq_(b'|  |  |\n| --- | --- |\n| a | b |\n| c | d |\n', buf.getvalue())
 
 
 def test_tomarkdown_fluent():
