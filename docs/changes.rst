@@ -1,6 +1,20 @@
 Changes
 =======
 
+Version 1.7.29
+--------------
+
+* Allow importing ``petl`` on Python builds without the ``bz2`` module.
+  Reading or writing ``.bz2`` files then raises an ``ImportError`` explaining
+  that ``bz2`` is not available.
+  By :user:`LuisFigueroaG`, :issue:`415`.
+
+* Apply JSON decoder options in ``fromjson(..., lines=True)`` during header
+  discovery and row parsing, including custom decoders and numeric parsers.
+  Reuse the first decoded record for header discovery and row output so
+  stateful decoder callbacks do not process it twice within one iteration.
+  By :user:`sunlishuo25`.
+
 Version 1.7.28
 --------------
 

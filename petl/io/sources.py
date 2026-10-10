@@ -6,7 +6,6 @@ import os
 import io
 import gzip
 import sys
-import bz2
 import zipfile
 from contextlib import contextmanager
 import subprocess
@@ -15,6 +14,12 @@ import logging
 
 from petl.errors import ArgumentError
 from petl.compat import urlopen, StringIO, BytesIO, string_types, PY2
+
+try:
+    import bz2
+except ImportError:
+    # Python can be built without bz2 support
+    bz2 = None
 
 
 logger = logging.getLogger(__name__)
@@ -64,6 +69,10 @@ class BZ2Source(object):
 
     @contextmanager
     def open(self, mode='r'):
+        if bz2 is None:
+            raise ImportError('the bz2 module is required to read or write '
+                              '.bz2 files, but it is not available in this '
+                              'Python installation')
         if self.remote:
             if not mode.startswith('r'):
                 raise ArgumentError('source is read-only')

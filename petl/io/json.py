@@ -14,7 +14,7 @@ from petl.compat import PY2
 from petl.compat import pickle
 from petl.io.sources import read_source_from_arg, write_source_from_arg
 # internal dependencies
-from petl.util.base import data, Table, dicts as _dicts, iterpeek
+from petl.util.base import data, Table, dicts as _dicts
 
 
 def fromjson(source, *args, **kwargs):
@@ -51,6 +51,12 @@ def fromjson(source, *args, **kwargs):
 
     An empty JSON lines file produces a table with no data rows. If no
     `header` is supplied, the table has an empty header tuple.
+
+    Additional arguments are passed to :func:`json.load`, or to
+    :func:`json.loads` for each JSON line. For example, ``parse_float=Decimal``
+    preserves decimal precision in both formats. Decoder options also apply
+    when discovering the header from the first JSON line. The decoded first
+    record is reused as the first data row.
 
         >>> import petl as etl
         >>> data_with_jlines = '''{"name": "Gilbert", "wins": [["straight", "7S"], ["one pair", "10H"]]}
@@ -117,7 +123,8 @@ class JsonView(Table):
                                      write_through=True)
             try:
                 if self.lines:
-                    for row in iterjlines(f, self._header, self.missing):
+                    for row in iterjlines(f, self._header, self.missing,
+                                         self.args, self.kwargs):
                         yield row
                 else:
                     dicts = json.load(f, *self.args, **self.kwargs)
@@ -325,23 +332,26 @@ class DictsGeneratorView(DictsView):
             unlink(self._filecache.name)
 
 
-def iterjlines(f, header, missing):
+def iterjlines(f, header, missing, args=(), kwargs=None):
+    if kwargs is None:
+        kwargs = {}
     it = iter(f)
+    first = ()
 
     if header is None:
         header = list()
         try:
-            peek, it = iterpeek(it, 1)
+            peek = next(it)
         except StopIteration:
             yield tuple()
             return
-        json_obj = json.loads(peek)
+        json_obj = json.loads(peek, *args, **kwargs)
+        first = (json_obj,)
         if hasattr(json_obj, 'keys'):
             header += [k for k in json_obj.keys() if k not in header]
     yield tuple(header)
 
-    for o in it:
-        json_obj = json.loads(o)
+    for json_obj in chain(first, (json.loads(o, *args, **kwargs) for o in it)):
         yield tuple(json_obj[f] if f in json_obj else missing for f in header)
 
 
