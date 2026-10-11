@@ -453,7 +453,8 @@ class DistinctView(Table):
                         n_dup = 1
                         previous = row
             # deal with last row
-            yield tuple(previous) + (n_dup,)
+            if previous is not INIT:
+                yield tuple(previous) + (n_dup,)
         else:
             yield tuple(hdr)
             previous_keys = INIT

@@ -46,6 +46,10 @@ Version 1.7.29
   ``sort()``, by chaining stable sorts starting with the last field.
   By :user:`LuisFigueroaG`, :issue:`375`.
 
+* Return the header with the count field from ``distinct(..., count=...)``
+  on a table without data rows, instead of raising a ``TypeError``.
+  By :user:`NotAFlightRisk`.
+
 Version 1.7.28
 --------------
 

@@ -224,6 +224,13 @@ def test_distinct_count():
     ieq(expect, result)
 
 
+def test_distinct_count_empty():
+    table = (('foo', 'bar'),)
+    expect = (('foo', 'bar', 'count'),)
+    actual = distinct(table, count='count')
+    ieq(expect, actual)
+
+
 def test_key_distinct():
 
     table = (('foo', 'bar', 'baz'),
