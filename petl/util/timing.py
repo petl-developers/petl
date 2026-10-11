@@ -91,6 +91,7 @@ class ProgressViewBase(Table):
         batchtimemin, batchtimemax = None, None
         batchtimemean, batchtimevar = 0, 0
         batchratemean, batchratevar = 0, 0
+        n = 0  # stays 0 if the table yields no rows at all
 
         for n, r in enumerate(self.inner):
             if n % self.batchsize == 0 and n > 0:

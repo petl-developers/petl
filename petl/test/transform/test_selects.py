@@ -289,6 +289,31 @@ def test_selectusingcontext():
     ieq(expect, actual)
 
 
+def test_selectusingcontext_header_only():
+
+    table1 = (('foo', 'bar'),)
+    expect = (('foo', 'bar'),)
+
+    def query(prv, cur, nxt):
+        return True
+
+    actual = selectusingcontext(table1, query)
+    ieq(expect, actual)
+    ieq(expect, actual)
+
+
+def test_selectusingcontext_headerless():
+
+    table1 = []
+    expect = []
+
+    def query(prv, cur, nxt):
+        return True
+
+    actual = selectusingcontext(table1, query)
+    ieq(expect, actual)
+
+
 def test_facet():
 
     table = (('foo', 'bar', 'baz'),
