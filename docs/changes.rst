@@ -31,6 +31,9 @@ Version 1.7.29
   test, doctest and documentation environments.
   By :user:`ryanduguid`.
 
+* Add ``tomarkdown()`` to write a table as a Markdown pipe table.
+  By :user:`LuisFigueroaG`, :issue:`418`.
+
 Version 1.7.28
 --------------
 
