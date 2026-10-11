@@ -439,7 +439,10 @@ def iterselectusingcontext(table, query):
     yield hdr
     it = (Record(row, flds) for row in it)
     prv = None
-    cur = next(it)
+    try:
+        cur = next(it)
+    except StopIteration:
+        return  # no data rows
     for nxt in it:
         if query(prv, cur, nxt):
             yield cur

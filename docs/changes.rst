@@ -29,7 +29,18 @@ Version 1.7.29
   
 * Update the contributor guide to use pytest and the configured Tox
   test, doctest and documentation environments.
-  By :user:`ryanduguid`.
+  By :user:`ryanduguid`, :issue:`737`.
+
+* Fix ``selectusingcontext()`` raising ``RuntimeError`` on a table that has
+  a header but no data rows. The header is now returned unchanged.
+  By :user:`raashish1601`.
+
+* Add ``tomarkdown()`` to write a table as a Markdown pipe table.
+  By :user:`LuisFigueroaG`, :issue:`418`.
+
+* Fix ``progress()`` and ``log_progress()`` raising ``UnboundLocalError``
+  when the table yields no rows at all, e.g. when reading an empty CSV file.
+  By :user:`raashish1601`.
 
 * Document how to sort by several fields in different directions with
   ``sort()``, by chaining stable sorts starting with the last field.
