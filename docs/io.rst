@@ -145,6 +145,15 @@ HTML files
 .. autofunction:: petl.io.html.teehtml
 
 
+.. module:: petl.io.markdown
+.. _io_markdown:
+
+Markdown files
+^^^^^^^^^^^^^^
+
+.. autofunction:: petl.io.markdown.tomarkdown
+
+
 .. module:: petl.io.json
 .. _io_json:
 
