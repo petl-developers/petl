@@ -29,7 +29,11 @@ Version 1.7.29
   
 * Update the contributor guide to use pytest and the configured Tox
   test, doctest and documentation environments.
-  By :user:`ryanduguid`.
+  By :user:`ryanduguid`, :issue:`737`.
+
+* Fix ``selectusingcontext()`` raising ``RuntimeError`` on a table that has
+  a header but no data rows. The header is now returned unchanged.
+  By :user:`raashish1601`.
 
 * Add ``tomarkdown()`` to write a table as a Markdown pipe table.
   By :user:`LuisFigueroaG`, :issue:`418`.
