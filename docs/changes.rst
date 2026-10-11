@@ -38,6 +38,10 @@ Version 1.7.29
 * Add ``tomarkdown()`` to write a table as a Markdown pipe table.
   By :user:`LuisFigueroaG`, :issue:`418`.
 
+* Fix ``progress()`` and ``log_progress()`` raising ``UnboundLocalError``
+  when the table yields no rows at all, e.g. when reading an empty CSV file.
+  By :user:`raashish1601`.
+
 Version 1.7.28
 --------------
 
