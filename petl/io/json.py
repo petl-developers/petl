@@ -285,7 +285,7 @@ class DictsGeneratorView(DictsView):
         self._cached = 0
 
     def __iter__(self):
-        if not self._header:
+        if self._header is None:
             self._determine_header()
         yield self._header
 
