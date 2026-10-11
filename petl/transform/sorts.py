@@ -85,6 +85,24 @@ def sort(table, key=None, reverse=False, buffersize=None, tempdir=None,
         | 'F' |   1 |
         +-----+-----+
 
+        >>> # sorting is stable, so fields can be sorted in different
+        ... # directions by chaining sorts, starting with the last field
+        ... table5 = etl.sort(table1, 'bar').sort('foo', reverse=True)
+        >>> table5
+        +-----+-----+
+        | foo | bar |
+        +=====+=====+
+        | 'F' |   1 |
+        +-----+-----+
+        | 'D' |  10 |
+        +-----+-----+
+        | 'C' |   2 |
+        +-----+-----+
+        | 'A' |   6 |
+        +-----+-----+
+        | 'A' |   9 |
+        +-----+-----+
+
     The `buffersize` argument should be an `int` or `None`.
 
     If the number of rows in the table is less than `buffersize`, the table

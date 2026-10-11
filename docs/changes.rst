@@ -42,6 +42,10 @@ Version 1.7.29
   when the table yields no rows at all, e.g. when reading an empty CSV file.
   By :user:`raashish1601`.
 
+* Document how to sort by several fields in different directions with
+  ``sort()``, by chaining stable sorts starting with the last field.
+  By :user:`LuisFigueroaG`, :issue:`375`.
+
 Version 1.7.28
 --------------
 
