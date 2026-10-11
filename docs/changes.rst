@@ -1,6 +1,15 @@
 Changes
 =======
 
+Version 1.7.30
+--------------
+
+* Return the original value from ``boolparser(strict=False)`` when it can't
+  be parsed, as documented, instead of a stripped and lowercased copy.
+  Non-string values such as ``None`` are also returned as-is, instead of
+  raising ``AttributeError``.
+  By :user:`LuisFigueroaG`.
+
 Version 1.7.29
 --------------
 

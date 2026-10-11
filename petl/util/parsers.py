@@ -146,16 +146,21 @@ def boolparser(true_strings=('true', 't', 'yes', 'y', '1'),
         false_strings = [s.lower() for s in false_strings]
 
     def parser(value):
-        value = value.strip()
+        try:
+            s = value.strip()
+        except AttributeError:
+            if strict:
+                raise
+            return value
         if not case_sensitive:
-            value = value.lower()
-        if value in true_strings:
+            s = s.lower()
+        if s in true_strings:
             return True
-        elif value in false_strings:
+        elif s in false_strings:
             return False
         elif strict:
             raise ValueError('value is not one of recognised boolean strings: '
-                             '%r' % value)
+                             '%r' % s)
         else:
             return value
 

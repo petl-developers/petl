@@ -3,7 +3,7 @@ from __future__ import absolute_import, print_function, division
 
 from petl.compat import maxint
 from petl.test.helpers import eq_
-from petl.util.parsers import numparser, datetimeparser
+from petl.util.parsers import numparser, datetimeparser, boolparser
 
 
 def test_numparser():
@@ -55,3 +55,13 @@ def test_laxparsers():
         assert False, 'did not expect exception'
     else:
         eq_('2002-12-25 00:00:00', v)
+
+
+def test_boolparser_non_strict():
+
+    parsebool = boolparser(strict=False)
+    assert parsebool(' Yes ') is True
+    assert parsebool('n') is False
+    eq_(' Maybe ', parsebool(' Maybe '))
+    assert parsebool(None) is None
+    eq_(2, parsebool(2))
