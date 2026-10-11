@@ -1,6 +1,13 @@
 Changes
 =======
 
+Version 1.7.30
+--------------
+
+* Return ``True`` from ``issorted()`` on a table without data rows, instead
+  of raising ``StopIteration``.
+  By :user:`LuisFigueroaG`.
+
 Version 1.7.29
 --------------
 
