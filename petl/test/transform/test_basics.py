@@ -123,6 +123,12 @@ def test_cutout_headerless():
             pass
 
 
+@pytest.mark.parametrize('fields', [('bar', 'baz'), ['bar', 'baz']])
+def test_cutout_field_sequence(fields):
+    table = (('foo', 'bar', 'baz'), ('A', 1, 2))
+    ieq((('foo',), ('A',)), cutout(table, fields))
+
+
 def test_cat():
 
     table1 = (('foo', 'bar'),
