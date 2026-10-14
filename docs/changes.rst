@@ -4,14 +4,19 @@ Changes
 Version 1.7.30
 --------------
 
+* Return the original value from ``boolparser(strict=False)`` when it can't
+  be parsed, as documented, instead of a stripped and lowercased copy.
+  By :user:`LuisFigueroaG`, :issue:`745`.
+
+* Accept a single list or tuple of fields in ``cutout()``, as in ``cut()``.
+  By :user:`akashmalbari`, :issue:`744`.
+  
 * Return ``True`` from ``issorted()`` on a table without data rows, instead
   of raising ``StopIteration``.
-  By :user:`LuisFigueroaG`.
+  By :user:`LuisFigueroaG`, :issue:`743`.
 
 Version 1.7.29
 --------------
-
-* Accept a single list or tuple of fields in ``cutout()``, as in ``cut()``.
 
 * Reuse the sorted rows and discovered fields when a ``recast()`` view is
   read again. Copy row fields before sorting to keep the cache stable when
