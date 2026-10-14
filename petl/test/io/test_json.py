@@ -11,6 +11,17 @@ from petl.test.helpers import ieq
 from petl import dummytable, fromjson, fromdicts, tojson, tojsonarrays
 
 
+@pytest.mark.parametrize('header', [[], ()])
+@pytest.mark.parametrize('kind', ['list', 'generator'])
+def test_fromdicts_explicit_empty_header(kind, header):
+    records = [{'foo': 1}, {'foo': 2}]
+    source = (record for record in records) if kind == 'generator' else records
+    table = fromdicts(source, header=header)
+    expected = [(), (), ()]
+    assert [tuple(row) for row in table] == expected
+    assert [tuple(row) for row in table] == expected
+
+
 @pytest.mark.parametrize('kind', ['list', 'iterator', 'generator'])
 @pytest.mark.parametrize('sample', [0, 1, 2])
 def test_fromdicts_header_sample(kind, sample):
