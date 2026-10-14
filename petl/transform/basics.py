@@ -181,7 +181,12 @@ def cutout(table, *args, **kwargs):
 
     See also :func:`petl.transform.basics.cut`.
 
+    Fields can also be passed as a single list or tuple.
+
     """
+
+    if len(args) == 1 and isinstance(args[0], (list, tuple)):
+        args = args[0]
 
     return CutOutView(table, args, **kwargs)
 
