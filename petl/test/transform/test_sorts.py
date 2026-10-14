@@ -584,6 +584,15 @@ def test_issorted():
     assert not issorted(table5, key='foo', reverse=True, strict=True)
 
 
+def test_issorted_empty():
+
+    table = (('foo', 'bar'),)
+    assert issorted(table)
+    assert issorted(table, key='foo')
+    assert issorted(table, key='foo', reverse=True, strict=True)
+    assert issorted([])
+
+
 def test_sort_missing_cell_numeric():
     """ Sorting table with missing values raises IndexError #385 """
     tbl = (('a', 'b'), ('4',), ('2', '1'), ('1',))
