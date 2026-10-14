@@ -135,6 +135,14 @@ else:
         assert_almost_equal(4.4, a['C'][1], places=6)
         assert_almost_equal(.1, a['C'][2], places=6)
 
+    def test_toarray_headeronly():
+        t = [('foo', 'bar', 'baz')]
+        a = toarray(t)
+        assert isinstance(a, np.ndarray)
+        eq_(0, len(a))
+        eq_(('foo', 'bar', 'baz'), a.dtype.names)
+        ieq(t, fromarray(a))
+
     def test_fromarray():
         t = [('foo', 'bar', 'baz'),
              ('apples', 1, 2.5),

@@ -14,6 +14,9 @@ def infer_dtype(table):
     hdr = next(it)
     flds = list(map(str, hdr))
     rows = tuple(it)
+    if not rows:
+        # nothing to infer types from
+        return np.dtype([(f, object) for f in flds])
     dtype = np.rec.array(rows).dtype
     dtype.names = flds
     return dtype
