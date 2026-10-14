@@ -594,15 +594,18 @@ def issorted(table, key=None, reverse=False, strict=False):
         flds = [text_type(f) for f in next(it)]
     except StopIteration:
         flds = []
-    if key is None:
+    if key is not None:
+        getkey = comparable_itemgetter(*asindices(flds, key))
+    try:
         prev = next(it)
+    except StopIteration:
+        return True  # no data rows
+    if key is None:
         for curr in it:
             if not op(curr, prev):
                 return False
             prev = curr
     else:
-        getkey = comparable_itemgetter(*asindices(flds, key))
-        prev = next(it)
         prevkey = getkey(prev)
         for curr in it:
             currkey = getkey(curr)
