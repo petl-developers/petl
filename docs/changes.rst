@@ -67,6 +67,10 @@ Version 1.7.29
 Version 1.7.28
 --------------
 
+* Preserve group keys in multiple aggregations when the key selector is a
+  one-item list or tuple, matching simple aggregation. This avoids splitting
+  iterable key values into extra columns or raising errors for scalar values.
+
 * Preserve missing-cell positions when displaying short rows with
   ``see()``, including duplicate and numeric-looking field names.
   By :user:`rastagan-git`, :issue:`726`.

@@ -3,9 +3,12 @@ from __future__ import absolute_import, print_function, division
 
 import operator
 
+import pytest
+
 
 from collections import OrderedDict
 from petl.test.helpers import ieq
+from petl.errors import FieldSelectionError
 from petl.util import strjoin
 from petl.transform.reductions import rowreduce, aggregate, \
     mergeduplicates, Conflict, fold
@@ -225,6 +228,84 @@ def test_aggregate_multifield():
     table4 = aggregate(table1, 'foo', aggregators)
     ieq(expect2, table4)
     ieq(expect2, table4)  # check can iterate twice
+
+def _aggregate_multifield(table, key, form, presorted):
+    if form == 'dict':
+        aggregation = OrderedDict([('total', ('bar', sum)), ('count', len)])
+    elif form == 'list':
+        aggregation = [('total', 'bar', sum), ('count', len)]
+    else:
+        aggregation = None
+    result = aggregate(table, key, aggregation, presorted=presorted)
+    if form == 'suffix':
+        result['total'] = 'bar', sum
+        result['count'] = len
+    return result
+
+
+@pytest.mark.parametrize('key_type', [list, tuple])
+@pytest.mark.parametrize('key_values', [
+    ('alpha', 'beta'),
+    (1, 2),
+    (None, 1),
+    ('', 'a'),
+    ((1, 2), (3, 4)),
+    (False, True),
+])
+@pytest.mark.parametrize('form', ['dict', 'list', 'suffix'])
+@pytest.mark.parametrize('presorted', [False, True])
+def test_aggregate_multifield_singleton_key(key_type, key_values, form,
+                                          presorted):
+    first, second = key_values
+    rows = [(first, 3), (first, 7), (second, 5)]
+    if not presorted:
+        rows.reverse()
+    table = [('foo', 'bar')] + rows
+    original = list(table)
+    key = key_type(['foo'])
+    result = _aggregate_multifield(table, key, form, presorted)
+    expected = [('foo', 'total', 'count'), (first, 10, 2), (second, 5, 1)]
+
+    assert list(result) == expected
+    assert list(result) == expected
+    assert key == key_type(['foo'])
+    assert table == original
+
+
+@pytest.mark.parametrize('key_type', [list, tuple])
+@pytest.mark.parametrize('form', ['dict', 'list', 'suffix'])
+@pytest.mark.parametrize('presorted', [False, True])
+def test_aggregate_multifield_singleton_key_empty(key_type, form, presorted):
+    result = _aggregate_multifield([('foo', 'bar')], key_type(['foo']),
+                                  form, presorted)
+    expected = [('foo', 'total', 'count')]
+    assert list(result) == expected
+    assert list(result) == expected
+
+
+@pytest.mark.parametrize('presorted', [False, True])
+@pytest.mark.parametrize('key, expected', [
+    ('foo', [('foo', 'total', 'count'), ('alpha', 10, 2), ('beta', 5, 1)]),
+    (('foo', 'baz'), [('foo', 'baz', 'total', 'count'),
+                      ('alpha', 1, 10, 2), ('beta', 2, 5, 1)]),
+    (operator.itemgetter(0, 2), [('key', 'total', 'count'),
+                               (('alpha', 1), 10, 2), (('beta', 2), 5, 1)]),
+    (None, [('total', 'count'), (15, 3)]),
+])
+def test_aggregate_multifield_key_shapes(key, expected, presorted):
+    rows = [('alpha', 3, 1), ('alpha', 7, 1), ('beta', 5, 2)]
+    if not presorted:
+        rows.reverse()
+    result = _aggregate_multifield([('foo', 'bar', 'baz')] + rows, key,
+                                  'dict', presorted)
+    if callable(key) and not presorted:
+        # Sorting does not accept callable field selectors.
+        with pytest.raises(FieldSelectionError):
+            list(result)
+        return
+    assert list(result) == expected
+    assert list(result) == expected
+
 
 def test_aggregate_multifield_key_is_None():
 
