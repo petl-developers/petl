@@ -1,14 +1,17 @@
 Changes
 =======
 
-Version 1.7.30
+Version 1.7.31
 --------------
 
 * Return an empty array from ``toarray()`` and ``torecarray()`` on a table
   without data rows when no ``dtype`` is given, instead of raising
   ``IndexError``. The fields keep the table header and use the ``object``
   type, as there are no values to infer a type from.
-  By :user:`LuisFigueroaG`.
+  By :user:`LuisFigueroaG`, :issue:`746`.
+
+Version 1.7.30
+--------------
 
 * Return the original value from ``boolparser(strict=False)`` when it can't
   be parsed, as documented, instead of a stripped and lowercased copy.

@@ -96,12 +96,17 @@ def toarray(table, dtype=None, count=-1, sample=1000):
 
     # numpy is fussy about having tuples, need to make sure
     it = (tuple(row) for row in it)
-    try:
-        first = next(it)
-    except StopIteration:
-        # np.fromiter() can't create object fields before numpy 1.23
+    # np.fromiter() can't create object fields before numpy 1.23, so don't
+    # call it when no rows will be read
+    if count == 0:
         return np.empty(0, dtype=dtype)
-    sa = np.fromiter(chain([first], it), dtype=dtype, count=count)
+    if count == -1:
+        try:
+            first = next(it)
+        except StopIteration:
+            return np.empty(0, dtype=dtype)
+        it = chain([first], it)
+    sa = np.fromiter(it, dtype=dtype, count=count)
 
     return sa
 
