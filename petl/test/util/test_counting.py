@@ -1,10 +1,12 @@
 from __future__ import absolute_import, print_function, division
 
 
+import pytest
+
 from petl.compat import PY2
 from petl.test.helpers import ieq, eq_
 from petl.util.counting import valuecount, valuecounter, valuecounts, \
-    rowlengths, typecounts, parsecounts, stringpatterns, nrows
+    rowlengths, typecounts, parsecounter, parsecounts, stringpatterns, nrows
 
 
 def test_nrows():
@@ -178,3 +180,40 @@ def test_stringpatterns():
               ('999 9999', 2, 2./6),
               ('999-9999-AA', 1, 1./6))
     ieq(expect, actual)
+
+
+@pytest.mark.parametrize('error_type', [KeyboardInterrupt, SystemExit, GeneratorExit])
+@pytest.mark.parametrize('as_table', [False, True])
+def test_parser_process_control_exceptions(error_type, as_table):
+    observed = []
+    error = error_type('stop profiling')
+
+    def parser(value):
+        observed.append(value)
+        if value == 'stop':
+            raise error
+        return int(value)
+
+    table = [['amount'], ['1'], ['stop'], ['3']]
+    with pytest.raises(error_type) as caught:
+        if as_table:
+            list(parsecounts(table, 'amount', parsers={'custom': parser}))
+        else:
+            parsecounter(table, 'amount', parsers={'custom': parser})
+    assert caught.value is error
+    eq_(['1', 'stop'], observed)
+
+
+def test_parser_ordinary_exceptions_are_counted():
+    class ParseError(Exception):
+        pass
+
+    def parser(value):
+        if value == 'invalid':
+            raise ParseError('invalid amount')
+        return int(value)
+
+    table = [['amount'], ['1'], ['invalid'], ['3'], [4]]
+    counter, errors = parsecounter(table, 'amount', parsers={'custom': parser})
+    eq_({'custom': 2}, counter)
+    eq_({'custom': 1}, errors)

@@ -13,6 +13,10 @@ Version 1.7.31
 Version 1.7.30
 --------------
 
+* Propagate process-control exceptions such as ``KeyboardInterrupt`` and
+  ``SystemExit`` from parsers used by ``parsecounter()`` and ``parsecounts()``,
+  instead of treating them as ordinary data parsing failures.
+
 * Return the original value from ``boolparser(strict=False)`` when it can't
   be parsed, as documented, instead of a stripped and lowercased copy.
   By :user:`LuisFigueroaG`, :issue:`745`.
