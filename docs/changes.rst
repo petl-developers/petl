@@ -4,6 +4,9 @@ Changes
 Version 1.7.31
 --------------
 
+* Close database load cursors created by petl when truncation, insertion
+  or input iteration fails.
+
 * Return an empty array from ``toarray()`` and ``torecarray()`` on a table
   without data rows when no ``dtype`` is given, instead of raising
   ``IndexError``. The fields keep the table header and use the ``object``
