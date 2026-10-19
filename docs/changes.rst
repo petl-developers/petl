@@ -7,18 +7,27 @@ Version 1.7.31
 * Close database load cursors created by petl when truncation, insertion
   or input iteration fails.
 
+* Return zero count and frequency from ``valuecount()`` on a table without
+  data rows, instead of raising ``ZeroDivisionError``.
+  By :user:`IlyaKhalafi`, :issue:`752`.
+  
+* Return tuple rows from Whoosh indexes with zero or one stored field,
+  including document number and search score columns.
+  By :user:`IlyaKhalafi`, :issue:`751`.
+
 * Return an empty array from ``toarray()`` and ``torecarray()`` on a table
   without data rows when no ``dtype`` is given, instead of raising
   ``IndexError``. The fields keep the table header and use the ``object``
   type, as there are no values to infer a type from.
   By :user:`LuisFigueroaG`, :issue:`746`.
 
-Version 1.7.30
---------------
-
 * Propagate process-control exceptions such as ``KeyboardInterrupt`` and
   ``SystemExit`` from parsers used by ``parsecounter()`` and ``parsecounts()``,
   instead of treating them as ordinary data parsing failures.
+  By :user:`jadenfix`, :issue:`747`.
+
+Version 1.7.30
+--------------
 
 * Return the original value from ``boolparser(strict=False)`` when it can't
   be parsed, as documented, instead of a stripped and lowercased copy.

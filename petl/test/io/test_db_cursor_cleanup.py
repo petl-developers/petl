@@ -169,3 +169,111 @@ def test_clickhouse_adapter_closes_cursor_after_driver_error(
         load([('value',), (2,)], connection, 'target')
     assert_owned_cursors_closed(connection)
     assert connection.commit_calls == 0
+
+
+def fail_cursor_close(connection, monkeypatch, skip_first=False):
+    failure = RuntimeError('cursor cleanup failed')
+    make_cursor = connection.cursor
+
+    def failing_cursor():
+        cursor = make_cursor()
+        if not (skip_first and len(connection.created_cursors) == 1):
+            cursor.close_error = failure
+        return cursor
+
+    monkeypatch.setattr(connection, 'cursor', failing_cursor)
+    return failure
+
+
+@pytest.mark.parametrize('use_factory', [False, True])
+@pytest.mark.parametrize('replace', [False, True])
+@pytest.mark.parametrize('source_error', [False, True])
+def test_load_error_survives_cursor_close_error(
+        connection, monkeypatch, use_factory, replace, source_error):
+    fail_cursor_close(connection, monkeypatch, skip_first=replace)
+    source_failure = ValueError('source iteration failed')
+
+    def rows():
+        yield ('value',)
+        yield (2,)
+        if source_error:
+            raise source_failure
+        yield (2,)
+
+    database = connection.cursor if use_factory else connection
+    load = etl.todb if replace else etl.appenddb
+    expected = ValueError if source_error else sqlite3.IntegrityError
+    with pytest.raises(expected) as caught:
+        load(rows(), database, 'target')
+    if source_error:
+        assert caught.value is source_failure
+    assert all(cursor.close_calls == 1
+               for cursor in connection.created_cursors)
+    assert connection.commit_calls == 0
+
+
+@pytest.mark.parametrize('adapter', ['connection', 'factory', 'clickhouse'])
+def test_truncate_error_survives_cursor_close_error(
+        connection, monkeypatch, adapter):
+    fail_cursor_close(connection, monkeypatch)
+    if adapter == 'clickhouse':
+        monkeypatch.setattr(db, '_is_clikchouse_dbapi_connection',
+                            lambda value: value is connection)
+    database = connection.cursor if adapter == 'factory' else connection
+    with pytest.raises(sqlite3.OperationalError):
+        etl.todb([('value',), (2,)], database, 'missing')
+    assert len(connection.created_cursors) == 1
+    assert connection.created_cursors[0].close_calls == 1
+    assert connection.commit_calls == 0
+
+
+def test_clickhouse_insert_error_survives_cursor_close_error(
+        connection, monkeypatch):
+    fail_cursor_close(connection, monkeypatch)
+    monkeypatch.setattr(db, '_is_clikchouse_dbapi_connection',
+                        lambda value: value is connection)
+    with pytest.raises(sqlite3.OperationalError):
+        etl.appenddb([('value',), (2,)], connection, 'target')
+    assert connection.created_cursors[0].close_calls == 1
+    assert connection.commit_calls == 0
+
+
+@pytest.mark.parametrize('use_factory', [False, True])
+@pytest.mark.parametrize('handling_other_error', [False, True])
+def test_successful_load_still_reports_cursor_close_error(
+        connection, monkeypatch, use_factory, handling_other_error):
+    close_error = fail_cursor_close(connection, monkeypatch)
+    database = connection.cursor if use_factory else connection
+
+    def load():
+        with pytest.raises(RuntimeError) as caught:
+            etl.appenddb([('value',), (2,)], database, 'target')
+        assert caught.value is close_error
+
+    if handling_other_error:
+        try:
+            raise ValueError('unrelated outer error')
+        except ValueError:
+            load()
+    else:
+        load()
+    assert connection.created_cursors[0].close_calls == 1
+    assert connection.commit_calls == 0
+
+
+@pytest.mark.parametrize('use_factory', [False, True])
+def test_source_interrupt_survives_cursor_close_error(
+        connection, monkeypatch, use_factory):
+    failure = KeyboardInterrupt()
+    fail_cursor_close(connection, monkeypatch)
+
+    def rows():
+        yield ('value',)
+        raise failure
+
+    database = connection.cursor if use_factory else connection
+    with pytest.raises(KeyboardInterrupt) as caught:
+        etl.appenddb(rows(), database, 'target')
+    assert caught.value is failure
+    assert connection.created_cursors[0].close_calls == 1
+    assert connection.commit_calls == 0

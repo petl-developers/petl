@@ -441,6 +441,15 @@ SQL_TRUNCATE_QUERY = 'DELETE FROM %s'
 SQL_INSERT_QUERY = 'INSERT INTO %s (%s) VALUES (%s)'
 
 
+def _close_load_cursor(cursor, load_failed):
+    try:
+        cursor.close()
+    except Exception:
+        if not load_failed:
+            raise
+        debug('could not close cursor after failed load', exc_info=True)
+
+
 def _todb_dbapi_connection(table, connection, tablename, schema=None,
                            commit=True, truncate=False):
 
@@ -464,6 +473,7 @@ def _todb_dbapi_connection(table, connection, tablename, schema=None,
     # get a cursor
     cursor = connection.cursor()
 
+    load_failed = True
     try:
         if truncate:
             # TRUNCATE is not supported in some databases and causing locks with
@@ -480,10 +490,11 @@ def _todb_dbapi_connection(table, connection, tablename, schema=None,
         insertquery = SQL_INSERT_QUERY % (tablename, insertcolnames, placeholders)
         debug('insert data via query %r' % insertquery)
         cursor.executemany(insertquery, it)
+        load_failed = False
     finally:
         if cursor is not None:
             debug('close the cursor')
-            cursor.close()
+            _close_load_cursor(cursor, load_failed)
 
     if commit:
         debug('commit transaction')
@@ -513,6 +524,7 @@ def _todb_clikchouse_dbapi_connection(table, connection, tablename, schema=None,
     # get a cursor
     cursor = connection.cursor()
 
+    load_failed = True
     try:
         if truncate:
             # TRUNCATE is not supported in some databases and causing locks with
@@ -529,10 +541,11 @@ def _todb_clikchouse_dbapi_connection(table, connection, tablename, schema=None,
         insertquery = 'INSERT INTO %s (%s) VALUES' % (tablename, insertcolnames)
         debug('insert data via query %r' % insertquery)
         cursor.executemany(insertquery, it)
+        load_failed = False
     finally:
         if cursor is not None:
             debug('close the cursor')
-            cursor.close()
+            _close_load_cursor(cursor, load_failed)
 
     if commit:
         debug('commit transaction')
@@ -558,6 +571,7 @@ def _todb_dbapi_mkcurs(table, mkcurs, tablename, schema=None, commit=True,
     debug('obtain cursor and connection')
     cursor = mkcurs()
 
+    load_failed = True
     try:
         # N.B., we depend on this optional DB-API 2.0 attribute being implemented
         assert hasattr(cursor, 'connection'), \
@@ -583,9 +597,10 @@ def _todb_dbapi_mkcurs(table, mkcurs, tablename, schema=None, commit=True,
         insertquery = SQL_INSERT_QUERY % (tablename, insertcolnames, placeholders)
         debug('insert data via query %r' % insertquery)
         cursor.executemany(insertquery, it)
+        load_failed = False
     finally:
         if cursor is not None:
-            cursor.close()
+            _close_load_cursor(cursor, load_failed)
 
     if commit:
         debug('commit transaction')
