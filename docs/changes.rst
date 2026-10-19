@@ -4,6 +4,9 @@ Changes
 Version 1.7.31
 --------------
 
+* Return tuple rows from Whoosh indexes with zero or one stored field,
+  including document number and search score columns.
+
 * Return an empty array from ``toarray()`` and ``torecarray()`` on a table
   without data rows when no ``dtype`` is given, instead of raising
   ``IndexError``. The fields keep the table header and use the ``object``
