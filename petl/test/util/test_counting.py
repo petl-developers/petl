@@ -4,6 +4,7 @@ from __future__ import absolute_import, print_function, division
 import pytest
 
 from petl.compat import PY2
+from petl.errors import FieldSelectionError
 from petl.test.helpers import ieq, eq_
 from petl.util.counting import valuecount, valuecounter, valuecounts, \
     rowlengths, typecounts, parsecounter, parsecounts, stringpatterns, nrows
@@ -217,3 +218,17 @@ def test_parser_ordinary_exceptions_are_counted():
     counter, errors = parsecounter(table, 'amount', parsers={'custom': parser})
     eq_({'custom': 2}, counter)
     eq_({'custom': 1}, errors)
+
+
+@pytest.mark.parametrize(
+    ('field', 'value'),
+    [('foo', 'x'), (0, 'x'), (('foo', 'bar'), ('x', 1))],
+)
+def test_valuecount_without_data_rows(field, value):
+    table = [('foo', 'bar')]
+    assert valuecount(table, field, value) == (0, 0.0)
+
+
+def test_valuecount_empty_data_validates_field():
+    with pytest.raises(FieldSelectionError):
+        valuecount([('foo',)], 'missing', 'x')
