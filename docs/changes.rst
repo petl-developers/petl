@@ -1,6 +1,15 @@
 Changes
 =======
 
+Version 1.7.31
+--------------
+
+* Return an empty array from ``toarray()`` and ``torecarray()`` on a table
+  without data rows when no ``dtype`` is given, instead of raising
+  ``IndexError``. The fields keep the table header and use the ``object``
+  type, as there are no values to infer a type from.
+  By :user:`LuisFigueroaG`, :issue:`746`.
+
 Version 1.7.30
 --------------
 

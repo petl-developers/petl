@@ -135,6 +135,36 @@ else:
         assert_almost_equal(4.4, a['C'][1], places=6)
         assert_almost_equal(.1, a['C'][2], places=6)
 
+    def test_toarray_headeronly():
+        t = [('foo', 'bar', 'baz')]
+        a = toarray(t)
+        assert isinstance(a, np.ndarray)
+        eq_(0, len(a))
+        eq_(('foo', 'bar', 'baz'), a.dtype.names)
+        ieq(t, fromarray(a))
+
+    def test_toarray_count():
+        t = [('foo', 'bar', 'baz'),
+             ('apples', 1, 2.5),
+             ('oranges', 3, 4.4),
+             ('pears', 7, .1)]
+        a = toarray(t, dtype='U4, i2, f4', count=2)
+        eq_(2, len(a))
+        eq_('oran', a['foo'][1])
+        a = toarray(t, dtype='U4, i2, f4', count=0)
+        eq_(0, len(a))
+        eq_(('foo', 'bar', 'baz'), a.dtype.names)
+        with pytest.raises(ValueError):
+            toarray(t, dtype='U4, i2, f4', count=4)
+
+    def test_toarray_headeronly_count():
+        t = [('foo', 'bar', 'baz')]
+        a = toarray(t, count=0)
+        eq_(0, len(a))
+        eq_(('foo', 'bar', 'baz'), a.dtype.names)
+        with pytest.raises(ValueError):
+            toarray(t, dtype='U4, i2, f4', count=1)
+
     def test_fromarray():
         t = [('foo', 'bar', 'baz'),
              ('apples', 1, 2.5),

@@ -2,6 +2,8 @@
 from __future__ import division, print_function, absolute_import
 
 
+from itertools import chain
+
 from petl.compat import next, string_types
 from petl.util.base import iterpeek, ValuesView, Table
 from petl.util.materialise import columns
@@ -14,6 +16,9 @@ def infer_dtype(table):
     hdr = next(it)
     flds = list(map(str, hdr))
     rows = tuple(it)
+    if not rows:
+        # nothing to infer types from
+        return np.dtype([(f, object) for f in flds])
     dtype = np.rec.array(rows).dtype
     dtype.names = flds
     return dtype
@@ -91,6 +96,16 @@ def toarray(table, dtype=None, count=-1, sample=1000):
 
     # numpy is fussy about having tuples, need to make sure
     it = (tuple(row) for row in it)
+    # np.fromiter() can't create object fields before numpy 1.23, so don't
+    # call it when no rows will be read
+    if count == 0:
+        return np.empty(0, dtype=dtype)
+    if count == -1:
+        try:
+            first = next(it)
+        except StopIteration:
+            return np.empty(0, dtype=dtype)
+        it = chain([first], it)
     sa = np.fromiter(it, dtype=dtype, count=count)
 
     return sa
