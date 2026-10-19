@@ -41,6 +41,11 @@ def valuecount(table, field, value, missing=None):
     The `field` argument can be a single field name or index (starting from
     zero) or a tuple of field names and/or indexes.
 
+    A table without data rows has zero count and frequency::
+
+        >>> etl.valuecount([['foo']], 'foo', 'a')
+        (0, 0.0)
+
     """
 
     total = 0
@@ -49,7 +54,7 @@ def valuecount(table, field, value, missing=None):
         total += 1
         if v == value:
             vs += 1
-    return vs, float(vs)/total
+    return vs, float(vs)/total if total else 0.0
 
 
 Table.valuecount = valuecount
