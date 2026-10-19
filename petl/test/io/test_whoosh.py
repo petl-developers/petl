@@ -232,3 +232,65 @@ else:
     # TODO test_searchindexpage
     # TODO test_searchindex_multifield_query
     # TODO test_searchindex_nontext_query
+
+
+def _row_shape_index(stored_count):
+    """Create a real in-memory Whoosh index for the row-shape cases."""
+    from whoosh.filedb.filestore import RamStorage
+    schema = Schema(body=TEXT(stored=stored_count > 0),
+                    extra=TEXT(stored=stored_count > 1))
+    index = RamStorage().create_index(schema)
+    writer = index.writer()
+    writer.add_document(body=u'alpha', extra=u'beta')
+    writer.commit()
+    return index
+
+
+@pytest.mark.parametrize(
+    ('stored_count', 'fields', 'values'),
+    [(0, (), ()), (1, ('body',), (u'alpha',)),
+     (2, ('body', 'extra'), (u'alpha', u'beta'))],
+)
+@pytest.mark.parametrize('docnum_field', [None, 'docnum'])
+def test_fromindex_row_shape(stored_count, fields, values, docnum_field):
+    index = _row_shape_index(stored_count)
+    try:
+        expected_header = fields
+        expected_row = values
+        if docnum_field is not None:
+            expected_header = ('docnum',) + fields
+            expected_row = (0,) + values
+        assert list(fromtextindex(index, docnum_field=docnum_field)) == [
+            expected_header, expected_row,
+        ]
+    finally:
+        index.close()
+
+
+@pytest.mark.parametrize(
+    ('stored_count', 'fields', 'values'),
+    [(0, (), ()), (1, ('body',), (u'alpha',)),
+     (2, ('body', 'extra'), (u'alpha', u'beta'))],
+)
+@pytest.mark.parametrize('docnum_field', [None, 'docnum'])
+@pytest.mark.parametrize('score_field', [None, 'score'])
+def test_searchindex_row_shape(stored_count, fields, values,
+                               docnum_field, score_field):
+    from whoosh.query import Every
+    index = _row_shape_index(stored_count)
+    try:
+        metadata_fields = ()
+        metadata_values = ()
+        if docnum_field is not None:
+            metadata_fields += ('docnum',)
+            metadata_values += (0,)
+        if score_field is not None:
+            metadata_fields += ('score',)
+            metadata_values += (1.0,)
+        assert list(searchtextindex(index, Every(),
+                                    docnum_field=docnum_field,
+                                    score_field=score_field)) == [
+            metadata_fields + fields, metadata_values + values,
+        ]
+    finally:
+        index.close()

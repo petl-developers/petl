@@ -2,17 +2,21 @@
 from __future__ import absolute_import, print_function, division
 
 
-import operator
 from petl.compat import string_types, izip
 
 
 from petl.errors import ArgumentError
-from petl.util.base import Table, dicts
+from petl.util.base import Table, dicts, rowgetter
 
 
 def fromtextindex(index_or_dirname, indexname=None, docnum_field=None):
     """
-    Extract all documents from a Whoosh index. E.g.::
+    Extract all documents from a Whoosh index.
+
+    Rows are tuples matching the header, including when zero or one field
+    is stored in the index.
+
+    E.g.::
 
         >>> import petl as etl
         >>> import os
@@ -98,7 +102,7 @@ def itertextindex(index_or_dirname, indexname, docnum_field):
             yield hdr
 
             # yield all documents
-            astuple = operator.itemgetter(*index.schema.stored_names())
+            astuple = rowgetter(*index.schema.stored_names())
             for _, stored_fields_dict in index.reader().iter_docs():
                 yield astuple(stored_fields_dict)
 
@@ -109,7 +113,7 @@ def itertextindex(index_or_dirname, indexname, docnum_field):
             yield hdr
 
             # yield all documents
-            astuple = operator.itemgetter(*index.schema.stored_names())
+            astuple = rowgetter(*index.schema.stored_names())
             for docnum, stored_fields_dict in index.reader().iter_docs():
                 yield (docnum,) + astuple(stored_fields_dict)
 
@@ -454,7 +458,7 @@ def itersearchindex(index_or_dirname, query, limit, pagenum, pagelen, indexname,
             )
 
         # make a function to turn docs into tuples
-        astuple = operator.itemgetter(*index.schema.stored_names())
+        astuple = rowgetter(*index.schema.stored_names())
 
         with index.searcher() as searcher:
             if limit is not None:
