@@ -277,6 +277,9 @@ def todb(table, dbo, tablename, schema=None, commit=True,
     The parameter `dbo` may also be an SQLAlchemy engine, session or
     connection object.
 
+    Cursors created to truncate or insert rows are closed on success or failure.
+    A cursor supplied directly by the caller is left open.
+
     The parameter `dbo` may also be a string, in which case it is interpreted
     as the name of a file containing an :mod:`sqlite3` database.
 
@@ -438,6 +441,15 @@ SQL_TRUNCATE_QUERY = 'DELETE FROM %s'
 SQL_INSERT_QUERY = 'INSERT INTO %s (%s) VALUES (%s)'
 
 
+def _close_load_cursor(cursor, load_failed):
+    try:
+        cursor.close()
+    except Exception:
+        if not load_failed:
+            raise
+        debug('could not close cursor after failed load', exc_info=True)
+
+
 def _todb_dbapi_connection(table, connection, tablename, schema=None,
                            commit=True, truncate=False):
 
@@ -461,24 +473,28 @@ def _todb_dbapi_connection(table, connection, tablename, schema=None,
     # get a cursor
     cursor = connection.cursor()
 
-    if truncate:
-        # TRUNCATE is not supported in some databases and causing locks with
-        # MySQL used via SQLAlchemy, fall back to DELETE FROM for now
-        truncatequery = SQL_TRUNCATE_QUERY % tablename
-        debug('truncate the table via query %r', truncatequery)
-        cursor.execute(truncatequery)
-        # just in case, close and resurrect cursor
-        cursor.close()
-        cursor = connection.cursor()
+    load_failed = True
+    try:
+        if truncate:
+            # TRUNCATE is not supported in some databases and causing locks with
+            # MySQL used via SQLAlchemy, fall back to DELETE FROM for now
+            truncatequery = SQL_TRUNCATE_QUERY % tablename
+            debug('truncate the table via query %r', truncatequery)
+            cursor.execute(truncatequery)
+            # just in case, close and resurrect cursor
+            closing_cursor, cursor = cursor, None
+            closing_cursor.close()
+            cursor = connection.cursor()
 
-    insertcolnames = ', '.join(colnames)
-    insertquery = SQL_INSERT_QUERY % (tablename, insertcolnames, placeholders)
-    debug('insert data via query %r' % insertquery)
-    cursor.executemany(insertquery, it)
-
-    # finish up
-    debug('close the cursor')
-    cursor.close()
+        insertcolnames = ', '.join(colnames)
+        insertquery = SQL_INSERT_QUERY % (tablename, insertcolnames, placeholders)
+        debug('insert data via query %r' % insertquery)
+        cursor.executemany(insertquery, it)
+        load_failed = False
+    finally:
+        if cursor is not None:
+            debug('close the cursor')
+            _close_load_cursor(cursor, load_failed)
 
     if commit:
         debug('commit transaction')
@@ -508,24 +524,28 @@ def _todb_clikchouse_dbapi_connection(table, connection, tablename, schema=None,
     # get a cursor
     cursor = connection.cursor()
 
-    if truncate:
-        # TRUNCATE is not supported in some databases and causing locks with
-        # MySQL used via SQLAlchemy, fall back to DELETE FROM for now
-        truncatequery = 'TRUNCATE TABLE IF EXISTS %s' % tablename
-        debug('truncate the table via query %r', truncatequery)
-        cursor.execute(truncatequery)
-        # just in case, close and resurrect cursor
-        cursor.close()
-        cursor = connection.cursor()
+    load_failed = True
+    try:
+        if truncate:
+            # TRUNCATE is not supported in some databases and causing locks with
+            # MySQL used via SQLAlchemy, fall back to DELETE FROM for now
+            truncatequery = 'TRUNCATE TABLE IF EXISTS %s' % tablename
+            debug('truncate the table via query %r', truncatequery)
+            cursor.execute(truncatequery)
+            # just in case, close and resurrect cursor
+            closing_cursor, cursor = cursor, None
+            closing_cursor.close()
+            cursor = connection.cursor()
 
-    insertcolnames = ', '.join(colnames)
-    insertquery = 'INSERT INTO %s (%s) VALUES' % (tablename, insertcolnames)
-    debug('insert data via query %r' % insertquery)
-    cursor.executemany(insertquery, it)
-
-    # finish up
-    debug('close the cursor')
-    cursor.close()
+        insertcolnames = ', '.join(colnames)
+        insertquery = 'INSERT INTO %s (%s) VALUES' % (tablename, insertcolnames)
+        debug('insert data via query %r' % insertquery)
+        cursor.executemany(insertquery, it)
+        load_failed = False
+    finally:
+        if cursor is not None:
+            debug('close the cursor')
+            _close_load_cursor(cursor, load_failed)
 
     if commit:
         debug('commit transaction')
@@ -550,30 +570,37 @@ def _todb_dbapi_mkcurs(table, mkcurs, tablename, schema=None, commit=True,
 
     debug('obtain cursor and connection')
     cursor = mkcurs()
-    # N.B., we depend on this optional DB-API 2.0 attribute being implemented
-    assert hasattr(cursor, 'connection'), \
-        'could not obtain connection via cursor'
-    connection = cursor.connection
 
-    # determine paramstyle and build placeholders string
-    placeholders = _placeholders(connection, colnames)
-    debug('placeholders: %r', placeholders)
+    load_failed = True
+    try:
+        # N.B., we depend on this optional DB-API 2.0 attribute being implemented
+        assert hasattr(cursor, 'connection'), \
+            'could not obtain connection via cursor'
+        connection = cursor.connection
 
-    if truncate:
-        # TRUNCATE is not supported in some databases and causing locks with
-        # MySQL used via SQLAlchemy, fall back to DELETE FROM for now
-        truncatequery = SQL_TRUNCATE_QUERY % tablename
-        debug('truncate the table via query %r', truncatequery)
-        cursor.execute(truncatequery)
-        # N.B., may be server-side cursor, need to resurrect
-        cursor.close()
-        cursor = mkcurs()
+        # determine paramstyle and build placeholders string
+        placeholders = _placeholders(connection, colnames)
+        debug('placeholders: %r', placeholders)
 
-    insertcolnames = ', '.join(colnames)
-    insertquery = SQL_INSERT_QUERY % (tablename, insertcolnames, placeholders)
-    debug('insert data via query %r' % insertquery)
-    cursor.executemany(insertquery, it)
-    cursor.close()
+        if truncate:
+            # TRUNCATE is not supported in some databases and causing locks with
+            # MySQL used via SQLAlchemy, fall back to DELETE FROM for now
+            truncatequery = SQL_TRUNCATE_QUERY % tablename
+            debug('truncate the table via query %r', truncatequery)
+            cursor.execute(truncatequery)
+            # N.B., may be server-side cursor, need to resurrect
+            closing_cursor, cursor = cursor, None
+            closing_cursor.close()
+            cursor = mkcurs()
+
+        insertcolnames = ', '.join(colnames)
+        insertquery = SQL_INSERT_QUERY % (tablename, insertcolnames, placeholders)
+        debug('insert data via query %r' % insertquery)
+        cursor.executemany(insertquery, it)
+        load_failed = False
+    finally:
+        if cursor is not None:
+            _close_load_cursor(cursor, load_failed)
 
     if commit:
         debug('commit transaction')

@@ -9,6 +9,10 @@ Version 1.7.31
   of an Avro file with no fields that reads back with an empty header.
   By :user:`LuisFigueroaG`, :issue:`754`.
 
+* Close database load cursors created by petl when truncation, insertion
+  or input iteration fails.
+  By :user:`IlyaKhalafi`, :issue:`753`.
+
 * Return zero count and frequency from ``valuecount()`` on a table without
   data rows, instead of raising ``ZeroDivisionError``.
   By :user:`IlyaKhalafi`, :issue:`752`.
