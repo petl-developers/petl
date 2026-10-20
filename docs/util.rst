@@ -11,6 +11,7 @@ Basic utilities
 .. autofunction:: petl.util.base.fieldnames
 .. autofunction:: petl.util.base.data
 .. autofunction:: petl.util.base.values
+.. autofunction:: petl.util.base.distinctvalues
 .. autofunction:: petl.util.base.dicts
 .. autofunction:: petl.util.base.namedtuples
 .. autofunction:: petl.util.base.records

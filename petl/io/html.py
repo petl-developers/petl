@@ -206,7 +206,7 @@ def _write_begin(f, flds, lineterminator, caption, index_header, truncate):
             if index_header:
                 h = '%s|%s' % (i, h)
             if truncate:
-                h = h[:truncate]
+                h = text_type(h)[:truncate]
             f.write(('<th>%s</th>' % h) + lineterminator)
         f.write('</tr>' + lineterminator)
         f.write('</thead>' + lineterminator)

@@ -627,7 +627,7 @@ def test_toxml_escapes_values(tmpdir, style, value):
 
     filename = str(tmpdir.join('values.xml'))
     table = (row for row in [('label',), (value,)])
-    toxml(table, filename, root='table', rows='row/col', style=style)
+    toxml(table, filename, root='table', rows='row/col', style=style, escape=True)
     root = ElementTree.parse(filename).getroot()
     if style == 'tag':
         actual = root.find('.//col').text
@@ -644,7 +644,7 @@ def test_toxml_escapes_header(tmpdir, header):
     from xml.etree import ElementTree
 
     filename = str(tmpdir.join('header.xml'))
-    toxml([(header,), ('value',)], filename)
+    toxml([(header,), ('value',)], filename, escape=True)
     root = ElementTree.parse(filename).getroot()
     assert root.find('.//th').text == header
     assert root.find('.//td').text == 'value'
@@ -655,7 +655,7 @@ def test_toxml_keeps_custom_markup(tmpdir):
 
     filename = str(tmpdir.join('custom.xml'))
     toxml([['label'], ['<b>value</b>']], filename,
-          root='table', rows='body',
+          root='table', rows='body', escape=True,
           style=' <row><col>{label}</col></row>\n',
           prologue='<before/>', epilogue='<after/>')
     root = ElementTree.parse(filename).getroot()
@@ -672,7 +672,7 @@ def test_toxml_ignores_extra_values(tmpdir):
             raise AssertionError('unused value must not be formatted')
 
     filename = str(tmpdir.join('extra.xml'))
-    toxml([['label'], ['R&D', Unformattable()]], filename)
+    toxml([['label'], ['R&D', Unformattable()]], filename, escape=True)
     assert ElementTree.parse(filename).find('.//td').text == 'R&D'
 
 
@@ -688,5 +688,162 @@ def test_toxml_preserves_value_formatting(tmpdir):
             return 'R&D'
 
     filename = str(tmpdir.join('formatted.xml'))
-    toxml([['label'], [Formatted()]], filename)
+    toxml([['label'], [Formatted()]], filename, escape=True)
     assert ElementTree.parse(filename).find('.//td').text == 'R&D'
+
+
+@pytest.mark.parametrize('style', ['tag', 'name', 'attribute'])
+@pytest.mark.parametrize('escape', [False, True])
+def test_toxml_indexed_mapping_rows(style, escape):
+    from xml.etree import ElementTree
+    from petl.io.sources import MemorySource
+
+    sink = MemorySource()
+    toxml([('first', 'second'), {0: 'left', 1: 'right'}], sink,
+          root='table', rows='row/col', style=style, escape=escape)
+    root = ElementTree.fromstring(sink.getvalue())
+    if style == 'tag':
+        assert [col.text for col in root.findall('.//col')] == ['left', 'right']
+    elif style == 'name':
+        assert root.find('.//first').text == 'left'
+        assert root.find('.//second').text == 'right'
+    else:
+        assert root.find('.//col').attrib == {'first': 'left', 'second': 'right'}
+
+
+@pytest.mark.parametrize('style', ['tag', 'name', 'attribute'])
+@pytest.mark.parametrize('escape', [False, True])
+def test_toxml_does_not_format_shadowed_fields(style, escape):
+    from petl.io.sources import MemorySource
+
+    class Unformattable(object):
+        def __format__(self, spec):
+            raise AssertionError('shadowed field must not be formatted')
+
+    sink = MemorySource()
+    toxml([('value', 'value'), (Unformattable(), 'last')], sink,
+          root='table', rows='row/col', style=style, escape=escape)
+    assert sink.getvalue().count(b'last') == 2
+
+
+def test_toxml_formats_duplicate_fields_per_occurrence():
+    from xml.etree import ElementTree
+    from petl.io.sources import MemorySource
+
+    class Formatted(object):
+        calls = 0
+
+        def __format__(self, spec):
+            self.calls += 1
+            return 'R&D%s' % self.calls
+
+    value = Formatted()
+    sink = MemorySource()
+    toxml([('value', 'value'), ('unused', value)], sink, escape=True)
+    root = ElementTree.fromstring(sink.getvalue())
+    assert [col.text for col in root.findall('.//td')] == ['R&D1', 'R&D2']
+    assert value.calls == 2
+
+
+@pytest.mark.parametrize('escape', [False, True])
+def test_toxml_index_only_rows(escape):
+    from petl.io.sources import MemorySource
+
+    class Indexed(object):
+        def __iter__(self):
+            raise AssertionError('row must be read by index')
+
+        def __getitem__(self, index):
+            return ('first', 'second')[index]
+
+    sink = MemorySource()
+    toxml([('a', 'b'), Indexed()], sink, escape=escape)
+    assert b'<td>first</td><td>second</td>' in sink.getvalue()
+
+
+@pytest.mark.parametrize('style', ['tag', 'name', 'attribute'])
+@pytest.mark.parametrize('value', ['<b>markup</b>', '&amp;',
+                                    'a\r\nb\tc', u'caf\u00e9'])
+def test_toxml_keeps_raw_default(style, value):
+    from petl.io.sources import MemorySource
+
+    table = [('label',), (value,)]
+    if sys.version_info[0] < 3 and value == u'caf\u00e9':
+        # Python 2's byte templates cannot format non-ASCII Unicode.
+        for kwargs in ({}, {'escape': False}):
+            with pytest.raises(UnicodeEncodeError):
+                toxml(table, MemorySource(), style=style, **kwargs)
+        return
+    default = MemorySource()
+    explicit = MemorySource()
+    toxml(table, default, style=style)
+    toxml(table, explicit, style=style, escape=False)
+    assert default.getvalue() == explicit.getvalue()
+    assert value in default.getvalue().decode('utf-8')
+
+
+def test_toxml_keeps_raw_header_default():
+    from petl.io.sources import MemorySource
+
+    sink = MemorySource()
+    toxml([('R&D',), ('&amp;',)], sink)
+    assert b'<th>R&D</th>' in sink.getvalue()
+    assert b'<td>&amp;</td>' in sink.getvalue()
+
+
+@pytest.mark.parametrize('escape', [False, True])
+def test_toxml_propagates_formatter_error(escape):
+    from petl.io.sources import MemorySource
+
+    error = ValueError('invalid value')
+
+    class Unformattable(object):
+        def __format__(self, spec):
+            raise error
+
+    with pytest.raises(ValueError) as excinfo:
+        toxml([('label',), (Unformattable(),)], MemorySource(), escape=escape)
+    assert excinfo.value is error
+
+
+def test_toxml_escapes_after_format_conversions():
+    from xml.etree import ElementTree
+    from petl.io.sources import MemorySource
+
+    sink = MemorySource()
+    toxml([('x', 'x!r', 'x!s', 'x:>5'), ('R&D', 'unused', 'unused', 'unused')],
+          sink, escape=True)
+    root = ElementTree.fromstring(sink.getvalue())
+    assert [col.text for col in root.findall('.//td')] == [
+        'R&D', "'R&D'", 'R&D', '  R&D']
+
+
+def test_toxml_keeps_nested_format_spec_unescaped():
+    from xml.etree import ElementTree
+    from petl.io.sources import MemorySource
+
+    sink = MemorySource()
+    table = [('x', 'fill', 'width', 'x:{fill}>{width}'), ('a', '&', 6, 'unused')]
+    toxml(table, sink, escape=True)
+    root = ElementTree.fromstring(sink.getvalue())
+    assert [col.text for col in root.findall('.//td')] == ['a', '&', '6', '&&&&&a']
+
+
+@pytest.mark.parametrize('escape', [False, True])
+def test_toxml_keeps_positional_field_error(escape):
+    from petl.io.sources import MemorySource
+
+    with pytest.raises(IndexError):
+        toxml([('',), ('value',)], MemorySource(), escape=escape)
+
+
+@pytest.mark.parametrize('field', ['self', 'args', 'kwargs', 'format',
+                                   'field', 'spec', 'conversion'])
+@pytest.mark.parametrize('escape', [False, True])
+def test_toxml_accepts_formatter_parameter_field_names(field, escape):
+    from xml.etree import ElementTree
+    from petl.io.sources import MemorySource
+
+    sink = MemorySource()
+    toxml([(field,), ('value',)], sink, escape=escape)
+    assert ElementTree.fromstring(sink.getvalue()).find('.//td').text == 'value'

@@ -4,11 +4,19 @@ Changes
 Version 1.7.31
 --------------
 
-* Escape literal values in the built-in ``toxml()`` styles and text
-  headers written in the ``head`` element, escaping reserved characters.
-  Raw markup and pre-escaped entities in these values are now escaped too.
-  Values in custom style templates, prologues and epilogues retain raw markup.
+* Add opt-in ``escape=True`` to ``toxml()`` for literal XML values and
+  header text. Existing calls keep their output by default. Custom style
+  values, prologues and epilogues remain raw. Indexed rows and duplicate
+  field names retain the existing writer semantics.
   By :user:`IlyaKhalafi`, :issue:`755`.
+
+* Convert HTML header values to text before truncation in ``tohtml()``
+  and ``teehtml()``, avoiding errors for non-string headers.
+  By :user:`IlyaKhalafi`, :issue:`756`.
+
+* Add ``distinctvalues()`` to collect unique field values in their
+  original table order, including compound field selections.
+  By :user:`IlyaKhalafi`, :issue:`147`.
 
 * Keep the header when ``toavro()`` writes a table without data rows and no
   ``schema`` is given. Every field is written as a nullable string, instead

@@ -11,7 +11,8 @@ except ImportError:
 
 from operator import attrgetter
 import itertools
-from xml.sax.saxutils import escape
+from xml.sax.saxutils import escape as _xml_escape
+from string import Formatter
 from petl.compat import string_types, text_type
 
 
@@ -266,7 +267,7 @@ def attribute_text_getter(attr, missing):
 
 def toxml(table, target=None,
           root=None, head=None, rows=None, prologue=None, epilogue=None,
-          style='tag', encoding='utf-8'):
+          style='tag', encoding='utf-8', escape=False):
     """
     Write the table into a new xml file according to elements defined in the
     function arguments.
@@ -349,10 +350,24 @@ def toxml(table, target=None,
          <col><foo>b</foo><bar>2</bar></col>
         </row>
 
-    Built-in styles escape values as literal text. Field names written in
-    the `head` element are escaped regardless of the style. Values containing markup or already-escaped entities
-    are also treated as literal text. Values substituted into custom `style`
-    templates, and markup in `prologue` and `epilogue`, are written unchanged.
+    By default, values and header text are written unchanged for compatibility.
+    Set `escape=True` to escape literal values in the built-in styles and
+    field names written as text in the `head` element. Markup and already
+    escaped entities in those values are treated as literal text too.
+    This does not make field names valid XML element or attribute names.
+    Values substituted into custom `style` templates, and markup in
+    `prologue` and `epilogue`, are written unchanged even with `escape=True`.
+
+    For example, to write an ampersand as literal text::
+
+        >>> sink = etl.MemorySource()
+        >>> etl.toxml([['label'], ['R&D']], sink, escape=True)
+        >>> b'<td>R&amp;D</td>' in sink.getvalue()
+        True
+
+    .. versionchanged:: 1.7.31
+
+        Added the `escape` option.
 
     The `toxml()` function is just a wrapper over :func:`petl.io.text.totext`.
     For advanced cases use a template with `totext()` for generating xml files.
@@ -371,28 +386,50 @@ def toxml(table, target=None,
     sample, table2 = iterpeek(table, 2)
     props = fieldnames(sample)
 
-    top = _build_xml_header(style, props, root, head, rows, prologue, encoding)
+    head_props = ([_xml_escape(f, {'\r': '&#13;'}) for f in props]
+                  if escape else props)
+    top = _build_xml_header(style, head_props, root, head, rows, prologue, encoding)
     template = _build_cols(style, props, rows, True)
     bottom = _build_xml_footer(style, epilogue, rows, root)
 
-    if style in ('tag', 'name', 'attribute'):
+    if escape and style in ('tag', 'name', 'attribute'):
         entities = {'\r': '&#13;'}
         if style == 'attribute':
             entities.update({'"': '&quot;', '\n': '&#10;', '\t': '&#9;'})
-        table2 = _escape_xml_rows(table2, entities)
+        template = _XmlTemplate(template, entities)
 
     totext(table2, source=target, encoding=encoding, errors='strict',
            template=template, prologue=top, epilogue=bottom)
 
 
-def _escape_xml_rows(table, entities):
-    """Escape data values while preserving field names and single-pass input."""
-    it = iter(table)
-    hdr = next(it, ())
-    yield hdr
-    for row in it:
-        yield tuple(escape(format(value), entities)
-                    for value in itertools.islice(row, len(hdr)))
+class _XmlTemplate(object):
+    """Escape formatted fields without changing the writer's row semantics."""
+
+    def __init__(self, template, entities):
+        self.template = template
+        self.entities = entities
+        self.formatter = Formatter()
+        self.parts = None
+
+    def format(*args, **kwargs):
+        # Match str.format's positional-only receiver on Python 2 as well.
+        self = args[0]
+        if self.parts is None:
+            self.parts = tuple(self.formatter.parse(self.template))
+        output = []
+        for literal, field, spec, conversion in self.parts:
+            output.append(literal)
+            if field is None:
+                continue
+            # Empty fields also refer to unavailable positional arguments.
+            field = '0' if field == '' else field
+            value, _ = self.formatter.get_field(field, (), kwargs)
+            if conversion is not None:
+                value = self.formatter.convert_field(value, conversion)
+            if spec:
+                spec = self.formatter.vformat(spec, (), kwargs)
+            output.append(_xml_escape(format(value, spec), self.entities))
+        return ''.join(output)
 
 
 def _build_xml_header(style, props, root, head, rows, prologue, encoding):
@@ -463,7 +500,7 @@ def _build_cols_inline(props, path, is_value, use_tag):
         row = parts[-1]
     fld = '{{{0}}}' if is_value else '{0}'
     fmt = '<{0}>{1}</{0}>'.format(col, fld)
-    cols = [fmt.format(e if is_value else escape(e, {'\r': '&#13;'})) for e in props]
+    cols = [fmt.format(e) for e in props]
     tags = ''.join(cols)
     res = ' <{0}>{1}</{0}>\n'.format(row, tags)
     return res
