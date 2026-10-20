@@ -4,6 +4,9 @@ Changes
 Version 1.7.31
 --------------
 
+* Close database load cursors created by petl when truncation, insertion
+  or input iteration fails.
+
 * Return zero count and frequency from ``valuecount()`` on a table without
   data rows, instead of raising ``ZeroDivisionError``.
   By :user:`IlyaKhalafi`, :issue:`752`.
