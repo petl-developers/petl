@@ -374,7 +374,8 @@ def _look_simple(table, vrepr, index_header, truncate, width):
     output = hedsep + fldsline + hedsep
     for line in rowlines:
         output += line
-    output += hedsep
+    if rowlines:
+        output += hedsep
 
     return output
 

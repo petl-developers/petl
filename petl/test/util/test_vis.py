@@ -132,6 +132,16 @@ foo  bar
     etl.config.look_style = 'grid'
 
 
+def test_look_style_simple_no_data_rows():
+    table = (('foo', 'bar'),)
+    actual = repr(look(table, style='simple'))
+    expect = """===  ===
+foo  bar
+===  ===
+"""
+    eq_(expect, actual)
+
+
 def test_look_style_minimal():
     table = (('foo', 'bar'), ('a', 1), ('b', 2))
     actual = repr(look(table, style='minimal'))

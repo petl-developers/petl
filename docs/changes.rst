@@ -4,6 +4,11 @@ Changes
 Version 1.7.31
 --------------
 
+* Don't repeat the bottom border when ``look()`` uses ``style='simple'`` on a
+  table without data rows. The output now ends after the header separator,
+  as with the default grid style.
+  By :user:`LuisFigueroaG`, :issue:`761`.
+
 * Return an empty list from ``intervaljoinvalues()`` with ``lkey`` and
   ``rkey`` for left rows whose key is not in the right table, as for rows
   with no overlapping intervals, instead of raising ``KeyError``.
