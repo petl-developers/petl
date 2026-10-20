@@ -4,6 +4,10 @@ Changes
 Version 1.7.31
 --------------
 
+* Convert HTML header values to text before truncation in ``tohtml()``
+  and ``teehtml()``, avoiding errors for non-string headers.
+  By :user:`IlyaKhalafi`, :issue:`756`.
+
 * Add ``distinctvalues()`` to collect unique field values in their
   original table order, including compound field selections.
   By :user:`IlyaKhalafi`, :issue:`147`.

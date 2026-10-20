@@ -4,6 +4,7 @@ from __future__ import absolute_import, print_function, division
 
 from tempfile import NamedTemporaryFile
 import io
+import pytest
 from petl.test.helpers import eq_
 
 
@@ -136,3 +137,26 @@ def test_tohtml_headerless():
             u"</table>\n"
         )
         eq_(expect, actual)
+
+
+@pytest.mark.parametrize('writer', ['tohtml', 'teehtml'])
+@pytest.mark.parametrize('header', [12345, None, 12.345, u'caf\u00e9'])
+@pytest.mark.parametrize('index_header', [False, True])
+def test_html_truncates_non_string_headers(tmpdir, writer, header, index_header):
+    from petl import tohtml, teehtml
+    from petl.compat import text_type
+
+    table = [(header,), ('abcdef',)]
+    filename = str(tmpdir.join('table.html'))
+    write = tohtml if writer == 'tohtml' else teehtml
+    result = write(table, filename, encoding='utf-8', truncate=3,
+                   index_header=index_header)
+    if writer == 'teehtml':
+        assert list(result) == table
+    expected = text_type(header)
+    if index_header:
+        expected = '0|' + expected
+    with io.open(filename, encoding='utf-8') as source:
+        output = source.read()
+    assert '<th>%s</th>' % expected[:3] in output
+    assert '<td>abc</td>' in output
