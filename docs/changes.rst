@@ -4,6 +4,12 @@ Changes
 Version 1.7.31
 --------------
 
+* Escape literal values in the built-in ``toxml()`` styles and text
+  headers written in the ``head`` element, escaping reserved characters.
+  Raw markup and pre-escaped entities in these values are now escaped too.
+  Values in custom style templates, prologues and epilogues retain raw markup.
+  By :user:`IlyaKhalafi`, :issue:`755`.
+
 * Keep the header when ``toavro()`` writes a table without data rows and no
   ``schema`` is given. Every field is written as a nullable string, instead
   of an Avro file with no fields that reads back with an empty header.

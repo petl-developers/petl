@@ -614,3 +614,79 @@ def test_toxml22():
         prologue='<td ABCD="A" N123="0" />', 
         epilogue='<td ABCD="Z" N123="9" />'
     )
+
+
+@pytest.mark.parametrize('style', ['tag', 'name', 'attribute'])
+@pytest.mark.parametrize('value', [
+    u'R&D <review> "quoted" &amp;', u'caf\u00e9',
+    'first\r\nsecond\tthird', '', 42, False, None,
+])
+def test_toxml_escapes_values(tmpdir, style, value):
+    from xml.etree import ElementTree
+    from petl.compat import text_type
+
+    filename = str(tmpdir.join('values.xml'))
+    table = (row for row in [('label',), (value,)])
+    toxml(table, filename, root='table', rows='row/col', style=style)
+    root = ElementTree.parse(filename).getroot()
+    if style == 'tag':
+        actual = root.find('.//col').text
+    elif style == 'name':
+        actual = root.find('.//label').text
+    else:
+        actual = root.find('.//col').get('label')
+    # An empty XML text node is represented as None by ElementTree.
+    assert (actual or '') == text_type(value)
+
+
+@pytest.mark.parametrize('header', [u'R&D <review> "quoted"', 'line\rbreak'])
+def test_toxml_escapes_header(tmpdir, header):
+    from xml.etree import ElementTree
+
+    filename = str(tmpdir.join('header.xml'))
+    toxml([(header,), ('value',)], filename)
+    root = ElementTree.parse(filename).getroot()
+    assert root.find('.//th').text == header
+    assert root.find('.//td').text == 'value'
+
+
+def test_toxml_keeps_custom_markup(tmpdir):
+    from xml.etree import ElementTree
+
+    filename = str(tmpdir.join('custom.xml'))
+    toxml([['label'], ['<b>value</b>']], filename,
+          root='table', rows='body',
+          style=' <row><col>{label}</col></row>\n',
+          prologue='<before/>', epilogue='<after/>')
+    root = ElementTree.parse(filename).getroot()
+    assert root.find('.//col/b').text == 'value'
+    assert root.find('.//before') is not None
+    assert root.find('.//after') is not None
+
+
+def test_toxml_ignores_extra_values(tmpdir):
+    from xml.etree import ElementTree
+
+    class Unformattable(object):
+        def __str__(self):
+            raise AssertionError('unused value must not be formatted')
+
+    filename = str(tmpdir.join('extra.xml'))
+    toxml([['label'], ['R&D', Unformattable()]], filename)
+    assert ElementTree.parse(filename).find('.//td').text == 'R&D'
+
+
+def test_toxml_preserves_value_formatting(tmpdir):
+    from xml.etree import ElementTree
+
+    class Formatted(object):
+        def __str__(self):
+            return 'different representation'
+
+        def __format__(self, spec):
+            assert spec == ''
+            return 'R&D'
+
+    filename = str(tmpdir.join('formatted.xml'))
+    toxml([['label'], [Formatted()]], filename)
+    assert ElementTree.parse(filename).find('.//td').text == 'R&D'

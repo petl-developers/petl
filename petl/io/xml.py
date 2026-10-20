@@ -11,6 +11,7 @@ except ImportError:
 
 from operator import attrgetter
 import itertools
+from xml.sax.saxutils import escape
 from petl.compat import string_types, text_type
 
 
@@ -348,6 +349,11 @@ def toxml(table, target=None,
          <col><foo>b</foo><bar>2</bar></col>
         </row>
 
+    Built-in styles escape values as literal text. Field names written in
+    the `head` element are escaped regardless of the style. Values containing markup or already-escaped entities
+    are also treated as literal text. Values substituted into custom `style`
+    templates, and markup in `prologue` and `epilogue`, are written unchanged.
+
     The `toxml()` function is just a wrapper over :func:`petl.io.text.totext`.
     For advanced cases use a template with `totext()` for generating xml files.
 
@@ -369,8 +375,24 @@ def toxml(table, target=None,
     template = _build_cols(style, props, rows, True)
     bottom = _build_xml_footer(style, epilogue, rows, root)
 
+    if style in ('tag', 'name', 'attribute'):
+        entities = {'\r': '&#13;'}
+        if style == 'attribute':
+            entities.update({'"': '&quot;', '\n': '&#10;', '\t': '&#9;'})
+        table2 = _escape_xml_rows(table2, entities)
+
     totext(table2, source=target, encoding=encoding, errors='strict',
            template=template, prologue=top, epilogue=bottom)
+
+
+def _escape_xml_rows(table, entities):
+    """Escape data values while preserving field names and single-pass input."""
+    it = iter(table)
+    hdr = next(it, ())
+    yield hdr
+    for row in it:
+        yield tuple(escape(format(value), entities)
+                    for value in itertools.islice(row, len(hdr)))
 
 
 def _build_xml_header(style, props, root, head, rows, prologue, encoding):
@@ -441,7 +463,7 @@ def _build_cols_inline(props, path, is_value, use_tag):
         row = parts[-1]
     fld = '{{{0}}}' if is_value else '{0}'
     fmt = '<{0}>{1}</{0}>'.format(col, fld)
-    cols = [fmt.format(e) for e in props]
+    cols = [fmt.format(e if is_value else escape(e, {'\r': '&#13;'})) for e in props]
     tags = ''.join(cols)
     res = ' <{0}>{1}</{0}>\n'.format(row, tags)
     return res
