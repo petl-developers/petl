@@ -4,6 +4,11 @@ Changes
 Version 1.7.31
 --------------
 
+* Return an empty list from ``intervaljoinvalues()`` with ``lkey`` and
+  ``rkey`` for left rows whose key is not in the right table, as for rows
+  with no overlapping intervals, instead of raising ``KeyError``.
+  By :user:`LuisFigueroaG`, :issue:`760`.
+
 * Convert HTML header values to text before truncation in ``tohtml()``
   and ``teehtml()``, avoiding errors for non-string headers.
   By :user:`IlyaKhalafi`, :issue:`756`.

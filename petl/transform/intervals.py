@@ -849,7 +849,13 @@ def intervaljoinvalues(left, right, value, lstart='start', lstop='stop',
     else:
         lkp = facetintervallookup(right, rkey, start=rstart, stop=rstop,
                                   value=value, include_stop=include_stop)
-        f = lambda row: lkp[row[lkey]].search(row[lstart], row[lstop])
+
+        def f(row):
+            # a key missing from the right table has no overlapping intervals
+            facet = lkp.get(row[lkey])
+            if facet is None:
+                return []
+            return facet.search(row[lstart], row[lstop])
     return addfield(left, value, f)
         
         
