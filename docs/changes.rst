@@ -4,6 +4,11 @@ Changes
 Version 1.7.31
 --------------
 
+* Close the table with a bottom border when ``look()`` uses the default grid
+  style on a table without data rows, as the simple style already does, so
+  the output is a valid reStructuredText grid table.
+  By :user:`LuisFigueroaG`, :issue:`761`.
+
 * Return an empty list from ``intervaljoinvalues()`` with ``lkey`` and
   ``rkey`` for left rows whose key is not in the right table, as for rows
   with no overlapping intervals, instead of raising ``KeyError``.
