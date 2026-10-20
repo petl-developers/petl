@@ -431,3 +431,44 @@ def test_expr_nok_untrusted():
         with pytest.raises(KeyError) as exc_info:
             fu({'foo': 3, 'bar': 2})
             assert exc_info is not None
+
+
+def test_distinctvalues():
+    import petl as etl
+
+    table = [('name', 'score'), ('b', 2), ('a', 1), ('b', 2), ('a', 3)]
+    assert etl.distinctvalues(table, 'name') == ['b', 'a']
+    assert etl.distinctvalues(table, 1) == [2, 1, 3]
+    assert etl.distinctvalues(table, 'name', 'score') == [
+        ('b', 2), ('a', 1), ('a', 3)]
+    assert etl.wrap(table).distinctvalues('name') == ['b', 'a']
+    assert etl.distinctvalues((row for row in table), 'name') == ['b', 'a']
+
+
+def test_distinctvalues_empty():
+    import petl as etl
+
+    assert etl.distinctvalues([('name',)], 'name') == []
+
+
+def test_distinctvalues_missing():
+    import petl as etl
+
+    table = [('name', 'score'), ('b',), ('a', 1), ('b',), ('c', None)]
+    assert etl.distinctvalues(table, 'score') == [None, 1]
+    assert etl.distinctvalues(table, 'score', missing='unknown') == [
+        'unknown', 1, None]
+
+
+def test_distinctvalues_unhashable():
+    import petl as etl
+
+    with pytest.raises(TypeError):
+        etl.distinctvalues([['value'], [[1, 2]]], 'value')
+
+
+def test_distinctvalues_invalid_field():
+    import petl as etl
+
+    with pytest.raises(FieldSelectionError):
+        etl.distinctvalues([['value'], [1]], 'missing')

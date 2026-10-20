@@ -4,6 +4,10 @@ Changes
 Version 1.7.31
 --------------
 
+* Add ``distinctvalues()`` to collect unique field values in their
+  original table order, including compound field selections.
+  By :user:`IlyaKhalafi`, :issue:`147`.
+
 * Keep the header when ``toavro()`` writes a table without data rows and no
   ``schema`` is given. Every field is written as a nullable string, instead
   of an Avro file with no fields that reads back with an empty header.
