@@ -404,6 +404,33 @@ def iterdata(table, *sliceargs):
     return it
 
 
+def distinctvalues(table, *field, **kwargs):
+    """
+    Return distinct values in the order they first occur. E.g.::
+
+        >>> import petl as etl
+        >>> table = [('name', 'score'), ('b', 2), ('a', 1), ('b', 3)]
+        >>> etl.distinctvalues(table, 'name')
+        ['b', 'a']
+        >>> table = [('name', 'score'), ('b', 2), ('a', 1), ('b', 2)]
+        >>> etl.distinctvalues(table, 'name', 'score')
+        [('b', 2), ('a', 1)]
+
+    Field names, indexes and the `missing` option are as for :func:`values`.
+    Values must be hashable, as with ``set(values(...))``. The result is
+    materialized as a list and requires memory proportional to the number
+    of distinct values.
+
+    .. versionadded:: 1.7.31
+
+    """
+
+    return list(OrderedDict.fromkeys(values(table, *field, **kwargs)))
+
+
+Table.distinctvalues = distinctvalues
+
+
 def dicts(table, *sliceargs, **kwargs):
     """
     Return a container supporting iteration over rows as dicts. E.g.::
