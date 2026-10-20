@@ -921,6 +921,44 @@ else:
         ieq(expect, actual)
         ieq(expect, actual)
 
+    def test_intervaljoinvalues_faceted_missing_key():
+
+        left = (('fruit', 'begin', 'end'),
+                ('apple', 1, 2),
+                ('banana', 1, 2),
+                ('orange', 2, 5))
+
+        right = (('type', 'start', 'stop', 'value'),
+                 ('apple', 1, 4, 'foo'),
+                 ('orange', 4, 9, 'baz'))
+
+        expect = (('fruit', 'begin', 'end', 'value'),
+                  ('apple', 1, 2, ['foo']),
+                  ('banana', 1, 2, []),
+                  ('orange', 2, 5, ['baz']))
+
+        actual = intervaljoinvalues(left, right, lstart='begin', lstop='end',
+                                    rstart='start', rstop='stop', lkey='fruit',
+                                    rkey='type', value='value')
+
+        ieq(expect, actual)
+        ieq(expect, actual)
+
+        # right table without data rows
+        right = (('type', 'start', 'stop', 'value'),)
+
+        expect = (('fruit', 'begin', 'end', 'value'),
+                  ('apple', 1, 2, []),
+                  ('banana', 1, 2, []),
+                  ('orange', 2, 5, []))
+
+        actual = intervaljoinvalues(left, right, lstart='begin', lstop='end',
+                                    rstart='start', rstop='stop', lkey='fruit',
+                                    rkey='type', value='value')
+
+        ieq(expect, actual)
+        ieq(expect, actual)
+
     def test_subtract_1():
 
         left = (('begin', 'end', 'label'),

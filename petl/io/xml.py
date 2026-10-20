@@ -405,7 +405,11 @@ def toxml(table, target=None,
            template=template, prologue=top, epilogue=bottom)
 
 
-_invalid_xml_chars = re.compile(u'[\x00-\x08\x0b\x0c\x0e-\x1f\ufffe\uffff]')
+# List forbidden XML 1.0 controls and U+FFFE/U+FFFF explicitly for CodeQL.
+_invalid_xml_chars = re.compile(
+    u'[\x00\x01\x02\x03\x04\x05\x06\x07\x08\x0b\x0c'
+    u'\x0e\x0f\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19'
+    u'\x1a\x1b\x1c\x1d\x1e\x1f\ufffe\uffff]')
 
 
 def _escape_xml_text(value, entities):
