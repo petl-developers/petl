@@ -4,6 +4,10 @@ Changes
 Version 1.7.31
 --------------
 
+* Convert HTML header values to text before truncation in ``tohtml()``
+  and ``teehtml()``, avoiding errors for non-string headers.
+  By :user:`IlyaKhalafi`, :issue:`756`.
+
 * Keep the header when ``toavro()`` writes a table without data rows and no
   ``schema`` is given. Every field is written as a nullable string, instead
   of an Avro file with no fields that reads back with an empty header.
