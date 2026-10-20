@@ -5,7 +5,9 @@ Version 1.7.31
 --------------
 
 * Add opt-in ``escape=True`` to ``toxml()`` for literal XML values and
-  header text. Existing calls keep their output by default. Custom style
+  header text. Forbidden XML 1.0 controls and U+FFFE/U+FFFF raise
+  ``ValueError`` in escaped text. Existing calls keep their output by
+  default. Custom style
   values, prologues and epilogues remain raw. Indexed rows and duplicate
   field names retain the existing writer semantics.
   By :user:`IlyaKhalafi`, :issue:`755`.

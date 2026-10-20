@@ -847,3 +847,104 @@ def test_toxml_accepts_formatter_parameter_field_names(field, escape):
     sink = MemorySource()
     toxml([(field,), ('value',)], sink, escape=escape)
     assert ElementTree.fromstring(sink.getvalue()).find('.//td').text == 'value'
+
+
+@pytest.mark.parametrize('codepoint', list(range(9)) + [11, 12] +
+                         list(range(14, 32)) + [0xfffe, 0xffff])
+@pytest.mark.parametrize('style', ['tag', 'name', 'attribute'])
+def test_toxml_rejects_forbidden_characters_in_values(codepoint, style):
+    from petl.io.sources import MemorySource
+
+    with pytest.raises(ValueError) as excinfo:
+        toxml([('label',), (u'before' + (u'%c' % codepoint) + u'after',)],
+              MemorySource(), style=style, escape=True)
+    assert str(excinfo.value) == (
+        'XML 1.0 cannot represent character U+%04X' % codepoint)
+
+
+@pytest.mark.parametrize('codepoint', [0, 11, 12, 31, 0xfffe, 0xffff])
+def test_toxml_rejects_forbidden_characters_in_header(codepoint):
+    from petl.io.sources import MemorySource
+
+    with pytest.raises(ValueError) as excinfo:
+        toxml([(u'before' + (u'%c' % codepoint) + u'after',)],
+              MemorySource(), escape=True)
+    assert 'U+%04X' % codepoint in str(excinfo.value)
+
+
+@pytest.mark.parametrize('style', ['tag', 'name', 'attribute'])
+@pytest.mark.parametrize('value', [u'\t\n\r', u'\x7f\x85',
+                                   u'\ud7ff\ue000\ufffd', u'\U0001f600'])
+def test_toxml_keeps_representable_characters(style, value):
+    from xml.etree import ElementTree
+    from petl.io.sources import MemorySource
+
+    sink = MemorySource()
+    toxml([('label',), (value,)], sink, root='table', rows='row/col',
+          style=style, escape=True)
+    root = ElementTree.fromstring(sink.getvalue())
+    if style == 'tag':
+        actual = root.find('.//col').text
+    elif style == 'name':
+        actual = root.find('.//label').text
+    else:
+        actual = root.find('.//col').get('label')
+    assert actual == value
+
+
+@pytest.mark.parametrize('escape', [False, True])
+def test_toxml_leaves_custom_template_values_unvalidated(escape):
+    from petl.io.sources import MemorySource
+
+    sink = MemorySource()
+    toxml([('label',), ('raw\x0bvalue',)], sink, escape=escape,
+          style='<row>{label}</row>')
+    assert b'raw\x0bvalue' in sink.getvalue()
+
+
+def test_toxml_keeps_forbidden_characters_with_raw_default():
+    from petl.io.sources import MemorySource
+
+    table = [('head\x0btext',), ('value\x00text',)]
+    for kwargs in ({}, {'escape': False}):
+        sink = MemorySource()
+        toxml(table, sink, **kwargs)
+        assert b'head\x0btext' in sink.getvalue()
+        assert b'value\x00text' in sink.getvalue()
+
+
+def test_toxml_does_not_validate_omitted_header_text():
+    from xml.etree import ElementTree
+    from petl.io.sources import MemorySource
+
+    sink = MemorySource()
+    toxml([('head\x0btext',), ('value',)], sink,
+          root='table', rows='row/col', escape=True)
+    assert ElementTree.fromstring(sink.getvalue()).find('.//col').text == 'value'
+
+
+def test_toxml_validates_formatted_output_only():
+    from xml.etree import ElementTree
+    from petl.io.sources import MemorySource
+
+    class Formatted(object):
+        def __str__(self):
+            return 'unused\x0btext'
+
+        def __format__(self, spec):
+            return 'R&D'
+
+    sink = MemorySource()
+    toxml([('label',), (Formatted(),)], sink, escape=True)
+    assert ElementTree.fromstring(sink.getvalue()).find('.//td').text == 'R&D'
+
+
+def test_toxml_rejects_forbidden_formatted_output():
+    from petl.io.sources import MemorySource
+
+    class Formatted(object):
+        def __format__(self, spec):
+            return 'bad\x0btext'
+
+    with pytest.raises(ValueError):
+        toxml([('label',), (Formatted(),)], MemorySource(), escape=True)

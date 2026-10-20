@@ -11,6 +11,7 @@ except ImportError:
 
 from operator import attrgetter
 import itertools
+import re
 from xml.sax.saxutils import escape as _xml_escape
 from string import Formatter
 from petl.compat import string_types, text_type
@@ -354,6 +355,8 @@ def toxml(table, target=None,
     Set `escape=True` to escape literal values in the built-in styles and
     field names written as text in the `head` element. Markup and already
     escaped entities in those values are treated as literal text too.
+    XML 1.0-forbidden control characters in escaped values or header text
+    raise `ValueError`, as do U+FFFE and U+FFFF.
     This does not make field names valid XML element or attribute names.
     Values substituted into custom `style` templates, and markup in
     `prologue` and `epilogue`, are written unchanged even with `escape=True`.
@@ -386,8 +389,8 @@ def toxml(table, target=None,
     sample, table2 = iterpeek(table, 2)
     props = fieldnames(sample)
 
-    head_props = ([_xml_escape(f, {'\r': '&#13;'}) for f in props]
-                  if escape else props)
+    head_props = ([_escape_xml_text(f, {'\r': '&#13;'}) for f in props]
+                  if escape and head else props)
     top = _build_xml_header(style, head_props, root, head, rows, prologue, encoding)
     template = _build_cols(style, props, rows, True)
     bottom = _build_xml_footer(style, epilogue, rows, root)
@@ -400,6 +403,18 @@ def toxml(table, target=None,
 
     totext(table2, source=target, encoding=encoding, errors='strict',
            template=template, prologue=top, epilogue=bottom)
+
+
+_invalid_xml_chars = re.compile(u'[\x00-\x08\x0b\x0c\x0e-\x1f\ufffe\uffff]')
+
+
+def _escape_xml_text(value, entities):
+    """Escape XML text, rejecting characters without an XML representation."""
+    invalid = _invalid_xml_chars.search(value)
+    if invalid is not None:
+        raise ValueError('XML 1.0 cannot represent character U+%04X' %
+                         ord(invalid.group()))
+    return _xml_escape(value, entities)
 
 
 class _XmlTemplate(object):
@@ -428,7 +443,7 @@ class _XmlTemplate(object):
                 value = self.formatter.convert_field(value, conversion)
             if spec:
                 spec = self.formatter.vformat(spec, (), kwargs)
-            output.append(_xml_escape(format(value, spec), self.entities))
+            output.append(_escape_xml_text(format(value, spec), self.entities))
         return ''.join(output)
 
 
