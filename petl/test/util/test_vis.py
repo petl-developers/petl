@@ -132,11 +132,19 @@ foo  bar
     etl.config.look_style = 'grid'
 
 
-def test_look_style_simple_no_data_rows():
+def test_look_no_data_rows():
     table = (('foo', 'bar'),)
+    actual = repr(look(table))
+    expect = """+-----+-----+
+| foo | bar |
++=====+=====+
++-----+-----+
+"""
+    eq_(expect, actual)
     actual = repr(look(table, style='simple'))
     expect = """===  ===
 foo  bar
+===  ===
 ===  ===
 """
     eq_(expect, actual)

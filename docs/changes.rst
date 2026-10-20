@@ -4,9 +4,9 @@ Changes
 Version 1.7.31
 --------------
 
-* Don't repeat the bottom border when ``look()`` uses ``style='simple'`` on a
-  table without data rows. The output now ends after the header separator,
-  as with the default grid style.
+* Close the table with a bottom border when ``look()`` uses the default grid
+  style on a table without data rows, as the simple style already does, so
+  the output is a valid reStructuredText grid table.
   By :user:`LuisFigueroaG`, :issue:`761`.
 
 * Return an empty list from ``intervaljoinvalues()`` with ``lkey`` and
