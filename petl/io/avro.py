@@ -378,6 +378,9 @@ def _build_schema_fields_from_values(peek, props):
     for row in peek:
         _update_field_defs_from(props, row, fields, previous, fill_missing)
         fill_missing = False
+    if fill_missing:
+        # no data rows to sample, keep the header with the default type
+        _update_field_defs_from(props, (), fields, previous, fill_missing)
 
     schema_fields = [item for item in fields.values()]
     return schema_fields

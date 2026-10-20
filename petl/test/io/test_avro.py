@@ -95,6 +95,9 @@ else:
     def test_toavro60():
         _write_to_avro_file(table60, schema6, print_tables=False)
 
+    def test_toavro_header_only():
+        _write_to_avro_file([('name', 'friends', 'age')], None)
+
     def test_appendavro11():
         _append_to_avro_file(table11, table12, schema1, table1)
 

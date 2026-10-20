@@ -4,8 +4,14 @@ Changes
 Version 1.7.31
 --------------
 
+* Keep the header when ``toavro()`` writes a table without data rows and no
+  ``schema`` is given. Every field is written as a nullable string, instead
+  of an Avro file with no fields that reads back with an empty header.
+  By :user:`LuisFigueroaG`, :issue:`754`.
+
 * Close database load cursors created by petl when truncation, insertion
   or input iteration fails.
+  By :user:`IlyaKhalafi`, :issue:`753`.
 
 * Return zero count and frequency from ``valuecount()`` on a table without
   data rows, instead of raising ``ZeroDivisionError``.
