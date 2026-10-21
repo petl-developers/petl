@@ -4,6 +4,10 @@ Changes
 Version 1.7.31
 --------------
 
+* Honor ``reverse=True`` in ``sortheader()``, which was ignored, so the
+  columns are ordered with the header sorted in descending order.
+  By :user:`LuisFigueroaG`, :issue:`762`.
+
 * Return an empty list from ``intervaljoinvalues()`` with ``lkey`` and
   ``rkey`` for left rows whose key is not in the right table, as for rows
   with no overlapping intervals, instead of raising ``KeyError``.
