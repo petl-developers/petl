@@ -4,13 +4,12 @@ Changes
 Version 1.7.31
 --------------
 
-* Add opt-in ``escape=True`` to ``toxml()`` for literal XML values and
-  header text. Forbidden XML 1.0 controls and U+FFFE/U+FFFF raise
-  ``ValueError`` in escaped text. Existing calls keep their output by
-  default. Custom style
-  values, prologues and epilogues remain raw. Indexed rows and duplicate
-  field names retain the existing writer semantics.
+* Add opt-in ``escape=True`` to ``toxml()`` for literal XML values and header text.
   By :user:`IlyaKhalafi`, :issue:`755`.
+
+* Honor ``reverse=True`` in ``sortheader()``, which was ignored, so the
+  columns are ordered with the header sorted in descending order.
+  By :user:`LuisFigueroaG`, :issue:`762`.
 
 * Return an empty list from ``intervaljoinvalues()`` with ``lkey`` and
   ``rkey`` for left rows whose key is not in the right table, as for rows

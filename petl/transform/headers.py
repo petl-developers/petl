@@ -445,7 +445,7 @@ class SortHeaderView(Table):
             hdr = next(it)
         except StopIteration:
             return
-        shdr = sorted(hdr)
+        shdr = sorted(hdr, reverse=self.reverse)
         indices = asindices(hdr, shdr)
         transform = rowgetter(*indices)
 
