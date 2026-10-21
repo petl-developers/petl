@@ -4,6 +4,9 @@ Changes
 Version 1.7.31
 --------------
 
+* Add opt-in ``escape=True`` to ``toxml()`` for literal XML values and header text.
+  By :user:`IlyaKhalafi`, :issue:`755`.
+
 * Honor ``reverse=True`` in ``sortheader()``, which was ignored, so the
   columns are ordered with the header sorted in descending order.
   By :user:`LuisFigueroaG`, :issue:`762`.
