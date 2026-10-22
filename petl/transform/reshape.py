@@ -605,12 +605,11 @@ def iterpivot(source, f1, f2, f3, aggfun, missing):
     except StopIteration:
         hdr = []
     flds = list(map(text_type, hdr))
-    f1i = [flds.index(field) for field in rowfields]
+    f1i = asindices(hdr, rowfields)
     f2i = flds.index(f2)
     f3i = flds.index(f3)
 
-    def getrowkey(row):
-        return tuple(row[index] for index in f1i)
+    getrowkey = rowgetter(*f1i)
 
     for v1, v1rows in itertools.groupby(it, key=getrowkey):
         outrow = list(v1) + [missing] * len(f2vals)

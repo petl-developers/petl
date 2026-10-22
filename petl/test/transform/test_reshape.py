@@ -668,6 +668,16 @@ def test_pivot_compound_header_only(fields):
         pivot(table, fields(['city', 'year']), 'kind', 'value', sum))
 
 
+@pytest.mark.parametrize("presorted", [False, True])
+def test_pivot_compound_duplicate_header_names(presorted):
+    table = [('x', 'x', 'kind', 'value'),
+             ('A', 1, 'p', 10),
+             ('A', 2, 'p', 20)]
+    expected = [('x', 'x', 'p'), ('A', 1, 10), ('A', 2, 20)]
+    ieq(expected, pivot(table, ['x', 'x'], 'kind', 'value', sum,
+                        presorted=presorted))
+
+
 def test_pivot():
 
     table1 = (('region', 'gender', 'style', 'units'),
