@@ -549,6 +549,13 @@ def pivot(table, f1, f2, f3, aggfun, missing=None,
         | 'girl' |    19 |   24 |   9 |
         +--------+-------+------+-----+
 
+    Pass a list or tuple of field names as `f1` to group rows by a compound
+    key. Each key field is retained as a separate output column::
+
+        >>> table5 = etl.pivot(table1, ['region', 'gender'], 'style', 'units', sum)
+        >>> list(table5)[0]
+        ('region', 'gender', 'fancy', 'golf', 'tee')
+
     See also :func:`petl.transform.reshape.recast`.
 
     """
@@ -568,7 +575,8 @@ class PivotView(Table):
         if presorted:
             self.source = source
         else:
-            self.source = sort(source, key=(f1, f2), buffersize=buffersize,
+            rowfields = tuple(f1) if isinstance(f1, (list, tuple)) else (f1,)
+            self.source = sort(source, key=rowfields + (f2,), buffersize=buffersize,
                                tempdir=tempdir, cache=cache)
         self.f1, self.f2, self.f3 = f1, f2, f3
         self.aggfun = aggfun
@@ -585,7 +593,8 @@ def iterpivot(source, f1, f2, f3, aggfun, missing):
     f2vals = set(itervalues(source, f2))  # TODO only make one pass
     f2vals = list(f2vals)
     f2vals.sort()
-    outhdr = [f1]
+    rowfields = list(f1) if isinstance(f1, (list, tuple)) else [f1]
+    outhdr = rowfields[:]
     outhdr.extend(f2vals)
     yield tuple(outhdr)
 
@@ -596,15 +605,18 @@ def iterpivot(source, f1, f2, f3, aggfun, missing):
     except StopIteration:
         hdr = []
     flds = list(map(text_type, hdr))
-    f1i = flds.index(f1)
+    f1i = asindices(hdr, rowfields)
     f2i = flds.index(f2)
     f3i = flds.index(f3)
-    for v1, v1rows in itertools.groupby(it, key=operator.itemgetter(f1i)):
-        outrow = [v1] + [missing] * len(f2vals)
+
+    getrowkey = rowgetter(*f1i)
+
+    for v1, v1rows in itertools.groupby(it, key=getrowkey):
+        outrow = list(v1) + [missing] * len(f2vals)
         for v2, v12rows in itertools.groupby(v1rows,
                                              key=operator.itemgetter(f2i)):
             aggval = aggfun([row[f3i] for row in v12rows])
-            outrow[1 + f2vals.index(v2)] = aggval
+            outrow[len(rowfields) + f2vals.index(v2)] = aggval
         yield tuple(outrow)
 
 

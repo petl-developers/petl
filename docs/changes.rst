@@ -4,6 +4,8 @@ Changes
 Version 1.7.31
 --------------
 
+* Support compound row keys in :func:`petl.transform.reshape.pivot` (#398).
+
 * Add opt-in ``escape=True`` to ``toxml()`` for literal XML values and header text.
   By :user:`IlyaKhalafi`, :issue:`755`.
 
