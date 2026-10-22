@@ -67,34 +67,32 @@ class XLSXView(Table):
             wb = openpyxl.load_workbook(filename=source2,
                                         read_only=self.read_only,
                                         **self.kwargs)
-            if self.sheet is None:
-                ws = wb[wb.sheetnames[0]]
-            elif isinstance(self.sheet, int):
-                ws = wb[wb.sheetnames[self.sheet]]
-            else:
-                ws = wb[str(self.sheet)]
-            if self.range_string is not None:
-                bounds = range_boundaries(self.range_string)
-                if not any(bounds):
-                    raise IndexError(self.range_string +
-                                     " is not a valid coordinate or range")
-                min_col, min_row, max_col, max_row = bounds
-                if min_row == 0 or max_row == 0:
-                    raise ValueError("Row numbers must be at least 1")
-                rows = ws.iter_rows(min_row=min_row, min_col=min_col,
-                                    max_row=max_row, max_col=max_col)
-            else:
-                rows = ws.iter_rows(min_row=self.min_row,
-                                    min_col=self.min_col,
-                                    max_row=self.max_row,
-                                    max_col=self.max_col)
-            for row in rows:
-                yield tuple(cell.value for cell in row)
             try:
-                wb._archive.close()
-            except AttributeError:
-                # just here in case openpyxl stops exposing an _archive property.
-                pass
+                if self.sheet is None:
+                    ws = wb[wb.sheetnames[0]]
+                elif isinstance(self.sheet, int):
+                    ws = wb[wb.sheetnames[self.sheet]]
+                else:
+                    ws = wb[str(self.sheet)]
+                if self.range_string is not None:
+                    bounds = range_boundaries(self.range_string)
+                    if not any(bounds):
+                        raise IndexError(self.range_string +
+                                         " is not a valid coordinate or range")
+                    min_col, min_row, max_col, max_row = bounds
+                    if min_row == 0 or max_row == 0:
+                        raise ValueError("Row numbers must be at least 1")
+                    rows = ws.iter_rows(min_row=min_row, min_col=min_col,
+                                        max_row=max_row, max_col=max_col)
+                else:
+                    rows = ws.iter_rows(min_row=self.min_row,
+                                        min_col=self.min_col,
+                                        max_row=self.max_row,
+                                        max_col=self.max_col)
+                for row in rows:
+                    yield tuple(cell.value for cell in row)
+            finally:
+                wb.close()
 
 
 def toxlsx(tbl, filename, sheet=None, write_header=True, mode="replace"):
