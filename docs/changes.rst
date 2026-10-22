@@ -4,6 +4,11 @@ Changes
 Version 1.7.31
 --------------
 
+* Accept a field index in ``capture()``, as in ``split()``, instead of
+  raising ``ValueError`` while building the header when the original field
+  is not kept.
+  By :user:`LuisFigueroaG`, :issue:`763`.
+
 * Add opt-in ``escape=True`` to ``toxml()`` for literal XML values and header text.
   By :user:`IlyaKhalafi`, :issue:`755`.
 

@@ -30,6 +30,10 @@ def test_capture():
                      include_original=False)
     ieq(expectation, result)
 
+    # integer field reference
+    result = capture(table, 1, '(\\w)(\\d+)', ('treat', 'time'))
+    ieq(expectation, result)
+
     # what about including the original field?
     expectation = (('id', 'variable', 'value', 'treat', 'time'),
                    ('1', 'A1', '12', 'A', '1'),
