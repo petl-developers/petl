@@ -4,6 +4,8 @@ Changes
 Version 1.7.31
 --------------
 
+* Close XLSX workbooks when iteration ends early or raises an exception.
+
 * Add opt-in ``escape=True`` to ``toxml()`` for literal XML values and header text.
   By :user:`IlyaKhalafi`, :issue:`755`.
 
