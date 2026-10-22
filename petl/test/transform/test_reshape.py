@@ -632,6 +632,42 @@ def test_transpose_empty():
     ieq(expect2, table2)
 
 
+@pytest.mark.parametrize("fields", [list, tuple])
+@pytest.mark.parametrize("presorted,buffersize",
+                         [(True, None), (False, None), (False, 2)])
+def test_pivot_compound_row_keys(fields, presorted, buffersize):
+    table = [('city', 'year', 'kind', 'value'),
+             ('A', 2025, 'x', 1),
+             ('A', 2025, 'x', 2),
+             ('A', 2025, 'y', 4),
+             ('A', 2026, 'x', 8),
+             ('B', 2025, 'y', 16)]
+    if not presorted:
+        table = [table[0]] + list(reversed(table[1:]))
+    result = pivot(table, fields(['city', 'year']), 'kind', 'value',
+                   sum, missing=0, presorted=presorted, buffersize=buffersize)
+    expected = [('city', 'year', 'x', 'y'),
+                ('A', 2025, 3, 4),
+                ('A', 2026, 8, 0),
+                ('B', 2025, 0, 16)]
+    ieq(expected, result)
+    ieq(expected, result)
+
+
+@pytest.mark.parametrize("fields", [list, tuple])
+def test_pivot_single_field_sequence(fields):
+    table = [('city', 'kind', 'value'), ('A', 'x', 1), ('B', 'y', 2)]
+    ieq([('city', 'x', 'y'), ('A', 1, None), ('B', None, 2)],
+        pivot(table, fields(['city']), 'kind', 'value', sum))
+
+
+@pytest.mark.parametrize("fields", [list, tuple])
+def test_pivot_compound_header_only(fields):
+    table = [('city', 'year', 'kind', 'value')]
+    ieq([('city', 'year')],
+        pivot(table, fields(['city', 'year']), 'kind', 'value', sum))
+
+
 def test_pivot():
 
     table1 = (('region', 'gender', 'style', 'units'),
