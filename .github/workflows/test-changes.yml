@@ -65,6 +65,8 @@ jobs:
           # Handle random test failures with the versions below
           - python: "3.6"
             os: "ubuntu-24.04"
+          - mode: "full"
+          - scope: "full"
           - python: "3.9"
             os: "ubuntu-latest"
             mode: "basic"
