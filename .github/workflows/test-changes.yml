@@ -41,8 +41,7 @@ jobs:
       fail-fast: false
       matrix:
         #@ https://github.com/actions/runner-images#available-images
-        os:
-          ["ubuntu-latest", "windows-latest", "macos-latest"]
+        os: ["ubuntu-latest", "windows-latest", "macos-latest"]
         #@ https://github.com/marketplace/actions/setup-python
         #@ https://github.com/actions/setup-python/blob/main/docs/advanced-usage.md#python
         python:
@@ -52,27 +51,30 @@ jobs:
           # Default configuration for all jobs
           - mode: "full"
           - scope: "full"
-          - install: "no"
+          - legacy: "no"
           - primary: "3.10"
           # Conditional configuration overrides
           - python: "3.6"
-            install: "yes"
+            legacy: "yes"
           - python: "3.7"
-            install: "yes"
+            legacy: "yes"
           - os: "windows-latest"
             mode: "basic"
             scope: "basic"
-          # Handle random test failures
-          - os: "ubuntu-latest"
-            python: "3.9"
-            mode: "basic"
-            scope: "basic"
           # Additional Jobs not included in the matrix above
-          - python: "2.7"
+          # Handle random test failures with the versions below
+          - python: "3.6"
+            os: "ubuntu-24.04"
+          - python: "3.9"
             os: "ubuntu-latest"
             mode: "basic"
+            scope: "basic"
+          # Deprecated Python2.7 will be removed soon
+          - python: "2.7"
+            os: "ubuntu-24.04"
+            mode: "basic"
             scope: "full"
-            install: "yes"
+            legacy: "yes"
         exclude:
           # macos-latest == macos-15-arm64
           # macos-latest-large == macos-15-intel
@@ -83,6 +85,9 @@ jobs:
           # python 3.7 too slow on ubuntu-latest
           - os: "ubuntu-latest"
             python: "3.7"
+          # 3.6 does not build on ubuntu-latest 26.04
+          - os: "ubuntu-latest"
+            python: "3.6"
 
     runs-on: "${{ matrix.os }}"
     steps:
@@ -113,17 +118,12 @@ jobs:
           sudo apt-get install -y --no-install-recommends default-libmysqlclient-dev
           echo "::endgroup::"
 
-      - name: Set up Python ${{ matrix.python }} with install = ${{ matrix.install }}
-        if: matrix.install == 'no'
-        uses: actions/setup-python@v7
-        with:
-          python-version: ${{ matrix.python }}
-
-      - name: Set up Python ${{ matrix.python }} discontinued on ${{ matrix.os }}
-        if: matrix.install == 'yes'
+      - name: Set up Python ${{ matrix.python }}
         uses: MatteoH2O1999/setup-python@v6
         with:
           python-version: ${{ matrix.python }}
+          allow-build: info
+          cache-build: true
           cache: pip
 
       - name: Upgrade pip
@@ -145,7 +145,7 @@ jobs:
             - matrix.os: ${{ matrix.os }}
             - matrix.mode: ${{ matrix.mode }}
             - matrix.scope: ${{ matrix.scope }}
-            - matrix.install: ${{ matrix.install }}
+            - matrix.legacy: ${{ matrix.legacy }}
 
       - name: Install test dependencies
         run: |
@@ -157,15 +157,15 @@ jobs:
         if: matrix.os == 'ubuntu-latest' && matrix.python == matrix.primary
         run: |
           echo "::notice file=requirements-remote.txt,line=4,title=SMB environment configuration::Setup SMB environment variable to trigger testing in Petl"
-          echo 'PETL_TEST_SMB=smb://WORKGROUP;petl:test@localhost/public/' >> $GITHUB_ENV
+          echo 'PETL_TEST_SMB=smb://WORKGROUP;petl:test@localhost/public/' >> "$GITHUB_ENV"
           echo "::notice file=requirements-remote.txt,line=5,title=SFTP environment configuration::Setup SFTP environment variable to trigger testing in Petl"
-          echo 'PETL_TEST_SFTP=sftp://petl:test@localhost:2244/public/' >> $GITHUB_ENV
+          echo 'PETL_TEST_SFTP=sftp://petl:test@localhost:2244/public/' >> "$GITHUB_ENV"
           echo "::group::Install remote test dependencies"
           python -m pip install --prefer-binary -r requirements-remote.txt
           echo "::endgroup::"
 
-      - name: Install containers for remote filesystem testing with install = ${{ matrix.install }}
-        if: matrix.os == 'ubuntu-latest' && matrix.install == 'no'
+      - name: Install containers for remote filesystem testing (legacy = ${{ matrix.legacy }})
+        if: matrix.os == 'ubuntu-latest' && matrix.legacy != 'yes'
         run: |
           echo "::group::Setup docker for SMB at: ${{ env.PETL_TEST_SMB }}$"
           docker run -it --name samba -p 139:139 -p 445:445 -d "dperson/samba" -p -u "petl;test" -s "public;/public-dir;yes;no;yes;all"
@@ -202,8 +202,8 @@ jobs:
           python -m pip install --prefer-binary -r requirements-formats.txt
           echo "::endgroup::"
 
-      - name: Install optional test dependencies with install = ${{ matrix.install }}
-        if: matrix.os == 'ubuntu-latest' && matrix.install == 'no'
+      - name: Install optional test dependencies (legacy = ${{ matrix.legacy }})
+        if: matrix.os == 'ubuntu-latest' && matrix.legacy != 'yes'
         env:
           DISABLE_BLOSC_AVX2: 1
         run: |
@@ -267,7 +267,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python: ['3.10']
+        python: ["3.10"]
 
     steps:
       - name: Checkout source code at ${{ inputs.branch_commit_or_ref || github.ref }}
