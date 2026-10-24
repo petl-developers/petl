@@ -4,6 +4,11 @@ Changes
 Version 1.7.31
 --------------
 
+* Allow importing ``petl`` when a standard stream's binary buffer has been
+  detached, which raises ``ValueError`` on Python 3.15.1. Continue trying
+  the existing fallbacks for both standard input and standard output.
+  By :user:`KennyMcSimpson`, :issue:`768`.
+
 * Add opt-in ``escape=True`` to ``toxml()`` for literal XML values and header text.
   By :user:`IlyaKhalafi`, :issue:`755`.
 
