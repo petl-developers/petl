@@ -4,6 +4,9 @@ Changes
 Version 1.7.31
 --------------
 
+* Pass whole rows to simple aggregation functions when both ``key`` and
+  ``value`` are ``None``, instead of raising ``FieldSelectionError``.
+
 * Add opt-in ``escape=True`` to ``toxml()`` for literal XML values and header text.
   By :user:`IlyaKhalafi`, :issue:`755`.
 
