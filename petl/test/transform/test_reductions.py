@@ -176,6 +176,24 @@ def test_aggregate_simple_key_is_None():
     ieq(expect5, table5)
     ieq(expect5, table5)
 
+def test_aggregate_simple_whole_records():
+    table = (('foo', 'bar'), ('a', 3), ('b', 7))
+
+    def aggregation(rows):
+        return sum(row['bar'] for row in rows)
+
+    actual = aggregate(table, None, aggregation)
+    expect = (('value',), (10,))
+    ieq(expect, actual)
+
+
+def test_aggregate_simple_whole_records_single_pass():
+    table = iter((('foo', 'bar'), ('a', 3), ('b', 7)))
+    actual = aggregate(table, None, list)
+    expect = (('value',), ([('a', 3), ('b', 7)],))
+    ieq(expect, actual)
+
+
 def test_aggregate_multifield():
     
     table1 = (('foo', 'bar'),
