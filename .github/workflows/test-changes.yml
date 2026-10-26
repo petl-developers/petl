@@ -121,7 +121,7 @@ jobs:
           echo "::endgroup::"
 
       - name: Set up Python ${{ matrix.python }}
-        uses: MatteoH2O1999/setup-python@v6
+        uses: MatteoH2O1999/setup-python@master
         with:
           python-version: ${{ matrix.python }}
           allow-build: info
