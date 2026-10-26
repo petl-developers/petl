@@ -4,6 +4,11 @@ Changes
 Version 1.7.31
 --------------
 
+* Ignore values beyond the header in ``columns()`` and ``facetcolumns()``
+  even when ``missing`` matches a field name or is unhashable. This avoids
+  appending extra values to a column or raising ``TypeError`` on long rows.
+  By :user:`akashmalbari`.
+
 * Add opt-in ``escape=True`` to ``toxml()`` for literal XML values and header text.
   By :user:`IlyaKhalafi`, :issue:`755`.
 
