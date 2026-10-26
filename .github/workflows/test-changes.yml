@@ -114,16 +114,11 @@ jobs:
           echo "::endgroup::"
 
       - name: Set up Python ${{ matrix.python }} with install = ${{ matrix.install }}
-        if: matrix.install == 'no'
-        uses: actions/setup-python@v7
-        with:
-          python-version: ${{ matrix.python }}
-
-      - name: Set up Python ${{ matrix.python }} discontinued on ${{ matrix.os }}
-        if: matrix.install == 'yes'
         uses: MatteoH2O1999/setup-python@master
         with:
           python-version: ${{ matrix.python }}
+          allow-build: info
+          cache-build: true
           cache: pip
 
       - name: Upgrade pip
