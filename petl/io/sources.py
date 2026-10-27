@@ -103,9 +103,13 @@ class ZipSource(object):
         zf = zipfile.ZipFile(self.filename, mode, **self.kwargs)
         try:
             if self.pwd is not None:
-                yield zf.open(self.membername, mode, self.pwd)
+                member = zf.open(self.membername, mode, self.pwd)
             else:
-                yield zf.open(self.membername, mode)
+                member = zf.open(self.membername, mode)
+            try:
+                yield member
+            finally:
+                member.close()
         finally:
             zf.close()
 

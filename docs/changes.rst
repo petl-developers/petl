@@ -4,6 +4,10 @@ Changes
 Version 1.7.31
 --------------
 
+* Close ZIP member streams before their archives in ``ZipSource``, allowing
+  exports such as ``tocsv()`` to finish and releasing retained reader handles
+  after normal or interrupted context exits.
+
 * Add opt-in ``escape=True`` to ``toxml()`` for literal XML values and header text.
   By :user:`IlyaKhalafi`, :issue:`755`.
 
