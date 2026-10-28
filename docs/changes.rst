@@ -4,6 +4,10 @@ Changes
 Version 1.7.31
 --------------
 
+* Close ZIP member streams before their archives in ``ZipSource``, allowing
+  exports such as ``tocsv()`` to finish and releasing retained reader handles
+  after normal or interrupted context exits.
+  
 * Ignore values beyond the header in ``columns()`` and ``facetcolumns()``
   even when ``missing`` matches a field name or is unhashable. This avoids
   appending extra values to a column or raising ``TypeError`` on long rows.
