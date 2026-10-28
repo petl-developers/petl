@@ -6,7 +6,7 @@ Version 1.7.31
 
 * Accept a field index in ``capture()``, as in ``split()``, instead of
   raising ``ValueError`` while building the header when the original field
-  is not kept.
+  is not kept. Negative indexes count from the end of the header.
   By :user:`LuisFigueroaG`, :issue:`763`.
 
 * Pass whole rows to simple aggregation functions when both ``key`` and

@@ -105,8 +105,9 @@ def itercapture(source, field, pattern, newfields, include_original, flags,
     except StopIteration:
         hdr = []
     flds = list(map(text_type, hdr))
-    if isinstance(field, int) and field < len(hdr):
-        field_index = field
+    if isinstance(field, int) and -len(hdr) <= field < len(hdr):
+        # use a non-negative index, so rows drop the same column as the header
+        field_index = field % len(hdr)
     elif field in flds:
         field_index = flds.index(field)
     else:
