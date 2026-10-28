@@ -67,9 +67,20 @@ jobs:
             python: "3.9"
             mode: "basic"
             scope: "basic"
+          # Keep legacy Python on images that still provide its dependencies.
+          - os: 'ubuntu-latest'
+            python: '3.6'
+            runner: 'ubuntu-22.04'
+          - os: 'ubuntu-latest'
+            python: '3.8'
+            runner: 'ubuntu-24.04'
+          - os: 'ubuntu-latest'
+            python: '3.9'
+            runner: 'ubuntu-24.04'
           # Additional Jobs not included in the matrix above
           - python: "2.7"
             os: "ubuntu-latest"
+            runner: "ubuntu-22.04"
             mode: "basic"
             scope: "full"
             install: "yes"
@@ -84,7 +95,7 @@ jobs:
           - os: "ubuntu-latest"
             python: "3.7"
 
-    runs-on: "${{ matrix.os }}"
+    runs-on: "${{ matrix.runner || matrix.os }}"
     steps:
       - name: Checkout source code at ${{ inputs.branch_commit_or_ref || github.ref }}
         uses: actions/checkout@v7
@@ -178,7 +189,7 @@ jobs:
         if: matrix.os == 'ubuntu-latest' && matrix.scope == 'full'
         run: |
           echo "::group::Setup docker for MySQL"
-          docker run -it --name mysql -p 3306:3306 -p 33060:33060 -e MYSQL_ROOT_PASSWORD=pass0 -e MYSQL_DATABASE=petl -e MYSQL_USER=petl -e MYSQL_PASSWORD=test -d mysql:latest
+          docker run -it --name mysql -p 3306:3306 -e MYSQL_ROOT_PASSWORD=pass0 -e MYSQL_DATABASE=petl -e MYSQL_USER=petl -e MYSQL_PASSWORD=test -d mysql:latest
           echo "::notice file=requirements-database.txt,line=4,title=MySQL docker installation::Setup MySQL docker container for testing in Petl"
           echo "::endgroup::"
           echo "::group::Setup docker for Postgres"

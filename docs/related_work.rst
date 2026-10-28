@@ -94,9 +94,10 @@ csvstack, csvstat, csvgrep, csvlook.
 
 - http://code.google.com/p/python-pipeline/
 
-**Google Refine**
+**OpenRefine (formerly Google Refine)**
 
-- http://code.google.com/p/google-refine/
+- https://openrefine.org/
+- https://github.com/OpenRefine/OpenRefine
 
 A web application for exploring, filtering, cleaning and transforming
 a table of data. Some excellent functionality for finding and fixing
@@ -104,9 +105,9 @@ problems in data. Does have the capability to join two tables, but
 generally it's one table at a time. Some question marks over ability
 to handle larger datasets. 
 
-Has an extension capability, two third party extensions known at the
-time of writing, including a `stats extension
-<http://blog.apps.chicagotribune.com/2010/11/18/sprint-our-first-google-refine-extension-refine-stats/>`_.
+Has an extension capability; see the `official extensions catalog
+<https://openrefine.org/extensions>`_ for available extensions and their
+compatible versions.
 
 **Data Wrangler**
 
