@@ -8,6 +8,8 @@ import subprocess
 import gzip
 import bz2
 import zipfile
+import io
+import pytest
 from tempfile import NamedTemporaryFile
 from petl.compat import PY2
 
@@ -15,7 +17,49 @@ from petl.compat import PY2
 from petl.test.helpers import ieq, eq_
 import petl as etl
 from petl.io.sources import MemorySource, PopenSource, ZipSource, \
-    StdoutSource, GzipSource, BZ2Source
+    StdoutSource, GzipSource, BZ2Source, _get_stdin_binary, _get_stdout_binary
+
+
+class DetachedTextIOWrapper(io.TextIOWrapper):
+
+    @property
+    def buffer(self):
+        # Match Python 3.15.1's behavior on older supported interpreters too.
+        raise ValueError('underlying buffer has been detached')
+
+
+def detached_text_stream():
+    stream = DetachedTextIOWrapper(io.BytesIO())
+    stream.detach()
+    return stream
+
+
+@pytest.mark.parametrize('name, get_binary', [
+    ('stdin', _get_stdin_binary), ('stdout', _get_stdout_binary),
+])
+@pytest.mark.parametrize('case', ['current', 'original', 'both', 'normal', 'missing'])
+def test_standard_binary_with_unavailable_buffers(monkeypatch, name, get_binary, case):
+    current = io.StringIO()
+    original = io.TextIOWrapper(io.BytesIO())
+    expected = original.buffer
+    if case in ('current', 'both'):
+        current = detached_text_stream()
+    if case in ('original', 'both'):
+        original = detached_text_stream()
+        expected = current
+    if case == 'normal':
+        current = io.TextIOWrapper(io.BytesIO())
+        expected = current.buffer
+    if case == 'missing':
+        original = io.StringIO()
+        expected = current
+
+    # Restore standard streams before assertions or pytest's error reporting.
+    with monkeypatch.context() as patch:
+        patch.setattr(sys, name, current)
+        patch.setattr(sys, '__' + name + '__', original)
+        actual = get_binary()
+    assert actual is expected
 
 
 def test_memorysource():

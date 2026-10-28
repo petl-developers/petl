@@ -58,6 +58,41 @@ def test_fromxlsx_read_only(xlsx_test_filename):
     ieq(expect, tbl)
 
 
+@pytest.mark.parametrize("action", ["exhaust", "close", "throw", "bad_sheet"])
+def test_fromxlsx_closes_read_only_workbook(xlsx_test_filename, monkeypatch,
+                                           action):
+    load_workbook = openpyxl.load_workbook
+    workbooks = []
+
+    def track_workbook(*args, **kwargs):
+        workbook = load_workbook(*args, **kwargs)
+        workbooks.append(workbook)
+        return workbook
+
+    monkeypatch.setattr(openpyxl, 'load_workbook', track_workbook)
+    sheet = 'missing' if action == 'bad_sheet' else 'Sheet1'
+    rows = iter(fromxlsx(xlsx_test_filename, sheet=sheet, read_only=True))
+    try:
+        if action == 'exhaust':
+            list(rows)
+        elif action == 'bad_sheet':
+            with pytest.raises(KeyError):
+                next(rows)
+        else:
+            next(rows)
+            if action == 'close':
+                rows.close()
+            else:
+                with pytest.raises(RuntimeError, match='consumer failure'):
+                    rows.throw(RuntimeError('consumer failure'))
+        assert len(workbooks) == 1
+        assert workbooks[0]._archive.fp is None
+    finally:
+        rows.close()
+        for workbook in workbooks:
+            workbook.close()
+
+
 def test_fromxlsx_nosheet(xlsx_test_filename):
     tbl = fromxlsx(xlsx_test_filename)
     expect = (("foo", "bar"), ("A", 1), ("B", 2), ("C", 2), (u"é", datetime(2012, 1, 1)))
