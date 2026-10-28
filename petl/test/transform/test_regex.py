@@ -30,6 +30,10 @@ def test_capture():
                      include_original=False)
     ieq(expectation, result)
 
+    # integer field reference
+    result = capture(table, 1, '(\\w)(\\d+)', ('treat', 'time'))
+    ieq(expectation, result)
+
     # what about including the original field?
     expectation = (('id', 'variable', 'value', 'treat', 'time'),
                    ('1', 'A1', '12', 'A', '1'),
@@ -48,6 +52,22 @@ def test_capture():
                    ('4', '19', 'C', '12'))
     result = capture(table, 'variable', '(\\w)(\\d+)')
     ieq(expectation, result)
+
+
+def test_capture_negative_index():
+
+    table = (('id', 'value', 'variable'),
+             ('1', '12', 'A1'),
+             ('2', '15', 'B12'))
+
+    expectation = (('id', 'value', 'treat', 'time'),
+                   ('1', '12', 'A', '1'),
+                   ('2', '15', 'B', '12'))
+    result = capture(table, -1, '(\\w)(\\d+)', ('treat', 'time'))
+    ieq(expectation, result)
+
+    with pytest.raises(ArgumentError):
+        capture(table, -4, '(\\w)(\\d+)', ('treat', 'time')).nrows()
 
 
 def test_capture_empty():

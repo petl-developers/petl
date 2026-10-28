@@ -11,6 +11,9 @@ except ImportError:
 
 from operator import attrgetter
 import itertools
+import re
+from xml.sax.saxutils import escape as _xml_escape
+from string import Formatter
 from petl.compat import string_types, text_type
 
 
@@ -265,7 +268,7 @@ def attribute_text_getter(attr, missing):
 
 def toxml(table, target=None,
           root=None, head=None, rows=None, prologue=None, epilogue=None,
-          style='tag', encoding='utf-8'):
+          style='tag', encoding='utf-8', escape=False):
     """
     Write the table into a new xml file according to elements defined in the
     function arguments.
@@ -348,6 +351,27 @@ def toxml(table, target=None,
          <col><foo>b</foo><bar>2</bar></col>
         </row>
 
+    By default, values and header text are written unchanged for compatibility.
+    Set `escape=True` to escape literal values in the built-in styles and
+    field names written as text in the `head` element. Markup and already
+    escaped entities in those values are treated as literal text too.
+    XML 1.0-forbidden control characters in escaped values or header text
+    raise `ValueError`, as do U+FFFE and U+FFFF.
+    This does not make field names valid XML element or attribute names.
+    Values substituted into custom `style` templates, and markup in
+    `prologue` and `epilogue`, are written unchanged even with `escape=True`.
+
+    For example, to write an ampersand as literal text::
+
+        >>> sink = etl.MemorySource()
+        >>> etl.toxml([['label'], ['R&D']], sink, escape=True)
+        >>> b'<td>R&amp;D</td>' in sink.getvalue()
+        True
+
+    .. versionchanged:: 1.7.31
+
+        Added the `escape` option.
+
     The `toxml()` function is just a wrapper over :func:`petl.io.text.totext`.
     For advanced cases use a template with `totext()` for generating xml files.
 
@@ -365,12 +389,66 @@ def toxml(table, target=None,
     sample, table2 = iterpeek(table, 2)
     props = fieldnames(sample)
 
-    top = _build_xml_header(style, props, root, head, rows, prologue, encoding)
+    head_props = ([_escape_xml_text(f, {'\r': '&#13;'}) for f in props]
+                  if escape and head else props)
+    top = _build_xml_header(style, head_props, root, head, rows, prologue, encoding)
     template = _build_cols(style, props, rows, True)
     bottom = _build_xml_footer(style, epilogue, rows, root)
 
+    if escape and style in ('tag', 'name', 'attribute'):
+        entities = {'\r': '&#13;'}
+        if style == 'attribute':
+            entities.update({'"': '&quot;', '\n': '&#10;', '\t': '&#9;'})
+        template = _XmlTemplate(template, entities)
+
     totext(table2, source=target, encoding=encoding, errors='strict',
            template=template, prologue=top, epilogue=bottom)
+
+
+# List forbidden XML 1.0 controls and U+FFFE/U+FFFF explicitly for CodeQL.
+_invalid_xml_chars = re.compile(
+    u'[\x00\x01\x02\x03\x04\x05\x06\x07\x08\x0b\x0c'
+    u'\x0e\x0f\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19'
+    u'\x1a\x1b\x1c\x1d\x1e\x1f\ufffe\uffff]')
+
+
+def _escape_xml_text(value, entities):
+    """Escape XML text, rejecting characters without an XML representation."""
+    invalid = _invalid_xml_chars.search(value)
+    if invalid is not None:
+        raise ValueError('XML 1.0 cannot represent character U+%04X' %
+                         ord(invalid.group()))
+    return _xml_escape(value, entities)
+
+
+class _XmlTemplate(object):
+    """Escape formatted fields without changing the writer's row semantics."""
+
+    def __init__(self, template, entities):
+        self.template = template
+        self.entities = entities
+        self.formatter = Formatter()
+        self.parts = None
+
+    def format(*args, **kwargs):
+        # Match str.format's positional-only receiver on Python 2 as well.
+        self = args[0]
+        if self.parts is None:
+            self.parts = tuple(self.formatter.parse(self.template))
+        output = []
+        for literal, field, spec, conversion in self.parts:
+            output.append(literal)
+            if field is None:
+                continue
+            # Empty fields also refer to unavailable positional arguments.
+            field = '0' if field == '' else field
+            value, _ = self.formatter.get_field(field, (), kwargs)
+            if conversion is not None:
+                value = self.formatter.convert_field(value, conversion)
+            if spec:
+                spec = self.formatter.vformat(spec, (), kwargs)
+            output.append(_escape_xml_text(format(value, spec), self.entities))
+        return ''.join(output)
 
 
 def _build_xml_header(style, props, root, head, rows, prologue, encoding):

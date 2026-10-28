@@ -381,6 +381,22 @@ def test_sortheaders():
     ieq(expect, actual)
 
 
+def test_sortheaders_reverse():
+    table1 = (
+        ('id', 'foo', 'bar', 'baz'),
+        ('a', 1, 2, 3),
+        ('b', 4, 5, 6))
+
+    expect = (
+        ('id', 'foo', 'baz', 'bar'),
+        ('a', 1, 3, 2),
+        ('b', 4, 6, 5),
+    )
+
+    actual = sortheader(table1, reverse=True)
+    ieq(expect, actual)
+
+
 def test_sortheaders_duplicate_headers():
     """ Failing test case provided in sortheader()
     with duplicate column names overlays values #392 """
