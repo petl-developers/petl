@@ -8,6 +8,8 @@ import subprocess
 import gzip
 import bz2
 import zipfile
+import io
+import pytest
 from tempfile import NamedTemporaryFile
 from petl.compat import PY2
 
@@ -15,7 +17,49 @@ from petl.compat import PY2
 from petl.test.helpers import ieq, eq_
 import petl as etl
 from petl.io.sources import MemorySource, PopenSource, ZipSource, \
-    StdoutSource, GzipSource, BZ2Source
+    StdoutSource, GzipSource, BZ2Source, _get_stdin_binary, _get_stdout_binary
+
+
+class DetachedTextIOWrapper(io.TextIOWrapper):
+
+    @property
+    def buffer(self):
+        # Match Python 3.15.1's behavior on older supported interpreters too.
+        raise ValueError('underlying buffer has been detached')
+
+
+def detached_text_stream():
+    stream = DetachedTextIOWrapper(io.BytesIO())
+    stream.detach()
+    return stream
+
+
+@pytest.mark.parametrize('name, get_binary', [
+    ('stdin', _get_stdin_binary), ('stdout', _get_stdout_binary),
+])
+@pytest.mark.parametrize('case', ['current', 'original', 'both', 'normal', 'missing'])
+def test_standard_binary_with_unavailable_buffers(monkeypatch, name, get_binary, case):
+    current = io.StringIO()
+    original = io.TextIOWrapper(io.BytesIO())
+    expected = original.buffer
+    if case in ('current', 'both'):
+        current = detached_text_stream()
+    if case in ('original', 'both'):
+        original = detached_text_stream()
+        expected = current
+    if case == 'normal':
+        current = io.TextIOWrapper(io.BytesIO())
+        expected = current.buffer
+    if case == 'missing':
+        original = io.StringIO()
+        expected = current
+
+    # Restore standard streams before assertions or pytest's error reporting.
+    with monkeypatch.context() as patch:
+        patch.setattr(sys, name, current)
+        patch.setattr(sys, '__' + name + '__', original)
+        actual = get_binary()
+    assert actual is expected
 
 
 def test_memorysource():
@@ -85,6 +129,72 @@ def test_zipsource():
     # test
     actual = etl.fromtsv(ZipSource(fn_zip, 'data.tsv'))
     ieq(tbl, actual)
+
+
+@pytest.mark.parametrize('compression', [zipfile.ZIP_STORED,
+                                         zipfile.ZIP_DEFLATED])
+@pytest.mark.skipif(sys.version_info < (3, 6),
+                    reason='ZipFile.open() writes require Python 3.6')
+def test_zipsource_write_csv(tmpdir, compression):
+    filename = str(tmpdir.join('table.zip'))
+    table = [('name', 'value'), ('alpha', '1'), ('beta', '2')]
+    source = ZipSource(filename, 'data.csv', compression=compression)
+
+    etl.tocsv(table, source, lineterminator='\n')
+
+    with zipfile.ZipFile(filename) as archive:
+        eq_(archive.namelist(), ['data.csv'])
+        eq_(archive.read('data.csv'), b'name,value\nalpha,1\nbeta,2\n')
+    ieq(table, etl.fromcsv(source))
+
+
+@pytest.mark.parametrize('mode', ['rb', 'wb'])
+@pytest.mark.parametrize('error_type', [None, RuntimeError, KeyboardInterrupt])
+def test_zipsource_closes_member(tmpdir, monkeypatch, mode, error_type):
+    if mode == 'wb' and sys.version_info < (3, 6):
+        pytest.skip('ZipFile.open() writes require Python 3.6')
+    filename = str(tmpdir.join('table.zip'))
+    payload = b'name,value\nalpha,1\n'
+    if mode == 'rb':
+        with zipfile.ZipFile(filename, 'w') as archive:
+            archive.writestr('data.csv', payload)
+
+    # Track real archives so the failing baseline can also release its handles.
+    archives = []
+    zip_file = zipfile.ZipFile
+
+    def tracked_zip_file(*args, **kwargs):
+        archive = zip_file(*args, **kwargs)
+        archives.append(archive)
+        return archive
+
+    monkeypatch.setattr(zipfile, 'ZipFile', tracked_zip_file)
+    source = ZipSource(filename, 'data.csv')
+    error = error_type('interrupted ZIP operation') if error_type else None
+    member = None
+    try:
+        try:
+            with source.open(mode) as member:
+                if mode == 'rb':
+                    eq_(member.read(1), payload[:1])
+                else:
+                    eq_(member.write(payload), len(payload))
+                if error is not None:
+                    raise error
+        except BaseException as actual:
+            if error is None:
+                raise
+            assert actual is error
+        else:
+            assert error is None
+        assert member.closed
+        # A retained member must no longer keep the archive file open on Windows.
+        os.remove(filename)
+    finally:
+        if member is not None:
+            member.close()
+        for archive in archives:
+            archive.close()
 
 
 def test_stdoutsource():
