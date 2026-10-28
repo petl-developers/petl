@@ -4,6 +4,11 @@ Changes
 Version 1.7.31
 --------------
 
+* Ignore values beyond the header in ``columns()`` and ``facetcolumns()``
+  even when ``missing`` matches a field name or is unhashable. This avoids
+  appending extra values to a column or raising ``TypeError`` on long rows.
+  By :user:`akashmalbari`.
+
 * Allow importing ``petl`` when a standard stream's binary buffer has been
   detached, which raises ``ValueError`` on Python 3.15.1. Continue trying
   the existing fallbacks for both standard input and standard output.
