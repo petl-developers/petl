@@ -48,3 +48,35 @@ def test_facetcolumns_headerless():
     table = []
     with pytest.raises(FieldSelectionError):
         facetcolumns(table, 'foo')
+
+
+@pytest.mark.parametrize('missing', [None, 'NA', [], {}])
+def test_columns_ragged_rows(missing):
+    table = [['NA', 'group', 'value'],
+             ['kept', 'A', 10, 'extra', 'also extra'],
+             ['next', 'A']]
+
+    cols = columns(table, missing=missing)
+
+    eq_({'NA': ['kept', 'next'],
+         'group': ['A', 'A'],
+         'value': [10, missing]}, cols)
+    eq_(['NA', 'group', 'value'], list(cols))
+
+
+@pytest.mark.parametrize('missing', [None, 'NA', [], {}])
+def test_facetcolumns_ragged_rows(missing):
+    table = [['NA', 'group', 'value'],
+             ['kept', 'A', 10, 'extra', 'also extra'],
+             ['next', 'A'],
+             ['third', 'B', 20, 'extra'],
+             ['last', 'B']]
+
+    actual = facetcolumns(table, 'group', missing=missing)
+
+    eq_({'A': {'NA': ['kept', 'next'],
+               'group': ['A', 'A'],
+               'value': [10, missing]},
+         'B': {'NA': ['third', 'last'],
+               'group': ['B', 'B'],
+               'value': [20, missing]}}, actual)

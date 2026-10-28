@@ -3,8 +3,8 @@ from __future__ import absolute_import, print_function, division
 
 import operator
 from collections import OrderedDict
-from itertools import islice
-from petl.compat import izip_longest, text_type, next
+from itertools import chain, islice, repeat
+from petl.compat import izip, text_type, next
 
 
 from petl.util.base import asindices, Table
@@ -54,6 +54,8 @@ def columns(table, missing=None):
         >>> cols['bar']
         [1, 2, 3]
 
+    Short rows are padded with `missing`; values beyond the header are ignored.
+
     See also :func:`petl.util.materialise.facetcolumns`.
 
     """
@@ -68,9 +70,8 @@ def columns(table, missing=None):
     for f in flds:
         cols[f] = list()
     for row in it:
-        for f, v in izip_longest(flds, row, fillvalue=missing):
-            if f in cols:
-                cols[f].append(v)
+        for f, v in izip(flds, chain(row, repeat(missing))):
+            cols[f].append(v)
     return cols
 
 
@@ -92,6 +93,8 @@ def facetcolumns(table, key, missing=None):
         {'foo': ['a'], 'bar': [1], 'baz': [True]}
         >>> fc['b']
         {'foo': ['b', 'b'], 'bar': [2, 3], 'baz': [True, None]}
+
+    Short rows are padded with `missing`; values beyond the header are ignored.
 
     """
 
@@ -115,9 +118,8 @@ def facetcolumns(table, key, missing=None):
             fct[kv] = cols
         else:
             cols = fct[kv]
-        for f, v in izip_longest(flds, row, fillvalue=missing):
-            if f in cols:
-                cols[f].append(v)
+        for f, v in izip(flds, chain(row, repeat(missing))):
+            cols[f].append(v)
 
     return fct
 
