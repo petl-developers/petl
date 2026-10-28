@@ -9,6 +9,34 @@ Version 1.7.31
   is not kept.
   By :user:`LuisFigueroaG`, :issue:`763`.
 
+* Pass whole rows to simple aggregation functions when both ``key`` and
+  ``value`` are ``None``, instead of raising ``FieldSelectionError``.
+  By :user:`umtong`, :issue:`770`.
+
+* Close ZIP member streams before their archives in ``ZipSource``, allowing
+  exports such as ``tocsv()`` to finish and releasing retained reader handles
+  after normal or interrupted context exits.
+  By :user:`chivector`, :issue:`773`.
+  
+* Ignore values beyond the header in ``columns()`` and ``facetcolumns()``
+  even when ``missing`` matches a field name or is unhashable. This avoids
+  appending extra values to a column or raising ``TypeError`` on long rows.
+  By :user:`akashmalbari`, :issue:`771`.
+
+* Allow importing ``petl`` when a standard stream's binary buffer has been
+  detached, which raises ``ValueError`` on Python 3.15.1. Continue trying
+  the existing fallbacks for both standard input and standard output.
+  By :user:`KennyMcSimpson`, :issue:`768`.
+
+* Close XLSX workbooks when iteration ends early or raises an exception.
+  By :user:` nawaaaaaAaar`, :issue:`766`.
+
+* Refresh OpenRefine's name and links in related work.
+  By :user:` tongwentao`, :issue:`764`.
+
+* CI: Fix failing tests on Ubuntu 26.04.
+  By :user:` tongwentao`, :issue:`764`.
+
 * Add opt-in ``escape=True`` to ``toxml()`` for literal XML values and header text.
   By :user:`IlyaKhalafi`, :issue:`755`.
 

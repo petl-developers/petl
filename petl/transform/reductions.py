@@ -9,7 +9,7 @@ from petl.compat import next, string_types, reduce, text_type
 
 from petl.errors import ArgumentError
 from petl.util.base import Table, iterpeek, rowgroupby
-from petl.util.base import values
+from petl.util.base import values, records
 from petl.util.counting import nrows
 from petl.transform.sorts import sort, mergesort
 from petl.transform.basics import cut
@@ -214,6 +214,9 @@ def aggregate(table, key, aggregation=None, value=None, presorted=False,
 
     If `key` is None, sorting is not necessary.
 
+    If both `key` and `value` are None, a callable `aggregation` receives an
+    iterator of whole records, with values accessible by field name or index.
+
     A single-field key may also be specified as a one-item list or tuple,
     for both simple and multiple aggregations.
 
@@ -286,6 +289,8 @@ def itersimpleaggregate(table, key, aggregation, value, field):
         # special case counting
         if aggregation == len:
             yield nrows(table),
+        elif value is None:
+            yield aggregation(iter(records(table))),
         else:
             yield aggregation(values(table, value)),
     else:

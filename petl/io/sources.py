@@ -103,9 +103,13 @@ class ZipSource(object):
         zf = zipfile.ZipFile(self.filename, mode, **self.kwargs)
         try:
             if self.pwd is not None:
-                yield zf.open(self.membername, mode, self.pwd)
+                member = zf.open(self.membername, mode, self.pwd)
             else:
-                yield zf.open(self.membername, mode)
+                member = zf.open(self.membername, mode)
+            try:
+                yield member
+            finally:
+                member.close()
         finally:
             zf.close()
 
@@ -129,7 +133,7 @@ class Uncloseable(object):
 def _get_stdout_binary():
     try:
         return sys.stdout.buffer
-    except AttributeError:
+    except (AttributeError, ValueError):
         pass
     try:
         fd = sys.stdout.fileno()
@@ -138,7 +142,7 @@ def _get_stdout_binary():
         pass
     try:
         return sys.__stdout__.buffer
-    except AttributeError:
+    except (AttributeError, ValueError):
         pass
     try:
         fd = sys.__stdout__.fileno()
@@ -155,7 +159,7 @@ stdout_binary = _get_stdout_binary()
 def _get_stdin_binary():
     try:
         return sys.stdin.buffer
-    except AttributeError:
+    except (AttributeError, ValueError):
         pass
     try:
         fd = sys.stdin.fileno()
@@ -164,7 +168,7 @@ def _get_stdin_binary():
         pass
     try:
         return sys.__stdin__.buffer
-    except AttributeError:
+    except (AttributeError, ValueError):
         pass
     try:
         fd = sys.__stdin__.fileno()
