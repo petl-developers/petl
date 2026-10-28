@@ -129,7 +129,7 @@ class Uncloseable(object):
 def _get_stdout_binary():
     try:
         return sys.stdout.buffer
-    except AttributeError:
+    except (AttributeError, ValueError):
         pass
     try:
         fd = sys.stdout.fileno()
@@ -138,7 +138,7 @@ def _get_stdout_binary():
         pass
     try:
         return sys.__stdout__.buffer
-    except AttributeError:
+    except (AttributeError, ValueError):
         pass
     try:
         fd = sys.__stdout__.fileno()
@@ -155,7 +155,7 @@ stdout_binary = _get_stdout_binary()
 def _get_stdin_binary():
     try:
         return sys.stdin.buffer
-    except AttributeError:
+    except (AttributeError, ValueError):
         pass
     try:
         fd = sys.stdin.fileno()
@@ -164,7 +164,7 @@ def _get_stdin_binary():
         pass
     try:
         return sys.__stdin__.buffer
-    except AttributeError:
+    except (AttributeError, ValueError):
         pass
     try:
         fd = sys.__stdin__.fileno()
