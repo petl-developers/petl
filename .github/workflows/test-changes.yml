@@ -201,10 +201,11 @@ jobs:
           echo "::endgroup::"
 
       - name: Setup petl package with mode = ${{ matrix.mode }}
+        shell: bash
         run: |
           python -m pip install --upgrade build setuptools wheel
           python -m build
-          python -m pip install build --user
+          python -m pip install dist/*.whl
 
       - name: Install extra packages dependencies for scope = ${{ matrix.scope }}
         if: matrix.scope == 'full'
