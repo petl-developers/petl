@@ -7,8 +7,8 @@ from collections import OrderedDict
 from petl.compat import next, string_types, reduce, text_type
 
 
-from petl.errors import ArgumentError
-from petl.util.base import Table, iterpeek, rowgroupby
+from petl.errors import ArgumentError, FieldSelectionError
+from petl.util.base import Table, iterpeek, rowgroupby, asindices
 from petl.util.base import values, records
 from petl.util.counting import nrows
 from petl.transform.sorts import sort, mergesort
@@ -596,22 +596,24 @@ def itermergeduplicates(table, key, missing):
     hdr, it = iterpeek(it)
     flds = list(map(text_type, hdr))
 
+    # resolve the key to non-negative field indices, so the key can also be
+    # given by field index or as a list with a single field
+    keyidxs = []
+    for i in asindices(hdr, key):
+        if i < -len(hdr):
+            raise FieldSelectionError(i)
+        keyidxs.append(i % len(hdr))
+
     # determine output fields
-    if isinstance(key, string_types):
-        outhdr = [key]
-        keyflds = {key}
-    else:
-        outhdr = list(key)
-        keyflds = set(key)
-    valflds = [f for f in flds if f not in keyflds]
-    valfldidxs = [flds.index(f) for f in valflds]
-    outhdr.extend(valflds)
+    outhdr = [flds[i] for i in keyidxs]
+    valfldidxs = [i for i in range(len(flds)) if i not in keyidxs]
+    outhdr.extend(flds[i] for i in valfldidxs)
     yield tuple(outhdr)
 
     # do the work
-    for k, grp in rowgroupby(it, key):
+    for k, grp in rowgroupby(it, keyidxs):
         grp = list(grp)
-        if isinstance(key, string_types):
+        if len(keyidxs) == 1:
             outrow = [k]
         else:
             outrow = list(k)

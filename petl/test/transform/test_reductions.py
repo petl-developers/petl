@@ -11,7 +11,7 @@ from petl.test.helpers import ieq
 from petl.errors import FieldSelectionError
 from petl.util import strjoin
 from petl.transform.reductions import rowreduce, aggregate, \
-    mergeduplicates, Conflict, fold
+    mergeduplicates, merge, Conflict, fold
 
 
 def test_rowreduce():
@@ -585,6 +585,53 @@ def test_mergeduplicates_compoundkey():
               ('c', 3, Conflict([True, False]))]
     ieq(expect, actual)
         
+
+def test_mergeduplicates_field_index():
+    table = [['foo', 'bar', 'baz'],
+             ['aa', 1, True],
+             ['aa', None, False],
+             ['bb', 2, True]]
+    expect = [('foo', 'bar', 'baz'),
+              ('aa', 1, Conflict([True, False])),
+              ('bb', 2, True)]
+    for key in 0, -3, [0], ['foo'], (-3,):
+        ieq(expect, mergeduplicates(table, key))
+        ieq(expect, mergeduplicates(table, key, presorted=True))
+        ieq(expect, merge(table[:2], table[:1] + table[2:], key=key))
+
+    # key fields come first in the output, as with field names
+    expect = [('baz', 'foo', 'bar'),
+              (False, 'aa', None),
+              (True, Conflict(['aa', 'bb']), Conflict([1, 2]))]
+    ieq(expect, mergeduplicates(table, -1))
+    ieq(expect, mergeduplicates(table, 'baz'))
+
+
+def test_mergeduplicates_compoundkey_field_index():
+    table = [['foo', 'bar', 'baz'],
+             ['a', 1, True],
+             ['a', 1, None],
+             ['a', 2, False],
+             ['c', 3, True],
+             ['c', 3, False]]
+    expect = [('foo', 'bar', 'baz'),
+              ('a', 1, True),
+              ('a', 2, False),
+              ('c', 3, Conflict([True, False]))]
+    for key in (0, 1), [-3, -2], ('foo', 1):
+        ieq(expect, mergeduplicates(table, key))
+        ieq(expect, mergeduplicates(table, key, presorted=True))
+
+
+def test_mergeduplicates_field_index_out_of_range():
+    table = [['foo', 'bar'],
+             ['a', 1]]
+    for key in 2, -3, [0, 2]:
+        with pytest.raises(FieldSelectionError):
+            mergeduplicates(table, key).nrows()
+        with pytest.raises(FieldSelectionError):
+            mergeduplicates(table, key, presorted=True).nrows()
+
 
 def test_fold():
 

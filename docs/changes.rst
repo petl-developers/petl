@@ -4,6 +4,13 @@ Changes
 Version 1.7.31
 --------------
 
+* Accept field indexes and single-field lists as the key in
+  ``mergeduplicates()`` and ``merge()``. An integer key raised ``TypeError``,
+  a one-item list split each key value into characters, and a list of
+  indexes repeated the key columns. Negative indexes count from the end of
+  the header.
+  By :user:`LuisFigueroaG`, :issue:`774`.
+
 * Close the table with a bottom border when ``look()`` uses the default grid
   style on a table without data rows, as the simple style already does, so
   the output is a valid reStructuredText grid table.
