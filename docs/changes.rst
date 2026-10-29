@@ -4,6 +4,11 @@ Changes
 Version 1.7.31
 --------------
 
+* Close the table with a bottom border when ``look()`` uses the default grid
+  style on a table without data rows, as the simple style already does, so
+  the output is a valid reStructuredText grid table.
+  By :user:`LuisFigueroaG`, :issue:`761`.
+
 * Accept a field index in ``capture()``, as in ``split()``, instead of
   raising ``ValueError`` while building the header when the original field
   is not kept. Negative indexes count from the end of the header.

@@ -289,6 +289,9 @@ def _look_grid(table, vrepr, index_header, truncate, width):
     output = sep + fldsline + hedsep
     for line in rowlines:
         output += line + sep
+    if not rowlines:
+        # close the table, as a reST grid table needs a bottom border
+        output += sep
 
     return output
 
