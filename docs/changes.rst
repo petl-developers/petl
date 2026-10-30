@@ -4,6 +4,10 @@ Changes
 Version 1.7.31
 --------------
 
+* Refresh nine related-work links using project sites, source repositories,
+  author pages, and clearly labelled research/book references.
+  By :user:`ub3dqy`, :issue:`616`.
+
 * Close the table with a bottom border when ``look()`` uses the default grid
   style on a table without data rows, as the simple style already does, so
   the output is a valid reStructuredText grid table.
