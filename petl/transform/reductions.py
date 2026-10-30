@@ -579,23 +579,31 @@ class MergeDuplicatesView(Table):
 
     def __init__(self, table, key, missing=None, presorted=False,
                  buffersize=None, tempdir=None, cache=True):
-        if presorted:
-            self.table = table
-        else:
-            self.table = sort(table, key, buffersize=buffersize,
-                              tempdir=tempdir, cache=cache)
+        self.table = table
         self.key = key
         self.missing = missing
+        self.presorted = presorted
+        self.buffersize = buffersize
+        self.tempdir = tempdir
+        self._cache = cache
+        self._sorted = None
 
     def __iter__(self):
-        return itermergeduplicates(self.table, self.key, self.missing)
+        table = self.table
+        if not self.presorted:
+            if self._sorted is None:
+                # sort by the same field indices that rows are grouped by, so
+                # a negative index selects the same field in rows shorter or
+                # longer than the header
+                hdr = next(iter(table), ())
+                self._sorted = sort(table, _mergekeyindices(hdr, self.key),
+                                    buffersize=self.buffersize,
+                                    tempdir=self.tempdir, cache=self._cache)
+            table = self._sorted
+        return itermergeduplicates(table, self.key, self.missing)
 
 
-def itermergeduplicates(table, key, missing):
-    it = iter(table)
-    hdr, it = iterpeek(it)
-    flds = list(map(text_type, hdr))
-
+def _mergekeyindices(hdr, key):
     # resolve the key to non-negative field indices, so the key can also be
     # given by field index or as a list with a single field
     keyidxs = []
@@ -603,6 +611,14 @@ def itermergeduplicates(table, key, missing):
         if i < -len(hdr):
             raise FieldSelectionError(i)
         keyidxs.append(i % len(hdr))
+    return keyidxs
+
+
+def itermergeduplicates(table, key, missing):
+    it = iter(table)
+    hdr, it = iterpeek(it)
+    flds = list(map(text_type, hdr))
+    keyidxs = _mergekeyindices(hdr, key)
 
     # determine output fields
     outhdr = [flds[i] for i in keyidxs]
@@ -663,6 +679,13 @@ def merge(*tables, **kwargs):
 
     assert 'key' in kwargs, 'keyword argument "key" is required'
     key = kwargs['key']
+    keyspec = key if isinstance(key, (list, tuple)) else (key,)
+    if any(isinstance(k, int) for k in keyspec):
+        # mergesort() would sort each table by the index in its own header,
+        # so select the key fields by name from the combined header instead
+        hdr = next(iter(mergesort(*tables, presorted=True,
+                                  header=kwargs.get('header'))))
+        key = kwargs['key'] = [hdr[i] for i in _mergekeyindices(hdr, key)]
     t1 = mergesort(*tables, **kwargs)
     t2 = mergeduplicates(t1, key=key, presorted=True)
     return t2

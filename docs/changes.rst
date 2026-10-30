@@ -8,7 +8,7 @@ Version 1.7.31
   ``mergeduplicates()`` and ``merge()``. An integer key raised ``TypeError``,
   a one-item list split each key value into characters, and a list of
   indexes repeated the key columns. Negative indexes count from the end of
-  the header.
+  the header, and in ``merge()`` indexes refer to the combined header.
   By :user:`LuisFigueroaG`, :issue:`774`.
 
 * Refresh nine related-work links using project sites, source repositories,

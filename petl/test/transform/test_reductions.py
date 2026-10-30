@@ -633,6 +633,51 @@ def test_mergeduplicates_field_index_out_of_range():
             mergeduplicates(table, key, presorted=True).nrows()
 
 
+def test_mergeduplicates_field_index_ragged_rows():
+    # a negative index counts from the end of the header, not of the row
+    table = [['foo', 'bar', 'baz'],
+             ['s1', 'a'],
+             ['f', 0, 'x'],
+             ['s2', 'z']]
+    expect = [('baz', 'foo', 'bar'),
+              (None, Conflict(['s1', 's2']), Conflict(['a', 'z'])),
+              ('x', 'f', 0)]
+    for key in 'baz', 2, -1:
+        ieq(expect, mergeduplicates(table, key))
+
+    table = [['foo', 'bar'],
+             ['a', 1, 'zz'],
+             ['b', 2, 'mm'],
+             ['c', 1, 'aa']]
+    expect = [('bar', 'foo'),
+              (1, Conflict(['a', 'c'])),
+              (2, 'b')]
+    for key in 'bar', 1, -1:
+        ieq(expect, mergeduplicates(table, key))
+
+
+def test_merge_field_index_reordered_fields():
+    # an index refers to the combined header, whatever the order of the
+    # fields in each table
+    table1 = [['id', 'value'],
+              [1, 'z'],
+              [3, 'c']]
+    table2 = [['value', 'id'],
+              ['a', 2],
+              ['b', 1]]
+    expect = [('id', 'value'),
+              (1, Conflict(['z', 'b'])),
+              (2, 'a'),
+              (3, 'c')]
+    for key in 'id', 0, -2, [0]:
+        ieq(expect, merge(table1, table2, key=key))
+        ieq(expect[:1] + expect[:0:-1],
+            merge(table1, table2, key=key, reverse=True))
+    for key in 2, -3:
+        with pytest.raises(FieldSelectionError):
+            merge(table1, table2, key=key).nrows()
+
+
 def test_fold():
 
     t1 = (('id', 'count'), (1, 3), (1, 5), (2, 4), (2, 8))
