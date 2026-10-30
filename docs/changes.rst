@@ -4,6 +4,13 @@ Changes
 Version 1.7.31
 --------------
 
+* Accept field indexes and single-field lists as the key in
+  ``mergeduplicates()`` and ``merge()``. An integer key raised ``TypeError``,
+  a one-item list split each key value into characters, and a list of
+  indexes repeated the key columns. Negative indexes count from the end of
+  the header, and in ``merge()`` indexes refer to the combined header.
+  By :user:`LuisFigueroaG`, :issue:`774`.
+
 * Refresh nine related-work links using project sites, source repositories,
   author pages, and clearly labelled research/book references.
   By :user:`ub3dqy`, :issue:`616`.
