@@ -46,7 +46,7 @@ jobs:
         #@ https://github.com/marketplace/actions/setup-python
         #@ https://github.com/actions/setup-python/blob/main/docs/advanced-usage.md#python
         python:
-          ["3.6", "3.7", "3.8", "3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
+          ["3.6", "3.7", "3.8", "3.9", "3.10", "3.11", "3.12", "3.13", "3.14", "3.15"]
         # TODO: Also test with PyPy and GraalPy @https://github.com/actions/setup-python/blob/main/docs/advanced-usage.md#graalpy
         include:
           # Default configuration for all jobs
@@ -201,10 +201,11 @@ jobs:
           echo "::endgroup::"
 
       - name: Setup petl package with mode = ${{ matrix.mode }}
+        shell: bash
         run: |
           python -m pip install --upgrade build setuptools wheel
           python -m build
-          python -m pip install build --user
+          python -m pip install dist/*.whl
 
       - name: Install extra packages dependencies for scope = ${{ matrix.scope }}
         if: matrix.scope == 'full'

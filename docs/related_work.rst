@@ -164,7 +164,7 @@ filter, join and sort.
 
 **Scriptella**
 
-- http://scriptella.javaforge.com/
+- https://scriptella.org/
 
 **Kapow Katalyst**
 
@@ -194,7 +194,7 @@ filter, join and sort.
 
 **TableFu**
 
-- http://propublica.github.com/table-fu/
+- https://propublica.github.io/table-fu/
 
 **python-tablefu**
 
@@ -202,8 +202,8 @@ filter, join and sort.
 
 **pygrametl (Python package)**
 
-- http://www.pygrametl.org/
-- http://people.cs.aau.dk/~chr/pygrametl/pygrametl.html
+- https://pygrametl.org/
+- https://pygrametl.org/doc/
 - http://dbtr.cs.aau.dk/DBPublications/DBTR-25.pdf
 
 **etlpy (Python package)**
@@ -236,7 +236,9 @@ Looks abandoned since 2009, but there is some code.
 
 **Google Fusion Tables**
 
-- http://www.google.com/fusiontables/Home/
+- `Google Fusion Tables: Web-Centered Data Management and Collaboration
+  <https://research.google/pubs/google-fusion-tables-web-centered-data-management-and-collaboration/>`_
+  (2010 research paper)
 
 **pivottable (Python package)**
 
@@ -273,11 +275,11 @@ seamless format import & export.
 
 **SwiftRiver**
 
-- http://ushahidi.com/products/swiftriver-platform
+- https://github.com/ushahidi/SwiftRiver
 
 **Data Science Toolkit**
 
-- http://www.datasciencetoolkit.org/about
+- https://github.com/petewarden/dstk
 
 **IncPy**
 
@@ -292,7 +294,7 @@ new step.
 
 - http://metadeveloper.blogspot.com/2008/02/iron-python-dsl-for-etl.html
 - http://www.cs.uoi.gr/~pvassil/publications/2009_IJDWM/IJDWM_2009.pdf
-- http://web.tagus.ist.utl.pt/~helena.galhardas/ajax.html
+- https://web.ist.utl.pt/~helena.galhardas/Ajax/index.html
 - http://stackoverflow.com/questions/1321396/what-are-the-required-functionnalities-of-etl-frameworks
 - http://stackoverflow.com/questions/3762199/etl-using-python
 - http://www.jonathanlevin.co.uk/2008/03/open-source-etl-tools-vs-commerical-etl.html
@@ -304,7 +306,9 @@ new step.
 - http://www.protocolostomy.com/2009/12/28/codekata-4-data-munging/
 - http://www.hanselman.com/blog/ParsingCSVsAndPoorMansWebLogAnalysisWithPowerShell.aspx - nice example of a data transformation problem, done in PowerShell
 - http://www.datascience.co.nz/blog/2011/04/01/the-science-of-data-munging/
-- http://wesmckinney.com/blog/?p=8 - on grouping with pandas
+- `Data Aggregation and Group Operations
+  <https://wesmckinney.com/book/data-aggregation>`_ - a chapter from
+  Wes McKinney's *Python for Data Analysis*, on grouping with pandas
 - http://stackoverflow.com/questions/4341756/data-recognition-parsing-filtering-and-transformation-gui
 
 On memoization...
