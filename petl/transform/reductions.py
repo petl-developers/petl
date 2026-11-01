@@ -587,20 +587,31 @@ class MergeDuplicatesView(Table):
         self.tempdir = tempdir
         self._cache = cache
         self._sorted = None
+        self._sortkey = None
 
     def __iter__(self):
         table = self.table
         if not self.presorted:
-            if self._sorted is None:
+            key = self.key
+            if any(isinstance(k, int) and k < 0 for k in _keyspec(key)):
                 # sort by the same field indices that rows are grouped by, so
                 # a negative index selects the same field in rows shorter or
-                # longer than the header
-                hdr = next(iter(table), ())
-                self._sorted = sort(table, _mergekeyindices(hdr, self.key),
-                                    buffersize=self.buffersize,
+                # longer than the header; the header can change between
+                # uncached iterations, so resolve the index every time
+                # against the header of the sorted table (the cached one,
+                # if the sort is cached)
+                sortedtable = table if self._sorted is None else self._sorted
+                key = _mergekeyindices(next(iter(sortedtable), ()), key)
+            if self._sorted is None or key != self._sortkey:
+                self._sorted = sort(table, key, buffersize=self.buffersize,
                                     tempdir=self.tempdir, cache=self._cache)
+                self._sortkey = key
             table = self._sorted
         return itermergeduplicates(table, self.key, self.missing)
+
+
+def _keyspec(key):
+    return key if isinstance(key, (list, tuple)) else (key,)
 
 
 def _mergekeyindices(hdr, key):
@@ -679,8 +690,7 @@ def merge(*tables, **kwargs):
 
     assert 'key' in kwargs, 'keyword argument "key" is required'
     key = kwargs['key']
-    keyspec = key if isinstance(key, (list, tuple)) else (key,)
-    if any(isinstance(k, int) for k in keyspec):
+    if any(isinstance(k, int) for k in _keyspec(key)):
         # mergesort() would sort each table by the index in its own header,
         # so select the key fields by name from the combined header instead
         hdr = next(iter(mergesort(*tables, presorted=True,

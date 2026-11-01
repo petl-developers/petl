@@ -656,6 +656,28 @@ def test_mergeduplicates_field_index_ragged_rows():
         ieq(expect, mergeduplicates(table, key))
 
 
+def test_mergeduplicates_header_change_between_iterations():
+    # the key is resolved against the header of each iteration, so a reused
+    # view still groups equal keys after its source changes the header
+    table = [['id', 'value'],
+             ['a', 1],
+             ['b', 2],
+             ['a', 3]]
+    views = [mergeduplicates(table, key, cache=False) for key in ('id', -2)]
+    for view in views:
+        ieq([('id', 'value'), ('a', Conflict([1, 3])), ('b', 2)], view)
+
+    table[:] = [['x', 'id', 'value'],
+                [1, 'a', 1],
+                [2, 'b', 2],
+                [3, 'a', 3]]
+    expect = [('id', 'x', 'value'),
+              ('a', Conflict([1, 3]), Conflict([1, 3])),
+              ('b', 2, 2)]
+    for view in views:
+        ieq(expect, view)
+
+
 def test_merge_field_index_reordered_fields():
     # an index refers to the combined header, whatever the order of the
     # fields in each table
@@ -676,6 +698,27 @@ def test_merge_field_index_reordered_fields():
     for key in 2, -3:
         with pytest.raises(FieldSelectionError):
             merge(table1, table2, key=key).nrows()
+
+
+def test_merge_field_index_header_change_between_iterations():
+    # an index key is looked up by name in each table, so a table that
+    # changes the order of its fields is still sorted by the same field
+    table1 = [['id', 'value'],
+              [1, 'z'],
+              [3, 'c']]
+    table2 = [['id', 'value'],
+              [2, 'a'],
+              [1, 'b']]
+    expect = [('id', 'value'),
+              (1, Conflict(['z', 'b'])),
+              (2, 'a'),
+              (3, 'c')]
+    view = merge(table1, table2, key=0, cache=False)
+    ieq(expect, view)
+    table2[:] = [['value', 'id'],
+                 ['a', 2],
+                 ['b', 1]]
+    ieq(expect, view)
 
 
 def test_fold():
