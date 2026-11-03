@@ -207,8 +207,8 @@ def itersplit(source, field, pattern, newfields, include_original, maxsplit,
     except StopIteration:
         hdr = []
     flds = list(map(text_type, hdr))
-    if isinstance(field, int) and field < len(hdr):
-        field_index = field
+    if isinstance(field, int) and -len(hdr) <= field < len(hdr):
+        field_index = field % len(hdr)
         field = hdr[field_index]
     elif field in flds:
         field_index = flds.index(field)
@@ -456,8 +456,8 @@ def itersplitdown(table, field, pattern, maxsplit, flags):
         return
     flds = list(map(text_type, hdr))
 
-    if isinstance(field, int) and field < len(hdr):
-        field_index = field
+    if isinstance(field, int) and -len(hdr) <= field < len(hdr):
+        field_index = field % len(hdr)
         field = hdr[field_index]
     elif field in flds:
         field_index = flds.index(field)
