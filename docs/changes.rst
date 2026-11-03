@@ -4,6 +4,10 @@ Changes
 Version 1.7.31
 --------------
 
+* Normalize negative field indexes in ``split()`` and ``splitdown()`` so
+  output rows replace or remove the selected cell correctly.
+  By :user:`IlyaKhalafi`, :issue:`777`.
+
 * Accept field indexes and single-field lists as the key in
   ``mergeduplicates()`` and ``merge()``. An integer key raised ``TypeError``,
   a one-item list split each key value into characters, and a list of
