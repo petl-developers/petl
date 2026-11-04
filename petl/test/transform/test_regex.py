@@ -350,3 +350,10 @@ def test_splitdown_negative_index():
 def test_split_invalid_index(transform, field):
     with pytest.raises(ArgumentError):
         list(transform([('id', 'tags'), (1, 'red,blue')], field, ','))
+
+
+def test_split_duplicate_field_names_by_index():
+    table = [('tag', 'id', 'tag'), ('left', 1, 'red,blue')]
+    expectation = [('tag', 'id', 'first', 'second'),
+                   ('left', 1, 'red', 'blue')]
+    ieq(expectation, split(table, 2, ',', newfields=['first', 'second']))

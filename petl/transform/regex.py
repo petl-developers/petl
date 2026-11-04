@@ -218,7 +218,7 @@ def itersplit(source, field, pattern, newfields, include_original, maxsplit,
     # determine output fields
     outhdr = list(flds)
     if not include_original:
-        outhdr.remove(field)
+        del outhdr[field_index]
     if newfields:
         outhdr.extend(newfields)
     yield tuple(outhdr)

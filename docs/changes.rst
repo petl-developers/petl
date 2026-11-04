@@ -4,6 +4,9 @@ Changes
 Version 1.7.31
 --------------
 
+* Preserve header alignment when ``split()`` selects a duplicate field by index.
+  By :user:`IlyaKhalafi`, :issue:`779`.
+
 * Normalize negative field indexes in ``split()`` and ``splitdown()`` so
   output rows replace or remove the selected cell correctly.
   By :user:`IlyaKhalafi`, :issue:`777`.
