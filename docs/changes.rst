@@ -4,6 +4,9 @@ Changes
 Version 1.7.31
 --------------
 
+* Keep the header and data aligned when ``unpack()`` selects a field by a negative index.
+  By :user:`IlyaKhalafi`, :issue:`781`.
+
 * Preserve header alignment when ``split()`` selects a duplicate field by index.
   By :user:`IlyaKhalafi`, :issue:`779`.
 
