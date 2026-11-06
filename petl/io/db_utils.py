@@ -120,7 +120,6 @@ def _quote_qualified(tablename, schema=None):
     return '.'.join(_quote(part) for part in parts)
 
 
-
 def _placeholders(connection, names):
     # discover the paramstyle
     if connection is None:
