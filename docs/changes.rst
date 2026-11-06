@@ -4,6 +4,10 @@ Changes
 Version 1.7.31
 --------------
 
+* Exclude negatively selected fields from the inferred keys or variables
+  in ``melt()``.
+  By :user:`IlyaKhalafi`, :issue:`786`.
+
 * Preserve header alignment when ``split()`` selects a duplicate field by index.
   By :user:`IlyaKhalafi`, :issue:`779`.
 
