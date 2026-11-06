@@ -35,6 +35,8 @@ def unpack(table, field, newfields=None, include_original=False, missing=None):
     than new fields, remaining values will not be unpacked. If there are less
     values than new fields, `missing` values will be added.
 
+    Negative field indices count from the end of the header.
+
     See also :func:`petl.transform.unpacks.unpackdict`.
 
     """
@@ -71,8 +73,8 @@ def iterunpack(source, field, newfields, include_original, missing):
     flds = list(map(text_type, hdr))
     if field in flds:
         field_index = flds.index(field)
-    elif isinstance(field, int) and field < len(flds):
-        field_index = field
+    elif isinstance(field, int) and -len(flds) <= field < len(flds):
+        field_index = field + len(flds) if field < 0 else field
         field = flds[field_index]
     else:
         raise ArgumentError('field invalid: must be either field name or index')
