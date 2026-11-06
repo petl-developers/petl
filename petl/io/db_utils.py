@@ -118,7 +118,8 @@ def _quote_qualified(tablename, schema=None):
     if schema is not None:
         parts = [schema] + parts
     return '.'.join(_quote(part) for part in parts)
-    
+
+
 
 def _placeholders(connection, names):
     # discover the paramstyle
