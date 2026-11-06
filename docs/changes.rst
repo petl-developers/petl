@@ -8,6 +8,9 @@ Version 1.7.32
   in ``melt()``.
   By :user:`IlyaKhalafi`, :issue:`786`.
 
+* Avoid repeating right-hand key columns when join keys use negative indexes.
+  By :user:`IlyaKhalafi`, :issue:`790`.
+
 * Keep the header and data aligned when ``unpack()`` selects a field by a negative index.
   By :user:`IlyaKhalafi`, :issue:`781`.
 
