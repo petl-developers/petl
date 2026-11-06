@@ -1,8 +1,12 @@
 Changes
 =======
 
-Version 1.7.31
+Version 1.7.32
 --------------
+
+* Exclude negatively selected fields from the inferred keys or variables
+  in ``melt()``.
+  By :user:`IlyaKhalafi`, :issue:`786`.
 
 * Keep the header and data aligned when ``unpack()`` selects a field by a negative index.
   By :user:`IlyaKhalafi`, :issue:`781`.
@@ -20,6 +24,9 @@ Version 1.7.31
   indexes repeated the key columns. Negative indexes count from the end of
   the header, and in ``merge()`` indexes refer to the combined header.
   By :user:`LuisFigueroaG`, :issue:`774`.
+
+Version 1.7.31
+--------------
 
 * Refresh nine related-work links using project sites, source repositories,
   author pages, and clearly labelled research/book references.
