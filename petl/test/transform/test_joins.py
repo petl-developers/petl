@@ -1546,3 +1546,12 @@ def test_unjoin_explicit_key_5():
     ieq(expect_left, left)
     ieq(expect_right, right)
     ieq(expect_right, right)
+
+
+def test_joins_negative_key_indices():
+    left = [('value', 'id'), ('a', 1)]
+    right = [('other', 'key'), ('x', 1)]
+    expected = [('value', 'id', 'other'), ('a', 1, 'x')]
+    for join_impl in (join, leftjoin, rightjoin, outerjoin, hashjoin,
+                      hashleftjoin, hashrightjoin, lookupjoin, hashlookupjoin):
+        ieq(expected, join_impl(left, right, lkey=-1, rkey=-1))
