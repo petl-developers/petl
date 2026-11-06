@@ -237,7 +237,6 @@ def test_cat_dupfields():
 
     # duplicate field names are matched positionally, in order, so the
     # second 'foo' column keeps its own values (see issue #561)
-
     actual = cat(table1)
     expect = (('foo', 'foo'),
               (1, 'A'),
