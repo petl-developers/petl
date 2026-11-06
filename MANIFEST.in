@@ -1,3 +1,23 @@
 include *.txt
-recursive-include docs *.txt
 
+# Only the files required to build and install the package should be
+# included in the source distribution (see issue #605). setuptools-scm
+# otherwise pulls every git-tracked file (CI workflows, editor config,
+# docs, examples, dev requirements, ...) into the sdist.
+# Note: the old "recursive-include docs *.txt" line is dropped as well;
+# docs/ contains no *.txt files, so it only produced a "no files found"
+# warning during the build.
+prune .github
+prune .vscode
+prune docs
+prune examples
+global-exclude *.ipynb
+global-exclude requirements-*.txt
+global-exclude tox.ini
+global-exclude pytest.ini
+global-exclude docker-compose*.yml
+global-exclude .gitignore
+global-exclude .readthedocs.yaml
+global-exclude .flake8
+global-exclude .coveragerc
+global-exclude CODE_OF_CONDUCT.md
