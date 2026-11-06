@@ -11,6 +11,20 @@ from petl.util.base import asindices, Table
 
 
 def listoflists(tbl):
+    """
+    Materialise the table as a list of lists.
+
+    The header row is included as the first list, and each data row is
+    converted to a list. The whole table is held in memory, so this is
+    useful when a concrete copy of a table is needed, e.g., before passing
+    it to code that expects a list, or before iterating over a table
+    more than once.
+
+    See also :func:`petl.util.materialise.listoftuples`,
+    :func:`petl.util.materialise.tupleoflists` and
+    :func:`petl.util.materialise.tupleoftuples`.
+
+    """
     return [list(row) for row in tbl]
 
 
@@ -19,6 +33,20 @@ Table.lol = listoflists
 
 
 def tupleoftuples(tbl):
+    """
+    Materialise the table as a tuple of tuples.
+
+    The header row is included as the first tuple, and each data row is
+    converted to a tuple. The whole table is held in memory, so this is
+    useful when an immutable, concrete copy of a table is needed, e.g.,
+    before using a table as a dictionary key or passing it to code that
+    expects a tuple.
+
+    See also :func:`petl.util.materialise.listoflists`,
+    :func:`petl.util.materialise.listoftuples` and
+    :func:`petl.util.materialise.tupleoflists`.
+
+    """
     return tuple(tuple(row) for row in tbl)
 
 
@@ -27,6 +55,19 @@ Table.tot = tupleoftuples
 
 
 def listoftuples(tbl):
+    """
+    Materialise the table as a list of tuples.
+
+    The header row is included as the first tuple, and each data row is
+    converted to a tuple. The whole table is held in memory, so this is
+    useful when a concrete copy of a table is needed with immutable rows,
+    e.g., before passing it to code that expects a list of tuples.
+
+    See also :func:`petl.util.materialise.listoflists`,
+    :func:`petl.util.materialise.tupleoflists` and
+    :func:`petl.util.materialise.tupleoftuples`.
+
+    """
     return [tuple(row) for row in tbl]
 
 
@@ -35,6 +76,19 @@ Table.lot = listoftuples
 
 
 def tupleoflists(tbl):
+    """
+    Materialise the table as a tuple of lists.
+
+    The header row is included as the first list, and each data row is
+    converted to a list. The whole table is held in memory, so this is
+    useful when a concrete copy of a table is needed with an immutable
+    outer container but mutable rows.
+
+    See also :func:`petl.util.materialise.listoflists`,
+    :func:`petl.util.materialise.listoftuples` and
+    :func:`petl.util.materialise.tupleoftuples`.
+
+    """
     return tuple(list(row) for row in tbl)
 
 
