@@ -10,6 +10,8 @@ from petl.compat import text_type, numeric_types, next, PY2, izip_longest, \
 
 # internal dependencies
 from petl.errors import ArgumentError
+from html import escape as html_escape
+
 from petl.util.base import Table, Record
 from petl.io.base import getcodec
 from petl.io.sources import write_source_from_arg
@@ -54,6 +56,11 @@ def tohtml(table, source=None, encoding=None, errors='strict', caption=None,
 
     The `caption` keyword argument is used to provide a table caption
     in the output HTML.
+
+    Header and cell values are HTML-escaped so that text containing
+    ``<``, ``>`` or ``&`` renders as it was written. User-supplied
+    formatting arguments (`caption`, `tr_style`, `td_styles`) are not
+    escaped.
 
     """
 
@@ -207,7 +214,7 @@ def _write_begin(f, flds, lineterminator, caption, index_header, truncate):
                 h = '%s|%s' % (i, h)
             if truncate:
                 h = text_type(h)[:truncate]
-            f.write(('<th>%s</th>' % h) + lineterminator)
+            f.write(('<th>%s</th>' % html_escape(text_type(h))) + lineterminator)
         f.write('</tr>' + lineterminator)
         f.write('</thead>' + lineterminator)
     f.write('<tbody>' + lineterminator)
@@ -224,6 +231,7 @@ def _write_row(f, flds, row, lineterminator, vrepr, tr_style, td_styles,
         r = vrepr(v)
         if truncate:
             r = r[:truncate]
+        r = html_escape(text_type(r))
         td_css = _get_td_css(h, v, td_styles)
         if td_css:
             f.write(("<td style='%s'>%s</td>" % (td_css, r)) + lineterminator)
