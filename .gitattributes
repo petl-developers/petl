@@ -1,0 +1,42 @@
+# Merge and Diff Configurations --------------------------------------------------------
+
+# Avoid frequent merge conflicts in the changelog by using merge=union
+# Using diff=markdown because diff=rst is not a built-in diff format
+
+docs/changes.rst text merge=union eol=lf diff=markdown
+
+## File Type Settings ------------------------------------------------------------------
+
+#@ https://github.com/gitattributes/gitattributes/blob/master/Python.gitattributes
+
+# Basic .gitattributes for a python repo.
+
+# Source files
+# ============
+*.pxd    text diff=python
+*.py     text diff=python
+*.py3    text diff=python
+*.pyw    text diff=python
+*.pyx    text diff=python
+*.pyz    text diff=python
+*.pyi    text diff=python
+
+# Binary files
+# ============
+*.db     binary
+*.p      binary
+*.pkl    binary
+*.pickle binary
+*.pyc    binary export-ignore
+*.pyo    binary export-ignore
+*.pyd    binary
+
+# Jupyter notebook
+*.ipynb  text eol=lf
+
+# Note: .db, .p, and .pkl files are associated
+# with the python modules ``pickle``, ``dbm.*``,
+# ``shelve``, ``marshal``, ``anydbm``, & ``bsddb``
+# (among others).
+
+## END of .gitattributes file ----------------------------------------------------------
