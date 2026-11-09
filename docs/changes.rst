@@ -4,6 +4,11 @@ Changes
 Version 1.7.32
 --------------
 
+* Give each ``randomtable()`` iterator an independent random generator so
+  interleaved iterations and unrelated random calls preserve seeded output
+  without changing Python's global random state.
+  By :user:`akashmalbari`.
+
 * Exclude negatively selected fields from the inferred keys or variables
   in ``melt()``.
   By :user:`IlyaKhalafi`, :issue:`786`.
