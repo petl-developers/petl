@@ -7,6 +7,10 @@ Version 1.7.32
 * Keep headers aligned with row values when ``unpack()`` selects a duplicate
   field name by index.
   By :user:`HocVoNgThai`.
+* Preserve explicit iterator headers across rows and repeated passes in
+  ``fromdicts()`` and ``fromjson()`` without consuming headers until the first
+  iteration.
+  By :user:`IlyaKhalafi`, :issue:`794`.
 
 * Exclude negatively selected fields from the inferred keys or variables
   in ``melt()``.

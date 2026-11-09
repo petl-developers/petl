@@ -11,6 +11,69 @@ from petl.test.helpers import ieq
 from petl import dummytable, fromjson, fromdicts, tojson, tojsonarrays
 
 
+@pytest.mark.parametrize('header_type', [list, tuple, iter])
+@pytest.mark.parametrize('generator', [False, True])
+def test_fromdicts_header_iterable(header_type, generator):
+    records = [{'a': 1, 'b': 2}, {'a': 3}]
+    source = (record for record in records) if generator else records
+    table = fromdicts(source, header=header_type(['b', 'a']), missing=-1)
+    expected = [('b', 'a'), (2, 1), (-1, 3)]
+    assert [tuple(row) for row in table] == expected
+    assert [tuple(row) for row in table] == expected
+
+
+@pytest.mark.parametrize('lines', [False, True])
+def test_fromjson_iterator_header(tmpdir, lines):
+    records = [{'a': 1, 'b': 2}, {'a': 3}]
+    content = '\n'.join(json.dumps(row) for row in records) if lines else json.dumps(records)
+    path = tmpdir.join('headers.json')
+    path.write(content)
+    table = fromjson(str(path), lines=lines, header=iter(['b', 'a']), missing=-1)
+    expected = [('b', 'a'), (2, 1), (-1, 3)]
+    assert [tuple(row) for row in table] == expected
+    assert [tuple(row) for row in table] == expected
+
+
+@pytest.mark.parametrize('kind', ['dicts', 'generator', 'json', 'lines'])
+def test_header_is_lazy(tmpdir, kind):
+    calls = []
+
+    def header():
+        calls.append('header')
+        yield 'a'
+
+    records = [{'a': 1}, {'a': 2}]
+    if kind in ('json', 'lines'):
+        path = tmpdir.join('lazy.json')
+        content = ('\n'.join(json.dumps(row) for row in records)
+                   if kind == 'lines' else json.dumps(records))
+        path.write(content)
+        table = fromjson(str(path), lines=kind == 'lines', header=header())
+    else:
+        source = (record for record in records) if kind == 'generator' else records
+        table = fromdicts(source, header=header())
+
+    assert calls == []
+    rows = iter(table)
+    assert calls == []
+    assert next(rows) == ('a',)
+    assert calls == ['header']
+    assert list(rows) == [(1,), (2,)]
+    assert list(table) == [('a',), (1,), (2,)]
+    assert calls == ['header']
+
+
+def test_fromdicts_failed_header_cleanup():
+    def header():
+        yield 'a'
+        raise ValueError('broken header')
+
+    table = fromdicts((record for record in [{'a': 1}]), header=header())
+    with pytest.raises(ValueError, match='broken header'):
+        next(iter(table))
+    table.__del__()
+
+
 @pytest.mark.parametrize('header', [[], ()])
 @pytest.mark.parametrize('kind', ['list', 'generator'])
 def test_fromdicts_explicit_empty_header(kind, header):
