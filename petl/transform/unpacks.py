@@ -82,7 +82,7 @@ def iterunpack(source, field, newfields, include_original, missing):
     # determine output fields
     outhdr = list(flds)
     if not include_original:
-        outhdr.remove(field)
+        del outhdr[field_index]
     if isinstance(newfields, (list, tuple)):
         outhdr.extend(newfields)
         nunpack = len(newfields)
