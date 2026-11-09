@@ -36,6 +36,8 @@ def unpack(table, field, newfields=None, include_original=False, missing=None):
     values than new fields, `missing` values will be added.
 
     Negative field indices count from the end of the header.
+    When field names repeat, an index selects that position rather than the
+    first occurrence of the name.
 
     See also :func:`petl.transform.unpacks.unpackdict`.
 
@@ -82,7 +84,7 @@ def iterunpack(source, field, newfields, include_original, missing):
     # determine output fields
     outhdr = list(flds)
     if not include_original:
-        outhdr.remove(field)
+        del outhdr[field_index]
     if isinstance(newfields, (list, tuple)):
         outhdr.extend(newfields)
         nunpack = len(newfields)

@@ -52,6 +52,9 @@ def fromjson(source, *args, **kwargs):
     An empty JSON lines file produces a table with no data rows. If no
     `header` is supplied, the table has an empty header tuple.
 
+    An explicit `header` iterable is read once on first iteration and reused
+    for every row and subsequent pass over the table.
+
     Additional arguments are passed to :func:`json.load`, or to
     :func:`json.loads` for each JSON line. For example, ``parse_float=Decimal``
     preserves decimal precision in both formats. Decoder options also apply
@@ -116,6 +119,8 @@ class JsonView(Table):
         self.kwargs = kwargs
 
     def __iter__(self):
+        if self._header is not None:
+            self._header = tuple(self._header)
         with self.source.open('rb') as f:
             if not PY2:
                 # wrap buffer for text IO
@@ -155,6 +160,9 @@ def fromdicts(dicts, header=None, sample=1000, missing=None):
         +-----+-----+
         | 'c' |   2 |
         +-----+-----+
+
+    An explicit `header` iterable is read once on first iteration and reused
+    for every row and subsequent pass over the table.
 
     Argument `dicts` can also be a generator, the output of generator
     is iterated and cached using a temporary file to support further
@@ -263,7 +271,10 @@ class DictsView(Table):
         self.missing = missing
 
     def __iter__(self):
-        return iterdicts(self._dicts, self._header, self.sample, self.missing)
+        if self._header is not None:
+            self._header = tuple(self._header)
+        for row in iterdicts(self._dicts, self._header, self.sample, self.missing):  # noqa: UP028 - Python 2 compatibility
+            yield row
 
     @property
     def dicts(self):
@@ -287,6 +298,8 @@ class DictsGeneratorView(DictsView):
     def __iter__(self):
         if self._header is None:
             self._determine_header()
+        else:
+            self._header = tuple(self._header)
         yield self._header
 
         if not self._filecache:
