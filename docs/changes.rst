@@ -4,6 +4,10 @@ Changes
 Version 1.7.32
 --------------
 
+* Keep headers aligned with row values when ``unpack()`` selects a duplicate
+  field name by index.
+  By :user:`HocVoNgThai`.
+
 * Exclude negatively selected fields from the inferred keys or variables
   in ``melt()``.
   By :user:`IlyaKhalafi`, :issue:`786`.
