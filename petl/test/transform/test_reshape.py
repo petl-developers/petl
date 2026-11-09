@@ -75,6 +75,30 @@ def test_melt_empty():
     ieq(expect, actual)
 
 
+@pytest.mark.parametrize('key', [-1, ('id', -1)])
+def test_melt_negative_key(key):
+    table = [('id', 'value', 'group'), (1, 20, 'a')]
+    if key == -1:
+        expect = [('group', 'variable', 'value'),
+                  ('a', 'id', 1), ('a', 'value', 20)]
+    else:
+        expect = [('id', 'group', 'variable', 'value'),
+                  (1, 'a', 'value', 20)]
+    ieq(expect, melt(table, key=key))
+
+
+def test_melt_negative_variable():
+    table = [('id', 'value', 'group'), (1, 20, 'a')]
+    expect = [('id', 'group', 'variable', 'value'), (1, 'a', -2, 20)]
+    ieq(expect, melt(table, variables=-2))
+
+
+@pytest.mark.parametrize('hdr', [(), ('id', 'value', 'group')])
+def test_melt_missing_negative_variable(hdr):
+    expect = [hdr + ('variable', 'value')]
+    ieq(expect, melt([hdr], variables=-len(hdr) - 1))
+
+
 def test_melt_headerless():
     table = []
     expect = []

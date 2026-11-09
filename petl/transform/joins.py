@@ -43,6 +43,16 @@ def keys_from_args(left, right, key, lkey, rkey):
     return lkey, rkey
 
 
+def _nonkey_indices(hdr, indices):
+    """Return non-key positions, including when keys use negative indexes.
+
+    >>> _nonkey_indices(('id', 'value'), (-1,))
+    [0]
+    """
+    key_indices = {i if i >= 0 else len(hdr) + i for i in indices}
+    return [i for i in range(len(hdr)) if i not in key_indices]
+
+
 def join(left, right, key=None, lkey=None, rkey=None, presorted=False,
          buffersize=None, tempdir=None, cache=True, lprefix=None, rprefix=None):
     """
@@ -356,7 +366,7 @@ def iterjoin(left, right, lkey, rkey, leftouter=False, rightouter=False,
     # determine indices of non-key fields in the right table
     # (in the output, we only include key fields from the left table - we
     # don't want to duplicate fields)
-    rvind = [i for i in range(len(rhdr)) if i not in rkind]
+    rvind = _nonkey_indices(rhdr, rkind)
     rgetv = rowgetter(*rvind)
 
     # determine the output fields
@@ -748,7 +758,7 @@ def iterlookupjoin(left, right, lkey, rkey, missing=None, lprefix=None,
     # determine indices of non-key fields in the right table
     # (in the output, we only include key fields from the left table - we
     # don't want to duplicate fields)
-    rvind = [i for i in range(len(rhdr)) if i not in rkind]
+    rvind = _nonkey_indices(rhdr, rkind)
     rgetv = rowgetter(*rvind)
 
     # determine the output fields

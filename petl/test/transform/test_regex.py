@@ -331,3 +331,29 @@ def test_capture_none_value():
               ('1', '', ''),
               ('2', 'A', '1'))
     ieq(expect, result)
+
+
+def test_split_negative_index():
+    table = [('id', 'tags'), (1, 'red,blue')]
+    ieq([('id', 'first', 'second'), (1, 'red', 'blue')],
+        split(table, -1, ',', newfields=['first', 'second']))
+
+
+def test_splitdown_negative_index():
+    table = [('id', 'tags'), (1, 'red,blue')]
+    ieq([('id', 'tags'), (1, 'red'), (1, 'blue')],
+        splitdown(table, -1, ','))
+
+
+@pytest.mark.parametrize('transform', [split, splitdown])
+@pytest.mark.parametrize('field', [-3, 2])
+def test_split_invalid_index(transform, field):
+    with pytest.raises(ArgumentError):
+        list(transform([('id', 'tags'), (1, 'red,blue')], field, ','))
+
+
+def test_split_duplicate_field_names_by_index():
+    table = [('tag', 'id', 'tag'), ('left', 1, 'red,blue')]
+    expectation = [('tag', 'id', 'first', 'second'),
+                   ('left', 1, 'red', 'blue')]
+    ieq(expectation, split(table, 2, ',', newfields=['first', 'second']))

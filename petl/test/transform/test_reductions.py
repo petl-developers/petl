@@ -11,7 +11,7 @@ from petl.test.helpers import ieq
 from petl.errors import FieldSelectionError
 from petl.util import strjoin
 from petl.transform.reductions import rowreduce, aggregate, \
-    mergeduplicates, Conflict, fold
+    mergeduplicates, merge, Conflict, fold
 
 
 def test_rowreduce():
@@ -585,6 +585,141 @@ def test_mergeduplicates_compoundkey():
               ('c', 3, Conflict([True, False]))]
     ieq(expect, actual)
         
+
+def test_mergeduplicates_field_index():
+    table = [['foo', 'bar', 'baz'],
+             ['aa', 1, True],
+             ['aa', None, False],
+             ['bb', 2, True]]
+    expect = [('foo', 'bar', 'baz'),
+              ('aa', 1, Conflict([True, False])),
+              ('bb', 2, True)]
+    for key in 0, -3, [0], ['foo'], (-3,):
+        ieq(expect, mergeduplicates(table, key))
+        ieq(expect, mergeduplicates(table, key, presorted=True))
+        ieq(expect, merge(table[:2], table[:1] + table[2:], key=key))
+
+    # key fields come first in the output, as with field names
+    expect = [('baz', 'foo', 'bar'),
+              (False, 'aa', None),
+              (True, Conflict(['aa', 'bb']), Conflict([1, 2]))]
+    ieq(expect, mergeduplicates(table, -1))
+    ieq(expect, mergeduplicates(table, 'baz'))
+
+
+def test_mergeduplicates_compoundkey_field_index():
+    table = [['foo', 'bar', 'baz'],
+             ['a', 1, True],
+             ['a', 1, None],
+             ['a', 2, False],
+             ['c', 3, True],
+             ['c', 3, False]]
+    expect = [('foo', 'bar', 'baz'),
+              ('a', 1, True),
+              ('a', 2, False),
+              ('c', 3, Conflict([True, False]))]
+    for key in (0, 1), [-3, -2], ('foo', 1):
+        ieq(expect, mergeduplicates(table, key))
+        ieq(expect, mergeduplicates(table, key, presorted=True))
+
+
+def test_mergeduplicates_field_index_out_of_range():
+    table = [['foo', 'bar'],
+             ['a', 1]]
+    for key in 2, -3, [0, 2]:
+        with pytest.raises(FieldSelectionError):
+            mergeduplicates(table, key).nrows()
+        with pytest.raises(FieldSelectionError):
+            mergeduplicates(table, key, presorted=True).nrows()
+
+
+def test_mergeduplicates_field_index_ragged_rows():
+    # a negative index counts from the end of the header, not of the row
+    table = [['foo', 'bar', 'baz'],
+             ['s1', 'a'],
+             ['f', 0, 'x'],
+             ['s2', 'z']]
+    expect = [('baz', 'foo', 'bar'),
+              (None, Conflict(['s1', 's2']), Conflict(['a', 'z'])),
+              ('x', 'f', 0)]
+    for key in 'baz', 2, -1:
+        ieq(expect, mergeduplicates(table, key))
+
+    table = [['foo', 'bar'],
+             ['a', 1, 'zz'],
+             ['b', 2, 'mm'],
+             ['c', 1, 'aa']]
+    expect = [('bar', 'foo'),
+              (1, Conflict(['a', 'c'])),
+              (2, 'b')]
+    for key in 'bar', 1, -1:
+        ieq(expect, mergeduplicates(table, key))
+
+
+def test_mergeduplicates_header_change_between_iterations():
+    # the key is resolved against the header of each iteration, so a reused
+    # view still groups equal keys after its source changes the header
+    table = [['id', 'value'],
+             ['a', 1],
+             ['b', 2],
+             ['a', 3]]
+    views = [mergeduplicates(table, key, cache=False) for key in ('id', -2)]
+    for view in views:
+        ieq([('id', 'value'), ('a', Conflict([1, 3])), ('b', 2)], view)
+
+    table[:] = [['x', 'id', 'value'],
+                [1, 'a', 1],
+                [2, 'b', 2],
+                [3, 'a', 3]]
+    expect = [('id', 'x', 'value'),
+              ('a', Conflict([1, 3]), Conflict([1, 3])),
+              ('b', 2, 2)]
+    for view in views:
+        ieq(expect, view)
+
+
+def test_merge_field_index_reordered_fields():
+    # an index refers to the combined header, whatever the order of the
+    # fields in each table
+    table1 = [['id', 'value'],
+              [1, 'z'],
+              [3, 'c']]
+    table2 = [['value', 'id'],
+              ['a', 2],
+              ['b', 1]]
+    expect = [('id', 'value'),
+              (1, Conflict(['z', 'b'])),
+              (2, 'a'),
+              (3, 'c')]
+    for key in 'id', 0, -2, [0]:
+        ieq(expect, merge(table1, table2, key=key))
+        ieq(expect[:1] + expect[:0:-1],
+            merge(table1, table2, key=key, reverse=True))
+    for key in 2, -3:
+        with pytest.raises(FieldSelectionError):
+            merge(table1, table2, key=key).nrows()
+
+
+def test_merge_field_index_header_change_between_iterations():
+    # an index key is looked up by name in each table, so a table that
+    # changes the order of its fields is still sorted by the same field
+    table1 = [['id', 'value'],
+              [1, 'z'],
+              [3, 'c']]
+    table2 = [['id', 'value'],
+              [2, 'a'],
+              [1, 'b']]
+    expect = [('id', 'value'),
+              (1, Conflict(['z', 'b'])),
+              (2, 'a'),
+              (3, 'c')]
+    view = merge(table1, table2, key=0, cache=False)
+    ieq(expect, view)
+    table2[:] = [['value', 'id'],
+                 ['a', 2],
+                 ['b', 1]]
+    ieq(expect, view)
+
 
 def test_fold():
 

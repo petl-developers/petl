@@ -1,8 +1,43 @@
 Changes
 =======
 
+Version 1.7.32
+--------------
+
+* Keep headers aligned with row values when ``unpack()`` selects a duplicate
+  field name by index.
+  By :user:`HocVoNgThai`.
+
+* Exclude negatively selected fields from the inferred keys or variables
+  in ``melt()``.
+  By :user:`IlyaKhalafi`, :issue:`786`.
+
+* Avoid repeating right-hand key columns when join keys use negative indexes.
+  By :user:`IlyaKhalafi`, :issue:`790`.
+
+* Keep the header and data aligned when ``unpack()`` selects a field by a negative index.
+  By :user:`IlyaKhalafi`, :issue:`781`.
+
+* Preserve header alignment when ``split()`` selects a duplicate field by index.
+  By :user:`IlyaKhalafi`, :issue:`779`.
+
+* Normalize negative field indexes in ``split()`` and ``splitdown()`` so
+  output rows replace or remove the selected cell correctly.
+  By :user:`IlyaKhalafi`, :issue:`777`.
+
+* Accept field indexes and single-field lists as the key in
+  ``mergeduplicates()`` and ``merge()``. An integer key raised ``TypeError``,
+  a one-item list split each key value into characters, and a list of
+  indexes repeated the key columns. Negative indexes count from the end of
+  the header, and in ``merge()`` indexes refer to the combined header.
+  By :user:`LuisFigueroaG`, :issue:`774`.
+
 Version 1.7.31
 --------------
+
+* Refresh nine related-work links using project sites, source repositories,
+  author pages, and clearly labelled research/book references.
+  By :user:`ub3dqy`, :issue:`616`.
 
 * Close the table with a bottom border when ``look()`` uses the default grid
   style on a table without data rows, as the simple style already does, so

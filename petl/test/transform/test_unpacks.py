@@ -70,6 +70,29 @@ def test_unpack():
     ieq(expect8, table8)
 
 
+@pytest.mark.parametrize('table, field, expected', [
+    ([['id', 'parts'], [1, ['a', 'b']]], -1,
+     [('id', 'a', 'b'), (1, 'a', 'b')]),
+    ([['parts', 'id'], [['a', 'b'], 1]], -2,
+     [('id', 'a', 'b'), (1, 'a', 'b')]),
+])
+def test_unpack_negative_index(table, field, expected):
+    ieq(expected, unpack(table, field, ['a', 'b']))
+
+
+@pytest.mark.parametrize('field', [2, -1])
+def test_unpack_duplicate_field_names(field):
+    table = [['item', 'keep', 'item'], ['left', 'middle', ['a', 'b']]]
+    expected = [('item', 'keep', 'x', 'y'), ('left', 'middle', 'a', 'b')]
+    ieq(expected, unpack(table, field, ['x', 'y']))
+
+
+@pytest.mark.parametrize('field', [-3, 2])
+def test_unpack_invalid_index(field):
+    with pytest.raises(ArgumentError):
+        list(unpack([['id', 'parts'], [1, ['a']]], field, ['a']))
+
+
 def test_unpack_empty():
 
     table1 = (('foo', 'bar'),)

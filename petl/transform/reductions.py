@@ -7,8 +7,8 @@ from collections import OrderedDict
 from petl.compat import next, string_types, reduce, text_type
 
 
-from petl.errors import ArgumentError
-from petl.util.base import Table, iterpeek, rowgroupby
+from petl.errors import ArgumentError, FieldSelectionError
+from petl.util.base import Table, iterpeek, rowgroupby, asindices
 from petl.util.base import values, records
 from petl.util.counting import nrows
 from petl.transform.sorts import sort, mergesort
@@ -579,39 +579,68 @@ class MergeDuplicatesView(Table):
 
     def __init__(self, table, key, missing=None, presorted=False,
                  buffersize=None, tempdir=None, cache=True):
-        if presorted:
-            self.table = table
-        else:
-            self.table = sort(table, key, buffersize=buffersize,
-                              tempdir=tempdir, cache=cache)
+        self.table = table
         self.key = key
         self.missing = missing
+        self.presorted = presorted
+        self.buffersize = buffersize
+        self.tempdir = tempdir
+        self._cache = cache
+        self._sorted = None
+        self._sortkey = None
 
     def __iter__(self):
-        return itermergeduplicates(self.table, self.key, self.missing)
+        table = self.table
+        if not self.presorted:
+            key = self.key
+            if any(isinstance(k, int) and k < 0 for k in _keyspec(key)):
+                # sort by the same field indices that rows are grouped by, so
+                # a negative index selects the same field in rows shorter or
+                # longer than the header; the header can change between
+                # uncached iterations, so resolve the index every time
+                # against the header of the sorted table (the cached one,
+                # if the sort is cached)
+                sortedtable = table if self._sorted is None else self._sorted
+                key = _mergekeyindices(next(iter(sortedtable), ()), key)
+            if self._sorted is None or key != self._sortkey:
+                self._sorted = sort(table, key, buffersize=self.buffersize,
+                                    tempdir=self.tempdir, cache=self._cache)
+                self._sortkey = key
+            table = self._sorted
+        return itermergeduplicates(table, self.key, self.missing)
+
+
+def _keyspec(key):
+    return key if isinstance(key, (list, tuple)) else (key,)
+
+
+def _mergekeyindices(hdr, key):
+    # resolve the key to non-negative field indices, so the key can also be
+    # given by field index or as a list with a single field
+    keyidxs = []
+    for i in asindices(hdr, key):
+        if i < -len(hdr):
+            raise FieldSelectionError(i)
+        keyidxs.append(i % len(hdr))
+    return keyidxs
 
 
 def itermergeduplicates(table, key, missing):
     it = iter(table)
     hdr, it = iterpeek(it)
     flds = list(map(text_type, hdr))
+    keyidxs = _mergekeyindices(hdr, key)
 
     # determine output fields
-    if isinstance(key, string_types):
-        outhdr = [key]
-        keyflds = {key}
-    else:
-        outhdr = list(key)
-        keyflds = set(key)
-    valflds = [f for f in flds if f not in keyflds]
-    valfldidxs = [flds.index(f) for f in valflds]
-    outhdr.extend(valflds)
+    outhdr = [flds[i] for i in keyidxs]
+    valfldidxs = [i for i in range(len(flds)) if i not in keyidxs]
+    outhdr.extend(flds[i] for i in valfldidxs)
     yield tuple(outhdr)
 
     # do the work
-    for k, grp in rowgroupby(it, key):
+    for k, grp in rowgroupby(it, keyidxs):
         grp = list(grp)
-        if isinstance(key, string_types):
+        if len(keyidxs) == 1:
             outrow = [k]
         else:
             outrow = list(k)
@@ -661,6 +690,12 @@ def merge(*tables, **kwargs):
 
     assert 'key' in kwargs, 'keyword argument "key" is required'
     key = kwargs['key']
+    if any(isinstance(k, int) for k in _keyspec(key)):
+        # mergesort() would sort each table by the index in its own header,
+        # so select the key fields by name from the combined header instead
+        hdr = next(iter(mergesort(*tables, presorted=True,
+                                  header=kwargs.get('header'))))
+        key = kwargs['key'] = [hdr[i] for i in _mergekeyindices(hdr, key)]
     t1 = mergesort(*tables, **kwargs)
     t2 = mergeduplicates(t1, key=key, presorted=True)
     return t2

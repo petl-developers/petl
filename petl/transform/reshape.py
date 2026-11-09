@@ -127,12 +127,14 @@ def itermelt(source, key, variables, variablefield, valuefield):
 
     if key is None:
         # assume key is fields not in variables
+        selected = {i + len(hdr) if i < 0 else i for i in variables_indices}
         key_indices = [i for i in range(len(hdr))
-                       if i not in variables_indices]
+                       if i not in selected]
     if variables is None:
         # assume variables are fields not in key
+        selected = {i + len(hdr) if i < 0 else i for i in key_indices}
         variables_indices = [i for i in range(len(hdr))
-                             if i not in key_indices]
+                             if i not in selected]
         variables = [hdr[i] for i in variables_indices]
 
     getkey = rowgetter(*key_indices)

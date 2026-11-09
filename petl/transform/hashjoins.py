@@ -4,7 +4,7 @@ import operator
 
 from petl.compat import next, text_type
 from petl.transform.basics import stack
-from petl.transform.joins import keys_from_args
+from petl.transform.joins import keys_from_args, _nonkey_indices
 from petl.util.base import Table, asindices, iterpeek, rowgetter
 from petl.util.lookups import lookup, lookupone
 
@@ -76,7 +76,7 @@ def iterhashjoin(left, right, lkey, rkey, rlookup, lprefix, rprefix):
     # determine indices of non-key fields in the right table
     # (in the output, we only include key fields from the left table - we
     # don't want to duplicate fields)
-    rvind = [i for i in range(len(rhdr)) if i not in rkind]
+    rvind = _nonkey_indices(rhdr, rkind)
     rgetv = rowgetter(*rvind)
     
     # determine the output fields
@@ -177,7 +177,7 @@ def iterhashleftjoin(left, right, lkey, rkey, missing, rlookup, lprefix,
     # determine indices of non-key fields in the right table
     # (in the output, we only include key fields from the left table - we
     # don't want to duplicate fields)
-    rvind = [i for i in range(len(rhdr)) if i not in rkind]
+    rvind = _nonkey_indices(rhdr, rkind)
     rgetv = rowgetter(*rvind)
     
     # determine the output fields
@@ -283,7 +283,7 @@ def iterhashrightjoin(left, right, lkey, rkey, missing, llookup, lprefix,
     # determine indices of non-key fields in the right table
     # (in the output, we only include key fields from the left table - we
     # don't want to duplicate fields)
-    rvind = [i for i in range(len(rhdr)) if i not in rkind]
+    rvind = _nonkey_indices(rhdr, rkind)
     rgetv = rowgetter(*rvind)
     
     # determine the output fields
@@ -445,7 +445,7 @@ def iterhashlookupjoin(left, right, lkey, rkey, missing, lprefix, rprefix):
     # determine indices of non-key fields in the right table
     # (in the output, we only include key fields from the left table - we
     # don't want to duplicate fields)
-    rvind = [i for i in range(len(rhdr)) if i not in rkind]
+    rvind = _nonkey_indices(rhdr, rkind)
     rgetv = rowgetter(*rvind)
 
     # determine the output fields
