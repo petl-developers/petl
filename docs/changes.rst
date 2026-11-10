@@ -4,6 +4,10 @@ Changes
 Version 1.7.32
 --------------
 
+* Fill every column by position when ``filldown()`` has no explicit field
+  selectors, including columns with integer or mixed-type headers.
+  By :user:`wynneyin`.
+
 * Give each ``randomtable()`` iterator an independent random generator so
   interleaved iterations and unrelated random calls preserve seeded output
   without changing Python's global random state.
