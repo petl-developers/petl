@@ -10,7 +10,14 @@ from petl.compat import text_type, numeric_types, next, PY2, izip_longest, \
 
 # internal dependencies
 from petl.errors import ArgumentError
-from html import escape as html_escape
+try:
+    from html import escape as html_escape
+except ImportError:  # Python 2 (project still declares 2.7 support)
+    from cgi import escape as _cgi_escape
+
+    def html_escape(s, quote=True):
+        # keep parity with html.escape, which escapes quotes by default
+        return _cgi_escape(s, quote)
 
 from petl.util.base import Table, Record
 from petl.io.base import getcodec
