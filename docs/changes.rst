@@ -4,6 +4,9 @@ Changes
 Version 1.7.32
 --------------
 
+* Close remote gzip and bz2 responses after reading or an error.
+  By :user:`IlyaKhalafi`, :issue:`803`.
+
 * Give each ``randomtable()`` iterator an independent random generator so
   interleaved iterations and unrelated random calls preserve seeded output
   without changing Python's global random state.
