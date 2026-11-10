@@ -4,6 +4,10 @@ Changes
 Version 1.7.32
 --------------
 
+* Compare custom missing values by equality in ``coalesce()`` so equal but
+  distinct values fall back to the next field or the configured default.
+  By :user:`wynneyin`.
+
 * Give each ``randomtable()`` iterator an independent random generator so
   interleaved iterations and unrelated random calls preserve seeded output
   without changing Python's global random state.

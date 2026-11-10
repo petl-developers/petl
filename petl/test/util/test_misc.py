@@ -1,6 +1,9 @@
 from __future__ import absolute_import, print_function, division
 
 
+import pytest
+
+import petl as etl
 from petl.test.helpers import eq_
 from petl.compat import PY2
 from petl.util.misc import typeset, diffvalues, diffheaders, substringbefore, \
@@ -50,6 +53,49 @@ def test_diffvalues():
     add, sub = diffvalues(table1, table2, 'foo')
     eq_({'c'}, add)
     eq_({'b'}, sub)
+
+
+@pytest.mark.parametrize('missing, cell', [
+    ('N/A', ''.join(['N', '/', 'A'])),
+    (999, int('999')),
+    (['missing'], ['missing']),
+])
+def test_coalesce_matches_missing_values_by_equality(missing, cell):
+    assert cell == missing
+    assert cell is not missing
+    table = (('a', 'b', 'c'),
+             (cell, cell, 7),
+             (cell, cell, cell),
+             (5, 6, 7),
+             (None, 7, 8))
+    actual = etl.addfield(table, 'chosen',
+                          etl.coalesce('a', 'b', 'c', missing=missing,
+                                       default=0))
+    expected = [('a', 'b', 'c', 'chosen'),
+                (cell, cell, 7, 7),
+                (cell, cell, cell, 0),
+                (5, 6, 7, 5),
+                (None, 7, 8, None)]
+    eq_(expected, list(actual))
+    eq_(expected, list(actual))
+
+
+def test_coalesce_preserves_non_missing_false_values():
+    table = (('a', 'b'),
+             (0, 9),
+             (False, 9),
+             ('', 9),
+             ([], 9),
+             (None, 9),
+             (None, None))
+    actual = etl.addfield(table, 'chosen', etl.coalesce('a', 'b', default=7))
+    eq_([('a', 'b', 'chosen'),
+         (0, 9, 0),
+         (False, 9, False),
+         ('', 9, ''),
+         ([], 9, []),
+         (None, 9, 9),
+         (None, None, 7)], list(actual))
 
 
 def test_substringbefore():
