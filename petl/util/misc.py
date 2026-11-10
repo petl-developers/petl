@@ -167,9 +167,12 @@ def coalesce(*fields, **kwargs):
     value from the specified fields. Intended for use with
     :func:`petl.transform.basics.addfield`.
 
-    Use `missing` to specify the missing value (``None`` by default). Values
-    are compared by equality. If all selected fields are missing, return
-    `default` (``None`` by default).
+    Use `missing` to specify the missing value (``None`` by default). The
+    marker itself is always skipped; other values are compared by equality
+    for custom non-``None`` markers. Comparisons that raise ``TypeError`` or
+    ``ValueError`` (for example, ambiguous array comparisons) are treated as
+    non-matching. If all selected fields are missing, return `default`
+    (``None`` by default).
 
     """
     missing = kwargs.get('missing', None)
@@ -178,8 +181,15 @@ def coalesce(*fields, **kwargs):
     def _coalesce(row):
         for f in fields:
             v = row[f]
-            if v != missing:
-                return v
+            if v is missing:
+                continue
+            if missing is not None:
+                try:
+                    if v == missing:
+                        continue
+                except (TypeError, ValueError):
+                    pass  # non-scalar or otherwise incompatible comparison
+            return v
         return default
 
     return _coalesce

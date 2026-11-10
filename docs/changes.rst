@@ -6,6 +6,8 @@ Version 1.7.32
 
 * Compare custom missing values by equality in ``coalesce()`` so equal but
   distinct values fall back to the next field or the configured default.
+  Preserve identity-based markers and array-valued cells whose comparisons
+  have no scalar truth value.
   By :user:`wynneyin`.
 
 * Give each ``randomtable()`` iterator an independent random generator so

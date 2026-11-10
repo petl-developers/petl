@@ -80,6 +80,33 @@ def test_coalesce_matches_missing_values_by_equality(missing, cell):
     eq_(expected, list(actual))
 
 
+def test_coalesce_skips_identical_nan_marker():
+    missing = float('nan')
+    table = (('a', 'b'), (missing, 9), (missing, missing))
+    actual = etl.addfield(table, 'chosen',
+                          etl.coalesce('a', 'b', missing=missing, default=7))
+    eq_([9, 7], [row[-1] for row in list(actual)[1:]])
+
+
+@pytest.mark.parametrize('missing', [None, 'N/A'])
+def test_coalesce_preserves_array_values(missing):
+    np = pytest.importorskip('numpy')
+    value = np.array([1, 2])
+    table = (('a', 'b'), (value, 9))
+    actual = etl.addfield(table, 'chosen',
+                          etl.coalesce('a', 'b', missing=missing))
+    assert list(actual)[1][-1] is value
+
+
+def test_coalesce_skips_identical_array_marker():
+    np = pytest.importorskip('numpy')
+    missing = np.array([1, 2])
+    table = (('a', 'b'), (missing, 9), (missing, missing))
+    actual = etl.addfield(table, 'chosen',
+                          etl.coalesce('a', 'b', missing=missing, default=7))
+    eq_([9, 7], [row[-1] for row in list(actual)[1:]])
+
+
 def test_coalesce_preserves_non_missing_false_values():
     table = (('a', 'b'),
              (0, 9),
