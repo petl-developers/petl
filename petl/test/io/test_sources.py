@@ -105,6 +105,28 @@ def test_memorysource_2():
     ieq(expect, actual)
 
 
+@pytest.mark.parametrize('read_first', [False, True])
+def test_memorysource_append_preserves_csv_rows(read_first):
+    source = MemorySource(b'name\r\nAda\r\n')
+    if read_first:
+        with source.open('rb') as stream:
+            assert stream.read(2) == b'na'
+
+    etl.appendcsv([('name',), ('Grace',)], source, encoding='ascii')
+    etl.appendcsv([('name',), ('Lin',)], source, encoding='ascii')
+
+    assert source.getvalue() == b'name\r\nAda\r\nGrace\r\nLin\r\n'
+    rows = etl.fromcsv(MemorySource(source.getvalue()))
+    ieq([('name',), ('Ada',), ('Grace',), ('Lin',)], rows)
+
+
+def test_memorysource_append_preserves_text():
+    source = MemorySource('existing\n')
+    with source.open('a') as stream:
+        stream.write('added\n')
+    assert source.getvalue() == 'existing\nadded\n'
+
+
 def test_popensource():
 
     expect = (('foo', 'bar'),)
