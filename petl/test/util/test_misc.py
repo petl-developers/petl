@@ -57,7 +57,7 @@ def test_diffvalues():
 
 @pytest.mark.parametrize('missing, cell', [
     ('N/A', ''.join(['N', '/', 'A'])),
-    (999, int('999')),
+    (10 ** 20, int('100000000000000000000')),
     (['missing'], ['missing']),
 ])
 def test_coalesce_matches_missing_values_by_equality(missing, cell):
