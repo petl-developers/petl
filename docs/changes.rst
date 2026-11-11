@@ -18,6 +18,9 @@ Version 1.7.32
   iteration.
   By :user:`IlyaKhalafi`, :issue:`794`.
 
+* Preserve existing data when appending to a preloaded ``MemorySource``,
+  even after a partial read.
+
 * Exclude negatively selected fields from the inferred keys or variables
   in ``melt()``.
   By :user:`IlyaKhalafi`, :issue:`786`.
