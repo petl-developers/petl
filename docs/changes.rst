@@ -4,6 +4,10 @@ Changes
 Version 1.7.32
 --------------
 
+* Fill every column by position when ``filldown()`` has no explicit field
+  selectors, including columns with integer or mixed-type headers.
+  By :user:`wynneyin`.
+
 * Close remote gzip and bz2 responses after reading or an error.
   By :user:`IlyaKhalafi`, :issue:`803`.
 

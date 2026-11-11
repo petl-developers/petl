@@ -81,7 +81,8 @@ def filldown(table, *fields, **kwargs):
         +------+-----+------+
 
     Use the `missing` keyword argument to control which value is treated as
-    missing (`None` by default).
+    missing (`None` by default). If no fields are specified, all columns are
+    filled by position, including columns with non-string header values.
 
     """
 
@@ -109,9 +110,10 @@ def iterfilldown(table, fillfields, missing):
     except StopIteration:
         return
     yield tuple(hdr)
-    if not fillfields:  # fill down all fields
-        fillfields = hdr
-    fillindices = asindices(hdr, fillfields)
+    if not fillfields:  # fill down all fields by position
+        fillindices = range(len(hdr))
+    else:
+        fillindices = asindices(hdr, fillfields)
     try:
         fill = list(next(it))  # fill values
     except StopIteration:
