@@ -56,6 +56,9 @@ def fromtext(source=None, encoding=None, errors='strict', strip=None,
     characters to strip. Set the `strip` argument to `False` to disable this
     behaviour and leave line endings in place.
 
+    An explicit `header` iterable is read once on first iteration and reused
+    on subsequent passes over the table.
+
     """
 
     source = read_source_from_arg(source)
@@ -74,6 +77,8 @@ class TextView(Table):
         self.strip = strip
 
     def __iter__(self):
+        if self._header is not None:
+            self._header = tuple(self._header)
         with self.source.open('rb') as buf:
 
             # deal with text encoding
@@ -89,7 +94,7 @@ class TextView(Table):
             # generate the table
             try:
                 if self._header is not None:
-                    yield tuple(self._header)
+                    yield self._header
                 if self.strip is False:
                     for line in f:
                         yield (line,)

@@ -4,6 +4,9 @@ Changes
 Version 1.7.32
 --------------
 
+* Preserve explicit iterator headers across repeated passes in ``fromtext()``.
+  By :user:`IlyaKhalafi`.
+
 * Use PETL's mixed-type ordering for variable names discovered by
   ``recast()``, allowing tables with mixed-type headers to be melted and
   recast without a comparison error.
