@@ -7,7 +7,7 @@ import io
 import gzip
 import sys
 import zipfile
-from contextlib import contextmanager
+from contextlib import closing, contextmanager
 import subprocess
 import logging
 
@@ -53,11 +53,12 @@ class GzipSource(object):
             filehandle = urlopen(self.filename)
         else:
             filehandle = self.filename
-        source = gzip.open(filehandle, mode, **self.kwargs)
         try:
-            yield source
+            with closing(gzip.open(filehandle, mode, **self.kwargs)) as source:
+                yield source
         finally:
-            source.close()
+            if self.remote:
+                filehandle.close()
 
 
 class BZ2Source(object):
@@ -79,11 +80,12 @@ class BZ2Source(object):
             filehandle = urlopen(self.filename)
         else:
             filehandle = self.filename
-        source = bz2.BZ2File(filehandle, mode, **self.kwargs)
         try:
-            yield source
+            with closing(bz2.BZ2File(filehandle, mode, **self.kwargs)) as source:
+                yield source
         finally:
-            source.close()
+            if self.remote:
+                filehandle.close()
 
 
 class ZipSource(object):
