@@ -4,6 +4,41 @@ Changes
 Version 1.7.32
 --------------
 
+* Use PETL's mixed-type ordering for variable names discovered by
+  ``recast()``, allowing tables with mixed-type headers to be melted and
+  recast without a comparison error.
+  By :user:`wynneyin`.
+
+* Compare custom missing values by equality in ``coalesce()`` so equal but
+  distinct values fall back to the next field or the configured default.
+  Preserve identity-based markers and array-valued cells whose comparisons
+  have no scalar truth value.
+  By :user:`wynneyin`.
+
+* Fill every column by position when ``filldown()`` has no explicit field
+  selectors, including columns with integer or mixed-type headers.
+  By :user:`wynneyin`.
+
+* Close remote gzip and bz2 responses after reading or an error.
+  By :user:`IlyaKhalafi`, :issue:`803`.
+
+* Give each ``randomtable()`` iterator an independent random generator so
+  interleaved iterations and unrelated random calls preserve seeded output
+  without changing Python's global random state.
+  By :user:`akashmalbari`, :issue:`799`.
+
+* Keep headers aligned with row values when ``unpack()`` selects a duplicate
+  field name by index.
+  By :user:`HocVoNgThai`, :issue:`793`.
+  
+* Preserve explicit iterator headers across rows and repeated passes in
+  ``fromdicts()`` and ``fromjson()`` without consuming headers until the first
+  iteration.
+  By :user:`IlyaKhalafi`, :issue:`794`.
+
+* Preserve existing data when appending to a preloaded ``MemorySource``,
+  even after a partial read.
+
 * Exclude negatively selected fields from the inferred keys or variables
   in ``melt()``.
   By :user:`IlyaKhalafi`, :issue:`786`.

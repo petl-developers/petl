@@ -183,6 +183,45 @@ def test_recast_1():
     ieq(expectation, result)
 
 
+@pytest.mark.parametrize('first, second, expected_header', [
+    (2024, 'forecast', ('id', 2024, 'forecast')),
+    (None, 2024, ('id', None, 2024)),
+    (b'actual', u'forecast', ('id', b'actual', u'forecast')),
+    ('actual', 'forecast', ('id', 'actual', 'forecast')),
+    (2024, 2025, ('id', 2024, 2025)),
+])
+def test_recast_discovers_variables_of_different_types(
+        first, second, expected_header):
+    table = (('id', 'variable', 'value'),
+             ('B', second, 20),
+             ('A', second, 2),
+             ('A', first, 1),
+             ('B', first, 10))
+    expected = (expected_header, ('A', 1, 2), ('B', 10, 20))
+    actual = recast(table, key='id')
+    ieq(expected, actual)
+    ieq(expected, actual)
+
+
+def test_recast_melt_with_mixed_header_types():
+    table = (('id', 2024, 'forecast'), ('B', 10, 20), ('A', 1, 2))
+    actual = recast(melt(table, key='id'), key='id')
+    expected = (('id', 2024, 'forecast'), ('A', 1, 2), ('B', 10, 20))
+    ieq(expected, actual)
+    ieq(expected, actual)
+
+
+def test_recast_preserves_explicit_mixed_variable_order():
+    table = (('id', 'variable', 'value'),
+             ('A', 2024, 1),
+             ('A', 'forecast', 2))
+    actual = recast(table, key='id',
+                    variablefield={'variable': ['forecast', 2024]})
+    expected = (('id', 'forecast', 2024), ('A', 2, 1))
+    ieq(expected, actual)
+    ieq(expected, actual)
+
+
 def test_recast_2():
 
     table = (('id', 'variable', 'value'),

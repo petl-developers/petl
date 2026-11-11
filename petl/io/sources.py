@@ -7,7 +7,7 @@ import io
 import gzip
 import sys
 import zipfile
-from contextlib import contextmanager
+from contextlib import closing, contextmanager
 import subprocess
 import logging
 
@@ -53,11 +53,12 @@ class GzipSource(object):
             filehandle = urlopen(self.filename)
         else:
             filehandle = self.filename
-        source = gzip.open(filehandle, mode, **self.kwargs)
         try:
-            yield source
+            with closing(gzip.open(filehandle, mode, **self.kwargs)) as source:
+                yield source
         finally:
-            source.close()
+            if self.remote:
+                filehandle.close()
 
 
 class BZ2Source(object):
@@ -79,11 +80,12 @@ class BZ2Source(object):
             filehandle = urlopen(self.filename)
         else:
             filehandle = self.filename
-        source = bz2.BZ2File(filehandle, mode, **self.kwargs)
         try:
-            yield source
+            with closing(bz2.BZ2File(filehandle, mode, **self.kwargs)) as source:
+                yield source
         finally:
-            source.close()
+            if self.remote:
+                filehandle.close()
 
 
 class ZipSource(object):
@@ -246,7 +248,8 @@ class MemorySource(object):
         >>> sink.getvalue()
         b'[{"foo": "a", "bar": "1"}, {"foo": "b", "bar": "2"}, {"foo": "c", "bar": "2"}]'
 
-    Also supports appending.
+    Appending adds data after the existing contents, including any initial data
+    supplied to the constructor.
 
     """
 
@@ -273,11 +276,15 @@ class MemorySource(object):
                 else:
                     self.buffer = StringIO()
             elif 'a' in mode:
-                if self.buffer is None:
+                # On Python 2, cStringIO initialized for reading is read-only.
+                if self.buffer is None or not hasattr(self.buffer, 'write'):
                     if 'b' in mode:
                         self.buffer = BytesIO()
                     else:
                         self.buffer = StringIO()
+                    if self.s is not None:
+                        self.buffer.write(self.s)
+                self.buffer.seek(0, io.SEEK_END)
             yield Uncloseable(self.buffer)
         except:
             raise
