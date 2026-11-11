@@ -8,7 +8,7 @@ from petl.compat import next, text_type
 
 
 from petl.errors import ArgumentError
-from petl.comparison import comparable_itemgetter
+from petl.comparison import Comparable, comparable_itemgetter
 from petl.util.base import Table, rowgetter, values, itervalues, \
     header, data, asindices
 from petl.transform.sorts import sort
@@ -263,6 +263,9 @@ def recast(table, key=None, variablefield='variable', valuefield='value',
     Note that the table is scanned once to discover variables, then a second
     time to reshape the data and recast variables as fields. How many rows are
     scanned in the first pass is determined by the `samplesize` argument.
+    Discovered variable names are sorted using PETL's mixed-type ordering,
+    so names such as integers and strings can be recast together. Names
+    explicitly supplied in a `variablefield` dictionary retain their order.
 
     When the result is iterated, invalid key, variable or value field names
     raise :class:`petl.errors.ArgumentError`. The value field must exist in the
@@ -391,7 +394,7 @@ def _prepare_recast(source, key, variablefield, valuefield, samplesize):
                 variables[f].add(row[i])
         for f in variables:
             # turn from sets to sorted lists
-            variables[f] = sorted(variables[f])
+            variables[f] = sorted(variables[f], key=Comparable)
 
     # Keep the sample order when the sorted rows are read again.
     variables = [tuple(variables[f]) for f in variablefields]

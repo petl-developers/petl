@@ -4,6 +4,11 @@ Changes
 Version 1.7.32
 --------------
 
+* Use PETL's mixed-type ordering for variable names discovered by
+  ``recast()``, allowing tables with mixed-type headers to be melted and
+  recast without a comparison error.
+  By :user:`wynneyin`.
+
 * Compare custom missing values by equality in ``coalesce()`` so equal but
   distinct values fall back to the next field or the configured default.
   Preserve identity-based markers and array-valued cells whose comparisons
