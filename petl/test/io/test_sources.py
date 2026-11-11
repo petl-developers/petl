@@ -105,6 +105,28 @@ def test_memorysource_2():
     ieq(expect, actual)
 
 
+@pytest.mark.parametrize('read_first', [False, True])
+def test_memorysource_append_preserves_csv_rows(read_first):
+    source = MemorySource(b'name\r\nAda\r\n')
+    if read_first:
+        with source.open('rb') as stream:
+            assert stream.read(2) == b'na'
+
+    etl.appendcsv([('name',), ('Grace',)], source, encoding='ascii')
+    etl.appendcsv([('name',), ('Lin',)], source, encoding='ascii')
+
+    assert source.getvalue() == b'name\r\nAda\r\nGrace\r\nLin\r\n'
+    rows = etl.fromcsv(MemorySource(source.getvalue()))
+    ieq([('name',), ('Ada',), ('Grace',), ('Lin',)], rows)
+
+
+def test_memorysource_append_preserves_text():
+    source = MemorySource('existing\n')
+    with source.open('a') as stream:
+        stream.write('added\n')
+    assert source.getvalue() == 'existing\nadded\n'
+
+
 def test_popensource():
 
     expect = (('foo', 'bar'),)
@@ -299,3 +321,48 @@ for f in (lambda: etl.tocsv(tbl, fn + '.out.bz2'),
 """
     cwd = os.path.dirname(os.path.dirname(os.path.abspath(etl.__file__)))
     subprocess.check_call([sys.executable, '-c', code, fn], cwd=cwd)
+
+
+@pytest.mark.parametrize('source_class', [GzipSource, BZ2Source])
+@pytest.mark.parametrize('body_error', [False, True])
+@pytest.mark.skipif(PY2, reason='Remote compressed streams require Python 3')
+def test_remote_compressed_source_closes_response(monkeypatch, source_class, body_error):
+    payload = b'foo,bar\na,1\n'
+    response = io.BytesIO()
+    if source_class is GzipSource:
+        with gzip.GzipFile(fileobj=response, mode='wb') as writer:
+            writer.write(payload)
+        response.seek(0)
+    else:
+        response.write(bz2.compress(payload))
+        response.seek(0)
+    monkeypatch.setattr('petl.io.sources.urlopen', lambda url: response)
+    source = source_class('http://example.test/data', remote=True)
+    try:
+        try:
+            with source.open('rb') as reader:
+                assert reader.read() == payload
+                assert not response.closed
+                if body_error:
+                    raise RuntimeError('interrupted read')
+        except RuntimeError:
+            assert body_error
+        assert reader.closed
+        assert response.closed
+    finally:
+        response.close()
+
+
+@pytest.mark.parametrize('source_class', [GzipSource, BZ2Source])
+@pytest.mark.skipif(PY2, reason='Remote compressed streams require Python 3')
+def test_remote_compressed_source_closes_response_on_open_error(monkeypatch, source_class):
+    response = io.BytesIO()
+    monkeypatch.setattr('petl.io.sources.urlopen', lambda url: response)
+    source = source_class('http://example.test/data', remote=True, invalid_option=True)
+    try:
+        with pytest.raises(TypeError):
+            with source.open('rb'):
+                pass
+        assert response.closed
+    finally:
+        response.close()
