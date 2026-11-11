@@ -4,6 +4,11 @@ Changes
 Version 1.7.32
 --------------
 
+* Use PETL's mixed-type ordering for variable names discovered by
+  ``recast()``, allowing tables with mixed-type headers to be melted and
+  recast without a comparison error.
+  By :user:`wynneyin`.
+
 * Give each ``randomtable()`` iterator an independent random generator so
   interleaved iterations and unrelated random calls preserve seeded output
   without changing Python's global random state.
