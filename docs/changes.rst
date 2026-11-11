@@ -4,6 +4,12 @@ Changes
 Version 1.7.32
 --------------
 
+* Compare custom missing values by equality in ``coalesce()`` so equal but
+  distinct values fall back to the next field or the configured default.
+  Preserve identity-based markers and array-valued cells whose comparisons
+  have no scalar truth value.
+  By :user:`wynneyin`.
+
 * Fill every column by position when ``filldown()`` has no explicit field
   selectors, including columns with integer or mixed-type headers.
   By :user:`wynneyin`.
