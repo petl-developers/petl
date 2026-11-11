@@ -10,6 +10,13 @@ Version 1.7.32
   have no scalar truth value.
   By :user:`wynneyin`.
 
+* Fill every column by position when ``filldown()`` has no explicit field
+  selectors, including columns with integer or mixed-type headers.
+  By :user:`wynneyin`.
+
+* Close remote gzip and bz2 responses after reading or an error.
+  By :user:`IlyaKhalafi`, :issue:`803`.
+
 * Give each ``randomtable()`` iterator an independent random generator so
   interleaved iterations and unrelated random calls preserve seeded output
   without changing Python's global random state.
@@ -23,6 +30,9 @@ Version 1.7.32
   ``fromdicts()`` and ``fromjson()`` without consuming headers until the first
   iteration.
   By :user:`IlyaKhalafi`, :issue:`794`.
+
+* Preserve existing data when appending to a preloaded ``MemorySource``,
+  even after a partial read.
 
 * Exclude negatively selected fields from the inferred keys or variables
   in ``melt()``.
