@@ -32,6 +32,16 @@ def test_fromtext():
     ieq(expect, actual)  # verify can iterate twice
 
 
+def test_fromtext_generator_header():
+    from petl.io.sources import MemorySource
+
+    table = fromtext(MemorySource(b'hello\n'),
+                     header=(name for name in ['text']))
+    expected = [('text',), ('hello',)]
+    eq_(expected, list(table))
+    eq_(expected, list(table))
+
+
 def test_fromtext_lineterminators():
 
     data = [b'foo,bar',
