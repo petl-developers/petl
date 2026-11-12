@@ -554,6 +554,10 @@ def pivot(table, f1, f2, f3, aggfun, missing=None,
         | 'girl' |    19 |   24 |   9 |
         +--------+-------+------+-----+
 
+    Category values are ordered using PETL's mixed-type comparison, as in
+    :func:`petl.transform.sorts.sort`, so missing values and differently typed
+    categories can be used together.
+
     See also :func:`petl.transform.reshape.recast`.
 
     """
@@ -589,7 +593,7 @@ def iterpivot(source, f1, f2, f3, aggfun, missing):
     # first pass - collect fields
     f2vals = set(itervalues(source, f2))  # TODO only make one pass
     f2vals = list(f2vals)
-    f2vals.sort()
+    f2vals.sort(key=Comparable)
     outhdr = [f1]
     outhdr.extend(f2vals)
     yield tuple(outhdr)
