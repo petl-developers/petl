@@ -610,10 +610,14 @@ def iterpivot(source, f1, f2, f3, aggfun, missing):
     f3i = flds.index(f3)
     for v1, v1rows in itertools.groupby(it, key=operator.itemgetter(f1i)):
         outrow = [v1] + [missing] * len(f2vals)
-        for v2, v12rows in itertools.groupby(v1rows,
-                                             key=operator.itemgetter(f2i)):
-            aggval = aggfun([row[f3i] for row in v12rows])
-            outrow[1 + f2vals.index(v2)] = aggval
+        # Comparable can order distinct categories as ties (e.g., Enum
+        # members). Collect by equality rather than assuming equal categories
+        # are consecutive, otherwise a later group overwrites the aggregate.
+        category_values = collections.defaultdict(list)
+        for row in v1rows:
+            category_values[row[f2i]].append(row[f3i])
+        for category, vals in category_values.items():
+            outrow[1 + f2vals.index(category)] = aggfun(vals)
         yield tuple(outrow)
 
 
