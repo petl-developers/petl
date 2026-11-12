@@ -84,10 +84,14 @@ def valuecounter(table, *field, **kwargs):
         >>> etl.valuecounter(table, 'foo', 1)
         Counter({('b', True): 2, ('a', False): 1})
 
-    If field names or indexes are stored in a tuple or list, unpack them with
-    ``*`` instead of passing the tuple or list as a single argument::
+    If field names or indexes are stored in a tuple or list, they can be
+    passed as a single argument, the same way :func:`values` accepts them, or
+    unpacked with ``*``::
 
         >>> fields = ('foo', 'bar')
+        >>> etl.valuecounter(table, fields)
+        Counter({('b', True): 2, ('a', False): 1})
+
         >>> etl.valuecounter(table, *fields)
         Counter({('b', True): 2, ('a', False): 1})
 
@@ -95,7 +99,7 @@ def valuecounter(table, *field, **kwargs):
 
     missing = kwargs.get('missing', None)
     counter = Counter()
-    for v in values(table, field, missing=missing):
+    for v in values(table, *field, missing=missing):
         try:
             counter[v] += 1
         except IndexError:
@@ -156,6 +160,17 @@ class ValueCountsView(Table):
 
     def __init__(self, table, field, missing=None):
         self.table = table
+        # deal with field arg in a backwards-compatible way, like ValuesView:
+        # a single tuple or list argument is a compound field selection, not a
+        # one-element selection of that tuple (#641). Only a container element
+        # unwraps — a string would otherwise be splatted into characters by the
+        # ``*self.field`` call in __iter__.
+        if (
+            isinstance(field, tuple)
+            and len(field) == 1
+            and isinstance(field[0], (tuple, list))
+        ):
+            field = field[0]
         self.field = field
         self.missing = missing
 

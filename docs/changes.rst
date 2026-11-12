@@ -1,6 +1,15 @@
 Changes
 =======
 
+Version 1.7.33
+--------------
+
+* Accept a tuple or list of fields passed as a single argument to
+  ``valuecounter()`` and ``valuecounts()``, counting the same compound key
+  as unpacking it with ``*``, like ``values()`` already does. It used to
+  raise a ``FieldSelectionError``.
+  By :user:`rahul05ranjan`, :issue:`641`.
+
 Version 1.7.32
 --------------
 

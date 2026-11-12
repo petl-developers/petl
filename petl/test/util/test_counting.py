@@ -47,6 +47,32 @@ def test_valuecounter_shortrows():
     eq_(expect, actual)
 
 
+def test_valuecounter_single_tuple_field():
+
+    # passing a tuple or list of fields as a single argument is supported
+    # like values() does, not only via unpacking (#641)
+    table = (('foo', 'bar'), ('a', 1), ('b', 2), ('b', 7))
+    actual = valuecounter(table, ('foo', 'bar'))
+    expect = {('a', 1): 1, ('b', 2): 1, ('b', 7): 1}
+    eq_(expect, actual)
+    actual = valuecounter(table, ['foo', 'bar'])
+    eq_(expect, actual)
+
+
+def test_valuecounts_single_tuple_field():
+
+    table = (('foo', 'bar'), ('a', 1), ('b', 2), ('b', 7))
+    actual = valuecounts(table, ('foo', 'bar'))
+    expect = (('foo', 'bar', 'count', 'frequency'),
+              ('a', 1, 1, 1./3),
+              ('b', 2, 1, 1./3),
+              ('b', 7, 1, 1./3))
+    ieq(expect, actual)
+    ieq(expect, actual)
+    actual = valuecounts(table, ['foo', 'bar'])
+    ieq(expect, actual)
+
+
 def test_valuecounts():
 
     table = (('foo', 'bar'), ('a', 1), ('b', 2), ('b', 7))
