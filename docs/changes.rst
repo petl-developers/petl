@@ -4,6 +4,10 @@ Changes
 Version 1.7.32
 --------------
 
+* Clear existing merged cells when replacing a named sheet with ``toxlsx()``
+  so the saved workbook retains every value in the replacement table.
+  By :user:`IlyaKhalafi`.
+
 * Preserve explicit iterator headers across repeated passes in ``fromtext()``.
   By :user:`IlyaKhalafi`.
 
