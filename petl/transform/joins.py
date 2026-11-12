@@ -629,12 +629,14 @@ def iterantijoin(left, right, lkey, rkey):
     lgit = itertools.groupby(lit, key=lgetk)
     rgit = itertools.groupby(rit, key=rgetk)
     lrowgrp = []
+    lgrp_pending = False
 
     # loop until *either* of the iterators is exhausted
     try:
 
         # pick off initial row groups
         lkval, lrowgrp = next(lgit)
+        lgrp_pending = True
         rkval, _ = next(rgit)
 
         while True:
@@ -642,22 +644,26 @@ def iterantijoin(left, right, lkey, rkey):
                 for row in lrowgrp:
                     yield tuple(row)
                 # advance left
+                lgrp_pending = False
                 lkval, lrowgrp = next(lgit)
+                lgrp_pending = True
             elif lkval > rkval:
                 # advance right
                 rkval, _ = next(rgit)
             else:
                 # advance both
+                lgrp_pending = False
                 lkval, lrowgrp = next(lgit)
+                lgrp_pending = True
                 rkval, _ = next(rgit)
 
     except StopIteration:
         pass
 
-    # Any matched or yielded group was consumed when lgit advanced.
-    # Drain the pending group even when the right table was empty.
-    for row in lrowgrp:
-        yield tuple(row)
+    # Only drain an unmatched group, even if the right table was empty.
+    if lgrp_pending:
+        for row in lrowgrp:
+            yield tuple(row)
     # and the rest...
     for lkval, lrowgrp in lgit:
         for row in lrowgrp:

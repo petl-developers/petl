@@ -1193,6 +1193,19 @@ def test_antijoin_empty_right_streaming():
     ieq(((None, 20), (2, 30)), actual)
 
 
+@pytest.mark.parametrize('presorted', [False, True])
+@pytest.mark.parametrize('left', [
+    (('id', 'amount'), (1, 10), (2, 20)),
+    (('id', 'amount'), (1, 10), (2, 20), (2, 30)),
+])
+def test_antijoin_final_numeric_match(presorted, left):
+    right = (('id',), (2,))
+    expect = (('id', 'amount'), (1, 10))
+    actual = antijoin(left, right, key='id', presorted=presorted)
+    ieq(expect, actual)
+    ieq(expect, actual)
+
+
 def _test_lookupjoin_1(lookupjoin_impl):
 
     table1 = (('id', 'color', 'cost'),
