@@ -4,6 +4,9 @@ Changes
 Version 1.7.32
 --------------
 
+* Preserve every left row in ``antijoin()`` when the right table is empty,
+  including an initial group whose key is ``None``.
+
 * Preserve explicit iterator headers across repeated passes in ``fromtext()``.
   By :user:`IlyaKhalafi`.
 

@@ -1,5 +1,7 @@
 from __future__ import absolute_import, division, print_function
 
+import pytest
+
 from petl import (
     antijoin,
     crossjoin,
@@ -1122,6 +1124,73 @@ def _test_antijoin(antijoin_impl):
 
 def test_antijoin():
     _test_antijoin(antijoin)
+
+
+@pytest.mark.parametrize('presorted', [False, True])
+@pytest.mark.parametrize('left, expect', [
+    ((('id', 'amount'), (None, 10)),
+     (('id', 'amount'), (None, 10))),
+    ((('id', 'amount'), (None, 10), (None, 20)),
+     (('id', 'amount'), (None, 10), (None, 20))),
+    ((('id', 'amount'), (None, 10), (None, 20), (2, 30)),
+     (('id', 'amount'), (None, 10), (None, 20), (2, 30))),
+])
+def test_antijoin_empty_right_none_key(presorted, left, expect):
+    actual = antijoin(left, (('id',),), key='id', presorted=presorted)
+    ieq(expect, actual)
+    ieq(expect, actual)
+
+
+@pytest.mark.parametrize('presorted', [False, True])
+@pytest.mark.parametrize('right, expect', [
+    ((('identifier',),),
+     (('id', 'amount'), (None, 10), (None, 20), (2, 30), ('three', 40))),
+    ((('identifier',), (None,), (None,)),
+     (('id', 'amount'), (2, 30), ('three', 40))),
+    ((('identifier',), (None,), (2,)),
+     (('id', 'amount'), ('three', 40))),
+    ((('identifier',), (2,), ('three',)),
+     (('id', 'amount'), (None, 10), (None, 20))),
+])
+def test_antijoin_none_key_lrkey(presorted, right, expect):
+    left = (('id', 'amount'), (None, 10), (None, 20), (2, 30), ('three', 40))
+    actual = antijoin(left, right, lkey='id', rkey='identifier',
+                      presorted=presorted)
+    ieq(expect, actual)
+
+
+@pytest.mark.parametrize('presorted', [False, True])
+@pytest.mark.parametrize('left, right, expect', [
+    ((('id', 'amount'),), (('id',),), (('id', 'amount'),)),
+    ((('id', 'amount'),), (('id',), (None,)), (('id', 'amount'),)),
+    ((('id', 'amount'), (None, 10), (None, 20)),
+     (('id',), (None,)), (('id', 'amount'),)),
+    ((('id', 'amount'), (None, 10), (None, 20)),
+     (('id',), (2,)), (('id', 'amount'), (None, 10), (None, 20))),
+    ((('id', 'amount'), (2, 10), (2, 20)),
+     (('id',), (None,)), (('id', 'amount'), (2, 10), (2, 20))),
+    ((('id', 'amount'), (None, 10), (2, 20), (2, 30), (4, 40)),
+     (('id',), (None,), (2,)), (('id', 'amount'), (4, 40))),
+])
+def test_antijoin_group_exhaustion(presorted, left, right, expect):
+    ieq(expect, antijoin(left, right, key='id', presorted=presorted))
+
+
+def test_antijoin_empty_right_streaming():
+    consumed = []
+
+    def left_rows():
+        for row in (('id', 'amount'), (None, 10), (None, 20), (2, 30)):
+            consumed.append(row)
+            yield row
+
+    actual = iter(antijoin(left_rows(), iter((('id',),)),
+                          key='id', presorted=True))
+    assert next(actual) == ('id', 'amount')
+    assert consumed == [('id', 'amount')]
+    assert next(actual) == (None, 10)
+    assert consumed == [('id', 'amount'), (None, 10)]
+    ieq(((None, 20), (2, 30)), actual)
 
 
 def _test_lookupjoin_1(lookupjoin_impl):

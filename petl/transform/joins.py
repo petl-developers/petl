@@ -631,7 +631,6 @@ def iterantijoin(left, right, lkey, rkey):
     lrowgrp = []
 
     # loop until *either* of the iterators is exhausted
-    lkval, rkval = Comparable(None), Comparable(None)
     try:
 
         # pick off initial row groups
@@ -655,11 +654,10 @@ def iterantijoin(left, right, lkey, rkey):
     except StopIteration:
         pass
 
-    # any left over?
-    if lkval > rkval:
-        # yield anything that got left hanging
-        for row in lrowgrp:
-            yield tuple(row)
+    # Any matched or yielded group was consumed when lgit advanced.
+    # Drain the pending group even when the right table was empty.
+    for row in lrowgrp:
+        yield tuple(row)
     # and the rest...
     for lkval, lrowgrp in lgit:
         for row in lrowgrp:
