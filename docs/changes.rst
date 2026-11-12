@@ -4,6 +4,9 @@ Changes
 Version 1.7.32
 --------------
 
+* Remove the selected columns in ``cutout()`` when using negative field
+  indexes, including when called by ``unjoin()`` with an explicit key.
+
 * Preserve explicit iterator headers across repeated passes in ``fromtext()``.
   By :user:`IlyaKhalafi`.
 

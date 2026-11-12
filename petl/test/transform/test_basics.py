@@ -129,6 +129,19 @@ def test_cutout_field_sequence(fields):
     ieq((('foo',), ('A',)), cutout(table, fields))
 
 
+@pytest.mark.parametrize('fields, expected', [
+    ((-1,), (('foo', 'bar'), ('A', 1), ('B', None))),
+    ((-3,), (('bar', 'baz'), (1, 2), (None, None))),
+    ((-1, 2), (('foo', 'bar'), ('A', 1), ('B', None))),
+    ((0, -1), (('bar',), (1,), (None,))),
+    (([-1, 'foo'],), (('bar',), (1,), (None,))),
+    (((-1, 'foo'),), (('bar',), (1,), (None,))),
+])
+def test_cutout_negative_indices(fields, expected):
+    table = (('foo', 'bar', 'baz'), ('A', 1, 2), ('B',))
+    ieq(expected, cutout(table, *fields))
+
+
 def test_cat():
 
     table1 = (('foo', 'bar'),

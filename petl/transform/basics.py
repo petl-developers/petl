@@ -181,7 +181,8 @@ def cutout(table, *args, **kwargs):
 
     See also :func:`petl.transform.basics.cut`.
 
-    Fields can also be passed as a single list or tuple.
+    Fields can also be passed as a single list or tuple. Negative field indices
+    count from the end of the header.
 
     """
 
@@ -214,7 +215,8 @@ def itercutout(source, spec, missing=None):
         hdr = next(it)
     except StopIteration:
         hdr = []
-    indicesout = asindices(hdr, spec)
+    indicesout = {i if i >= 0 else len(hdr) + i
+                  for i in asindices(hdr, spec)}
     indices = [i for i in range(len(hdr)) if i not in indicesout]
 
     # define a function to transform each row in the source data
