@@ -22,6 +22,11 @@ Version 1.7.32
   selectors, including columns with integer or mixed-type headers.
   By :user:`wynneyin`.
 
+* Treat a missing (``None``) value as missing data in ``split()`` and as an
+  empty sequence in ``unpack()``, filling the new fields with missing values
+  instead of raising ``TypeError``.
+  By :user:`rahul05ranjan`.
+
 * Close remote gzip and bz2 responses after reading or an error.
   By :user:`IlyaKhalafi`, :issue:`803`.
 

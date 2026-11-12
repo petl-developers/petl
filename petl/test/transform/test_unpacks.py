@@ -160,3 +160,30 @@ def test_unpackdict():
                (3, 'e', 'f'))
     ieq(expect2, table2)
     ieq(expect2, table2)  # check twice
+
+
+def test_unpack_missing_values():
+    # None is missing data; new fields receive missing instead of a TypeError
+    table1 = (('foo', 'bar'),
+              (1, ('a', 'b')),
+              (2, None))
+    table2 = unpack(table1, 'bar', ['baz', 'quux'])
+    expect2 = (('foo', 'baz', 'quux'),
+               (1, 'a', 'b'),
+               (2, None, None))
+    ieq(expect2, table2)
+    ieq(expect2, table2)  # check twice
+
+    # custom missing marker
+    table3 = unpack(table1, 'bar', ['baz', 'quux'], missing='?')
+    expect3 = (('foo', 'baz', 'quux'),
+               (1, 'a', 'b'),
+               (2, '?', '?'))
+    ieq(expect3, table3)
+
+    # include_original keeps the original column
+    table4 = unpack(table1, 'bar', ['baz'], include_original=True)
+    expect4 = (('foo', 'bar', 'baz'),
+               (1, ('a', 'b'), 'a'),
+               (2, None, None))
+    ieq(expect4, table4)
