@@ -10,6 +10,15 @@ from petl.compat import text_type, numeric_types, next, PY2, izip_longest, \
 
 # internal dependencies
 from petl.errors import ArgumentError
+try:
+    from html import escape as html_escape
+except ImportError:  # Python 2 (project still declares 2.7 support)
+    from cgi import escape as _cgi_escape
+
+    def html_escape(s, quote=True):
+        # keep parity with html.escape, which escapes quotes by default
+        return _cgi_escape(s, quote)
+
 from petl.util.base import Table, Record
 from petl.io.base import getcodec
 from petl.io.sources import write_source_from_arg
@@ -54,6 +63,14 @@ def tohtml(table, source=None, encoding=None, errors='strict', caption=None,
 
     The `caption` keyword argument is used to provide a table caption
     in the output HTML.
+
+    Header and cell values are HTML-escaped so that text containing
+    ``<``, ``>`` or ``&`` renders as it was written. Cell values are
+    escaped after conversion by `vrepr`, so markup returned by a custom
+    `vrepr` renders as literal text rather than HTML — the deliberate
+    behavior of the fix for #797: table-derived text must not inject
+    markup. User-supplied formatting arguments (`caption`, `tr_style`,
+    `td_styles`) are not escaped.
 
     """
 
@@ -207,7 +224,7 @@ def _write_begin(f, flds, lineterminator, caption, index_header, truncate):
                 h = '%s|%s' % (i, h)
             if truncate:
                 h = text_type(h)[:truncate]
-            f.write(('<th>%s</th>' % h) + lineterminator)
+            f.write(('<th>%s</th>' % html_escape(text_type(h))) + lineterminator)
         f.write('</tr>' + lineterminator)
         f.write('</thead>' + lineterminator)
     f.write('<tbody>' + lineterminator)
@@ -224,6 +241,7 @@ def _write_row(f, flds, row, lineterminator, vrepr, tr_style, td_styles,
         r = vrepr(v)
         if truncate:
             r = r[:truncate]
+        r = html_escape(text_type(r))
         td_css = _get_td_css(h, v, td_styles)
         if td_css:
             f.write(("<td style='%s'>%s</td>" % (td_css, r)) + lineterminator)
