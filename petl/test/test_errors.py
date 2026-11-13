@@ -23,9 +23,12 @@ def test_error_message(error_class, prefix, value, expected):
 
 
 def test_valuecounter_invalid_tuple_field_message():
+    # a tuple of fields passed as a single argument is a compound selection
+    # (#641), so the message's tuple rendering is pinned on a selection that is
+    # genuinely invalid: a nested tuple names no field at all
     table = [['foo', 'bar'], ['a', 1]]
     with pytest.raises(FieldSelectionError) as excinfo:
-        valuecounter(table, ('foo', 'bar'))
+        valuecounter(table, (('foo', 'bar'),))
     assert str(excinfo.value) == (
         "selection is not a field or valid field index: ('foo', 'bar')")
 
