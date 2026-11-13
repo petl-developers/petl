@@ -6,24 +6,31 @@ Version 1.7.32
 
 * Preserve every left row in ``antijoin()`` when the right table is empty,
   including an initial group whose key is ``None``.
+  By :user:`peterolkhov`, :issue:`810`.
+
+* Use PETL's mixed-type ordering for pivot categories, including missing
+  values, instead of raising when category types cannot be directly compared.
+  Collect all values for each category before aggregation, even when distinct
+  categories compare as ordering ties.
+  By :user:`anishpentyala`, :issue:`811`.
 
 * Preserve explicit iterator headers across repeated passes in ``fromtext()``.
-  By :user:`IlyaKhalafi`.
+  By :user:`IlyaKhalafi`, :issue:`809`.
 
 * Use PETL's mixed-type ordering for variable names discovered by
   ``recast()``, allowing tables with mixed-type headers to be melted and
   recast without a comparison error.
-  By :user:`wynneyin`.
+  By :user:`wynneyin`, :issue:`807`.
 
 * Compare custom missing values by equality in ``coalesce()`` so equal but
   distinct values fall back to the next field or the configured default.
   Preserve identity-based markers and array-valued cells whose comparisons
   have no scalar truth value.
-  By :user:`wynneyin`.
+  By :user:`wynneyin`, :issue:`806`.
 
 * Fill every column by position when ``filldown()`` has no explicit field
   selectors, including columns with integer or mixed-type headers.
-  By :user:`wynneyin`.
+  By :user:`wynneyin`, :issue:`805`.
 
 * Close remote gzip and bz2 responses after reading or an error.
   By :user:`IlyaKhalafi`, :issue:`803`.
