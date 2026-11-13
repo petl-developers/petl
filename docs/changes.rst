@@ -13,11 +13,15 @@ Version 1.7.33
 Version 1.7.32
 --------------
 
+* Clear existing merged cells when replacing a named sheet with ``toxlsx()``
+  so the saved workbook retains every value in the replacement table.
+  By :user:`IlyaKhalafi`, :issue:`815`.
+
 * Use PETL's mixed-type ordering for pivot categories, including missing
   values, instead of raising when category types cannot be directly compared.
   Collect all values for each category before aggregation, even when distinct
   categories compare as ordering ties.
-  By :user:`anishpentyala`.
+  By :user:`anishpentyala`, :issue:`811`.
 
 * Preserve explicit iterator headers across repeated passes in ``fromtext()``.
   By :user:`IlyaKhalafi`.
