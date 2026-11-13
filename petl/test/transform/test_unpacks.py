@@ -160,3 +160,22 @@ def test_unpackdict():
                (3, 'e', 'f'))
     ieq(expect2, table2)
     ieq(expect2, table2)  # check twice
+
+
+def test_unpackdict_iterator_keys():
+    table = (('id', 'details'),
+             (1, {'a': 2, 'b': 3}),
+             (2, {'b': 4}))
+    reads = []
+
+    def keys():
+        reads.append(True)
+        yield 'b'
+        yield 'a'
+
+    result = unpackdict(table, 'details', keys=keys(), missing='NA')
+    assert reads == []
+    expected = (('id', 'b', 'a'), (1, 3, 2), (2, 4, 'NA'))
+    ieq(expected, result)
+    ieq(expected, result)
+    assert reads == [True]

@@ -4,6 +4,10 @@ Changes
 Version 1.7.32
 --------------
 
+* Preserve iterator-supplied dictionary keys in ``unpackdict()``, including
+  when iterating the view more than once.
+  By :user:`IlyaKhalafi`, :issue:`818`.
+
 * Preserve explicit iterator headers across repeated passes in ``fromtext()``.
   By :user:`IlyaKhalafi`.
 
