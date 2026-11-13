@@ -357,3 +357,24 @@ def test_split_duplicate_field_names_by_index():
     expectation = [('tag', 'id', 'first', 'second'),
                    ('left', 1, 'red', 'blue')]
     ieq(expectation, split(table, 2, ',', newfields=['first', 'second']))
+
+
+def test_split_missing_values():
+    # None is missing data; new fields receive None instead of a TypeError
+    table = (('id', 'variable'),
+             (1, 'parad1'),
+             (2, None))
+    expectation = (('id', 'variable', 'day'),
+                   (1, 'para', '1'),
+                   (2, None, None))
+    result = split(table, 'variable', 'd', ('variable', 'day'))
+    ieq(expectation, result)
+    ieq(expectation, result)  # check twice
+
+    # missing value with include_original keeps the original column
+    result = split(table, 'variable', 'd', ('variable', 'day'),
+                   include_original=True)
+    expectation = (('id', 'variable', 'variable', 'day'),
+                   (1, 'parad1', 'para', '1'),
+                   (2, None, None, None))
+    ieq(expectation, result)
