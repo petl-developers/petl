@@ -8,6 +8,12 @@ Version 1.7.32
   when iterating the view more than once.
   By :user:`IlyaKhalafi`, :issue:`818`.
 
+* Use PETL's mixed-type ordering for pivot categories, including missing
+  values, instead of raising when category types cannot be directly compared.
+  Collect all values for each category before aggregation, even when distinct
+  categories compare as ordering ties.
+  By :user:`anishpentyala`.
+
 * Preserve explicit iterator headers across repeated passes in ``fromtext()``.
   By :user:`IlyaKhalafi`.
 
