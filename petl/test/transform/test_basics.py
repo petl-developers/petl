@@ -855,3 +855,46 @@ def test_movefield():
     actual = movefield(table1, 'foo', 1)
     ieq(expect, actual)
     ieq(expect, actual)
+
+
+def test_movefield_duplicate_field_names():
+
+    table1 = (('foo', 'bar', 'foo'),
+              (1, 'A', True),
+              (2, 'B', False))
+
+    expect = (('foo', 'foo', 'bar'),
+              (1, True, 'A'),
+              (2, False, 'B'))
+
+    actual = movefield(table1, 'foo', 0)
+    ieq(expect, actual)
+    ieq(expect, actual)
+
+
+def test_movefield_mixed_type_field_names():
+
+    table1 = (('foo', '1', 1),
+              ('A', 'B', 'C'))
+
+    expect = ((1, 'foo', '1'),
+              ('C', 'A', 'B'))
+
+    actual = movefield(table1, 1, 0)
+    ieq(expect, actual)
+    ieq(expect, actual)
+
+
+def test_movefield_by_index():
+
+    table1 = (('foo', 'bar', 'baz'),
+              (1, 'A', True),
+              (2, 'B', False))
+
+    expect = (('bar', 'baz', 'foo'),
+              ('A', True, 1),
+              ('B', False, 2))
+
+    actual = movefield(table1, 0, 2)
+    ieq(expect, actual)
+    ieq(expect, actual)

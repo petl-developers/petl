@@ -22,6 +22,11 @@ Version 1.7.32
   Collect all values for each category before aggregation, even when distinct
   categories compare as ordering ties.
   By :user:`anishpentyala`, :issue:`811`.
+* Keep row values aligned with the header in ``movefield()`` when field
+  names repeat or only differ in type (e.g. ``1`` and ``'1'``), and accept a
+  field index as the field to move. Previously a repeated name dropped a column
+  and a type clash moved the wrong values.
+  By :user:`Kernel-Hunter`.
 
 * Preserve explicit iterator headers across repeated passes in ``fromtext()``.
   By :user:`IlyaKhalafi`.
