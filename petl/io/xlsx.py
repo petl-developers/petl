@@ -104,8 +104,8 @@ def toxlsx(tbl, filename, sheet=None, write_header=True, mode="replace"):
     The `mode` argument controls how the file and sheet are treated:
 
       - `replace`: This is the default. It either replaces or adds a
-        named sheet, or if no sheet name is provided, all sheets
-        (overwrites the entire file).
+        named sheet, clearing any existing merged cells, or if no sheet
+        name is provided, all sheets (overwrites the entire file).
 
       - `overwrite`: Always overwrites the file. This produces a file
         with a single sheet.
@@ -162,9 +162,12 @@ def _insert_sheet_on_workbook(mode, sheet, wb):
     if mode == "replace":
         try:
             ws = wb[str(sheet)]
-            ws.delete_rows(1, ws.max_row)
         except KeyError:
             ws = wb.create_sheet(title=sheet)
+        else:
+            for merged_range in list(ws.merged_cells.ranges):
+                ws.unmerge_cells(str(merged_range))
+            ws.delete_rows(1, ws.max_row)
     elif mode == "add":
         ws = wb.create_sheet(title=sheet)
         # it creates a sheet named "foo1" if "foo" exists.

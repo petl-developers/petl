@@ -47,6 +47,47 @@ def test_valuecounter_shortrows():
     eq_(expect, actual)
 
 
+def test_valuecounter_single_tuple_field():
+
+    # passing a tuple or list of fields as a single argument is supported
+    # like values() does, not only via unpacking (#641)
+    table = (('foo', 'bar'), ('a', 1), ('b', 2), ('b', 7))
+    actual = valuecounter(table, ('foo', 'bar'))
+    expect = {('a', 1): 1, ('b', 2): 1, ('b', 7): 1}
+    eq_(expect, actual)
+    actual = valuecounter(table, ['foo', 'bar'])
+    eq_(expect, actual)
+
+
+def test_valuecounts_single_tuple_field():
+
+    # counts are distinct so most_common()'s ordering is deterministic on
+    # Python 2, where Counter does not preserve insertion order
+    table = (('foo', 'bar'), ('a', 1), ('b', 2), ('b', 2), ('c', 3),
+             ('c', 3), ('c', 3))
+    actual = valuecounts(table, ('foo', 'bar'))
+    expect = (('foo', 'bar', 'count', 'frequency'),
+              ('c', 3, 3, 3./6),
+              ('b', 2, 2, 2./6),
+              ('a', 1, 1, 1./6))
+    ieq(expect, actual)
+    ieq(expect, actual)
+    actual = valuecounts(table, ['foo', 'bar'])
+    ieq(expect, actual)
+
+
+def test_valuecounts_nested_field_selection_raises():
+
+    # a tuple or list nested inside the single tuple argument names no field;
+    # valuecounts() must reject it like valuecounter() does, not unwrap it
+    # once and yield a malformed table (#641)
+    table = (('foo', 'bar'), ('a', 1), ('b', 2))
+    with pytest.raises(FieldSelectionError):
+        list(valuecounts(table, (('foo', 'bar'),)))
+    with pytest.raises(FieldSelectionError):
+        list(valuecounts(table, [['foo', 'bar']]))
+
+
 def test_valuecounts():
 
     table = (('foo', 'bar'), ('a', 1), ('b', 2), ('b', 7))

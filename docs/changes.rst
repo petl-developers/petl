@@ -1,11 +1,29 @@
 Changes
 =======
 
+Version 1.7.33
+--------------
+
+* Accept a tuple or list of fields passed as a single argument to
+  ``valuecounter()`` and ``valuecounts()``, counting the same compound key
+  as unpacking it with ``*``, like ``values()`` already does. It used to
+  raise a ``FieldSelectionError``.
+  By :user:`rahul05ranjan`, :issue:`641`.
+
 Version 1.7.32
 --------------
 
 * Remove the selected columns in ``cutout()`` when using negative field
   indexes, including when called by ``unjoin()`` with an explicit key.
+* Clear existing merged cells when replacing a named sheet with ``toxlsx()``
+  so the saved workbook retains every value in the replacement table.
+  By :user:`IlyaKhalafi`, :issue:`815`.
+
+* Use PETL's mixed-type ordering for pivot categories, including missing
+  values, instead of raising when category types cannot be directly compared.
+  Collect all values for each category before aggregation, even when distinct
+  categories compare as ordering ties.
+  By :user:`anishpentyala`, :issue:`811`.
 
 * Preserve explicit iterator headers across repeated passes in ``fromtext()``.
   By :user:`IlyaKhalafi`.
