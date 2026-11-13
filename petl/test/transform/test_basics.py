@@ -129,6 +129,41 @@ def test_cutout_field_sequence(fields):
     ieq((('foo',), ('A',)), cutout(table, fields))
 
 
+@pytest.mark.parametrize('fields, expected', [
+    ((-1,), (('foo', 'bar'), ('A', 1), ('B', None))),
+    ((-3,), (('bar', 'baz'), (1, 2), (None, None))),
+    ((-1, 2), (('foo', 'bar'), ('A', 1), ('B', None))),
+    ((0, -1), (('bar',), (1,), (None,))),
+    (([-1, 'foo'],), (('bar',), (1,), (None,))),
+    (((-1, 'foo'),), (('bar',), (1,), (None,))),
+])
+def test_cutout_negative_indices(fields, expected):
+    table = (('foo', 'bar', 'baz'), ('A', 1, 2), ('B',))
+    ieq(expected, cutout(table, *fields))
+
+
+@pytest.mark.parametrize('fields, invalid', [
+    ((-4,), -4),
+    ((-5,), -5),
+    (('foo', -4), -4),
+    (([-5, 'bar'],), -5),
+    (((-4, 'bar'),), -4),
+    ((3,), 3),
+])
+def test_cutout_out_of_range_indices(fields, invalid):
+    table = (('foo', 'bar', 'baz'), ('A', 1, 2))
+    with pytest.raises(FieldSelectionError) as error:
+        list(cutout(table, *fields))
+    assert error.value.value == invalid
+
+
+@pytest.mark.parametrize('table', [(), ((),)])
+def test_cutout_empty_header_negative_index(table):
+    with pytest.raises(FieldSelectionError) as error:
+        list(cutout(table, -1))
+    assert error.value.value == -1
+
+
 def test_cat():
 
     table1 = (('foo', 'bar'),
