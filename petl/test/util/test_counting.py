@@ -73,6 +73,18 @@ def test_valuecounts_single_tuple_field():
     ieq(expect, actual)
 
 
+def test_valuecounts_nested_field_selection_raises():
+
+    # a tuple or list nested inside the single tuple argument names no field;
+    # valuecounts() must reject it like valuecounter() does, not unwrap it
+    # once and yield a malformed table (#641)
+    table = (('foo', 'bar'), ('a', 1), ('b', 2))
+    with pytest.raises(FieldSelectionError):
+        list(valuecounts(table, (('foo', 'bar'),)))
+    with pytest.raises(FieldSelectionError):
+        list(valuecounts(table, [['foo', 'bar']]))
+
+
 def test_valuecounts():
 
     table = (('foo', 'bar'), ('a', 1), ('b', 2), ('b', 7))

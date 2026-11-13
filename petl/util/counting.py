@@ -176,17 +176,20 @@ class ValueCountsView(Table):
 
     def __iter__(self):
 
+        # count values first: valuecounter() rejects a nested selection (a
+        # tuple inside the single tuple argument names no field) before any
+        # row is yielded, so valuecounts() and valuecounter() agree on what is
+        # valid (#641)
+        counter = valuecounter(self.table, self.field, missing=self.missing)
+        counts = counter.most_common()  # sort descending
+        total = sum(c[1] for c in counts)
+
         # construct output header
         if isinstance(self.field, (tuple, list)):
             outhdr = tuple(self.field) + ('count', 'frequency')
         else:
             outhdr = (self.field, 'count', 'frequency')
         yield outhdr
-
-        # count values
-        counter = valuecounter(self.table, *self.field, missing=self.missing)
-        counts = counter.most_common()  # sort descending
-        total = sum(c[1] for c in counts)
 
         if len(self.field) > 1:
             for c in counts:
