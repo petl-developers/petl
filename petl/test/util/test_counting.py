@@ -61,12 +61,15 @@ def test_valuecounter_single_tuple_field():
 
 def test_valuecounts_single_tuple_field():
 
-    table = (('foo', 'bar'), ('a', 1), ('b', 2), ('b', 7))
+    # counts are distinct so most_common()'s ordering is deterministic on
+    # Python 2, where Counter does not preserve insertion order
+    table = (('foo', 'bar'), ('a', 1), ('b', 2), ('b', 2), ('c', 3),
+             ('c', 3), ('c', 3))
     actual = valuecounts(table, ('foo', 'bar'))
     expect = (('foo', 'bar', 'count', 'frequency'),
-              ('a', 1, 1, 1./3),
-              ('b', 2, 1, 1./3),
-              ('b', 7, 1, 1./3))
+              ('c', 3, 3, 3./6),
+              ('b', 2, 2, 2./6),
+              ('a', 1, 1, 1./6))
     ieq(expect, actual)
     ieq(expect, actual)
     actual = valuecounts(table, ['foo', 'bar'])
