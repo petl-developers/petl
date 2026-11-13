@@ -138,6 +138,8 @@ def unpackdict(table, field, keys=None, includeoriginal=False,
         |   3 | 'e' | 'f'  |
         +-----+-----+------+
 
+    Explicit `keys` may be an iterable and are retained for repeated iteration.
+
     See also :func:`petl.transform.unpacks.unpack`.
 
     """
@@ -162,6 +164,8 @@ class UnpackDictView(Table):
         self.missing = missing
 
     def __iter__(self):
+        if self.keys is not None:
+            self.keys = tuple(self.keys)
         return iterunpackdict(self.table, self.field, self.keys,
                               self.includeoriginal, self.samplesize,
                               self.missing)

@@ -4,6 +4,10 @@ Changes
 Version 1.7.32
 --------------
 
+* Preserve iterator-supplied dictionary keys in ``unpackdict()``, including
+  when iterating the view more than once.
+  By :user:`IlyaKhalafi`, :issue:`818`.
+
 * Use PETL's mixed-type ordering for pivot categories, including missing
   values, instead of raising when category types cannot be directly compared.
   Collect all values for each category before aggregation, even when distinct
