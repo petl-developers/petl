@@ -163,7 +163,7 @@ class ValueCountsView(Table):
         # deal with field arg in a backwards-compatible way, like ValuesView:
         # a single tuple or list argument is a compound field selection, not a
         # one-element selection of that tuple (#641). Only a container element
-        # unwraps — a string would otherwise be splatted into characters by the
+        # unwraps -- a string would otherwise be splatted into characters by the
         # ``*self.field`` call in __iter__.
         if (
             isinstance(field, tuple)
