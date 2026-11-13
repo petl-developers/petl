@@ -554,6 +554,10 @@ def pivot(table, f1, f2, f3, aggfun, missing=None,
         | 'girl' |    19 |   24 |   9 |
         +--------+-------+------+-----+
 
+    Category values are ordered using PETL's mixed-type comparison, as in
+    :func:`petl.transform.sorts.sort`, so missing values and differently typed
+    categories can be used together.
+
     See also :func:`petl.transform.reshape.recast`.
 
     """
@@ -589,7 +593,7 @@ def iterpivot(source, f1, f2, f3, aggfun, missing):
     # first pass - collect fields
     f2vals = set(itervalues(source, f2))  # TODO only make one pass
     f2vals = list(f2vals)
-    f2vals.sort()
+    f2vals.sort(key=Comparable)
     outhdr = [f1]
     outhdr.extend(f2vals)
     yield tuple(outhdr)
@@ -606,10 +610,14 @@ def iterpivot(source, f1, f2, f3, aggfun, missing):
     f3i = flds.index(f3)
     for v1, v1rows in itertools.groupby(it, key=operator.itemgetter(f1i)):
         outrow = [v1] + [missing] * len(f2vals)
-        for v2, v12rows in itertools.groupby(v1rows,
-                                             key=operator.itemgetter(f2i)):
-            aggval = aggfun([row[f3i] for row in v12rows])
-            outrow[1 + f2vals.index(v2)] = aggval
+        # Comparable can order distinct categories as ties (e.g., Enum
+        # members). Collect by equality rather than assuming equal categories
+        # are consecutive, otherwise a later group overwrites the aggregate.
+        category_values = collections.defaultdict(list)
+        for row in v1rows:
+            category_values[row[f2i]].append(row[f3i])
+        for category, vals in category_values.items():
+            outrow[1 + f2vals.index(category)] = aggfun(vals)
         yield tuple(outrow)
 
 
