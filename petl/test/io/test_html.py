@@ -189,9 +189,13 @@ def test_html_escapes_cell_and_header_text(tmpdir, writer):
 def test_html_escaping_after_truncation(tmpdir):
     from petl import tohtml
 
-    table = [('h',), ('abcdef',)]
+    # The value contains an escapable character at the truncation boundary.
+    # Truncating first yields 'ab&c' -> 'ab&amp;c'; escaping first would
+    # truncate 'ab&amp;cd' to 'ab&a', splitting the entity. The asserted
+    # entity pins truncate-then-escape ordering in the writer.
+    table = [('h',), ('ab&cd',)]
     filename = str(tmpdir.join('table.html'))
     tohtml(table, filename, truncate=4)
     with io.open(filename, encoding='utf-8') as source:
         output = source.read()
-    assert '<td>abcd</td>' in output
+    assert '<td>ab&amp;c</td>' in output
