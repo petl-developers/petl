@@ -103,3 +103,8 @@ def test_clampvalues_field_by_index():
     result = list(etl.clampvalues(table, 1, 0, 10))
     assert result[1] == (1, 0)    # -5 clamped to 0; id column untouched
     assert result[2] == (2, 10)   # 50 clamped to 10
+
+
+def test_clampvalues_empty_table():
+    """An empty table (no header) should yield nothing, not raise."""
+    assert list(etl.clampvalues([], 'v', 0, 10)) == []

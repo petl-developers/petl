@@ -53,7 +53,10 @@ class ClampValuesView(Table):
 
     def __iter__(self):
         it = iter(self.table)
-        header = next(it)
+        try:
+            header = next(it)
+        except StopIteration:
+            return
         yield header  # pass header row through unchanged
 
         # find the index of the target field
