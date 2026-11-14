@@ -118,8 +118,8 @@ def test_clampvalues_table_method():
 
 
 def test_clampvalues_non_comparable_passthrough():
-    """Values that can't be compared with the bounds are left unchanged."""
-    table = [['v'], ['abc'], [5]]
+    """Values that can't be ordered (e.g. complex numbers) are left unchanged."""
+    table = [['v'], [1j], [5]]
     result = list(etl.clampvalues(table, 'v', 0, 10))
-    assert result[1][0] == 'abc'
+    assert result[1][0] == 1j
     assert result[2][0] == 5
