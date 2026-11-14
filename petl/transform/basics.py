@@ -374,20 +374,33 @@ def itercat(sources, missing, header):
     # output data rows
     for hdr, it in zip(hdrs, its):
 
+        # map each output field to an index in this source table, matching
+        # duplicate field names positionally, in order, so that e.g. the
+        # second occurrence of 'foo' in the output maps to the second
+        # occurrence of 'foo' in the source, rather than to the first one
+        # (see issue #561: list.index() always returns the first match,
+        # which silently copied the first column's values into every
+        # duplicate column)
+        remaining = list(range(len(hdr)))
+        indices = []
+        for h in outhdr:
+            idx = None
+            for i in remaining:
+                if hdr[i] == h:
+                    idx = i
+                    remaining.remove(i)
+                    break
+            indices.append(idx)
+
         # now construct and yield the data rows
         for row in it:
             outrow = list()
-            for h in outhdr:
-                val = missing
-                try:
-                    val = row[hdr.index(h)]
-                except IndexError:
-                    # short row
-                    pass
-                except ValueError:
-                    # field not in table
-                    pass
-                outrow.append(val)
+            for idx in indices:
+                if idx is None or idx >= len(row):
+                    # field not in table, or short row
+                    outrow.append(missing)
+                else:
+                    outrow.append(row[idx])
             yield tuple(outrow)
 
 
