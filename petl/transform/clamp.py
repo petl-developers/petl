@@ -1,5 +1,5 @@
 from __future__ import absolute_import, print_function, division
-from petl.util.base import Table
+from petl.util.base import Table, asindices
 
 
 def clampvalues(table, field, low, high):
@@ -57,10 +57,7 @@ class ClampValuesView(Table):
         yield header  # pass header row through unchanged
 
         # find the index of the target field
-        try:
-            idx = list(header).index(self.field)
-        except ValueError:
-            raise ValueError('field %r not found in header %r' % (self.field, header))
+        idx = asindices(header, self.field)[0]
 
         low, high = self.low, self.high
         for row in it:

@@ -1,6 +1,7 @@
 from __future__ import absolute_import, print_function, division
 import pytest
 import petl as etl
+from petl.errors import FieldSelectionError
 
 
 # ---------------------------------------------------------------------------
@@ -90,7 +91,15 @@ def test_clampvalues_invalid_range_raises():
 
 
 def test_clampvalues_missing_field_raises():
-    """Referencing a field not in the header should raise ValueError."""
+    """Referencing a field not in the header should raise FieldSelectionError."""
     table = [['v'], [1]]
-    with pytest.raises(ValueError):
+    with pytest.raises(FieldSelectionError):
         list(etl.clampvalues(table, 'nonexistent', 0, 10))
+
+
+def test_clampvalues_field_by_index():
+    """The field may be given as a column position instead of a name."""
+    table = [['id', 'score'], [1, -5], [2, 50]]
+    result = list(etl.clampvalues(table, 1, 0, 10))
+    assert result[1] == (1, 0)    # -5 clamped to 0; id column untouched
+    assert result[2] == (2, 10)   # 50 clamped to 10
