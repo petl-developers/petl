@@ -222,6 +222,27 @@ def test_recast_preserves_explicit_mixed_variable_order():
     ieq(expected, actual)
 
 
+def test_recast_without_key_fields():
+    table = [('variable', 'value'), ('b', 2), ('a', 1), ('b', 3)]
+    view = recast(table, reducers={'b': sum})
+    expected = [('a', 'b'), (1, 5)]
+    ieq(expected, view)
+    ieq(expected, view)
+    table[1] = ('b', 20)
+    table.append(('c', 4))
+    ieq(expected, view)
+    # This also inverts a one-record melt without identifier columns.
+    original = [('a', 'b'), (1, 2)]
+    ieq(original, recast(melt(original, key=[])))
+
+
+def test_recast_without_key_fields_missing_values():
+    table = [('variable', 'value'), ('b', 2), ('a', 1), ('b', 3)]
+    view = recast(table, variablefield={'variable': ['b', 'c']}, missing=0)
+    ieq([('b', 'c'), ([2, 3], 0)], view)
+    ieq([()], recast([('variable', 'value')]))
+
+
 def test_recast_2():
 
     table = (('id', 'variable', 'value'),

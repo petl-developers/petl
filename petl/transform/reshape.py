@@ -267,6 +267,9 @@ def recast(table, key=None, variablefield='variable', valuefield='value',
     so names such as integers and strings can be recast together. Names
     explicitly supplied in a `variablefield` dictionary retain their order.
 
+    If no key fields remain after inference, all input rows form one group
+    and are recast into a single output record without sorting.
+
     When the result is iterated, invalid key, variable or value field names
     raise :class:`petl.errors.ArgumentError`. The value field must exist in the
     input header and must not also be selected as a key or variable field.
@@ -399,7 +402,9 @@ def _prepare_recast(source, key, variablefield, valuefield, samplesize):
     # Keep the sample order when the sorted rows are read again.
     variables = [tuple(variables[f]) for f in variablefields]
     outhdr = tuple(keyfields) + tuple(itertools.chain.from_iterable(variables))
-    sorted_source = sort(_RecastSource(source), key=keyfields)
+    sorted_source = _RecastSource(source)
+    if keyfields:
+        sorted_source = sort(sorted_source, key=keyfields)
     return (sorted_source, outhdr, keyindices, variableindices, variables,
             valueindex)
 
@@ -421,14 +426,18 @@ def iterrecast(source, key, variablefield, valuefield,
             raise ArgumentError('recast fields changed during iteration')
         prepared = cache[0]
     source, outhdr, keyindices, variableindices, variables, valueindex = prepared
+    if not keyindices and not cache:
+        source = list(source)
+        prepared = (source,) + prepared[1:]
     it = itertools.islice(source, 1, None)
     # A data read completes the sort. Do not retain a failed or unread sort.
     first = list(itertools.islice(it, 1))
     if cache is not None and not cache:
         cache.append(prepared)
     it = itertools.chain(first, it)
-    getsortablekey = comparable_itemgetter(*keyindices)
-    getactualkey = operator.itemgetter(*keyindices)
+    getsortablekey = (comparable_itemgetter(*keyindices) if keyindices
+                      else rowgetter())
+    getactualkey = rowgetter(*keyindices)
 
     # process sorted data in newfields
     groups = itertools.groupby(it, key=getsortablekey)
@@ -437,11 +446,7 @@ def iterrecast(source, key, variablefield, valuefield,
         group = list(group)
         # N.B., key returned by groupby may be wrapped as SortableItem, we want
         # to output the actual key value, get it from the first row in the group
-        key_value = getactualkey(group[0])
-        if len(keyindices) > 1:
-            out_row = list(key_value)
-        else:
-            out_row = [key_value]
+        out_row = list(getactualkey(group[0]))
         for i, field_variables in zip(variableindices, variables):
             for variable in field_variables:
                 # collect all values for the current variable
