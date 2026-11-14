@@ -38,6 +38,9 @@ def clampvalues(table, field, low, high):
     return ClampValuesView(table, field, low, high)
 
 
+Table.clampvalues = clampvalues
+
+
 class ClampValuesView(Table):
     """View returned by :func:`clampvalues`."""
 

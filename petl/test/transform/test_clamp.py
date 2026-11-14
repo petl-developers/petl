@@ -108,3 +108,10 @@ def test_clampvalues_field_by_index():
 def test_clampvalues_empty_table():
     """An empty table (no header) should yield nothing, not raise."""
     assert list(etl.clampvalues([], 'v', 0, 10)) == []
+
+
+def test_clampvalues_table_method():
+    """clampvalues should be available as a method on Table objects."""
+    table = etl.wrap([['v'], [-1], [5], [99]])
+    result = list(table.clampvalues('v', 0, 10))
+    assert result == [['v'], (0,), (5,), (10,)]
