@@ -29,10 +29,12 @@ def clampvalues(table, field, low, high):
         |  4 |  None |
         +----+-------+
 
-    The `low` and `high` parameters are both inclusive bounds. Raises
-    ``ValueError`` if ``low > high``.
+    The `field` may be given as a field name or a column index. The `low`
+    and `high` parameters are both inclusive bounds. Raises ``ValueError``
+    if ``low > high`` and ``FieldSelectionError`` if `field` is not in the
+    table header.
 
-    .. versionadded:: 1.8.0
+    .. versionadded:: 1.7.33
 
     """
     return ClampValuesView(table, field, low, high)

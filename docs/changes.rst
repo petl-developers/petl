@@ -4,6 +4,10 @@ Changes
 Version 1.7.33
 --------------
 
+* Add ``clampvalues()`` to limit the values of a field to an inclusive
+  ``low``/``high`` range, passing ``None`` through unchanged.
+  By :user:`UdayPate`, :issue:`692`.
+
 * Accept a tuple or list of fields passed as a single argument to
   ``valuecounter()`` and ``valuecounts()``, counting the same compound key
   as unpacking it with ``*``, like ``values()`` already does. It used to
