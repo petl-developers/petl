@@ -115,3 +115,11 @@ def test_clampvalues_table_method():
     table = etl.wrap([['v'], [-1], [5], [99]])
     result = list(table.clampvalues('v', 0, 10))
     assert result == [['v'], (0,), (5,), (10,)]
+
+
+def test_clampvalues_non_comparable_passthrough():
+    """Values that can't be compared with the bounds are left unchanged."""
+    table = [['v'], ['abc'], [5]]
+    result = list(etl.clampvalues(table, 'v', 0, 10))
+    assert result[1][0] == 'abc'
+    assert result[2][0] == 5
