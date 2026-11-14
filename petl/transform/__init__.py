@@ -13,8 +13,6 @@ from petl.transform.conversions import convert, convertall, replace, \
 
 from petl.transform.clamp import clampvalues
 
-from petl.transform.filldown import filldown
- 
 from petl.transform.sorts import sort, mergesort, issorted
 
 from petl.transform.selects import select, selectop, selectcontains, \
