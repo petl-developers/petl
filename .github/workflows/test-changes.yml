@@ -319,7 +319,7 @@ jobs:
       - name: Build both distribution formats
         run: |
           python -m pip install --upgrade build
-          python -m build --wheel --sdist --outdir dist
+          python -m build --outdir dist
       - name: Check expected files in source distribution
         run: |
           python - <<'PY'
