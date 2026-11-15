@@ -4,6 +4,9 @@ Changes
 Version 1.7.33
 --------------
 
+* Retain iterator headers in ``setheader()`` across repeated and interleaved
+  passes. By :user:`IlyaKhalafi`, :issue:`824`.
+
 * Accept a tuple or list of fields passed as a single argument to
   ``valuecounter()`` and ``valuecounts()``, counting the same compound key
   as unpacking it with ``*``, like ``values()`` already does. It used to
