@@ -9,6 +9,7 @@ from petl.compat import izip, izip_longest, next, string_types, text_type
 
 
 # internal dependencies
+from petl.errors import FieldSelectionError
 from petl.util.base import asindices, rowgetter, Record, Table
 
 
@@ -181,7 +182,9 @@ def cutout(table, *args, **kwargs):
 
     See also :func:`petl.transform.basics.cut`.
 
-    Fields can also be passed as a single list or tuple.
+    Fields can also be passed as a single list or tuple. Negative field indices
+    count from the end of the header. Indices outside the header raise
+    ``FieldSelectionError``.
 
     """
 
@@ -214,7 +217,11 @@ def itercutout(source, spec, missing=None):
         hdr = next(it)
     except StopIteration:
         hdr = []
-    indicesout = asindices(hdr, spec)
+    indicesout = set()
+    for i in asindices(hdr, spec):
+        if i < -len(hdr):
+            raise FieldSelectionError(i)
+        indicesout.add(i if i >= 0 else len(hdr) + i)
     indices = [i for i in range(len(hdr)) if i not in indicesout]
 
     # define a function to transform each row in the source data
