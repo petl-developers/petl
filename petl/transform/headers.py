@@ -133,6 +133,9 @@ def setheader(table, header):
         | 'b' |   2 |
         +-----+-----+
 
+    An iterator supplied as the header is read once on first iteration and
+    reused on subsequent passes. Callable transformations still run each time.
+
     See also :func:`petl.transform.headers.extendheader`,
     :func:`petl.transform.headers.pushheader`.
 
@@ -151,7 +154,15 @@ class SetHeaderView(Table):
         self._header = header
 
     def __iter__(self):
-        return itersetheader(self.source, self._header)
+        try:
+            header = iter(self._header)
+        except TypeError:
+            pass  # callable header transformation
+        else:
+            if header is self._header:
+                self._header = tuple(header)
+        for row in itersetheader(self.source, self._header):
+            yield row
 
 
 def itersetheader(source, header):

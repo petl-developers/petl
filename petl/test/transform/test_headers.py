@@ -23,6 +23,27 @@ def test_setheader():
     ieq(expect2, table2)  # can iterate twice?
 
 
+def test_setheader_iterator():
+    consumed = []
+
+    def header():
+        for field in ('new_foo', 'new_bar'):
+            consumed.append(field)
+            yield field
+
+    table = setheader([('foo', 'bar'), ('a', 1)], header())
+    assert consumed == []
+    first = iter(table)
+    second = iter(table)
+    assert consumed == []
+    assert next(first) == ('new_foo', 'new_bar')
+    assert next(second) == ('new_foo', 'new_bar')
+    assert list(first) == [('a', 1)]
+    assert list(second) == [('a', 1)]
+    ieq([('new_foo', 'new_bar'), ('a', 1)], table)
+    assert consumed == ['new_foo', 'new_bar']
+
+
 def test_setheader_callable():
 
     table1 = (('foo', 'Bar'),

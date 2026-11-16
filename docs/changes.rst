@@ -4,6 +4,9 @@ Changes
 Version 1.7.33
 --------------
 
+* Retain iterator headers in ``setheader()`` across repeated and interleaved
+  passes. By :user:`IlyaKhalafi`, :issue:`824`.
+
 * Add ``clampvalues()`` to limit the values of a field to an inclusive
   ``low``/``high`` range, passing ``None`` through unchanged.
   By :user:`UdayPate`, :issue:`692`.
