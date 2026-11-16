@@ -4,8 +4,13 @@ Changes
 Version 1.7.33
 --------------
 
+* Use the same mixed-type ordering as ``sort()`` in ``issorted()`` when no
+  key is specified, including treating missing cells as ``None``.
+  By :user:`FFspiky`, :issue:`826`.
+
 * Retain iterator headers in ``setheader()`` across repeated and interleaved
-  passes. By :user:`IlyaKhalafi`, :issue:`824`.
+  passes.
+  By :user:`IlyaKhalafi`, :issue:`824`.
 
 * Add ``clampvalues()`` to limit the values of a field to an inclusive
   ``low``/``high`` range, passing ``None`` through unchanged.
@@ -14,6 +19,7 @@ Version 1.7.33
 * Remove the selected columns in ``cutout()`` when using negative field
   indexes, including when called by ``unjoin()`` with an explicit key.
   Raise ``FieldSelectionError`` for indexes outside the header.
+ By :user:`yuxino`, :issue:`813`.
 
 * Accept a tuple or list of fields passed as a single argument to
   ``valuecounter()`` and ``valuecounts()``, counting the same compound key
@@ -26,7 +32,7 @@ Version 1.7.33
   field index as the field to move, with a negative one counting from the
   end. Previously a repeated name dropped a column and a type clash moved the
   wrong values.
-  By :user:`Kernel-Hunter`.
+  By :user:`Kernel-Hunter`, :issue:`820`.
 
 Version 1.7.32
 --------------

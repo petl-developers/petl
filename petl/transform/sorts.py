@@ -577,6 +577,9 @@ def issorted(table, key=None, reverse=False, strict=False):
         >>> etl.issorted(table1, key='foo', reverse=True)
         False
 
+    When no key is given, compare all fields in the header using the same
+    mixed-type ordering as :func:`sort`. Missing cells compare as ``None``.
+
     """
 
     # determine the operator to use when comparing rows
@@ -596,22 +599,20 @@ def issorted(table, key=None, reverse=False, strict=False):
         flds = []
     if key is not None:
         getkey = comparable_itemgetter(*asindices(flds, key))
+    elif flds:
+        getkey = comparable_itemgetter(*range(len(flds)))
+    else:
+        getkey = lambda row: row  # no fields to select in a zero-column table
     try:
         prev = next(it)
     except StopIteration:
         return True  # no data rows
-    if key is None:
-        for curr in it:
-            if not op(curr, prev):
-                return False
-            prev = curr
-    else:
-        prevkey = getkey(prev)
-        for curr in it:
-            currkey = getkey(curr)
-            if not op(currkey, prevkey):
-                return False
-            prevkey = currkey
+    prevkey = getkey(prev)
+    for curr in it:
+        currkey = getkey(curr)
+        if not op(currkey, prevkey):
+            return False
+        prevkey = currkey
     return True
 
 
