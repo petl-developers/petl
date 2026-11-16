@@ -1,5 +1,7 @@
 from __future__ import absolute_import, print_function, division
 
+from collections import OrderedDict
+
 import pytest
 
 from petl.errors import FieldSelectionError
@@ -888,5 +890,82 @@ def test_movefield():
     ieq(expect, actual)
 
     actual = movefield(table1, 'foo', 1)
+    ieq(expect, actual)
+    ieq(expect, actual)
+
+
+def test_movefield_duplicate_field_names():
+
+    table1 = (('foo', 'bar', 'foo'),
+              (1, 'A', True),
+              (2, 'B', False))
+
+    expect = (('foo', 'foo', 'bar'),
+              (1, True, 'A'),
+              (2, False, 'B'))
+
+    actual = movefield(table1, 'foo', 0)
+    ieq(expect, actual)
+    ieq(expect, actual)
+
+
+def test_movefield_mixed_type_field_names():
+
+    table1 = (('foo', '1', 1),
+              ('A', 'B', 'C'))
+
+    expect = ((1, 'foo', '1'),
+              ('C', 'A', 'B'))
+
+    actual = movefield(table1, 1, 0)
+    ieq(expect, actual)
+    ieq(expect, actual)
+
+
+def test_movefield_by_index():
+
+    table1 = (('foo', 'bar', 'baz'),
+              (1, 'A', True),
+              (2, 'B', False))
+
+    expect = (('bar', 'baz', 'foo'),
+              ('A', True, 1),
+              ('B', False, 2))
+
+    actual = movefield(table1, 0, 2)
+    ieq(expect, actual)
+    ieq(expect, actual)
+
+
+def test_movefield_by_negative_index():
+
+    table1 = (('foo', 'bar', 'baz'),
+              (1, 'A', True),
+              (2, 'B', False))
+
+    expect = (('baz', 'foo', 'bar'),
+              (True, 1, 'A'),
+              (False, 2, 'B'))
+
+    actual = movefield(table1, -1, 0)
+    ieq(expect, actual)
+    ieq(expect, actual)
+
+    with pytest.raises(FieldSelectionError):
+        list(movefield(table1, -4, 0))
+
+
+def test_movefield_iterable_header():
+
+    # a header that can be iterated but not indexed by position
+    table1 = (OrderedDict([('foo', None), ('bar', None)]),
+              (1, 'A'),
+              (2, 'B'))
+
+    expect = (('bar', 'foo'),
+              ('A', 1),
+              ('B', 2))
+
+    actual = movefield(table1, 'bar', 0)
     ieq(expect, actual)
     ieq(expect, actual)

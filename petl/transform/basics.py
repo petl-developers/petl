@@ -951,14 +951,25 @@ class MoveFieldView(Table):
             hdr = next(it)
         except StopIteration:
             hdr = []
-        outhdr = [f for f in hdr if f != self.field]
-        outhdr.insert(self._index, self.field)
+        # work with positions, so that row values follow the header even
+        # when field names are not unique once converted to text; a list
+        # first, as the header only has to be iterable
+        hdr = list(hdr)
+        moved = [i for i, f in enumerate(hdr) if f == self.field]
+        if not moved:
+            # not a field name, so it could be a field index; a negative
+            # one counts from the end, as it would in a list
+            moved = [i + len(hdr) if i < 0 else i
+                     for i in asindices(hdr, self.field)]
+            if any(i < 0 for i in moved):
+                raise FieldSelectionError(self.field)
+        indices = [i for i in range(len(hdr)) if i not in moved]
+        indices[self._index:self._index] = moved
+        outhdr = [hdr[i] for i in indices]
         yield tuple(outhdr)
 
         # define a function to transform each row in the source data
         # according to the field selection
-        outflds = list(map(str, outhdr))
-        indices = asindices(hdr, outflds)
         transform = rowgetter(*indices)
 
         # construct the transformed data
