@@ -8,6 +8,10 @@ Version 1.7.33
   ``low``/``high`` range, passing ``None`` through unchanged.
   By :user:`UdayPate`, :issue:`692`.
 
+* Remove the selected columns in ``cutout()`` when using negative field
+  indexes, including when called by ``unjoin()`` with an explicit key.
+  Raise ``FieldSelectionError`` for indexes outside the header.
+
 * Accept a tuple or list of fields passed as a single argument to
   ``valuecounter()`` and ``valuecounts()``, counting the same compound key
   as unpacking it with ``*``, like ``values()`` already does. It used to
