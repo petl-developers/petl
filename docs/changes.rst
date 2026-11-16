@@ -4,6 +4,10 @@ Changes
 Version 1.7.33
 --------------
 
+* Add ``clampvalues()`` to limit the values of a field to an inclusive
+  ``low``/``high`` range, passing ``None`` through unchanged.
+  By :user:`UdayPate`, :issue:`692`.
+
 * Remove the selected columns in ``cutout()`` when using negative field
   indexes, including when called by ``unjoin()`` with an explicit key.
   Raise ``FieldSelectionError`` for indexes outside the header.

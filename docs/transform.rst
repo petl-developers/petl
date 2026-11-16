@@ -240,6 +240,15 @@ Filling missing values
 .. autofunction:: petl.transform.fills.fillleft
 
 
+.. module:: petl.transform.clamp
+.. _transform_clamp:
+
+Clamping values
+---------------
+
+.. autofunction:: petl.transform.clamp.clampvalues
+
+
 .. module:: petl.transform.validation
 .. _transform_validation:
 
