@@ -4,6 +4,9 @@ Changes
 Version 1.7.33
 --------------
 
+* Use the same mixed-type ordering as ``sort()`` in ``issorted()`` when no
+  key is specified, including treating missing cells as ``None``.
+
 * Add ``clampvalues()`` to limit the values of a field to an inclusive
   ``low``/``high`` range, passing ``None`` through unchanged.
   By :user:`UdayPate`, :issue:`692`.

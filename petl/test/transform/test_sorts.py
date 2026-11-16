@@ -593,6 +593,36 @@ def test_issorted_empty():
     assert issorted([])
 
 
+@pytest.mark.parametrize('reverse', [False, True])
+@pytest.mark.parametrize('strict', [False, True])
+@pytest.mark.parametrize('header, rows', [
+    (('foo',), [(None,), (1,), (b'a',), ('a',)]),
+    (('foo', 'bar'), [('a', None), ('a', 1), ('a', 'x'), ('b', None)]),
+    (('foo', 'bar'), [('a',), ('a', 1), ('b',)]),
+])
+def test_issorted_default_order(header, rows, reverse, strict):
+    if reverse:
+        rows = rows[::-1]
+    table = [header] + rows
+    assert issorted(table, reverse=reverse, strict=strict)
+    assert issorted(sort(table, reverse=reverse), reverse=reverse, strict=strict)
+    assert not issorted([header] + rows[::-1], reverse=reverse, strict=strict)
+
+
+@pytest.mark.parametrize('reverse', [False, True])
+def test_issorted_default_equal_missing_cells(reverse):
+    table = [('foo', 'bar'), ('a',), ('a', None)]
+    assert issorted(table, reverse=reverse)
+    assert not issorted(table, reverse=reverse, strict=True)
+
+
+@pytest.mark.parametrize('reverse', [False, True])
+def test_issorted_zero_columns(reverse):
+    table = [(), (), ()]
+    assert issorted(table, reverse=reverse)
+    assert not issorted(table, reverse=reverse, strict=True)
+
+
 def test_sort_missing_cell_numeric():
     """ Sorting table with missing values raises IndexError #385 """
     tbl = (('a', 'b'), ('4',), ('2', '1'), ('1',))
