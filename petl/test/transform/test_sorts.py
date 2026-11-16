@@ -596,7 +596,7 @@ def test_issorted_empty():
 @pytest.mark.parametrize('reverse', [False, True])
 @pytest.mark.parametrize('strict', [False, True])
 @pytest.mark.parametrize('header, rows', [
-    (('foo',), [(None,), (1,), (b'a',), ('a',)]),
+    (('foo',), [(None,), (1,), (b'b',), (u'a',)]),
     (('foo', 'bar'), [('a', None), ('a', 1), ('a', 'x'), ('b', None)]),
     (('foo', 'bar'), [('a',), ('a', 1), ('b',)]),
 ])
