@@ -1,6 +1,13 @@
 Changes
 =======
 
+Version 1.8.0
+-------------
+
+* Drop support for Python 2.7. The minimum supported version is Python 3.6.
+  Bugfixes for Python 2.7 users continue on the ``1.7.x`` maintenance branch.
+  By :user:`juarezr`, :issue:`478`.
+
 Version 1.7.33
 --------------
 

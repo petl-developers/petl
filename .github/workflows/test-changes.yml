@@ -77,13 +77,6 @@ jobs:
           - os: 'ubuntu-latest'
             python: '3.9'
             runner: 'ubuntu-24.04'
-          # Additional Jobs not included in the matrix above
-          - python: "2.7"
-            os: "ubuntu-latest"
-            runner: "ubuntu-22.04"
-            mode: "basic"
-            scope: "full"
-            install: "yes"
         exclude:
           # macos-latest == macos-15-arm64
           # macos-latest-large == macos-15-intel

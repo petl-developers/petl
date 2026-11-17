@@ -100,6 +100,16 @@ in ``tox.ini``. Database and remote filesystem tests have separate
 ``database``, ``remote`` and ``compose`` environments; see ``tox.ini``
 for their dependencies and service setup commands.
 
+Branch policy
+-------------
+
+- ``1.7.x`` is the maintenance branch for Python 2.7 and Python 3 bugfixes.
+- ``master`` is the development branch for the 1.8.x series (Python 3.6+ only,
+  after Python 2.7 support was dropped).
+
+Open pull requests against the branch that matches the release line you intend
+to change. CI runs on both ``master`` and ``1.7.x``.
+
 Contributing code via GitHub
 ----------------------------
 

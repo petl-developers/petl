@@ -13,7 +13,7 @@ import logging
 
 
 from petl.errors import ArgumentError
-from petl.compat import urlopen, StringIO, BytesIO, string_types, PY2
+from petl.compat import urlopen, StringIO, BytesIO, string_types
 
 try:
     import bz2
@@ -98,10 +98,7 @@ class ZipSource(object):
 
     @contextmanager
     def open(self, mode):
-        if PY2:
-            mode = mode.translate(None, 'bU')
-        else:
-            mode = mode.translate({ord('b'): None, ord('U'): None})
+        mode = mode.translate({ord('b'): None, ord('U'): None})
         zf = zipfile.ZipFile(self.filename, mode, **self.kwargs)
         try:
             if self.pwd is not None:

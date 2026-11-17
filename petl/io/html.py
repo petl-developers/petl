@@ -4,23 +4,15 @@ from __future__ import absolute_import, print_function, division
 
 # standard library dependencies
 import io
-from petl.compat import text_type, numeric_types, next, PY2, izip_longest, \
+from petl.compat import text_type, numeric_types, next, izip_longest, \
     string_types, callable
 
 
 # internal dependencies
 from petl.errors import ArgumentError
-try:
-    from html import escape as html_escape
-except ImportError:  # Python 2 (project still declares 2.7 support)
-    from cgi import escape as _cgi_escape
-
-    def html_escape(s, quote=True):
-        # keep parity with html.escape, which escapes quotes by default
-        return _cgi_escape(s, quote)
+from html import escape as html_escape
 
 from petl.util.base import Table, Record
-from petl.io.base import getcodec
 from petl.io.sources import write_source_from_arg
 
 
@@ -78,14 +70,10 @@ def tohtml(table, source=None, encoding=None, errors='strict', caption=None,
     with source.open('wb') as buf:
 
         # deal with text encoding
-        if PY2:
-            codec = getcodec(encoding)
-            f = codec.streamwriter(buf, errors=errors)
-        else:
-            f = io.TextIOWrapper(buf,
-                                 encoding=encoding,
-                                 errors=errors,
-                                 newline='')
+        f = io.TextIOWrapper(buf,
+                             encoding=encoding,
+                             errors=errors,
+                             newline='')
 
         # write the table
         try:
@@ -112,8 +100,7 @@ def tohtml(table, source=None, encoding=None, errors='strict', caption=None,
             f.flush()
 
         finally:
-            if not PY2:
-                f.detach()
+            f.detach()
 
 
 Table.tohtml = tohtml
@@ -172,14 +159,10 @@ class TeeHTMLView(Table):
         with source.open('wb') as buf:
 
             # deal with text encoding
-            if PY2:
-                codec = getcodec(encoding)
-                f = codec.streamwriter(buf, errors=errors)
-            else:
-                f = io.TextIOWrapper(buf,
-                                     encoding=encoding,
-                                     errors=errors,
-                                     newline='')
+            f = io.TextIOWrapper(buf,
+                                 encoding=encoding,
+                                 errors=errors,
+                                 newline='')
 
             # write the table
             try:
@@ -208,8 +191,7 @@ class TeeHTMLView(Table):
                 f.flush()
 
             finally:
-                if not PY2:
-                    f.detach()
+                f.detach()
 
 
 def _write_begin(f, flds, lineterminator, caption, index_header, truncate):
