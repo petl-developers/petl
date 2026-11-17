@@ -4,6 +4,12 @@ Changes
 Version 1.7.33
 --------------
 
+* Select extreme rows within existing key groups in ``groupselectmin()``
+  and ``groupselectmax()`` with ``presorted=True``, so each key produces
+  only one row, including callable keys. This path sorts each group's
+  values separately and requires a repeatable input table for multiple
+  passes; group sorts are not cached between passes.
+
 * Use the same mixed-type ordering as ``sort()`` in ``issorted()`` when no
   key is specified, including treating missing cells as ``None``.
   By :user:`FFspiky`, :issue:`826`.

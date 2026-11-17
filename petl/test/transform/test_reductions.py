@@ -11,7 +11,7 @@ from petl.test.helpers import ieq
 from petl.errors import FieldSelectionError
 from petl.util import strjoin
 from petl.transform.reductions import rowreduce, aggregate, \
-    mergeduplicates, merge, Conflict, fold
+    mergeduplicates, merge, Conflict, fold, groupselectmin, groupselectmax
 
 
 def test_rowreduce():
@@ -728,3 +728,134 @@ def test_fold():
     expect = (('key', 'value'), (1, 8), (2, 12))
     ieq(expect, t2)
     ieq(expect, t2)
+
+
+@pytest.mark.parametrize('select, expected_rows', [
+    (groupselectmin, [('a', 1, 'first'), ('b', 2, 'first')]),
+    (groupselectmax, [('a', 4, 'last'), ('b', 3, 'last')]),
+])
+@pytest.mark.parametrize('key', ['group', 0, ['group'], ('group',),
+                               operator.itemgetter('group'),
+                               lambda row: {'group': row['group']}])
+def test_groupselectextreme_presorted(select, expected_rows, key):
+    table = [('group', 'value', 'label'),
+             ('a', 1, 'first'), ('a', 4, 'last'),
+             ('b', 2, 'first'), ('b', 3, 'last')]
+    expected = [table[0]] + expected_rows
+    result = select(table, key, 'value', presorted=True, buffersize=2)
+    ieq(expected, result)
+    ieq(expected, result)
+    if not callable(key):
+        ieq(expected, select(table, key, 'value', buffersize=2))
+
+
+@pytest.mark.parametrize('select, expected_rows', [
+    (groupselectmin, [('r', 'a', 1, 2, 'first'),
+                      ('r', 'b', 2, 0, 'first')]),
+    (groupselectmax, [('r', 'a', 4, 0, 'last'),
+                      ('r', 'b', 3, 0, 'last')]),
+])
+def test_groupselectextreme_presorted_compound(select, expected_rows):
+    table = [('region', 'group', 'v1', 'v2', 'label'),
+             ('r', 'a', 1, 2, 'first'), ('r', 'a', 4, 0, 'last'),
+             ('r', 'b', 2, 0, 'first'), ('r', 'b', 3, 0, 'last')]
+    ieq([table[0]] + expected_rows,
+        select(table, ['region', 'group'], ['v1', 'v2'],
+               presorted=True))
+
+
+@pytest.mark.parametrize('select, expected_rows', [
+    (groupselectmin, [('a', None, 'missing'), ('b', 2, 'first')]),
+    (groupselectmax, [('a', 'z', 'text'), ('b', 3, 'last')]),
+])
+def test_groupselectextreme_presorted_mixed_values(select, expected_rows):
+    table = [('group', 'value', 'label'),
+             ('a', None, 'missing'), ('a', 1, 'number'), ('a', 'z', 'text'),
+             ('b', 2, 'first'), ('b', 3, 'last')]
+    ieq([table[0]] + expected_rows,
+        select(table, 'group', 'value', presorted=True))
+
+
+@pytest.mark.parametrize('select', [groupselectmin, groupselectmax])
+@pytest.mark.parametrize('rows', [[], [('a', 1, 'only')],
+                                  [('a', 1, 'first'), ('a', 1, 'second')]])
+def test_groupselectextreme_presorted_boundaries(select, rows):
+    header = ('group', 'value', 'label')
+    expected = [header] + rows[:1]
+    ieq(expected, select([header] + rows, 'group', 'value', presorted=True))
+
+
+class _OrderingTie(object):
+
+    def __lt__(self, other):
+        raise TypeError('ordering is not defined')
+
+
+@pytest.mark.parametrize('select', [groupselectmin, groupselectmax])
+def test_groupselectextreme_presorted_ordering_ties(select):
+    # These unequal values have the same PETL fallback ordering on Python 2/3.
+    table = [('group', 'value', 'label'),
+             ('a', _OrderingTie(), 'first'), ('a', _OrderingTie(), 'second')]
+    assert list(select(table, 'group', 'value', presorted=True)) == table[:2]
+
+
+@pytest.mark.parametrize('select', [groupselectmin, groupselectmax])
+def test_groupselectextreme_presorted_all_fields(select):
+    # value=None compares header-covered cells, not extra trailing cells.
+    table = [('group', 'value'), ('a', 1, 'z'), ('a', 1, 'a')]
+    assert list(select(table, 'group', None, presorted=True)) == table[:2]
+
+
+@pytest.mark.parametrize('select, expected', [
+    (groupselectmin, ('a', 5, 1)), (groupselectmax, ('a', 4)),
+])
+def test_groupselectextreme_presorted_negative_value(select, expected):
+    table = [('group', 'value'), ('a', 5, 1), ('a', 4)]
+    assert list(select(table, 'group', -1, presorted=True)) == [table[0], expected]
+
+
+@pytest.mark.parametrize('select, expected', [
+    (groupselectmin, ('a',)), (groupselectmax, ('a', 2)),
+])
+def test_groupselectextreme_presorted_short_rows(select, expected):
+    table = [('group', 'value'), ('a',), ('a', 2)]
+    assert list(select(table, 'group', 'value', presorted=True)) == [table[0], expected]
+
+
+@pytest.mark.parametrize('select, expected', [
+    (groupselectmin, ('a', 1, 2)), (groupselectmax, ('a', 1, 4)),
+])
+def test_groupselectextreme_presorted_duplicate_fields(select, expected):
+    table = [('group', 'value', 'value'), ('a', 1, 2), ('a', 1, 4)]
+    result = select(table, 'group', ['value', 'value'], presorted=True)
+    assert list(result) == [table[0], expected]
+
+
+@pytest.mark.parametrize('select', [groupselectmin, groupselectmax])
+@pytest.mark.parametrize('value, error', [('missing', FieldSelectionError),
+                                        ([], TypeError)])
+def test_groupselectextreme_presorted_empty_invalid_value(select, value, error):
+    with pytest.raises(error):
+        list(select([('group', 'value')], 'group', value, presorted=True))
+
+
+@pytest.mark.parametrize('select', [groupselectmin, groupselectmax])
+@pytest.mark.parametrize('cache', [False, True])
+def test_groupselectextreme_presorted_spill_and_iterators(select, cache, tmpdir):
+    import gc
+    table = [('group', 'value')]
+    table += [(group, value) for group in ['a', 'b']
+              for value in [2, 4, 1, 5, 3]]
+    value = 1 if select is groupselectmin else 5
+    expected = [table[0], ('a', value), ('b', value)]
+    result = select(table, lambda row: row['group'], 'value',
+                    presorted=True, buffersize=2, tempdir=str(tmpdir),
+                    cache=cache)
+    first = iter(result)
+    assert next(first) == table[0]
+    assert list(result) == expected
+    assert list(first) == expected[1:]
+    assert list(result) == expected
+    assert list(result.cache()) == expected
+    gc.collect()
+    assert not tmpdir.listdir()
