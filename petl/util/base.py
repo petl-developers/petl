@@ -9,7 +9,7 @@ import operator
 from collections import Counter, namedtuple, OrderedDict
 from itertools import compress, combinations_with_replacement
 from petl.compat import imap, izip, izip_longest, ifilter, ifilterfalse, \
-    reduce, next, string_types, text_type, PY3
+    reduce, next, string_types, text_type
 
 
 from petl.errors import FieldSelectionError
@@ -724,7 +724,7 @@ def expr(expression_text, trusted=True):
     global _expr_impl
     if _expr_impl is None:
         _expr_impl = _unsafe_expr
-        if trusted is not None and not trusted and PY3:
+        if trusted is not None and not trusted:
             try:
                 import asteval # noqa: F401
                 _expr_impl = _safe_expr

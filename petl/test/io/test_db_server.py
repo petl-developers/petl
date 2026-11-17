@@ -4,9 +4,8 @@ import logging
 import pytest
 
 import petl as etl
-from petl.compat import PY3
 from petl.test.helpers import ieq
-from petl.test.io.pytest_helpers import get_db_args, get_mysql_args, get_pg_args, require_package, skip_unless_connect
+from petl.test.io.pytest_helpers import get_mysql_args, get_pg_args, require_package, skip_unless_connect
 
 
 logger = logging.getLogger(__name__)
@@ -189,68 +188,6 @@ def test_pymysql():
                                   user=myuser,
                                   password=mypassword,
                                   database=mydatabase,
-                                  charset='utf8')
-        try:
-            utf8_connection.cursor().execute('SET SQL_MODE=ANSI_QUOTES')
-            _test_unicode(utf8_connection)
-        finally:
-            utf8_connection.close()
-    finally:
-        dbapi_connection.close()
-
-
-@pytest.mark.skipif(PY3, reason='MySQLdb is Python 2 only')
-def test_mysqldb():
-    MySQLdb = require_package('MySQLdb')
-    require_package('sqlalchemy')
-    myhost, myuser, mypassword, mydatabase = get_db_args('MYSQLDB', 'MYSQL')
-
-    def connect():
-        return MySQLdb.connect(host=myhost,
-                               user=myuser,
-                               passwd=mypassword,
-                               db=mydatabase)
-
-    dbapi_connection = skip_unless_connect(connect, 'SKIP MySQLdb tests')
-
-    try:
-        # exercise using a dbapi_connection
-        _setup_mysql(dbapi_connection)
-        _test_dbo(dbapi_connection)
-
-        # exercise using a dbapi_cursor
-        _setup_mysql(dbapi_connection)
-        dbapi_cursor = dbapi_connection.cursor()
-        _test_dbo(dbapi_cursor)
-        dbapi_cursor.close()
-
-        # exercise sqlalchemy dbapi_connection
-        _setup_mysql(dbapi_connection)
-        from sqlalchemy import create_engine
-        sqlalchemy_engine = create_engine('mysql+mysqldb://%s:%s@%s/%s' %
-                                         (myuser, mypassword, myhost, mydatabase))
-        from sqlalchemy.event import listen
-        from sqlalchemy import create_engine, text as sqlalchemy_text
-        listen(sqlalchemy_engine, "connect", _setup_sqlalchemy_quotes)
-        sqlalchemy_connection = sqlalchemy_engine.connect()
-        sqlalchemy_connection.execute(sqlalchemy_text('SET SQL_MODE=ANSI_QUOTES'))
-        _test_dbo(sqlalchemy_connection)
-        sqlalchemy_connection.close()
-
-        # exercise sqlalchemy session
-        _setup_mysql(dbapi_connection)
-        from sqlalchemy.orm import sessionmaker
-        Session = sessionmaker(bind=sqlalchemy_engine)
-        sqlalchemy_session = Session()
-        _test_dbo(sqlalchemy_session)
-        sqlalchemy_session.close()
-
-        # other exercises
-        _test_with_schema(dbapi_connection, mydatabase)
-        utf8_connection = MySQLdb.connect(host=myhost,
-                                  user=myuser,
-                                  passwd=mypassword,
-                                  db=mydatabase,
                                   charset='utf8')
         try:
             utf8_connection.cursor().execute('SET SQL_MODE=ANSI_QUOTES')

@@ -8,7 +8,7 @@ import pytest
 
 from petl.errors import FieldSelectionError
 from petl.test.helpers import ieq, eq_
-from petl.compat import PY3, next
+from petl.compat import next
 from petl.util.base import header, fieldnames, data, dicts, records, \
     namedtuples, itervalues, values, rowgroupby, expr
 from petl.util.lookups import recordlookup
@@ -400,13 +400,11 @@ def test_expr_inject():
 
 
 def _has_asteval():
-    if PY3:
-        try:
-            import asteval
-            return True
-        except ImportError:
-            pass
-    return False
+    try:
+        import asteval
+        return True
+    except ImportError:
+        return False
 
 
 def test_expr_untrusted():

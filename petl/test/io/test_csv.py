@@ -6,8 +6,6 @@ from tempfile import NamedTemporaryFile
 import gzip
 import os
 import logging
-from petl.compat import PY2
-
 
 from petl.test.helpers import ieq, eq_
 from petl.io.csv import fromcsv, fromtsv, tocsv, appendcsv, totsv, appendtsv
@@ -112,12 +110,7 @@ def test_fromcsv_gz():
               ('b', '2'),
               ('c', '2'))
 
-    # '\r' not supported in PY2 because universal newline mode is
-    # not supported by gzip module
-    if PY2:
-        lts = b'\n', b'\r\n'
-    else:
-        lts = b'\r', b'\n', b'\r\n'
+    lts = b'\r', b'\n', b'\r\n'
     for lt in lts:
         f = NamedTemporaryFile(delete=False)
         f.close()
