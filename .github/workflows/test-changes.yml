@@ -5,11 +5,11 @@ name: Test Changes
 
 on:
   push:
-    branches: ["master"]
+    branches: ["master", "1.7.x"]
   merge_group:
-    branches: ["master"]
+    branches: ["master", "1.7.x"]
   pull_request:
-    branches: ["master"]
+    branches: ["master", "1.7.x"]
     types: [opened, reopened, synchronize, ready_for_review]
   workflow_dispatch:
     inputs:
