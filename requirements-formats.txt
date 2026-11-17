@@ -17,6 +17,7 @@ xlwt>=1.3.0
 fastavro>=0.24.2 ; python_version >= '3'
 fastavro==0.24.2 ; python_version < '3'
 gspread>=3.4.0 ; python_version >= '3'
+pyarrow>=4.0.0 ; python_version >= '3.8'
 
 tables<=3.8   ; python_version <  '3.9' and sys_platform != 'darwin'
 tables>=3.9.2 ; python_version >= '3.9' and sys_platform != 'darwin'
