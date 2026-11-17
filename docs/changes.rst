@@ -32,6 +32,9 @@ Version 1.7.33
   used to support the legacy code for Python 2.7 users.
   Development continues on the ``master`` branch.
   By :user:`juarezr`, :issue:`830`.
+* Added :func:`petl.io.arrow.fromarrow` and :func:`petl.io.arrow.toarrow` for
+  reading and writing Parquet and Feather/IPC formats with ``pyarrow``,
+  along with a ``parquet`` extra. :issue:`627`.
 
 * Select extreme rows within existing key groups in ``groupselectmin()``
   and ``groupselectmax()`` with ``presorted=True``, so each key produces
