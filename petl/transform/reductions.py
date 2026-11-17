@@ -582,6 +582,10 @@ class _PresortedGroupSelectExtremeView(Table):
             try:
                 next(ordered)  # header
                 winner = next(ordered)
+                # Finish the merge so spill readers close before their
+                # temporary files are released, including on Windows.
+                for _ in ordered:
+                    pass
             finally:
                 ordered.close()
             yield winner
