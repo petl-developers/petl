@@ -19,7 +19,7 @@ Version 1.7.33
 * Remove the selected columns in ``cutout()`` when using negative field
   indexes, including when called by ``unjoin()`` with an explicit key.
   Raise ``FieldSelectionError`` for indexes outside the header.
- By :user:`yuxino`, :issue:`813`.
+  By :user:`yuxino`, :issue:`813`.
 
 * Accept a tuple or list of fields passed as a single argument to
   ``valuecounter()`` and ``valuecounts()``, counting the same compound key
