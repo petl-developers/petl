@@ -785,11 +785,17 @@ def test_groupselectextreme_presorted_boundaries(select, rows):
     ieq(expected, select([header] + rows, 'group', 'value', presorted=True))
 
 
+class _OrderingTie(object):
+
+    def __lt__(self, other):
+        raise TypeError('ordering is not defined')
+
+
 @pytest.mark.parametrize('select', [groupselectmin, groupselectmax])
 def test_groupselectextreme_presorted_ordering_ties(select):
-    # These unequal dictionaries compare as an ordering tie in PETL.
+    # These unequal values have the same PETL fallback ordering on Python 2/3.
     table = [('group', 'value', 'label'),
-             ('a', {'x': 1}, 'first'), ('a', {'y': 2}, 'second')]
+             ('a', _OrderingTie(), 'first'), ('a', _OrderingTie(), 'second')]
     assert list(select(table, 'group', 'value', presorted=True)) == table[:2]
 
 
