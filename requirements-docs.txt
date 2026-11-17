@@ -10,3 +10,5 @@ rinohtype ; python_version >= '3.10'
 
 setuptools
 setuptools-scm
+
+pyarrow>=4.0.0 ; python_version >= '3.8'

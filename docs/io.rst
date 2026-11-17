@@ -399,6 +399,21 @@ Avro files (fastavro)
    :start-after: begin_complex_schema
    :end-before: end_complex_schema
 
+.. module:: petl.io.arrow
+.. _io_pyarrow:
+
+Parquet and Arrow files (PyArrow)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. note::
+
+    The following functions require `pyarrow
+    <https://arrow.apache.org/docs/python/>`_ to be installed, e.g.::
+
+        $ pip install pyarrow
+
+    Supported formats are ``'parquet'``, ``'feather'`` and ``'ipc'``.
+
 .. module:: petl.io.gsheet
 .. _io_gsheet:
 

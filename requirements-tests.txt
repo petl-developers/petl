@@ -14,3 +14,4 @@ tox
 coverage
 coveralls
 mock; python_version < '3.0'
+pyarrow>=4.0.0 ; python_version >= '3.8'

@@ -4,6 +4,10 @@ Changes
 Version 1.7.33
 --------------
 
+* Added :func:`petl.io.arrow.fromarrow` and :func:`petl.io.arrow.toarrow` for
+  reading and writing Parquet and Feather/IPC formats with ``pyarrow``,
+  along with a ``parquet`` extra. :issue:`627`.
+
 * Select extreme rows within existing key groups in ``groupselectmin()``
   and ``groupselectmax()`` with ``presorted=True``, so each key produces
   only one row, including callable keys. This path sorts each group's
