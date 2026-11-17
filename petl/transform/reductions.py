@@ -502,10 +502,15 @@ def groupselectmin(table, key, value, presorted=False, buffersize=None,
                    tempdir=None, cache=True):
     """Group by the `key` field then return the row with the minimum of the
     `value` field within each group. N.B., will only return one row for each
-    group, even if multiple rows have the same (minimum) value."""
+    group, even if multiple rows have the same (minimum) value.
+
+    Sorting by `value` can split key groups, so the rows are regrouped by
+    `key` even if `presorted` is True.
+
+    """
 
     return groupselectfirst(sort(table, value, reverse=False), key,
-                            presorted=presorted, buffersize=buffersize,
+                            presorted=False, buffersize=buffersize,
                             tempdir=tempdir, cache=cache)
 
 
@@ -516,10 +521,15 @@ def groupselectmax(table, key, value, presorted=False, buffersize=None,
                    tempdir=None, cache=True):
     """Group by the `key` field then return the row with the maximum of the
     `value` field within each group. N.B., will only return one row for each
-    group, even if multiple rows have the same (maximum) value."""
+    group, even if multiple rows have the same (maximum) value.
+
+    Sorting by `value` can split key groups, so the rows are regrouped by
+    `key` even if `presorted` is True.
+
+    """
 
     return groupselectfirst(sort(table, value, reverse=True), key,
-                            presorted=presorted, buffersize=buffersize,
+                            presorted=False, buffersize=buffersize,
                             tempdir=tempdir, cache=cache)
 
 

@@ -4,6 +4,10 @@ Changes
 Version 1.7.33
 --------------
 
+* Regroup rows by key after sorting by value in ``groupselectmin()`` and
+  ``groupselectmax()`` even when ``presorted=True``, so each key produces
+  only one row.
+
 * Use the same mixed-type ordering as ``sort()`` in ``issorted()`` when no
   key is specified, including treating missing cells as ``None``.
   By :user:`FFspiky`, :issue:`826`.

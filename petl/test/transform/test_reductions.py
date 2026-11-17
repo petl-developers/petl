@@ -11,7 +11,7 @@ from petl.test.helpers import ieq
 from petl.errors import FieldSelectionError
 from petl.util import strjoin
 from petl.transform.reductions import rowreduce, aggregate, \
-    mergeduplicates, merge, Conflict, fold
+    mergeduplicates, merge, Conflict, fold, groupselectmin, groupselectmax
 
 
 def test_rowreduce():
@@ -728,3 +728,55 @@ def test_fold():
     expect = (('key', 'value'), (1, 8), (2, 12))
     ieq(expect, t2)
     ieq(expect, t2)
+
+
+@pytest.mark.parametrize('select, expected_rows', [
+    (groupselectmin, [('a', 1, 'first'), ('b', 2, 'first')]),
+    (groupselectmax, [('a', 4, 'last'), ('b', 3, 'last')]),
+])
+@pytest.mark.parametrize('key', ['group', 0, ['group'], ('group',)])
+def test_groupselectextreme_presorted(select, expected_rows, key):
+    table = [('group', 'value', 'label'),
+             ('a', 1, 'first'), ('a', 4, 'last'),
+             ('b', 2, 'first'), ('b', 3, 'last')]
+    expected = [table[0]] + expected_rows
+    result = select(table, key, 'value', presorted=True, buffersize=2)
+    ieq(expected, result)
+    ieq(expected, result)
+    ieq(expected, select(table, key, 'value', buffersize=2))
+
+
+@pytest.mark.parametrize('select, expected_rows', [
+    (groupselectmin, [('r', 'a', 1, 2, 'first'),
+                      ('r', 'b', 2, 0, 'first')]),
+    (groupselectmax, [('r', 'a', 4, 0, 'last'),
+                      ('r', 'b', 3, 0, 'last')]),
+])
+def test_groupselectextreme_presorted_compound(select, expected_rows):
+    table = [('region', 'group', 'v1', 'v2', 'label'),
+             ('r', 'a', 1, 2, 'first'), ('r', 'a', 4, 0, 'last'),
+             ('r', 'b', 2, 0, 'first'), ('r', 'b', 3, 0, 'last')]
+    ieq([table[0]] + expected_rows,
+        select(iter(table), ['region', 'group'], ['v1', 'v2'],
+               presorted=True))
+
+
+@pytest.mark.parametrize('select, expected_rows', [
+    (groupselectmin, [('a', None, 'missing'), ('b', 2, 'first')]),
+    (groupselectmax, [('a', 'z', 'text'), ('b', 3, 'last')]),
+])
+def test_groupselectextreme_presorted_mixed_values(select, expected_rows):
+    table = [('group', 'value', 'label'),
+             ('a', None, 'missing'), ('a', 1, 'number'), ('a', 'z', 'text'),
+             ('b', 2, 'first'), ('b', 3, 'last')]
+    ieq([table[0]] + expected_rows,
+        select(table, 'group', 'value', presorted=True))
+
+
+@pytest.mark.parametrize('select', [groupselectmin, groupselectmax])
+@pytest.mark.parametrize('rows', [[], [('a', 1, 'only')],
+                                  [('a', 1, 'first'), ('a', 1, 'second')]])
+def test_groupselectextreme_presorted_boundaries(select, rows):
+    header = ('group', 'value', 'label')
+    expected = [header] + rows[:1]
+    ieq(expected, select([header] + rows, 'group', 'value', presorted=True))
