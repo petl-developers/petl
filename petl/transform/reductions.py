@@ -8,6 +8,7 @@ from petl.compat import next, string_types, reduce, text_type
 
 
 from petl.errors import ArgumentError, FieldSelectionError
+from petl.comparison import comparable_itemgetter
 from petl.util.base import Table, iterpeek, rowgroupby, asindices
 from petl.util.base import values, records
 from petl.util.counting import nrows
@@ -504,10 +505,16 @@ def groupselectmin(table, key, value, presorted=False, buffersize=None,
     `value` field within each group. N.B., will only return one row for each
     group, even if multiple rows have the same (minimum) value.
 
-    Sorting by `value` can split key groups, so the rows are regrouped by
-    `key` even if `presorted` is True.
+    With `presorted=True`, input rows must already be grouped by `key`.
+    Values are sorted within each group, without sorting the keys. This
+    also supports callable keys. A repeatable input table is required;
+    group sorts are not retained between passes.
 
     """
+
+    if presorted:
+        return _PresortedGroupSelectExtremeView(table, key, value, False,
+                                               buffersize, tempdir, cache)
 
     return groupselectfirst(sort(table, value, reverse=False), key,
                             presorted=False, buffersize=buffersize,
@@ -523,10 +530,16 @@ def groupselectmax(table, key, value, presorted=False, buffersize=None,
     `value` field within each group. N.B., will only return one row for each
     group, even if multiple rows have the same (maximum) value.
 
-    Sorting by `value` can split key groups, so the rows are regrouped by
-    `key` even if `presorted` is True.
+    With `presorted=True`, input rows must already be grouped by `key`.
+    Values are sorted within each group, without sorting the keys. This
+    also supports callable keys. A repeatable input table is required;
+    group sorts are not retained between passes.
 
     """
+
+    if presorted:
+        return _PresortedGroupSelectExtremeView(table, key, value, True,
+                                               buffersize, tempdir, cache)
 
     return groupselectfirst(sort(table, value, reverse=True), key,
                             presorted=False, buffersize=buffersize,
@@ -534,6 +547,44 @@ def groupselectmax(table, key, value, presorted=False, buffersize=None,
 
 
 Table.groupselectmax = groupselectmax
+
+
+class _PresortedGroupSelectExtremeView(Table):
+
+    def __init__(self, source, key, value, reverse, buffersize, tempdir, cache):
+        self.source = source
+        self.key = key
+        self.value = value
+        self.reverse = reverse
+        self.buffersize = buffersize
+        self.tempdir = tempdir
+        self._cache = cache
+
+    def __iter__(self):
+        it = iter(self.source)
+        try:
+            hdr = next(it)
+        except StopIteration:
+            hdr = []
+        yield tuple(hdr)
+
+        # Preserve sort's selector validation even on header-only input.
+        indices = (range(len(hdr)) if self.value is None
+                   else asindices(hdr, self.value))
+        comparable_itemgetter(*indices)
+
+        source = itertools.chain([hdr], it)
+        for _, rows in rowgroupby(source, self.key):
+            group = itertools.chain([hdr], rows)
+            ordered = iter(sort(group, self.value, reverse=self.reverse,
+                                buffersize=self.buffersize,
+                                tempdir=self.tempdir, cache=self._cache))
+            try:
+                next(ordered)  # header
+                winner = next(ordered)
+            finally:
+                ordered.close()
+            yield winner
 
 
 def mergeduplicates(table, key, missing=None, presorted=False, buffersize=None,
