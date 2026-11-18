@@ -325,6 +325,43 @@ def test_aggregate_multifield_key_shapes(key, expected, presorted):
     assert list(result) == expected
 
 
+@pytest.mark.parametrize('presorted', [False, True])
+def test_aggregate_field_index(presorted):
+    table = [['foo', 'bar', 'baz'],
+             ['a', 3, True],
+             ['a', 7, False],
+             ['b', 2, True]]
+    for key in 0, -3, [0], ('foo',):
+        expect = [('foo', 'value'), ('a', 2), ('b', 1)]
+        ieq(expect, aggregate(table, key, len, presorted=presorted))
+        expect = [('foo', 'value'), ('a', 10), ('b', 2)]
+        ieq(expect, aggregate(table, key, sum, 'bar', presorted=presorted))
+        expect = [('foo', 'sumbar'), ('a', 10), ('b', 2)]
+        ieq(expect, aggregate(table, key, {'sumbar': ('bar', sum)},
+                              presorted=presorted))
+
+    for key in (0, 1), ['foo', 1], (-3, 'bar'):
+        expect = [('foo', 'bar', 'value'), ('a', 3, 1), ('a', 7, 1),
+                  ('b', 2, 1)]
+        ieq(expect, aggregate(table, key, len, presorted=presorted))
+        expect = [('foo', 'bar', 'count'), ('a', 3, 1), ('a', 7, 1),
+                  ('b', 2, 1)]
+        ieq(expect, aggregate(table, key, {'count': len},
+                              presorted=presorted))
+
+
+@pytest.mark.parametrize('presorted', [False, True])
+def test_aggregate_field_index_out_of_range(presorted):
+    table = [['foo', 'bar'],
+             ['a', 1]]
+    for key in 2, -3, [0, 2]:
+        with pytest.raises(FieldSelectionError):
+            aggregate(table, key, len, presorted=presorted).nrows()
+        with pytest.raises(FieldSelectionError):
+            aggregate(table, key, {'count': len},
+                      presorted=presorted).nrows()
+
+
 def test_aggregate_multifield_key_is_None():
 
     table1 = (('foo', 'bar'),
