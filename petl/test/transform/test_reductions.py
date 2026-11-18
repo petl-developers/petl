@@ -7,9 +7,9 @@ import pytest
 
 
 from collections import OrderedDict
-from petl.test.helpers import ieq
+from petl.test.helpers import ieq, eq_
 from petl.errors import FieldSelectionError
-from petl.util import strjoin
+from petl.util import strjoin, header
 from petl.transform.reductions import rowreduce, aggregate, \
     mergeduplicates, merge, Conflict, fold, groupselectmin, groupselectmax
 
@@ -360,6 +360,14 @@ def test_aggregate_field_index_out_of_range(presorted):
         with pytest.raises(FieldSelectionError):
             aggregate(table, key, {'count': len},
                       presorted=presorted).nrows()
+
+
+def test_aggregate_field_index_empty_table_presorted():
+    # without a header there is nothing to name the key after, so the key
+    # is kept as given, as it was before indexes were resolved
+    for key, expect in (('foo', ('foo', 'value')), (0, (0, 'value')),
+                        (('foo', 'bar'), ('foo', 'bar', 'value'))):
+        eq_(expect, header(aggregate([], key, len, presorted=True)))
 
 
 def test_aggregate_multifield_key_is_None():

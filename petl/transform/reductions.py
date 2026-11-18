@@ -309,6 +309,10 @@ def _aggregatekeyfields(hdr, key):
     # name the output key fields, using the header field name for any part
     # of the key given by field index
     keyspec = _keyspec(key)
+    if not hdr:
+        # a table without a header has nothing to resolve the key against,
+        # so keep the key as given and let the empty table pass through
+        return list(keyspec)
     keyidxs = _mergekeyindices(hdr, keyspec)
     return [hdr[i] if isinstance(k, int) else k
             for k, i in zip(keyspec, keyidxs)]
