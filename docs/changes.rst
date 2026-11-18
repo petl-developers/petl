@@ -4,6 +4,9 @@ Changes
 Version 1.8.0
 -------------
 
+* Keep added column values aligned with their header when input rows are short
+  or long in ``addcolumn()``.
+
 * Drop support for Python 2.7. The minimum supported version is Python 3.6.
   Bugfixes for Python 2.7 users continue on the ``1.7.x`` maintenance branch.
   By :user:`juarezr`, :issue:`478`.
@@ -90,6 +93,11 @@ Version 1.7.32
 * Fill every column by position when ``filldown()`` has no explicit field
   selectors, including columns with integer or mixed-type headers.
   By :user:`wynneyin`.
+
+* Treat a missing (``None``) value as missing data in ``split()`` and as an
+  empty sequence in ``unpack()``, filling the new fields with missing values
+  instead of raising ``TypeError``.
+  By :user:`rahul05ranjan`.
 
 * Close remote gzip and bz2 responses after reading or an error.
   By :user:`IlyaKhalafi`, :issue:`803`.

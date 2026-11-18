@@ -1131,6 +1131,8 @@ def addcolumn(table, field, col, index=None, missing=None):
         +-----+-----+-------+
 
     Use the `index` parameter to control the position of the new column.
+    Short input rows are padded with `missing` and extra cells beyond the
+    header are trimmed before the new column is inserted.
 
     """
 
@@ -1156,27 +1158,18 @@ class AddColumnView(Table):
 
 def iteraddcolumn(table, field, col, index, missing):
     it = iter(table)
-    try:
-        hdr = next(it)
-    except StopIteration:
-        hdr = []
-
-    # determine position of new column
+    outhdr = list(next(it, ()))
+    width = len(outhdr)
     if index is None:
-        index = len(hdr)
-
-    # construct output header
-    outhdr = list(hdr)
+        index = width
     outhdr.insert(index, field)
     yield tuple(outhdr)
 
-    # construct output data
-    for row, val in izip_longest(it, col, fillvalue=missing):
-        # run out of rows?
-        if row == missing:
-            row = [missing] * len(hdr)
-        outrow = list(row)
-        outrow.insert(index, val)
+    exhausted = object()
+    for row, val in izip_longest(it, col, fillvalue=exhausted):
+        outrow = [] if row is exhausted else list(islice(row, width))
+        outrow.extend([missing] * (width - len(outrow)))
+        outrow.insert(index, missing if val is exhausted else val)
         yield tuple(outrow)
 
 
