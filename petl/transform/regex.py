@@ -170,6 +170,21 @@ def split(table, field, pattern, newfields=None, include_original=False,
     By default the field on which the split is performed is omitted. It can
     be included using the `include_original` argument.
 
+    A missing (``None``) value is treated as missing data: the new fields
+    receive ``None`` rather than raising a ``TypeError``. E.g.::
+
+        >>> table3 = [['id', 'variable'],
+        ...           [1, 'parad1'],
+        ...           [2, None]]
+        >>> etl.split(table3, 'variable', 'd', ['variable', 'day'])
+        +----+----------+------+
+        | id | variable | day  |
+        +====+==========+======+
+        |  1 | 'para'   | '1'  |
+        +----+----------+------+
+        |  2 | None     | None |
+        +----+----------+------+
+
     """
 
     return SplitView(table, field, pattern, newfields, include_original,
@@ -186,7 +201,9 @@ class SplitView(Table):
         self.source = source
         self.field = field
         self.pattern = pattern
-        self.newfields = newfields
+        # materialize newfields so header construction and missing-row padding
+        # use the same repeatable collection; also survives the __len__ pass
+        self.newfields = list(newfields) if newfields is not None else None
         self.include_original = include_original
         self.maxsplit = maxsplit
         self.flags = flags
@@ -230,7 +247,13 @@ def itersplit(source, field, pattern, newfields, include_original, maxsplit,
             out_row = list(row)
         else:
             out_row = [v for i, v in enumerate(row) if i != field_index]
-        out_row.extend(prog.split(value, maxsplit))
+        if value is None:
+            # None is a missing cell; treat as missing data, like sub() and
+            # capture() treat missing values
+            if newfields:
+                out_row.extend([None] * len(newfields))
+        else:
+            out_row.extend(prog.split(value, maxsplit))
         yield tuple(out_row)
 
 
