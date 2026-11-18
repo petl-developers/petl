@@ -1131,6 +1131,8 @@ def addcolumn(table, field, col, index=None, missing=None):
         +-----+-----+-------+
 
     Use the `index` parameter to control the position of the new column.
+    Short input rows are padded with `missing` and extra cells beyond the
+    header are trimmed before the new column is inserted.
 
     """
 
@@ -1143,7 +1145,7 @@ Table.addcolumn = addcolumn
 class AddColumnView(Table):
 
     def __init__(self, table, field, col, index=None, missing=None):
-        self._table = table
+        self._table = stack(table, missing=missing)
         self._field = field
         self._col = col
         self._index = index

@@ -969,3 +969,10 @@ def test_movefield_iterable_header():
     actual = movefield(table1, 'bar', 0)
     ieq(expect, actual)
     ieq(expect, actual)
+
+
+def test_addcolumn_keeps_values_in_their_header_column():
+    source = [('id', 'amount'), ('a',), ('b', 42), ('c', 30, 'extra')]
+    result = addcolumn(source, 'region', ['east', 'west', 'north'], missing='NA')
+    ieq([('id', 'amount', 'region'), ('a', 'NA', 'east'),
+         ('b', 42, 'west'), ('c', 30, 'north')], result)
