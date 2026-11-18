@@ -160,3 +160,42 @@ def test_html_truncates_non_string_headers(tmpdir, writer, header, index_header)
         output = source.read()
     assert '<th>%s</th>' % expected[:3] in output
     assert '<td>abc</td>' in output
+
+
+@pytest.mark.parametrize('writer', ['tohtml', 'teehtml'])
+def test_html_escapes_cell_and_header_text(tmpdir, writer):
+    from petl import tohtml, teehtml
+
+    table = [['na<b>me', 'plain'],
+             ['AT&T', '<script>alert(1)</script>'],
+             ['<b>bold', 3]]
+    filename = str(tmpdir.join('table.html'))
+    write = tohtml if writer == 'tohtml' else teehtml
+    result = write(table, filename, encoding='utf-8')
+    if writer == 'teehtml':
+        assert list(result) == table
+    with io.open(filename, encoding='utf-8') as source:
+        output = source.read()
+    # header and cell text is escaped, so markup characters stay in their cells
+    assert '<th>na&lt;b&gt;me</th>' in output
+    assert '<td>AT&amp;T</td>' in output
+    assert '<td>&lt;script&gt;alert(1)&lt;/script&gt;</td>' in output
+    assert '<td>&lt;b&gt;bold</td>' in output
+    assert '<script>' not in output
+    # numeric alignment styling still applies to the escaped value
+    assert "<td style='text-align: right'>3</td>" in output
+
+
+def test_html_escaping_after_truncation(tmpdir):
+    from petl import tohtml
+
+    # The value contains an escapable character at the truncation boundary.
+    # Truncating first yields 'ab&c' -> 'ab&amp;c'; escaping first would
+    # truncate 'ab&amp;cd' to 'ab&a', splitting the entity. The asserted
+    # entity pins truncate-then-escape ordering in the writer.
+    table = [('h',), ('ab&cd',)]
+    filename = str(tmpdir.join('table.html'))
+    tohtml(table, filename, truncate=4)
+    with io.open(filename, encoding='utf-8') as source:
+        output = source.read()
+    assert '<td>ab&amp;c</td>' in output

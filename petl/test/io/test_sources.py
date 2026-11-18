@@ -11,8 +11,6 @@ import zipfile
 import io
 import pytest
 from tempfile import NamedTemporaryFile
-from petl.compat import PY2
-
 
 from petl.test.helpers import ieq, eq_
 import petl as etl
@@ -71,9 +69,7 @@ def test_memorysource():
     # test writing to a string buffer
     ss = MemorySource()
     etl.tocsv(tbl1, ss)
-    expect = "foo,bar\r\na,1\r\nb,2\r\nc,2\r\n"
-    if not PY2:
-        expect = expect.encode('ascii')
+    expect = "foo,bar\r\na,1\r\nb,2\r\nc,2\r\n".encode('ascii')
     actual = ss.getvalue()
     eq_(expect, actual)
 
@@ -85,17 +81,13 @@ def test_memorysource():
     # test appending
     etl.appendcsv(tbl1, ss)
     actual = ss.getvalue()
-    expect = "foo,bar\r\na,1\r\nb,2\r\nc,2\r\na,1\r\nb,2\r\nc,2\r\n"
-    if not PY2:
-        expect = expect.encode('ascii')
+    expect = "foo,bar\r\na,1\r\nb,2\r\nc,2\r\na,1\r\nb,2\r\nc,2\r\n".encode('ascii')
     eq_(expect, actual)
 
 
 def test_memorysource_2():
 
-    data = 'foo,bar\r\na,1\r\nb,2\r\nc,2\r\n'
-    if not PY2:
-        data = data.encode('ascii')
+    data = 'foo,bar\r\na,1\r\nb,2\r\nc,2\r\n'.encode('ascii')
     actual = etl.fromcsv(MemorySource(data))
     expect = (('foo', 'bar'),
               ('a', '1'),
@@ -325,7 +317,6 @@ for f in (lambda: etl.tocsv(tbl, fn + '.out.bz2'),
 
 @pytest.mark.parametrize('source_class', [GzipSource, BZ2Source])
 @pytest.mark.parametrize('body_error', [False, True])
-@pytest.mark.skipif(PY2, reason='Remote compressed streams require Python 3')
 def test_remote_compressed_source_closes_response(monkeypatch, source_class, body_error):
     payload = b'foo,bar\na,1\n'
     response = io.BytesIO()
@@ -354,7 +345,6 @@ def test_remote_compressed_source_closes_response(monkeypatch, source_class, bod
 
 
 @pytest.mark.parametrize('source_class', [GzipSource, BZ2Source])
-@pytest.mark.skipif(PY2, reason='Remote compressed streams require Python 3')
 def test_remote_compressed_source_closes_response_on_open_error(monkeypatch, source_class):
     response = io.BytesIO()
     monkeypatch.setattr('petl.io.sources.urlopen', lambda url: response)

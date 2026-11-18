@@ -3,7 +3,7 @@ from __future__ import absolute_import, print_function, division
 
 import itertools
 
-from petl.compat import PY3, text_type
+from petl.compat import text_type
 from petl.util.base import Table, data
 from petl.io.sources import read_source_from_arg, write_source_from_arg
 
@@ -104,8 +104,8 @@ def toxlsx(tbl, filename, sheet=None, write_header=True, mode="replace"):
     The `mode` argument controls how the file and sheet are treated:
 
       - `replace`: This is the default. It either replaces or adds a
-        named sheet, or if no sheet name is provided, all sheets
-        (overwrites the entire file).
+        named sheet, clearing any existing merged cells, or if no sheet
+        name is provided, all sheets (overwrites the entire file).
 
       - `overwrite`: Always overwrites the file. This produces a file
         with a single sheet.
@@ -139,11 +139,6 @@ def toxlsx(tbl, filename, sheet=None, write_header=True, mode="replace"):
 
 
 def _load_or_create_workbook(filename, mode, sheet):
-    if PY3:
-        FileNotFound = FileNotFoundError
-    else:
-        FileNotFound = IOError
-
     import openpyxl
     wb = None
     if not (mode == "overwrite" or (mode == "replace" and sheet is None)):
@@ -151,7 +146,7 @@ def _load_or_create_workbook(filename, mode, sheet):
             source = read_source_from_arg(filename)
             with source.open('rb') as source2:
                 wb = openpyxl.load_workbook(filename=source2, read_only=False)
-        except FileNotFound:
+        except FileNotFoundError:
             wb = None
     if wb is None:
         wb = openpyxl.Workbook(write_only=True)
@@ -162,9 +157,12 @@ def _insert_sheet_on_workbook(mode, sheet, wb):
     if mode == "replace":
         try:
             ws = wb[str(sheet)]
-            ws.delete_rows(1, ws.max_row)
         except KeyError:
             ws = wb.create_sheet(title=sheet)
+        else:
+            for merged_range in list(ws.merged_cells.ranges):
+                ws.unmerge_cells(str(merged_range))
+            ws.delete_rows(1, ws.max_row)
     elif mode == "add":
         ws = wb.create_sheet(title=sheet)
         # it creates a sheet named "foo1" if "foo" exists.

@@ -1,5 +1,7 @@
 from __future__ import absolute_import, print_function, division
 
+from collections import OrderedDict
+
 import pytest
 
 from petl.errors import FieldSelectionError
@@ -127,6 +129,41 @@ def test_cutout_headerless():
 def test_cutout_field_sequence(fields):
     table = (('foo', 'bar', 'baz'), ('A', 1, 2))
     ieq((('foo',), ('A',)), cutout(table, fields))
+
+
+@pytest.mark.parametrize('fields, expected', [
+    ((-1,), (('foo', 'bar'), ('A', 1), ('B', None))),
+    ((-3,), (('bar', 'baz'), (1, 2), (None, None))),
+    ((-1, 2), (('foo', 'bar'), ('A', 1), ('B', None))),
+    ((0, -1), (('bar',), (1,), (None,))),
+    (([-1, 'foo'],), (('bar',), (1,), (None,))),
+    (((-1, 'foo'),), (('bar',), (1,), (None,))),
+])
+def test_cutout_negative_indices(fields, expected):
+    table = (('foo', 'bar', 'baz'), ('A', 1, 2), ('B',))
+    ieq(expected, cutout(table, *fields))
+
+
+@pytest.mark.parametrize('fields, invalid', [
+    ((-4,), -4),
+    ((-5,), -5),
+    (('foo', -4), -4),
+    (([-5, 'bar'],), -5),
+    (((-4, 'bar'),), -4),
+    ((3,), 3),
+])
+def test_cutout_out_of_range_indices(fields, invalid):
+    table = (('foo', 'bar', 'baz'), ('A', 1, 2))
+    with pytest.raises(FieldSelectionError) as error:
+        list(cutout(table, *fields))
+    assert error.value.value == invalid
+
+
+@pytest.mark.parametrize('table', [(), ((),)])
+def test_cutout_empty_header_negative_index(table):
+    with pytest.raises(FieldSelectionError) as error:
+        list(cutout(table, -1))
+    assert error.value.value == -1
 
 
 def test_cat():
@@ -853,5 +890,82 @@ def test_movefield():
     ieq(expect, actual)
 
     actual = movefield(table1, 'foo', 1)
+    ieq(expect, actual)
+    ieq(expect, actual)
+
+
+def test_movefield_duplicate_field_names():
+
+    table1 = (('foo', 'bar', 'foo'),
+              (1, 'A', True),
+              (2, 'B', False))
+
+    expect = (('foo', 'foo', 'bar'),
+              (1, True, 'A'),
+              (2, False, 'B'))
+
+    actual = movefield(table1, 'foo', 0)
+    ieq(expect, actual)
+    ieq(expect, actual)
+
+
+def test_movefield_mixed_type_field_names():
+
+    table1 = (('foo', '1', 1),
+              ('A', 'B', 'C'))
+
+    expect = ((1, 'foo', '1'),
+              ('C', 'A', 'B'))
+
+    actual = movefield(table1, 1, 0)
+    ieq(expect, actual)
+    ieq(expect, actual)
+
+
+def test_movefield_by_index():
+
+    table1 = (('foo', 'bar', 'baz'),
+              (1, 'A', True),
+              (2, 'B', False))
+
+    expect = (('bar', 'baz', 'foo'),
+              ('A', True, 1),
+              ('B', False, 2))
+
+    actual = movefield(table1, 0, 2)
+    ieq(expect, actual)
+    ieq(expect, actual)
+
+
+def test_movefield_by_negative_index():
+
+    table1 = (('foo', 'bar', 'baz'),
+              (1, 'A', True),
+              (2, 'B', False))
+
+    expect = (('baz', 'foo', 'bar'),
+              (True, 1, 'A'),
+              (False, 2, 'B'))
+
+    actual = movefield(table1, -1, 0)
+    ieq(expect, actual)
+    ieq(expect, actual)
+
+    with pytest.raises(FieldSelectionError):
+        list(movefield(table1, -4, 0))
+
+
+def test_movefield_iterable_header():
+
+    # a header that can be iterated but not indexed by position
+    table1 = (OrderedDict([('foo', None), ('bar', None)]),
+              (1, 'A'),
+              (2, 'B'))
+
+    expect = (('bar', 'foo'),
+              ('A', 1),
+              ('B', 2))
+
+    actual = movefield(table1, 'bar', 0)
     ieq(expect, actual)
     ieq(expect, actual)

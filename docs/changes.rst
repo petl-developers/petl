@@ -1,8 +1,70 @@
 Changes
 =======
 
+Version 1.8.0
+-------------
+
+* Drop support for Python 2.7. The minimum supported version is Python 3.6.
+  Bugfixes for Python 2.7 users continue on the ``1.7.x`` maintenance branch.
+  By :user:`juarezr`, :issue:`478`.
+
+Version 1.7.33
+--------------
+
+* Included in the CI workflows the ``1.7.x`` maintenance branch that will be
+  used to support the legacy code for Python 2.7 users.
+  Development continues on the ``master`` branch.
+  By :user:`juarezr`, :issue:`830`.
+
+* Select extreme rows within existing key groups in ``groupselectmin()``
+  and ``groupselectmax()`` with ``presorted=True``, so each key produces
+  only one row, including callable keys. This path sorts each group's
+  values separately and requires a repeatable input table for multiple
+  passes; group sorts are not cached between passes.
+  By :user:`FFspiky`, :issue:`838`.
+
+* Use the same mixed-type ordering as ``sort()`` in ``issorted()`` when no
+  key is specified, including treating missing cells as ``None``.
+  By :user:`FFspiky`, :issue:`826`.
+
+* Retain iterator headers in ``setheader()`` across repeated and interleaved
+  passes.
+  By :user:`IlyaKhalafi`, :issue:`824`.
+
+* Add ``clampvalues()`` to limit the values of a field to an inclusive
+  ``low``/``high`` range, passing ``None`` through unchanged.
+  By :user:`UdayPate`, :issue:`692`.
+
+* Remove the selected columns in ``cutout()`` when using negative field
+  indexes, including when called by ``unjoin()`` with an explicit key.
+  Raise ``FieldSelectionError`` for indexes outside the header.
+  By :user:`yuxino`, :issue:`813`.
+
+* Accept a tuple or list of fields passed as a single argument to
+  ``valuecounter()`` and ``valuecounts()``, counting the same compound key
+  as unpacking it with ``*``, like ``values()`` already does. It used to
+  raise a ``FieldSelectionError``.
+  By :user:`rahul05ranjan`, :issue:`641`.
+
+* Keep row values aligned with the header in ``movefield()`` when field
+  names repeat or only differ in type (e.g. ``1`` and ``'1'``), and accept a
+  field index as the field to move, with a negative one counting from the
+  end. Previously a repeated name dropped a column and a type clash moved the
+  wrong values.
+  By :user:`Kernel-Hunter`, :issue:`820`.
+
 Version 1.7.32
 --------------
+
+* Clear existing merged cells when replacing a named sheet with ``toxlsx()``
+  so the saved workbook retains every value in the replacement table.
+  By :user:`IlyaKhalafi`, :issue:`815`.
+
+* Use PETL's mixed-type ordering for pivot categories, including missing
+  values, instead of raising when category types cannot be directly compared.
+  Collect all values for each category before aggregation, even when distinct
+  categories compare as ordering ties.
+  By :user:`anishpentyala`, :issue:`811`.
 
 * Preserve explicit iterator headers across repeated passes in ``fromtext()``.
   By :user:`IlyaKhalafi`.

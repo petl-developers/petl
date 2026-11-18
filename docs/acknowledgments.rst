@@ -51,6 +51,9 @@ the development of this package:
 * `thatneat <https://github.com/thatneat>`_
 * `titusz <https://github.com/titusz>`_
 * `zigen <https://github.com/zigen>`_
+* There are many more contributors, check the `GitHub contributors <https://github.com/petl-developers/petl/graphs/contributors>`_ page to find recent ones.
 
-Development of petl has been supported by an open source license for
-`PyCharm <https://www.jetbrains.com/pycharm/>`_.
+Development of petl has been supported by an open source license of:
+
+- `PyCharm <https://www.jetbrains.com/pycharm/>`_.
+- `Qodo <https://qodo.ai>`_.

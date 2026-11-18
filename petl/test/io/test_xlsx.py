@@ -233,6 +233,46 @@ def test_toxlsx_replace_sheet(xlsx_test_table):
     eq_(1, len(wb.sheetnames))
 
 
+def test_toxlsx_replace_merged_sheet(tmpdir, xlsx_test_table):
+    filename = str(tmpdir.join("merged.xlsx"))
+    workbook = openpyxl.Workbook()
+    sheet = workbook.active
+    sheet.title = "data"
+    sheet.merge_cells("A1:B1")
+    sheet.merge_cells("A2:A3")
+    other = workbook.create_sheet("other")
+    other["A1"] = "keep"
+    other.merge_cells("A1:B1")
+    workbook.save(filename)
+    workbook.close()
+
+    toxlsx(xlsx_test_table, filename, "data", mode="replace")
+
+    workbook = openpyxl.load_workbook(filename)
+    try:
+        assert workbook.sheetnames == ["data", "other"]
+        assert not workbook["data"].merged_cells.ranges
+        assert list(workbook["data"].values) == list(xlsx_test_table)
+        assert workbook["other"]["A1"].value == "keep"
+        assert str(workbook["other"].merged_cells) == "A1:B1"
+    finally:
+        workbook.close()
+
+
+def test_toxlsx_replace_overlapping_merges(tmpdir):
+    filename = str(tmpdir.join("overlapping.xlsx"))
+    workbook = openpyxl.Workbook()
+    sheet = workbook.active
+    sheet.title = "data"
+    sheet.merge_cells("A1:C1")
+    sheet.merge_cells("B1:D1")
+    workbook.save(filename)
+    workbook.close()
+
+    with pytest.raises(KeyError):
+        toxlsx([("a", "b", "c", "d")], filename, "data", mode="replace")
+
+
 def test_toxlsx_replace_sheet_nofile(xlsx_test_table):
     f = NamedTemporaryFile(delete=True, suffix=".xlsx")
     f.close()
