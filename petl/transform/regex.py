@@ -201,7 +201,9 @@ class SplitView(Table):
         self.source = source
         self.field = field
         self.pattern = pattern
-        self.newfields = newfields
+        # materialize newfields so header construction and missing-row padding
+        # use the same repeatable collection; also survives the __len__ pass
+        self.newfields = list(newfields) if newfields is not None else None
         self.include_original = include_original
         self.maxsplit = maxsplit
         self.flags = flags

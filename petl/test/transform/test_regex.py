@@ -378,3 +378,17 @@ def test_split_missing_values():
                    (1, 'parad1', 'para', '1'),
                    (2, None, None, None))
     ieq(expectation, result)
+
+
+def test_split_iterable_newfields_missing_values():
+    # regression test for review finding: newfields given as a non-sequence
+    # iterable must not fail on missing (None) values
+    table = (('id', 'variable'),
+             (1, 'parad1'),
+             (2, None))
+    expectation = (('id', 'variable', 'day'),
+                   (1, 'para', '1'),
+                   (2, None, None))
+    result = split(table, 'variable', 'd', iter(['variable', 'day']))
+    ieq(expectation, result)
+    ieq(expectation, result)  # check twice
