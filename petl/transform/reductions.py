@@ -271,15 +271,21 @@ def itersimpleaggregate(table, key, aggregation, value, field):
     if isinstance(key, (list, tuple)) and len(key) == 1:
         key = key[0]
 
+    if key is not None and not callable(key):
+        it = iter(table)
+        hdr = next(it, ())
+        table = itertools.chain([hdr], it)
+        keyflds = _aggregatekeyfields(hdr, key)
+
     # determine output header
     if isinstance(key, (list, tuple)):
-        outhdr = tuple(key) + (field,)
+        outhdr = tuple(keyflds) + (field,)
     elif callable(key):
         outhdr = ('key', field)
     elif key is None:
         outhdr = field,
     else:
-        outhdr = (key, field)
+        outhdr = (keyflds[0], field)
     yield outhdr
 
     # generate data
@@ -297,6 +303,19 @@ def itersimpleaggregate(table, key, aggregation, value, field):
     else:
         for k, grp in rowgroupby(table, key, value):
             yield k, aggregation(grp)
+
+
+def _aggregatekeyfields(hdr, key):
+    # name the output key fields, using the header field name for any part
+    # of the key given by field index
+    keyspec = _keyspec(key)
+    if not hdr:
+        # a table without a header has nothing to resolve the key against,
+        # so keep the key as given and let the empty table pass through
+        return list(keyspec)
+    keyidxs = _mergekeyindices(hdr, keyspec)
+    return [hdr[i] if isinstance(k, int) else k
+            for k, i in zip(keyspec, keyidxs)]
 
 
 class MultiAggregateView(Table):
@@ -358,14 +377,12 @@ def itermultiaggregate(source, key, aggregation):
             raise ArgumentError('invalid aggregation: %r, %r' % (outfld, agg))
 
     # determine output header
-    if isinstance(key, (list, tuple)):
-        outhdr = list(key)
-    elif callable(key):
+    if callable(key):
         outhdr = ['key']
     elif key is None:
         outhdr = []
     else:
-        outhdr = [key]
+        outhdr = _aggregatekeyfields(hdr, key)
     for outfld in aggregation:
         outhdr.append(outfld)
     yield tuple(outhdr)

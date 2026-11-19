@@ -11,6 +11,13 @@ Version 1.8.0
   Bugfixes for Python 2.7 users continue on the ``1.7.x`` maintenance branch.
   By :user:`juarezr`, :issue:`478`.
 
+* Name the key fields of ``aggregate()`` after the header when the key is
+  given by field index. The output header used the index itself, e.g.
+  ``(0, 'value')`` instead of ``('foo', 'value')``. Negative indexes count
+  from the end of the header, and indexes outside the header raise
+  ``FieldSelectionError``.
+  By :user:`LuisFigueroaG`, :issue:`832`.
+
 Version 1.7.33
 --------------
 
