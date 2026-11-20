@@ -221,6 +221,9 @@ def aggregate(table, key, aggregation=None, value=None, presorted=False,
     A single-field key may also be specified as a one-item list or tuple,
     for both simple and multiple aggregations.
 
+    The source fields of multiple aggregations may also be given by field
+    index.
+
     """
 
     if callable(aggregation):
@@ -318,6 +321,13 @@ def _aggregatekeyfields(hdr, key):
             for k, i in zip(keyspec, keyidxs)]
 
 
+def _aggregatesrcindex(hdr, fld):
+    # a source field may also be given by field index
+    if isinstance(fld, int):
+        return _mergekeyindices(hdr, fld)[0]
+    return hdr.index(fld)
+
+
 class MultiAggregateView(Table):
     
     def __init__(self, source, key, aggregation=None, presorted=False, 
@@ -356,7 +366,7 @@ def itermultiaggregate(source, key, aggregation):
 
     aggregation = OrderedDict(aggregation.items())  # take a copy
     it = iter(source)
-    hdr = next(it)
+    hdr = next(it, ())
     # push back header to ensure we iterate only once
     it = itertools.chain([hdr], it)
 
@@ -365,9 +375,9 @@ def itermultiaggregate(source, key, aggregation):
         agg = aggregation[outfld]
         if callable(agg):
             aggregation[outfld] = None, agg
-        elif isinstance(agg, string_types):
+        elif isinstance(agg, string_types + (int,)):
             aggregation[outfld] = agg, list  # list is default
-        elif len(agg) == 1 and isinstance(agg[0], string_types):
+        elif len(agg) == 1 and isinstance(agg[0], string_types + (int,)):
             aggregation[outfld] = agg[0], list  # list is default
         elif len(agg) == 1 and callable(agg[0]):
             aggregation[outfld] = None, agg[0]  # aggregate whole rows
@@ -408,13 +418,13 @@ def itermultiaggregate(source, key, aggregation):
                 aggval = aggfun(rows)
                 outrow.append(aggval)
             elif isinstance(srcfld, (list, tuple)):
-                idxs = [hdr.index(f) for f in srcfld]
+                idxs = [_aggregatesrcindex(hdr, f) for f in srcfld]
                 valgetter = operator.itemgetter(*idxs)
                 vals = (valgetter(row) for row in rows)
                 aggval = aggfun(vals)
                 outrow.append(aggval)
             else:
-                idx = hdr.index(srcfld)
+                idx = _aggregatesrcindex(hdr, srcfld)
                 # try using generator comprehension
                 vals = (row[idx] for row in rows)
                 aggval = aggfun(vals)

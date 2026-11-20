@@ -18,6 +18,13 @@ Version 1.8.0
   ``FieldSelectionError``.
   By :user:`LuisFigueroaG`, :issue:`832`.
 
+* Accept field indexes as the source fields of multiple aggregations in
+  ``aggregate()``, e.g. ``{'sumbar': (1, sum)}``, which raised ``ValueError``
+  before. Negative indexes count from the end of the header, and indexes
+  outside the header raise ``FieldSelectionError``. Multiple aggregations of
+  a table without a header no longer fail with ``StopIteration``.
+  By :user:`LuisFigueroaG`, :issue:`834`.
+
 Version 1.7.33
 --------------
 
