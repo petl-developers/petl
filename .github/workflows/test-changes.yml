@@ -337,9 +337,9 @@ jobs:
         run: |
           python -m venv "$RUNNER_TEMP/petl-wheel"
           "$RUNNER_TEMP/petl-wheel/bin/python" -m pip install --no-deps dist/*.whl
-          "$RUNNER_TEMP/petl-wheel/bin/python" -c 'import petl; assert list(petl.fromdicts([{"name": "Ada"}])) == [("name",), ("Ada",)]'
+          "$RUNNER_TEMP/petl-wheel/bin/python" -I -c 'import petl; assert list(petl.fromdicts([{"name": "Ada"}])) == [("name",), ("Ada",)]'
       - name: Install sdist in a separate clean environment
         run: |
           python -m venv "$RUNNER_TEMP/petl-sdist"
           "$RUNNER_TEMP/petl-sdist/bin/python" -m pip install --no-deps dist/*.tar.gz
-          "$RUNNER_TEMP/petl-sdist/bin/python" -c 'import petl; assert list(petl.fromdicts([{"name": "Ada"}])) == [("name",), ("Ada",)]'
+          "$RUNNER_TEMP/petl-sdist/bin/python" -I -c 'import petl; assert list(petl.fromdicts([{"name": "Ada"}])) == [("name",), ("Ada",)]'
