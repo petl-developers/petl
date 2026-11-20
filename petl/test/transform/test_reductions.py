@@ -370,6 +370,58 @@ def test_aggregate_field_index_empty_table_presorted():
         eq_(expect, header(aggregate([], key, len, presorted=True)))
 
 
+@pytest.mark.parametrize('presorted', [False, True])
+def test_aggregate_source_field_index(presorted):
+    table = [['foo', 'bar', 'baz'],
+             ['a', 3, True],
+             ['a', 7, False],
+             ['b', 2, True]]
+    for srcfld in 1, -2, 'bar':
+        aggregators = OrderedDict()
+        aggregators['sumbar'] = srcfld, sum
+        aggregators['listbar'] = srcfld
+        aggregators['bars'] = (srcfld,)
+        expect = [('foo', 'sumbar', 'listbar', 'bars'),
+                  ('a', 10, [3, 7], [3, 7]),
+                  ('b', 2, [2], [2])]
+        ieq(expect, aggregate(table, 'foo', aggregators,
+                              presorted=presorted))
+        expect = [('sumbar', 'listbar', 'bars'),
+                  (12, [3, 7, 2], [3, 7, 2])]
+        ieq(expect, aggregate(table, None, aggregators))
+        expect = [('foo', 'sumbar'), ('a', 10), ('b', 2)]
+        ieq(expect, aggregate(table, 'foo', [('sumbar', srcfld, sum)],
+                              presorted=presorted))
+
+    for srcflds in (1, 2), ('bar', 2), (-2, 'baz'):
+        expect = [('foo', 'barbaz'),
+                  ('a', [(3, True), (7, False)]),
+                  ('b', [(2, True)])]
+        ieq(expect, aggregate(table, 'foo', {'barbaz': (srcflds, list)},
+                              presorted=presorted))
+
+
+@pytest.mark.parametrize('presorted', [False, True])
+def test_aggregate_source_field_index_out_of_range(presorted):
+    table = [['foo', 'bar'],
+             ['a', 1]]
+    for srcfld in 2, -3, (0, 2):
+        with pytest.raises(FieldSelectionError):
+            aggregate(table, 'foo', {'value': (srcfld, list)},
+                      presorted=presorted).nrows()
+
+
+def test_aggregate_source_field_index_empty_table():
+    aggregators = {'sumbar': (1, sum)}
+    table = [['foo', 'bar']]
+    ieq([('foo', 'sumbar')], aggregate(table, 'foo', aggregators))
+    ieq([('sumbar',)], aggregate(table, None, aggregators))
+    # without a header the key is kept as given
+    eq_(('foo', 'sumbar'),
+        header(aggregate([], 'foo', aggregators, presorted=True)))
+    ieq([('sumbar',)], aggregate([], None, aggregators))
+
+
 def test_aggregate_multifield_key_is_None():
 
     table1 = (('foo', 'bar'),
