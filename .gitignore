@@ -1,8 +1,10 @@
-## https://raw.githubusercontent.com/github/gitignore/main/Python.gitignore ##
+## File Type Settings ------------------------------------------------------------------
+
+#@ https://raw.githubusercontent.com/github/gitignore/main/Python.gitignore
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
-*.py[cod]
+*.py[codz]
 *$py.class
 
 # C extensions
@@ -29,8 +31,8 @@ share/python-wheels/
 MANIFEST
 
 # PyInstaller
-#  Usually these files are written by a python script from a template
-#  before PyInstaller builds the exe, so as to inject date/other infos into it.
+#   Usually these files are written by a python script from a template
+#   before PyInstaller builds the exe, so as to inject date/other infos into it.
 *.manifest
 *.spec
 
@@ -38,25 +40,21 @@ MANIFEST
 pip-log.txt
 pip-delete-this-directory.txt
 
-# Unit test
+# Unit test / coverage reports
+htmlcov/
 .tox/
 .nox/
-.cache
-.hypothesis/
-.pytest_cache/
-nosetests.xml
-
-# Coverage reports
 .coverage
 .coverage.*
-*.cover
-*.py,cover
-lcov.info
-cov.xml
+.cache
+nosetests.xml
 coverage.xml
+*.cover
+*.py.cover
+*.lcov
+.hypothesis/
+.pytest_cache/
 cover/
-coverage/
-htmlcov/
 
 # Translations
 *.mo
@@ -99,33 +97,74 @@ ipython_config.py
 #   However, in case of collaboration, if having platform-specific dependencies or dependencies
 #   having no cross-platform support, pipenv may install dependencies that don't work, or not
 #   install all needed dependencies.
-#Pipfile.lock
+# Pipfile.lock
+
+# uv
+#   Similar to Pipfile.lock, it is generally recommended to include uv.lock in version control.
+#   This is especially recommended for binary packages to ensure reproducibility, and is more
+#   commonly ignored for libraries.
+# uv.lock
 
 # poetry
 #   Similar to Pipfile.lock, it is generally recommended to include poetry.lock in version control.
 #   This is especially recommended for binary packages to ensure reproducibility, and is more
 #   commonly ignored for libraries.
 #   https://python-poetry.org/docs/basic-usage/#commit-your-poetrylock-file-to-version-control
-#poetry.lock
+# poetry.lock
+# poetry.toml
 
-# PEP 582; used by e.g. github.com/David-OConnor/pyflow
+# pdm
+#   Similar to Pipfile.lock, it is generally recommended to include pdm.lock in version control.
+#   pdm recommends including project-wide configuration in pdm.toml, but excluding .pdm-python.
+#   https://pdm-project.org/en/latest/usage/project/#working-with-version-control
+# pdm.lock
+# pdm.toml
+.pdm-python
+.pdm-build/
+
+# pixi
+#   Similar to Pipfile.lock, it is generally recommended to include pixi.lock in version control.
+# pixi.lock
+#   Pixi creates a virtual environment in the .pixi directory, just like venv module creates one
+#   in the .venv directory. It is recommended not to include this directory in version control.
+.pixi/*
+!.pixi/config.toml
+
+# PEP 582; used by e.g. github.com/David-OConnor/pyflow and github.com/pdm-project/pdm
 __pypackages__/
 
 # Celery stuff
-celerybeat-schedule
+celerybeat-schedule*
 celerybeat.pid
+
+# Redis
+*.rdb
+*.aof
+*.pid
+
+# RabbitMQ
+mnesia/
+rabbitmq/
+rabbitmq-data/
+
+# ActiveMQ
+activemq-data/
 
 # SageMath parsed files
 *.sage.py
 
 # Environments
 .env
+.envrc
 .venv
 env/
 venv/
 ENV/
 env.bak/
 venv.bak/
+
+# Conda environments
+conda-meta/
 
 # Spyder project settings
 .spyderproject
@@ -134,7 +173,7 @@ venv.bak/
 # Rope project settings
 .ropeproject
 
-# mkdocs documentation
+# mkdocs/Zensical documentation
 /site
 
 # mypy
@@ -152,46 +191,103 @@ dmypy.json
 cython_debug/
 
 # PyCharm
-#  JetBrains specific template is maintainted in a separate JetBrains.gitignore that can
-#  be found at https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore
-#  and can be added to the global gitignore or merged into this file.  For a more nuclear
-#  option (not recommended) you can uncomment the following to ignore the entire idea folder.
-#.idea/
+#   JetBrains specific template is maintained in a separate JetBrains.gitignore that can
+#   be found at https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore
+#   and can be added to the global gitignore or merged into this file.  For a more nuclear
+#   option (not recommended) you can uncomment the following to ignore the entire idea folder.
+# .idea/
 
-## Custom section for petl ##
+# Abstra
+#   Abstra is an AI-powered process automation framework.
+#   Ignore directories containing user credentials, local state, and settings.
+#   Learn more at https://abstra.io/docs
+.abstra/
 
-# Python generated files
+# Visual Studio Code
+#   Visual Studio Code specific template is maintained in a separate VisualStudioCode.gitignore that
+#   can be found at https://github.com/github/gitignore/blob/main/Global/VisualStudioCode.gitignore
+#   and can be added to the global gitignore or merged into this file. However, if you prefer, you
+#   could uncomment the following to ignore the entire vscode folder
+# .vscode/
+# Temporary file for partial code execution
+tempCodeRunnerFile.py
 
-*.pyc
+# Ruff stuff:
+.ruff_cache/
 
-# Jypyter notebooks tem files
+# PyPI configuration file
+.pypirc
 
-.ipynb_checkpoints/
-**/.ipynb_checkpoints/*
+# Marimo
+marimo/_static/
+marimo/_lsp/
+__marimo__/
 
-# uv tools generated files
-.uv/
+# Streamlit
+.streamlit/secrets.toml
+
+## Overrides for settings above --------------------------------------------------------
+
+# pyenv
+.python-version
+
+# pipenv
+Pipfile.lock
+
+# uv
 uv.lock
+
+# poetry
+poetry.lock
+poetry.toml
+
+# pdm
+pdm.lock
+pdm.toml
+
+# PyCharm
+.idea/
+
+## Ammending settings above ------------------------------------------------------------
+
+# Unit test / coverage reports
+lcov.info
+
+# uv
+.uv/
+
+## Custom settings for petl ------------------------------------------------------------
+
+# Petl build generated files that shouldn't be committed
+petl/version.py
+
+# Petl test and doctest generated files
+**/tmp/
+example*.*
+
+## Other Custom Settings ---------------------------------------------------------------
+
+# Esbonio Sphinx extensions files
 esbonio.*
+
+# Packages and compressed files
+*.tar
+*.gz
+*.bz2
+*.xz
+*.lzma
+*.zstd
+*.z
+*.lz
+*.lz4
+*.zip
 
 # Editor backup files 
 *~
 *.backup
 
-# Petl build generated files
-petl/version.py
-**/tmp/
-
-# Petl doctest generated files
-example*.*
-
-# Ignore this patterns for develepment convenience
+# Ignore these patterns for develepment convenience
 
 sketch*
 
-
-# Ignore this folder not idea users
-
-.idea/
-
-## end of .gitignore file ##
+## END of .gitignore file --------------------------------------------------------------

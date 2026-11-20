@@ -3,7 +3,6 @@ from __future__ import absolute_import, print_function, division
 
 import pytest
 
-from petl.compat import PY2
 from petl.errors import FieldSelectionError
 from petl.test.helpers import ieq, eq_
 from petl.util.counting import valuecount, valuecounter, valuecounts, \
@@ -45,6 +44,47 @@ def test_valuecounter_shortrows():
     actual = valuecounter(table, 'foo', 'bar')
     expect = {('a', 7): 1, ('b', None): 1, ('b', 7): 1}
     eq_(expect, actual)
+
+
+def test_valuecounter_single_tuple_field():
+
+    # passing a tuple or list of fields as a single argument is supported
+    # like values() does, not only via unpacking (#641)
+    table = (('foo', 'bar'), ('a', 1), ('b', 2), ('b', 7))
+    actual = valuecounter(table, ('foo', 'bar'))
+    expect = {('a', 1): 1, ('b', 2): 1, ('b', 7): 1}
+    eq_(expect, actual)
+    actual = valuecounter(table, ['foo', 'bar'])
+    eq_(expect, actual)
+
+
+def test_valuecounts_single_tuple_field():
+
+    # counts are distinct so most_common()'s ordering is deterministic on
+    # Python 2, where Counter does not preserve insertion order
+    table = (('foo', 'bar'), ('a', 1), ('b', 2), ('b', 2), ('c', 3),
+             ('c', 3), ('c', 3))
+    actual = valuecounts(table, ('foo', 'bar'))
+    expect = (('foo', 'bar', 'count', 'frequency'),
+              ('c', 3, 3, 3./6),
+              ('b', 2, 2, 2./6),
+              ('a', 1, 1, 1./6))
+    ieq(expect, actual)
+    ieq(expect, actual)
+    actual = valuecounts(table, ['foo', 'bar'])
+    ieq(expect, actual)
+
+
+def test_valuecounts_nested_field_selection_raises():
+
+    # a tuple or list nested inside the single tuple argument names no field;
+    # valuecounts() must reject it like valuecounter() does, not unwrap it
+    # once and yield a malformed table (#641)
+    table = (('foo', 'bar'), ('a', 1), ('b', 2))
+    with pytest.raises(FieldSelectionError):
+        list(valuecounts(table, (('foo', 'bar'),)))
+    with pytest.raises(FieldSelectionError):
+        list(valuecounts(table, [['foo', 'bar']]))
 
 
 def test_valuecounts():
@@ -116,25 +156,15 @@ def test_typecounts():
              (b'E', 42))
 
     actual = typecounts(table, 'foo')
-    if PY2:
-        expect = (('type', 'count', 'frequency'),
-                  ('str', 4, 4./5),
-                  ('unicode', 1, 1./5))
-    else:
-        expect = (('type', 'count', 'frequency'),
-                  ('bytes', 4, 4./5),
-                  ('str', 1, 1./5))
+    expect = (('type', 'count', 'frequency'),
+              ('bytes', 4, 4./5),
+              ('str', 1, 1./5))
     ieq(expect, actual)
 
     actual = typecounts(table, 'bar')
-    if PY2:
-        expect = (('type', 'count', 'frequency'),
-                  ('unicode', 3, 3./5),
-                  ('int', 2, 2./5))
-    else:
-        expect = (('type', 'count', 'frequency'),
-                  ('str', 3, 3./5),
-                  ('int', 2, 2./5))
+    expect = (('type', 'count', 'frequency'),
+              ('str', 3, 3./5),
+              ('int', 2, 2./5))
     ieq(expect, actual)
 
     actual = typecounts(table, 'baz')

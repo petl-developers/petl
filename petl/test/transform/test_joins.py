@@ -1427,6 +1427,14 @@ def test_unjoin_explicit_key():
     ieq(expect_right, right)
 
 
+def test_unjoin_negative_value_index():
+    table = (('item', 'customer_id', 'customer_name'),
+             ('Book', 1, 'Alice'), ('Pen', 1, 'Alice'), ('Ruler', 2, 'Bob'))
+    left, right = unjoin(table, -1, key='customer_id')
+    ieq((('item', 'customer_id'), ('Book', 1), ('Pen', 1), ('Ruler', 2)), left)
+    ieq((('customer_id', 'customer_name'), (1, 'Alice'), (2, 'Bob')), right)
+
+
 def test_unjoin_explicit_key_2():
     
     table3 = (('Employee', 'Skill', 'Current Work Location'),

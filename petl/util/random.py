@@ -49,6 +49,9 @@ def randomtable(numflds=5, numrows=100, wait=0, seed=None):
 
     Note that the data are generated on the fly and are not stored in memory,
     so this function can be used to simulate very large tables.
+    Each iteration uses an independent random generator, preserving seeded
+    output even with interleaved iterations or other random calls. Iterating
+    the table does not change Python's global random state.
     The only supported seed types are: None, int, float, str, bytes, and bytearray.
 
     """
@@ -72,7 +75,7 @@ class RandomTable(Table):
         seed = self.seed
 
         # N.B., we want this to be stable, i.e., same data each time
-        pyrandom.seed(seed)
+        rng = pyrandom.Random(seed)
 
         # construct fields
         flds = ["f%s" % n for n in range(nf)]
@@ -83,7 +86,7 @@ class RandomTable(Table):
             # artificial delay
             if self.wait:
                 time.sleep(self.wait)
-            yield tuple(pyrandom.random() for n in range(nf))
+            yield tuple(rng.random() for n in range(nf))
 
     def reseed(self):
         self.seed = randomseed()

@@ -10,7 +10,6 @@ from json.encoder import JSONEncoder
 from os import unlink
 from tempfile import NamedTemporaryFile
 
-from petl.compat import PY2
 from petl.compat import pickle
 from petl.io.sources import read_source_from_arg, write_source_from_arg
 # internal dependencies
@@ -51,6 +50,9 @@ def fromjson(source, *args, **kwargs):
 
     An empty JSON lines file produces a table with no data rows. If no
     `header` is supplied, the table has an empty header tuple.
+
+    An explicit `header` iterable is read once on first iteration and reused
+    for every row and subsequent pass over the table.
 
     Additional arguments are passed to :func:`json.load`, or to
     :func:`json.loads` for each JSON line. For example, ``parse_float=Decimal``
@@ -116,11 +118,12 @@ class JsonView(Table):
         self.kwargs = kwargs
 
     def __iter__(self):
+        if self._header is not None:
+            self._header = tuple(self._header)
         with self.source.open('rb') as f:
-            if not PY2:
-                # wrap buffer for text IO
-                f = io.TextIOWrapper(f, encoding='utf-8', newline='',
-                                     write_through=True)
+            # wrap buffer for text IO
+            f = io.TextIOWrapper(f, encoding='utf-8', newline='',
+                                 write_through=True)
             try:
                 if self.lines:
                     for row in iterjlines(f, self._header, self.missing,
@@ -132,8 +135,7 @@ class JsonView(Table):
                                          self.missing):
                         yield row
             finally:
-                if not PY2:
-                    f.detach()
+                f.detach()
 
 
 def fromdicts(dicts, header=None, sample=1000, missing=None):
@@ -155,6 +157,9 @@ def fromdicts(dicts, header=None, sample=1000, missing=None):
         +-----+-----+
         | 'c' |   2 |
         +-----+-----+
+
+    An explicit `header` iterable is read once on first iteration and reused
+    for every row and subsequent pass over the table.
 
     Argument `dicts` can also be a generator, the output of generator
     is iterated and cached using a temporary file to support further
@@ -263,7 +268,10 @@ class DictsView(Table):
         self.missing = missing
 
     def __iter__(self):
-        return iterdicts(self._dicts, self._header, self.sample, self.missing)
+        if self._header is not None:
+            self._header = tuple(self._header)
+        for row in iterdicts(self._dicts, self._header, self.sample, self.missing):  # noqa: UP028 - Python 2 compatibility
+            yield row
 
     @property
     def dicts(self):
@@ -287,13 +295,12 @@ class DictsGeneratorView(DictsView):
     def __iter__(self):
         if self._header is None:
             self._determine_header()
+        else:
+            self._header = tuple(self._header)
         yield self._header
 
         if not self._filecache:
-            if PY2:
-                self._filecache = NamedTemporaryFile(delete=False, mode='wb+', bufsize=0)
-            else:
-                self._filecache = NamedTemporaryFile(delete=False, mode='wb+', buffering=0)
+            self._filecache = NamedTemporaryFile(delete=False, mode='wb+', buffering=0)
 
         position = 0
         it = iter(self._dicts)
@@ -455,17 +462,13 @@ def _writejson(source, obj, prefix, suffix, *args, **kwargs):
     encoder = JSONEncoder(*args, **kwargs)
     source = write_source_from_arg(source)
     with source.open('wb') as f:
-        if PY2:
-            # write directly to buffer
+        # wrap buffer for text IO
+        f = io.TextIOWrapper(f, encoding='utf-8', newline='',
+                             write_through=True)
+        try:
             _writeobj(encoder, obj, f, prefix, suffix, lines=lines)
-        else:
-            # wrap buffer for text IO
-            f = io.TextIOWrapper(f, encoding='utf-8', newline='',
-                                 write_through=True)
-            try:
-                _writeobj(encoder, obj, f, prefix, suffix, lines=lines)
-            finally:
-                f.detach()
+        finally:
+            f.detach()
 
 
 def _writeobj(encoder, obj, f, prefix, suffix, lines=False):

@@ -4,14 +4,15 @@ from __future__ import absolute_import, print_function, division
 
 # standard library dependencies
 import io
-from petl.compat import text_type, numeric_types, next, PY2, izip_longest, \
+from petl.compat import text_type, numeric_types, next, izip_longest, \
     string_types, callable
 
 
 # internal dependencies
 from petl.errors import ArgumentError
+from html import escape as html_escape
+
 from petl.util.base import Table, Record
-from petl.io.base import getcodec
 from petl.io.sources import write_source_from_arg
 
 
@@ -55,20 +56,24 @@ def tohtml(table, source=None, encoding=None, errors='strict', caption=None,
     The `caption` keyword argument is used to provide a table caption
     in the output HTML.
 
+    Header and cell values are HTML-escaped so that text containing
+    ``<``, ``>`` or ``&`` renders as it was written. Cell values are
+    escaped after conversion by `vrepr`, so markup returned by a custom
+    `vrepr` renders as literal text rather than HTML — the deliberate
+    behavior of the fix for #797: table-derived text must not inject
+    markup. User-supplied formatting arguments (`caption`, `tr_style`,
+    `td_styles`) are not escaped.
+
     """
 
     source = write_source_from_arg(source)
     with source.open('wb') as buf:
 
         # deal with text encoding
-        if PY2:
-            codec = getcodec(encoding)
-            f = codec.streamwriter(buf, errors=errors)
-        else:
-            f = io.TextIOWrapper(buf,
-                                 encoding=encoding,
-                                 errors=errors,
-                                 newline='')
+        f = io.TextIOWrapper(buf,
+                             encoding=encoding,
+                             errors=errors,
+                             newline='')
 
         # write the table
         try:
@@ -95,8 +100,7 @@ def tohtml(table, source=None, encoding=None, errors='strict', caption=None,
             f.flush()
 
         finally:
-            if not PY2:
-                f.detach()
+            f.detach()
 
 
 Table.tohtml = tohtml
@@ -155,14 +159,10 @@ class TeeHTMLView(Table):
         with source.open('wb') as buf:
 
             # deal with text encoding
-            if PY2:
-                codec = getcodec(encoding)
-                f = codec.streamwriter(buf, errors=errors)
-            else:
-                f = io.TextIOWrapper(buf,
-                                     encoding=encoding,
-                                     errors=errors,
-                                     newline='')
+            f = io.TextIOWrapper(buf,
+                                 encoding=encoding,
+                                 errors=errors,
+                                 newline='')
 
             # write the table
             try:
@@ -191,8 +191,7 @@ class TeeHTMLView(Table):
                 f.flush()
 
             finally:
-                if not PY2:
-                    f.detach()
+                f.detach()
 
 
 def _write_begin(f, flds, lineterminator, caption, index_header, truncate):
@@ -207,7 +206,7 @@ def _write_begin(f, flds, lineterminator, caption, index_header, truncate):
                 h = '%s|%s' % (i, h)
             if truncate:
                 h = text_type(h)[:truncate]
-            f.write(('<th>%s</th>' % h) + lineterminator)
+            f.write(('<th>%s</th>' % html_escape(text_type(h))) + lineterminator)
         f.write('</tr>' + lineterminator)
         f.write('</thead>' + lineterminator)
     f.write('<tbody>' + lineterminator)
@@ -224,6 +223,7 @@ def _write_row(f, flds, row, lineterminator, vrepr, tr_style, td_styles,
         r = vrepr(v)
         if truncate:
             r = r[:truncate]
+        r = html_escape(text_type(r))
         td_css = _get_td_css(h, v, td_styles)
         if td_css:
             f.write(("<td style='%s'>%s</td>" % (td_css, r)) + lineterminator)

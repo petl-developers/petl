@@ -10,7 +10,8 @@ from tempfile import NamedTemporaryFile
 
 import pytest
 
-from petl.compat import PY3
+from datetime import timezone
+
 from petl.transform.basics import cat
 from petl.util.base import dicts
 from petl.util.vis import look
@@ -22,9 +23,6 @@ from petl.io.avro import _get_definition_from_type_of, precision_and_scale
 
 from petl.test.io.test_avro_schemas import schema0, schema1, schema2, \
     schema3, schema4, schema5, schema6
-
-if PY3:
-    from datetime import timezone
 
 try:
     import fastavro
@@ -333,9 +331,7 @@ else:
 
     def _utc(year, month, day, hour=0, minute=0, second=0, microsecond=0):
         u = datetime(year, month, day, hour, minute, second, microsecond)
-        if PY3:
-            return u.replace(tzinfo=timezone.utc)
-        return u.replace(tzinfo=pytz.utc)
+        return u.replace(tzinfo=timezone.utc)
 
     def _get_tempfile_path(delete_on_close=False):
         f = NamedTemporaryFile(delete=delete_on_close, mode='r')

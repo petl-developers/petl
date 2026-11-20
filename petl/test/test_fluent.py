@@ -3,7 +3,6 @@ from __future__ import absolute_import, print_function, division
 
 from tempfile import NamedTemporaryFile
 import csv
-from petl.compat import PY2
 
 
 import petl as etl

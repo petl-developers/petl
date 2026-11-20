@@ -40,6 +40,41 @@ def test_randomtable_class():
     assert len(table) == rows + 1
 
 
+def test_randomtable_interleaved_iterations():
+    table = randomtable(3, 4, seed=42)
+    expected = list(table)
+    first = iter(table)
+    second = iter(table)
+
+    assert next(first) == next(second) == expected[0]
+    for row in expected[1:]:
+        assert next(first) == row
+        assert next(second) == row
+    assert list(first) == list(second) == []
+
+
+def test_randomtable_unrelated_random_calls():
+    table = randomtable(3, 4, seed=42)
+    expected = list(table)
+    rows = iter(table)
+
+    assert next(rows) == expected[0]
+    for row in expected[1:]:
+        pyrandom.random()
+        assert next(rows) == row
+
+
+def test_randomtable_preserves_global_random_state():
+    state = pyrandom.getstate()
+    try:
+        pyrandom.seed(123)
+        expected = pyrandom.getstate()
+        list(randomtable(3, 4, seed=42))
+        assert pyrandom.getstate() == expected
+    finally:
+        pyrandom.setstate(state)
+
+
 def test_dummytable_custom_fields():
     """
     Ensure that dummytable provides a table with the right number of rows

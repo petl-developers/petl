@@ -7,11 +7,11 @@ import pytest
 
 
 from collections import OrderedDict
-from petl.test.helpers import ieq
+from petl.test.helpers import ieq, eq_
 from petl.errors import FieldSelectionError
-from petl.util import strjoin
+from petl.util import strjoin, header
 from petl.transform.reductions import rowreduce, aggregate, \
-    mergeduplicates, merge, Conflict, fold
+    mergeduplicates, merge, Conflict, fold, groupselectmin, groupselectmax
 
 
 def test_rowreduce():
@@ -323,6 +323,103 @@ def test_aggregate_multifield_key_shapes(key, expected, presorted):
         return
     assert list(result) == expected
     assert list(result) == expected
+
+
+@pytest.mark.parametrize('presorted', [False, True])
+def test_aggregate_field_index(presorted):
+    table = [['foo', 'bar', 'baz'],
+             ['a', 3, True],
+             ['a', 7, False],
+             ['b', 2, True]]
+    for key in 0, -3, [0], ('foo',):
+        expect = [('foo', 'value'), ('a', 2), ('b', 1)]
+        ieq(expect, aggregate(table, key, len, presorted=presorted))
+        expect = [('foo', 'value'), ('a', 10), ('b', 2)]
+        ieq(expect, aggregate(table, key, sum, 'bar', presorted=presorted))
+        expect = [('foo', 'sumbar'), ('a', 10), ('b', 2)]
+        ieq(expect, aggregate(table, key, {'sumbar': ('bar', sum)},
+                              presorted=presorted))
+
+    for key in (0, 1), ['foo', 1], (-3, 'bar'):
+        expect = [('foo', 'bar', 'value'), ('a', 3, 1), ('a', 7, 1),
+                  ('b', 2, 1)]
+        ieq(expect, aggregate(table, key, len, presorted=presorted))
+        expect = [('foo', 'bar', 'count'), ('a', 3, 1), ('a', 7, 1),
+                  ('b', 2, 1)]
+        ieq(expect, aggregate(table, key, {'count': len},
+                              presorted=presorted))
+
+
+@pytest.mark.parametrize('presorted', [False, True])
+def test_aggregate_field_index_out_of_range(presorted):
+    table = [['foo', 'bar'],
+             ['a', 1]]
+    for key in 2, -3, [0, 2]:
+        with pytest.raises(FieldSelectionError):
+            aggregate(table, key, len, presorted=presorted).nrows()
+        with pytest.raises(FieldSelectionError):
+            aggregate(table, key, {'count': len},
+                      presorted=presorted).nrows()
+
+
+def test_aggregate_field_index_empty_table_presorted():
+    # without a header there is nothing to name the key after, so the key
+    # is kept as given, as it was before indexes were resolved
+    for key, expect in (('foo', ('foo', 'value')), (0, (0, 'value')),
+                        (('foo', 'bar'), ('foo', 'bar', 'value'))):
+        eq_(expect, header(aggregate([], key, len, presorted=True)))
+
+
+@pytest.mark.parametrize('presorted', [False, True])
+def test_aggregate_source_field_index(presorted):
+    table = [['foo', 'bar', 'baz'],
+             ['a', 3, True],
+             ['a', 7, False],
+             ['b', 2, True]]
+    for srcfld in 1, -2, 'bar':
+        aggregators = OrderedDict()
+        aggregators['sumbar'] = srcfld, sum
+        aggregators['listbar'] = srcfld
+        aggregators['bars'] = (srcfld,)
+        expect = [('foo', 'sumbar', 'listbar', 'bars'),
+                  ('a', 10, [3, 7], [3, 7]),
+                  ('b', 2, [2], [2])]
+        ieq(expect, aggregate(table, 'foo', aggregators,
+                              presorted=presorted))
+        expect = [('sumbar', 'listbar', 'bars'),
+                  (12, [3, 7, 2], [3, 7, 2])]
+        ieq(expect, aggregate(table, None, aggregators))
+        expect = [('foo', 'sumbar'), ('a', 10), ('b', 2)]
+        ieq(expect, aggregate(table, 'foo', [('sumbar', srcfld, sum)],
+                              presorted=presorted))
+
+    for srcflds in (1, 2), ('bar', 2), (-2, 'baz'):
+        expect = [('foo', 'barbaz'),
+                  ('a', [(3, True), (7, False)]),
+                  ('b', [(2, True)])]
+        ieq(expect, aggregate(table, 'foo', {'barbaz': (srcflds, list)},
+                              presorted=presorted))
+
+
+@pytest.mark.parametrize('presorted', [False, True])
+def test_aggregate_source_field_index_out_of_range(presorted):
+    table = [['foo', 'bar'],
+             ['a', 1]]
+    for srcfld in 2, -3, (0, 2):
+        with pytest.raises(FieldSelectionError):
+            aggregate(table, 'foo', {'value': (srcfld, list)},
+                      presorted=presorted).nrows()
+
+
+def test_aggregate_source_field_index_empty_table():
+    aggregators = {'sumbar': (1, sum)}
+    table = [['foo', 'bar']]
+    ieq([('foo', 'sumbar')], aggregate(table, 'foo', aggregators))
+    ieq([('sumbar',)], aggregate(table, None, aggregators))
+    # without a header the key is kept as given
+    eq_(('foo', 'sumbar'),
+        header(aggregate([], 'foo', aggregators, presorted=True)))
+    ieq([('sumbar',)], aggregate([], None, aggregators))
 
 
 def test_aggregate_multifield_key_is_None():
@@ -728,3 +825,134 @@ def test_fold():
     expect = (('key', 'value'), (1, 8), (2, 12))
     ieq(expect, t2)
     ieq(expect, t2)
+
+
+@pytest.mark.parametrize('select, expected_rows', [
+    (groupselectmin, [('a', 1, 'first'), ('b', 2, 'first')]),
+    (groupselectmax, [('a', 4, 'last'), ('b', 3, 'last')]),
+])
+@pytest.mark.parametrize('key', ['group', 0, ['group'], ('group',),
+                               operator.itemgetter('group'),
+                               lambda row: {'group': row['group']}])
+def test_groupselectextreme_presorted(select, expected_rows, key):
+    table = [('group', 'value', 'label'),
+             ('a', 1, 'first'), ('a', 4, 'last'),
+             ('b', 2, 'first'), ('b', 3, 'last')]
+    expected = [table[0]] + expected_rows
+    result = select(table, key, 'value', presorted=True, buffersize=2)
+    ieq(expected, result)
+    ieq(expected, result)
+    if not callable(key):
+        ieq(expected, select(table, key, 'value', buffersize=2))
+
+
+@pytest.mark.parametrize('select, expected_rows', [
+    (groupselectmin, [('r', 'a', 1, 2, 'first'),
+                      ('r', 'b', 2, 0, 'first')]),
+    (groupselectmax, [('r', 'a', 4, 0, 'last'),
+                      ('r', 'b', 3, 0, 'last')]),
+])
+def test_groupselectextreme_presorted_compound(select, expected_rows):
+    table = [('region', 'group', 'v1', 'v2', 'label'),
+             ('r', 'a', 1, 2, 'first'), ('r', 'a', 4, 0, 'last'),
+             ('r', 'b', 2, 0, 'first'), ('r', 'b', 3, 0, 'last')]
+    ieq([table[0]] + expected_rows,
+        select(table, ['region', 'group'], ['v1', 'v2'],
+               presorted=True))
+
+
+@pytest.mark.parametrize('select, expected_rows', [
+    (groupselectmin, [('a', None, 'missing'), ('b', 2, 'first')]),
+    (groupselectmax, [('a', 'z', 'text'), ('b', 3, 'last')]),
+])
+def test_groupselectextreme_presorted_mixed_values(select, expected_rows):
+    table = [('group', 'value', 'label'),
+             ('a', None, 'missing'), ('a', 1, 'number'), ('a', 'z', 'text'),
+             ('b', 2, 'first'), ('b', 3, 'last')]
+    ieq([table[0]] + expected_rows,
+        select(table, 'group', 'value', presorted=True))
+
+
+@pytest.mark.parametrize('select', [groupselectmin, groupselectmax])
+@pytest.mark.parametrize('rows', [[], [('a', 1, 'only')],
+                                  [('a', 1, 'first'), ('a', 1, 'second')]])
+def test_groupselectextreme_presorted_boundaries(select, rows):
+    header = ('group', 'value', 'label')
+    expected = [header] + rows[:1]
+    ieq(expected, select([header] + rows, 'group', 'value', presorted=True))
+
+
+class _OrderingTie(object):
+
+    def __lt__(self, other):
+        raise TypeError('ordering is not defined')
+
+
+@pytest.mark.parametrize('select', [groupselectmin, groupselectmax])
+def test_groupselectextreme_presorted_ordering_ties(select):
+    # These unequal values have the same PETL fallback ordering on Python 2/3.
+    table = [('group', 'value', 'label'),
+             ('a', _OrderingTie(), 'first'), ('a', _OrderingTie(), 'second')]
+    assert list(select(table, 'group', 'value', presorted=True)) == table[:2]
+
+
+@pytest.mark.parametrize('select', [groupselectmin, groupselectmax])
+def test_groupselectextreme_presorted_all_fields(select):
+    # value=None compares header-covered cells, not extra trailing cells.
+    table = [('group', 'value'), ('a', 1, 'z'), ('a', 1, 'a')]
+    assert list(select(table, 'group', None, presorted=True)) == table[:2]
+
+
+@pytest.mark.parametrize('select, expected', [
+    (groupselectmin, ('a', 5, 1)), (groupselectmax, ('a', 4)),
+])
+def test_groupselectextreme_presorted_negative_value(select, expected):
+    table = [('group', 'value'), ('a', 5, 1), ('a', 4)]
+    assert list(select(table, 'group', -1, presorted=True)) == [table[0], expected]
+
+
+@pytest.mark.parametrize('select, expected', [
+    (groupselectmin, ('a',)), (groupselectmax, ('a', 2)),
+])
+def test_groupselectextreme_presorted_short_rows(select, expected):
+    table = [('group', 'value'), ('a',), ('a', 2)]
+    assert list(select(table, 'group', 'value', presorted=True)) == [table[0], expected]
+
+
+@pytest.mark.parametrize('select, expected', [
+    (groupselectmin, ('a', 1, 2)), (groupselectmax, ('a', 1, 4)),
+])
+def test_groupselectextreme_presorted_duplicate_fields(select, expected):
+    table = [('group', 'value', 'value'), ('a', 1, 2), ('a', 1, 4)]
+    result = select(table, 'group', ['value', 'value'], presorted=True)
+    assert list(result) == [table[0], expected]
+
+
+@pytest.mark.parametrize('select', [groupselectmin, groupselectmax])
+@pytest.mark.parametrize('value, error', [('missing', FieldSelectionError),
+                                        ([], TypeError)])
+def test_groupselectextreme_presorted_empty_invalid_value(select, value, error):
+    with pytest.raises(error):
+        list(select([('group', 'value')], 'group', value, presorted=True))
+
+
+@pytest.mark.parametrize('select', [groupselectmin, groupselectmax])
+@pytest.mark.parametrize('cache', [False, True])
+def test_groupselectextreme_presorted_spill_and_iterators(select, cache, tmpdir):
+    import gc
+    table = [('group', 'value')]
+    table += [(group, value) for group in ['a', 'b']
+              for value in [2, 4, 1, 5, 3]]
+    value = 1 if select is groupselectmin else 5
+    expected = [table[0], ('a', value), ('b', value)]
+    result = select(table, lambda row: row['group'], 'value',
+                    presorted=True, buffersize=2, tempdir=str(tmpdir),
+                    cache=cache)
+    first = iter(result)
+    assert next(first) == table[0]
+    assert list(result) == expected
+    assert list(first) == expected[1:]
+    assert list(result) == expected
+    assert list(result.cache()) == expected
+    gc.collect()
+    assert not tmpdir.listdir()
