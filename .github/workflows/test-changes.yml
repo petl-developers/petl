@@ -298,3 +298,41 @@ jobs:
         run: |
           cd docs
           sphinx-build -W -b singlehtml -d ../build/doctrees . ../build/singlehtml
+
+  validate-distributions:
+    needs: run-guard
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.10"
+      - name: Build both distribution formats
+        run: |
+          python -m pip install --upgrade build
+          python -m build --outdir dist
+      - name: Check expected files in source distribution
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import tarfile
+
+          sdists = list(Path('dist').glob('*.tar.gz'))
+          assert len(sdists) == 1, f'Expected one source distribution, found {len(sdists)}'
+          with tarfile.open(sdists[0], 'r:gz') as archive:
+              files = {member.name.split('/', 1)[-1] for member in archive.getmembers()}
+          for required in ('README.txt', 'setup.py', 'petl/__init__.py'):
+              assert required in files, f'Missing from sdist: {required}'
+          PY
+      - name: Install wheel in a clean environment
+        run: |
+          python -m venv "$RUNNER_TEMP/petl-wheel"
+          "$RUNNER_TEMP/petl-wheel/bin/python" -m pip install --no-deps dist/*.whl
+          "$RUNNER_TEMP/petl-wheel/bin/python" -I -c 'import petl; assert list(petl.fromdicts([{"name": "Ada"}])) == [("name",), ("Ada",)]'
+      - name: Install sdist in a separate clean environment
+        run: |
+          python -m venv "$RUNNER_TEMP/petl-sdist"
+          "$RUNNER_TEMP/petl-sdist/bin/python" -m pip install --no-deps dist/*.tar.gz
+          "$RUNNER_TEMP/petl-sdist/bin/python" -I -c 'import petl; assert list(petl.fromdicts([{"name": "Ada"}])) == [("name",), ("Ada",)]'
