@@ -28,7 +28,7 @@ setup(
         'interval': ['intervaltree>=3.0.2'],
         'numpy': ['numpy>=1.16.4'],
         'pandas': ['pandas>=0.24.2'],
-        'parquet': ['pyarrow>=4.0.0'],
+        'parquet': ['pyarrow>=4.0.0 ; python_version >= "3.8"'],
         'remote': ['fsspec>=0.7.4'],
         'smb': ['smbprotocol>=1.0.1'],
         'xls': ['xlrd>=2.0.1', 'xlwt>=1.3.0'],
