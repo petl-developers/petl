@@ -107,6 +107,19 @@ def _quote(s):
     return quotechar + s.replace(quotechar, quotechar+quotechar) + quotechar
 
 
+def _quote_qualified(tablename, schema=None):
+    # Quote a (possibly schema-qualified)
+    # dot-separated part separately, e.g. 'myschema.mytable' becomes
+    # '"myschema"."mytable"'. See issue #467: _quote() applied to the whole
+    # string produced '"myschema.mytable"', which Postgres treats as a
+    # single relation name that does not exist. An explicit schema argument
+    # is prepended as an additional quoted part.
+    parts = tablename.split('.')
+    if schema is not None:
+        parts = [schema] + parts
+    return '.'.join(_quote(part) for part in parts)
+
+
 def _placeholders(connection, names):
     # discover the paramstyle
     if connection is None:

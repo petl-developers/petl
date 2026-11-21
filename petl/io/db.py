@@ -12,7 +12,7 @@ from petl.errors import ArgumentError
 from petl.util.base import Table
 from petl.io.db_utils import _is_dbapi_connection, _is_dbapi_cursor, \
     _is_sqlalchemy_connection, _is_sqlalchemy_engine, _is_sqlalchemy_session, \
-    _is_clikchouse_dbapi_connection, _quote, _placeholders, \
+    _is_clikchouse_dbapi_connection, _quote, _quote_qualified, _placeholders, \
     _execute_sqlalchemy, _sqlalchemy_transaction
 from petl.io.db_create import drop_table, create_table
 
@@ -454,9 +454,7 @@ def _todb_dbapi_connection(table, connection, tablename, schema=None,
                            commit=True, truncate=False):
 
     # sanitise table name
-    tablename = _quote(tablename)
-    if schema is not None:
-        tablename = _quote(schema) + '.' + tablename
+    tablename = _quote_qualified(tablename, schema)
     debug('tablename: %r', tablename)
 
     # sanitise field names
@@ -505,9 +503,7 @@ def _todb_clikchouse_dbapi_connection(table, connection, tablename, schema=None,
                            commit=True, truncate=False):
 
     # sanitise table name
-    tablename = _quote(tablename)
-    if schema is not None:
-        tablename = _quote(schema) + '.' + tablename
+    tablename = _quote_qualified(tablename, schema)
     debug('tablename: %r', tablename)
 
     # sanitise field names
@@ -556,9 +552,7 @@ def _todb_dbapi_mkcurs(table, mkcurs, tablename, schema=None, commit=True,
                        truncate=False):
 
     # sanitise table name
-    tablename = _quote(tablename)
-    if schema is not None:
-        tablename = _quote(schema) + '.' + tablename
+    tablename = _quote_qualified(tablename, schema)
     debug('tablename: %r', tablename)
 
     # sanitise field names
@@ -611,9 +605,7 @@ def _todb_dbapi_cursor(table, cursor, tablename, schema=None, commit=True,
                        truncate=False):
 
     # sanitise table name
-    tablename = _quote(tablename)
-    if schema is not None:
-        tablename = _quote(schema) + '.' + tablename
+    tablename = _quote_qualified(tablename, schema)
     debug('tablename: %r', tablename)
 
     # sanitise field names
@@ -666,9 +658,7 @@ def _todb_sqlalchemy_connection(table, connection, tablename, schema=None,
     debug('connection: %r', connection)
 
     # sanitise table name
-    tablename = _quote(tablename)
-    if schema is not None:
-        tablename = _quote(schema) + '.' + tablename
+    tablename = _quote_qualified(tablename, schema)
     debug('tablename: %r', tablename)
 
     # sanitise field names
