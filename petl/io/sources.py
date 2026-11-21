@@ -29,6 +29,14 @@ debug = logger.debug
 
 
 class FileSource(object):
+    """Read from or write to a plain file on the local filesystem.
+
+    The `filename` is opened with :func:`io.open`; any extra keyword
+    arguments are passed through to it.
+
+    Note that the documentation lists this class under deprecated I/O
+    sources; its functionality is replaced by the remote I/O helpers.
+    """
 
     def __init__(self, filename, **kwargs):
         self.filename = filename
@@ -39,6 +47,21 @@ class FileSource(object):
 
 
 class GzipSource(object):
+    """Read from or write to a gzip-compressed file.
+
+    The `filename` is opened with :func:`gzip.open`; any extra keyword
+    arguments are passed through to it. If `remote` is true, `filename`
+    is treated as a URL and fetched with :func:`urllib.request.urlopen`
+    instead; a remote source is read-only.
+
+    This class is also registered as the handler for the ``.gz`` and
+    ``.bgz`` filename extensions, so compressed files are handled
+    transparently when a filename string is passed as the ``source``
+    argument.
+
+    Note that the documentation lists this class under deprecated I/O
+    sources; its functionality is replaced by the remote I/O helpers.
+    """
 
     def __init__(self, filename, remote=False, **kwargs):
         self.filename = filename
@@ -62,6 +85,21 @@ class GzipSource(object):
 
 
 class BZ2Source(object):
+    """Read from or write to a bzip2-compressed file.
+
+    The `filename` is opened with :class:`bz2.BZ2File`; any extra keyword
+    arguments are passed through to it. If `remote` is true, `filename`
+    is treated as a URL and fetched with :func:`urllib.request.urlopen`
+    instead; a remote source is read-only. Raises :exc:`ImportError` if
+    the :mod:`bz2` module is not available in this Python installation.
+
+    This class is also registered as the handler for the ``.bz2``
+    filename extension, so compressed files are handled transparently
+    when a filename string is passed as the ``source`` argument.
+
+    Note that the documentation lists this class under deprecated I/O
+    sources; its functionality is replaced by the remote I/O helpers.
+    """
 
     def __init__(self, filename, remote=False, **kwargs):
         self.filename = filename
@@ -89,6 +127,16 @@ class BZ2Source(object):
 
 
 class ZipSource(object):
+    """Read from or write to a single member file within a zip archive.
+
+    `filename` is the path of the archive and `membername` the name of
+    the member file within it; `pwd` is the password for encrypted
+    members. Any extra keyword arguments are passed through to
+    :class:`zipfile.ZipFile`.
+
+    Note that the documentation lists this class under deprecated I/O
+    sources; its functionality is replaced by the remote I/O helpers.
+    """
 
     def __init__(self, filename, membername, pwd=None, **kwargs):
         self.filename = filename
@@ -182,6 +230,13 @@ stdin_binary = _get_stdin_binary()
 
 
 class StdoutSource(object):
+    """Write data to standard output.
+
+    Write-only: opening for reading raises
+    :class:`petl.errors.ArgumentError`. In binary mode the binary stdout
+    buffer is used, otherwise ``sys.stdout``. The underlying stream is
+    never closed.
+    """
 
     @contextmanager
     def open(self, mode):
@@ -194,6 +249,13 @@ class StdoutSource(object):
 
 
 class StdinSource(object):
+    """Read data from standard input.
+
+    Read-only: opening for writing raises
+    :class:`petl.errors.ArgumentError`. In binary mode the binary stdin
+    buffer is used, otherwise ``sys.stdin``. The underlying stream is
+    never closed.
+    """
 
     @contextmanager
     def open(self, mode='r'):
@@ -206,6 +268,19 @@ class StdinSource(object):
 
 
 class URLSource(object):
+    """Read data from a URL, e.g. ``http://``, ``https://`` or ``ftp://``.
+
+    Read-only: opening for writing raises
+    :class:`petl.errors.ArgumentError`. All arguments are passed through
+    to :func:`urllib.request.urlopen`.
+
+    This class is registered as the reader for the ``ftp``, ``http`` and
+    ``https`` protocols, so URLs with those schemes are handled
+    transparently when passed as the ``source`` argument.
+
+    Note that the documentation lists this class under deprecated I/O
+    sources; its functionality is replaced by the remote I/O helpers.
+    """
 
     def __init__(self, *args, **kwargs):
         self.args = args
@@ -298,6 +373,12 @@ StringSource = MemorySource
 
 
 class PopenSource(object):
+    """Read data from the standard output of a subprocess.
+
+    Read-only: opening for writing raises
+    :class:`petl.errors.ArgumentError`. All arguments are passed through
+    to :class:`subprocess.Popen`, with its standard output piped.
+    """
 
     def __init__(self, *args, **kwargs):
         self.args = args
