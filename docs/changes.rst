@@ -4,6 +4,9 @@ Changes
 Version 1.8.0
 -------------
 
+* Add ``petl.config.temp_dir`` to set the directory for on-disk sorts and
+  generator-backed ``fromdicts()`` caches. :issue:`389`.
+
 * Keep added column values aligned with their header when input rows are short
   or long in ``addcolumn()``.
 

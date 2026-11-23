@@ -16,6 +16,7 @@ display_limit = 5
 display_index_header = False
 display_vrepr = text_type
 sort_buffersize = 100000
+temp_dir = None
 failonerror=False # False, True, 'inline'
 """
 Controls what happens when unhandled exceptions are raised in a

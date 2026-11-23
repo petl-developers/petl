@@ -9,6 +9,7 @@ import platform
 
 import pytest
 
+from petl import config
 from petl.compat import next
 
 from petl.errors import FieldSelectionError
@@ -265,6 +266,22 @@ def test_sort_buffered_tempdir():
         os.mkdir(tempdir)
     result = sort(table, 'bar', buffersize=2, tempdir=tempdir)
     ieq(expectation, result)
+
+
+@pytest.mark.parametrize('override', [False, True])
+def test_sort_configured_temp_dir(tmp_path, monkeypatch, override):
+    default = tmp_path / 'default'
+    explicit = tmp_path / 'explicit'
+    default.mkdir()
+    explicit.mkdir()
+    monkeypatch.setattr(config, 'temp_dir', default)
+    table = sort([('value',), (2,), (1,)], buffersize=1,
+                 tempdir=explicit if override else None)
+    monkeypatch.setattr(config, 'temp_dir', None)
+
+    assert list(table) == [('value',), (1,), (2,)]
+    assert any(default.iterdir()) == (not override)
+    assert any(explicit.iterdir()) == override
 
 
 def test_sort_buffered_independent():
