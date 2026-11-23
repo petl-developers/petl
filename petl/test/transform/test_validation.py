@@ -3,6 +3,8 @@ from __future__ import absolute_import, print_function, division
 
 
 import logging
+import subprocess
+import sys
 
 import pytest
 
@@ -141,3 +143,42 @@ def test_validation_headerless():
     actual = validate(table, header=header)
     ieq(expect, actual)
     ieq(expect, actual)
+
+
+@pytest.mark.parametrize('optimization', ['-O', '-OO'])
+def test_validation_with_optimization(optimization):
+    code = """
+from unittest import TestCase
+from petl import validate
+
+check = TestCase().assertEqual
+header = ('name', 'row', 'field', 'value', 'error')
+
+check(list(validate([('actual',), (1,)], header=('expected',))),
+      [header, ('__header__', 0, None, None, 'AssertionError')])
+check(list(validate([('value',), (), (1, 2)])),
+      [header, ('__len__', 1, None, 0, 'AssertionError'),
+       ('__len__', 2, None, 2, 'AssertionError')])
+
+def positive(value):
+    return value > 0
+
+constraints = [dict(name='positive', field='value', assertion=positive)]
+check(list(validate([('value',), (1,), (-1,), (2,)], constraints)),
+      [header, ('positive', 2, 'value', -1, 'AssertionError')])
+constraints = [dict(name='not_none', assertion=lambda row: None not in row)]
+check(list(validate([('value',), (1,), (None,)], constraints)),
+      [header, ('not_none', 2, None, None, 'AssertionError')])
+
+def invalid(value):
+    raise ValueError('invalid value')
+
+constraints = [dict(name='invalid', field='value', assertion=invalid)]
+check(list(validate([('value',), (1,)], constraints)),
+      [header, ('invalid', 1, 'value', 1, 'ValueError')])
+
+constraints = [dict(name='positive', field='value', assertion=positive)]
+check(list(validate([('value',), (1,)], constraints, header=('value',))),
+      [header])
+"""
+    subprocess.check_call([sys.executable, optimization, '-c', code])
