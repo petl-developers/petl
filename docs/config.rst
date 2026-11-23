@@ -2,8 +2,8 @@ Configuration
 =============
 
 The :mod:`petl.config` module contains process-wide defaults for table
-inspection, sorting and error handling. Change an attribute on the module
-to change a default, for example::
+inspection, sorting, temporary files and error handling. Change an attribute
+on the module to change a default, for example::
 
     import petl as etl
     etl.config.look_limit = 10
@@ -81,6 +81,15 @@ An omitted ``buffersize``, or ``buffersize=None``, uses the configured
 default. Pass an explicit positive integer to override it for one sort.
 In particular, passing ``buffersize=None`` alone does not force an
 in-memory sort when the configured default is an integer.
+
+Temporary files
+---------------
+
+Set ``etl.config.temp_dir`` to an existing directory for on-disk sort
+chunks and for the cache used by :func:`petl.io.json.fromdicts` with a
+generator. The default, ``None``, lets Python choose its usual temporary
+directory. Both views capture the setting when created. The ``tempdir``
+argument to :func:`petl.transform.sorts.sort` overrides it for one sort.
 
 Error handling
 --------------

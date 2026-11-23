@@ -120,6 +120,10 @@ def sort(table, key=None, reverse=False, buffersize=None, tempdir=None,
     If `petl.config.sort_buffersize` is set to `None`, this forces
     all sorting to be done entirely in memory.
 
+    Temporary files are written to `tempdir`. If omitted or set to `None`,
+    the sort uses `petl.config.temp_dir`, which defaults to the system
+    temporary directory.
+
     By default the results of the sort will be cached, and so a second pass over
     the sorted table will yield rows from the cache and will not repeat the
     sort operation. To turn off caching, set the `cache` argument to `False`.
@@ -246,7 +250,7 @@ class SortView(Table):
             self.buffersize = config.sort_buffersize
         else:
             self.buffersize = buffersize
-        self.tempdir = tempdir
+        self.tempdir = config.temp_dir if tempdir is None else tempdir
         self._cache = cache
         self._hdrcache = None
         self._memcache = None

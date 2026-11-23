@@ -10,6 +10,7 @@ from json.encoder import JSONEncoder
 from os import unlink
 from tempfile import NamedTemporaryFile
 
+from petl import config
 from petl.compat import pickle
 from petl.io.sources import read_source_from_arg, write_source_from_arg
 # internal dependencies
@@ -163,7 +164,8 @@ def fromdicts(dicts, header=None, sample=1000, missing=None):
 
     Argument `dicts` can also be a generator, the output of generator
     is iterated and cached using a temporary file to support further
-    transforms and multiple passes of the table:
+    transforms and multiple passes of the table. Set `petl.config.temp_dir`
+    before creating the table to choose the directory for this file.
 
         >>> import petl as etl
         >>> dicts = ({"foo": chr(ord("a")+i), "bar":i+1} for i in range(3))
@@ -289,6 +291,7 @@ class DictsGeneratorView(DictsView):
 
     def __init__(self, dicts, header=None, sample=1000, missing=None):
         super(DictsGeneratorView, self).__init__(dicts, header, sample, missing)
+        self._tempdir = config.temp_dir
         self._filecache = None
         self._cached = 0
 
@@ -300,7 +303,8 @@ class DictsGeneratorView(DictsView):
         yield self._header
 
         if not self._filecache:
-            self._filecache = NamedTemporaryFile(delete=False, mode='wb+', buffering=0)
+            self._filecache = NamedTemporaryFile(
+                dir=self._tempdir, delete=False, mode='wb+', buffering=0)
 
         position = 0
         it = iter(self._dicts)
