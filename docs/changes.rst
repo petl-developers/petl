@@ -4,6 +4,11 @@ Changes
 Version 1.8.0
 -------------
 
+* Add :func:`petl.io.arrow.fromarrow` and :func:`petl.io.arrow.toarrow` for
+  reading and writing Parquet and Feather/IPC formats with ``pyarrow``,
+  including automatic format detection and explicit ``schema`` support.
+  By :user:`muhammadbadar1998`, :issue:`627`.
+
 * Keep added column values aligned with their header when input rows are short
   or long in ``addcolumn()``.
 

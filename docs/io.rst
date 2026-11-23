@@ -399,6 +399,65 @@ Avro files (fastavro)
    :start-after: begin_complex_schema
    :end-before: end_complex_schema
 
+.. module:: petl.io.arrow
+.. _io_pyarrow:
+
+Parquet and Arrow files (PyArrow)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. note::
+
+    The following functions require `pyarrow
+    <https://arrow.apache.org/docs/python/>`_ to be installed, e.g.::
+
+        $ pip install pyarrow
+
+    Supported formats are ``'parquet'``, ``'feather'`` and ``'ipc'``.
+
+.. autofunction:: petl.io.arrow.fromarrow
+.. autofunction:: petl.io.arrow.toarrow
+
+Schema examples
+"""""""""""""""
+
+When writing tables with :func:`petl.io.arrow.toarrow`, an explicit
+``pyarrow.Schema`` (or sequence of ``(name, type)`` pairs) can be passed
+via ``schema`` to control column types (such as dates, timestamps,
+decimals, lists, or structs). Field names and order must match the table
+header, and the table must contain at least one column. When ``schema`` is
+omitted, types are inferred from the data and columns whose values are all
+``None`` fall back to ``pyarrow.string()`` (since Parquet cannot store
+Arrow's ``null`` type); passing an explicit ``schema`` also avoids row
+buffering when leading values are ``None``::
+
+    import datetime
+    import decimal
+    import pyarrow as pa
+    import petl as etl
+
+    schema = pa.schema([
+        pa.field('id', pa.int64()),
+        pa.field('created', pa.timestamp('us')),
+        pa.field('day', pa.date32()),
+        pa.field('amount', pa.decimal128(10, 2)),
+        pa.field('tags', pa.list_(pa.string())),
+        pa.field('meta', pa.struct([('flag', pa.bool_())])),
+    ])
+
+    table = [
+        ['id', 'created', 'day', 'amount', 'tags', 'meta'],
+        [
+            1,
+            datetime.datetime(2026, 1, 15, 12, 30),
+            datetime.date(2026, 1, 15),
+            decimal.Decimal('19.95'),
+            ['a', 'b'],
+            {'flag': True},
+        ],
+    ]
+
+    etl.toarrow(table, 'example.parquet', schema=schema)
+
 .. module:: petl.io.gsheet
 .. _io_gsheet:
 
