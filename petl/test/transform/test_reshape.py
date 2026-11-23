@@ -695,6 +695,13 @@ def test_transpose_empty():
     ieq(expect2, table2)
 
 
+def test_transpose_no_header():
+    table1 = []
+    table2 = transpose(table1)
+    ieq([], table2)
+    ieq([], table2)
+
+
 def test_pivot():
 
     table1 = (('region', 'gender', 'style', 'units'),

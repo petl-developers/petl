@@ -499,7 +499,10 @@ class TransposeView(Table):
 
 
 def itertranspose(source):
-    hdr = header(source)
+    try:
+        hdr = header(source)
+    except StopIteration:
+        return
     its = [iter(source) for _ in hdr]
     for i in range(len(hdr)):
         yield tuple(row[i] for row in its[i])

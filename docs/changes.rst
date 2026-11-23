@@ -25,6 +25,10 @@ Version 1.8.0
   a table without a header no longer fail with ``StopIteration``.
   By :user:`LuisFigueroaG`, :issue:`834`.
 
+* Return an empty table from ``transpose()`` when the table has no header,
+  instead of failing with ``RuntimeError: generator raised StopIteration``.
+  By :user:`LuisFigueroaG`, :issue:`837`.
+
 Version 1.7.33
 --------------
 
