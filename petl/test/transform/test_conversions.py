@@ -6,7 +6,7 @@ from petl.errors import FieldSelectionError
 from petl.test.failonerror import assert_failonerror
 from petl.test.helpers import ieq
 from petl.transform.conversions import convert, convertall, convertnumbers, \
-    replace, update, format, interpolate
+    replace, update, format, interpolate, roundvalues
 
 from functools import partial
 
@@ -399,4 +399,52 @@ def test_interpolate():
     actual = interpolate(table, 'bar', '%02d')
     ieq(expect, actual)
     ieq(expect, actual)
+
+
+def test_roundvalues_rounds_numeric_values():
+    table = [
+        ["id", "price"],
+        [1, 2.345],
+        [2, 8.766],
+    ]
+
+    result = roundvalues(table, "price", 2)
+
+    assert list(result) == [
+        ("id", "price"),
+        (1, 2.35),
+        (2, 8.77),
+    ]
+
+
+def test_roundvalues_preserves_none_and_strings():
+    table = [
+        ["value"],
+        [None],
+        ["not numeric"],
+        [4.567],
+    ]
+
+    result = roundvalues(table, "value", 1)
+
+    assert list(result) == [
+        ("value",),
+        (None,),
+        ("not numeric",),
+        (4.6,),
+    ]
+
+
+def test_roundvalues_supports_field_index():
+    table = [
+        ["id", "value"],
+        [1, 3.14159],
+    ]
+
+    result = roundvalues(table, 1, 3)
+
+    assert list(result) == [
+        ("id", "value"),
+        (1, 3.142),
+    ]
 
