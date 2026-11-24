@@ -4,6 +4,9 @@ Changes
 Version 1.8.0
 -------------
 
+* Keep header, row-length and assertion-constraint checks active in
+  ``validate()`` when Python is run with ``-O`` or ``-OO``.
+
 * Add ``petl.config.temp_dir`` to set the directory for on-disk sorts and
   generator-backed ``fromdicts()`` caches. :issue:`389`.
 
