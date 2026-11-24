@@ -4,6 +4,9 @@ Changes
 Version 1.8.0
 -------------
 
+* Pad short rows before ``filldown()`` so missing cells can inherit prior
+  values without raising ``IndexError``.
+
 * Add ``petl.config.temp_dir`` to set the directory for on-disk sorts and
   generator-backed ``fromdicts()`` caches. :issue:`389`.
 
