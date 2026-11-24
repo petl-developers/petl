@@ -948,6 +948,13 @@ def test_crossjoin():
     ieq(expect3, table3)
 
 
+def test_crossjoin_single_pass_inputs():
+    left = iter([('a',), (1,), (2,)])
+    right = iter([('b',), ('x',), ('y',)])
+    rows = [row for row in crossjoin(left, right)]
+    assert rows == [('a', 'b'), (1, 'x'), (1, 'y'), (2, 'x'), (2, 'y')]
+
+
 def test_crossjoin_empty():
 
     table1 = (('id', 'colour'),

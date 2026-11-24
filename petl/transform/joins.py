@@ -8,7 +8,7 @@ from petl.errors import ArgumentError
 from petl.transform.basics import cut, cutout, stack
 from petl.transform.dedup import distinct
 from petl.transform.sorts import sort
-from petl.util.base import Table, asindices, data, header, rowgetter, rowgroupby
+from petl.util.base import Table, asindices, header, rowgetter, rowgroupby
 
 
 def natural_key(left, right):
@@ -524,16 +524,17 @@ def itercrossjoin(sources, prefix):
 
     # construct fields
     outhdr = list()
-    for i, s in enumerate(sources):
+    iterators = [iter(source) for source in sources]
+    for i, it in enumerate(iterators):
+        fields = next(it)
         if prefix:
             # use one-based numbering
-            outhdr.extend([text_type(i+1) + '_' + text_type(f) for f in header(s)])
+            outhdr.extend([text_type(i+1) + '_' + text_type(f) for f in fields])
         else:
-            outhdr.extend(header(s))
+            outhdr.extend(fields)
     yield tuple(outhdr)
 
-    datasrcs = [data(src) for src in sources]
-    for prod in itertools.product(*datasrcs):
+    for prod in itertools.product(*iterators):
         outrow = list()
         for row in prod:
             outrow.extend(row)
