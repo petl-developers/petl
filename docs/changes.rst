@@ -6,12 +6,19 @@ Version 1.8.0
 
 * Pad short rows before ``filldown()`` so missing cells can inherit prior
   values without raising ``IndexError``.
+  By :user:`Kulraj69`, :issue:`840`.
+  
+* Keep header, row-length and assertion-constraint checks active in
+  ``validate()`` when Python is run with ``-O`` or ``-OO``.
+  By :user:`fbirds5230`, :issue:`839`.
 
 * Add ``petl.config.temp_dir`` to set the directory for on-disk sorts and
-  generator-backed ``fromdicts()`` caches. :issue:`389`.
+  generator-backed ``fromdicts()`` caches. :issue:`838`.
+  By :user:`Arham-Begani`, :issue:`838`.
 
 * Keep added column values aligned with their header when input rows are short
   or long in ``addcolumn()``.
+  By :user:`wiink`, :issue:`833`.
 
 * Drop support for Python 2.7. The minimum supported version is Python 3.6.
   Bugfixes for Python 2.7 users continue on the ``1.7.x`` maintenance branch.
