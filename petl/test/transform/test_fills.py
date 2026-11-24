@@ -180,3 +180,33 @@ def test_fillleft_headerless():
     actual = fillleft(table, 'foo')
     expect = []
     ieq(expect, actual)
+
+
+@pytest.mark.parametrize('fields', [(), ('bar',), (1,), (-1,)])
+@pytest.mark.parametrize('missing', [None, ''])
+def test_filldown_short_rows(fields, missing):
+    table = [('foo', 'bar'), (1,), (2, 10), (3,), (4, missing)]
+    expect = [('foo', 'bar'), (1, missing), (2, 10), (3, 10), (4, 10)]
+    actual = filldown(table, *fields, missing=missing)
+    ieq(expect, actual)
+    ieq(expect, actual)
+    assert table == [('foo', 'bar'), (1,), (2, 10), (3,), (4, missing)]
+
+
+def test_filldown_short_csv_rows(tmp_path):
+    import petl as etl
+
+    path = tmp_path / 'ragged.csv'
+    path.write_text('foo,bar\n1,value\n2\n3,\n')
+    source = etl.fromcsv(str(path))
+    actual = etl.filldown(source, 'bar', missing='')
+    expect = [('foo', 'bar'), ('1', 'value'), ('2', 'value'),
+              ('3', 'value')]
+    ieq(expect, actual)
+    ieq(expect, actual)
+
+
+def test_filldown_preserves_extra_cells():
+    table = [('foo', 'bar'), (1, 10, 'extra'), (2, None, 'other')]
+    expect = [('foo', 'bar'), (1, 10, 'extra'), (2, 10, 'other')]
+    ieq(expect, filldown(table))
