@@ -410,9 +410,9 @@ def _get_definition_from_type_of(prop, val, prev):
     tdef = None
     curr = None
     if isinstance(val, datetime):
-        tdef = {'type': 'long', 'logicalType': 'timestamp-millis'}
+        tdef = {'type': 'long', 'logicalType': 'timestamp-micros'}
     elif isinstance(val, time):
-        tdef = {'type': 'int', 'logicalType': 'time-millis'}
+        tdef = {'type': 'long', 'logicalType': 'time-micros'}
     elif isinstance(val, date):
         tdef = {'type': 'int', 'logicalType': 'date'}
     elif isinstance(val, Decimal):
