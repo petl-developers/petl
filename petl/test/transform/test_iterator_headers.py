@@ -46,3 +46,26 @@ def test_repeatable_header_definitions_remain_live(kind):
     names.append('extra')
 
     assert etl.header(view) == initial + ('extra',)
+
+
+@pytest.mark.parametrize('kind', ['extendheader', 'cat', 'mergesort'])
+def test_stateful_repeatable_headers_do_not_skip_a_definition(kind):
+    definitions = ([['value'], ['later']] if kind == 'extendheader'
+                   else [['value', 'id'], ['id', 'value']])
+
+    class ChangingFields:
+        def __init__(self):
+            self.iterations = 0
+
+        def __iter__(self):
+            names = definitions[self.iterations % len(definitions)]
+            self.iterations += 1
+            return iter(names)
+
+    fields = ChangingFields()
+    view = make_view(kind, fields)
+    assert fields.iterations == 0
+    prefix = ('id',) if kind == 'extendheader' else ()
+
+    assert etl.header(view) == prefix + tuple(definitions[0])
+    assert etl.header(view) == prefix + tuple(definitions[1])

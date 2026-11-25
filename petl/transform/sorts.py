@@ -7,6 +7,7 @@ from tempfile import NamedTemporaryFile
 import itertools
 import logging
 from collections import namedtuple
+from collections.abc import Iterator
 import operator
 from petl.compat import pickle, next, text_type
 
@@ -501,7 +502,7 @@ class MergeSortView(Table):
         self.reverse = reverse
 
     def __iter__(self):
-        if self._header is not None and iter(self._header) is self._header:
+        if isinstance(self._header, Iterator):
             self._header = tuple(self._header)
         yield from itermergesort(self.tables, self.key, self._header,
                                  self.missing, self.reverse)

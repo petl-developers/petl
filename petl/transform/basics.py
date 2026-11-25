@@ -4,6 +4,7 @@ from __future__ import absolute_import, print_function, division
 # standard library dependencies
 from itertools import islice, chain
 from collections import deque
+from collections.abc import Iterator
 from itertools import count
 from petl.compat import izip, izip_longest, next, string_types, text_type
 
@@ -356,7 +357,7 @@ class CatView(Table):
         self._header = header
 
     def __iter__(self):
-        if self._header is not None and iter(self._header) is self._header:
+        if isinstance(self._header, Iterator):
             self._header = tuple(self._header)
         yield from itercat(self.sources, self.missing, self._header)
 

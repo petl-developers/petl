@@ -4,6 +4,7 @@ from __future__ import absolute_import, print_function, division
 import itertools
 import operator
 from collections import deque
+from collections.abc import Iterator
 from petl.compat import next, text_type
 from petl.errors import FieldSelectionError
 
@@ -220,9 +221,8 @@ class ExtendHeaderView(Table):
         self.fields = fields
 
     def __iter__(self):
-        fields = iter(self.fields)
-        if fields is self.fields:
-            self.fields = tuple(fields)
+        if isinstance(self.fields, Iterator):
+            self.fields = tuple(self.fields)
         yield from iterextendheader(self.source, self.fields)
 
 
