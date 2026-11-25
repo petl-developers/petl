@@ -10,7 +10,7 @@ from petl.compat import next, text_type
 from petl.errors import ArgumentError
 from petl.comparison import Comparable, comparable_itemgetter
 from petl.util.base import Table, rowgetter, values, itervalues, \
-    header, data, asindices
+    data, asindices
 from petl.transform.sorts import sort
 
 
@@ -479,6 +479,9 @@ def transpose(table):
         | 'colour' | 'blue' | 'red' | 'purple' | 'yellow' | 'orange' |
         +----------+--------+-------+----------+----------+----------+
 
+    When the input is an iterator, its rows are retained in memory on first
+    traversal so that subsequent columns and traversals can reuse them.
+
     See also :func:`petl.transform.reshape.recast`.
 
     """
@@ -495,14 +498,28 @@ class TransposeView(Table):
         self.source = source
 
     def __iter__(self):
-        return itertranspose(self.source)
+        rows = iter(self.source)
+        hdr = tuple(next(rows, ()))
+        if rows is self.source:
+            snapshot = [hdr]
+            if hdr:
+                while True:
+                    try:
+                        row = next(rows)
+                    except StopIteration:
+                        break
+                    snapshot.append(tuple(row))
+            self.source = snapshot
+        # Release the header reader before opening a reader for each column.
+        del rows
+        yield from _transpose_columns(self.source, hdr)
 
 
 def itertranspose(source):
-    try:
-        hdr = header(source)
-    except StopIteration:
-        return
+    return iter(TransposeView(source))
+
+
+def _transpose_columns(source, hdr):
     its = [iter(source) for _ in hdr]
     for i in range(len(hdr)):
         yield tuple(row[i] for row in its[i])

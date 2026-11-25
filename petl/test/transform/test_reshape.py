@@ -687,6 +687,66 @@ def test_transpose():
     ieq(expect2, table2)
 
 
+def test_transpose_one_shot_rows():
+    def rows():
+        row = ['id', 'colour']
+        yield row
+        for values in [(1, 'blue'), (2, 'red')]:
+            row[:] = values
+            yield row
+
+    view = transpose(rows())
+    expected = [('id', 1, 2), ('colour', 'blue', 'red')]
+    assert list(view) == expected
+    assert list(iter(view)) == expected
+
+
+def test_transpose_reusable_source_with_next():
+    class Rows:
+        def __init__(self):
+            self.rows = [('id', 'value'), (1, 'a')]
+            self.cursor = iter(self.rows)
+
+        def __iter__(self):
+            return iter(self.rows)
+
+        def __next__(self):
+            return next(self.cursor)
+
+    source = Rows()
+    view = transpose(source)
+    assert list(iter(view)) == [('id', 1), ('value', 'a')]
+    source.rows.append((2, 'b'))
+    assert list(iter(view)) == [('id', 1, 2), ('value', 'a', 'b')]
+
+
+def test_transpose_releases_header_reader_before_reading_column():
+    class Rows:
+        active = False
+
+        def __iter__(self):
+            if self.active:
+                raise RuntimeError('reader already open')
+            self.active = True
+            try:
+                yield ('id',)
+                yield (1,)
+            finally:
+                self.active = False
+
+    view = transpose(Rows())
+    for _ in range(2):
+        assert list(iter(view)) == [('id', 1)]
+
+
+def test_transpose_empty_header_does_not_read_data():
+    def rows():
+        yield ()
+        raise AssertionError('no columns to read')
+
+    assert list(transpose(rows())) == []
+
+
 def test_transpose_empty():
     table1 = (('id', 'colour'),)
     table2 = transpose(table1)
