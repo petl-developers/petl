@@ -318,7 +318,8 @@ def _write_toavro(table, target, mode, schema, sample,
     if table is None:
         return
     # build a schema when not defined by user
-    if not schema:
+    inferred_schema = not schema
+    if inferred_schema:
         schema, table2 = _build_schema_from_values(table, sample)
     else:
         table2 = _fix_missing_headers(table, schema)
@@ -328,8 +329,15 @@ def _write_toavro(table, target, mode, schema, sample,
     target2 = write_source_from_arg(target, mode=mode)
     with target2.open(mode) as target_file:
         # delay the import of fastavro for not breaking when unused
-        from fastavro import parse_schema
+        from fastavro import parse_schema, reader
         from fastavro.write import Writer
+
+        # Older fastavro versions compare append schemas instead of ignoring
+        # the supplied schema. Inferred appends must use the stored precision.
+        if inferred_schema and mode == 'a+b' and target_file.tell():
+            target_file.seek(0)
+            schema = reader(target_file).writer_schema
+            target_file.seek(0, 2)
 
         parsed_schema = parse_schema(schema)
         writer = Writer(fo=target_file,
