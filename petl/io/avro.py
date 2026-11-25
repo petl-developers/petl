@@ -40,6 +40,10 @@ def fromavro(source, limit=None, skips=0, **avro_args):
     bytes decimal and fixed decimal: Decimal, int time-millis and 
     long time-micros: datetime.time.
 
+    Temporal precision is determined by the file's stored writer schema.
+    Both millisecond and microsecond files can be read without specifying a
+    reader schema.
+
     Example usage for reading files::
 
         >>> # set up a Avro file to demonstrate with
@@ -145,6 +149,12 @@ def toavro(table, target, schema=None, sample=9,
     coresponding python types: long timestamp-millis, long timestamp-micros, int date, 
     bytes decimal, fixed decimal, string uuid, int time-millis, long time-micros.
 
+    When inferring a schema, Python time and datetime values use the Avro
+    long types time-micros and timestamp-micros. This preserves microseconds,
+    including values encountered after the sample. To retain millisecond
+    writer schemas, pass an explicit int time-millis or long timestamp-millis
+    field type. See :ref:`io_avro` for a compatibility example.
+
     Example usage for writing files::
 
         >>> # set up a Avro file to demonstrate with
@@ -212,6 +222,10 @@ def appendavro(table, target, schema=None, sample=9, **avro_args):
     The `schema` argument is checked against the schema of the existing file.
     So it must be the same schema as used by `toavro()` or the schema of the
     existing file.
+
+    Appending to an existing file retains its stored writer schema and
+    temporal precision. A millisecond file therefore continues truncating
+    sub-millisecond values; appending does not upgrade its schema.
 
     The `sample` argument (int, optional) defines how many rows are inspected
     for discovering the field types and building a schema for the avro file 
