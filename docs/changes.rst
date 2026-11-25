@@ -5,6 +5,7 @@ Version 1.8.0
 -------------
 
 * Cache one-shot dictionary iterators, including ``map`` and list iterators, in ``fromdicts()``.
+  Rows containing unpicklable values are retained in memory; other rows use the file cache.
   By :user:`Aschenbath`.
 
 * Pad short rows before ``filldown()`` so missing cells can inherit prior

@@ -166,6 +166,8 @@ def fromdicts(dicts, header=None, sample=1000, missing=None):
     Its output is iterated and cached using a temporary file to support further
     transforms and multiple passes of the table. Set `petl.config.temp_dir`
     before creating the table to choose the directory for this file.
+    Rows containing values that cannot be pickled, such as local functions or
+    open files, are retained in memory instead.
 
         >>> import petl as etl
         >>> dicts = ({"foo": chr(ord("a")+i), "bar":i+1} for i in range(3))
@@ -294,6 +296,7 @@ class DictsGeneratorView(DictsView):
         self._tempdir = config.temp_dir
         self._filecache = None
         self._cached = 0
+        self._memorycache = {}
 
     def __iter__(self):
         if self._header is None:
@@ -312,6 +315,8 @@ class DictsGeneratorView(DictsView):
             if position < self._cached:
                 self._filecache.seek(position)
                 row = pickle.load(self._filecache)
+                if position in self._memorycache:
+                    row = self._memorycache[position]
                 position = self._filecache.tell()
                 yield row
                 continue
@@ -321,7 +326,14 @@ class DictsGeneratorView(DictsView):
                 break
             row = tuple(o.get(f, self.missing) for f in self._header)
             self._filecache.seek(self._cached)
-            pickle.dump(row, self._filecache, protocol=-1)
+            try:
+                pickle.dump(row, self._filecache, protocol=-1)
+            except (pickle.PicklingError, TypeError, AttributeError):
+                # A failed dump may already have written part of this row.
+                self._filecache.seek(self._cached)
+                self._filecache.truncate()
+                pickle.dump(None, self._filecache, protocol=-1)
+                self._memorycache[self._cached] = row
             self._cached = position = self._filecache.tell()
             yield row
 
