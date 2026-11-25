@@ -31,5 +31,13 @@ def test_filldown_targets_the_header_column_when_rows_have_extra_cells(selector)
 
 @pytest.mark.parametrize('transform', [etl.cut, etl.filldown])
 def test_negative_selector_outside_the_header_is_rejected(transform):
-    with pytest.raises(FieldSelectionError):
+    with pytest.raises(FieldSelectionError) as exc:
         list(transform([('id', 'amount'), ('a', 12)], -3))
+    assert exc.value.value == -3
+
+
+@pytest.mark.parametrize('transform', [etl.cut, etl.filldown])
+def test_mixed_selectors_report_the_invalid_index(transform):
+    with pytest.raises(FieldSelectionError) as exc:
+        list(transform([('id', 'amount'), ('a', 12)], 'id', -3))
+    assert exc.value.value == -3

@@ -115,10 +115,11 @@ def iterfilldown(table, fillfields, missing):
     if not fillfields:  # fill down all fields by position
         fillindices = range(len(hdr))
     else:
-        fillindices = [i + len(hdr) if i < 0 else i
-                       for i in asindices(hdr, fillfields)]
-        if any(i < 0 for i in fillindices):
-            raise FieldSelectionError(fillfields)
+        fillindices = []
+        for i in asindices(hdr, fillfields):
+            if i < -len(hdr):
+                raise FieldSelectionError(i)
+            fillindices.append(i + len(hdr) if i < 0 else i)
     try:
         fill = list(next(it))  # fill values
     except StopIteration:
