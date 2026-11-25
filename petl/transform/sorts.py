@@ -473,6 +473,9 @@ def mergesort(*tables, **kwargs):
         Limit the number of rows in memory per input table when inputs are not
         presorted
 
+    Short rows are padded with ``missing`` in the selected output fields,
+    including when the output header omits some source fields.
+
     """
 
     return MergeSortView(tables, **kwargs)
@@ -529,21 +532,11 @@ def itermergesort(sources, key, header, missing, reverse):
 
     def _standardisedata(it, hdr, ofs):
         flds = list(map(text_type, hdr))
+        indices = [flds.index(fo) if fo in flds else None for fo in ofs]
         # now construct and yield the data rows
         for _row in it:
-            try:
-                # should be quickest to do this way
-                yield tuple(_row[flds.index(fo)] if fo in flds else missing
-                            for fo in ofs)
-            except IndexError:
-                # handle short rows
-                outrow = [missing] * len(ofs)
-                for i, fi in enumerate(flds):
-                    try:
-                        outrow[ofs.index(fi)] = _row[i]
-                    except IndexError:
-                        pass  # be relaxed about short rows
-                yield tuple(outrow)
+            yield tuple(_row[i] if i is not None and i < len(_row) else missing
+                        for i in indices)
 
     # wrap all iterators to standardise fields
     sits = [_standardisedata(it, hdr, outhdr)
