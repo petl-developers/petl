@@ -8,7 +8,7 @@ from petl.compat import next, string_types, text_type
 
 import petl.config as config
 from petl.errors import ArgumentError
-from petl.util.base import Table, expr, rowgroupby, Record
+from petl.util.base import Table, expr, rowgroupby, Record, iterpeek
 from petl.transform.sorts import sort
 
 
@@ -344,6 +344,8 @@ def rowgroupmap(table, key, mapper, header=None, presorted=False,
     Group rows under the given key then apply `mapper` to yield zero or more
     output rows for each input group of rows.
 
+    If `header` is omitted, the input table's header is used.
+
     """
 
     return RowGroupMapView(table, key, mapper, header=header,
@@ -372,6 +374,8 @@ class RowGroupMapView(Table):
 
 
 def iterrowgroupmap(source, key, mapper, header):
+    if header is None:
+        header, source = iterpeek(source)
     yield tuple(header)
     for key, rows in rowgroupby(source, key):
         for row in mapper(key, rows):
