@@ -202,6 +202,9 @@ def extendheader(table, fields):
     See also :func:`petl.transform.headers.setheader`,
     :func:`petl.transform.headers.pushheader`.
 
+    An iterator of fields is read once on first iteration and reused
+    for subsequent passes. Repeatable field sequences remain live.
+
     """
 
     return ExtendHeaderView(table, fields)
@@ -217,7 +220,10 @@ class ExtendHeaderView(Table):
         self.fields = fields
 
     def __iter__(self):
-        return iterextendheader(self.source, self.fields)
+        fields = iter(self.fields)
+        if fields is self.fields:
+            self.fields = tuple(fields)
+        yield from iterextendheader(self.source, self.fields)
 
 
 def iterextendheader(source, fields):

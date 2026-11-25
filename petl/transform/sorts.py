@@ -473,6 +473,9 @@ def mergesort(*tables, **kwargs):
         Limit the number of rows in memory per input table when inputs are not
         presorted
 
+    An iterator supplied as ``header`` is read once on first iteration
+    and reused for subsequent passes. Repeatable header sequences remain live.
+
     """
 
     return MergeSortView(tables, **kwargs)
@@ -498,8 +501,10 @@ class MergeSortView(Table):
         self.reverse = reverse
 
     def __iter__(self):
-        return itermergesort(self.tables, self.key, self._header, self.missing,
-                             self.reverse)
+        if self._header is not None and iter(self._header) is self._header:
+            self._header = tuple(self._header)
+        yield from itermergesort(self.tables, self.key, self._header,
+                                 self.missing, self.reverse)
 
 
 def itermergesort(sources, key, header, missing, reverse):
