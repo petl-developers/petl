@@ -170,7 +170,7 @@ def iterproblems(table, constraints, expected_header):
                 # getting target value failed, report problem
                 yield (name, i+1, field, None, type(e).__name__)
             else:
-                value = target if field else None
+                value = target if field is not None else None
                 if test is not None:
                     try:
                         test(target)
