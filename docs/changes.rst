@@ -4,6 +4,9 @@ Changes
 Version 1.8.0
 -------------
 
+* Prevent interleaved reads of cached tables from adding duplicate rows to the cache.
+  By :user:`Aschenbath`.
+
 * Pad short rows before ``filldown()`` so missing cells can inherit prior
   values without raising ``IndexError``.
   By :user:`Kulraj69`, :issue:`840`.
