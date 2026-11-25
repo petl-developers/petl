@@ -9,6 +9,7 @@ def test_pushheader_accepts_one_positional_name(name):
     expected = [(name,), (1,), (2,)]
 
     assert list(result) == expected
+    # Reading the view again must retain the same header and rows.
     assert list(result) == expected
 
 
