@@ -4,7 +4,7 @@ from __future__ import absolute_import, print_function, division
 # standard library dependencies
 import io
 import json
-import inspect
+from collections.abc import Iterator
 from itertools import chain, islice
 from json.encoder import JSONEncoder
 from os import unlink
@@ -162,8 +162,8 @@ def fromdicts(dicts, header=None, sample=1000, missing=None):
     An explicit `header` iterable is read once on first iteration and reused
     for every row and subsequent pass over the table.
 
-    Argument `dicts` can also be a generator, the output of generator
-    is iterated and cached using a temporary file to support further
+    Argument `dicts` can also be a one-shot iterator, including a generator.
+    Its output is iterated and cached using a temporary file to support further
     transforms and multiple passes of the table. Set `petl.config.temp_dir`
     before creating the table to choose the directory for this file.
 
@@ -212,7 +212,7 @@ def fromdicts(dicts, header=None, sample=1000, missing=None):
     instead of `itertools.tee` due to high memory usage.
 
     """
-    view = DictsGeneratorView if inspect.isgenerator(dicts) else DictsView
+    view = DictsGeneratorView if isinstance(dicts, Iterator) else DictsView
     return view(dicts, header=header, sample=sample, missing=missing)
 
 
