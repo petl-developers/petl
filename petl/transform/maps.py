@@ -375,7 +375,10 @@ class RowGroupMapView(Table):
 
 def iterrowgroupmap(source, key, mapper, header):
     if header is None:
-        header, source = iterpeek(source)
+        try:
+            header, source = iterpeek(source)
+        except StopIteration:
+            raise ArgumentError('Cannot infer a header from an empty table.')
     yield tuple(header)
     for key, rows in rowgroupby(source, key):
         for row in mapper(key, rows):

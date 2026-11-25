@@ -1,6 +1,7 @@
 import pytest
 
 import petl as etl
+from petl.errors import ArgumentError
 
 
 @pytest.mark.parametrize('presorted', [False, True])
@@ -30,3 +31,10 @@ def test_rowgroupmap_keeps_an_explicit_header():
 def test_rowgroupmap_keeps_a_header_only_table():
     assert list(etl.rowgroupmap([('group', 'amount')], 'group', lambda key, rows: rows)) == [
         ('group', 'amount')]
+
+
+@pytest.mark.parametrize('one_shot', [False, True])
+def test_rowgroupmap_reports_missing_header_for_empty_presorted_input(one_shot):
+    source = iter([]) if one_shot else []
+    with pytest.raises(ArgumentError, match='header.*empty table'):
+        list(etl.rowgroupmap(source, 'group', lambda key, rows: rows, presorted=True))
