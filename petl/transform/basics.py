@@ -135,7 +135,9 @@ def itercut(source, spec, missing=None):
         hdr = next(it)
     except StopIteration:
         hdr = []
-    indices = asindices(hdr, spec)
+    indices = [i + len(hdr) if i < 0 else i for i in asindices(hdr, spec)]
+    if any(i < 0 for i in indices):
+        raise FieldSelectionError(spec)
 
     # define a function to transform each row in the source data
     # according to the field selection
