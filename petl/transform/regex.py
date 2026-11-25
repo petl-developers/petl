@@ -59,6 +59,13 @@ def capture(table, field, pattern, newfields=None, include_original=False,
     By default the field on which the capture is performed is omitted. It can
     be included using the `include_original` argument.
 
+    A field-name iterator supplied as `newfields` is read when the output
+    header is built and its names are reused on subsequent traversals of the
+    view. As before, false-valued `newfields` are skipped without being opened.
+    If reading names raises before yielding any name, a later traversal may
+    retry the iterator in its current state. After a partial read, replace
+    the iterator before retrying to avoid a truncated header.
+
     The ``fill`` parameter can be used to provide a list or tuple of values to
     use if the regular expression does not match. The ``fill`` parameter
     should contain as many values as there are capturing groups in the regular
@@ -85,18 +92,65 @@ class CaptureView(Table):
         self.field = field
         self.pattern = pattern
         self.newfields = newfields
+        self._name_state = None
         self.include_original = include_original
         self.flags = flags
         self.fill = fill
 
     def __iter__(self):
+        names = self.newfields
+        if self._name_state is None or self._name_state.names is not names:
+            self._name_state = _CaptureNames(names)
         return itercapture(self.source, self.field, self.pattern,
-                           self.newfields, self.include_original, self.flags,
-                           self.fill)
+                           names, self.include_original, self.flags,
+                           self.fill, self._name_state.extend)
+
+
+class _CaptureNames(object):
+
+    def __init__(self, names):
+        self.names = names
+        self.cached = None
+        self.failed = False
+
+    def extend(self, header):
+        if self.cached is not None:
+            header.extend(self.cached)
+            return
+        if self.failed:
+            raise TransformError('cannot reuse a failed newfields iterator')
+        names = self.names
+        if not names:
+            return
+        it = iter(names)
+        opened = _OpenedNames(names, it)
+        if it is not names:
+            header.extend(opened)
+            return
+        start = len(header)
+        try:
+            header.extend(opened)
+            self.cached = tuple(header[start:])
+        finally:
+            self.failed = self.cached is None and len(header) > start
+
+
+class _OpenedNames(object):
+    """Give list.extend the original length hint and the already opened cursor."""
+
+    def __init__(self, names, cursor):
+        self.names = names
+        self.cursor = cursor
+
+    def __iter__(self):
+        return self.cursor
+
+    def __length_hint__(self):
+        return operator.length_hint(self.names, 8)
 
 
 def itercapture(source, field, pattern, newfields, include_original, flags,
-                fill):
+                fill, extendnewfields=None):
     it = iter(source)
     prog = re.compile(pattern, flags)
 
@@ -117,7 +171,9 @@ def itercapture(source, field, pattern, newfields, include_original, flags,
     outhdr = list(flds)
     if not include_original:
         del outhdr[field_index]
-    if newfields:
+    if extendnewfields is not None:
+        extendnewfields(outhdr)
+    elif newfields:
         outhdr.extend(newfields)
     yield tuple(outhdr)
 

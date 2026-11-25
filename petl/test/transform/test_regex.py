@@ -54,6 +54,309 @@ def test_capture():
     ieq(expectation, result)
 
 
+def test_capture_iterator_newfields():
+    table = [('id', 'code'), (7, 'A12'), (8, 'B34')]
+    names = iter(['letter', 'number'])
+    result = capture(table, 'code', r'([A-Z])(\d+)', names)
+    expected = [('id', 'letter', 'number'), (7, 'A', '12'), (8, 'B', '34')]
+    assert result.header() == expected[0]
+    assert list(iter(result)) == expected
+    assert list(iter(result)) == expected
+    assert list(result) == expected
+
+
+def test_capture_newfields_validation_and_failure():
+    reads = []
+
+    def names():
+        reads.append('first')
+        yield 'letter'
+        raise ValueError('bad name')
+
+    fields = names()
+    table = [('code',), ('A',)]
+    invalid = iter(capture(table, 'absent', '(.)', fields))
+    assert not reads
+    with pytest.raises(ArgumentError):
+        next(invalid)
+    assert not reads
+    view = capture(table, 'code', '(.)', fields)
+    rows = iter(view)
+    assert not reads
+    with pytest.raises(ValueError, match='bad name'):
+        next(rows)
+    # Never silently report a partial header after materialization failed.
+    with pytest.raises((ValueError, TransformError)):
+        next(iter(view))
+
+
+def test_capture_validates_field_before_opening_newfields():
+    class UnopenableNames(object):
+        def __iter__(self):
+            raise ValueError('names opened')
+
+    table = [('code',), ('A',)]
+    names = UnopenableNames()
+    rows = iter(capture(table, 'absent', '(.)', names))
+    with pytest.raises(ArgumentError):
+        next(rows)
+    rows = iter(capture(table, 'code', '(.)', names))
+    with pytest.raises(ValueError, match='names opened'):
+        next(rows)
+
+
+def test_capture_rereads_repeatable_newfields():
+    class Names(list):
+        def __next__(self):
+            raise AssertionError('use the list iterator')
+
+    fields = Names(['before'])
+    view = capture([('code',), ('A',)], 'code', '(.)', fields)
+    assert view.header() == ('before',)
+    fields[:] = ['after']
+    assert view.header() == ('after',)
+
+
+def test_capture_iterator_on_first_list():
+    class Names(object):
+        def __init__(self):
+            self.names = iter(['label'])
+
+        def __iter__(self):
+            return self
+
+        def __next__(self):
+            return next(self.names)
+
+    view = capture([('code',), ('A',)], 'code', '(.)', Names())
+    assert list(view) == [('label',), ('A',)]
+    assert view.header() == ('label',)
+
+
+def test_capture_does_not_reopen_collection_cursor():
+    events = []
+
+    class Cursor(object):
+        def __init__(self):
+            self.names = iter(['label'])
+
+        def __iter__(self):
+            events.append('cursor')
+            return self
+
+        def __next__(self):
+            return next(self.names)
+
+    class Collection(object):
+        def __iter__(self):
+            events.append('collection')
+            return Cursor()
+
+    view = capture([('code',)], 'code', '(.)', Collection())
+    assert view.header() == view.header() == ('label',)
+    assert events == ['collection', 'collection']
+
+
+def test_capture_opens_name_iterator_once():
+    class Names(object):
+        def __init__(self):
+            self.values = iter(['label'])
+            self.opens = 0
+
+        def __iter__(self):
+            self.opens += 1
+            return self
+
+        def __next__(self):
+            return next(self.values)
+
+    names = Names()
+    view = capture([('code',)], 'code', '(.)', names)
+    assert view.header() == view.header() == ('label',)
+    assert names.opens == 1
+
+
+def test_capture_keeps_names_for_open_traversal():
+    view = capture([('code',)], 'code', '(.)', iter(['before']))
+    rows = iter(view)
+    view.newfields = ['after']
+    assert next(rows) == ('before',)
+    assert view.header() == ('after',)
+
+
+def test_capture_replaces_failed_names():
+    def names():
+        yield 'first'
+        raise ValueError('bad name')
+
+    view = capture([('code',)], 'code', '(.)', names())
+    with pytest.raises(ValueError, match='bad name'):
+        view.header()
+    view.newfields = ['valid']
+    assert view.header() == ('valid',)
+
+
+def test_capture_retries_before_first_name_is_yielded():
+    class Names(object):
+        def __init__(self):
+            self.values = iter(['letter', 'number'])
+            self.first = True
+
+        def __iter__(self):
+            return self
+
+        def __next__(self):
+            if self.first:
+                self.first = False
+                raise ValueError('try again')
+            return next(self.values)
+
+    view = capture([('code',), ('A1',)], 'code', r'(.)(.)', Names())
+    with pytest.raises(ValueError, match='try again'):
+        view.header()
+    expected = [('letter', 'number'), ('A', '1')]
+    assert list(iter(view)) == expected
+    assert list(iter(view)) == expected
+
+
+def test_capture_skips_disabled_names_on_retry():
+    class Names(object):
+        enabled = True
+
+        def __bool__(self):
+            return self.enabled
+
+        def __iter__(self):
+            assert self.enabled
+            return self
+
+        def __next__(self):
+            self.enabled = False
+            raise ValueError('disabled')
+
+    view = capture([('code',)], 'code', '(.)', Names())
+    with pytest.raises(ValueError, match='disabled'):
+        view.header()
+    assert view.header() == ()
+
+
+def test_capture_refreshes_source_fields_with_cached_names():
+    table = [('id', 'code'), (7, 'A')]
+    view = capture(table, 'code', '(.)', iter(['label']))
+    assert list(iter(view)) == [('id', 'label'), (7, 'A')]
+    table[0] = ('key', 'code')
+    table[1] = (8, 'B')
+    assert list(iter(view)) == [('key', 'label'), (8, 'B')]
+
+
+def test_capture_retries_after_length_hint_failure():
+    class Names(object):
+        def __init__(self):
+            self.values = iter(['label'])
+            self.first = True
+
+        def __iter__(self):
+            return self
+
+        def __next__(self):
+            return next(self.values)
+
+        def __length_hint__(self):
+            if self.first:
+                self.first = False
+                raise ValueError('length unavailable')
+            return 1
+
+    view = capture([('code',)], 'code', '(.)', Names())
+    with pytest.raises(ValueError, match='length unavailable'):
+        view.header()
+    assert view.header() == ('label',)
+
+
+@pytest.mark.parametrize('wrap', [lambda it: it, lambda it: map(str, it)])
+def test_capture_retries_exhausted_names_like_any_empty_iterator(wrap):
+    def names():
+        raise ValueError('bad name')
+        yield 'label'
+
+    view = capture([('code',), ('A',)], 'code', '(.)', wrap(names()))
+    with pytest.raises(ValueError, match='bad name'):
+        view.header()
+    assert view.header() == ()
+
+
+def test_capture_collection_needs_no_class_attribute_probe():
+    class Meta(type):
+        @property
+        def __next__(cls):
+            raise RuntimeError('class lookup')
+
+    class Names(list, metaclass=Meta):
+        pass
+
+    names = Names(['before'])
+    view = capture([('code',)], 'code', '(.)', names)
+    assert view.header() == ('before',)
+    names[0] = 'after'
+    assert view.header() == ('after',)
+
+
+def test_capture_accepts_valid_empty_retry():
+    class Names(object):
+        first = True
+
+        def __iter__(self):
+            return self
+
+        def __next__(self):
+            if self.first:
+                self.first = False
+                raise ValueError('try again')
+            raise StopIteration
+
+    view = capture([('code',), ('A',)], 'code', 'A', Names())
+    with pytest.raises(ValueError, match='try again'):
+        view.header()
+    assert list(iter(view)) == [(), ()]
+    assert list(iter(view)) == [(), ()]
+
+
+def test_capture_falsey_repeatable_collection():
+    class Hidden(list):
+        def __iter__(self):
+            raise AssertionError('should not open hidden names')
+
+        def __next__(self):
+            raise AssertionError('not a self-iterator')
+
+        def __bool__(self):
+            return False
+
+    view = capture([('code',)], 'code', '(.)', Hidden(['hidden']))
+    assert view.header() == ()
+
+
+def test_capture_tests_collection_before_opening():
+    events = []
+
+    class Names(list):
+        @property
+        def __next__(self):
+            raise AssertionError('not used by collection iteration')
+
+        def __bool__(self):
+            events.append('truth')
+            return True
+
+        def __iter__(self):
+            events.append('open')
+            return super().__iter__()
+
+    view = capture([('code',)], 'code', '(.)', Names(['label']))
+    assert view.header() == ('label',)
+    assert events == ['truth', 'open']
+
+
 def test_capture_negative_index():
 
     table = (('id', 'value', 'variable'),
