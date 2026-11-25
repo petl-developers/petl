@@ -3,7 +3,7 @@ import pytest
 import petl as etl
 
 
-@pytest.mark.parametrize('name', ['', 0, 'count'])
+@pytest.mark.parametrize('name', ['', 0, False, 'count'])
 @pytest.mark.parametrize('presorted', [False, True])
 def test_distinct_uses_explicit_count_name(name, presorted):
     table = [('key', 'value'), ('a', 2), ('a', 3), ('b', 4)]
@@ -11,6 +11,7 @@ def test_distinct_uses_explicit_count_name(name, presorted):
     expected = [('key', 'value', name), ('a', 2, 2), ('b', 4, 1)]
 
     assert list(result) == expected
+    # A second read must retain both the field name and the counts.
     assert list(result) == expected
 
 

@@ -386,7 +386,8 @@ def distinct(table, key=None, count=None, presorted=False, buffersize=None,
 
     If the `count` argument is not None, it will be used as the name for an
     additional field, and the values of the field will be the number of
-    duplicate rows. An empty string or zero is also a valid count field name.
+    duplicate rows. An empty string, zero or False is also a valid count field
+    name. Use None to omit the count column.
 
     If the `key` keyword argument is passed, the comparison is done on the
     given key instead of the full row.
