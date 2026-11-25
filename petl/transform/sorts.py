@@ -473,6 +473,9 @@ def mergesort(*tables, **kwargs):
         Limit the number of rows in memory per input table when inputs are not
         presorted
 
+    Without an explicit key, all output fields use the same mixed-type
+    ordering as :func:`petl.transform.sorts.sort`.
+
     """
 
     return MergeSortView(tables, **kwargs)
@@ -559,6 +562,8 @@ def itermergesort(sources, key, header, missing, reverse):
         getkey = comparable_itemgetter(*indices)
 
     # OK, do the merge sort
+    if key is None and outhdr:
+        getkey = comparable_itemgetter(*range(len(outhdr)))
     for row in _shortlistmergesorted(getkey, reverse, *sits):
         yield row
 

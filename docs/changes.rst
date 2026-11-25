@@ -4,6 +4,9 @@ Changes
 Version 1.8.0
 -------------
 
+* Use the same mixed-type ordering as ``sort()`` when ``mergesort()`` has no explicit key.
+  By :user:`Aschenbath`.
+
 * Pad short rows before ``filldown()`` so missing cells can inherit prior
   values without raising ``IndexError``.
   By :user:`Kulraj69`, :issue:`840`.
