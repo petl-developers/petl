@@ -814,6 +814,25 @@ def test_unflatten_2():
     ieq(expect1, actual1)
 
 
+def test_unflatten_yields_complete_rows_before_reading_more_input():
+    def source():
+        yield 'A'
+        yield 'B'
+        raise ValueError('later input')
+
+    rows = iter(unflatten(source(), 2))
+    assert next(rows) == ('f0', 'f1')
+    assert next(rows) == ('A', 'B')
+    with pytest.raises(ValueError, match='later input'):
+        next(rows)
+
+
+@pytest.mark.parametrize('period', [0, -1])
+def test_unflatten_requires_positive_period(period):
+    with pytest.raises(ValueError, match='period must be positive'):
+        next(iter(unflatten([], period)))
+
+
 def test_unflatten_empty():
 
     table1 = (('lines',),)

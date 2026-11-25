@@ -705,6 +705,9 @@ def unflatten(*args, **kwargs):
         | 'C' |  9 | None  |
         +-----+----+-------+
 
+    The period must be positive. Each complete row is yielded as soon as its
+    last value is available.
+
     See also :func:`petl.transform.reshape.flatten`.
 
     """
@@ -735,19 +738,19 @@ class UnflattenView(Table):
 
         # generate header row
         outhdr = tuple('f%s' % i for i in range(period))
+        if not outhdr:
+            raise ValueError('period must be positive')
         yield outhdr
 
         # generate data rows
         row = list()
         for v in inpt:
-            if len(row) < period:
-                row.append(v)
-            else:
+            row.append(v)
+            if len(row) == len(outhdr):
                 yield tuple(row)
-                row = [v]
+                row = []
 
         # deal with last row
-        if len(row) > 0:
-            if len(row) < period:
-                row.extend([missing] * (period - len(row)))
+        if row:
+            row.extend([missing] * (len(outhdr) - len(row)))
             yield tuple(row)
