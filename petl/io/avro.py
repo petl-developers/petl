@@ -272,7 +272,10 @@ class AvroView(Table):
         self.avro_schema = avro_reader.writer_schema
         if self.avro_schema is None:
             return None, None
-        schema_fields = self.avro_schema['fields']
+        schema = self.avro_args.get('reader_schema')
+        if not isinstance(schema, dict) or schema.get('type') != 'record':
+            schema = self.avro_schema
+        schema_fields = schema['fields']
         header = tuple(col['name'] for col in schema_fields)
         return header
 
@@ -296,6 +299,9 @@ class AvroView(Table):
         - avro type: int logicalType: date              -> python date
         - avro type: bytes logicalType: decimal         -> python Decimal
         '''
+        schema = self.avro_args.get('reader_schema')
+        if isinstance(schema, dict) and schema.get('type') == 'record':
+            return tuple(record[name] for name in header)
         return tuple(record.values())
 
 
