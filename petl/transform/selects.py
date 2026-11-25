@@ -168,7 +168,20 @@ Table.selectop = selectop
 
 
 def selecteq(table, field, value, complement=False):
-    """Select rows where the given field equals the given value."""
+    r"""Select rows where the given field equals the given value.
+
+    String equality is case-sensitive. For a case-insensitive match on a
+    whole text field, use :func:`petl.search` with ``re.IGNORECASE``.
+    Escape the query so that punctuation is matched literally::
+
+        >>> import re
+        >>> import petl as etl
+        >>> table = [('code',), ('A.1',), ('a.1',), ('Ax1',), ('A.10',)]
+        >>> pattern = r'\A' + re.escape('a.1') + r'\Z'
+        >>> list(etl.search(table, 'code', pattern, flags=re.IGNORECASE))
+        [('code',), ('A.1',), ('a.1',)]
+
+    """
 
     return selectop(table, field, value, operator.eq, complement=complement)
 
