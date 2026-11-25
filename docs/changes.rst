@@ -4,6 +4,9 @@ Changes
 Version 1.8.0
 -------------
 
+* Resolve negative field indexes in ``clampvalues()`` against the header,
+  so surplus values in longer rows do not change the selected field.
+
 * Pad short rows before ``filldown()`` so missing cells can inherit prior
   values without raising ``IndexError``.
   By :user:`Kulraj69`, :issue:`840`.
