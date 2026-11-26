@@ -147,6 +147,10 @@ def unpackdict(table, field, keys=None, includeoriginal=False,
         |   3 | 'e' | 'f'  |
         +-----+-----+------+
 
+    The `field` can be a field name or an index. Negative indices count
+    from the end of the header. An index selects that position even when
+    field names repeat.
+
     See also :func:`petl.transform.unpacks.unpack`.
 
     """
@@ -185,7 +189,12 @@ def iterunpackdict(table, field, keys, includeoriginal, samplesize, missing):
     except StopIteration:
         hdr = []
     flds = list(map(text_type, hdr))
-    fidx = flds.index(field)
+    if isinstance(field, int):
+        if not -len(flds) <= field < len(flds):
+            raise ArgumentError('field index out of range')
+        fidx = field + len(flds) if field < 0 else field
+    else:
+        fidx = flds.index(field)
     outhdr = list(flds)
     if not includeoriginal:
         del outhdr[fidx]
