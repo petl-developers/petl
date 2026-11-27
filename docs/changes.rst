@@ -4,6 +4,9 @@ Changes
 Version 1.8.0
 -------------
 
+* Keep numeric header labels aligned with their data columns in ``sortheader()``.
+  By :user:`Aschenbath`, :issue:`854`.
+
 * Resolve negative field indexes in ``clampvalues()`` against the header,
   so surplus values in longer rows do not change the selected field.
   By :user:`Kulraj69`, :issue:`843`.
