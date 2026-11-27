@@ -9,7 +9,7 @@ from petl.compat import next, text_type
 from petl.errors import FieldSelectionError
 
 
-from petl.util.base import Table, asindices, rowgetter
+from petl.util.base import Table, rowgetter
 
 
 def rename(table, *args, **kwargs):
@@ -256,7 +256,7 @@ def pushheader(table, header, *args):
         | 'b' |   2 |
         +-----+-----+
 
-    The header row can either be a list or positional arguments.
+    The header row can either be a list or one or more positional arguments.
 
     """
 
@@ -275,12 +275,10 @@ class PushHeaderView(Table):
         if isinstance(header, (list, tuple)):
             self._header = header
         # otherwise,
-        elif len(args) > 0:
+        else:
             self._header = []
             self._header.append(header)  # first argument is named header
             self._header.extend(args)  # add the other positional arguments
-        else:
-            assert False, 'bad parameters'
 
     def __iter__(self):
         return iterpushheader(self.source, self._header)
@@ -439,6 +437,8 @@ class SuffixHeaderView(Table):
 def sortheader(table, reverse=False, missing=None):
     """Re-order columns so the header is sorted.
 
+    Header values, including numeric labels, remain paired with their columns.
+
     .. versionadded:: 1.1.0
 
     """
@@ -462,8 +462,9 @@ class SortHeaderView(Table):
             hdr = next(it)
         except StopIteration:
             return
-        shdr = sorted(hdr, reverse=self.reverse)
-        indices = asindices(hdr, shdr)
+        indices = sorted(range(len(hdr)), key=hdr.__getitem__,
+                         reverse=self.reverse)
+        shdr = [hdr[i] for i in indices]
         transform = rowgetter(*indices)
 
         # yield the transformed header

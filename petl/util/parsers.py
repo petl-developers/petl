@@ -93,11 +93,13 @@ def timeparser(fmt, strict=True):
     If ``strict=False`` then if an error occurs when parsing, the original
     value will be returned as-is, and no error will be raised.
 
+    UTC offsets parsed with ``%z`` are preserved in the returned time.
+
     """
 
     def parser(value):
         try:
-            return datetime.datetime.strptime(value.strip(), fmt).time()
+            return datetime.datetime.strptime(value.strip(), fmt).timetz()
         except Exception as e:
             if strict:
                 raise e
