@@ -476,7 +476,7 @@ def _get_definition_from_array(prop, val, prev):
             prev = curr2
 
     bfield = 'string' if afield is None else afield
-    tdef = {'type': 'array', 'items': bfield}
+    tdef = {'type': 'array', 'items': ['null', bfield]}
     return tdef, prev
 
 
