@@ -1,9 +1,9 @@
 
-This change has the objective of <describe what you want to acomplish here> because <describe the reasons here>.
+This changes <describe what you are changing> because <describe what you want to accomplish>.
 
 ## Changes
 
-1. Added new feature for...
+1. Added a new feature for...
 2. Fixed a bug in...
 3. Changed the behavior of...
 4. Improved the docs about...
@@ -17,7 +17,6 @@ Use this checklist to ensure the quality of the source code modified by the pull
   * [ ] New functions have docstrings with examples that can be run with doctest
   * [ ] New functions are included in API docs
   * [ ] Docstrings include notes for any changes to API or behavior
-  * [ ] Added an item documenting the change in docs/changes.rst
 * [ ] Versioning and history tracking guidelines:
   * [ ] Using atomic commits whenever possible
   * [ ] Commits are reversible whenever possible
@@ -33,7 +32,7 @@ Use this checklist to ensure the quality of the source code modified by the pull
 ## Conventions
 
 * Keep the PR as draft while developing and request a review when ready.
-* Keep the pull request description and the commit messages consise:
-  * Don't add text explaining the changes that could be infered from the commit diff.
-  * Don't explain the source code but tell the reasons, impacts and objectives of the change.
-  * You may omit saying that local test passed as this is already a requiment and is redundant.
+* Keep the pull request description and the commit messages concise:
+  * Don't add text explaining the changes that could be inferred from the commit diff.
+  * Don't explain the source code but tell the reasons, impacts, and objectives of the change.
+  * You may omit saying that local tests passed, as this is already a requirement and is redundant.
