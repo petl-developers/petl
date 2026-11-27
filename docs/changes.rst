@@ -1,8 +1,11 @@
 Changes
 =======
 
-Version 1.8.0
+Version 1.8.1
 -------------
+
+* Retain one-shot header iterators in ``cat()``, ``mergesort()`` and ``extendheader()`` across repeated reads.
+  By :user:`Aschenbath`, :issue:`858`.
 
 * Accept a single positional field name in ``pushheader()``.
   By :user:`Aschenbath`, :issue:`857`.
@@ -23,6 +26,10 @@ Version 1.8.0
 * Retain an explicitly supplied empty or zero-valued count field name in ``distinct()``.
   ``count=False`` now creates a field named ``False``; use ``count=None`` to omit counts.
   By :user:`Aschenbath`, :issue:`853`.
+
+Version 1.8.0
+-------------
+
 
 * Pad short rows before ``filldown()`` so missing cells can inherit prior
   values without raising ``IndexError``.

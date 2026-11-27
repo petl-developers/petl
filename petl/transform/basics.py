@@ -4,6 +4,7 @@ from __future__ import absolute_import, print_function, division
 # standard library dependencies
 from itertools import islice, chain
 from collections import deque
+from collections.abc import Iterator
 from itertools import count
 from petl.compat import izip, izip_longest, next, string_types, text_type
 
@@ -341,6 +342,9 @@ def cat(*tables, **kwargs):
     argument to override this behaviour and specify a fixed set of fields for
     the output table.
 
+    An iterator supplied as ``header`` is read once on first iteration
+    and reused for subsequent passes. Repeatable header sequences remain live.
+
     """
 
     return CatView(tables, **kwargs)
@@ -357,7 +361,9 @@ class CatView(Table):
         self._header = header
 
     def __iter__(self):
-        return itercat(self.sources, self.missing, self._header)
+        if isinstance(self._header, Iterator):
+            self._header = tuple(self._header)
+        yield from itercat(self.sources, self.missing, self._header)
 
 
 def itercat(sources, missing, header):

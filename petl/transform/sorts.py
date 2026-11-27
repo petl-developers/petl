@@ -7,6 +7,7 @@ from tempfile import NamedTemporaryFile
 import itertools
 import logging
 from collections import namedtuple
+from collections.abc import Iterator
 import operator
 from petl.compat import pickle, next, text_type
 
@@ -473,6 +474,9 @@ def mergesort(*tables, **kwargs):
         Limit the number of rows in memory per input table when inputs are not
         presorted
 
+    An iterator supplied as ``header`` is read once on first iteration
+    and reused for subsequent passes. Repeatable header sequences remain live.
+
     """
 
     return MergeSortView(tables, **kwargs)
@@ -498,8 +502,10 @@ class MergeSortView(Table):
         self.reverse = reverse
 
     def __iter__(self):
-        return itermergesort(self.tables, self.key, self._header, self.missing,
-                             self.reverse)
+        if isinstance(self._header, Iterator):
+            self._header = tuple(self._header)
+        yield from itermergesort(self.tables, self.key, self._header,
+                                 self.missing, self.reverse)
 
 
 def itermergesort(sources, key, header, missing, reverse):
