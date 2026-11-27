@@ -4,6 +4,9 @@ Changes
 Version 1.8.1
 -------------
 
+* Prevent interleaved reads of cached tables from adding duplicate rows to the cache.
+  By :user:`Aschenbath`, :issue:`859`.
+
 * Retain one-shot header iterators in ``cat()``, ``mergesort()`` and ``extendheader()`` across repeated reads.
   By :user:`Aschenbath`, :issue:`858`.
 
@@ -29,7 +32,6 @@ Version 1.8.1
 
 Version 1.8.0
 -------------
-
 
 * Pad short rows before ``filldown()`` so missing cells can inherit prior
   values without raising ``IndexError``.

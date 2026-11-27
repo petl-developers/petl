@@ -186,6 +186,9 @@ def cache(table, n=None):
     Wrap the table with a cache that caches up to `n` rows as they are initially
     requested via iteration (cache all rows be default).
 
+    Multiple iterators can be advanced in an interleaved order without
+    duplicating rows in the cache.
+
     """
 
     return CacheView(table, n=n)
@@ -216,9 +219,10 @@ class CacheView(Table):
 
             # serve the remainder from the inner iterator
             it = iter(self.inner)
-            for row in islice(it, len(self._cache), None):
-                # maybe there's more room in the cache?
-                if not self.n or len(self._cache) < self.n:
+            offset = len(self._cache)
+            for index, row in enumerate(islice(it, offset, None), offset):
+                # Another iterator may already have cached this row.
+                if index == len(self._cache) and (not self.n or len(self._cache) < self.n):
                     self._cache.append(row)
                 yield row
 
