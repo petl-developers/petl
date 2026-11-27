@@ -45,6 +45,11 @@ python-etl@googlegroups.com or `raise an issue on GitHub
 For an example of :mod:`petl` in use, see the `case study on comparing tables
 <http://nbviewer.ipython.org/github/petl-developers/petl/tree/master/notes/case_study_1.ipynb>`_.
 
+The `ETL with Python tutorial
+<https://github.com/dimgold/ETL_with_Python/blob/master/ETL_with_Python.ipynb>`_
+uses a Python 2 notebook to walk through reading JSON, transforming tables and
+loading the results into MySQL.
+
 Contents
 --------
 

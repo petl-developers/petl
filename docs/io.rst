@@ -367,6 +367,32 @@ Avro files (fastavro)
 
         $ pip install fastavro
 
+For new files, inferred ``datetime.time`` and ``datetime.datetime`` fields use
+the Avro ``long`` types ``time-micros`` and ``timestamp-micros``. Microseconds
+are retained even when the first value with sub-millisecond precision appears
+after the schema inference sample.
+
+This changes the inferred writer schema from millisecond types. In particular,
+a reader schema pinned to ``int`` / ``time-millis`` cannot read a ``long`` /
+``time-micros`` field. To keep writing millisecond-compatible files, supply an
+explicit schema, for example::
+
+    schema = {
+        'type': 'record', 'name': 'event',
+        'fields': [
+            {'name': 'at', 'type': {'type': 'int', 'logicalType': 'time-millis'}},
+            {'name': 'created', 'type': {'type': 'long', 'logicalType': 'timestamp-millis'}},
+        ],
+    }
+    etl.toavro(table, 'events.avro', schema=schema)
+
+For an explicit microsecond schema, change the ``at`` field to ``long`` /
+``time-micros`` and the ``created`` field to ``long`` / ``timestamp-micros``.
+Both precisions can be read by ``fromavro()`` without a reader schema.
+Appending to an existing file retains its stored writer schema, so an existing
+millisecond file continues truncating finer precision. Write a new file to
+change the stored precision.
+
 .. autofunction:: petl.io.avro.fromavro
 .. autofunction:: petl.io.avro.toavro
 .. autofunction:: petl.io.avro.appendavro

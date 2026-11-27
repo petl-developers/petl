@@ -7,6 +7,7 @@ from tempfile import NamedTemporaryFile
 import itertools
 import logging
 from collections import namedtuple
+from collections.abc import Iterator
 import operator
 from petl.compat import pickle, next, text_type
 
@@ -473,6 +474,15 @@ def mergesort(*tables, **kwargs):
         Limit the number of rows in memory per input table when inputs are not
         presorted
 
+    Short rows are padded with ``missing`` in the selected output fields,
+    including when the output header omits some source fields.
+    
+    Without an explicit key, all output fields use the same mixed-type
+    ordering as :func:`petl.transform.sorts.sort`.
+    
+    An iterator supplied as ``header`` is read once on first iteration
+    and reused for subsequent passes. Repeatable header sequences remain live.
+
     """
 
     return MergeSortView(tables, **kwargs)
@@ -498,8 +508,10 @@ class MergeSortView(Table):
         self.reverse = reverse
 
     def __iter__(self):
-        return itermergesort(self.tables, self.key, self._header, self.missing,
-                             self.reverse)
+        if isinstance(self._header, Iterator):
+            self._header = tuple(self._header)
+        yield from itermergesort(self.tables, self.key, self._header,
+                                 self.missing, self.reverse)
 
 
 def itermergesort(sources, key, header, missing, reverse):
@@ -529,21 +541,11 @@ def itermergesort(sources, key, header, missing, reverse):
 
     def _standardisedata(it, hdr, ofs):
         flds = list(map(text_type, hdr))
+        indices = [flds.index(fo) if fo in flds else None for fo in ofs]
         # now construct and yield the data rows
         for _row in it:
-            try:
-                # should be quickest to do this way
-                yield tuple(_row[flds.index(fo)] if fo in flds else missing
-                            for fo in ofs)
-            except IndexError:
-                # handle short rows
-                outrow = [missing] * len(ofs)
-                for i, fi in enumerate(flds):
-                    try:
-                        outrow[ofs.index(fi)] = _row[i]
-                    except IndexError:
-                        pass  # be relaxed about short rows
-                yield tuple(outrow)
+            yield tuple(_row[i] if i is not None and i < len(_row) else missing
+                        for i in indices)
 
     # wrap all iterators to standardise fields
     sits = [_standardisedata(it, hdr, outhdr)
@@ -559,6 +561,8 @@ def itermergesort(sources, key, header, missing, reverse):
         getkey = comparable_itemgetter(*indices)
 
     # OK, do the merge sort
+    if key is None and outhdr:
+        getkey = comparable_itemgetter(*range(len(outhdr)))
     for row in _shortlistmergesorted(getkey, reverse, *sits):
         yield row
 

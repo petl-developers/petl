@@ -3,7 +3,10 @@ from __future__ import absolute_import, print_function, division
 
 
 from datetime import datetime
+from io import BytesIO
 from tempfile import NamedTemporaryFile
+from xml.etree import ElementTree as ET
+from zipfile import ZipFile
 
 import pytest
 
@@ -22,6 +25,107 @@ except ImportError:  # Python < 3.9
 @pytest.fixture()
 def xlsx_test_filename():
     return str(files("petl") / "test/resources/test.xlsx")
+
+
+@pytest.fixture()
+def xlsm_filename(tmp_path):
+    # Build a workbook with an opaque marker in place of executable VBA.
+    book = openpyxl.Workbook()
+    book.active.title = 'Data'
+    book.active.append(['old'])
+    book.create_sheet('Other').append(['untouched'])
+    original = BytesIO()
+    book.save(original)
+    filename = str(tmp_path / 'example.xlsm')
+    with ZipFile(original) as src, ZipFile(filename, 'w') as dest:
+        for name in src.namelist():
+            blob = src.read(name)
+            if name == '[Content_Types].xml':
+                root = ET.fromstring(blob)
+                for part in root:
+                    if part.get('PartName') == '/xl/workbook.xml':
+                        part.set('ContentType', 'application/vnd.ms-excel.sheet.macroEnabled.main+xml')
+                ET.SubElement(root, '{http://schemas.openxmlformats.org/package/2006/content-types}Default', Extension='bin',
+                              ContentType='application/vnd.ms-office.vbaProject')
+                blob = ET.tostring(root)
+            elif name == 'xl/_rels/workbook.xml.rels':
+                root = ET.fromstring(blob)
+                ET.SubElement(root, root[0].tag, Id='rIdVba', Target='vbaProject.bin',
+                              Type='http://schemas.microsoft.com/office/2006/relationships/vbaProject')
+                blob = ET.tostring(root)
+            dest.writestr(name, blob)
+        dest.writestr('xl/vbaProject.bin', b'PETL test project')
+    return filename
+
+
+@pytest.mark.parametrize('mode,sheet,options,preserved', [
+    ('replace', 'Data', {'keep_vba': True}, True),
+    ('add', 'Added', {'keep_vba': True}, True),
+    ('add', None, {'keep_vba': True, 'write_header': False}, True),
+    ('replace', 'Data', {}, False),
+    ('replace', 'Data', {'keep_vba': False}, False),
+    ('overwrite', 'Data', {'keep_vba': True}, False),
+    ('replace', None, {'keep_vba': True}, False),
+])
+def test_toxlsx_keep_vba(xlsm_filename, mode, sheet, options, preserved):
+    rows = [('name',), ('new',)]
+    toxlsx(rows, xlsm_filename, sheet=sheet, mode=mode, **options)
+    result_sheet = -1 if mode == 'add' else sheet
+    expected = rows if options.get('write_header', True) else rows[1:]
+    assert list(fromxlsx(xlsm_filename, result_sheet)) == expected
+    if mode == 'add':
+        assert list(fromxlsx(xlsm_filename, 'Data')) == [('old',)]
+    if mode == 'add' or (mode == 'replace' and sheet is not None):
+        assert list(fromxlsx(xlsm_filename, 'Other')) == [('untouched',)]
+    with ZipFile(xlsm_filename) as archive:
+        assert ('xl/vbaProject.bin' in archive.namelist()) == preserved
+        if preserved:
+            assert archive.read('xl/vbaProject.bin') == b'PETL test project'
+        types = ET.fromstring(archive.read('[Content_Types].xml'))
+        workbook_type = next(p.get('ContentType') for p in types
+                             if p.get('PartName') == '/xl/workbook.xml')
+        assert ('macroEnabled' in workbook_type) == preserved
+        rels = ET.fromstring(archive.read('xl/_rels/workbook.xml.rels'))
+        assert any(r.get('Type').endswith('/vbaProject') and
+                   r.get('Target') == 'vbaProject.bin' for r in rels) == preserved
+
+
+@pytest.mark.parametrize('mode', ['replace', 'add'])
+def test_keep_vba_closes_archive(xlsm_filename, monkeypatch, mode):
+    archives = []
+    load = openpyxl.load_workbook
+
+    def track_archive(*args, **kwargs):
+        book = load(*args, **kwargs)
+        archives.append(book.vba_archive)
+        return book
+
+    monkeypatch.setattr(openpyxl, 'load_workbook', track_archive)
+    if mode == 'add':
+        with pytest.raises(ValueError, match='already exists'):
+            toxlsx([('value',)], xlsm_filename, sheet='Data', mode=mode, keep_vba=True)
+    else:
+        toxlsx([('value',)], xlsm_filename, sheet='Data', mode=mode, keep_vba=True)
+    assert len(archives) == 1
+    assert archives[0].fp is None
+
+
+@pytest.mark.parametrize('macro_enabled', [False, True])
+def test_keep_vba_without_project(tmp_path, macro_enabled):
+    original = BytesIO()
+    openpyxl.Workbook().save(original)
+    filename = tmp_path / ('empty.xlsm' if macro_enabled else 'plain.xlsx')
+    with ZipFile(original) as src, ZipFile(str(filename), 'w') as dest:
+        for name in src.namelist():
+            blob = src.read(name)
+            if macro_enabled and name == '[Content_Types].xml':
+                blob = blob.replace(b'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml',
+                                    b'application/vnd.ms-excel.sheet.macroEnabled.main+xml')
+            dest.writestr(name, blob)
+    before = filename.read_bytes()
+    with pytest.raises(ValueError, match='no VBA project'):
+        toxlsx([('value',)], str(filename), sheet='Sheet', keep_vba=True)
+    assert filename.read_bytes() == before
 
 
 @pytest.fixture(scope="module")
