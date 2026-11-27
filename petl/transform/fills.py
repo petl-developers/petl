@@ -5,6 +5,7 @@ from petl.compat import next
 
 
 from petl.util.base import Table, asindices
+from petl.errors import FieldSelectionError
 
 
 def filldown(table, *fields, **kwargs):
@@ -114,7 +115,11 @@ def iterfilldown(table, fillfields, missing):
     if not fillfields:  # fill down all fields by position
         fillindices = range(len(hdr))
     else:
-        fillindices = asindices(hdr, fillfields)
+        fillindices = []
+        for i in asindices(hdr, fillfields):
+            if i < -len(hdr):
+                raise FieldSelectionError(i)
+            fillindices.append(i + len(hdr) if i < 0 else i)
     try:
         fill = list(next(it))  # fill values
     except StopIteration:
