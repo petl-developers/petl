@@ -4,6 +4,9 @@ Changes
 Version 1.8.0
 -------------
 
+* Preserve UTC offsets parsed with ``%z`` in ``timeparser()``.
+  By :user:`Aschenbath`, :issue:`856`.
+
 * Resolve negative ``convert()`` field indexes against the header and reject indexes outside its bounds.
   By :user:`Aschenbath`, :issue:`855`.
 
