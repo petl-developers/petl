@@ -262,14 +262,15 @@ def _iterteetext(table, source, encoding, errors, template, prologue, epilogue):
             try:
                 hdr = next(it)
             except StopIteration:
-                return
-            yield tuple(hdr)
-            flds = list(map(text_type, hdr))
-            for row in it:
-                rec = asdict(flds, row)
-                s = template.format(**rec)
-                f.write(s)
-                yield row
+                pass
+            else:
+                yield tuple(hdr)
+                flds = list(map(text_type, hdr))
+                for row in it:
+                    rec = asdict(flds, row)
+                    s = template.format(**rec)
+                    f.write(s)
+                    yield row
             if epilogue is not None:
                 f.write(epilogue)
             f.flush()

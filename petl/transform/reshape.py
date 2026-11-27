@@ -10,7 +10,7 @@ from petl.compat import next, text_type
 from petl.errors import ArgumentError
 from petl.comparison import Comparable, comparable_itemgetter
 from petl.util.base import Table, rowgetter, values, itervalues, \
-    header, data, asindices
+    data, asindices
 from petl.transform.sorts import sort
 
 
@@ -479,6 +479,9 @@ def transpose(table):
         | 'colour' | 'blue' | 'red' | 'purple' | 'yellow' | 'orange' |
         +----------+--------+-------+----------+----------+----------+
 
+    When the input is an iterator, its rows are retained in memory on first
+    traversal so that subsequent columns and traversals can reuse them.
+
     See also :func:`petl.transform.reshape.recast`.
 
     """
@@ -495,14 +498,28 @@ class TransposeView(Table):
         self.source = source
 
     def __iter__(self):
-        return itertranspose(self.source)
+        rows = iter(self.source)
+        hdr = tuple(next(rows, ()))
+        if rows is self.source:
+            snapshot = [hdr]
+            if hdr:
+                while True:
+                    try:
+                        row = next(rows)
+                    except StopIteration:
+                        break
+                    snapshot.append(tuple(row))
+            self.source = snapshot
+        # Release the header reader before opening a reader for each column.
+        del rows
+        yield from _transpose_columns(self.source, hdr)
 
 
 def itertranspose(source):
-    try:
-        hdr = header(source)
-    except StopIteration:
-        return
+    return iter(TransposeView(source))
+
+
+def _transpose_columns(source, hdr):
     its = [iter(source) for _ in hdr]
     for i in range(len(hdr)):
         yield tuple(row[i] for row in its[i])
@@ -705,6 +722,9 @@ def unflatten(*args, **kwargs):
         | 'C' |  9 | None  |
         +-----+----+-------+
 
+    The period must be positive. Each complete row is yielded as soon as its
+    last value is available.
+
     See also :func:`petl.transform.reshape.flatten`.
 
     """
@@ -735,19 +755,19 @@ class UnflattenView(Table):
 
         # generate header row
         outhdr = tuple('f%s' % i for i in range(period))
+        if not outhdr:
+            raise ValueError('period must be positive')
         yield outhdr
 
         # generate data rows
         row = list()
         for v in inpt:
-            if len(row) < period:
-                row.append(v)
-            else:
+            row.append(v)
+            if len(row) == len(outhdr):
                 yield tuple(row)
-                row = [v]
+                row = []
 
         # deal with last row
-        if len(row) > 0:
-            if len(row) < period:
-                row.extend([missing] * (period - len(row)))
+        if row:
+            row.extend([missing] * (len(outhdr) - len(row)))
             yield tuple(row)

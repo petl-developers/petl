@@ -4,6 +4,7 @@ from __future__ import absolute_import, print_function, division
 # standard library dependencies
 from itertools import islice, chain
 from collections import deque
+from collections.abc import Iterator
 from itertools import count
 from petl.compat import izip, izip_longest, next, string_types, text_type
 
@@ -135,7 +136,11 @@ def itercut(source, spec, missing=None):
         hdr = next(it)
     except StopIteration:
         hdr = []
-    indices = asindices(hdr, spec)
+    indices = []
+    for i in asindices(hdr, spec):
+        if i < -len(hdr):
+            raise FieldSelectionError(i)
+        indices.append(i + len(hdr) if i < 0 else i)
 
     # define a function to transform each row in the source data
     # according to the field selection
@@ -337,6 +342,9 @@ def cat(*tables, **kwargs):
     argument to override this behaviour and specify a fixed set of fields for
     the output table.
 
+    An iterator supplied as ``header`` is read once on first iteration
+    and reused for subsequent passes. Repeatable header sequences remain live.
+
     """
 
     return CatView(tables, **kwargs)
@@ -353,7 +361,9 @@ class CatView(Table):
         self._header = header
 
     def __iter__(self):
-        return itercat(self.sources, self.missing, self._header)
+        if isinstance(self._header, Iterator):
+            self._header = tuple(self._header)
+        yield from itercat(self.sources, self.missing, self._header)
 
 
 def itercat(sources, missing, header):
@@ -654,6 +664,9 @@ class AddFieldsView(Table):
         self.field_defs = field_defs
 
     def __iter__(self):
+        field_defs = iter(self.field_defs)
+        if field_defs is self.field_defs:
+            self.field_defs = tuple(field_defs)
         return iteraddfields(self.source, self.field_defs)
 
 
