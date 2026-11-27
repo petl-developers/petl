@@ -250,7 +250,7 @@ def pushheader(table, header, *args):
         | 'b' |   2 |
         +-----+-----+
 
-    The header row can either be a list or positional arguments.
+    The header row can either be a list or one or more positional arguments.
 
     """
 
@@ -269,12 +269,10 @@ class PushHeaderView(Table):
         if isinstance(header, (list, tuple)):
             self._header = header
         # otherwise,
-        elif len(args) > 0:
+        else:
             self._header = []
             self._header.append(header)  # first argument is named header
             self._header.extend(args)  # add the other positional arguments
-        else:
-            assert False, 'bad parameters'
 
     def __iter__(self):
         return iterpushheader(self.source, self._header)

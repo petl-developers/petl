@@ -4,6 +4,9 @@ Changes
 Version 1.8.0
 -------------
 
+* Accept a single positional field name in ``pushheader()``.
+  By :user:`Aschenbath`, :issue:`857`.
+
 * Preserve UTC offsets parsed with ``%z`` in ``timeparser()``.
   By :user:`Aschenbath`, :issue:`856`.
 
