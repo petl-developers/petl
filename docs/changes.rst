@@ -4,6 +4,9 @@ Changes
 Version 1.8.0
 -------------
 
+* Resolve negative ``convert()`` field indexes against the header and reject indexes outside its bounds.
+  By :user:`Aschenbath`, :issue:`855`.
+
 * Keep numeric header labels aligned with their data columns in ``sortheader()``.
   By :user:`Aschenbath`, :issue:`854`.
 
