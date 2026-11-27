@@ -130,12 +130,29 @@ def _test_complement_none(complement_impl):
     ieq(expectation, result)
 
 
+def _test_complement_headerless(complement_impl):
+    # a table without a header row, e.g. read from an empty file
+    table = (('foo', 'bar'),
+             ('A', 1),
+             ('B', 2))
+
+    result = complement_impl(table, [])
+    ieq(table, result)
+
+    result = complement_impl([], table)
+    ieq([], result)
+
+    result = complement_impl([], [])
+    ieq([], result)
+
+
 def _test_complement(f):
     _test_complement_1(f)
     _test_complement_2(f)
     _test_complement_3(f)
     _test_complement_4(f)
     _test_complement_none(f)
+    _test_complement_headerless(f)
 
 
 def test_complement():
@@ -411,12 +428,29 @@ def _test_intersection_empty(intersection_impl):
     ieq(expectation, result)
 
 
+def _test_intersection_headerless(intersection_impl):
+    # a table without a header row, e.g. read from an empty file
+    table = (('foo', 'bar'),
+             ('A', 1),
+             ('B', 2))
+
+    result = intersection_impl(table, [])
+    ieq((('foo', 'bar'),), result)
+
+    result = intersection_impl([], table)
+    ieq([], result)
+
+    result = intersection_impl([], [])
+    ieq([], result)
+
+
 def _test_intersection(intersection_impl):
     _test_intersection_1(intersection_impl)
     _test_intersection_2(intersection_impl)
     _test_intersection_3(intersection_impl)
     _test_intersection_4(intersection_impl)
     _test_intersection_empty(intersection_impl)
+    _test_intersection_headerless(intersection_impl)
 
 
 def test_intersection():

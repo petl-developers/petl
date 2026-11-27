@@ -124,8 +124,11 @@ def itercomplement(ta, tb, strict):
     # coerce rows to tuples to ensure hashable and comparable
     ita = (tuple(row) for row in iter(ta))
     itb = (tuple(row) for row in iter(tb))
-    ahdr = tuple(next(ita))
-    next(itb)  # ignore b fields
+    try:
+        ahdr = tuple(next(ita))
+    except StopIteration:
+        return  # will yield nothing
+    next(itb, None)  # ignore b fields
     yield ahdr
 
     try:
@@ -408,8 +411,11 @@ class IntersectionView(Table):
 def iterintersection(a, b):
     ita = iter(a)
     itb = iter(b)
-    ahdr = next(ita)
-    next(itb)  # ignore b header
+    try:
+        ahdr = next(ita)
+    except StopIteration:
+        return  # will yield nothing
+    next(itb, None)  # ignore b header
     yield tuple(ahdr)
     try:
         a = tuple(next(ita))
@@ -463,10 +469,13 @@ class HashComplementView(Table):
 
 def iterhashcomplement(a, b, strict):
     ita = iter(a)
-    ahdr = next(ita)
+    try:
+        ahdr = next(ita)
+    except StopIteration:
+        return  # will yield nothing
     yield tuple(ahdr)
     itb = iter(b)
-    next(itb)  # discard b header, assume same as a
+    next(itb, None)  # discard b header, assume same as a
 
     # N.B., need to account for possibility of duplicate rows
     bcnt = Counter(tuple(row) for row in itb)
@@ -509,10 +518,13 @@ class HashIntersectionView(Table):
 
 def iterhashintersection(a, b):
     ita = iter(a)
-    ahdr = next(ita)
+    try:
+        ahdr = next(ita)
+    except StopIteration:
+        return  # will yield nothing
     yield tuple(ahdr)
     itb = iter(b)
-    next(itb)  # discard b header, assume same as a
+    next(itb, None)  # discard b header, assume same as a
 
     # N.B., need to account for possibility of duplicate rows
     bcnt = Counter(tuple(row) for row in itb)
