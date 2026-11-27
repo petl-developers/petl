@@ -5,7 +5,7 @@
     "tasks": [
         {
             "label": "Package: build",
-            "command": "python2",
+            "command": "python3",
             "args": [
                 "setup.py",
                 "build"

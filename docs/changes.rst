@@ -1,12 +1,150 @@
 Changes
 =======
 
-Version 1.7.32
---------------
+.. note::
+    Please don't add your changes into this document because it becomes a hotspot for merge conflicts.
+    All changes will be inserted before the release, using the title of the pull request merged since the last version.
+
+Version 1.8.1
+-------------
+
+* Accept a field index in ``unpackdict()``, including negative indexes
+  counting from the end of the header. Indexes select the requested position
+  even when field names repeat; out-of-range indexes raise ``ArgumentError``.
+  By :user:`SanketCSakhare`, :issue:`869`.
+  
+* Pad missing values in short rows when ``mergesort()`` selects a subset of the source fields.
+  By :user:`Aschenbath`, :issue:`862`.
+
+* Use the same mixed-type ordering as ``sort()`` when ``mergesort()`` has no explicit key.
+  By :user:`Aschenbath`, :issue:`861`.
+
+* Cache one-shot dictionary iterators, including ``map`` and list iterators, in ``fromdicts()``.
+  Rows containing unpicklable values are retained in memory; other rows use the file cache.
+  By :user:`Aschenbath`.
+
+* Prevent interleaved reads of cached tables from adding duplicate rows to the cache.
+  By :user:`Aschenbath`, :issue:`859`.
+
+* Retain one-shot header iterators in ``cat()``, ``mergesort()`` and ``extendheader()`` across repeated reads.
+  By :user:`Aschenbath`, :issue:`858`.
+
+* Accept a single positional field name in ``pushheader()``.
+  By :user:`Aschenbath`, :issue:`857`.
+
+* Preserve UTC offsets parsed with ``%z`` in ``timeparser()``.
+  By :user:`Aschenbath`, :issue:`856`.
+
+* Resolve negative ``convert()`` field indexes against the header and reject indexes outside its bounds.
+  By :user:`Aschenbath`, :issue:`855`.
+
+* Keep numeric header labels aligned with their data columns in ``sortheader()``.
+  By :user:`Aschenbath`, :issue:`854`.
+
+* Resolve negative field indexes in ``clampvalues()`` against the header,
+  so surplus values in longer rows do not change the selected field.
+  By :user:`Kulraj69`, :issue:`843`.
+  
+* Retain an explicitly supplied empty or zero-valued count field name in ``distinct()``.
+  ``count=False`` now creates a field named ``False``; use ``count=None`` to omit counts.
+  By :user:`Aschenbath`, :issue:`853`.
 
 * Preserve every left row in ``antijoin()`` when the right table is empty,
   including an initial group whose key is ``None``.
   By :user:`peterolkhov`, :issue:`810`.
+
+Version 1.8.0
+-------------
+
+* Pad short rows before ``filldown()`` so missing cells can inherit prior
+  values without raising ``IndexError``.
+  By :user:`Kulraj69`, :issue:`840`.
+  
+* Keep header, row-length and assertion-constraint checks active in
+  ``validate()`` when Python is run with ``-O`` or ``-OO``.
+  By :user:`fbirds5230`, :issue:`839`.
+
+* Add ``petl.config.temp_dir`` to set the directory for on-disk sorts and
+  generator-backed ``fromdicts()`` caches. :issue:`838`.
+  By :user:`Arham-Begani`, :issue:`838`.
+
+* Keep added column values aligned with their header when input rows are short
+  or long in ``addcolumn()``.
+  By :user:`wiink`, :issue:`833`.
+
+* Drop support for Python 2.7. The minimum supported version is Python 3.6.
+  Bugfixes for Python 2.7 users continue on the ``1.7.x`` maintenance branch.
+  By :user:`juarezr`, :issue:`478`.
+
+* Name the key fields of ``aggregate()`` after the header when the key is
+  given by field index. The output header used the index itself, e.g.
+  ``(0, 'value')`` instead of ``('foo', 'value')``. Negative indexes count
+  from the end of the header, and indexes outside the header raise
+  ``FieldSelectionError``.
+  By :user:`LuisFigueroaG`, :issue:`832`.
+
+* Accept field indexes as the source fields of multiple aggregations in
+  ``aggregate()``, e.g. ``{'sumbar': (1, sum)}``, which raised ``ValueError``
+  before. Negative indexes count from the end of the header, and indexes
+  outside the header raise ``FieldSelectionError``. Multiple aggregations of
+  a table without a header no longer fail with ``StopIteration``.
+  By :user:`LuisFigueroaG`, :issue:`834`.
+
+* Return an empty table from ``transpose()`` when the table has no header,
+  instead of failing with ``RuntimeError: generator raised StopIteration``.
+  By :user:`LuisFigueroaG`, :issue:`837`.
+
+Version 1.7.33
+--------------
+
+* Included in the CI workflows the ``1.7.x`` maintenance branch that will be
+  used to support the legacy code for Python 2.7 users.
+  Development continues on the ``master`` branch.
+  By :user:`juarezr`, :issue:`830`.
+
+* Select extreme rows within existing key groups in ``groupselectmin()``
+  and ``groupselectmax()`` with ``presorted=True``, so each key produces
+  only one row, including callable keys. This path sorts each group's
+  values separately and requires a repeatable input table for multiple
+  passes; group sorts are not cached between passes.
+  By :user:`FFspiky`, :issue:`838`.
+
+* Use the same mixed-type ordering as ``sort()`` in ``issorted()`` when no
+  key is specified, including treating missing cells as ``None``.
+  By :user:`FFspiky`, :issue:`826`.
+
+* Retain iterator headers in ``setheader()`` across repeated and interleaved
+  passes.
+  By :user:`IlyaKhalafi`, :issue:`824`.
+
+* Add ``clampvalues()`` to limit the values of a field to an inclusive
+  ``low``/``high`` range, passing ``None`` through unchanged.
+  By :user:`UdayPate`, :issue:`692`.
+
+* Remove the selected columns in ``cutout()`` when using negative field
+  indexes, including when called by ``unjoin()`` with an explicit key.
+  Raise ``FieldSelectionError`` for indexes outside the header.
+  By :user:`yuxino`, :issue:`813`.
+
+* Accept a tuple or list of fields passed as a single argument to
+  ``valuecounter()`` and ``valuecounts()``, counting the same compound key
+  as unpacking it with ``*``, like ``values()`` already does. It used to
+  raise a ``FieldSelectionError``.
+  By :user:`rahul05ranjan`, :issue:`641`.
+
+* Keep row values aligned with the header in ``movefield()`` when field
+  names repeat or only differ in type (e.g. ``1`` and ``'1'``), and accept a
+  field index as the field to move, with a negative one counting from the
+  end. Previously a repeated name dropped a column and a type clash moved the
+  wrong values.
+  By :user:`Kernel-Hunter`, :issue:`820`.
+
+Version 1.7.32
+--------------
+
+* Clear existing merged cells when replacing a named sheet with ``toxlsx()``
+  so the saved workbook retains every value in the replacement table.
+  By :user:`IlyaKhalafi`, :issue:`815`.
 
 * Use PETL's mixed-type ordering for pivot categories, including missing
   values, instead of raising when category types cannot be directly compared.
@@ -31,6 +169,11 @@ Version 1.7.32
 * Fill every column by position when ``filldown()`` has no explicit field
   selectors, including columns with integer or mixed-type headers.
   By :user:`wynneyin`, :issue:`805`.
+
+* Treat a missing (``None``) value as missing data in ``split()`` and as an
+  empty sequence in ``unpack()``, filling the new fields with missing values
+  instead of raising ``TypeError``.
+  By :user:`rahul05ranjan`.
 
 * Close remote gzip and bz2 responses after reading or an error.
   By :user:`IlyaKhalafi`, :issue:`803`.

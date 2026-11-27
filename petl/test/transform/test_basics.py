@@ -1,5 +1,7 @@
 from __future__ import absolute_import, print_function, division
 
+from collections import OrderedDict
+
 import pytest
 
 from petl.errors import FieldSelectionError
@@ -129,6 +131,41 @@ def test_cutout_field_sequence(fields):
     ieq((('foo',), ('A',)), cutout(table, fields))
 
 
+@pytest.mark.parametrize('fields, expected', [
+    ((-1,), (('foo', 'bar'), ('A', 1), ('B', None))),
+    ((-3,), (('bar', 'baz'), (1, 2), (None, None))),
+    ((-1, 2), (('foo', 'bar'), ('A', 1), ('B', None))),
+    ((0, -1), (('bar',), (1,), (None,))),
+    (([-1, 'foo'],), (('bar',), (1,), (None,))),
+    (((-1, 'foo'),), (('bar',), (1,), (None,))),
+])
+def test_cutout_negative_indices(fields, expected):
+    table = (('foo', 'bar', 'baz'), ('A', 1, 2), ('B',))
+    ieq(expected, cutout(table, *fields))
+
+
+@pytest.mark.parametrize('fields, invalid', [
+    ((-4,), -4),
+    ((-5,), -5),
+    (('foo', -4), -4),
+    (([-5, 'bar'],), -5),
+    (((-4, 'bar'),), -4),
+    ((3,), 3),
+])
+def test_cutout_out_of_range_indices(fields, invalid):
+    table = (('foo', 'bar', 'baz'), ('A', 1, 2))
+    with pytest.raises(FieldSelectionError) as error:
+        list(cutout(table, *fields))
+    assert error.value.value == invalid
+
+
+@pytest.mark.parametrize('table', [(), ((),)])
+def test_cutout_empty_header_negative_index(table):
+    with pytest.raises(FieldSelectionError) as error:
+        list(cutout(table, -1))
+    assert error.value.value == -1
+
+
 def test_cat():
 
     table1 = (('foo', 'bar'),
@@ -235,14 +272,13 @@ def test_cat_dupfields():
               (2,),
               (3, 'B', True))
 
-    # these cases are pathological, including to confirm expected behaviour,
-    # but user needs to rename fields to get something sensible
-
+    # duplicate field names are matched positionally, in order, so the
+    # second 'foo' column keeps its own values (see issue #561)
     actual = cat(table1)
     expect = (('foo', 'foo'),
-              (1, 1),
-              (2, 2),
-              (3, 3))
+              (1, 'A'),
+              (2, None),
+              (3, 'B'))
     ieq(expect, actual)
 
     table2 = (('foo', 'foo', 'bar'),
@@ -250,11 +286,31 @@ def test_cat_dupfields():
               (5, 'D', False))
     actual = cat(table1, table2)
     expect = (('foo', 'foo', 'bar'),
-              (1, 1, None),
-              (2, 2, None),
-              (3, 3, None),
-              (4, 4, True),
-              (5, 5, False))
+              (1, 'A', None),
+              (2, None, None),
+              (3, 'B', None),
+              (4, 'C', True),
+              (5, 'D', False))
+    ieq(expect, actual)
+
+
+def test_cat_duplicate_columns_issue561():
+    # concatenating two tables with non-unique column names must not copy
+    # the first duplicate column's values into the later ones
+    table1 = (('foo', 'header2', 'foo', 'bar'),
+              ('1', '2', '3', '4'),
+              ('5', '6', '7'),
+              ('', '8', '9', '10'))
+    table2 = (('foo', 'header2', 'foo', 'bar'),
+              ('0', '2', '0', '0'),
+              ('1', '1', '0'))
+    actual = cat(table1, table2)
+    expect = (('foo', 'header2', 'foo', 'bar'),
+              ('1', '2', '3', '4'),
+              ('5', '6', '7', None),
+              ('', '8', '9', '10'),
+              ('0', '2', '0', '0'),
+              ('1', '1', '0', None))
     ieq(expect, actual)
 
 
@@ -855,3 +911,100 @@ def test_movefield():
     actual = movefield(table1, 'foo', 1)
     ieq(expect, actual)
     ieq(expect, actual)
+
+
+def test_movefield_duplicate_field_names():
+
+    table1 = (('foo', 'bar', 'foo'),
+              (1, 'A', True),
+              (2, 'B', False))
+
+    expect = (('foo', 'foo', 'bar'),
+              (1, True, 'A'),
+              (2, False, 'B'))
+
+    actual = movefield(table1, 'foo', 0)
+    ieq(expect, actual)
+    ieq(expect, actual)
+
+
+def test_movefield_mixed_type_field_names():
+
+    table1 = (('foo', '1', 1),
+              ('A', 'B', 'C'))
+
+    expect = ((1, 'foo', '1'),
+              ('C', 'A', 'B'))
+
+    actual = movefield(table1, 1, 0)
+    ieq(expect, actual)
+    ieq(expect, actual)
+
+
+def test_movefield_by_index():
+
+    table1 = (('foo', 'bar', 'baz'),
+              (1, 'A', True),
+              (2, 'B', False))
+
+    expect = (('bar', 'baz', 'foo'),
+              ('A', True, 1),
+              ('B', False, 2))
+
+    actual = movefield(table1, 0, 2)
+    ieq(expect, actual)
+    ieq(expect, actual)
+
+
+def test_movefield_by_negative_index():
+
+    table1 = (('foo', 'bar', 'baz'),
+              (1, 'A', True),
+              (2, 'B', False))
+
+    expect = (('baz', 'foo', 'bar'),
+              (True, 1, 'A'),
+              (False, 2, 'B'))
+
+    actual = movefield(table1, -1, 0)
+    ieq(expect, actual)
+    ieq(expect, actual)
+
+    with pytest.raises(FieldSelectionError):
+        list(movefield(table1, -4, 0))
+
+
+def test_movefield_iterable_header():
+
+    # a header that can be iterated but not indexed by position
+    table1 = (OrderedDict([('foo', None), ('bar', None)]),
+              (1, 'A'),
+              (2, 'B'))
+
+    expect = (('bar', 'foo'),
+              ('A', 1),
+              ('B', 2))
+
+    actual = movefield(table1, 'bar', 0)
+    ieq(expect, actual)
+    ieq(expect, actual)
+
+
+def test_addcolumn_accepts_iterable_header():
+    source = [iter(['id', 'amount']), ['a', 2]]
+    result = addcolumn(source, 'region', ['east'], index=0)
+    ieq([('region', 'id', 'amount'), ('east', 'a', 2)], result)
+
+
+def test_addcolumn_preserves_row_equal_to_missing():
+    missing = ('a', 2)
+    source = [('id', 'amount'), ['a', 2]]
+    result = addcolumn(source, 'region', ['east', 'west'], missing=missing)
+    ieq([('id', 'amount', 'region'), ('a', 2, 'east'), (missing, missing, 'west')], result)
+
+
+def test_addcolumn_keeps_values_in_their_header_column():
+    source = [('id', 'amount'), ('a',), ('b', 42), ('c', 30, 'extra')]
+    result = addcolumn(source, 'region', ['east', 'west', 'north'], missing='NA')
+    ieq([('id', 'amount', 'region'), ('a', 'NA', 'east'),
+         ('b', 42, 'west'), ('c', 30, 'north')], result)

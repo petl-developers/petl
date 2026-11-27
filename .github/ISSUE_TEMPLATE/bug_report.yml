@@ -95,7 +95,6 @@ body:
         - python 3.2
         - python 3.1
         - python 3.0
-        - python 2.7
     validations:
       required: true
   - type: dropdown

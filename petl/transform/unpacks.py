@@ -35,6 +35,9 @@ def unpack(table, field, newfields=None, include_original=False, missing=None):
     than new fields, remaining values will not be unpacked. If there are less
     values than new fields, `missing` values will be added.
 
+    A missing (``None``) value is treated as an empty sequence: all new
+    fields receive `missing` rather than raising a ``TypeError``.
+
     Negative field indices count from the end of the header.
     When field names repeat, an index selects that position rather than the
     first occurrence of the name.
@@ -106,9 +109,15 @@ def iterunpack(source, field, newfields, include_original, missing):
             out_row = list(row)
         else:
             out_row = [v for i, v in enumerate(row) if i != field_index]
-        nvals = len(value)
+        if value is None:
+            # None is a missing cell; treat as an empty sequence
+            nvals = 0
+        else:
+            nvals = len(value)
         if nunpack > 0:
-            if nvals >= nunpack:
+            if value is None:
+                newvals = [missing] * nunpack
+            elif nvals >= nunpack:
                 newvals = value[:nunpack]
             else:
                 newvals = list(value) + ([missing] * (nunpack - nvals))
@@ -137,6 +146,10 @@ def unpackdict(table, field, keys=None, includeoriginal=False,
         +-----+-----+------+
         |   3 | 'e' | 'f'  |
         +-----+-----+------+
+
+    The `field` can be a field name or an index. Negative indices count
+    from the end of the header. An index selects that position even when
+    field names repeat.
 
     See also :func:`petl.transform.unpacks.unpack`.
 
@@ -176,7 +189,12 @@ def iterunpackdict(table, field, keys, includeoriginal, samplesize, missing):
     except StopIteration:
         hdr = []
     flds = list(map(text_type, hdr))
-    fidx = flds.index(field)
+    if isinstance(field, int):
+        if not -len(flds) <= field < len(flds):
+            raise ArgumentError('field index out of range')
+        fidx = field + len(flds) if field < 0 else field
+    else:
+        fidx = flds.index(field)
     outhdr = list(flds)
     if not includeoriginal:
         del outhdr[fidx]

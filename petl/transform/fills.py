@@ -5,6 +5,7 @@ from petl.compat import next
 
 
 from petl.util.base import Table, asindices
+from petl.errors import FieldSelectionError
 
 
 def filldown(table, *fields, **kwargs):
@@ -83,6 +84,7 @@ def filldown(table, *fields, **kwargs):
     Use the `missing` keyword argument to control which value is treated as
     missing (`None` by default). If no fields are specified, all columns are
     filled by position, including columns with non-string header values.
+    Short rows are padded with the missing value before filling.
 
     """
 
@@ -113,19 +115,25 @@ def iterfilldown(table, fillfields, missing):
     if not fillfields:  # fill down all fields by position
         fillindices = range(len(hdr))
     else:
-        fillindices = asindices(hdr, fillfields)
+        fillindices = []
+        for i in asindices(hdr, fillfields):
+            if i < -len(hdr):
+                raise FieldSelectionError(i)
+            fillindices.append(i + len(hdr) if i < 0 else i)
     try:
         fill = list(next(it))  # fill values
     except StopIteration:
         return
+    fill.extend([missing] * max(0, len(hdr) - len(fill)))
     yield tuple(fill)
     for row in it:
         outrow = list(row)
+        outrow.extend([missing] * max(0, len(hdr) - len(outrow)))
         for idx in fillindices:
-            if row[idx] == missing:
+            if outrow[idx] == missing:
                 outrow[idx] = fill[idx]  # fill down
             else:
-                fill[idx] = row[idx]  # new fill value
+                fill[idx] = outrow[idx]  # new fill value
         yield tuple(outrow)
 
 

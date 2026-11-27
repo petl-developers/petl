@@ -6,7 +6,7 @@ from collections import OrderedDict
 from datetime import datetime, date, time
 from decimal import Decimal
 
-from petl.compat import izip_longest, text_type, string_types, PY3
+from petl.compat import izip_longest, text_type, string_types
 from petl.io.sources import read_source_from_arg, write_source_from_arg
 from petl.transform.headers import skip, setheader
 from petl.util.base import Table, dicts, fieldnames, iterpeek, wrap
@@ -39,6 +39,10 @@ def fromavro(source, limit=None, skips=0, **avro_args):
     long timestamp-micros: datetime.datetime, int date: datetime.date, 
     bytes decimal and fixed decimal: Decimal, int time-millis and 
     long time-micros: datetime.time.
+
+    Temporal precision is determined by the file's stored writer schema.
+    Both millisecond and microsecond files can be read without specifying a
+    reader schema.
 
     Example usage for reading files::
 
@@ -145,6 +149,12 @@ def toavro(table, target, schema=None, sample=9,
     coresponding python types: long timestamp-millis, long timestamp-micros, int date, 
     bytes decimal, fixed decimal, string uuid, int time-millis, long time-micros.
 
+    When inferring a schema, Python time and datetime values use the Avro
+    long types time-micros and timestamp-micros. This preserves microseconds,
+    including values encountered after the sample. To retain millisecond
+    writer schemas, pass an explicit int time-millis or long timestamp-millis
+    field type. See :ref:`io_avro` for a compatibility example.
+
     Example usage for writing files::
 
         >>> # set up a Avro file to demonstrate with
@@ -213,6 +223,10 @@ def appendavro(table, target, schema=None, sample=9, **avro_args):
     So it must be the same schema as used by `toavro()` or the schema of the
     existing file.
 
+    Appending to an existing file retains its stored writer schema and
+    temporal precision. A millisecond file therefore continues truncating
+    sub-millisecond values; appending does not upgrade its schema.
+
     The `sample` argument (int, optional) defines how many rows are inspected
     for discovering the field types and building a schema for the avro file 
     when the `schema` argument is not passed.
@@ -272,7 +286,10 @@ class AvroView(Table):
         self.avro_schema = avro_reader.writer_schema
         if self.avro_schema is None:
             return None, None
-        schema_fields = self.avro_schema['fields']
+        schema = self.avro_args.get('reader_schema')
+        if not isinstance(schema, dict) or schema.get('type') != 'record':
+            schema = self.avro_schema
+        schema_fields = schema['fields']
         header = tuple(col['name'] for col in schema_fields)
         return header
 
@@ -296,12 +313,10 @@ class AvroView(Table):
         - avro type: int logicalType: date              -> python date
         - avro type: bytes logicalType: decimal         -> python Decimal
         '''
-        if header is None or PY3:
-            r = tuple(record.values())
-        else:
-            # fastavro on python2 does not respect dict order
-            r = tuple(record.get(col) for col in header)
-        return r
+        schema = self.avro_args.get('reader_schema')
+        if isinstance(schema, dict) and schema.get('type') == 'record':
+            return tuple(record[name] for name in header)
+        return tuple(record.values())
 
 
 def _write_toavro(table, target, mode, schema, sample,
@@ -309,18 +324,26 @@ def _write_toavro(table, target, mode, schema, sample,
     if table is None:
         return
     # build a schema when not defined by user
-    if not schema:
+    inferred_schema = not schema
+    if inferred_schema:
         schema, table2 = _build_schema_from_values(table, sample)
     else:
         table2 = _fix_missing_headers(table, schema)
     # fastavro expects a iterator of dicts
-    rows = dicts(table2) if PY3 else _ordered_dict_iterator(table2)
+    rows = dicts(table2)
 
     target2 = write_source_from_arg(target, mode=mode)
     with target2.open(mode) as target_file:
         # delay the import of fastavro for not breaking when unused
-        from fastavro import parse_schema
+        from fastavro import parse_schema, reader
         from fastavro.write import Writer
+
+        # Older fastavro versions compare append schemas instead of ignoring
+        # the supplied schema. Inferred appends must use the stored precision.
+        if inferred_schema and mode == 'a+b' and target_file.tell():
+            target_file.seek(0)
+            schema = reader(target_file).writer_schema
+            target_file.seek(0, 2)
 
         parsed_schema = parse_schema(schema)
         writer = Writer(fo=target_file,
@@ -415,9 +438,9 @@ def _get_definition_from_type_of(prop, val, prev):
     tdef = None
     curr = None
     if isinstance(val, datetime):
-        tdef = {'type': 'long', 'logicalType': 'timestamp-millis'}
+        tdef = {'type': 'long', 'logicalType': 'timestamp-micros'}
     elif isinstance(val, time):
-        tdef = {'type': 'int', 'logicalType': 'time-millis'}
+        tdef = {'type': 'long', 'logicalType': 'time-micros'}
     elif isinstance(val, date):
         tdef = {'type': 'int', 'logicalType': 'date'}
     elif isinstance(val, Decimal):
@@ -453,7 +476,7 @@ def _get_definition_from_array(prop, val, prev):
             prev = curr2
 
     bfield = 'string' if afield is None else afield
-    tdef = {'type': 'array', 'items': bfield}
+    tdef = {'type': 'array', 'items': ['null', bfield]}
     return tdef, prev
 
 
@@ -565,32 +588,14 @@ def _get_schema_header_names(schema):
 
 
 def _raise_error(ErrorType, new_message):
-    """Works like raise Excetion(msg) from prev_exp in python3."""
+    """Works like raise Exception(msg) from prev_exp."""
     exinf = sys.exc_info()
     tracebk = exinf[2]
     try:
-        if PY3:
-            raise ErrorType(new_message).with_traceback(tracebk)
-        # Python2 compatibility workaround
-        exec('raise ErrorType, new_message, tracebk')
+        raise ErrorType(new_message).with_traceback(tracebk)
     finally:
         exinf = None
         tracebk = None  # noqa: F841
-
-
-def _ordered_dict_iterator(table):
-    it = iter(table)
-    hdr = next(it)
-    flds = [text_type(f) for f in hdr]
-    for row in it:
-        items = list()
-        for i, f in enumerate(flds):
-            try:
-                v = row[i]
-            except IndexError:
-                v = None
-            items.append((f, v))
-        yield OrderedDict(items)
 
 
 Table.toavro = toavro

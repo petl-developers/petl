@@ -66,6 +66,8 @@ def validate(table, constraints=None, header=None):
 
     Returns a table of validation problems.
 
+    Validation remains active when Python is run with ``-O`` or ``-OO``.
+
     """  # noqa
 
     return ProblemsView(table, constraints=constraints, header=header)
@@ -123,7 +125,8 @@ def iterproblems(table, constraints, expected_header):
         expected_flds = list(map(text_type, expected_header))
         actual_flds = list(map(text_type, actual_header))
         try:
-            assert expected_flds == actual_flds
+            if expected_flds != actual_flds:
+                raise AssertionError
         except Exception as e:
             yield ('__header__', 0, None, None, type(e).__name__)
         flds = expected_flds
@@ -148,7 +151,8 @@ def iterproblems(table, constraints, expected_header):
         l = None
         try:
             l = len(row)
-            assert l == expected_len
+            if l != expected_len:
+                raise AssertionError
         except Exception as e:
             yield ('__len__', i+1, None, l, type(e).__name__)
 
@@ -166,7 +170,7 @@ def iterproblems(table, constraints, expected_header):
                 # getting target value failed, report problem
                 yield (name, i+1, field, None, type(e).__name__)
             else:
-                value = target if field else None
+                value = target if field is not None else None
                 if test is not None:
                     try:
                         test(target)
@@ -175,7 +179,8 @@ def iterproblems(table, constraints, expected_header):
                         yield (name, i+1, field, value, type(e).__name__)
                 if assertion is not None:
                     try:
-                        assert assertion(target)
+                        if not assertion(target):
+                            raise AssertionError
                     except Exception as e:
                         # assertion raised exception, report problem
                         yield (name, i+1, field, value, type(e).__name__)

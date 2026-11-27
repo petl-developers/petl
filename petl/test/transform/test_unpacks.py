@@ -160,3 +160,74 @@ def test_unpackdict():
                (3, 'e', 'f'))
     ieq(expect2, table2)
     ieq(expect2, table2)  # check twice
+
+
+@pytest.mark.parametrize('field', [1, -1])
+@pytest.mark.parametrize('keys, expected', [
+    (None, [('id', 'a', 'b'), (1, 2, 3), (2, 4, '?')]),
+    (['b', 'a'], [('id', 'b', 'a'), (1, 3, 2), (2, '?', 4)]),
+])
+def test_unpackdict_field_index(field, keys, expected):
+    table = [['id', 'details'],
+             [1, {'a': 2, 'b': 3}],
+             [2, {'a': 4}]]
+    result = unpackdict(table, field, keys=keys, missing='?')
+    ieq(expected, result)
+    ieq(expected, result)
+
+
+@pytest.mark.parametrize('field', [0, -2])
+def test_unpackdict_first_field_index(field):
+    table = [['details', 'id'], [{'a': 2}, 1]]
+    ieq([('id', 'a'), (1, 2)], unpackdict(table, field))
+
+
+@pytest.mark.parametrize('field', [2, -1])
+@pytest.mark.parametrize('includeoriginal', [False, True])
+def test_unpackdict_index_with_duplicate_field_names(field, includeoriginal):
+    table = [['details', 'id', 'details'], ['keep', 1, {'a': 2}]]
+    if includeoriginal:
+        expected = [('details', 'id', 'details', 'a'),
+                    ('keep', 1, {'a': 2}, 2)]
+    else:
+        expected = [('details', 'id', 'a'), ('keep', 1, 2)]
+    ieq(expected, unpackdict(table, field, includeoriginal=includeoriginal))
+
+
+@pytest.mark.parametrize('field', [2, -3])
+def test_unpackdict_invalid_index(field):
+    with pytest.raises(ArgumentError):
+        list(unpackdict([['id', 'details'], [1, {'a': 2}]], field))
+
+
+@pytest.mark.parametrize('field', [0, -1])
+def test_unpackdict_index_without_header(field):
+    with pytest.raises(ArgumentError):
+        list(unpackdict([], field))
+
+
+def test_unpack_missing_values():
+    # None is missing data; new fields receive missing instead of a TypeError
+    table1 = (('foo', 'bar'),
+              (1, ('a', 'b')),
+              (2, None))
+    table2 = unpack(table1, 'bar', ['baz', 'quux'])
+    expect2 = (('foo', 'baz', 'quux'),
+               (1, 'a', 'b'),
+               (2, None, None))
+    ieq(expect2, table2)
+    ieq(expect2, table2)  # check twice
+
+    # custom missing marker
+    table3 = unpack(table1, 'bar', ['baz', 'quux'], missing='?')
+    expect3 = (('foo', 'baz', 'quux'),
+               (1, 'a', 'b'),
+               (2, '?', '?'))
+    ieq(expect3, table3)
+
+    # include_original keeps the original column
+    table4 = unpack(table1, 'bar', ['baz'], include_original=True)
+    expect4 = (('foo', 'bar', 'baz'),
+               (1, ('a', 'b'), 'a'),
+               (2, None, None))
+    ieq(expect4, table4)

@@ -12,7 +12,12 @@ from petl.util.parsers import numparser
 
 def convert(table, *args, **kwargs):
     """Transform values under one or more fields via arbitrary functions, method
-    invocations or dictionary translations. E.g.::
+    invocations or dictionary translations.
+
+    Negative field indexes count from the end of the header. Indexes outside
+    the header raise :class:`petl.errors.FieldSelectionError`.
+
+    For example::
 
         >>> import petl as etl
         >>> table1 = [['foo', 'bar', 'baz'],
@@ -404,6 +409,10 @@ def iterfieldconvert(source, converters, failonerror, errorvalue, where,
             except ValueError:  # not in list
                 raise FieldSelectionError(k)
         assert isinstance(k, int), 'expected integer, found %r' % k
+        if not -len(hdr) <= k < len(hdr):
+            raise FieldSelectionError(k)
+        if k < 0:
+            k += len(hdr)
 
         # is converter a function?
         if callable(c):

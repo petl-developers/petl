@@ -4,11 +4,12 @@ from __future__ import absolute_import, print_function, division
 import itertools
 import operator
 from collections import deque
+from collections.abc import Iterator
 from petl.compat import next, text_type
 from petl.errors import FieldSelectionError
 
 
-from petl.util.base import Table, asindices, rowgetter
+from petl.util.base import Table, rowgetter
 
 
 def rename(table, *args, **kwargs):
@@ -133,6 +134,9 @@ def setheader(table, header):
         | 'b' |   2 |
         +-----+-----+
 
+    An iterator supplied as the header is read once on first iteration and
+    reused on subsequent passes. Callable transformations still run each time.
+
     See also :func:`petl.transform.headers.extendheader`,
     :func:`petl.transform.headers.pushheader`.
 
@@ -151,7 +155,15 @@ class SetHeaderView(Table):
         self._header = header
 
     def __iter__(self):
-        return itersetheader(self.source, self._header)
+        try:
+            header = iter(self._header)
+        except TypeError:
+            pass  # callable header transformation
+        else:
+            if header is self._header:
+                self._header = tuple(header)
+        for row in itersetheader(self.source, self._header):
+            yield row
 
 
 def itersetheader(source, header):
@@ -191,6 +203,9 @@ def extendheader(table, fields):
     See also :func:`petl.transform.headers.setheader`,
     :func:`petl.transform.headers.pushheader`.
 
+    An iterator of fields is read once on first iteration and reused
+    for subsequent passes. Repeatable field sequences remain live.
+
     """
 
     return ExtendHeaderView(table, fields)
@@ -206,7 +221,9 @@ class ExtendHeaderView(Table):
         self.fields = fields
 
     def __iter__(self):
-        return iterextendheader(self.source, self.fields)
+        if isinstance(self.fields, Iterator):
+            self.fields = tuple(self.fields)
+        yield from iterextendheader(self.source, self.fields)
 
 
 def iterextendheader(source, fields):
@@ -239,7 +256,7 @@ def pushheader(table, header, *args):
         | 'b' |   2 |
         +-----+-----+
 
-    The header row can either be a list or positional arguments.
+    The header row can either be a list or one or more positional arguments.
 
     """
 
@@ -258,12 +275,10 @@ class PushHeaderView(Table):
         if isinstance(header, (list, tuple)):
             self._header = header
         # otherwise,
-        elif len(args) > 0:
+        else:
             self._header = []
             self._header.append(header)  # first argument is named header
             self._header.extend(args)  # add the other positional arguments
-        else:
-            assert False, 'bad parameters'
 
     def __iter__(self):
         return iterpushheader(self.source, self._header)
@@ -422,6 +437,8 @@ class SuffixHeaderView(Table):
 def sortheader(table, reverse=False, missing=None):
     """Re-order columns so the header is sorted.
 
+    Header values, including numeric labels, remain paired with their columns.
+
     .. versionadded:: 1.1.0
 
     """
@@ -445,8 +462,9 @@ class SortHeaderView(Table):
             hdr = next(it)
         except StopIteration:
             return
-        shdr = sorted(hdr, reverse=self.reverse)
-        indices = asindices(hdr, shdr)
+        indices = sorted(range(len(hdr)), key=hdr.__getitem__,
+                         reverse=self.reverse)
+        shdr = [hdr[i] for i in indices]
         transform = rowgetter(*indices)
 
         # yield the transformed header

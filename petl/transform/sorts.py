@@ -7,6 +7,7 @@ from tempfile import NamedTemporaryFile
 import itertools
 import logging
 from collections import namedtuple
+from collections.abc import Iterator
 import operator
 from petl.compat import pickle, next, text_type
 
@@ -119,6 +120,10 @@ def sort(table, key=None, reverse=False, buffersize=None, tempdir=None,
 
     If `petl.config.sort_buffersize` is set to `None`, this forces
     all sorting to be done entirely in memory.
+
+    Temporary files are written to `tempdir`. If omitted or set to `None`,
+    the sort uses `petl.config.temp_dir`, which defaults to the system
+    temporary directory.
 
     By default the results of the sort will be cached, and so a second pass over
     the sorted table will yield rows from the cache and will not repeat the
@@ -246,7 +251,7 @@ class SortView(Table):
             self.buffersize = config.sort_buffersize
         else:
             self.buffersize = buffersize
-        self.tempdir = tempdir
+        self.tempdir = config.temp_dir if tempdir is None else tempdir
         self._cache = cache
         self._hdrcache = None
         self._memcache = None
@@ -469,6 +474,15 @@ def mergesort(*tables, **kwargs):
         Limit the number of rows in memory per input table when inputs are not
         presorted
 
+    Short rows are padded with ``missing`` in the selected output fields,
+    including when the output header omits some source fields.
+    
+    Without an explicit key, all output fields use the same mixed-type
+    ordering as :func:`petl.transform.sorts.sort`.
+    
+    An iterator supplied as ``header`` is read once on first iteration
+    and reused for subsequent passes. Repeatable header sequences remain live.
+
     """
 
     return MergeSortView(tables, **kwargs)
@@ -494,8 +508,10 @@ class MergeSortView(Table):
         self.reverse = reverse
 
     def __iter__(self):
-        return itermergesort(self.tables, self.key, self._header, self.missing,
-                             self.reverse)
+        if isinstance(self._header, Iterator):
+            self._header = tuple(self._header)
+        yield from itermergesort(self.tables, self.key, self._header,
+                                 self.missing, self.reverse)
 
 
 def itermergesort(sources, key, header, missing, reverse):
@@ -525,21 +541,11 @@ def itermergesort(sources, key, header, missing, reverse):
 
     def _standardisedata(it, hdr, ofs):
         flds = list(map(text_type, hdr))
+        indices = [flds.index(fo) if fo in flds else None for fo in ofs]
         # now construct and yield the data rows
         for _row in it:
-            try:
-                # should be quickest to do this way
-                yield tuple(_row[flds.index(fo)] if fo in flds else missing
-                            for fo in ofs)
-            except IndexError:
-                # handle short rows
-                outrow = [missing] * len(ofs)
-                for i, fi in enumerate(flds):
-                    try:
-                        outrow[ofs.index(fi)] = _row[i]
-                    except IndexError:
-                        pass  # be relaxed about short rows
-                yield tuple(outrow)
+            yield tuple(_row[i] if i is not None and i < len(_row) else missing
+                        for i in indices)
 
     # wrap all iterators to standardise fields
     sits = [_standardisedata(it, hdr, outhdr)
@@ -555,6 +561,8 @@ def itermergesort(sources, key, header, missing, reverse):
         getkey = comparable_itemgetter(*indices)
 
     # OK, do the merge sort
+    if key is None and outhdr:
+        getkey = comparable_itemgetter(*range(len(outhdr)))
     for row in _shortlistmergesorted(getkey, reverse, *sits):
         yield row
 
@@ -577,6 +585,9 @@ def issorted(table, key=None, reverse=False, strict=False):
         >>> etl.issorted(table1, key='foo', reverse=True)
         False
 
+    When no key is given, compare all fields in the header using the same
+    mixed-type ordering as :func:`sort`. Missing cells compare as ``None``.
+
     """
 
     # determine the operator to use when comparing rows
@@ -596,22 +607,20 @@ def issorted(table, key=None, reverse=False, strict=False):
         flds = []
     if key is not None:
         getkey = comparable_itemgetter(*asindices(flds, key))
+    elif flds:
+        getkey = comparable_itemgetter(*range(len(flds)))
+    else:
+        getkey = lambda row: row  # no fields to select in a zero-column table
     try:
         prev = next(it)
     except StopIteration:
         return True  # no data rows
-    if key is None:
-        for curr in it:
-            if not op(curr, prev):
-                return False
-            prev = curr
-    else:
-        prevkey = getkey(prev)
-        for curr in it:
-            currkey = getkey(curr)
-            if not op(currkey, prevkey):
-                return False
-            prevkey = currkey
+    prevkey = getkey(prev)
+    for curr in it:
+        currkey = getkey(curr)
+        if not op(currkey, prevkey):
+            return False
+        prevkey = currkey
     return True
 
 

@@ -23,7 +23,6 @@ import pytest
 
 
 import petl as etl
-from petl.compat import PY2
 from petl.test.helpers import eq_
 from petl.util.base import Table
 
@@ -49,7 +48,6 @@ def _jsonfile(obj):
     return f.name
 
 
-@pytest.mark.skipif(PY2, reason='NamedTemporaryFile newline kwarg is Python 3 only')
 def test_fromcsv_header():
     t = etl.fromcsv(_csvfile('foo,bar\r\n1,2\r\n'))
     eq_(('foo', 'bar'), t.header())

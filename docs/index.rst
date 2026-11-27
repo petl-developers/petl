@@ -27,8 +27,10 @@ Resources
    - This version will introduce some changes that could affect current behaviour.
    - We will try to keep compatibility to the maximum possible, except 
      when the current behavior is inconsistent or have shortcomings.
-   - The biggest change is the end of support of Python `2.7`.
-   - The minimum supported version will be Python `3.6`.
+   - The minimum supported version is Python 3.6.
+   - Version 1.8.x drops support for Python 2.7.
+   - Bugfixes for users who still need Python 2.7 continue on the ``1.7.x``
+     maintenance branch.
 
 Getting Help
 -------------
@@ -42,6 +44,11 @@ python-etl@googlegroups.com or `raise an issue on GitHub
 
 For an example of :mod:`petl` in use, see the `case study on comparing tables
 <http://nbviewer.ipython.org/github/petl-developers/petl/tree/master/notes/case_study_1.ipynb>`_.
+
+The `ETL with Python tutorial
+<https://github.com/dimgold/ETL_with_Python/blob/master/ETL_with_Python.ipynb>`_
+uses a Python 2 notebook to walk through reading JSON, transforming tables and
+loading the results into MySQL.
 
 Contents
 --------

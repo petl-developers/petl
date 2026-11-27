@@ -10,7 +10,8 @@ from tempfile import NamedTemporaryFile
 
 import pytest
 
-from petl.compat import PY3
+from datetime import timezone
+
 from petl.transform.basics import cat
 from petl.util.base import dicts
 from petl.util.vis import look
@@ -22,9 +23,6 @@ from petl.io.avro import _get_definition_from_type_of, precision_and_scale
 
 from petl.test.io.test_avro_schemas import schema0, schema1, schema2, \
     schema3, schema4, schema5, schema6
-
-if PY3:
-    from datetime import timezone
 
 try:
     import fastavro
@@ -43,6 +41,19 @@ else:
 
     def test_fromavro33():
         _read_from_mavro_file(table3, schema3)
+
+    @pytest.mark.parametrize('rows', [[], [(11, 22, 33)]])
+    def test_fromavro_reader_schema(tmp_path, rows):
+        path = str(tmp_path / 'records.avro')
+        writer = {'type': 'record', 'name': 'Row', 'fields': [
+            {'name': name, 'type': 'int'} for name in ('a', 'b', 'c')]}
+        reader = dict(writer, fields=[writer['fields'][2],
+                                      {'name': 'd', 'type': 'int', 'default': 44},
+                                      writer['fields'][0]])
+        toavro([('a', 'b', 'c')] + rows, path, schema=writer)
+        view = fromavro(path, reader_schema=reader)
+        assert list(view) == [('c', 'd', 'a')] + [(c, 44, a) for a, b, c in rows]
+        assert view.get_avro_schema()['fields'] == writer['fields']
 
     def test_toavro11():
         _write_to_avro_file(table1, schema1)
@@ -333,9 +344,7 @@ else:
 
     def _utc(year, month, day, hour=0, minute=0, second=0, microsecond=0):
         u = datetime(year, month, day, hour, minute, second, microsecond)
-        if PY3:
-            return u.replace(tzinfo=timezone.utc)
-        return u.replace(tzinfo=pytz.utc)
+        return u.replace(tzinfo=timezone.utc)
 
     def _get_tempfile_path(delete_on_close=False):
         f = NamedTemporaryFile(delete=delete_on_close, mode='r')

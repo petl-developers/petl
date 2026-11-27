@@ -9,6 +9,7 @@ import platform
 
 import pytest
 
+from petl import config
 from petl.compat import next
 
 from petl.errors import FieldSelectionError
@@ -265,6 +266,22 @@ def test_sort_buffered_tempdir():
         os.mkdir(tempdir)
     result = sort(table, 'bar', buffersize=2, tempdir=tempdir)
     ieq(expectation, result)
+
+
+@pytest.mark.parametrize('override', [False, True])
+def test_sort_configured_temp_dir(tmp_path, monkeypatch, override):
+    default = tmp_path / 'default'
+    explicit = tmp_path / 'explicit'
+    default.mkdir()
+    explicit.mkdir()
+    monkeypatch.setattr(config, 'temp_dir', default)
+    table = sort([('value',), (2,), (1,)], buffersize=1,
+                 tempdir=explicit if override else None)
+    monkeypatch.setattr(config, 'temp_dir', None)
+
+    assert list(table) == [('value',), (1,), (2,)]
+    assert any(default.iterdir()) == (not override)
+    assert any(explicit.iterdir()) == override
 
 
 def test_sort_buffered_independent():
@@ -591,6 +608,36 @@ def test_issorted_empty():
     assert issorted(table, key='foo')
     assert issorted(table, key='foo', reverse=True, strict=True)
     assert issorted([])
+
+
+@pytest.mark.parametrize('reverse', [False, True])
+@pytest.mark.parametrize('strict', [False, True])
+@pytest.mark.parametrize('header, rows', [
+    (('foo',), [(None,), (1,), (b'b',), (u'a',)]),
+    (('foo', 'bar'), [('a', None), ('a', 1), ('a', 'x'), ('b', None)]),
+    (('foo', 'bar'), [('a',), ('a', 1), ('b',)]),
+])
+def test_issorted_default_order(header, rows, reverse, strict):
+    if reverse:
+        rows = rows[::-1]
+    table = [header] + rows
+    assert issorted(table, reverse=reverse, strict=strict)
+    assert issorted(sort(table, reverse=reverse), reverse=reverse, strict=strict)
+    assert not issorted([header] + rows[::-1], reverse=reverse, strict=strict)
+
+
+@pytest.mark.parametrize('reverse', [False, True])
+def test_issorted_default_equal_missing_cells(reverse):
+    table = [('foo', 'bar'), ('a',), ('a', None)]
+    assert issorted(table, reverse=reverse)
+    assert not issorted(table, reverse=reverse, strict=True)
+
+
+@pytest.mark.parametrize('reverse', [False, True])
+def test_issorted_zero_columns(reverse):
+    table = [(), (), ()]
+    assert issorted(table, reverse=reverse)
+    assert not issorted(table, reverse=reverse, strict=True)
 
 
 def test_sort_missing_cell_numeric():

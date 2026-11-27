@@ -5,12 +5,11 @@ from __future__ import absolute_import, print_function, division
 # standard library dependencies
 import io
 from itertools import chain
-from petl.compat import text_type, next, PY2, izip_longest
+from petl.compat import text_type, next, izip_longest
 
 
 # internal dependencies
 from petl.util.base import Table
-from petl.io.base import getcodec
 from petl.io.sources import write_source_from_arg
 
 
@@ -46,14 +45,10 @@ def tomarkdown(table, source=None, encoding=None, errors='strict',
     with source.open('wb') as buf:
 
         # deal with text encoding
-        if PY2:
-            codec = getcodec(encoding)
-            f = codec.streamwriter(buf, errors=errors)
-        else:
-            f = io.TextIOWrapper(buf,
-                                 encoding=encoding,
-                                 errors=errors,
-                                 newline='')
+        f = io.TextIOWrapper(buf,
+                             encoding=encoding,
+                             errors=errors,
+                             newline='')
 
         # write the table
         try:
@@ -82,8 +77,7 @@ def tomarkdown(table, source=None, encoding=None, errors='strict',
             f.flush()
 
         finally:
-            if not PY2:
-                f.detach()
+            f.detach()
 
 
 Table.tomarkdown = tomarkdown

@@ -8,7 +8,7 @@ import json
 import pytest
 
 from petl.test.helpers import ieq
-from petl import dummytable, fromjson, fromdicts, tojson, tojsonarrays
+from petl import config, dummytable, fromjson, fromdicts, tojson, tojsonarrays
 
 
 @pytest.mark.parametrize('header_type', [list, tuple, iter])
@@ -442,6 +442,16 @@ def test_fromdicts_generator_twice(dicts_generator):
               ('c', 2))
     ieq(expect, actual)
     ieq(expect, actual)
+
+
+def test_fromdicts_generator_configured_temp_dir(tmp_path, monkeypatch):
+    monkeypatch.setattr(config, 'temp_dir', tmp_path)
+    table = fromdicts(({'value': i} for i in range(2)))
+    monkeypatch.setattr(config, 'temp_dir', None)
+
+    assert list(table) == [('value',), (0,), (1,)]
+    assert any(tmp_path.iterdir())
+    assert list(table) == [('value',), (0,), (1,)]
 
 
 def test_fromdicts_generator_header(dicts_generator):

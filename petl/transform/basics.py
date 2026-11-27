@@ -4,11 +4,13 @@ from __future__ import absolute_import, print_function, division
 # standard library dependencies
 from itertools import islice, chain
 from collections import deque
+from collections.abc import Iterator
 from itertools import count
 from petl.compat import izip, izip_longest, next, string_types, text_type
 
 
 # internal dependencies
+from petl.errors import FieldSelectionError
 from petl.util.base import asindices, rowgetter, Record, Table
 
 
@@ -134,7 +136,11 @@ def itercut(source, spec, missing=None):
         hdr = next(it)
     except StopIteration:
         hdr = []
-    indices = asindices(hdr, spec)
+    indices = []
+    for i in asindices(hdr, spec):
+        if i < -len(hdr):
+            raise FieldSelectionError(i)
+        indices.append(i + len(hdr) if i < 0 else i)
 
     # define a function to transform each row in the source data
     # according to the field selection
@@ -181,7 +187,9 @@ def cutout(table, *args, **kwargs):
 
     See also :func:`petl.transform.basics.cut`.
 
-    Fields can also be passed as a single list or tuple.
+    Fields can also be passed as a single list or tuple. Negative field indices
+    count from the end of the header. Indices outside the header raise
+    ``FieldSelectionError``.
 
     """
 
@@ -214,7 +222,11 @@ def itercutout(source, spec, missing=None):
         hdr = next(it)
     except StopIteration:
         hdr = []
-    indicesout = asindices(hdr, spec)
+    indicesout = set()
+    for i in asindices(hdr, spec):
+        if i < -len(hdr):
+            raise FieldSelectionError(i)
+        indicesout.add(i if i >= 0 else len(hdr) + i)
     indices = [i for i in range(len(hdr)) if i not in indicesout]
 
     # define a function to transform each row in the source data
@@ -330,6 +342,9 @@ def cat(*tables, **kwargs):
     argument to override this behaviour and specify a fixed set of fields for
     the output table.
 
+    An iterator supplied as ``header`` is read once on first iteration
+    and reused for subsequent passes. Repeatable header sequences remain live.
+
     """
 
     return CatView(tables, **kwargs)
@@ -346,7 +361,9 @@ class CatView(Table):
         self._header = header
 
     def __iter__(self):
-        return itercat(self.sources, self.missing, self._header)
+        if isinstance(self._header, Iterator):
+            self._header = tuple(self._header)
+        yield from itercat(self.sources, self.missing, self._header)
 
 
 def itercat(sources, missing, header):
@@ -374,20 +391,33 @@ def itercat(sources, missing, header):
     # output data rows
     for hdr, it in zip(hdrs, its):
 
+        # map each output field to an index in this source table, matching
+        # duplicate field names positionally, in order, so that e.g. the
+        # second occurrence of 'foo' in the output maps to the second
+        # occurrence of 'foo' in the source, rather than to the first one
+        # (see issue #561: list.index() always returns the first match,
+        # which silently copied the first column's values into every
+        # duplicate column)
+        remaining = list(range(len(hdr)))
+        indices = []
+        for h in outhdr:
+            idx = None
+            for i in remaining:
+                if hdr[i] == h:
+                    idx = i
+                    remaining.remove(i)
+                    break
+            indices.append(idx)
+
         # now construct and yield the data rows
         for row in it:
             outrow = list()
-            for h in outhdr:
-                val = missing
-                try:
-                    val = row[hdr.index(h)]
-                except IndexError:
-                    # short row
-                    pass
-                except ValueError:
-                    # field not in table
-                    pass
-                outrow.append(val)
+            for idx in indices:
+                if idx is None or idx >= len(row):
+                    # field not in table, or short row
+                    outrow.append(missing)
+                else:
+                    outrow.append(row[idx])
             yield tuple(outrow)
 
 
@@ -634,6 +664,9 @@ class AddFieldsView(Table):
         self.field_defs = field_defs
 
     def __iter__(self):
+        field_defs = iter(self.field_defs)
+        if field_defs is self.field_defs:
+            self.field_defs = tuple(field_defs)
         return iteraddfields(self.source, self.field_defs)
 
 
@@ -944,14 +977,25 @@ class MoveFieldView(Table):
             hdr = next(it)
         except StopIteration:
             hdr = []
-        outhdr = [f for f in hdr if f != self.field]
-        outhdr.insert(self._index, self.field)
+        # work with positions, so that row values follow the header even
+        # when field names are not unique once converted to text; a list
+        # first, as the header only has to be iterable
+        hdr = list(hdr)
+        moved = [i for i, f in enumerate(hdr) if f == self.field]
+        if not moved:
+            # not a field name, so it could be a field index; a negative
+            # one counts from the end, as it would in a list
+            moved = [i + len(hdr) if i < 0 else i
+                     for i in asindices(hdr, self.field)]
+            if any(i < 0 for i in moved):
+                raise FieldSelectionError(self.field)
+        indices = [i for i in range(len(hdr)) if i not in moved]
+        indices[self._index:self._index] = moved
+        outhdr = [hdr[i] for i in indices]
         yield tuple(outhdr)
 
         # define a function to transform each row in the source data
         # according to the field selection
-        outflds = list(map(str, outhdr))
-        indices = asindices(hdr, outflds)
         transform = rowgetter(*indices)
 
         # construct the transformed data
@@ -1113,6 +1157,8 @@ def addcolumn(table, field, col, index=None, missing=None):
         +-----+-----+-------+
 
     Use the `index` parameter to control the position of the new column.
+    Short input rows are padded with `missing` and extra cells beyond the
+    header are trimmed before the new column is inserted.
 
     """
 
@@ -1138,27 +1184,18 @@ class AddColumnView(Table):
 
 def iteraddcolumn(table, field, col, index, missing):
     it = iter(table)
-    try:
-        hdr = next(it)
-    except StopIteration:
-        hdr = []
-
-    # determine position of new column
+    outhdr = list(next(it, ()))
+    width = len(outhdr)
     if index is None:
-        index = len(hdr)
-
-    # construct output header
-    outhdr = list(hdr)
+        index = width
     outhdr.insert(index, field)
     yield tuple(outhdr)
 
-    # construct output data
-    for row, val in izip_longest(it, col, fillvalue=missing):
-        # run out of rows?
-        if row == missing:
-            row = [missing] * len(hdr)
-        outrow = list(row)
-        outrow.insert(index, val)
+    exhausted = object()
+    for row, val in izip_longest(it, col, fillvalue=exhausted):
+        outrow = [] if row is exhausted else list(islice(row, width))
+        outrow.extend([missing] * (width - len(outrow)))
+        outrow.insert(index, missing if val is exhausted else val)
         yield tuple(outrow)
 
 
