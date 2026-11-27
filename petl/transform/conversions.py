@@ -579,3 +579,24 @@ def interpolateall(table, fmt, **kwargs):
 
 
 Table.interpolateall = interpolateall
+
+
+def roundvalues(table, field, ndigits=0, **kwargs):
+    """Round numeric values in a field.
+
+    Non-numeric values, including None, are passed through unchanged.
+    """
+
+    def round_value(value):
+        if value is None:
+            return None
+
+        try:
+            return round(value, ndigits)
+        except TypeError:
+            return value
+
+    return convert(table, field, round_value, **kwargs)
+
+
+Table.roundvalues = roundvalues
