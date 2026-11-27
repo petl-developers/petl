@@ -4,6 +4,10 @@ Changes
 Version 1.8.0
 -------------
 
+* Retain an explicitly supplied empty or zero-valued count field name in ``distinct()``.
+  ``count=False`` now creates a field named ``False``; use ``count=None`` to omit counts.
+  By :user:`Aschenbath`.
+
 * Pad short rows before ``filldown()`` so missing cells can inherit prior
   values without raising ``IndexError``.
   By :user:`Kulraj69`, :issue:`840`.
