@@ -1,11 +1,37 @@
 Changes
 =======
 
-Version 1.8.0
+Version 1.8.1
 -------------
 
 * Prevent interleaved reads of cached tables from adding duplicate rows to the cache.
-  By :user:`Aschenbath`.
+  By :user:`Aschenbath`, :issue:`859`.
+
+* Retain one-shot header iterators in ``cat()``, ``mergesort()`` and ``extendheader()`` across repeated reads.
+  By :user:`Aschenbath`, :issue:`858`.
+
+* Accept a single positional field name in ``pushheader()``.
+  By :user:`Aschenbath`, :issue:`857`.
+
+* Preserve UTC offsets parsed with ``%z`` in ``timeparser()``.
+  By :user:`Aschenbath`, :issue:`856`.
+
+* Resolve negative ``convert()`` field indexes against the header and reject indexes outside its bounds.
+  By :user:`Aschenbath`, :issue:`855`.
+
+* Keep numeric header labels aligned with their data columns in ``sortheader()``.
+  By :user:`Aschenbath`, :issue:`854`.
+
+* Resolve negative field indexes in ``clampvalues()`` against the header,
+  so surplus values in longer rows do not change the selected field.
+  By :user:`Kulraj69`, :issue:`843`.
+  
+* Retain an explicitly supplied empty or zero-valued count field name in ``distinct()``.
+  ``count=False`` now creates a field named ``False``; use ``count=None`` to omit counts.
+  By :user:`Aschenbath`, :issue:`853`.
+
+Version 1.8.0
+-------------
 
 * Pad short rows before ``filldown()`` so missing cells can inherit prior
   values without raising ``IndexError``.
