@@ -1,8 +1,19 @@
 Changes
 =======
 
+.. note::
+    Please don't add your changes into this document because it becomes a hotspot for merge conflicts.
+    All changes will be inserted before the release, using the title of the pull request merged since the last version.
+
 Version 1.8.1
 -------------
+
+* Use the same mixed-type ordering as ``sort()`` when ``mergesort()`` has no explicit key.
+  By :user:`Aschenbath`, :issue:`861`.
+
+* Cache one-shot dictionary iterators, including ``map`` and list iterators, in ``fromdicts()``.
+  Rows containing unpicklable values are retained in memory; other rows use the file cache.
+  By :user:`Aschenbath`.
 
 * Prevent interleaved reads of cached tables from adding duplicate rows to the cache.
   By :user:`Aschenbath`, :issue:`859`.
@@ -32,10 +43,6 @@ Version 1.8.1
 
 Version 1.8.0
 -------------
-
-* Cache one-shot dictionary iterators, including ``map`` and list iterators, in ``fromdicts()``.
-  Rows containing unpicklable values are retained in memory; other rows use the file cache.
-  By :user:`Aschenbath`.
 
 * Pad short rows before ``filldown()`` so missing cells can inherit prior
   values without raising ``IndexError``.
