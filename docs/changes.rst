@@ -8,6 +8,14 @@ Changes
 Version 1.8.1
 -------------
 
+* Accept a field index in ``unpackdict()``, including negative indexes
+  counting from the end of the header. Indexes select the requested position
+  even when field names repeat; out-of-range indexes raise ``ArgumentError``.
+  By :user:`SanketCSakhare`, :issue:`869`.
+  
+* Pad missing values in short rows when ``mergesort()`` selects a subset of the source fields.
+  By :user:`Aschenbath`, :issue:`862`.
+
 * Use the same mixed-type ordering as ``sort()`` when ``mergesort()`` has no explicit key.
   By :user:`Aschenbath`, :issue:`861`.
 
@@ -43,9 +51,6 @@ Version 1.8.1
 
 Version 1.8.0
 -------------
-
-* Pad missing values in short rows when ``mergesort()`` selects a subset of the source fields.
-  By :user:`Aschenbath`.
 
 * Pad short rows before ``filldown()`` so missing cells can inherit prior
   values without raising ``IndexError``.
