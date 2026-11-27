@@ -52,6 +52,16 @@ def test_constraints():
     ieq(expect, actual)
 
 
+@pytest.mark.parametrize('field, expected', [(0, 'bad-left'), ('', 'bad-right')])
+def test_problem_value_for_falsy_field(field, expected):
+    table = (('ordinary', ''), ('bad-left', 'bad-right'))
+    constraints = [dict(name='integer', field=field, test=int)]
+
+    ieq((('name', 'row', 'field', 'value', 'error'),
+         ('integer', 1, field, expected, 'ValueError')),
+        validate(table, constraints))
+
+
 def test_non_optional_constraint_with_missing_field():
     constraints = [
         dict(name='C1', field='foo', test=int),
