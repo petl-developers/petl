@@ -44,6 +44,9 @@ Version 1.8.1
 Version 1.8.0
 -------------
 
+* Pad missing values in short rows when ``mergesort()`` selects a subset of the source fields.
+  By :user:`Aschenbath`.
+
 * Pad short rows before ``filldown()`` so missing cells can inherit prior
   values without raising ``IndexError``.
   By :user:`Kulraj69`, :issue:`840`.
