@@ -5,17 +5,19 @@ from functools import partial
 from petl.util.random import randomseed, randomtable, RandomTable, dummytable, DummyTable
 
 
-def test_randomseed():
+def test_randomseed(monkeypatch):
     """
     Ensure that randomseed provides a non-empty string that changes.
     """
+    monkeypatch.setattr(time, 'time', lambda: 123.0)
+    state = pyrandom.getstate()
     seed_1 = randomseed()
-    time.sleep(1)
     seed_2 = randomseed()
 
     assert isinstance(seed_1, str)
     assert seed_1 != ""
     assert seed_1 != seed_2
+    assert pyrandom.getstate() == state
 
 
 def test_randomtable():

@@ -7,6 +7,7 @@ from tempfile import NamedTemporaryFile
 import itertools
 import logging
 from collections import namedtuple
+from collections.abc import Iterator
 import operator
 from petl.compat import pickle, next, text_type
 
@@ -475,6 +476,12 @@ def mergesort(*tables, **kwargs):
 
     Short rows are padded with ``missing`` in the selected output fields,
     including when the output header omits some source fields.
+    
+    Without an explicit key, all output fields use the same mixed-type
+    ordering as :func:`petl.transform.sorts.sort`.
+    
+    An iterator supplied as ``header`` is read once on first iteration
+    and reused for subsequent passes. Repeatable header sequences remain live.
 
     """
 
@@ -501,8 +508,10 @@ class MergeSortView(Table):
         self.reverse = reverse
 
     def __iter__(self):
-        return itermergesort(self.tables, self.key, self._header, self.missing,
-                             self.reverse)
+        if isinstance(self._header, Iterator):
+            self._header = tuple(self._header)
+        yield from itermergesort(self.tables, self.key, self._header,
+                                 self.missing, self.reverse)
 
 
 def itermergesort(sources, key, header, missing, reverse):
@@ -552,6 +561,8 @@ def itermergesort(sources, key, header, missing, reverse):
         getkey = comparable_itemgetter(*indices)
 
     # OK, do the merge sort
+    if key is None and outhdr:
+        getkey = comparable_itemgetter(*range(len(outhdr)))
     for row in _shortlistmergesorted(getkey, reverse, *sits):
         yield row
 
