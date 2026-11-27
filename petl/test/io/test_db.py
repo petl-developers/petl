@@ -49,7 +49,62 @@ def test_drop_table_if_exists_sql():
         dbo.sql)
 
 
-def _record_todb_create_calls(monkeypatch, drop):
+class RecordingCursor(object):
+    """Minimal DB-API cursor recording SQL instead of executing it."""
+
+    def __init__(self):
+        self.sql = []
+        self.connection = LoggingConnection()
+
+    def execute(self, sql, params=None):
+        self.sql.append(sql)
+
+    def executemany(self, sql, rows):
+        self.sql.append(sql)
+        list(rows)  # consume the iterator
+
+    def fetchone(self):
+        pass
+
+    def fetchmany(self, size=None):
+        pass
+
+    def fetchall(self):
+        pass
+
+
+def test_appenddb_qualified_tablename_issue467():
+    # a schema-qualified table name passed as a single string must be
+    # quoted per part: "myschema"."mytable", not "myschema.mytable"
+    table = (('foo', 'bar'), (1, 'A'), (2, 'B'))
+
+    cursor = RecordingCursor()
+        appenddb(table, cursor, 'myschema.mytable')
+eq_([u'INSERT INTO "myschema"."mytable" ("foo", "bar") VALUES (?, ?)'],
+        cursor.sql)
+        
+# the schema keyword argument keeps working the same way
+    cursor = RecordingCursor()
+appenddb(table, cursor, 'mytable', schema='myschema')
+eq_([u'INSERT INTO "myschema"."mytable" ("foo", "bar") VALUES (?, ?)'],
+        cursor.sql)
+    
+# and a plain table name is unchanged
+cursor = RecordingCursor()
+appenddb(table, cursor, 'mytable')
+eq_([u'INSERT INTO "mytable" ("foo", "bar") VALUES (?, ?)'],
+        cursor.sql)
+
+
+def test_drop_table_qualified_tablename_issue467():
+    dbo = LoggingConnection()
+
+    drop_table(dbo, 'myschema.mytable', commit=False)
+
+    eq_([u'DROP TABLE "myschema"."mytable"'], dbo.sql)
+
+
+    def _record_todb_create_calls(monkeypatch, drop):
     calls = []
 
     def fake_drop_table(dbo, tablename, schema=None, commit=True,

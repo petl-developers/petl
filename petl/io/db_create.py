@@ -20,7 +20,7 @@ from petl.util.materialise import columns
 from petl.transform.basics import head
 from petl.io.db_utils import _is_dbapi_connection, _is_dbapi_cursor, \
     _is_sqlalchemy_engine, _is_sqlalchemy_session, _is_sqlalchemy_connection,\
-    _quote, _execute_sqlalchemy, _sqlalchemy_transaction
+    _quote_qualified, _execute_sqlalchemy, _sqlalchemy_transaction
 
 
 logger = logging.getLogger(__name__)
@@ -250,9 +250,7 @@ def drop_table(dbo, tablename, schema=None, commit=True, if_exists=False):
     """
 
     # sanitise table name
-    tablename = _quote(tablename)
-    if schema is not None:
-        tablename = _quote(schema) + '.' + tablename
+    tablename = _quote_qualified(tablename, schema)        
 
     if if_exists:
         sql = u'DROP TABLE IF EXISTS %s' % tablename
