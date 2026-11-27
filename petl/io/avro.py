@@ -40,6 +40,10 @@ def fromavro(source, limit=None, skips=0, **avro_args):
     bytes decimal and fixed decimal: Decimal, int time-millis and 
     long time-micros: datetime.time.
 
+    Temporal precision is determined by the file's stored writer schema.
+    Both millisecond and microsecond files can be read without specifying a
+    reader schema.
+
     Example usage for reading files::
 
         >>> # set up a Avro file to demonstrate with
@@ -145,6 +149,12 @@ def toavro(table, target, schema=None, sample=9,
     coresponding python types: long timestamp-millis, long timestamp-micros, int date, 
     bytes decimal, fixed decimal, string uuid, int time-millis, long time-micros.
 
+    When inferring a schema, Python time and datetime values use the Avro
+    long types time-micros and timestamp-micros. This preserves microseconds,
+    including values encountered after the sample. To retain millisecond
+    writer schemas, pass an explicit int time-millis or long timestamp-millis
+    field type. See :ref:`io_avro` for a compatibility example.
+
     Example usage for writing files::
 
         >>> # set up a Avro file to demonstrate with
@@ -212,6 +222,10 @@ def appendavro(table, target, schema=None, sample=9, **avro_args):
     The `schema` argument is checked against the schema of the existing file.
     So it must be the same schema as used by `toavro()` or the schema of the
     existing file.
+
+    Appending to an existing file retains its stored writer schema and
+    temporal precision. A millisecond file therefore continues truncating
+    sub-millisecond values; appending does not upgrade its schema.
 
     The `sample` argument (int, optional) defines how many rows are inspected
     for discovering the field types and building a schema for the avro file 
@@ -310,7 +324,8 @@ def _write_toavro(table, target, mode, schema, sample,
     if table is None:
         return
     # build a schema when not defined by user
-    if not schema:
+    inferred_schema = not schema
+    if inferred_schema:
         schema, table2 = _build_schema_from_values(table, sample)
     else:
         table2 = _fix_missing_headers(table, schema)
@@ -320,8 +335,15 @@ def _write_toavro(table, target, mode, schema, sample,
     target2 = write_source_from_arg(target, mode=mode)
     with target2.open(mode) as target_file:
         # delay the import of fastavro for not breaking when unused
-        from fastavro import parse_schema
+        from fastavro import parse_schema, reader
         from fastavro.write import Writer
+
+        # Older fastavro versions compare append schemas instead of ignoring
+        # the supplied schema. Inferred appends must use the stored precision.
+        if inferred_schema and mode == 'a+b' and target_file.tell():
+            target_file.seek(0)
+            schema = reader(target_file).writer_schema
+            target_file.seek(0, 2)
 
         parsed_schema = parse_schema(schema)
         writer = Writer(fo=target_file,
@@ -416,9 +438,9 @@ def _get_definition_from_type_of(prop, val, prev):
     tdef = None
     curr = None
     if isinstance(val, datetime):
-        tdef = {'type': 'long', 'logicalType': 'timestamp-millis'}
+        tdef = {'type': 'long', 'logicalType': 'timestamp-micros'}
     elif isinstance(val, time):
-        tdef = {'type': 'int', 'logicalType': 'time-millis'}
+        tdef = {'type': 'long', 'logicalType': 'time-micros'}
     elif isinstance(val, date):
         tdef = {'type': 'int', 'logicalType': 'date'}
     elif isinstance(val, Decimal):
