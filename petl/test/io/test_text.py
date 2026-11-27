@@ -6,10 +6,11 @@ from tempfile import NamedTemporaryFile
 import gzip
 import os
 import io
+import pytest
 
 
 from petl.test.helpers import ieq, eq_
-from petl.io.text import fromtext, totext
+from petl.io.text import fromtext, teetext, totext
 
 
 def test_fromtext():
@@ -40,6 +41,29 @@ def test_fromtext_generator_header():
     expected = [('text',), ('hello',)]
     eq_(expected, list(table))
     eq_(expected, list(table))
+
+
+@pytest.mark.parametrize('prologue,epilogue', [('<rows>', '</rows>'),
+                                             (None, 'done'), ('begin', None),
+                                             ('BEGIN\n', 'END\n')])
+def test_teetext_headerless(tmp_path, prologue, epilogue):
+    path = tmp_path / 'export.txt'
+    view = teetext(iter(()), str(path), encoding='ascii', template='{name}',
+                   prologue=prologue, epilogue=epilogue)
+    assert list(view) == []
+    expected = (prologue or '') + (epilogue or '')
+    assert path.read_bytes() == expected.replace('\n', os.linesep).encode('ascii')
+
+
+def test_teetext_close_before_exhaustion(tmp_path):
+    path = tmp_path / 'export.txt'
+    rows = iter(teetext([('name',), ('Alice',), ('Bob',)], str(path),
+                        encoding='ascii', template='{name};',
+                        prologue='<rows>', epilogue='</rows>'))
+    assert next(rows) == ('name',)
+    assert next(rows) == ('Alice',)
+    rows.close()
+    assert path.read_bytes() == b'<rows>Alice;'
 
 
 def test_fromtext_lineterminators():

@@ -1,7 +1,7 @@
 from __future__ import absolute_import, print_function, division
 
-import hashlib
 import random as pyrandom
+import secrets
 import time
 from collections import OrderedDict
 from functools import partial
@@ -12,13 +12,10 @@ from petl.util.base import Table
 
 def randomseed():
     """
-    Obtain the hex digest of a sha256 hash of the
-    current epoch time in nanoseconds.
+    Generate a hexadecimal seed from operating system randomness.
     """
 
-    time_ns = str(time.time()).encode()
-    hash_time = hashlib.sha256(time_ns).hexdigest()
-    return hash_time
+    return secrets.token_hex(32)
 
 
 def randomtable(numflds=5, numrows=100, wait=0, seed=None):
