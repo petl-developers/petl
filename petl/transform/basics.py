@@ -135,7 +135,11 @@ def itercut(source, spec, missing=None):
         hdr = next(it)
     except StopIteration:
         hdr = []
-    indices = asindices(hdr, spec)
+    indices = []
+    for i in asindices(hdr, spec):
+        if i < -len(hdr):
+            raise FieldSelectionError(i)
+        indices.append(i + len(hdr) if i < 0 else i)
 
     # define a function to transform each row in the source data
     # according to the field selection
@@ -654,6 +658,9 @@ class AddFieldsView(Table):
         self.field_defs = field_defs
 
     def __iter__(self):
+        field_defs = iter(self.field_defs)
+        if field_defs is self.field_defs:
+            self.field_defs = tuple(field_defs)
         return iteraddfields(self.source, self.field_defs)
 
 
