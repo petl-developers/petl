@@ -658,6 +658,9 @@ class AddFieldsView(Table):
         self.field_defs = field_defs
 
     def __iter__(self):
+        field_defs = iter(self.field_defs)
+        if field_defs is self.field_defs:
+            self.field_defs = tuple(field_defs)
         return iteraddfields(self.source, self.field_defs)
 
 
