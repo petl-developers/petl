@@ -66,6 +66,8 @@ class ClampValuesView(Table):
 
         # find the index of the target field
         idx = asindices(header, self.field)[0]
+        if -len(header) <= idx < 0:
+            idx += len(header)
 
         low, high = self.low, self.high
         for row in it:

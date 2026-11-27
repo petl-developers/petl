@@ -42,6 +42,19 @@ else:
     def test_fromavro33():
         _read_from_mavro_file(table3, schema3)
 
+    @pytest.mark.parametrize('rows', [[], [(11, 22, 33)]])
+    def test_fromavro_reader_schema(tmp_path, rows):
+        path = str(tmp_path / 'records.avro')
+        writer = {'type': 'record', 'name': 'Row', 'fields': [
+            {'name': name, 'type': 'int'} for name in ('a', 'b', 'c')]}
+        reader = dict(writer, fields=[writer['fields'][2],
+                                      {'name': 'd', 'type': 'int', 'default': 44},
+                                      writer['fields'][0]])
+        toavro([('a', 'b', 'c')] + rows, path, schema=writer)
+        view = fromavro(path, reader_schema=reader)
+        assert list(view) == [('c', 'd', 'a')] + [(c, 44, a) for a, b, c in rows]
+        assert view.get_avro_schema()['fields'] == writer['fields']
+
     def test_toavro11():
         _write_to_avro_file(table1, schema1)
 

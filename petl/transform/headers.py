@@ -8,7 +8,7 @@ from petl.compat import next, text_type
 from petl.errors import FieldSelectionError
 
 
-from petl.util.base import Table, asindices, rowgetter
+from petl.util.base import Table, rowgetter
 
 
 def rename(table, *args, **kwargs):
@@ -433,6 +433,8 @@ class SuffixHeaderView(Table):
 def sortheader(table, reverse=False, missing=None):
     """Re-order columns so the header is sorted.
 
+    Header values, including numeric labels, remain paired with their columns.
+
     .. versionadded:: 1.1.0
 
     """
@@ -456,8 +458,9 @@ class SortHeaderView(Table):
             hdr = next(it)
         except StopIteration:
             return
-        shdr = sorted(hdr, reverse=self.reverse)
-        indices = asindices(hdr, shdr)
+        indices = sorted(range(len(hdr)), key=hdr.__getitem__,
+                         reverse=self.reverse)
+        shdr = [hdr[i] for i in indices]
         transform = rowgetter(*indices)
 
         # yield the transformed header
