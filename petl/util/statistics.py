@@ -2,6 +2,7 @@ from __future__ import absolute_import, print_function, division
 
 
 from collections import namedtuple
+from math import isfinite
 
 
 from petl.util.base import values, Table
@@ -95,4 +96,11 @@ def onlinestats(xi, n, mean=0, variance=0):
     varianceprv = variance
     mean = (((n - 1)*meanprv) + xi)/n
     variance = (((n - 1)*varianceprv) + ((xi - meanprv)*(xi - mean)))/n
+    if (not isfinite(variance) and
+            all(isfinite(v) for v in (xi, meanprv, mean, varianceprv))):
+        # Divide before multiplying when finite state overflows internally.
+        delta = xi - meanprv
+        delta_new = xi - mean
+        if isfinite(delta) and isfinite(delta_new):
+            variance = ((n - 1) / n) * varianceprv + (delta / n) * delta_new
     return mean, variance
