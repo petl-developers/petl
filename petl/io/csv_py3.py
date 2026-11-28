@@ -17,14 +17,36 @@ def fromcsv_impl(source, **kwargs):
     return CSVView(source, **kwargs)
 
 
+def _strip_nulls(stream):
+    """Yield physical lines as if NULs had been removed before line splitting."""
+    line = stream.readline()
+    while line:
+        line = line.replace('\x00', '')
+        prefix = ''
+        if line.endswith('\r'):
+            # Only the next non-NUL character can turn this CR into CRLF.
+            prefix = stream.read(1)
+            while prefix == '\x00':
+                prefix = stream.read(1)
+            if prefix == '\n':
+                line += prefix
+                prefix = ''
+        if line:
+            yield line
+
+        # A CR read ahead is already a line terminator in its own right.
+        line = prefix if prefix == '\r' else prefix + stream.readline()
+
+
 class CSVView(Table):
 
-    def __init__(self, source, encoding, errors, header, **csvargs):
+    def __init__(self, source, encoding, errors, header, strip_nulls=False, **csvargs):
         self.source = source
         self.encoding = encoding
         self.errors = errors
         self.csvargs = csvargs
         self._header = header
+        self.strip_nulls = strip_nulls
 
     def __iter__(self):
         if self._header is not None:
@@ -33,7 +55,10 @@ class CSVView(Table):
             csvfile = io.TextIOWrapper(buf, encoding=self.encoding,
                                        errors=self.errors, newline='')
             try:
-                reader = csv.reader(csvfile, **self.csvargs)
+                lines = csvfile
+                if self.strip_nulls:
+                    lines = _strip_nulls(csvfile)
+                reader = csv.reader(lines, **self.csvargs)
                 for row in reader:
                     yield tuple(row)
             finally:

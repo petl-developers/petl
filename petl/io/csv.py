@@ -9,8 +9,8 @@ from petl.io.csv_py3 import fromcsv_impl, tocsv_impl, appendcsv_impl, \
     teecsv_impl
 
 
-def fromcsv(source=None, encoding=None, errors='strict', header=None, 
-            **csvargs):
+def fromcsv(source=None, encoding=None, errors='strict', header=None,
+            strip_nulls=False, **csvargs):
     """
     Extract a table from a delimited file. E.g.::
 
@@ -38,10 +38,13 @@ def fromcsv(source=None, encoding=None, errors='strict', header=None,
         | 'c' | '2' |
         +-----+-----+
 
-    The `source` argument is the path of the delimited file, all other keyword
-    arguments are passed to :func:`csv.reader`. So, e.g., to override the
-    delimiter from the default CSV dialect, provide the `delimiter` keyword
-    argument.
+    The `source` argument is the path of the delimited file. Set
+    ``strip_nulls=True`` to remove NUL characters from the decoded input
+    before CSV parsing. By default the input is passed through unchanged.
+
+    CSV format arguments are passed to :func:`csv.reader`. For example, to
+    override the delimiter from the default dialect, use the `delimiter`
+    keyword argument.
 
     Note that all data values are strings, and any intended numeric values will
     need to be converted, see also :func:`petl.transform.conversions.convert`.
@@ -50,12 +53,12 @@ def fromcsv(source=None, encoding=None, errors='strict', header=None,
 
     source = read_source_from_arg(source)
     csvargs.setdefault('dialect', 'excel')
-    return fromcsv_impl(source=source, encoding=encoding, errors=errors, 
-                        header=header, **csvargs)
+    return fromcsv_impl(source=source, encoding=encoding, errors=errors,
+                        header=header, strip_nulls=strip_nulls, **csvargs)
 
 
-def fromtsv(source=None, encoding=None, errors='strict', header=None, 
-            **csvargs):
+def fromtsv(source=None, encoding=None, errors='strict', header=None,
+            strip_nulls=False, **csvargs):
     """
     Convenience function, as :func:`petl.io.csv.fromcsv` but with different
     default dialect (tab delimited).
@@ -63,7 +66,8 @@ def fromtsv(source=None, encoding=None, errors='strict', header=None,
     """
 
     csvargs.setdefault('dialect', 'excel-tab')
-    return fromcsv(source, encoding=encoding, errors=errors, header=header, **csvargs)
+    return fromcsv(source, encoding=encoding, errors=errors, header=header,
+                   strip_nulls=strip_nulls, **csvargs)
 
 
 def tocsv(table, source=None, encoding=None, errors='strict', write_header=True,
