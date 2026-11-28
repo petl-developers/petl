@@ -17,6 +17,26 @@ def fromcsv_impl(source, **kwargs):
     return CSVView(source, **kwargs)
 
 
+def _strip_nulls(lines):
+    """Yield physical lines as if NULs had been removed before line splitting."""
+    pending = ''
+    for line in lines:
+        line = line.replace('\x00', '')
+        if pending:
+            if line == '\n':
+                line = pending + line
+            else:
+                yield pending
+            pending = ''
+        if line.endswith('\r'):
+            # Removing NULs may join this CR to the next line's LF.
+            pending = line
+        elif line:
+            yield line
+    if pending:
+        yield pending
+
+
 class CSVView(Table):
 
     def __init__(self, source, encoding, errors, header, strip_nulls=False, **csvargs):
@@ -36,7 +56,7 @@ class CSVView(Table):
             try:
                 lines = csvfile
                 if self.strip_nulls:
-                    lines = (line.replace('\x00', '') for line in csvfile)
+                    lines = _strip_nulls(csvfile)
                 reader = csv.reader(lines, **self.csvargs)
                 for row in reader:
                     yield tuple(row)

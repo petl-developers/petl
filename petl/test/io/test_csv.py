@@ -52,6 +52,21 @@ def test_fromcsv_strip_nulls(tmp_path):
     assert source.read_bytes() == raw
 
 
+@pytest.mark.parametrize('raw', [
+    b'\x00', b'h\n\x00\x00', b'\x00\n',
+    b'h\r\x00\nv\r\n', b'h\r\x00\x00\n\nv\r',
+    b'"a\r\x00\nb"\r\x00c\r\r', b'h\r\x00',
+])
+def test_fromcsv_strip_nulls_record_boundaries(tmp_path, raw):
+    source = tmp_path / 'input.csv'
+    rewritten = tmp_path / 'rewritten.csv'
+    source.write_bytes(raw)
+    rewritten.write_bytes(raw.replace(b'\x00', b''))
+    with rewritten.open(encoding='ascii', newline='') as stream:
+        expected = [tuple(row) for row in csv.reader(stream)]
+    assert list(iter(fromcsv(str(source), strip_nulls=True))) == expected
+
+
 def test_fromtsv_strip_nulls_after_decoding(tmp_path):
     source = tmp_path / 'input.tsv'
     source.write_bytes('caf\x00\xe9\t10\n'.encode('utf-16'))
@@ -61,13 +76,16 @@ def test_fromtsv_strip_nulls_after_decoding(tmp_path):
 
 
 @pytest.mark.parametrize('options', [{}, {'strip_nulls': False}])
-def test_fromcsv_strip_nulls_disabled(tmp_path, options):
-    source = tmp_path / 'input.csv'
-    line = 'a\x00,b\n'
+@pytest.mark.parametrize('reader, dialect, line', [
+    (fromcsv, 'excel', 'a\x00,b\r\n'),
+    (fromtsv, 'excel-tab', 'a\x00\tb\r\n'),
+])
+def test_strip_nulls_disabled(tmp_path, options, reader, dialect, line):
+    source = tmp_path / 'input.txt'
     source.write_bytes(line.encode('ascii'))
-    table = fromcsv(str(source), **options)
+    table = reader(str(source), **options)
     try:
-        row = next(csv.reader([line]))
+        row = next(csv.reader([line], dialect=dialect))
     except csv.Error:
         with pytest.raises(csv.Error):
             next(iter(table))
