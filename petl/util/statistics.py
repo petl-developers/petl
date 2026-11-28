@@ -102,5 +102,5 @@ def onlinestats(xi, n, mean=0, variance=0):
         delta = xi - meanprv
         delta_new = xi - mean
         if isfinite(delta) and isfinite(delta_new):
-            variance = ((n - 1) / n) * varianceprv + (delta / n) * delta_new
+            variance = (varianceprv - varianceprv / n) + (delta / n) * delta_new
     return mean, variance
