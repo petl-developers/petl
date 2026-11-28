@@ -33,3 +33,26 @@ def test_nonfinite_mean_semantics(values):
         assert math.isnan(result.mean)
     else:
         assert result.mean == values[0]
+
+
+def test_decimal_mean_fallback_keeps_numeric_type():
+    from decimal import Decimal, Overflow, localcontext
+    from petl.util.statistics import onlinestats
+
+    with localcontext() as context:
+        context.Emax = 9
+        context.traps[Overflow] = False
+        mean, variance = onlinestats(Decimal('-8e9'), 3,
+                                    Decimal('8e9'), Decimal(0))
+        expected = Decimal('8e9') / 3
+        assert mean.is_finite()
+        assert abs(mean - expected) <= abs(expected) * Decimal('1e-26')
+
+
+def test_mean_overflow_fallback_preserves_cancellation_remainder():
+    import sys
+
+    values = [float(2 ** 1023), float(2 ** 1023), -sys.float_info.max]
+    result = petl.stats([['v']] + [[x] for x in values], 'v')
+    expected = float(sum(map(Fraction.from_float, values)) / len(values))
+    assert result.mean == expected
