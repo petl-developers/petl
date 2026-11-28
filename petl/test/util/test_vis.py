@@ -236,3 +236,57 @@ def test_look_headerless():
     actual = repr(look(table))
     expect = ""
     eq_(expect, actual)
+
+
+@pytest.mark.parametrize('style, expect', [
+    ('grid', ['+-------+------+',
+              '| name  | n    |',
+              '+=======+======+',
+              '| cafe\u0301  |    1 |',
+              '+-------+------+',
+              '| \u4e2d\u6587  | x    |',
+              '+-------+------+',
+              '| abcde | 1000 |',
+              '+-------+------+']),
+    ('simple', ['=====  ====',
+                'name   n   ',
+                '=====  ====',
+                'cafe\u0301      1',
+                '\u4e2d\u6587   x   ',
+                'abcde  1000',
+                '=====  ====']),
+    ('minimal', ['name   n   ',
+                 'cafe\u0301      1',
+                 '\u4e2d\u6587   x   ',
+                 'abcde  1000']),
+])
+def test_look_display_width(style, expect):
+    # a combining mark takes no column, an East Asian wide character takes two
+    table = (('name', 'n'), ('cafe\u0301', 1), ('\u4e2d\u6587', 'x'),
+             ('abcde', 1000))
+    actual = str(lookstr(table, style=style))
+    eq_(''.join(line + '\n' for line in expect), actual)
+
+@pytest.mark.parametrize('style, expect', [
+    ('grid', ['+------+---+',
+              '| name | n |',
+              '+======+===+',
+              '| \U0001f44d\U0001f3fd   | a |',
+              '+------+---+',
+              '| \U0001f3fd   | b |',
+              '+------+---+']),
+    ('simple', ['====  =',
+                'name  n',
+                '====  =',
+                '\U0001f44d\U0001f3fd    a',
+                '\U0001f3fd    b',
+                '====  =']),
+    ('minimal', ['name  n',
+                 '\U0001f44d\U0001f3fd    a',
+                 '\U0001f3fd    b']),
+])
+def test_look_skin_tone_modifier(style, expect):
+    # a modifier merges into the emoji before it, on its own it takes two columns
+    table = (('name', 'n'), ('\U0001f44d\U0001f3fd', 'a'), ('\U0001f3fd', 'b'))
+    actual = str(lookstr(table, style=style))
+    eq_(''.join(line + '\n' for line in expect), actual)

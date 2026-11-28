@@ -2,6 +2,7 @@ from __future__ import absolute_import, print_function, division
 
 
 import locale
+import unicodedata
 from itertools import islice
 from collections import defaultdict
 from petl.compat import numeric_types, text_type
@@ -190,6 +191,34 @@ Table.lookallstr = lookallstr
 Table.lookall = lookall
 
 
+def _display_width(s):
+    """Number of terminal columns taken by `s`. Combining marks and format
+    characters take none, East Asian wide and fullwidth characters take two.
+    A skin tone modifier following an emoji takes none."""
+    width = 0
+    previous = ''
+    for c in s:
+        modifies_previous = (
+            '\U0001f3fb' <= c <= '\U0001f3ff'
+            and previous != ''
+            and unicodedata.category(previous) == 'So'
+            and unicodedata.east_asian_width(previous) == 'W')
+        if modifies_previous:
+            pass  # merged into the preceding emoji
+        elif unicodedata.category(c) not in ('Mn', 'Me', 'Cf'):
+            width += 2 if unicodedata.east_asian_width(c) in ('W', 'F') else 1
+        previous = c
+    return width
+
+
+def _ljust(s, w):
+    return s + ' ' * (w - _display_width(s))
+
+
+def _rjust(s, w):
+    return ' ' * (w - _display_width(s)) + s
+
+
 def _look_grid(table, vrepr, index_header, truncate, width):
     it = iter(table)
 
@@ -229,11 +258,11 @@ def _look_grid(table, vrepr, index_header, truncate, width):
     # find longest representations so we know how wide to make cells
     colwidths = [0] * maxrowlen  # initialise to 0
     for i, fr in enumerate(fldsrepr):
-        colwidths[i] = len(fr)
+        colwidths[i] = _display_width(fr)
     for valsrepr in rowsrepr:
         for i, vr in enumerate(valsrepr):
-            if len(vr) > colwidths[i]:
-                colwidths[i] = len(vr)
+            if _display_width(vr) > colwidths[i]:
+                colwidths[i] = _display_width(vr)
 
     # construct a line separator
     sep = '+'
@@ -257,8 +286,7 @@ def _look_grid(table, vrepr, index_header, truncate, width):
     fldsline = '|'
     for i, w in enumerate(colwidths):
         f = fldsrepr[i]
-        fldsline += ' ' + f
-        fldsline += ' ' * (w - len(f))  # padding
+        fldsline += ' ' + _ljust(f, w)
         fldsline += ' |'
     if width:
         fldsline = fldsline[:width]
@@ -273,13 +301,10 @@ def _look_grid(table, vrepr, index_header, truncate, width):
             if i < len(vals) and isinstance(vals[i], numeric_types) \
                     and not isinstance(vals[i], bool):
                 # left pad numbers
-                rowline += ' ' * (w + 1 - len(vr))  # padding
-                rowline += vr + ' |'
+                rowline += ' ' + _rjust(vr, w) + ' |'
             else:
                 # right pad everything else
-                rowline += ' ' + vr
-                rowline += ' ' * (w - len(vr))  # padding
-                rowline += ' |'
+                rowline += ' ' + _ljust(vr, w) + ' |'
         if width:
             rowline = rowline[:width]
         rowline += '\n'
@@ -335,11 +360,11 @@ def _look_simple(table, vrepr, index_header, truncate, width):
     # find longest representations so we know how wide to make cells
     colwidths = [0] * maxrowlen  # initialise to 0
     for i, fr in enumerate(fldsrepr):
-        colwidths[i] = len(fr)
+        colwidths[i] = _display_width(fr)
     for valsrepr in rowsrepr:
         for i, vr in enumerate(valsrepr):
-            if len(vr) > colwidths[i]:
-                colwidths[i] = len(vr)
+            if _display_width(vr) > colwidths[i]:
+                colwidths[i] = _display_width(vr)
 
     # construct a header separator
     hedsep = '  '.join('=' * w for w in colwidths)
@@ -348,7 +373,7 @@ def _look_simple(table, vrepr, index_header, truncate, width):
     hedsep += '\n'
 
     # construct a line for the header row
-    fldsline = '  '.join(f.ljust(w) for f, w in zip(fldsrepr, colwidths))
+    fldsline = '  '.join(_ljust(f, w) for f, w in zip(fldsrepr, colwidths))
     if width:
         fldsline = fldsline[:width]
     fldsline += '\n'
@@ -362,10 +387,10 @@ def _look_simple(table, vrepr, index_header, truncate, width):
             if i < len(vals) and isinstance(vals[i], numeric_types) \
                     and not isinstance(vals[i], bool):
                 # left pad numbers
-                rowline += vr.rjust(w)
+                rowline += _rjust(vr, w)
             else:
                 # right pad everything else
-                rowline += vr.ljust(w)
+                rowline += _ljust(vr, w)
             if i < len(colwidths) - 1:
                 rowline += '  '
         if width:
@@ -421,14 +446,14 @@ def _look_minimal(table, vrepr, index_header, truncate, width):
     # find longest representations so we know how wide to make cells
     colwidths = [0] * maxrowlen  # initialise to 0
     for i, fr in enumerate(fldsrepr):
-        colwidths[i] = len(fr)
+        colwidths[i] = _display_width(fr)
     for valsrepr in rowsrepr:
         for i, vr in enumerate(valsrepr):
-            if len(vr) > colwidths[i]:
-                colwidths[i] = len(vr)
+            if _display_width(vr) > colwidths[i]:
+                colwidths[i] = _display_width(vr)
 
     # construct a line for the header row
-    fldsline = '  '.join(f.ljust(w) for f, w in zip(fldsrepr, colwidths))
+    fldsline = '  '.join(_ljust(f, w) for f, w in zip(fldsrepr, colwidths))
     if width:
         fldsline = fldsline[:width]
     fldsline += '\n'
@@ -442,10 +467,10 @@ def _look_minimal(table, vrepr, index_header, truncate, width):
             if i < len(vals) and isinstance(vals[i], numeric_types) \
                     and not isinstance(vals[i], bool):
                 # left pad numbers
-                rowline += vr.rjust(w)
+                rowline += _rjust(vr, w)
             else:
                 # right pad everything else
-                rowline += vr.ljust(w)
+                rowline += _ljust(vr, w)
             if i < len(colwidths) - 1:
                 rowline += '  '
         if width:
