@@ -1,17 +1,9 @@
 import math
 import pytest
 import petl
-"""Offline variance reference fixtures, not a PETL patch or PETL test result.
-
-Uses exact conversion of binary64 inputs and a high-precision two-pass Decimal
-calculation with exact rational intermediates. Reports both population and sample conventions so a future adapter
-must explicitly choose the upstream API's documented convention.
-"""
-from decimal import Decimal, localcontext
+from decimal import Decimal, Overflow, localcontext
 from fractions import Fraction
-import math
 import random
-import unittest
 
 
 def reference(values, ddof=0):
@@ -54,3 +46,15 @@ def test_finite_population_variance(name, values):
 def test_nonfinite_path_retained(values):
     result = petl.stats([['v']] + [[x] for x in values], 'v')
     assert math.isnan(result.pvariance)
+
+
+def test_decimal_variance_fallback_keeps_numeric_type():
+    from petl.util.statistics import onlinestats
+
+    with localcontext() as context:
+        context.Emax = 9
+        context.traps[Overflow] = False
+        mean, variance = onlinestats(Decimal('8e4'), 1)
+        mean, variance = onlinestats(Decimal('-8e4'), 2, mean, variance)
+        assert mean == Decimal(0)
+        assert variance == Decimal('6.4e9')
