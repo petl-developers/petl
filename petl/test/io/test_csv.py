@@ -12,6 +12,7 @@ import pytest
 
 from petl.test.helpers import ieq, eq_
 from petl.io.csv import fromcsv, fromtsv, tocsv, appendcsv, totsv, appendtsv
+from petl.io.sources import MemorySource
 
 
 logger = logging.getLogger(__name__)
@@ -55,7 +56,7 @@ def test_fromcsv_strip_nulls(tmp_path):
 @pytest.mark.parametrize('raw', [
     b'\x00', b'h\n\x00\x00', b'\x00\n',
     b'h\r\x00\nv\r\n', b'h\r\x00\x00\n\nv\r',
-    b'"a\r\x00\nb"\r\x00c\r\r', b'h\r\x00',
+    b'"a\r\x00\nb"\r\x00c\r\r', b'h\r\x00', b'h\r\r\nv', b'h\r\x00v',
 ])
 def test_fromcsv_strip_nulls_record_boundaries(tmp_path, raw):
     source = tmp_path / 'input.csv'
@@ -101,6 +102,24 @@ def test_fromcsv_strip_nulls_streams_rows(tmp_path):
     assert next(rows) == ('name', 'id')
     with pytest.raises(UnicodeDecodeError):
         list(rows)
+
+
+def test_fromcsv_strip_nulls_streams_bare_cr():
+    raw = b'na\x00me,id\r' + b'A' * 50000 + b',1\xff\r'
+    rows = iter(fromcsv(MemorySource(raw), encoding='ascii', strip_nulls=True))
+    assert next(rows) == ('name', 'id')
+    with pytest.raises(UnicodeDecodeError):
+        next(rows)
+
+
+def test_fromcsv_strip_nulls_bare_cr_lookahead():
+    value = 'A' * 50000
+    raw = b'name,id\r\x00' + value.encode('ascii') + b',1\r'
+    source = MemorySource(raw)
+    rows = iter(fromcsv(source, encoding='ascii', strip_nulls=True))
+    assert next(rows) == ('name', 'id')
+    assert source.buffer.tell() < len(raw)
+    assert list(rows) == [(value, '1')]
 
 
 def test_fromcsv_lineterminators():

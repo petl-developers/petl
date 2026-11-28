@@ -17,24 +17,25 @@ def fromcsv_impl(source, **kwargs):
     return CSVView(source, **kwargs)
 
 
-def _strip_nulls(lines):
+def _strip_nulls(stream):
     """Yield physical lines as if NULs had been removed before line splitting."""
-    pending = ''
-    for line in lines:
+    line = stream.readline()
+    while line:
         line = line.replace('\x00', '')
-        if pending:
-            if line == '\n':
-                line = pending + line
-            else:
-                yield pending
-            pending = ''
+        prefix = ''
         if line.endswith('\r'):
-            # Removing NULs may join this CR to the next line's LF.
-            pending = line
-        elif line:
+            # Only the next non-NUL character can turn this CR into CRLF.
+            prefix = stream.read(1)
+            while prefix == '\x00':
+                prefix = stream.read(1)
+            if prefix == '\n':
+                line += prefix
+                prefix = ''
+        if line:
             yield line
-    if pending:
-        yield pending
+
+        # A CR read ahead is already a line terminator in its own right.
+        line = prefix if prefix == '\r' else prefix + stream.readline()
 
 
 class CSVView(Table):
