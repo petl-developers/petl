@@ -3,6 +3,7 @@ from __future__ import absolute_import, print_function, division
 
 from collections import namedtuple
 from math import isfinite
+from fractions import Fraction
 
 
 from petl.util.base import values, Table
@@ -96,10 +97,15 @@ def onlinestats(xi, n, mean=0, variance=0):
     varianceprv = variance
     mean = (((n - 1)*meanprv) + xi)/n
     if (not isfinite(mean) and isfinite(meanprv) and isfinite(xi)):
-        delta = xi - meanprv
-        if isfinite(delta):
-            mean = meanprv + delta / n
+        if isinstance(meanprv, float) and isinstance(xi, float):
+            # Keep cancellation exact on this exceptional binary-float path.
+            mean = float(((n - 1) * Fraction.from_float(meanprv) +
+                          Fraction.from_float(xi)) / n)
         else:
-            mean = ((n - 1) / n) * meanprv + xi / n
+            delta = xi - meanprv
+            if isfinite(delta):
+                mean = meanprv + delta / n
+            else:
+                mean = (meanprv - meanprv / n) + xi / n
     variance = (((n - 1)*varianceprv) + ((xi - meanprv)*(xi - mean)))/n
     return mean, variance
