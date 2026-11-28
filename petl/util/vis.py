@@ -199,7 +199,7 @@ def _display_width(s):
     previous = ''
     for c in s:
         modifies_previous = (
-            u'\U0001f3fb' <= c <= u'\U0001f3ff'
+            '\U0001f3fb' <= c <= '\U0001f3ff'
             and previous != ''
             and unicodedata.category(previous) == 'So'
             and unicodedata.east_asian_width(previous) == 'W')
