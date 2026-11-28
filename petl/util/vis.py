@@ -193,11 +193,22 @@ Table.lookall = lookall
 
 def _display_width(s):
     """Number of terminal columns taken by `s`. Combining marks and format
-    characters take none, East Asian wide and fullwidth characters take two."""
-    return sum(0 if unicodedata.category(c) in ('Mn', 'Me', 'Cf')
-               else 2 if unicodedata.east_asian_width(c) in ('W', 'F')
-               else 1
-               for c in s)
+    characters take none, East Asian wide and fullwidth characters take two.
+    A skin tone modifier following an emoji takes none."""
+    width = 0
+    previous = ''
+    for c in s:
+        modifies_previous = (
+            u'\U0001f3fb' <= c <= u'\U0001f3ff'
+            and previous != ''
+            and unicodedata.category(previous) == 'So'
+            and unicodedata.east_asian_width(previous) == 'W')
+        if modifies_previous:
+            pass  # merged into the preceding emoji
+        elif unicodedata.category(c) not in ('Mn', 'Me', 'Cf'):
+            width += 2 if unicodedata.east_asian_width(c) in ('W', 'F') else 1
+        previous = c
+    return width
 
 
 def _ljust(s, w):
