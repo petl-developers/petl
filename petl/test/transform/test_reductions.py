@@ -11,7 +11,8 @@ from petl.test.helpers import ieq, eq_
 from petl.errors import FieldSelectionError
 from petl.util import strjoin, header
 from petl.transform.reductions import rowreduce, aggregate, \
-    mergeduplicates, merge, Conflict, fold, groupselectmin, groupselectmax
+    mergeduplicates, merge, Conflict, fold, groupselectmin, groupselectmax, \
+    groupselectfirst, groupselectlast
 
 
 def test_rowreduce():
@@ -87,6 +88,20 @@ def test_rowreduce_empty():
     actual = rowreduce(table, key='foo', reducer=reducer, 
                        header=('foo', 'bar'))
     ieq(expect, actual)
+
+
+@pytest.mark.parametrize('presorted', [False, True])
+def test_rowreduce_no_header(presorted):
+    reducer = lambda key, rows: (key, len(list(rows)))
+    with pytest.raises(FieldSelectionError):
+        rowreduce([], key='foo', reducer=reducer, presorted=presorted).nrows()
+
+
+@pytest.mark.parametrize('select', [groupselectfirst, groupselectlast])
+@pytest.mark.parametrize('presorted', [False, True])
+def test_groupselectfirstlast_no_header(select, presorted):
+    with pytest.raises(FieldSelectionError):
+        select([], 'foo', presorted=presorted).nrows()
 
 
 def test_aggregate_simple():
@@ -652,6 +667,12 @@ def test_mergeduplicates_empty():
     expect = (('foo', 'bar'),)
     actual = mergeduplicates(table, key='foo')
     ieq(expect, actual)
+
+
+@pytest.mark.parametrize('presorted', [False, True])
+def test_mergeduplicates_no_header(presorted):
+    with pytest.raises(FieldSelectionError):
+        mergeduplicates([], key='foo', presorted=presorted).nrows()
 
 
 def test_mergeduplicates_shortrows():

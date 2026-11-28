@@ -53,6 +53,12 @@ Version 1.8.1
   including an initial group whose key is ``None``.
   By :user:`peterolkhov`, :issue:`810`.
 
+* Raise ``FieldSelectionError`` from ``rowreduce()``, ``groupselectfirst()``,
+  ``groupselectlast()`` and ``mergeduplicates()`` with ``presorted=True`` when
+  the table has no header, as without ``presorted``, instead of failing with
+  ``RuntimeError: generator raised StopIteration``.
+  By :user:`LuisFigueroaG`, :issue:`870`.
+
 Version 1.8.0
 -------------
 

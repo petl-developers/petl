@@ -9,7 +9,7 @@ from petl.compat import next, string_types, reduce, text_type
 
 from petl.errors import ArgumentError, FieldSelectionError
 from petl.comparison import comparable_itemgetter
-from petl.util.base import Table, iterpeek, rowgroupby, asindices
+from petl.util.base import Table, rowgroupby, asindices
 from petl.util.base import values, records
 from petl.util.counting import nrows
 from petl.transform.sorts import sort, mergesort
@@ -85,7 +85,9 @@ class RowReduceView(Table):
 def iterrowreduce(source, key, reducer, header):
     if header is None:
         # output header from source
-        header, source = iterpeek(source)
+        it = iter(source)
+        header = next(it, ())
+        source = itertools.chain([header], it)
     yield tuple(header)
     for key, rows in rowgroupby(source, key):
         yield tuple(reducer(key, rows))
@@ -719,7 +721,8 @@ def _mergekeyindices(hdr, key):
 
 def itermergeduplicates(table, key, missing):
     it = iter(table)
-    hdr, it = iterpeek(it)
+    hdr = next(it, ())
+    it = itertools.chain([hdr], it)
     flds = list(map(text_type, hdr))
     keyidxs = _mergekeyindices(hdr, key)
 
