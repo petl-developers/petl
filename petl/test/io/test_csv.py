@@ -3,9 +3,12 @@ from __future__ import absolute_import, print_function, division
 
 
 from tempfile import NamedTemporaryFile
+import csv
 import gzip
 import os
 import logging
+
+import pytest
 
 from petl.test.helpers import ieq, eq_
 from petl.io.csv import fromcsv, fromtsv, tocsv, appendcsv, totsv, appendtsv
@@ -35,6 +38,53 @@ def test_fromcsv():
     ieq(expect, actual)  # verify can iterate twice
 
 
+def test_fromcsv_strip_nulls(tmp_path):
+    source = tmp_path / 'input.csv'
+    raw = (b'na\x00me;note\r\n'
+           b'\x00"A;B";"first\r\nse\x00\x00cond"\r\n'
+           b'\x00;keep\x0bthis\r\n')
+    source.write_bytes(raw)
+
+    table = fromcsv(str(source), encoding='ascii', delimiter=';', strip_nulls=True)
+    expected = [('name', 'note'), ('A;B', 'first\r\nsecond'), ('', 'keep\x0bthis')]
+    assert list(iter(table)) == expected
+    assert list(iter(table)) == expected
+    assert source.read_bytes() == raw
+
+
+def test_fromtsv_strip_nulls_after_decoding(tmp_path):
+    source = tmp_path / 'input.tsv'
+    source.write_bytes('caf\x00\xe9\t10\n'.encode('utf-16'))
+    table = fromtsv(str(source), encoding='utf-16', strip_nulls=True,
+                    header=('external\x00', 'count'))
+    assert list(iter(table)) == [('external\x00', 'count'), ('caf\xe9', '10')]
+
+
+@pytest.mark.parametrize('options', [{}, {'strip_nulls': False}])
+def test_fromcsv_strip_nulls_disabled(tmp_path, options):
+    source = tmp_path / 'input.csv'
+    line = 'a\x00,b\n'
+    source.write_bytes(line.encode('ascii'))
+    table = fromcsv(str(source), **options)
+    try:
+        row = next(csv.reader([line]))
+    except csv.Error:
+        with pytest.raises(csv.Error):
+            next(iter(table))
+    else:
+        assert list(iter(table)) == [tuple(row)]
+
+
+def test_fromcsv_strip_nulls_streams_rows(tmp_path):
+    source = tmp_path / 'input.csv'
+    # Keep the decoding error beyond the text stream's initial buffer.
+    source.write_bytes(b'na\x00me,id\n' + b'A,1\n' * 32768 + b'\xff')
+    rows = iter(fromcsv(str(source), encoding='ascii', strip_nulls=True))
+    assert next(rows) == ('name', 'id')
+    with pytest.raises(UnicodeDecodeError):
+        list(rows)
+
+
 def test_fromcsv_lineterminators():
 
     data = [b'foo,bar',
@@ -60,7 +110,6 @@ def test_fromcsv_lineterminators():
 
 
 def test_fromcsv_quoted():
-    import csv
     data = [b'"foo","bar"',
             b'"a",1',
             b'"b",2',

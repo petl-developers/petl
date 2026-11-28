@@ -19,12 +19,13 @@ def fromcsv_impl(source, **kwargs):
 
 class CSVView(Table):
 
-    def __init__(self, source, encoding, errors, header, **csvargs):
+    def __init__(self, source, encoding, errors, header, strip_nulls=False, **csvargs):
         self.source = source
         self.encoding = encoding
         self.errors = errors
         self.csvargs = csvargs
         self._header = header
+        self.strip_nulls = strip_nulls
 
     def __iter__(self):
         if self._header is not None:
@@ -33,7 +34,10 @@ class CSVView(Table):
             csvfile = io.TextIOWrapper(buf, encoding=self.encoding,
                                        errors=self.errors, newline='')
             try:
-                reader = csv.reader(csvfile, **self.csvargs)
+                lines = csvfile
+                if self.strip_nulls:
+                    lines = (line.replace('\x00', '') for line in csvfile)
+                reader = csv.reader(lines, **self.csvargs)
                 for row in reader:
                     yield tuple(row)
             finally:
