@@ -167,9 +167,41 @@ def selectop(table, field, value, op, complement=False):
 Table.selectop = selectop
 
 
-def selecteq(table, field, value, complement=False):
-    """Select rows where the given field equals the given value."""
+def selecteq(table, field, value, complement=False, case_sensitive=True):
+    r"""Select rows where the given field equals the given value.
 
+    String equality is case-sensitive by default. Set ``case_sensitive=False``
+    to ignore case when both values are strings. The entire field is compared
+    literally, and the selected rows retain their original values::
+
+        >>> import petl as etl
+        >>> table = [('code',), ('A.1',), ('a.1',), ('Ax1',), ('A.10',)]
+        >>> list(etl.selecteq(table, 'code', 'a.1', case_sensitive=False))
+        [('code',), ('A.1',), ('a.1',)]
+
+    For regular expressions, :func:`petl.search` also supports
+    ``re.IGNORECASE``. Unlike equality, it converts cells to strings: a
+    pattern for ``'none'`` can then match ``None``, and ``'12'`` can match
+    the number 12. On a text column, escape and anchor a literal query::
+
+        >>> import re
+        >>> import petl as etl
+        >>> table = [('code',), ('A.1',), ('a.1',), ('Ax1',), ('A.10',)]
+        >>> pattern = r'\A' + re.escape('a.1') + r'\Z'
+        >>> list(etl.search(table, 'code', pattern, flags=re.IGNORECASE))
+        [('code',), ('A.1',), ('a.1',)]
+
+    """
+
+    if not case_sensitive and isinstance(value, string_types):
+        folded = value.casefold()
+
+        def matches(v):
+            if isinstance(v, string_types):
+                return v.casefold() == folded
+            return v == value
+
+        return select(table, field, matches, complement=complement)
     return selectop(table, field, value, operator.eq, complement=complement)
 
 
