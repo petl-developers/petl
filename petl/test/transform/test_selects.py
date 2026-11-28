@@ -1,7 +1,10 @@
 from __future__ import absolute_import, print_function, division
 
+from collections import UserString
+
 import pytest
 
+import petl as etl
 from petl.errors import FieldSelectionError
 from petl.test.helpers import ieq, eq_
 from petl.comparison import Comparable
@@ -136,6 +139,43 @@ def test_select_falsey():
     expect = (('foo',),)
     actual = select(table, '{foo}')
     ieq(expect, actual)
+
+
+def test_selecteq_case_sensitive():
+    table = [('code',), ('Ab',), ('aB',)]
+    assert list(etl.selecteq(table, 'code', 'Ab')) == [('code',), ('Ab',)]
+    assert list(etl.selecteq(table, 'code', 'Ab', case_sensitive=True)) == [
+        ('code',), ('Ab',)]
+    assert list(etl.selecteq(table, 'code', 'Ab', True)) == [('code',), ('aB',)]
+
+
+def test_selecteq_case_insensitive():
+    table = etl.wrap([('id', 'code'), (1, 'A.b'), (2, 'axb'), (3, 'a.B'),
+                      (3, 'a.B'), (4, 'a.b!'), (5, 'xa.b')])
+    selected = table.selecteq('code', 'a.B', case_sensitive=False)
+    assert list(selected) == [('id', 'code'), (1, 'A.b'), (3, 'a.B'), (3, 'a.B')]
+    remaining = table.eq(1, 'a.B', complement=True, case_sensitive=False)
+    assert list(remaining) == [('id', 'code'), (2, 'axb'), (4, 'a.b!'), (5, 'xa.b')]
+
+
+def test_selecteq_casefold():
+    table = [('word',), ('Stra\u00dfe',), ('street',)]
+    assert list(etl.selecteq(table, 'word', 'STRASSE', case_sensitive=False)) == [
+        ('word',), ('Stra\u00dfe',)]
+
+
+@pytest.mark.parametrize('query, expected', [
+    ('NoNe', [('NONE',)]), ('12', [('12',)]), ('', [('',)]),
+    (None, [(None,), ()]), (12, [(12,)])])
+def test_selecteq_mixed_types(query, expected):
+    table = [('value',), (None,), ('NONE',), (12,), ('12',), (), ('',)]
+    assert list(etl.selecteq(table, 'value', query, case_sensitive=False)) == [
+        ('value',)] + expected
+
+
+def test_selecteq_non_string_equality():
+    table = [('value',), (UserString('Ab'),), (UserString('ab'),)]
+    assert list(etl.selecteq(table, 'value', 'Ab', case_sensitive=False)) == table[:2]
 
 
 def test_selectgt():
